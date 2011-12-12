@@ -27,8 +27,8 @@ import getopt
 import os
 import sys
 
-from xivo_ctiservers import ctiserver
-from xivo_ctiservers import cti_config
+from xivo_cti import ctiserver
+from xivo_cti import cti_config
 
 try:
     cti_config.DAEMONNAME = os.path.basename(sys.argv[0])
