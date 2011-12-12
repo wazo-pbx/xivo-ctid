@@ -38,7 +38,7 @@ PORTDELTA = 0
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
-XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/ctiserver_default_configuration.json'
+XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
 XIVO_CONF_OVER = None
 
 cconf = None

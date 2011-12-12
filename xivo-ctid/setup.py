@@ -18,4 +18,6 @@ setup(
               'xivo_cti.dao',
               'xivo_cti.dao.alchemy',],
     scripts=['bin/xivo-ctid'],
+    data_files=[('/etc/pf-xivo/xivo-ctid', ['etc/allowedxlets.json',
+                                            'etc/default_config.json'])],
 )
