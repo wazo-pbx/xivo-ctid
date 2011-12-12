@@ -71,7 +71,7 @@ class CTIServer:
         try:
             logfilehandler = RotatingFileHandler(cti_config.LOGFILENAME)
             formatter = logging.Formatter('%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
-                                          % cti_config.LOGDAEMONNAME)
+                                          % cti_config.DAEMONNAME)
             logfilehandler.setFormatter(formatter)
             root_logger = logging.getLogger()
             root_logger.addHandler(logfilehandler)

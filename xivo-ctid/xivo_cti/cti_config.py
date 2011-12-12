@@ -20,28 +20,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__author__ = 'Corentin Le Gall'
-
 import logging
 import urllib2
 import cjson
+import ssl
 
 log = logging.getLogger('cti_config')
 
-import ssl
 
-ALARM_DIRECTORY = '/var/lib/pf-xivo-cti-server/alarms'
+DAEMONNAME = 'xivo-ctid'
+ALARM_DIRECTORY = '/var/lib/%s/alarms' % DAEMONNAME
 BUFSIZE_LARGE = 262144
-DAEMONNAME = 'ctid'
 DEBUG_MODE = False
-LOGDAEMONNAME = 'ctid'
-LOGFILENAME = '/var/log/pf-xivo-cti-server/daemon.log'
-PIDFILE = '/var/run/ctid.pid'
+LOGFILENAME = '/var/log/%s.log' % DAEMONNAME
+PIDFILE = '/var/run/%s.pid' % DAEMONNAME
 PORTDELTA = 0
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
-XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/ctiservers/ctiserver_default_configuration.json'
+XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/ctiserver_default_configuration.json'
 XIVO_CONF_OVER = None
 
 cconf = None
