@@ -1,9 +1,6 @@
 # XiVO CTI Server
 
-__version__   = '$Revision$'
-__date__      = '$Date: 2011-04-06 17:20:05 +0200 (Wed, 06 Apr 2011) $'
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'
-__author__    = 'Corentin Le Gall'
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
