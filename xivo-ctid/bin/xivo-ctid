@@ -64,4 +64,6 @@ if __name__ == '__main__':
     parse_command_line()
     if cti_config.XIVOIP != 'localhost':
         cti_config.XIVO_CONF_FILE = 'https://%s/cti/json.php/restricted/configuration' % cti_config.XIVOIP
-    main = ctiserver.CTIServer()
+    ctid = ctiserver.CTIServer()
+    ctid.setup()
+    ctid.run()

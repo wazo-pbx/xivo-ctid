@@ -62,70 +62,78 @@ class CTIServer:
     xdname = 'XiVO CTI Server'
 
     def __init__(self):
-        logging.basicConfig(level = logging.INFO)
+        self.nreload = 0
+        self.myami = {}
+        self.mycti = {}
+        self.safe = {}
+        self.timeout_queue = None
+        self.pipe_queued_threads = None
+        self.scheduler = None
 
+    def _set_signal_handlers(self):
+        signal.signal(signal.SIGINT, self.sighandler)
+        signal.signal(signal.SIGTERM, self.sighandler)
+        signal.signal(signal.SIGHUP, self.sighandler_reload)
+
+    def _set_logger(self):
+        logging.basicConfig(level=logging.INFO)
         global log
-
         log = logging.getLogger('main')
-
         try:
             logfilehandler = RotatingFileHandler(cti_config.LOGFILENAME)
-            formatter = logging.Formatter('%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
-                                          % cti_config.DAEMONNAME)
+            formatter = logging.Formatter(
+                '%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
+                % cti_config.DAEMONNAME)
             logfilehandler.setFormatter(formatter)
             root_logger = logging.getLogger()
             root_logger.addHandler(logfilehandler)
             if cti_config.DEBUG_MODE:
                 root_logger.setLevel(logging.DEBUG)
-
         except Exception:
             log.exception('logfilehandler')
 
+    def _daemonize(self):
         if not cti_config.DEBUG_MODE:
             daemonize.daemonize()
-
         daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
 
-        self.nreload = 0
-        self.myami = {}
-        self.mycti = {}
-        self.safe = {}
+    def _setup_zones_and_alarms(self, persister, alarm):
+        try:
+            system_zone = alarm.get_system_zone()
+        except Exception as e:
+            log.warning('Error while getting system zone: %s', e)
+            system_zone = None
+        self.alarm_mgr = alarm.AlarmClockManager(
+            self.scheduler, persister, self._alarm_callback, system_zone)
+        self.global_zone = None
+
+    def setup(self):
+        self._set_logger()
+        self._daemonize()
         self.timeout_queue = Queue.Queue()
-        self.pipe_queued_threads = None
         self.scheduler = scheduler.Scheduler()
         persister = alarm.JSONPersister(cti_config.ALARM_DIRECTORY)
         persister = alarm.MaxDeltaPersisterDecorator(datetime.timedelta(hours=2),
                                                      persister)
-        try:
-            system_zone = alarm.get_system_zone()
-        except Exception, e:
-            log.warning('Error while getting system zone: %s', e)
-            system_zone = None
-        self.alarm_mgr = alarm.AlarmClockManager(self.scheduler, persister,
-                                                 self._alarm_callback,
-                                                 system_zone)
-        self.global_zone = None
+        self._setup_zones_and_alarms(persister, alarm)
+        self._set_signal_handlers()
 
-        signal.signal(signal.SIGINT, self.sighandler)
-        signal.signal(signal.SIGTERM, self.sighandler)
-        signal.signal(signal.SIGHUP, self.sighandler_reload)
-
+    def run(self):
         while True:
             try:
                 self.main_loop()
             except Exception:
                 log.exception('main loop has crashed ... retrying in 5 seconds ...')
                 time.sleep(5)
-    
+
     def _alarm_callback(self, data):
         # WARNING: we are in the scheduler thread
         userid = data['userid']
         os.write(self.pipe_queued_threads[1], 'alarmclk:%s\n' % userid)
-    
+
     ## \brief Handler for catching signals (in the main thread)
     # \param signum signal number
     # \param frame frame
-    # \return none
     def sighandler(self, signum, frame):
         log.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits'
                     % (signum, frame.f_lineno, self.askedtoquit))
@@ -134,41 +142,34 @@ class CTIServer:
             print '--- living thread <%s>' % (t.getName())
             t._Thread__stop()
         self.askedtoquit = True
-        return
 
     ## \brief Handler for catching signals (in the main thread)
     # \param signum signal number
     # \param frame frame
-    # \return none
     def sighandler_reload(self, signum, frame):
         log.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads'
                     % (signum, frame.f_lineno, self.askedtoquit))
         self.askedtoquit = False
-        return
 
     def manage_tcp_connections(self, sel_i, msg, kind):
         """
         Dispatches the message's handling according to the connection's kind.
         """
         closemenow = False
-        if not isinstance(kind, str): # CTI, INFO, WEBI
+        if not isinstance(kind, str):   # CTI, INFO, WEBI
             replies = kind.manage_connection(msg)
             for reply in replies:
                 if reply:
-                    if reply.has_key('closemenow'):
+                    if 'closemenow' in reply:
                         closemenow = reply.get('closemenow')
-                    if reply.has_key('message'):
+                    if 'message' in reply:
                         if reply.get('dest'):
                             self.send_to_cti_client(reply.get('dest'),
                                                     reply.get('message'))
                         else:
                             kind.reply(reply.get('message'))
-                    elif reply.has_key('warning'):
+                    elif 'warning' in reply:
                         kind.reply(reply.get('warning'))
-            # issue : when to define the recipient list ?
-            # change status
-            # find changes
-            # warn
         else:
             log.warning('unknown connection kind %s' % kind)
         return closemenow
@@ -234,7 +235,6 @@ class CTIServer:
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:
             log.exception('cb_timer %s' % args)
-        return
 
     def updates_period(self):
         return int(cti_config.cconf.getconfig('main').get('updates_period', '3600'))
@@ -423,7 +423,6 @@ class CTIServer:
                     self.select_step()
             finally:
                 self.scheduler.shutdown()
-    # }
 
     def loop_over_cti_queue(self, innerdata):
         cti_queue = innerdata.events_cti
@@ -448,14 +447,10 @@ class CTIServer:
     def sendsheettolist(self, tsl, payload):
         for k in tsl:
             k.reply(payload)
-        return
 
     def loop_over_cti_queues(self):
         for ipbxid, innerdata in self.safe.iteritems():
             queuesize = self.loop_over_cti_queue(innerdata)
-##            if queuesize > 0:
-##                log.info('loop_over_cti_queue %s %d items' % (ipbxid, queuesize))
-        return
 
     def set_transfer_socket(self, faxobj, direction):
         for iconn, kind in self.fdlist_established.iteritems():
@@ -467,7 +462,6 @@ class CTIServer:
                         sendbuffer = ''
                         kind.reply(sendbuffer)
                     break
-        return
 
     def send_to_cti_client(self, who, what):
         (ipbxid, userid) = who.split('/')
@@ -498,13 +492,13 @@ class CTIServer:
                 log.info('Alarm clock changed for user %s', userid)
                 if not zone:
                     zone = global_zone
-                self.alarm_mgr.test_update_alarm_clock(int(userid), alarmclock, zone) 
+                self.alarm_mgr.test_update_alarm_clock(int(userid), alarmclock, zone)
             userlist.alarm_clk_changes.clear()
-        
-    def select_step(self):  # {
+
+    def select_step(self):
         self._schedule_alarms()
-        
-        try:    # {
+
+        try:
             fdtodel = []
             for cn in self.fdlist_established.keys():
                 if isinstance(cn, ClientConnection):
@@ -533,8 +527,8 @@ class CTIServer:
                     writefds.append(iconn)
             [sels_i, sels_o, sels_e] = select.select(self.fdlist_full, writefds, [],
                                                      self.updates_period())
-        # }
-        except Exception:  # {
+
+        except Exception:
             log.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
             log.warning('(select) self.askedtoquit=%s fdlist_full=%s'
                         % (self.askedtoquit, self.fdlist_full))
@@ -577,8 +571,8 @@ class CTIServer:
                     print '--- (reload) the thread <%s> remains' % t.getName()
                     # t._Thread__stop() # does not work in reload case (vs. stop case)
                 return
-        # }
-        try:    # {
+
+        try:
             # connexions ready for sending(writing)
             if sels_o:
                 log.warning('got some sels_o %s' % sels_o)
@@ -597,8 +591,8 @@ class CTIServer:
             if sels_e:
                 log.warning('got some sels_e %s' % sels_e)
 
-            if sels_i:  # {
-                for sel_i in sels_i: # {
+            if sels_i:
+                for sel_i in sels_i:
                     # these AMI connections are used in order to manage AMI commands and events
                     if sel_i in self.fdlist_ami.keys():
                         try:
@@ -644,9 +638,9 @@ class CTIServer:
                             log.info('UDP %s <%s> %s' % (kind, data.strip(), sockparams))
                             # scheduling AMI reconnection
                             k = threading.Timer(1, self.cb_timer,
-                                                ({'action' : 'ipbxup',
-                                                  'properties' : { 'data' : data,
-                                                                   'sockparams' : sockparams }},))
+                                                ({'action': 'ipbxup',
+                                                  'properties': {'data': data,
+                                                                 'sockparams': sockparams }},))
                             k.setName('Thread-ipbxup-%s' % data.strip())
                             k.start()
                         else:
@@ -704,8 +698,8 @@ class CTIServer:
                                 logintimeout = int(cti_config.cconf.getconfig('main').get('logintimeout', 5))
                                 # logintimeout = 3600
                                 nc.logintimer = threading.Timer(logintimeout, self.cb_timer,
-                                                                ({'action' : 'ctilogin',
-                                                                  'properties' : connc},))
+                                                                ({'action': 'ctilogin',
+                                                                  'properties': connc},))
                                 nc.logintimer.start()
                             self.fdlist_established[connc] = nc
                         else:
@@ -757,8 +751,6 @@ class CTIServer:
                                 # if requester in self.commandclass.transfers_ref:
                                 #   self.commandclass.transfer_endbuf(requester)
                                 log.info('TCP socket %s closed(B) on %s' % (kind.kind, requester))
-                            # }
-                        # }
                         except Exception:
                             # socket.error : exc.args[0]
                             log.exception('[%s] %s' % (kind, sel_i))
@@ -770,9 +762,8 @@ class CTIServer:
                             except Exception:
                                 log.exception('[%s] (2nd exception)' % kind)
 
-                    # }
                     # local pipe fd
-                    elif self.pipe_queued_threads[0] == sel_i: # {
+                    elif self.pipe_queued_threads[0] == sel_i:
                         try:
                             pipebuf = os.read(sel_i, 1024)
                             if len(pipebuf) == 0:
@@ -799,8 +790,6 @@ class CTIServer:
                                         log.warning('unknown kind for %s' % pb)
                         except Exception:
                             log.exception('[pipe_queued_threads]')
-
-                    # }
 
                     self.loop_over_cti_queues()
 
