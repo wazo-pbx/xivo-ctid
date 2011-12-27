@@ -107,10 +107,13 @@ class Fax:
         self.userid = userid
         self.context = context
         self.number = number.replace('.', '').replace(' ', '')
-        if hide != '0':
+        linelist = self.innerdata.xod_config['users'].keeplist[userid]['linelist']
+        if not linelist or hide != '0':
             self.callerid = 'anonymous'
         else:
-            self.callerid = '010101'
+            phoneid = linelist[0]
+            phoneinfo = self.innerdata.xod_config['phones'].keeplist[phoneid]
+            self.callerid = phoneinfo['callerid']
         return
 
     def setfileparameters(self, size):
