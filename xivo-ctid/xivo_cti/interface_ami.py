@@ -369,7 +369,7 @@ class AMI:
         except KeyError:
             self.log.warning('Could not update voicemail info: %s', event)
 
-    def _handler_useraction_success(self, event, actionid, properties, mode):
+    def _handle_useraction_success(self, event, actionid, properties, mode):
         self.log.info('amiresponse_success %s %s : %s - %s'
                       % (actionid, mode, event, properties))
         request = properties.get('request')
