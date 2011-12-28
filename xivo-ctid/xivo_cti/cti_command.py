@@ -118,7 +118,7 @@ class Command:
         self.tipbxid = self.commanddict.get('tipbxid', self.ipbxid)
         self.tinnerdata = self._ctiserver.safe.get(self.tipbxid)
 
-        messagebase = { 'class' : self.command }
+        messagebase = {'class': self.command}
         if self.commandid:
             messagebase['replyid'] = self.commandid
 
@@ -261,7 +261,7 @@ class Command:
             self.log.warning('%s - undefined user : probably the login_id step failed' % head)
             return 'login_password'
 
-        reply = { 'capalist' : [self._ctiserver.safe[ipbxid].user_get_ctiprofile(userid)] }
+        reply = {'capalist': [self._ctiserver.safe[ipbxid].user_get_ctiprofile(userid)]}
         return reply
 
     def regcommand_login_capas(self):
@@ -280,9 +280,6 @@ class Command:
 
         state = self.commanddict.get('state')
         capaid = self.commanddict.get('capaid')
-        subscribe = self.commanddict.get('subscribe')
-        lastconnwins = self.commanddict.get('lastconnwins')
-        loginkind = self.commanddict.get('loginkind')
 
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
@@ -300,16 +297,10 @@ class Command:
 
         if self.userid.startswith('cs:'):
             notifyremotelogin = threading.Timer(2, self._ctiserver.cb_timer,
-                                                ({'action' : 'xivoremote',
-                                                  'properties' : None },))
+                                                ({'action': 'xivoremote',
+                                                  'properties': None}))
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
-
-##            if loginkind == 'agent':
-##                userinfo['agentphonenumber'] = self.commanddict.get('agentphonenumber')
-##            if subscribe is not None:
-##                userinfo['subscribe'] = 0
-##            return userinfo
 
         profileclient = self.innerdata.xod_config['users'].keeplist[self.userid].get('profileclient')
         profilespecs = self._config.getconfig('profiles').get(profileclient)
@@ -332,18 +323,15 @@ class Command:
                         summarycapas[capakind] = tt
                 else:
                     capastruct[capakind] = {}
-                    # self.log.warning('no capakind %s in profilespecs %s' % (capakind, profilespecs.keys()))
         else:
             self.log.warning('empty profilespecs %s' % profilespecs)
 
-        reply = { 'ipbxid' : self.ipbxid,
-                  'userid' : self.userid,
-                  # profile-specific data
-                  'appliname' : profilespecs.get('name'),
-                  'capaxlets' : profilespecs.get('xlets'),
-                  'capas' : capastruct,
-                  'presence' : 'available',
-                  }
+        reply = {'ipbxid': self.ipbxid,
+                 'userid': self.userid,
+                 'appliname': profilespecs.get('name'),
+                 'capaxlets': profilespecs.get('xlets'),
+                 'capas': capastruct,
+                 'presence': 'available'}
 
         self.connection.connection_details['logged'] = True
         self.connection.logintimer.cancel()
@@ -359,11 +347,6 @@ class Command:
 ##  "presencecounter": {"connected": 1},
 
     def __check_user_connection__(self):
-        cdetails = self.connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
-        userid = cdetails.get('userid')
-        # if self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] == 'yes':
-        # return 'alreadythere'
         return
 
     def __check_capa_connection__(self, capaid):
@@ -383,9 +366,6 @@ class Command:
         userid = cdetails.get('userid')
         self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
-        # connection : os, version, sessionid, socket data, capaid
-        # {'prelogin': {'cticlientos': 'X11', 'version': '1305641743-87aa765', 'sessionid': 'deyLicgThU'}}
-        return
 
     def __disconnect_user__(self):
         cdetails = self.connection.connection_details
@@ -395,23 +375,19 @@ class Command:
         availstate = self.commanddict.get('availstate')
         # disconnected vs. invisible vs. recordstatus ?
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
-        return
 
     # end of login/logout related commands
 
-
     def regcommand_callcampaign(self):
-        reply = {}
-        return reply
+        return {}
 
     def regcommand_chitchat(self):
         reply = {}
-        (ipbxid, userid) = self.commanddict.get('to').split('/')
         chitchattext = self.commanddict.get('text')
-        self.othermessages.append( {'dest' : self.commanddict.get('to'),
-                                    'message' : { 'to' : self.commanddict.get('to'),
-                                                  'from' : '%s/%s' % (self.ripbxid, self.ruserid),
-                                                  'text' : chitchattext}} )
+        self.othermessages.append({'dest': self.commanddict.get('to'),
+                                   'message': {'to': self.commanddict.get('to'),
+                                               'from': '%s/%s' % (self.ripbxid, self.ruserid),
+                                                'text': chitchattext}})
         return reply
 
     def regcommand_actionfiche(self):
@@ -539,11 +515,11 @@ class Command:
         reply = {}
         for ipbxid, pcalls in self.parkedcalls.iteritems():
             for parkingbay, pprops in pcalls.iteritems():
-                tosend = { 'class' : 'parkcall',
-                           'eventkind' : 'parkedcall',
-                           'ipbxid' : ipbxid,
-                           'parkingbay' : parkingbay,
-                           'payload' : pprops }
+                tosend = {'class': 'parkcall',
+                          'eventkind': 'parkedcall',
+                          'ipbxid': ipbxid,
+                          'parkingbay': parkingbay,
+                          'payload': pprops}
                 repstr = self.__cjson_encode__(tosend)
         return reply
 
@@ -553,7 +529,6 @@ class Command:
                             self.commanddict.get('level'),
                             self.commanddict.get('classmethod'),
                             self.commanddict.get('message')))
-        return
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self.commanddict:
@@ -578,15 +553,11 @@ class Command:
             else:
                 self.log.info('keepalive from user:%s (%d %d/0 > %.1f bytes/ms)'
                          % (self.ruserid, nsamples, nbytes, float(nbytes)))
-        return
 
     def regcommand_availstate(self):
-        reply = {}
-        # if self.capas[capaid].match_funcs(ucapa, 'presence'):
-        # self.__fill_user_ctilog__(userinfo, 'cticommand:%s' % classcomm)
         availstate = self.commanddict.get('availstate')
         self.rinnerdata.update_presence(self.ruserid, availstate)
-        return reply
+        return {}
 
     def regcommand_filetransfer(self):
         reply = {}
@@ -643,11 +614,11 @@ class Command:
         elif function == 'updateconfig':
             tid = self.commanddict.get('tid')
             g = self.tinnerdata.get_config(listname, tid)
-            reply = { 'function' : 'updateconfig',
-                      'listname' : listname,
-                      'tipbxid' : self.tipbxid,
-                      'tid' : tid,
-                      'config' : g }
+            reply = {'function': 'updateconfig',
+                     'listname': listname,
+                     'tipbxid': self.tipbxid,
+                     'tid': tid,
+                     'config': g}
 
         elif function == 'updatestatus':
             tid = self.commanddict.get('tid')
@@ -662,11 +633,11 @@ class Command:
 
     def regcommand_ipbxcommand(self):
         reply = {}
-        self.ipbxcommand = self.commanddict.get('command', None)
+        self.ipbxcommand = self.commanddict.get('command')
         if not self.ipbxcommand:
             self.log.warning('no command given')
             return reply
-        reply['command'] = self.ipbxcommand # show the command issued in the reply
+        reply['command'] = self.ipbxcommand
         if self.ipbxcommand not in IPBXCOMMANDS:
             self.log.warning('unknown ipbxcommand %s' % self.ipbxcommand)
             return reply
@@ -692,24 +663,20 @@ class Command:
             self.log.warning('no such ipbx method %s' % methodname)
 
         # if some actions have been requested ...
-        if self.commandid: # pass the commandid on the actionid # 'user action - forwarded'
+        if self.commandid:  # pass the commandid on the actionid # 'user action - forwarded'
             baseactionid = 'uaf:%s' % self.commandid
-        else: # 'user action - auto'
+        else:  # 'user action - auto'
             baseactionid = 'uaa:%s' % ''.join(random.sample(ALPHANUMS, 10))
         ipbxreply = 'noaction'
         idz = 0
         for z in zs:
             if 'amicommand' in z:
-                params = {
-                    'mode' : 'useraction',
-                    'request' : {
-                        'requester' : self.connection,
-                        'ipbxcommand' : self.ipbxcommand,
-                        'commandid' : self.commandid
-                        },
-                    'amicommand' : z.get('amicommand'),
-                    'amiargs' : z.get('amiargs')
-                    }
+                params = {'mode': 'useraction',
+                          'request': {'requester': self.connection,
+                                      'ipbxcommand': self.ipbxcommand,
+                                      'commandid': self.commandid},
+                          'amicommand': z.get('amicommand'),
+                          'amiargs': z.get('amiargs')}
                 actionid = '%s-%03d' % (baseactionid, idz)
                 ipbxreply = self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
             else:
@@ -718,7 +685,6 @@ class Command:
 
         reply['ipbxreply'] = ipbxreply
         return reply
-
 
     # "any number" :
     # - an explicit number
@@ -755,9 +721,9 @@ class Command:
         try:
             [typev, who] = item.split(':', 1)
             [ipbxid, idv] = who.split('/', 1)
-            id_as_obj = { 'type' : typev,
-                          'ipbxid' : ipbxid,
-                          'id' : idv }
+            id_as_obj = {'type': typev,
+                         'ipbxid': ipbxid,
+                         'id': idv}
         except Exception:
             pass
         return id_as_obj
@@ -766,15 +732,15 @@ class Command:
     def ipbxcommand_originate(self):
         src = self.parseid(self.commanddict.get('source'))
         if not src:
-            return [{'error' : 'source'}]
+            return [{'error': 'source'}]
         dst = self.parseid(self.commanddict.get('destination'))
         if not dst:
-            return [{'error' : 'destination'}]
+            return [{'error': 'destination'}]
 
         if src.get('ipbxid') != dst.get('ipbxid'):
-            return [{'error' : 'ipbxids'}]
+            return [{'error': 'ipbxids'}]
         if src.get('ipbxid') not in self._ctiserver.safe:
-            return [{'error' : 'ipbxid'}]
+            return [{'error': 'ipbxid'}]
 
         innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
@@ -799,11 +765,11 @@ class Command:
             # in android cases
             # there was a warning back to revision 6095 - maybe to avoid making arbitrary calls on behalf
             # of the local telephony system ?
-            orig_context = 'mamaop' # XXX how should we define or guess the proper context here ?
+            orig_context = 'mamaop'  # XXX how should we define or guess the proper context here ?
             orig_protocol = 'local'
-            orig_name = '%s@%s' % (src.get('id'), orig_context) # this is the number actually dialed, in local channel mode
-            orig_number = src.get('id') # this is the number that will be displayed as ~ callerid
-            orig_identity = '' # how would we know the identity there ?
+            orig_name = '%s@%s' % (src.get('id'), orig_context)  # this is the number actually dialed, in local channel mode
+            orig_number = src.get('id')  # this is the number that will be displayed as ~ callerid
+            orig_identity = ''  # how would we know the identity there ?
 
         if phoneidstruct_src:
             orig_protocol = phoneidstruct_src.get('protocol')
@@ -862,20 +828,17 @@ class Command:
 
         rep = {}
         if orig_protocol and orig_name and orig_number and extentodial:
-            rep = {'amicommand' : 'originate',
-                   'amiargs' : (orig_protocol,
-                                orig_name,
-                                orig_number,
-                                orig_identity,
-                                extentodial,
-                                dst_identity,
-                                dst_context)
-                   }
-            # {'XIVO_USERID' : userinfo.get('xivo_userid')})
+            rep = {'amicommand': 'originate',
+                   'amiargs': (orig_protocol,
+                               orig_name,
+                               orig_number,
+                               orig_identity,
+                               extentodial,
+                               dst_identity,
+                               dst_context)}
         return [rep]
 
     def ipbxcommand_meetme(self):
-        self.log.info('ipbxcommand_meetme %s' % self.commanddict)
         function = self.commanddict['function']
         args = self.commanddict['functionargs']
 
@@ -916,17 +879,6 @@ class Command:
         elif function in ['MeetmeMute', 'MeetmeUnmute']:
             return [{'amicommand': function.lower(),
                      'amiargs': (meetme_conf['confno'], usernum)}]
-        # elif function == 'kick':
-        #     pass
-        # elif function == 'getlist':
-        #     fullstat = {}
-        #     for iastid, v in self.xod_config['meetme'].iteritems():
-        #         fullstat[iastid] = v.keeplist
-        #     tosend = {'class': 'meetme', 'function': 'sendlist',
-        #               'payload': fullstat}
-        #     repstr = self.__cjson_encode__(tosend)
-
-        return
 
     def ipbxcommand_sipnotify(self):
         if 'variables' in self.commanddict:
@@ -936,7 +888,7 @@ class Command:
             uinfo = self.rinnerdata.xod_config['users'].keeplist[self.userid]
             # TODO: Choose the appropriate line if more than one
             line = self.rinnerdata.xod_config['phones'].keeplist[uinfo['linelist'][0]]
-            channel = line['identity'].replace('\\','')
+            channel = line['identity'].replace('\\', '')
         reply = {'amicommand': 'sipnotify', 'amiargs': (channel, variables)}
         return [reply]
 
@@ -953,15 +905,15 @@ class Command:
     def ipbxcommand_parking(self):
         src = self.parseid(self.commanddict.get('source'))
         if not src:
-            return [{'error' : 'source'}]
+            return [{'error': 'source'}]
         dst = self.parseid(self.commanddict.get('destination'))
         if not dst:
-            return {'error' : 'destination'}
+            return {'error': 'destination'}
 
         if src.get('ipbxid') != dst.get('ipbxid'):
-            return {'error' : 'ipbxids'}
+            return {'error': 'ipbxids'}
         if src.get('ipbxid') not in self._ctiserver.safe:
-            return {'error' : 'ipbxid'}
+            return {'error': 'ipbxid'}
 
         innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
@@ -980,24 +932,23 @@ class Command:
             except Exception:
                 parkinglot = 'default'
 
-        rep = {'amicommand' : 'park',
-               'amiargs' : (channel, peerchannel, parkinglot, 120000)
-               }
+        rep = {'amicommand': 'park',
+               'amiargs': (channel, peerchannel, parkinglot, 120000)}
         return [rep, ]
 
     # direct transfers
     def ipbxcommand_transfer(self):
         src = self.parseid(self.commanddict.get('source'))
         if not src:
-            return [{'error' : 'source'}]
+            return [{'error': 'source'}]
         dst = self.parseid(self.commanddict.get('destination'))
         if not dst:
-            return [{'error' : 'destination'}]
+            return [{'error': 'destination'}]
 
         if src.get('ipbxid') != dst.get('ipbxid'):
-            return [{'error' : 'ipbxids'}]
+            return [{'error': 'ipbxids'}]
         if src.get('ipbxid') not in self._ctiserver.safe:
-            return [{'error' : 'ipbxid'}]
+            return [{'error': 'ipbxid'}]
 
         innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
@@ -1047,18 +998,13 @@ class Command:
 
         rep = {}
         if extentodial:
-            rep = {'amicommand' : 'transfer',
-                   'amiargs' : (channel,
+            rep = {'amicommand': 'transfer',
+                   'amiargs': (channel,
                                 extentodial,
-                                dst_context)
-                   }
+                                dst_context)}
         return [rep]
 
     def ipbxcommand_atxfer(self):
-        # no reply was received from this :
-        # http://lists.digium.com/pipermail/asterisk-users/2011-March/260508.html
-        # however some clues could be found here :
-        # https://issues.asterisk.org/view.php?id=12158
         rep = {}
         try:
             src = self.parseid(self.commanddict.get('source'))
@@ -1073,16 +1019,15 @@ class Command:
                                    context)}
         except KeyError:
             self.log.warning('Atxfer failed %s', self.commanddict)
-        return [rep,]
-
+        return [rep, ]
 
     def ipbxcommand_transfercancel(self):
         print self.ipbxcommand, self.commanddict
         return []
 
     def ipbxcommand_intercept(self):
-        self.commanddict['source'] = self.commanddict.pop('tointercept')
-        self.commanddict['destination'] = self.commanddict.pop('catcher')
+        self.commanddict['source'] = self.commanddict['tointercept']
+        self.commanddict['destination'] = self.commanddict['catcher']
         # ami transfer mode
         reps = self.ipbxcommand_transfer()
         # what about origination with '*8' ?
@@ -1091,22 +1036,22 @@ class Command:
     # hangup and one's own line management
     def ipbxcommand_hangup(self):
         channel = self.parseid(self.commanddict.get('channelids'))
-        rep = { 'amicommand': 'hangup',
-                'amiargs': (channel.get('id'), )
-                }
+        rep = {'amicommand': 'hangup',
+               'amiargs': (channel.get('id'))}
         return [rep, ]
 
     def ipbxcommand_answer(self):
         print self.ipbxcommand, self.commanddict
         return []
+
     def ipbxcommand_cancel(self):
         print self.ipbxcommand, self.commanddict
         return []
+
     def ipbxcommand_refuse(self):
         print self.ipbxcommand, self.commanddict
         return []
 
-    # agents and queues
     def ipbxcommand_agentlogin(self):
         agentphonenumber = self.commanddict.get('agentphonenumber')
         memberstatus = None
@@ -1131,9 +1076,8 @@ class Command:
         rep = list()
         if agentnumber and agentcontext and memberstatus:
             if memberstatus.get('status') not in ['AGENT_IDLE', 'AGENT_ONCALL']:
-                rep = [{ 'amicommand' : 'agentcallbacklogin',
-                         'amiargs' : (agentnumber, agentphonenumber, agentcontext, True)
-                         }]
+                rep = [{'amicommand': 'agentcallbacklogin',
+                        'amiargs': (agentnumber, agentphonenumber, agentcontext, True)}]
         return rep
 
     def ipbxcommand_agentlogout(self):
@@ -1156,9 +1100,8 @@ class Command:
         rep = list()
         if agentnumber and memberstatus:
             if memberstatus.get('status') != 'AGENT_LOGGEDOFF':
-                rep = [{ 'amicommand' : 'agentlogoff',
-                         'amiargs' : (agentnumber,)
-                         }]
+                rep = [{'amicommand': 'agentlogoff',
+                        'amiargs': (agentnumber, )}]
         return rep
 
     def whenmember(self, innerdata, command, dopause, listname, k, member):
@@ -1194,7 +1137,8 @@ class Command:
             elif member.get('id') == 'all':
                 if command != 'add':
                     for any_id in any_members:
-                        member = {'type' : member.get('type'), 'id' : any_id}
+                        member = {'type': member.get('type'),
+                                  'id': any_id}
                         memberlist = self.whenmember(innerdata, command, dopause, listname, k, member)
         return memberlist
 
@@ -1213,13 +1157,13 @@ class Command:
                 interfaces.append(interface)
         return interfaces
 
-    def queue_generic(self, command, dopause = None):
+    def queue_generic(self, command, dopause=None):
         member = self.parseid(self.commanddict.get('member'))
         if not member:
-            return [{'error' : 'member'}]
+            return [{'error': 'member'}]
         queue = self.parseid(self.commanddict.get('queue'))
         if not queue:
-            return [{'error' : 'queue'}]
+            return [{'error': 'queue'}]
 
         innerdata = self._ctiserver.safe.get(queue.get('ipbxid'))
 
@@ -1298,8 +1242,6 @@ class Command:
         self.commanddict['queue'] = 'queue:xivo/all'
         return self.queue_generic('remove')
 
-
-    # record, listen actions
     def ipbxcommand_record(self):
         subcommand = self.commanddict.pop('subcommand')
         channel = self.commanddict.pop('channel')

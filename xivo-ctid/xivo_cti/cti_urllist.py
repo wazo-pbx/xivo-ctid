@@ -24,10 +24,10 @@ import cjson
 import csv
 import logging
 import hashlib
-import time
 import urllib2
 
 log = logging.getLogger('urllist')
+
 
 class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, headers):
@@ -35,15 +35,15 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         result.status = code
         return result
 
+
 class UrlList:
     def __init__(self, url):
         self.list = {}
         self.url = url.replace('\\/', '/')
         self.trueurl = self.url.split('?')
         self.urlmd5 = ''
-        return
 
-    def getlist(self, index, length, header = False):
+    def getlist(self, index, length, header=False):
         self.list = {}
         http_contenttype = None
         http_code = 200
@@ -56,15 +56,12 @@ class UrlList:
                 elif kind in ['mysql', 'sqlite', 'ldap']:
                     log.warning('URL kind %s not supported yet' % kind)
                 elif kind in ['http', 'https']:
-                    t1 = time.time()
                     request = '%s?sum=%s' % (self.trueurl[0], self.urlmd5)
                     urequest = urllib2.Request(request)
                     opener = urllib2.build_opener(DefaultErrorHandler)
                     f = opener.open(urequest)
                     http_contenttype = f.headers.getheaders('Content-Type')
                     http_code = f.code
-                    t2 = time.time()
-                    log.debug('time for %s is %f' % (request, t2 - t1))
                 else:
                     log.warning('URL kind %s not supported' % kind)
                     return -1
@@ -73,9 +70,9 @@ class UrlList:
                 return -1
         except urllib2.URLError, uerr:
             errnum = uerr.reason[0]
-            if errnum == 113: # No route to host
+            if errnum == 113:  # No route to host
                 log.error('(UrlList) %s %s : %s' % (self.url, uerr.args[0].__class__, uerr.reason))
-            elif errnum == 111: # Connection refused
+            elif errnum == 111:  # Connection refused
                 log.error('(UrlList) %s %s : %s' % (self.url, uerr.args[0].__class__, uerr.reason))
             else:
                 # The connect operation timed out
@@ -122,7 +119,7 @@ class UrlList:
                     ret = 2
                 elif http_code == 204:
                     log.info('%s : received no-data (204) from WEBI' % self.url)
-                elif http_code == 200: # XXX temporary compatibility
+                elif http_code == 200:  # XXX temporary compatibility
                     if fulltable == 'XIVO-WEBI: no-update':
                         self.urlmd5 = savemd5
                         log.info('%s : received no-update from WEBI' % self.url)
@@ -130,7 +127,7 @@ class UrlList:
                 else:
                     log.warning('%s : unknown code (%d)' % (self.url, http_code))
             else:
-                csvreader = csv.reader(mytab, delimiter = '|')
+                csvreader = csv.reader(mytab, delimiter='|')
                 # builds the users list
                 for line in csvreader:
                     if len(line) == length:

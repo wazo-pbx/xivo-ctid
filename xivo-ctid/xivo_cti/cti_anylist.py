@@ -25,6 +25,7 @@ import cti_urllist
 
 log = logging.getLogger('anylist')
 
+
 class AnyList:
     def __init__(self, newurls):
         self.commandclass = None
@@ -32,7 +33,6 @@ class AnyList:
         self.keeplist = {}
         self.__clean_urls__()
         self.__add_urls__(newurls)
-        return
 
     def update(self):
         lstadd = []

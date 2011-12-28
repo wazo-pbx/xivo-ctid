@@ -29,9 +29,11 @@ import time
 from xivo_cti.interfaces import Interfaces
 from xivo_cti import cti_command
 
+
 class serialJson():
     def __init__(self):
         return
+
     def decode(self, linein):
         # Output of the cjson.decode is a Unicode object, even though the
         # non-ASCII characters have not been decoded.
@@ -39,19 +41,21 @@ class serialJson():
         # will not be interpreted correctly.
         v = cjson.decode(linein.decode('utf-8').replace('\\/', '/'))
         return v
+
     def encode(self, obj):
         obj['timenow'] = time.time()
         return cjson.encode(obj)
 
+
 class CTI(Interfaces):
     kind = 'CTI'
     sep = '\n'
+
     def __init__(self, ctiserver):
         Interfaces.__init__(self, ctiserver)
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
-        return
 
     def connected(self, connid):
         """
@@ -61,7 +65,6 @@ class CTI(Interfaces):
         self.log = logging.getLogger('interface_cti(%s:%d)' % self.requester)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
-        return
 
     def disconnected(self, msg):
         self.log.info('disconnected %s' % msg)
@@ -89,16 +92,14 @@ class CTI(Interfaces):
             multimsg = msg.split(self.sep)
             for usefulmsgpart in multimsg:
                 cmd = self.serial.decode(usefulmsgpart)
-                self.log.debug('commanddict: %s', cmd)
                 nc = cti_command.Command(self, cmd)
                 z.extend(nc.parse())
         return z
 
     def set_as_transfer(self, direction, faxobj):
         self.log.info('%s set_as_transfer %s' % (faxobj.fileid, direction))
-        self.transferconnection = { 'direction' : direction,
-                                    'faxobj' : faxobj }
-        return
+        self.transferconnection = {'direction': direction,
+                                   'faxobj': faxobj}
 
     def reply(self, msg):
         if self.transferconnection:
@@ -108,35 +109,36 @@ class CTI(Interfaces):
         else:
             self.connid.sendall(self.serial.encode(msg) + '\n')
 
-    def _manage_logout(self, ipbxid, id, msg):
+    def _manage_logout(self, ipbxid, user_id, msg):
         """
         Clean up code for user disconnection
         """
-        self.log.info('logout (%s) user:%s/%s', msg, ipbxid, id)
-        self._disconnect_user(ipbxid, id)
+        self.log.info('logout (%s) user:%s/%s', msg, ipbxid, user_id)
+        self._disconnect_user(ipbxid, user_id)
 
     def loginko(self, errorstring):
         self.log.warning('user can not connect (%s) : sending %s'
                          % (self.details, errorstring))
         # self.logintimer.cancel() + close
-        tosend = { 'class' : 'loginko',
-                   'error_string' : errorstring }
+        tosend = {'class': 'loginko',
+                  'error_string': errorstring}
         return self.serial.encode(tosend)
 
-    def _disconnect_user(self, ipbxid, id):
+    def _disconnect_user(self, ipbxid, user_id):
         """
         Change the user's status to disconnected
         """
         try:
             innerdata = self._ctiserver.safe[ipbxid]
-            userstatus = innerdata.xod_status['users'][id]
-            innerdata.handle_cti_stack('set', ('users', 'updatestatus', id))
+            userstatus = innerdata.xod_status['users'][user_id]
+            innerdata.handle_cti_stack('set', ('users', 'updatestatus', user_id))
             userstatus['availstate'] = 'disconnected'
             userstatus['connection'] = None
             userstatus['last-logouttimestamp'] = time.time()
             innerdata.handle_cti_stack('empty_stack')
         except KeyError:
-            self.log.warning('Could not update user status %s', id)
+            self.log.warning('Could not update user status %s', user_id)
+
 
 class CTIS(CTI):
     kind = 'CTIS'

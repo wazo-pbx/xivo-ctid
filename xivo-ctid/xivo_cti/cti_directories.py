@@ -187,7 +187,7 @@ class Display(object):
             return ';'.join(_apply_subs(display_elem, result) for
                             display_elem in self._display_elems)
         return aux
-    
+
     @classmethod
     def new_from_contents(cls, contents):
         contents = list({'title': v[0], 'default': v[2], 'fmt': v[3]} for
