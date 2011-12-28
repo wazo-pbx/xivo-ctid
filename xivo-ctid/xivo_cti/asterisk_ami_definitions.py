@@ -125,8 +125,6 @@ for k, v in event_flags.iteritems():
         methodname = 'ami_%s' % eventname.lower().replace('-', '_')
         if eventname not in evfunction_to_method_name:
             evfunction_to_method_name[eventname] = methodname
-        else:
-            log.warning('%s (flags) %s already there' % (k, eventname))
 
 for k, v in event_others.iteritems():
     for eventname in v:

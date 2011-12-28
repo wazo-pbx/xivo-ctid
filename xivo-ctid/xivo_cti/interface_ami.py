@@ -32,14 +32,13 @@ import time
 from xivo_cti import xivo_ami, cti_config
 from xivo_cti import asterisk_ami_definitions as ami_def
 
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
-
 
 class AMI:
     kind = 'AMI'
     LINE_SEPARATOR = '\r\n'
     EVENT_SEPARATOR = '\r\n\r\n'
     FIELD_SEPARATOR = ': '
+    ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
     def __init__(self, ctiserver, ipbxid):
         self._ctiserver = ctiserver
@@ -125,7 +124,7 @@ class AMI:
         return ncount
 
     def delayed_action(self, usefulmsg, replyto):
-        actionid = ''.join(random.sample(ALPHANUMS, 10))
+        actionid = self.make_actionid()
         self.amicl.sendcommand('Command', [('Command', usefulmsg),
                                            ('ActionID', actionid)])
         self.waiting_actionid[actionid] = replyto
@@ -187,183 +186,118 @@ class AMI:
                                       'Newstate',
                                       'Newcallerid']:
                     pass
-            else:
-                if 'Response' in event and event['Response'] is not None:
-                    response = event['Response']
-                    if (response == 'Follows' and 'Privilege' in event
-                            and event['Privilege'] == 'Command'):
-                        reply = []
-                        try:
-                            for line in nocolon:
-                                to_ignore = ('', '--END COMMAND--')
-                                args = [a for a in line.split('\n') if a not in to_ignore]
-                                reply.extend(args)
-                                if len(args):
-                                    self.log.info('Response : %s' % (args))
+            elif 'Response' in event and event['Response'] is not None:
+                response = event['Response']
+                if (response == 'Follows' and 'Privilege' in event
+                        and event['Privilege'] == 'Command'):
+                    reply = []
+                    try:
+                        for line in nocolon:
+                            to_ignore = ('', '--END COMMAND--')
+                            args = [a for a in line.split('\n') if a not in to_ignore]
+                            reply.extend(args)
+                            if len(args):
+                                self.log.info('Response : %s' % (args))
 
-                            if 'ActionID' in event:
-                                actionid = event['ActionID']
-                                if actionid in self.waiting_actionid:
-                                    connreply = self.waiting_actionid[actionid]
-                                    if connreply is not None:
-                                        connreply.replytimer.cancel()
-                                        connreply.makereply_close(actionid, 'OK', reply)
-                                    del self.waiting_actionid[actionid]
-
-                        except Exception, e:
-                            self.log.exception('(command reply)')
-                            print e
-                        try:
-                            self.amiresponse_follows(event)
-                        except Exception:
-                            self.log.exception('response_follows (%s) (%s)' % (event, nocolon))
-
-                    elif response == 'Success':
-                        try:
-                            self.amiresponse_success(event)
-                        except Exception:
-                            self.log.exception('response_success (%s) (%s)' % (event, nocolon))
-
-                    elif response == 'Error':
                         if 'ActionID' in event:
                             actionid = event['ActionID']
                             if actionid in self.waiting_actionid:
-                                connreply = self.waiting_actionid.get(actionid)
+                                connreply = self.waiting_actionid[actionid]
                                 if connreply is not None:
                                     connreply.replytimer.cancel()
-                                    connreply.makereply_close(actionid, 'KO')
+                                    connreply.makereply_close(actionid, 'OK', reply)
                                 del self.waiting_actionid[actionid]
-                        try:
-                            self.amiresponse_error(event)
-                        except Exception:
-                            self.log.exception('response_error (%s) (%s)' % (event, nocolon))
-                    else:
-                        self.log.warning('Response=%s (untracked) : %s' % (response, event))
 
-                elif len(event) > 0:
-                    self.log.warning('XXX: %s' % (event))
+                    except Exception, e:
+                        self.log.exception('(command reply)')
+                        print e
+                    try:
+                        self.amiresponse_follows(event)
+                    except Exception:
+                        self.log.exception('response_follows (%s) (%s)' % (event, nocolon))
+
+                elif response == 'Success':
+                    try:
+                        self.amiresponse_success(event)
+                    except Exception:
+                        self.log.exception('response_success (%s) (%s)' % (event, nocolon))
+
+                elif response == 'Error':
+                    if 'ActionID' in event:
+                        actionid = event['ActionID']
+                        if actionid in self.waiting_actionid:
+                            connreply = self.waiting_actionid.get(actionid)
+                            if connreply is not None:
+                                connreply.replytimer.cancel()
+                                connreply.makereply_close(actionid, 'KO')
+                            del self.waiting_actionid[actionid]
+                    try:
+                        self.amiresponse_error(event)
+                    except Exception:
+                        self.log.exception('response_error (%s) (%s)' % (event, nocolon))
                 else:
-                    self.log.warning('Other : %s' % (event))
+                    self.log.warning('Response=%s (untracked) : %s' % (response, event))
+            elif len(event) > 0:
+                self.log.warning('XXX: %s' % (event))
+            else:
+                self.log.warning('Other : %s' % (event))
         event_count = len(events)
         if event_count > 200:
             self.log.info('handled %d (> 200) events' % (event_count))
 
-    def handle_ami_function(self, evfunction, this_event):
+    def handle_ami_function(self, evfunction, event):
         """
         Handles the AMI events related to a given function (i.e. containing the Event field).
         It roughly only dispatches them to the relevant commandset's methods.
         """
         try:
-            if 'Privilege' in this_event:
-                this_event.pop('Privilege')
-            if (evfunction in ami_def.evfunction_to_method_name):
+            if evfunction in ami_def.evfunction_to_method_name:
                 methodname = ami_def.evfunction_to_method_name.get(evfunction)
                 if hasattr(self._ctiserver.commandclass, methodname):
-                    getattr(self._ctiserver.commandclass, methodname)(this_event)
+                    getattr(self._ctiserver.commandclass, methodname)(event)
                 else:
-                    self.log.warning('this event (%s) is tracked but no %s method is defined : %s'
-                                     % (evfunction, methodname, this_event))
-            else:
-                self.log.warning('this event (%s) is not tracked : %s'
-                                 % (evfunction, this_event))
-
+                    self.log.warning('No matching method found (%s): %s'
+                                     % (methodname, event))
         except Exception:
-            self.log.exception('%s : event %s' % (evfunction, this_event))
+            self.log.exception('%s : event %s' % (evfunction, event))
 
     def amiresponse_success(self, event):
-        if 'ActionID' in event:
-            actionid = event.pop('ActionID')
-        else:
+        actionid = event.get('ActionID')
+        if not actionid:
             self.log.info('amiresponse_success (no ActionID) %s' % event)
-            return
-
-        if actionid in self.actionids:
+        elif actionid not in self.actionids:
+            self.log.warning('amiresponse_success %s (no record) : %s'
+                             % (actionid, event))
+        else:
             properties = self.actionids.pop(actionid)
-            mode = properties.pop('mode')
+            mode = properties['mode']
             if mode == 'newchannel':
-                value = event.pop('Value')
-                if value:
-                    # self.log.info('amiresponse_success %s %s : %s %s : %s'
-                    # % (actionid, mode, value, properties, event))
-                    (channel, dummyvarname) = properties.get('amiargs')
-                    self.innerdata.autocall(channel, value)
-                    # we tell the original requester of the ipbxcommand action
-                    # about the channel he actually created
-                    if value in self.originate_actionids:
-                        request = self.originate_actionids[value].get('request')
-                        cn = request.get('requester')
-                        cn.reply({'class': 'ipbxcommand',
-                                  'autocall_channel': channel,
-                                  'command': request.get('ipbxcommand'),
-                                  'replyid': request.get('commandid')})
+                self._handle_newchannel_success(event, properties)
             elif mode == 'useraction':
-                self.log.info('amiresponse_success %s %s : %s - %s'
-                              % (actionid, mode, event, properties))
-                request = properties.get('request')
-                cn = request.get('requester')
-                try:
-                    cn.reply({'class': 'ipbxcommand',
-                              'response': 'ok',
-                              'command': request.get('ipbxcommand'),
-                              'replyid': request.get('commandid')})
-                except Exception:
-                    # when requester is not connected any more ...
-                    pass
-
-                if 'amicommand' in properties:
-                    if properties['amicommand'] in ['originate',
-                                                    'origapplication',
-                                                    'txfax']:
-                        self.originate_actionids[actionid] = properties
-                    elif ('mailboxcount' in properties['amicommand']
-                          and 'amiargs' in properties
-                          and len(properties['amiargs']) > 1):
-                        # The context is not part of this event, it's only part
-                        # of the request when using track_and_execute with an
-                        # extra argument
-                        context = properties['amiargs'][1]
-                        fullmailbox = event['Mailbox'] + '@' + context
-                        self.innerdata.voicemailupdate(fullmailbox,
-                                                       event['NewMessages'],
-                                                       event['OldMessages'])
+                self._handle_useraction_success(event, actionid, properties, mode)
             elif mode == 'extension':
-                msg = event.pop('Message')
-                if msg == 'Extension Status':
-                    self._ctiserver.commandclass.amiresponse_extensionstatus(event)
-                else:
-                    self.log.warning('amiresponse_success %s %s : %s - %s - unknown msg %s'
-                                     % (actionid, mode, event, properties, msg))
+                self._handle_extension_success(event, actionid, properties, mode)
             elif mode == 'init':
                 self.log.info('amiresponse_success %s %s : %s'
                               % (actionid, mode, event))
             elif mode == 'presence':
                 pass
             elif mode == 'vmupdate':
-                try:
-                    self.innerdata.voicemailupdate(
-                        event['Mailbox'] + '@' + properties['amiargs'][1],
-                        event['NewMessages'],
-                        event['OldMessages'])
-                except KeyError:
-                    self.log.warning('Could not update voicemail info: %s', event)
+                self._handle_vmupdate_success(event, properties)
             else:
                 self.log.info('amiresponse_success %s %s (?) : %s'
                               % (actionid, mode, event))
-        else:
-            self.log.warning('amiresponse_success %s (no record) : %s'
-                             % (actionid, event))
-        return
 
     def amiresponse_error(self, event):
-        if 'ActionID' in event:
-            actionid = event.pop('ActionID')
-        else:
+        actionid = event.get('ActionID')
+        if not actionid:
             self.log.warning('amiresponse_error (no ActionID) %s' % event)
-            return
-
-        if actionid in self.actionids:
+        elif actionid not in self.actionids:
+            self.log.warning('amiresponse_error %s (no record) : %s'
+                             % (actionid, event))
+        else:
             properties = self.actionids.pop(actionid)
-            mode = properties.pop('mode')
+            mode = properties['mode']
             self.log.warning('amiresponse_error %s %s : %s - %s'
                              % (actionid, mode, event, properties))
             if mode == 'useraction':
@@ -373,41 +307,99 @@ class AMI:
                           'response': 'ko',
                           'command': request.get('ipbxcommand'),
                           'replyid': request.get('commandid')})
-        else:
-            self.log.warning('amiresponse_error %s (no record) : %s'
-                             % (actionid, event))
-        return
 
     def amiresponse_follows(self, event):
-        if 'ActionID' in event:
-            actionid = event.pop('ActionID')
-        else:
+        actionid = event.get('ActionID')
+        if not actionid:
             self.log.warning('amiresponse_follows (no ActionID) %s' % event)
-            return
-
-        if actionid in self.actionids:
-            properties = self.actionids.pop(actionid)
-            mode = properties.pop('mode')
-            self.log.info('amiresponse_follows %s %s : %s - %s'
-                          % (actionid, mode, event, properties))
-        else:
+        elif actionid not in self.actionids:
             self.log.warning('amiresponse_follows %s (no record) : %s'
                              % (actionid, event))
+        else:
+            properties = self.actionids.pop(actionid)
+            mode = properties['mode']
+            self.log.info('amiresponse_follows %s %s : %s - %s'
+                          % (actionid, mode, event, properties))
 
     def execute_and_track(self, actionid, params):
         conn_ami = self.amicl
-        amicommand = params.get('amicommand')
-        amiargs = params.get('amiargs')
         mode = params.get('mode')
-        if conn_ami:
+        if conn_ami and 'amicommand' in params:
+            amicommand = params['amicommand']
             if hasattr(conn_ami, amicommand):
                 conn_ami.actionid = actionid
                 self.actionids[actionid] = params
-                ret = getattr(conn_ami, amicommand)(* amiargs)
+                amiargs = params.get('amiargs')
+                return getattr(conn_ami, amicommand)(* amiargs)
             else:
-                self.log.warning('mode %s : no such AMI command %s' % (mode, amicommand))
-                ret = 'unknown'
+                self.log.warning('mode %s : no such AMI command %s' %
+                                 (mode, amicommand))
+                return 'unknown'
         else:
             self.log.warning('mode %s : no AMI connection' % mode)
-            ret = 'noconn'
-        return ret
+            return 'noconn'
+
+    def _handle_newchannel_success(self, event, properties):
+        if 'Value' in event and event['Value']:
+            value = event['Value']
+            channel, dummyvarname = properties.get('amiargs')
+            self.innerdata.autocall(channel, value)
+            if value in self.originate_actionids:
+                request = self.originate_actionids[value].get('request')
+                cn = request.get('requester')
+                cn.reply({'class': 'ipbxcommand',
+                          'autocall_channel': channel,
+                          'command': request.get('ipbxcommand'),
+                          'replyid': request.get('commandid')})
+
+    def _handle_extension_success(self, event, actionid, properties, mode):
+        msg = event.get('Message')
+        if msg and msg == 'Extension Status':
+            self._ctiserver.commandclass.amiresponse_extensionstatus(event)
+        else:
+            self.log.warning('amiresponse_success %s %s : %s - %s - unknown msg %s' %
+                             (actionid, mode, event, properties, msg))
+
+    def _handle_vmupdate_success(self, event, properties):
+        try:
+            mailbox = event['Mailbox'] + '@' + properties['amiargs'][1]
+            self.innerdata.voicemailupdate(mailbox,
+                                           event['NewMessages'],
+                                           event['OldMessages'])
+        except KeyError:
+            self.log.warning('Could not update voicemail info: %s', event)
+
+    def _handler_useraction_success(self, event, actionid, properties, mode):
+        self.log.info('amiresponse_success %s %s : %s - %s'
+                      % (actionid, mode, event, properties))
+        request = properties.get('request')
+        cn = request.get('requester')
+        try:
+            cn.reply({'class': 'ipbxcommand',
+                      'response': 'ok',
+                      'command': request.get('ipbxcommand'),
+                      'replyid': request.get('commandid')})
+        except Exception:
+            # when requester is not connected any more ...
+            pass
+
+        if 'amicommand' in properties:
+            if properties['amicommand'] in ['originate',
+                                            'origapplication',
+                                            'txfax']:
+                self.originate_actionids[actionid] = properties
+            elif ('mailboxcount' in properties['amicommand']
+                  and 'amiargs' in properties
+                  and len(properties['amiargs']) > 1):
+                # The context is not part of this event, it's only part
+                # of the request when using track_and_execute with an
+                # extra argument
+                context = properties['amiargs'][1]
+                fullmailbox = event['Mailbox'] + '@' + context
+                self.innerdata.voicemailupdate(fullmailbox,
+                                               event['NewMessages'],
+                                               event['OldMessages'])
+
+    @classmethod
+    def make_actionid(cls):
+        return ''.join(random.sample(cls.ALPHANUMS, 10))
