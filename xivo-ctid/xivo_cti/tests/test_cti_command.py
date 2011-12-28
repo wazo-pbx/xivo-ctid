@@ -62,7 +62,10 @@ class Test(unittest.TestCase):
         xws = Mock()
         xws.__init__(return_value=xws_inst)
         cti_command.xivo_webservices.xws = xws
-        cti_config.cconf = Mock()
+        cti_config.Config.get_instance = Mock()
+        config = Mock(cti_config.Config)
+        config.ipwebs = 'localhost'
+        cti_config.Config.get_instance.return_value = config
 
         conn = Mock()
         conn.requester = ('test_requester', 3)

@@ -383,15 +383,16 @@ class InternalDirectoryDataSource(object):
         except Exception:
             conn_mgr.put()
             raise
-    
+
     def _new_map_fun(self):
         def aux(row):
             return dict(izip(self._key_mapping, row))
         return aux
-    
+
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        db_uri = cti_config.cconf.getconfig('ipbxes')[ctid.myipbxid]['userfeatures_db_uri']
+        db_uri = (cti_config.Config.get_instance()
+                  .getconfig('ipbxes')[ctid.myipbxid]['userfeatures_db_uri'])
         key_mapping = _get_key_mapping(contents)
         return cls(db_uri, key_mapping)
 

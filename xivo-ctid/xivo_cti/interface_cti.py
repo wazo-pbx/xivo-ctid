@@ -46,8 +46,8 @@ class serialJson():
 class CTI(Interfaces):
     kind = 'CTI'
     sep = '\n'
-    def __init__(self, ctid):
-        Interfaces.__init__(self, ctid)
+    def __init__(self, ctiserver):
+        Interfaces.__init__(self, ctiserver)
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
@@ -128,7 +128,7 @@ class CTI(Interfaces):
         Change the user's status to disconnected
         """
         try:
-            innerdata = self.ctid.safe[ipbxid]
+            innerdata = self._ctiserver.safe[ipbxid]
             userstatus = innerdata.xod_status['users'][id]
             innerdata.handle_cti_stack('set', ('users', 'updatestatus', id))
             userstatus['availstate'] = 'disconnected'

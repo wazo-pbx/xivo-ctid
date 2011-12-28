@@ -22,8 +22,8 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Interfaces():
-    def __init__(self, ctid):
-        self.ctid = ctid
+    def __init__(self, ctiserver):
+        self._ctiserver = ctiserver
         self.logintimer = None
         self.connid = None
         self.requester = None

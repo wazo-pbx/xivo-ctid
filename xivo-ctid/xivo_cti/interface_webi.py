@@ -68,8 +68,8 @@ UPDATE_REQUESTS = [
 class WEBI(Interfaces):
     kind = 'WEBI'
     sep = '\\n' # this instead of \n is done in order to match wrong WEBI implementation
-    def __init__(self, ctid):
-        Interfaces.__init__(self, ctid)
+    def __init__(self, ctiserver):
+        Interfaces.__init__(self, ctiserver)
         return
 
     def connected(self, connid):
@@ -95,22 +95,22 @@ class WEBI(Interfaces):
                 break
             try:
                 if usefulmsg == 'xivo[daemon,reload]':
-                    self.ctid.askedtoquit = True
+                    self._ctiserver.askedtoquit = True
                     self.log.info('WEBI requested (reload) %s' % usefulmsg)
 
                 elif usefulmsg in UPDATE_REQUESTS:
-                    self.ctid.update_userlist[self.ipbxid].append(usefulmsg)
+                    self._ctiserver.update_userlist[self.ipbxid].append(usefulmsg)
                     self.log.info('WEBI requested (update) %s' % usefulmsg)
 
                 elif usefulmsg in AMI_REQUESTS:
-                    self.ctid.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
+                    self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
                     self.log.info('WEBI requested (ami) %s' % usefulmsg)
                     closemenow = False
 
                 else:
                     recomp = re.compile('sip show peer .* load')
                     if re.match(recomp, usefulmsg):
-                        self.ctid.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
+                        self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
                         self.log.info('WEBI requested (ami RE) %s' % usefulmsg)
                         closemenow = False
                     else:
@@ -143,8 +143,8 @@ class WEBI(Interfaces):
                 self.log.info('did a WEBI reply %s for %s' % (status, actionid))
             except Exception:
                 self.log.warning('failed a WEBI reply %s for %s (disconnected)' % (status, actionid))
-            if self.connid in self.ctid.fdlist_established:
-                del self.ctid.fdlist_established[self.connid]
+            if self.connid in self._ctiserver.fdlist_established:
+                del self._ctiserver.fdlist_established[self.connid]
             self.connid.close()
         else:
             self.log.warning('failed a WEBI reply %s for %s (connid None)' % (status, actionid))

@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -29,34 +29,38 @@ import string
 import threading
 import time
 
-from xivo_cti import xivo_ami
-from xivo_cti import asterisk_ami_definitions
+from xivo_cti import xivo_ami, cti_config
+from xivo_cti import asterisk_ami_definitions as ami_def
 
-__alphanums__ = string.uppercase + string.lowercase + string.digits
+ALPHANUMS = string.uppercase + string.lowercase + string.digits
+
 
 class AMI:
     kind = 'AMI'
+    LINE_SEPARATOR = '\r\n'
+    EVENT_SEPARATOR = '\r\n\r\n'
+    FIELD_SEPARATOR = ': '
 
-    def __init__(self, ctid, ipbxid, config):
-        self.ctid = ctid
+    def __init__(self, ctiserver, ipbxid):
+        self._ctiserver = ctiserver
         self.ipbxid = ipbxid
-        self.innerdata = self.ctid.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
         self.log = logging.getLogger('interface_ami(%s)' % self.ipbxid)
-
-        self.save_for_next_packet_events = ''
+        self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
-        self.ipaddress = config.get('ipaddress', '127.0.0.1')
-        self.ipport = int(config.get('ipport', 5038))
-        self.ami_login = config.get('username', 'xivouser')
-        self.ami_pass = config.get('password', 'xivouser')
+        config = cti_config.Config.get_instance()
+        ipbxconfig = (config.getconfig('ipbxes').get(self.ipbxid)
+                      .get('ipbx_connection'))
+        self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
+        self.ipport = int(ipbxconfig.get('ipport', 5038))
+        self.ami_login = ipbxconfig.get('username', 'xivouser')
+        self.ami_pass = ipbxconfig.get('password', 'xivouser')
         self.timeout_queue = Queue.Queue()
         self.amicl = None
-        return
 
     def connect(self):
-        ret = None
         try:
             self.amicl = xivo_ami.AMIClass(self.ipbxid,
                                            self.ipaddress, self.ipport,
@@ -64,48 +68,44 @@ class AMI:
                                            True)
             self.amicl.connect()
             self.amicl.login()
-            ret = self.amicl.sock
+            return self.amicl.sock
         except Exception:
             self.log.exception('unable to connect/login')
-        return ret
 
     def disconnect(self):
         self.amicl.sock.close()
         self.amicl = None
-        return
 
     def connected(self):
-        ret = None
         if self.amicl and self.amicl.sock:
             try:
-                ret = self.amicl.sock.getpeername()
+                return self.amicl.sock.getpeername()
             except Exception:
-                pass
-        return ret
+                return None
 
     def initrequest(self, phaseid):
         # 'CoreSettings', 'CoreStatus', 'ListCommands',
-        for initrequest in asterisk_ami_definitions.manager_commands.get('fetchstatuses'):
+        for initrequest in ami_def.manager_commands.get('fetchstatuses'):
             actionid = 'init_%s:%s-%d' % (initrequest.lower(),
                                           phaseid,
                                           int(time.time()))
             params = {
-                'mode' : 'init',
-                'amicommand' : 'sendcommand',
-                'amiargs' : (initrequest.lower(), [])
+                'mode': 'init',
+                'amicommand': 'sendcommand',
+                'amiargs': (initrequest.lower(), [])
                 }
-            ipbxreply = self.execute_and_track(actionid, params)
+            self.execute_and_track(actionid, params)
         self.amicl.setactionid('init_close_%s' % phaseid)
-        return
 
     def cb_timer(self, *args):
         try:
-            self.log.info('cb_timer (timer finished at %s) %s' % (time.asctime(), args))
+            self.log.info('cb_timer (timer finished at %s) %s' %
+                          (time.asctime(), args))
             self.timeout_queue.put(args)
-            os.write(self.ctid.pipe_queued_threads[1], 'ami:%s\n' % self.ipbxid)
+            os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
+                      self.ipbxid)
         except Exception:
             self.log.exception('cb_timer %s' % args)
-        return
 
     def checkqueue(self):
         self.log.info('entering checkqueue')
@@ -125,117 +125,108 @@ class AMI:
         return ncount
 
     def delayed_action(self, usefulmsg, replyto):
-        actionid = ''.join(random.sample(__alphanums__, 10))
-        self.amicl.sendcommand('Command', [('Command', usefulmsg), ('ActionID', actionid)])
+        actionid = ''.join(random.sample(ALPHANUMS, 10))
+        self.amicl.sendcommand('Command', [('Command', usefulmsg),
+                                           ('ActionID', actionid)])
         self.waiting_actionid[actionid] = replyto
         replyto.replytimer = threading.Timer(2, self.cb_timer,
-                                             ({'action' : 'commandrequest',
-                                               'properties' : actionid },))
+                                             ({'action': 'commandrequest',
+                                               'properties': actionid},))
         replyto.replytimer.setName('Thread-ami-%s' % actionid)
         replyto.replytimer.start()
-        return
 
-    def handle_event(self, idata):
+    def handle_event(self, input_data):
         """
         Handles the AMI events occuring on Asterisk.
         If the Event field is there, calls the handle_ami_function() function.
         """
-        full_idata = self.save_for_next_packet_events + idata
-        evlist = full_idata.split('\r\n\r\n')
-        self.save_for_next_packet_events = evlist.pop()
+        full_idata = self._input_buffer + input_data
+        events = full_idata.split(self.EVENT_SEPARATOR)
+        self._input_buffer = events.pop()
 
-        for ievt in evlist:
+        for raw_event in events:
             try:
-                evt = ievt.decode('utf8')
+                decoded_event = raw_event.decode('utf8')
             except Exception:
-                self.log.exception('could not decode event %r' % (ievt))
+                self.log.exception('could not decode event %r' % (raw_event))
                 continue
-            this_event = {}
+            event = {}
             nocolon = []
-            for myline in evt.split('\r\n'):
-                if myline.find('\n') < 0:
-                    if myline != '--END COMMAND--': # occurs when requesting "module reload xxx.so" for instance
-                        myfieldvalue = myline.split(': ', 1)
-                        if len(myfieldvalue) == 2:
-                            this_event[myfieldvalue[0]] = myfieldvalue[1]
-                        else:
-                            if myline.startswith('Asterisk Call Manager'):
-                                self.log.info('%s' % (myline))
-                            elif myline == 'ReportBlock:':
-                                # single line in RTCPSent events - ignoring it for the time being
-                                pass
-                            else:
-                                # comment these lines out, while RTCPSent and RTCPReceived events are crappy
-                                # self.log.warning('unable to parse <%s> : %s'
-                                # % (myline, evt.split('\r\n')))
-                                pass
+            for line in decoded_event.split(self.LINE_SEPARATOR):
+                if line.find('\n') < 0:
+                    if line != '--END COMMAND--':  # occurs when requesting "module reload xxx.so"
+                        key_value = line.split(self.FIELD_SEPARATOR, 1)
+                        if len(key_value) == 2:
+                            event[key_value[0]] = key_value[1]
+                        elif line.startswith('Asterisk Call Manager'):
+                            self.log.info('%s' % (line))
                 else:
-                    nocolon.append(myline)
+                    nocolon.append(line)
 
             if len(nocolon) > 1:
                 self.log.warning('nocolon is %s' % (nocolon))
 
-            evfunction = this_event.pop('Event', None)
-            # self.log.info('(all)  %s  : %s' % (evfunction, this_event))
-            if evfunction is not None:
-                for ik, iv in self.ctid.fdlist_established.iteritems():
-                    if not isinstance(iv, str) and iv.kind == 'INFO' and iv.dumpami_enable:
-                        todisp = this_event
-                        efn = evfunction
-                        if iv.dumpami_enable == ['all'] or efn in iv.dumpami_enable:
+            if 'Event' in event and event['Event'] is not None:
+                event_name = event['Event']
+                for ik, interface in self._ctiserver.fdlist_established.iteritems():
+                    if not isinstance(interface, str) and interface.kind == 'INFO' and interface.dumpami_enable:
+                        if interface.dumpami_enable == ['all'] or event_name in interface.dumpami_enable:
                             doallow = True
-                            if iv.dumpami_disable and efn in iv.dumpami_disable:
+                            if interface.dumpami_disable and event_name in interface.dumpami_disable:
                                 doallow = False
                             if doallow:
-                                ik.sendall('%.3f %s %s %s\n' % (time.time(), self.ipbxid, efn, todisp))
-                self.handle_ami_function(evfunction, this_event)
+                                ik.sendall('%.3f %s %s %s\n' %
+                                           (time.time(),
+                                            self.ipbxid,
+                                            event_name,
+                                            event))
+                self.handle_ami_function(event_name, event)
 
-                if evfunction not in ['Newexten', 'Newchannel', 'Newstate', 'Newcallerid']:
+                if event_name not in ['Newexten',
+                                      'Newchannel',
+                                      'Newstate',
+                                      'Newcallerid']:
                     pass
-                    # verboselog('%s %s' % (self.ipbxid, this_event), True, False)
-            else: # {
-                response = this_event.pop('Response', None)
-                if response is not None:
-                    if response == 'Follows' and this_event.get('Privilege') == 'Command':
+            else:
+                if 'Response' in event and event['Response'] is not None:
+                    response = event['Response']
+                    if (response == 'Follows' and 'Privilege' in event
+                            and event['Privilege'] == 'Command'):
                         reply = []
                         try:
-                            for noc in nocolon:
-                                arggs = noc.split('\n')
-                                for toremove in ['', '--END COMMAND--']:
-                                    while toremove in arggs:
-                                        arggs.remove(toremove)
-                                if arggs:
-                                    self.log.info('Response : %s' % (arggs))
-                                    for argg in arggs:
-                                        reply.append(argg)
+                            for line in nocolon:
+                                to_ignore = ('', '--END COMMAND--')
+                                args = [a for a in line.split('\n') if a not in to_ignore]
+                                reply.extend(args)
+                                if len(args):
+                                    self.log.info('Response : %s' % (args))
 
-                            if 'ActionID' in this_event:
-                                actionid = this_event.get('ActionID')
+                            if 'ActionID' in event:
+                                actionid = event['ActionID']
                                 if actionid in self.waiting_actionid:
-                                    connreply = self.waiting_actionid.get(actionid)
+                                    connreply = self.waiting_actionid[actionid]
                                     if connreply is not None:
                                         connreply.replytimer.cancel()
                                         connreply.makereply_close(actionid, 'OK', reply)
                                     del self.waiting_actionid[actionid]
 
                         except Exception, e:
-                            # self.log.exception('(command reply to %s, %s)' % (connreply, actionid))
                             self.log.exception('(command reply)')
                             print e
                         try:
-                            self.amiresponse_follows(this_event)
+                            self.amiresponse_follows(event)
                         except Exception:
-                            self.log.exception('response_follows (%s) (%s)' % (this_event, nocolon))
+                            self.log.exception('response_follows (%s) (%s)' % (event, nocolon))
 
                     elif response == 'Success':
                         try:
-                            self.amiresponse_success(this_event)
+                            self.amiresponse_success(event)
                         except Exception:
-                            self.log.exception('response_success (%s) (%s)' % (this_event, nocolon))
+                            self.log.exception('response_success (%s) (%s)' % (event, nocolon))
 
                     elif response == 'Error':
-                        if 'ActionID' in this_event:
-                            actionid = this_event.get('ActionID')
+                        if 'ActionID' in event:
+                            actionid = event['ActionID']
                             if actionid in self.waiting_actionid:
                                 connreply = self.waiting_actionid.get(actionid)
                                 if connreply is not None:
@@ -243,21 +234,19 @@ class AMI:
                                     connreply.makereply_close(actionid, 'KO')
                                 del self.waiting_actionid[actionid]
                         try:
-                            self.amiresponse_error(this_event)
+                            self.amiresponse_error(event)
                         except Exception:
-                            self.log.exception('response_error (%s) (%s)' % (this_event, nocolon))
+                            self.log.exception('response_error (%s) (%s)' % (event, nocolon))
                     else:
-                        self.log.warning('Response=%s (untracked) : %s' % (response, this_event))
+                        self.log.warning('Response=%s (untracked) : %s' % (response, event))
 
-                elif len(this_event) > 0:
-                    self.log.warning('XXX: %s' % (this_event))
+                elif len(event) > 0:
+                    self.log.warning('XXX: %s' % (event))
                 else:
-                    self.log.warning('Other : %s' % (this_event))
-            # }
-        nevts = len(evlist)
-        if nevts > 200:
-            self.log.info('handled %d (> 200) events' % (nevts))
-        return
+                    self.log.warning('Other : %s' % (event))
+        event_count = len(events)
+        if event_count > 200:
+            self.log.info('handled %d (> 200) events' % (event_count))
 
     def handle_ami_function(self, evfunction, this_event):
         """
@@ -267,10 +256,10 @@ class AMI:
         try:
             if 'Privilege' in this_event:
                 this_event.pop('Privilege')
-            if (evfunction in asterisk_ami_definitions.evfunction_to_method_name):
-                methodname = asterisk_ami_definitions.evfunction_to_method_name.get(evfunction)
-                if hasattr(self.ctid.commandclass, methodname):
-                    getattr(self.ctid.commandclass, methodname)(this_event)
+            if (evfunction in ami_def.evfunction_to_method_name):
+                methodname = ami_def.evfunction_to_method_name.get(evfunction)
+                if hasattr(self._ctiserver.commandclass, methodname):
+                    getattr(self._ctiserver.commandclass, methodname)(this_event)
                 else:
                     self.log.warning('this event (%s) is tracked but no %s method is defined : %s'
                                      % (evfunction, methodname, this_event))
@@ -280,8 +269,6 @@ class AMI:
 
         except Exception:
             self.log.exception('%s : event %s' % (evfunction, this_event))
-        return
-
 
     def amiresponse_success(self, event):
         if 'ActionID' in event:
@@ -303,22 +290,22 @@ class AMI:
                     # we tell the original requester of the ipbxcommand action
                     # about the channel he actually created
                     if value in self.originate_actionids:
-                        request = self.originate_actionids.get(value).get('request')
+                        request = self.originate_actionids[value].get('request')
                         cn = request.get('requester')
-                        cn.reply( { 'class' : 'ipbxcommand',
-                                    'autocall_channel' : channel,
-                                    'command' : request.get('ipbxcommand'),
-                                    'replyid' : request.get('commandid') } )
+                        cn.reply({'class': 'ipbxcommand',
+                                  'autocall_channel': channel,
+                                  'command': request.get('ipbxcommand'),
+                                  'replyid': request.get('commandid')})
             elif mode == 'useraction':
                 self.log.info('amiresponse_success %s %s : %s - %s'
                               % (actionid, mode, event, properties))
                 request = properties.get('request')
                 cn = request.get('requester')
                 try:
-                    cn.reply( { 'class' : 'ipbxcommand',
-                                'response' : 'ok',
-                                'command' : request.get('ipbxcommand'),
-                                'replyid' : request.get('commandid') } )
+                    cn.reply({'class': 'ipbxcommand',
+                              'response': 'ok',
+                              'command': request.get('ipbxcommand'),
+                              'replyid': request.get('commandid')})
                 except Exception:
                     # when requester is not connected any more ...
                     pass
@@ -340,12 +327,9 @@ class AMI:
                                                        event['NewMessages'],
                                                        event['OldMessages'])
             elif mode == 'extension':
-                # this is the reply to 'ExtensionState'
-                # too much verbose log output
-                # self.log.info('amiresponse_success %s %s : %s - %s' % (actionid, mode, event, properties))
                 msg = event.pop('Message')
                 if msg == 'Extension Status':
-                    self.ctid.commandclass.amiresponse_extensionstatus(event)
+                    self._ctiserver.commandclass.amiresponse_extensionstatus(event)
                 else:
                     self.log.warning('amiresponse_success %s %s : %s - %s - unknown msg %s'
                                      % (actionid, mode, event, properties, msg))
@@ -353,8 +337,6 @@ class AMI:
                 self.log.info('amiresponse_success %s %s : %s'
                               % (actionid, mode, event))
             elif mode == 'presence':
-                # self.log.info('amiresponse_success %s %s : %s' % (actionid, mode, event))
-                # too verbose, since occurs each time a user changes its presence
                 pass
             elif mode == 'vmupdate':
                 try:
@@ -367,7 +349,6 @@ class AMI:
             else:
                 self.log.info('amiresponse_success %s %s (?) : %s'
                               % (actionid, mode, event))
-            # print 'actionids left', self.actionids.keys()
         else:
             self.log.warning('amiresponse_success %s (no record) : %s'
                              % (actionid, event))
@@ -388,16 +369,10 @@ class AMI:
             if mode == 'useraction':
                 request = properties.get('request')
                 cn = request.get('requester')
-                cn.reply({'class' : 'ipbxcommand',
-                          'response' : 'ko',
-                          'command' : request.get('ipbxcommand'),
-                          'replyid' : request.get('commandid')})
-                # at this (time) point of code complexity, it does not make sense
-                # sending back the AMI event message 'as is', even if it is written
-                # 'no such channel', since maybe the asterisk command behind is not
-                # known ... for the time being, the best thing is to grep the commandid
-                # from the CTI server log file
-            # print 'actionids left', self.actionids.keys()
+                cn.reply({'class': 'ipbxcommand',
+                          'response': 'ko',
+                          'command': request.get('ipbxcommand'),
+                          'replyid': request.get('commandid')})
         else:
             self.log.warning('amiresponse_error %s (no record) : %s'
                              % (actionid, event))
@@ -415,11 +390,9 @@ class AMI:
             mode = properties.pop('mode')
             self.log.info('amiresponse_follows %s %s : %s - %s'
                           % (actionid, mode, event, properties))
-            # print 'actionids left', self.actionids.keys()
         else:
             self.log.warning('amiresponse_follows %s (no record) : %s'
                              % (actionid, event))
-        return
 
     def execute_and_track(self, actionid, params):
         conn_ami = self.amicl

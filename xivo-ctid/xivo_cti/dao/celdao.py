@@ -70,7 +70,7 @@ class CELChannel(object):
     def peers_uniqueids(self):
         uniqueid = self._chan_start_event.uniqueid
         linked_id = self.linked_id()
-        for config in cti_config.cconf.getconfig('ipbxes').itervalues():
+        for config in cti_config.Config.get_instance().getconfig('ipbxes').itervalues():
             cel_uri = config['cdr_db_uri']
             celdao = CELDAO.new_from_uri(cel_uri)
             cel_entries_with_uniqueid = celdao.cels_by_linked_id(linked_id)
@@ -79,7 +79,7 @@ class CELChannel(object):
     def peers_exten(self):
         try:
             peers_unique_id = self.peers_uniqueids().pop()
-            for config in cti_config.cconf.getconfig('ipbxes').itervalues():
+            for config in cti_config.Config.get_instance().getconfig('ipbxes').itervalues():
                 cel_uri = config['cdr_db_uri']
                 celdao = CELDAO.new_from_uri(cel_uri)
                 peers_channel = celdao.channel_by_unique_id(peers_unique_id)

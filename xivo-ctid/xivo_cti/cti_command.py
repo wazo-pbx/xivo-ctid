@@ -87,18 +87,19 @@ IPBXCOMMANDS = [
 
 XIVOVERSION_NUM = '1.2'
 XIVOVERSION_NAME = 'skaro'
-__alphanums__ = string.uppercase + string.lowercase + string.digits
+ALPHANUMS = string.uppercase + string.lowercase + string.digits
+
 
 class Command:
     def __init__(self, connection, thiscommand):
+        self._config = cti_config.Config.get_instance()
         self.connection = connection
-        self.ctid = self.connection.ctid
+        self._ctiserver = self.connection._ctiserver
         self.commanddict = thiscommand
         self.othermessages = list()
         self._queue_statistic_manager = QueueStatisticManager()
         self._queue_statistic_encoder = QueueStatisticEncoder()
         self.log = logging.getLogger('cti_command(%s:%d)' % self.connection.requester)
-        return
 
     def parse(self):
         self.command = self.commanddict.get('class', None)
@@ -106,16 +107,16 @@ class Command:
 
         self.ipbxid = self.connection.connection_details.get('ipbxid')
         self.userid = self.connection.connection_details.get('userid')
-        self.innerdata = self.ctid.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
 
         # identifiers for the requester
         self.ripbxid = self.commanddict.get('ipbxid', self.ipbxid)
         self.ruserid = self.commanddict.get('userid', self.userid)
-        self.rinnerdata = self.ctid.safe.get(self.ripbxid)
+        self.rinnerdata = self._ctiserver.safe.get(self.ripbxid)
 
         # identifiers for the requested
         self.tipbxid = self.commanddict.get('tipbxid', self.ipbxid)
-        self.tinnerdata = self.ctid.safe.get(self.tipbxid)
+        self.tinnerdata = self._ctiserver.safe.get(self.tipbxid)
 
         messagebase = { 'class' : self.command }
         if self.commandid:
@@ -204,8 +205,8 @@ class Command:
 
         # user match
         if self.commanddict.get('userlogin'):
-            ipbxid = self.ctid.myipbxid
-            saferef = self.ctid.safe.get(ipbxid)
+            ipbxid = self._ctiserver.myipbxid
+            saferef = self._ctiserver.safe.get(ipbxid)
             self.log.info('searching user %s in %s'
                           % (self.commanddict.get('userlogin'), ipbxid))
             userid = saferef.user_find(self.commanddict.get('userlogin'),
@@ -223,7 +224,7 @@ class Command:
         self.connection.connection_details['prelogin'] = {
             'cticlientos' : whatsmyos,
             'version' : rcsversion,
-            'sessionid' : ''.join(random.sample(__alphanums__, 10))
+            'sessionid' : ''.join(random.sample(ALPHANUMS, 10))
             }
 
         reply = { 'xivoversion' : XIVOVERSION_NUM,
@@ -252,7 +253,7 @@ class Command:
         sessionid = cdetails.get('prelogin').get('sessionid')
 
         if ipbxid and userid:
-            ref_hashed_password = self.ctid.safe[ipbxid].user_get_hashed_password(userid, sessionid)
+            ref_hashed_password = self._ctiserver.safe[ipbxid].user_get_hashed_password(userid, sessionid)
             if ref_hashed_password != this_hashed_password:
                 self.log.warning('%s - wrong hashed password' % head)
                 return 'login_password'
@@ -260,7 +261,7 @@ class Command:
             self.log.warning('%s - undefined user : probably the login_id step failed' % head)
             return 'login_password'
 
-        reply = { 'capalist' : [self.ctid.safe[ipbxid].user_get_ctiprofile(userid)] }
+        reply = { 'capalist' : [self._ctiserver.safe[ipbxid].user_get_ctiprofile(userid)] }
         return reply
 
     def regcommand_login_capas(self):
@@ -298,7 +299,7 @@ class Command:
         self.log.info('%s for %s' % (head, cdetails))
 
         if self.userid.startswith('cs:'):
-            notifyremotelogin = threading.Timer(2, self.ctid.cb_timer,
+            notifyremotelogin = threading.Timer(2, self._ctiserver.cb_timer,
                                                 ({'action' : 'xivoremote',
                                                   'properties' : None },))
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
@@ -311,7 +312,7 @@ class Command:
 ##            return userinfo
 
         profileclient = self.innerdata.xod_config['users'].keeplist[self.userid].get('profileclient')
-        profilespecs = cti_config.cconf.getconfig('profiles').get(profileclient)
+        profilespecs = self._config.getconfig('profiles').get(profileclient)
 
         capastruct = {}
         summarycapas = {}
@@ -321,7 +322,7 @@ class Command:
                              'userstatus', 'phonestatus', 'channelstatus', 'agentstatus']:
                 if profilespecs.get(capakind):
                     tt = profilespecs.get(capakind)
-                    cfg_capakind = cti_config.cconf.getconfig(capakind)
+                    cfg_capakind = self._config.getconfig(capakind)
                     if cfg_capakind:
                         details = cfg_capakind.get(tt)
                     else:
@@ -361,7 +362,7 @@ class Command:
         cdetails = self.connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        # if self.ctid.safe[ipbxid].xod_status['users'][userid]['connection'] == 'yes':
+        # if self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] == 'yes':
         # return 'alreadythere'
         return
 
@@ -369,9 +370,9 @@ class Command:
         cdetails = self.connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        if capaid not in cti_config.cconf.getconfig('profiles').keys():
+        if capaid not in self._config.getconfig('profiles').keys():
             return 'unknownprofile'
-        if capaid != self.ctid.safe[ipbxid].xod_config['users'].keeplist[userid]['profileclient']:
+        if capaid != self._ctiserver.safe[ipbxid].xod_config['users'].keeplist[userid]['profileclient']:
             return 'wrongprofile'
         # XXX : too much users ?
         return
@@ -380,8 +381,8 @@ class Command:
         cdetails = self.connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self.ctid.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
-        self.ctid.safe[ipbxid].update_presence(userid, availstate)
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
+        self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
         # connection : os, version, sessionid, socket data, capaid
         # {'prelogin': {'cticlientos': 'X11', 'version': '1305641743-87aa765', 'sessionid': 'deyLicgThU'}}
         return
@@ -390,10 +391,10 @@ class Command:
         cdetails = self.connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self.ctid.safe[ipbxid].xod_status['users'][userid]['connection'] = None
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = None
         availstate = self.commanddict.get('availstate')
         # disconnected vs. invisible vs. recordstatus ?
-        self.ctid.safe[ipbxid].update_presence(userid, availstate)
+        self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
         return
 
     # end of login/logout related commands
@@ -416,7 +417,7 @@ class Command:
     def regcommand_actionfiche(self):
         reply = {}
         infos = self.commanddict.get('infos')
-        uri = cti_config.cconf.getconfig('ipbxes').get(self.ripbxid).get('cdr_db_uri')
+        uri = self._config.getconfig('ipbxes').get(self.ripbxid).get('cdr_db_uri')
         self.rinnerdata.fill_user_ctilog(uri,
                                          self.ruserid,
                                          'cticommand:actionfiche',
@@ -424,15 +425,13 @@ class Command:
         return reply
 
     def regcommand_featuresget(self):
-        reply = {}
-        z = xivo_webservices.xws(cti_config.cconf.ipwebs, 80)
+        z = xivo_webservices.xws(self._config.ipwebs, 80)
         z.connect()
         services = z.serviceget(self.ruserid)
         z.close()
         # looks like this nice information is in userfeatures
         services.get('userfeatures').pop('passwdclient')
-        reply = { 'userfeatures' : services.get('userfeatures') }
-        return reply
+        return {'userfeatures': services.get('userfeatures')}
 
     def regcommand_featuresput(self):
         user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)
@@ -453,7 +452,7 @@ class Command:
             return {'status': 'OK', 'warning_string': 'no changes'}
 
         #user.update(values)
-        z = xivo_webservices.xws(cti_config.cconf.ipwebs, 80)
+        z = xivo_webservices.xws(self._config.ipwebs, 80)
         z.connect()
         z.serviceput(self.ruserid, values)
         z.close()
@@ -598,15 +597,15 @@ class Command:
             self.rinnerdata.faxes[fileid].setsocketref(socketref)
             self.rinnerdata.faxes[fileid].setfileparameters(self.commanddict.get('file_size'))
             if function == 'get_announce':
-                self.ctid.set_transfer_socket(self.rinnerdata.faxes[fileid], 's2c')
+                self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 's2c')
             elif function == 'put_announce':
-                self.ctid.set_transfer_socket(self.rinnerdata.faxes[fileid], 'c2s')
+                self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 'c2s')
         else:
             self.log.warning('empty fileid given %s' % self.commanddict)
         return reply
 
     def regcommand_faxsend(self):
-        fileid = ''.join(random.sample(__alphanums__, 10))
+        fileid = ''.join(random.sample(ALPHANUMS, 10))
         reply = {'fileid' : fileid}
         self.rinnerdata.faxes[fileid] = cti_fax.Fax(self.rinnerdata, fileid)
         # ruserid gives an entity, which doesn't give a context right away ...
@@ -619,8 +618,7 @@ class Command:
         return reply
 
     def regcommand_getipbxlist(self):
-        reply = { 'ipbxlist' : cti_config.cconf.getconfig('ipbxes').keys() }
-        return reply
+        return {'ipbxlist': self._config.getconfig('ipbxes').keys()}
 
     def regcommand_getlist(self):
         reply = {}
@@ -673,9 +671,9 @@ class Command:
             self.log.warning('unknown ipbxcommand %s' % self.ipbxcommand)
             return reply
         profileclient = self.rinnerdata.xod_config['users'].keeplist[self.ruserid].get('profileclient')
-        profilespecs = cti_config.cconf.getconfig('profiles').get(profileclient)
+        profilespecs = self._config.getconfig('profiles').get(profileclient)
         ipbxcommands_id = profilespecs.get('ipbxcommands')
-        ipbxcommands = cti_config.cconf.getconfig('ipbxcommands').get(ipbxcommands_id)
+        ipbxcommands = self._config.getconfig('ipbxcommands').get(ipbxcommands_id)
         if self.ipbxcommand not in ipbxcommands:
             self.log.warning('profile %s : unallowed ipbxcommand %s (intermediate %s)'
                         % (profileclient, self.ipbxcommand, ipbxcommands_id))
@@ -697,7 +695,7 @@ class Command:
         if self.commandid: # pass the commandid on the actionid # 'user action - forwarded'
             baseactionid = 'uaf:%s' % self.commandid
         else: # 'user action - auto'
-            baseactionid = 'uaa:%s' % ''.join(random.sample(__alphanums__, 10))
+            baseactionid = 'uaa:%s' % ''.join(random.sample(ALPHANUMS, 10))
         ipbxreply = 'noaction'
         idz = 0
         for z in zs:
@@ -713,7 +711,7 @@ class Command:
                     'amiargs' : z.get('amiargs')
                     }
                 actionid = '%s-%03d' % (baseactionid, idz)
-                ipbxreply = self.ctid.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                ipbxreply = self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
             else:
                 ipbxreply = z.get('error')
             idz += 1
@@ -775,10 +773,10 @@ class Command:
 
         if src.get('ipbxid') != dst.get('ipbxid'):
             return [{'error' : 'ipbxids'}]
-        if src.get('ipbxid') not in self.ctid.safe:
+        if src.get('ipbxid') not in self._ctiserver.safe:
             return [{'error' : 'ipbxid'}]
 
-        innerdata = self.ctid.safe.get(src.get('ipbxid'))
+        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
         orig_protocol = None
         orig_name = None
@@ -962,10 +960,10 @@ class Command:
 
         if src.get('ipbxid') != dst.get('ipbxid'):
             return {'error' : 'ipbxids'}
-        if src.get('ipbxid') not in self.ctid.safe:
+        if src.get('ipbxid') not in self._ctiserver.safe:
             return {'error' : 'ipbxid'}
 
-        innerdata = self.ctid.safe.get(src.get('ipbxid'))
+        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
         if src.get('type') == 'chan':
             if src.get('id') in innerdata.channels:
@@ -998,10 +996,10 @@ class Command:
 
         if src.get('ipbxid') != dst.get('ipbxid'):
             return [{'error' : 'ipbxids'}]
-        if src.get('ipbxid') not in self.ctid.safe:
+        if src.get('ipbxid') not in self._ctiserver.safe:
             return [{'error' : 'ipbxid'}]
 
-        innerdata = self.ctid.safe.get(src.get('ipbxid'))
+        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
 
         if 'type' in src and 'chan' in src['type']:
             if src.get('id') in innerdata.channels:
@@ -1116,7 +1114,7 @@ class Command:
         agentcontext = None
         if 'member' in self.commanddict:
             member = self.parseid(self.commanddict.get('member'))
-            innerdata = self.ctid.safe.get(member.get('ipbxid'))
+            innerdata = self._ctiserver.safe.get(member.get('ipbxid'))
             if member.get('id') in innerdata.xod_config.get('agents').keeplist:
                 memberstruct = innerdata.xod_config.get('agents').keeplist.get(member.get('id'))
                 memberstatus = innerdata.xod_status.get('agents').get(member.get('id'))
@@ -1143,7 +1141,7 @@ class Command:
         memberstatus = None
         if 'member' in self.commanddict:
             member = self.parseid(self.commanddict.get('member'))
-            innerdata = self.ctid.safe.get(member.get('ipbxid'))
+            innerdata = self._ctiserver.safe.get(member.get('ipbxid'))
             if member.get('id') in innerdata.xod_config.get('agents').keeplist:
                 memberstruct = innerdata.xod_config.get('agents').keeplist.get(member.get('id'))
                 memberstatus = innerdata.xod_status.get('agents').get(member.get('id'))
@@ -1223,7 +1221,7 @@ class Command:
         if not queue:
             return [{'error' : 'queue'}]
 
-        innerdata = self.ctid.safe.get(queue.get('ipbxid'))
+        innerdata = self._ctiserver.safe.get(queue.get('ipbxid'))
 
         listname = None
         if queue.get('type') == 'queue':

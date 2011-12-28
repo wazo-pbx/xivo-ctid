@@ -28,8 +28,8 @@ from xivo_cti.interfaces import Interfaces
 class FAGI(Interfaces):
     kind = 'FAGI'
     sep = '\n'
-    def __init__(self, ctid):
-        Interfaces.__init__(self, ctid)
+    def __init__(self, ctiserver):
+        Interfaces.__init__(self, ctiserver)
         self.stack = list()
         return
 
@@ -44,7 +44,7 @@ class FAGI(Interfaces):
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
-        self.innerdata = self.ctid.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
 
     def manage_connection(self, msg):
         for t in msg.split(self.sep):

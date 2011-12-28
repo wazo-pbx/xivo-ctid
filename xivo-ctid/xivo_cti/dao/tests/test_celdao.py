@@ -208,8 +208,10 @@ class TestCELChannel(unittest.TestCase):
 
     def test_peers_uniqueid(self):
         cdr_uri = 'sqlite:///:memory:'
-        cti_config.cconf = Mock(cti_config.Config)
-        cti_config.cconf.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri,},}
+        cti_config.Config.get_instance = Mock()
+        config = Mock(cti_config.Config)
+        cti_config.Config.get_instance.return_value = config
+        config.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri}}
         CELDAO.new_from_uri = Mock()
         mocked_celdao = Mock(CELDAO)
         CELDAO.new_from_uri.return_value = mocked_celdao
@@ -237,8 +239,10 @@ class TestCELChannel(unittest.TestCase):
 
     def test_peers_exten(self):
         cdr_uri = 'sqlite:///:memory:'
-        cti_config.cconf = Mock(cti_config.Config)
-        cti_config.cconf.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri,},}
+        cti_config.Config.get_instance = Mock()
+        config = Mock(cti_config.Config)
+        cti_config.Config.get_instance.return_value = config
+        config.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri}}
         CELDAO.new_from_uri = Mock()
         mocked_celdao = Mock(CELDAO)
         CELDAO.new_from_uri.return_value = mocked_celdao

@@ -31,11 +31,11 @@ import time
 class RCTI:
     kind = 'RCTI'
 
-    def __init__(self, ctid, ipbxid, config):
-        self.ctid = ctid
+    def __init__(self, ctiserver, ipbxid, config):
+        self._ctiserver = ctiserver
         self.ipbxid = ipbxid
         self.log = logging.getLogger('interface_rcti(%s)' % self.ipbxid)
-        self.innerdata = self.ctid.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
         self.ipaddress = config.get('ipaddress')
         self.ipport = int(config.get('ipport'))
         self.username = config.get('username')
@@ -138,7 +138,7 @@ class RCTI:
                                 self.innerdata.config_from_external(ln, t)
                 elif classname == 'chitchat':
                     self.log.info('got %s' % t)
-                    self.ctid.send_to_cti_client(t.get('to'), t)
+                    self._ctiserver.send_to_cti_client(t.get('to'), t)
                 else:
                     self.log.warning('unknown class : %s' % classname)
             else:
@@ -149,7 +149,7 @@ class RCTI:
         z = { 'class' : 'login_id',
               'company' : 'default',
               'userlogin' : userlogin,
-              'ident' : 'ctiserver-%s' % self.ctid.myipbxid,
+              'ident' : 'ctiserver-%s' % self._ctiserver.myipbxid,
               'xivoversion' : '1.2',
               'git_hash' : 'f',
               'git_date' : '0'

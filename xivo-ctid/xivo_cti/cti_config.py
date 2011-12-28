@@ -41,15 +41,16 @@ XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
 XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
 XIVO_CONF_OVER = None
 
-cconf = None
 
 class Config:
+
+    instance = None
+
     def __init__(self, * urilist):
         self.urilist = urilist
         self.ipwebs = None
         self.xc_json = {}
         self.overconf = None
-        return
 
     def update(self):
         # the aim of the urilist would be to handle the URI's one after the other
@@ -144,4 +145,9 @@ class Config:
 
     def set_rcti_override_ipbxes(self, overconf):
         self.overconf = overconf
-        return
+
+    @classmethod
+    def get_instance(cls):
+        if not cls.instance:
+            cls.instance = cls(XIVO_CONF_FILE, XIVO_CONF_FILE_DEFAULT)
+        return cls.instance

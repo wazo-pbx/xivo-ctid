@@ -37,23 +37,37 @@ from xivo_cti import cti_config
 log_ami_events_statusrequest = True
 log_ami_events_complete = False
 
-__alphanums__ = string.uppercase + string.lowercase + string.digits
+ALPHANUMS = string.uppercase + string.lowercase + string.digits
+
 
 class AMI_1_8:
-    def __init__(self, ctid, ipbxid):
+
+    userevents = ('Feature',
+                  'OutCall',
+                  'Custom',
+                  'LocalCall',
+                  'dialplan2cti',
+                  'LookupDirectory',
+                  'User',
+                  'Queue',
+                  'Group',
+                  'Meetme',
+                  'Did',)
+
+    def __init__(self, ctiserver, ipbxid):
         # BaseCommand.__init__(self)
-        self.ctid = ctid
+        self._ctiserver = ctiserver
         self.ipbxid = ipbxid
-        self.innerdata = self.ctid.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
         self.log = logging.getLogger('AMI_1.8(%s)' % self.ipbxid)
-        fagiport = cti_config.cconf.getconfig('main').get('incoming_tcp').get('FAGI')[1]
+        fagiport = (cti_config.Config.get_instance().getconfig('main')
+                    .get('incoming_tcp').get('FAGI')[1])
         self.fagiportstring = ':%s/' % fagiport
-        return
 
     def ami_fullybooted(self, event):
         self.log.info('ami_fullybooted : %s' % (event))
-        if self.ipbxid == self.ctid.myipbxid:
-            self.ctid.myami[self.ipbxid].initrequest(0)
+        if self.ipbxid == self._ctiserver.myipbxid:
+            self._ctiserver.myami[self.ipbxid].initrequest(0)
         return
 
     def ami_shutdown(self, event):
@@ -91,13 +105,13 @@ class AMI_1_8:
         channelstate = event.pop('ChannelState')
         context = event.pop('Context')
 
-        actionid = 'nc:%s' % ''.join(random.sample(__alphanums__, 10))
+        actionid = 'nc:%s' % ''.join(random.sample(ALPHANUMS, 10))
         params = {
             'mode' : 'newchannel',
             'amicommand' : 'getvar',
             'amiargs' : [channel, 'XIVO_ORIGACTIONID']
             }
-        self.ctid.myami.get(self.ipbxid).execute_and_track(actionid, params)
+        self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
         self.innerdata.newchannel(channel, context, channelstate)
         # self.log.info('ami_newchannel %s %s %s : %s' % (channel, channelstate, channelstatedesc, event))
         return
@@ -332,8 +346,8 @@ class AMI_1_8:
         # 1 : CLI 'channel request hangup' on the 1st phone's channel
         # 5 : 1st phone rejected the call (reject button or all lines busy)
         # 8 : 1st phone did not answer early enough
-        if actionid in self.ctid.myami.get(self.ipbxid).originate_actionids:
-            properties = self.ctid.myami.get(self.ipbxid).originate_actionids.pop(actionid)
+        if actionid in self._ctiserver.myami.get(self.ipbxid).originate_actionids:
+            properties = self._ctiserver.myami.get(self.ipbxid).originate_actionids.pop(actionid)
             request = properties.get('request')
             cn = request.get('requester')
             try:
@@ -351,7 +365,7 @@ class AMI_1_8:
         else:
             self.log.warning('ami_originateresponse %s %s %s %s (not in list)'
                              % (actionid, channel, reason, event))
-        # print 'originate_actionids left', self.ctid.myami.get(self.ipbxid).originate_actionids.keys()
+        # print 'originate_actionids left', self._ctiserver.myami.get(self.ipbxid).originate_actionids.keys()
         return
 
     # Meetme events
@@ -758,16 +772,14 @@ class AMI_1_8:
                                             'tipbxid': self.ipbxid,
                                             'tid': userid,
                                             'config': user})
-            z = xivo_webservices.xws(cti_config.cconf.ipwebs, 80)
+            z = xivo_webservices.xws(cti_config.Config.get_instance().ipwebs, 80)
             z.connect()
             z.serviceput(userid, {fn: status})
             z.close()
         return reply
 
     def userevent_custom(self, chanprops, event):
-        customname = event.get('NAME')
-        # sheet alert
-        return
+        pass
 
     def userevent_dialplan2cti(self, chanprops, event):
         # why "UserEvent + dialplan2cti" and not "Newexten + Set" ?
@@ -778,12 +790,6 @@ class AMI_1_8:
         cti_varname = event.get('VARIABLE')
         dp_value = event.get('VALUE')
         chanprops.set_extra_data('dp', cti_varname, dp_value)
-        return
-
-    userevents = ['Feature',
-                  'OutCall', 'Custom', 'LocalCall', 'dialplan2cti', 'LookupDirectory',
-                  'User', 'Queue', 'Group','Meetme', 'Did',
-                  ]
 
     def ami_userevent(self, event):
         eventname = event.pop('UserEvent')
@@ -834,8 +840,8 @@ class AMI_1_8:
                 params = {'mode': 'vmupdate',
                           'amicommand': 'mailboxcount',
                           'amiargs': mailbox_id.split('@')}
-                actionid = ''.join(random.sample(__alphanums__, 10))
-                self.ctid.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                actionid = ''.join(random.sample(ALPHANUMS, 10))
+                self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
         except KeyError:
             self.log.warning('ami_messagewaiting Failed to update mailbox')
 
@@ -998,13 +1004,13 @@ class AMI_1_8:
             context = event.pop('Context')
             priority = event.pop('Priority')
             if priority == '1':
-                actionid = 'exten:%s' % ''.join(random.sample(__alphanums__, 10))
+                actionid = 'exten:%s' % ''.join(random.sample(ALPHANUMS, 10))
                 params = {
                     'mode' : 'extension',
                     'amicommand' : 'sendextensionstate',
                     'amiargs' : (extension, context)
                     }
-                self.ctid.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
         return
 
     # XXX dahdi channels
