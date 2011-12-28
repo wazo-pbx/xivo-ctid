@@ -276,7 +276,7 @@ class Safe:
                     'positions': 'parkpos',
                     'duration': 'parkingtime',
                     'hints': 'parkinghints',
-                    'calltransfers' : 'parkedcalltransfers',
+                    'calltransfers': 'parkedcalltransfers',
                     'callparking': 'parkedcallreparking',
                     'callhangup': 'parkedcallhangup',
                     'callrecording': 'parkedcallrecording',
@@ -298,9 +298,9 @@ class Safe:
         '''Update the status of the parkinglot and sends an event to the
         clients'''
         def get_parking_id(name):
-            for id, parking in self.xod_config['parkinglots'].keeplist.iteritems():
+            for parking_id, parking in self.xod_config['parkinglots'].keeplist.iteritems():
                 if name in parking['name']:
-                    return id
+                    return parking_id
             return '0'
 
         parkingid = get_parking_id(parkinglot)
@@ -520,25 +520,25 @@ class Safe:
     def user_get_all(self):
         return self.xod_config['users'].keeplist.keys()
 
-    def get_config(self, listname, id, limit=None):
+    def get_config(self, listname, item_id, limit=None):
         reply = {}
         configdict = self.xod_config.get(listname).keeplist
         if not isinstance(configdict, dict):
             self.log.warning('get_config : problem with listname %s', listname)
             return reply
-        periddict = configdict.get(id)
-        if not isinstance(periddict, dict):
-            self.log.warning('get_config : problem with id %s in listname %s',
-                             id, listname)
+        item_config = configdict.get(item_id)
+        if not isinstance(item_config, dict):
+            self.log.warning('get_config : problem with item_id %s in listname %s',
+                             item_id, listname)
             return reply
 
         if limit:
             for k in limit:
                 if k in self.props_config.get(listname, []):
-                    reply[k] = periddict.get(k)
+                    reply[k] = item_config.get(k)
         else:
             for k in self.props_config.get(listname, []):
-                reply[k] = periddict.get(k)
+                reply[k] = item_config.get(k)
         return reply
 
     def get_status_channel(self, channel_id, limit=None):
@@ -548,20 +548,20 @@ class Safe:
     def get_status_queuemembers(self, queue_member_id, limit=None):
         return self.queuemembers.get(queue_member_id)
 
-    def get_status(self, listname, id, limit=None):
+    def get_status(self, listname, item_id, limit=None):
         if listname == 'channels':
-            return self.get_status_channel(id, limit)
+            return self.get_status_channel(item_id, limit)
         if listname == 'queuemembers':
-            return self.get_status_queuemembers(id, limit)
+            return self.get_status_queuemembers(item_id, limit)
         reply = {}
         statusdict = self.xod_status.get(listname)
         if not isinstance(statusdict, dict):
             self.log.warning('get_status : problem with listname %s', listname)
             return reply
-        periddict = statusdict.get(id)
+        periddict = statusdict.get(item_id)
         if not isinstance(periddict, dict):
-            self.log.warning('get_status : problem with id %s in listname %s',
-                             id, listname)
+            self.log.warning('get_status : problem with item_id %s in listname %s',
+                             item_id, listname)
             return reply
 
         if limit:
@@ -801,39 +801,34 @@ class Safe:
         self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel))
         self.handle_cti_stack('empty_stack')
 
-    def statusbylist(self, listname, id):
-        status = None
-        if id is None:
-            return status
+    def statusbylist(self, listname, item_id):
         if listname == 'channels':
-            if id in self.channels:
-                status = self.channels.get(id).properties
+            if item_id and item_id in self.channels:
+                return self.channels.get(item_id).properties
             else:
-                self.log.warning('%s not in channels', id)
+                self.log.warning('%s not in channels', item_id)
         elif listname == 'queuemembers':
-            if id in self.queuemembers:
-                status = self.queuemembers.get(id)
+            if item_id and item_id in self.queuemembers:
+                return self.queuemembers.get(item_id)
             else:
-                self.log.warning('%s not in queuemembers', id)
+                self.log.warning('%s not in queuemembers', item_id)
         else:
-            if id in self.xod_status[listname]:
-                status = self.xod_status[listname].get(id)
+            if item_id and item_id in self.xod_status[listname]:
+                return self.xod_status[listname].get(item_id)
             else:
-                self.log.warning('%s not in xod_status for %s', id, listname)
-        return status
+                self.log.warning('%s not in xod_status for %s', item_id, listname)
 
-    def appendcti(self, listname, which, id, status=None):
-        if status is None:
-            if id is None:
-                self.log.warning('XXX id is None (why ?) %s %s' % (listname, which))
-            else:
-                status = self.statusbylist(listname, id)
+    def appendcti(self, listname, which, item_id, status=None):
+        if status is None and item_id:
+            status = self.statusbylist(listname, item_id)
+        else:
+            self.log.warning('XXX item_id is None (why ?) %s %s' % (listname, which))
         if status:
             evt = {'class': 'getlist',
                    'listname': listname,
                    'function': which,
                    'tipbxid': self.ipbxid,
-                   'tid': id,
+                   'tid': item_id,
                    'status': status}
             self.events_cti.put(evt)
 
@@ -846,20 +841,20 @@ class Safe:
         'setforce' empties the first status, in order for the event to be always sent.
         """
         if action == 'set':
-            (x, y, z) = event
-            if z is None:
+            (listname, _, item) = event
+            if item is None:
                 self.log.warning('XXX id is None %s', event)
-            thisstatus = copy.deepcopy(self.statusbylist(x, z))
+            thisstatus = copy.deepcopy(self.statusbylist(listname, item))
             self.ctistack.append((event, thisstatus))
         elif action == 'setforce':
             self.ctistack.append((event, {}))
         elif action == 'empty_stack':
             while self.ctistack:
                 (oldevent, oldstatus) = self.ctistack.pop()
-                (x, y, z) = oldevent
-                if z is None:
+                (listname, _, item) = oldevent
+                if item is None:
                     self.log.warning('XXX id is None 2 %s', event)
-                newstatus = self.statusbylist(x, z)
+                newstatus = self.statusbylist(listname, item)
                 if oldstatus != newstatus:
                     if oldstatus is None:
                         sendstatus = newstatus
@@ -1131,10 +1126,7 @@ class Safe:
             protocol = cutchan1[0]
             cutchan2 = cutchan1[1].split('-')
             name = cutchan2[0]
-            term = {'protocol' : protocol, 'name' : name}
-            if len(cutchan2) > 1:
-                chanid = cutchan2[1]
-            # else self.log.warning('%s is not a channel per-se' % cutchan2)
+            term = {'protocol': protocol, 'name': name}
         elif len(cutchan1) < 2:
             self.log.warning('not enough /es in %s', cutchan1)
         elif len(cutchan1) > 2:
@@ -1158,7 +1150,6 @@ class Safe:
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
         datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        userprops = self.xod_config.get('users').keeplist.get(userid)
         loginclient = self.xod_config.get('users').keeplist.get(userid).get('loginclient')
         entityid = self.xod_config.get('users').keeplist.get(userid).get('entityid')
         userstatus = self.xod_status.get('users').get(userid).get('availstate')
@@ -1241,7 +1232,7 @@ class Safe:
             if action == 'fagi_noami':
                 fagistruct = toload.get('properties')
                 # XXX maybe we could handle the AGI data nevertheless ?
-                self.fagi_close(fagistruct, {'XIVO_CTI_AGI' : 'FAIL'})
+                self.fagi_close(fagistruct, {'XIVO_CTI_AGI': 'FAIL'})
             elif action == 'fax':
                 properties = toload.get('properties')
                 step = properties.get('step')
@@ -1272,7 +1263,7 @@ class Safe:
     # - AMI is connected and newexten 'AGI' (on ~ 5003) comes after the AGI (on ~ 5002) (sometimes)
     # - AMI is NOT connected and an AGI comes (on ~ 5002)
 
-    def fagi_sync(self, action, channel, where = None):
+    def fagi_sync(self, action, channel, where=None):
         if action == 'set':
             if channel not in self.fagisync:
                 self.fagisync[channel] = []
@@ -1367,7 +1358,6 @@ class Safe:
             # see https://projects.xivo.fr/issues/1995
             try:
                 if agiargs:
-                    presenceid = agiargs.get('1')
                     presences = self._config.getconfig('userstatus')
 
                     prescountdict = {}
@@ -1394,14 +1384,7 @@ class Safe:
 
         elif function == 'callerid_forphones':
             if channel in self.channels:
-                uniqueiddefs = self.channels[channel]
                 calleridsolved = None
-##                if uniqueiddefs.has_key('dialplan_data'):
-##                    dialplan_data = uniqueiddefs['dialplan_data']
-##                    calleridsolved = dialplan_data.get('dbr-display')
-##                else:
-##                    self.log.warning('handle_fagi %s no dialplan_data received yet'
-##                                % (function))
             else:
                 self.log.warning('handle_fagi %s no such uniqueid received yet : %s %s',
                                  function, uniqueid, channel)
@@ -1545,33 +1528,28 @@ class Channel:
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
-        self.properties = {
-            'monitored' : False, # for meetme as well as for regular calls ? agent calls ?
-            'spy' : False, # spier or spied ?
-            'holded' : False,
-            'parked' : False,
-            # meetme statuses
-            'meetme_ismuted' : False,
-            'meetme_isauthed' : False,
-            'meetme_isadmin' : False,
-            'meetme_usernum' : 0,
-            # agent/queue relations ?
-            'agent' : False,
-            'direction' : None,
-            'commstatus' : 'ready',
-            'timestamp' : time.time(),
-            'thisdisplay' : None,
-            # peerdisplay : to be used in order to override a default value
-            'peerdisplay' : None,
-            'talkingto_kind' : None,
-            'talkingto_id' : None,
-            'autocall' : False,
-            'history' : [],
-            'extra' : None
-            }
+        self.properties = {'monitored': False,  # for meetme as well as for regular calls ? agent calls ?
+                           'spy': False,  # spier or spied ?
+                           'holded': False,
+                           'parked': False,
+                           'meetme_ismuted': False,
+                           'meetme_isauthed': False,
+                           'meetme_isadmin': False,
+                           'meetme_usernum': 0,
+                           'agent': False,
+                           'direction': None,
+                           'commstatus': 'ready',
+                           'timestamp': time.time(),
+                           'thisdisplay': None,
+                           # peerdisplay : to be used in order to override a default value
+                           'peerdisplay': None,
+                           'talkingto_kind': None,
+                           'talkingto_id': None,
+                           'autocall': False,
+                           'history': [],
+                           'extra': None}
         self.relations = []
         self.extra_data = {}
-        return
 
     def setparking(self, exten, parkinglot):
         self.properties['peerdisplay'] = 'Parking (%s in %s)' % (exten, parkinglot)
@@ -1608,21 +1586,12 @@ class Channel:
     # extra dialplan data that may be reachable from sheets
 
     extra_vars = {
-        'xivo' : [
-            'time', 'date',
-            'origin', 'direction', 'context',
-            'did',
-            'calleridnum', 'calleridname',
-            'calleridrdnis', 'calleridton',
-            'calledidnum', 'calledidname',
-            'queuename', 'agentnumber',
-            'userid',
-            'directory',
-            'desttype', 'destid'
-            ],
-        'dp' : [],
-        'db' : []
-        }
+        'xivo': ['time', 'date', 'origin', 'direction', 'context', 'did',
+                 'calleridnum', 'calleridname', 'calleridrdnis',
+                 'calleridton', 'calledidnum', 'calledidname', 'queuename',
+                 'agentnumber', 'userid', 'directory', 'desttype', 'destid'],
+                  'dp': [],
+                  'db': []}
 
     def set_extra_data(self, family, varname, varvalue):
         if family not in self.extra_vars:
