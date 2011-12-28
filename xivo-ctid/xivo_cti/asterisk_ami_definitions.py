@@ -132,8 +132,6 @@ for k, v in event_others.iteritems():
         methodname = 'ami_%s' % eventname.lower().replace(' ', '_')
         if eventname not in evfunction_to_method_name:
             evfunction_to_method_name[eventname] = methodname
-        else:
-            log.warning('%s (others) %s already there' % (k, eventname))
 
 manager_commands = {}
 
