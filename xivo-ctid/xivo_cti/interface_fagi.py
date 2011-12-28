@@ -25,22 +25,21 @@ import logging
 
 from xivo_cti.interfaces import Interfaces
 
+
 class FAGI(Interfaces):
     kind = 'FAGI'
     sep = '\n'
+
     def __init__(self, ctiserver):
         Interfaces.__init__(self, ctiserver)
         self.stack = list()
-        return
 
     def connected(self, connid):
         Interfaces.connected(self, connid)
         self.log = logging.getLogger('interface_fagi(%s:%d)' % self.requester)
-        return
 
     def disconnected(self, msg):
         Interfaces.disconnected(self, msg)
-        return
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
@@ -69,4 +68,3 @@ class FAGI(Interfaces):
 
     def reply(self, replylines):
         print 'FAGI reply', replylines
-        return

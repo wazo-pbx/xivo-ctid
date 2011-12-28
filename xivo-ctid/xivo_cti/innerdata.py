@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall'
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -47,114 +47,152 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 class Safe:
     # matches between CTI lists and WEBI-given fields
     urlvars = {
-        'users'  : 'urllist_users',
-        'phones' : 'urllist_lines',
+        'users': 'urllist_users',
+        'phones': 'urllist_lines',
         # 'devices' : 'urllist_devices',
-        'trunks' : 'urllist_trunks',
+        'trunks': 'urllist_trunks',
 
-        'agents' : 'urllist_agents',
-        'queues' : 'urllist_queues',
-        'groups' : 'urllist_groups',
-        'meetmes' : 'urllist_meetmes',
-        'voicemails' : 'urllist_voicemails',
-        'incalls' : 'urllist_incalls',
+        'agents': 'urllist_agents',
+        'queues': 'urllist_queues',
+        'groups': 'urllist_groups',
+        'meetmes': 'urllist_meetmes',
+        'voicemails': 'urllist_voicemails',
+        'incalls': 'urllist_incalls',
         # 'outcalls' : 'urllist_outcalls',
-        'contexts' : 'urllist_contexts',
+        'contexts': 'urllist_contexts',
         # 'entities' : 'urllist_entities',
-        'parkinglots' : 'urllist_parkinglot',
-        'phonebooks' : 'urllist_phonebook'
+        'parkinglots': 'urllist_parkinglot',
+        'phonebooks': 'urllist_phonebook'
         }
 
     # defines the list of parameters that might be sent to xivo clients
-    props_config = {
-        'users' : [
-            'loginclient',
-            'firstname', 'lastname', 'fullname',
-            'entityid', # XXX (for entity/context relations)
-            'mobilephonenumber',
-            'profileclient',
-            'enableclient',
-            'agentid',
-            'voicemailid',
+    props_config = {'users': ['loginclient',
+                              'firstname',
+                              'lastname',
+                              'fullname',
+                              'entityid',
+                              'mobilephonenumber',
+                              'profileclient',
+                              'enableclient',
+                              'agentid',
+                              'voicemailid',
 
-            # services
-            'enablerna', 'enableunc', 'enablebusy',
-            'destrna', 'destunc', 'destbusy',
-            # 'bsfilter',
-            'enablevoicemail', 'enablednd', 'enableautomon', 'enablexfer',
-            'callrecord', 'incallfilter',
-            #
-            'ringseconds',
-            'simultcalls',
-            'linelist',
-            ],
-        'phones' : [
-            'context', 'protocol', 'number',
-            'iduserfeatures', 'rules_order',
-            'identity', 'firstname', 'lastname', 'call-limit', 'dtmfmode', 'language',
-            # rpid's
-            # other
-            'initialized', 'outcallerid', 'allowtransfer',
-            ],
-        'agents' : ['context', 'firstname', 'lastname', 'number', 'ackcall', 'wrapuptime'],
-        'queues' : ['context', 'name', 'displayname', 'number'],
-        'groups': ['context', 'name', 'number'],
-        'trunks': ['context', 'protocol', 'name', 'host', 'type'],
-        'voicemails' : ['context', 'fullname', 'mailbox', 'email'], # password
-        'meetmes' : ['context', 'confno', 'name', 'admin_moderationmode',
-                     'pin_needed'], # 'pin', 'pinadmin' should not be transmitted, due to security issues
-        'incalls' : ['context', 'exten', 'destidentity', 'action'],
-        'outcalls' : [],
-        'contexts' : ['context', 'contextnumbers', 'contexttype', 'deletable', 'contextinclude'],
-        'parkinglots' : ['context', 'name', 'extension', 'positions', 'description', 'duration'],
-        'phonebooks': [],
-        }
+                              # services
+                              'enablerna',
+                              'enableunc',
+                              'enablebusy',
+                              'destrna',
+                              'destunc',
+                              'destbusy',
+                              # 'bsfilter',
+                              'enablevoicemail',
+                              'enablednd',
+                              'enableautomon',
+                              'enablexfer',
+                              'callrecord',
+                              'incallfilter',
+                              'ringseconds',
+                              'simultcalls',
+                              'linelist',
+                              ],
+                    'phones': ['context',
+                               'protocol',
+                               'number',
+                               'iduserfeatures',
+                               'rules_order',
+                               'identity',
+                               'firstname',
+                               'lastname',
+                               'call-limit',
+                               'dtmfmode',
+                               'language',
+                               'initialized',
+                               'outcallerid',
+                               'allowtransfer',
+                               ],
+                    'agents': ['context',
+                               'firstname',
+                               'lastname',
+                               'number',
+                               'ackcall',
+                               'wrapuptime'],
+                    'queues': ['context',
+                               'name',
+                               'displayname',
+                               'number'],
+                    'groups': ['context',
+                               'name',
+                               'number'],
+                    'trunks': ['context',
+                               'protocol',
+                               'name',
+                               'host',
+                               'type'],
+                    'voicemails': ['context',
+                                   'fullname',
+                                   'mailbox',
+                                   'email'],
+                    'meetmes': ['context',
+                                'confno',
+                                'name',
+                                'admin_moderationmode',
+                                'pin_needed'],
+                    'incalls': ['context',
+                                'exten',
+                                'destidentity',
+                                'action'],
+                    'outcalls': [],
+                    'contexts': ['context',
+                                 'contextnumbers',
+                                 'contexttype',
+                                 'deletable',
+                                 'contextinclude'],
+                    'parkinglots': ['context',
+                                    'name',
+                                    'extension',
+                                    'positions',
+                                    'description',
+                                    'duration'],
+                    'phonebooks': []}
 
-    props_status = { 'users' : { 'connection' : None, # maybe should not transmitted
-                                 'availstate' : 'disconnected'
-                                 },
-                     'phones' : { 'hintstatus' : '4',
-                                  'reg' : '',
-                                  'channels' : [],
-                                  'queues' : [],
-                                  'groups' : []
-                                  },
-                     'trunks' : { 'hintstatus' : '-2',
-                                  'channels' : [],
-                                  'queues' : [],
-                                  'groups' : []
-                                  },
+    props_status = {'users': {'connection': None,
+                              'availstate': 'disconnected'},
+                    'phones': {'hintstatus': '4',
+                               'reg': '',
+                               'channels': [],
+                               'queues': [],
+                               'groups': []},
+                    'trunks': {'hintstatus': '-2',
+                               'channels': [],
+                               'queues': [],
+                               'groups': []},
+                    'agents': {'phonenumber': None,  # static mode
+                               'channel': None,  # dynamic mode
+                               'status': 'undefined',  # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
+                               'queues': [],
+                               'groups': []},
+                    'queues': {'agentmembers': [],
+                               'phonemembers': [],
+                               'incalls': []},
+                    'groups': {'agentmembers': [],
+                               'phonemembers': [],
+                               'incalls': []},
+                    'meetmes': {'pseudochan': None,
+                                'channels': {},
+                                'paused': False},
+                    'voicemails': {'waiting': False,
+                                   'old': 0,
+                                   'new': 0},
+                    'incalls': {},
+                    'outcalls': {},
+                    'contexts': {},
+                    'parkinglots': {}}
 
-                     'agents' : { 'phonenumber' : None, # static mode
-                                  'channel' : None, # dynamic mode
-                                  'status' : 'undefined', # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
-                                  'queues' : [],
-                                  'groups' : []
-                                  },
-
-                     'queues' : { 'agentmembers' : [],
-                                  'phonemembers' : [],
-                                  'incalls' : []
-                                  },
-                     'groups' : { 'agentmembers' : [],
-                                  'phonemembers' : [],
-                                  'incalls' : []
-                                  },
-                     'meetmes' : { 'pseudochan' : None,
-                                   'channels' : {},
-                                   'paused' : False,
-                                   },
-                     'voicemails' : { 'waiting' : False,
-                                      'old' : 0,
-                                      'new' : 0
-                                      },
-                     'incalls' : {},
-                     'outcalls' : {},
-                     'contexts' : {},
-                     'parkinglots' : {},
-                     }
-
-    user_props_send_extra = ['mailbox', 'subscribemwi', 'pickupgroup', 'callgroup', 'callerid']
+    user_props_send_extra = ('mailbox',
+                             'subscribemwi',
+                             'pickupgroup',
+                             'callgroup',
+                             'callerid')
     # 'queueskills',
     # links towards other properties
 
@@ -188,15 +226,15 @@ class Safe:
 
         self.extenfeatures = {}
 
-        if cnf:
-            self.set_extenfeatures(cnf.get('urllist_extenfeatures'))
+        if cnf and 'urllist_extenfeatures' in cnf:
+            self.set_extenfeatures(cnf['urllist_extenfeatures'])
 
         for listname, urllistkey in self.urlvars.iteritems():
             try:
                 cf = eval('lists.cti_%slist' % listname[:-1])
                 cn = '%s%sList' % (listname[0].upper(), listname[1:-1])
-                if cnf and cnf.has_key(urllistkey):
-                    self.xod_config[listname] = getattr(cf, cn)(cnf.get(urllistkey)) # urllist, { 'conf' : self.lconf })
+                if cnf and urllistkey in cnf:
+                    self.xod_config[listname] = getattr(cf, cn)(cnf[urllistkey])
                 else:
                     self.log.warning('no such key %s in configuration', urllistkey)
                     self.xod_config[listname] = getattr(cf, cn)()
@@ -208,7 +246,6 @@ class Safe:
 
         if cnf:
             self.add_default_parking()
-        return
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''
@@ -216,7 +253,7 @@ class Safe:
             self.extenfeatures = {}
             return
         extenfeatures = cti_urllist.UrlList(urls[0])
-        extenfeatures.getlist(0,0,False)
+        extenfeatures.getlist(0, 0, False)
         self.extenfeatures = extenfeatures.jsonreply
 
     # def make_ctiserver_account(self, ipbxid, username, password):
@@ -225,7 +262,7 @@ class Safe:
     # }
 
     def update_config_list_all(self):
-        for listname, urllistkey in self.urlvars.iteritems():
+        for listname in self.urlvars:
             self.update_config_list(listname)
 
     def add_default_parking(self):
@@ -274,7 +311,7 @@ class Safe:
 
     def unpark(self, channel):
         parking_id, exten = self.get_parking_name_exten(channel)
-        if parking_id:
+        if parking_id and exten:
             self.handle_cti_stack('set', ('parkinglots', 'updatestatus', parking_id))
             self.xod_status['parkinglots'][parking_id][exten] = {}
             self.handle_cti_stack('empty_stack')
@@ -294,18 +331,18 @@ class Safe:
         No events are sent to the clients at this point since the callerid will
         be changed next'''
         parking, exten = self.get_parking_name_exten(old)
-        if parking:
+        if parking and exten:
             self.xod_status['parkinglots'][parking][exten]['parked'] = new
 
     def update_parking_cid(self, channel, name, number):
         '''Update the parkinglot status when a caller id change occurs'''
         parking, exten = self.get_parking_name_exten(channel)
-        if not parking:
-            return
-        self.handle_cti_stack('set', ('parkinglots', 'updatestatus', parking))
-        self.xod_status['parkinglots'][parking][exten]['cid_name'] = name
-        self.xod_status['parkinglots'][parking][exten]['cid_num'] = number
-        self.handle_cti_stack('empty_stack')
+        if parking:
+            self.handle_cti_stack('set',
+                                  ('parkinglots', 'updatestatus', parking))
+            self.xod_status['parkinglots'][parking][exten]['cid_name'] = name
+            self.xod_status['parkinglots'][parking][exten]['cid_num'] = number
+            self.handle_cti_stack('empty_stack')
 
     def fill_lines_into_users(self):
         user2phone = {}
@@ -331,13 +368,12 @@ class Safe:
             tid = contents.get('tid')
             if self.xod_status[listname].get(tid) != contents.get('status'):
                 self.xod_status[listname][tid] = contents.get('status')
-                self.events_cti.put( { 'class' : 'getlist',
-                                       'listname' : listname,
-                                       'function' : 'updatestatus',
-                                       'tipbxid' : self.ipbxid,
-                                       'tid' : tid,
-                                       'status' : self.xod_status[listname][tid]
-                                       } )
+                self.events_cti.put({'class': 'getlist',
+                                     'listname': listname,
+                                     'function': 'updatestatus',
+                                     'tipbxid': self.ipbxid,
+                                     'tid': tid,
+                                     'status': self.xod_status[listname][tid]})
 
     def update_config_list(self, listname):
         if listname not in self.xod_config:
@@ -356,24 +392,22 @@ class Safe:
                 for prop, defaultvalue in self.props_status.get(listname, {}).iteritems():
                     self.xod_status[listname][k][prop] = copy.copy(defaultvalue)
                 # tells clients about new object XXX
-                self.events_cti.put( { 'class' : 'getlist',
-                                       'listname' : listname,
-                                       'function' : 'addconfig',
-                                       'tipbxid' : self.ipbxid,
-                                       'list' : [k]
-                                       } )
+                self.events_cti.put({'class': 'getlist',
+                                     'listname': listname,
+                                     'function': 'addconfig',
+                                     'tipbxid': self.ipbxid,
+                                     'list': [k]})
                 do_fill_lines = True
 
             if deltas.get('del'):
                 finaldels = deltas.get('del', [])
                 # tells clients about deleted objects
                 if finaldels:
-                    self.events_cti.put( { 'class' : 'getlist',
-                                           'listname' : listname,
-                                           'function' : 'delconfig',
-                                           'tipbxid' : self.ipbxid,
-                                           'list' : finaldels
-                                           } )
+                    self.events_cti.put({'class': 'getlist',
+                                         'listname': listname,
+                                         'function': 'delconfig',
+                                         'tipbxid': self.ipbxid,
+                                         'list': finaldels})
                     do_fill_lines = True
 
             for tid, v in deltas.get('change', {}).iteritems():
@@ -386,13 +420,12 @@ class Safe:
                         newc[p] = props[p]
                 # tells clients about changed object (if really so ...)
                 if newc:
-                    self.events_cti.put( { 'class' : 'getlist',
-                                           'listname' : listname,
-                                           'function' : 'updateconfig',
-                                           'tipbxid' : self.ipbxid,
-                                           'tid' : tid,
-                                           'config' : newc
-                                           } )
+                    self.events_cti.put({'class': 'getlist',
+                                         'listname': listname,
+                                         'function': 'updateconfig',
+                                         'tipbxid': self.ipbxid,
+                                         'tid': tid,
+                                         'config': newc})
                     do_fill_lines = True
 
             if do_fill_lines and listname in ['phones', 'users']:
@@ -456,17 +489,15 @@ class Safe:
         user_cfg = self.xod_config.get('users').keeplist.get(userid)
         entityid = user_cfg.get('entityid')
         contexts = list()
-        for k, v in self.xod_config.get('contexts').keeplist.iteritems():
-            if v.get('context').get('entityid') == str(user_cfg.get('entityid')):
-                contexts.append(k)
+        for context_id, context_config in self.xod_config.get('contexts').keeplist.iteritems():
+            if context_config.get('context').get('entityid') == str(entityid):
+                contexts.append(context_id)
         return contexts
 
     def user_find(self, ctilogin, company):
         uinfo = self.xod_config.get('users').finduser(ctilogin, company)
         if uinfo:
-            return str(uinfo.get('id')) # XXX redmine#2169
-        else:
-            return None
+            return str(uinfo.get('id'))  # XXX redmine#2169
 
     def user_status(self, userid):
         print self.xod_config['users'].keeplist[userid]
@@ -488,7 +519,7 @@ class Safe:
     def user_get_all(self):
         return self.xod_config['users'].keeplist.keys()
 
-    def get_config(self, listname, id, limit = None):
+    def get_config(self, listname, id, limit=None):
         reply = {}
         configdict = self.xod_config.get(listname).keeplist
         if not isinstance(configdict, dict):
@@ -509,19 +540,14 @@ class Safe:
                 reply[k] = periddict.get(k)
         return reply
 
-    def get_status_channel(self, id, limit = None):
-        reply = {}
-        if id in self.channels:
-            reply = self.channels[id].properties
-        return reply
+    def get_status_channel(self, channel_id, limit=None):
+        if channel_id in self.channels:
+            return self.channels[channel_id].properties
 
-    def get_status_queuemembers(self, id, limit = None):
-        reply = {}
-        if id in self.queuemembers:
-            reply = self.queuemembers[id]
-        return reply
+    def get_status_queuemembers(self, queue_member_id, limit=None):
+        return self.queuemembers.get(queue_member_id)
 
-    def get_status(self, listname, id, limit = None):
+    def get_status(self, listname, id, limit=None):
         if listname == 'channels':
             return self.get_status_channel(id, limit)
         if listname == 'queuemembers':
@@ -633,13 +659,13 @@ class Safe:
         # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
-    def voicemailupdate(self, mailbox, new, old = None, waiting = None):
+    def voicemailupdate(self, mailbox, new, old=None, waiting=None):
         for k, v in self.xod_config['voicemails'].keeplist.iteritems():
             if mailbox == v.get('fullmailbox'):
                 self.handle_cti_stack('set', ('voicemails', 'updatestatus', k))
-                self.xod_status['voicemails'][k].update({'old' : old,
-                                                         'new' : new,
-                                                         'waiting' : waiting})
+                self.xod_status['voicemails'][k].update({'old': old,
+                                                         'new': new,
+                                                         'waiting': waiting})
                 self.handle_cti_stack('empty_stack')
                 break
 
@@ -662,7 +688,6 @@ class Safe:
                     self.xod_status['agents'][aid][list_name].remove(queue_id)
         return queue_member_id
 
-
     def _update_phone_member(self, location, props, queue_id, list_name):
         queue_member_id = None
         termination = self.ast_channel_to_termination(location)
@@ -682,7 +707,6 @@ class Safe:
                     self.xod_status['phones'][pid][list_name].remove(queue_id)
         return queue_member_id
 
-
     def _update_queue_member(self, props, queue_member_id):
         if props:
             self.handle_cti_stack('set', ('queuemembers', 'updatestatus', queue_member_id))
@@ -693,7 +717,7 @@ class Safe:
         else:
             self.log.warning('%s no more in queuemembers', queue_member_id)
 
-    def queuememberupdate(self, queuename, location, props = None):
+    def queuememberupdate(self, queuename, location, props=None):
         if self.xod_config['queues'].hasqueue(queuename):
             list_name = 'queues'
         else:
@@ -714,23 +738,23 @@ class Safe:
     def _extract_queue_member_status(self, properties):
         if len(properties) == 6:
             (status, paused, membership, callstaken, penalty, lastcall) = properties
-            return {'status' : status,
-                    'paused' : paused,
-                    'membership' : membership,
-                    'callstaken' : callstaken,
-                    'penalty' : penalty,
-                    'lastcall' : lastcall,}
+            return {'status': status,
+                    'paused': paused,
+                    'membership': membership,
+                    'callstaken': callstaken,
+                    'penalty': penalty,
+                    'lastcall': lastcall}
         elif len(properties) == 1:
             (paused,) = properties
-            return { 'paused' : paused }
+            return {'paused': paused}
 
     def _remove_queue_member(self, queue_member_id):
         del self.queuemembers[queue_member_id]
-        self.events_cti.put({'class' : 'getlist',
-                             'listname' : 'queuemembers',
-                             'function' : 'delconfig',
-                             'tipbxid' : self.ipbxid,
-                             'list' : [queue_member_id]})
+        self.events_cti.put({'class': 'getlist',
+                             'listname': 'queuemembers',
+                             'function': 'delconfig',
+                             'tipbxid': self.ipbxid,
+                             'list': [queue_member_id]})
 
     def _update_queue_member_status(self, queue_member_id, status):
         if queue_member_id not in self.queuemembers:
@@ -738,7 +762,7 @@ class Safe:
         for k, v in status.iteritems():
             self.queuemembers[queue_member_id][k] = v
 
-    def queueentryupdate(self, queuename, channel, position, timestart = None):
+    def queueentryupdate(self, queuename, channel, position, timestart=None):
         qid = self.xod_config['queues'].idbyqueuename(queuename)
         # send a notification event if no new member
         self.handle_cti_stack('set', ('queues', 'updatestatus', qid))
@@ -797,24 +821,22 @@ class Safe:
                 self.log.warning('%s not in xod_status for %s', id, listname)
         return status
 
-    def appendcti(self, listname, which, id, status = None):
+    def appendcti(self, listname, which, id, status=None):
         if status is None:
             if id is None:
                 self.log.warning('XXX id is None (why ?) %s %s' % (listname, which))
             else:
                 status = self.statusbylist(listname, id)
         if status:
-            evt = {
-                'class' : 'getlist',
-                'listname' : listname,
-                'function' : which,
-                'tipbxid' : self.ipbxid,
-                'tid' : id,
-                'status' : status
-                }
+            evt = {'class': 'getlist',
+                   'listname': listname,
+                   'function': which,
+                   'tipbxid': self.ipbxid,
+                   'tid': id,
+                   'status': status}
             self.events_cti.put(evt)
 
-    def handle_cti_stack(self, action, event = None):
+    def handle_cti_stack(self, action, event=None):
         """
         The idea behind this method is to fill a list of would-be cti events
         with 'set', retrieve the statuses at this point.
@@ -862,12 +884,11 @@ class Safe:
                     else:
                         self.log.warning('%s not in channel list for phoneid %s', channel, phoneid)
             del self.channels[channel]
-            self.events_cti.put({'class' : 'getlist',
-                                 'listname' : 'channels',
-                                 'function' : 'delconfig',
-                                 'tipbxid' : self.ipbxid,
-                                 'list' : [channel]
-                                 })
+            self.events_cti.put({'class': 'getlist',
+                                 'listname': 'channels',
+                                 'function': 'delconfig',
+                                 'tipbxid': self.ipbxid,
+                                 'list': [channel]})
         else:
             self.log.warning('channel %s not there ...', channel)
         self.log.info('remaining channels : %s', self.channels.keys())
@@ -880,15 +901,14 @@ class Safe:
             self.xod_status['phones'][p]['hintstatus'] = status
             if status != oldstatus:
                 self.log.info('updatehint %s : %s => %s', hint, oldstatus, status)
-                self.events_cti.put( { 'class' : 'getlist',
-                                       'listname' : 'phones',
-                                       'function' : 'updatestatus',
-                                       'tipbxid' : self.ipbxid,
-                                       'tid' : p,
-                                       'status' : {'hintstatus' : status}
-                                       } )
+                self.events_cti.put({'class': 'getlist',
+                                     'listname': 'phones',
+                                     'function': 'updatestatus',
+                                     'tipbxid': self.ipbxid,
+                                     'tid': p,
+                                     'status': {'hintstatus': status}})
 
-    def updateregistration(self, peer, reg = ''):
+    def updateregistration(self, peer, reg=''):
         termination = self.ast_channel_to_termination(peer)
         p = self.zphones(termination.get('protocol'), termination.get('name'))
         if p:
@@ -897,13 +917,12 @@ class Safe:
             if reg != oldreg:
                 self.log.info('registration for %s : <%s> => <%s>',
                               peer, oldreg, reg)
-                self.events_cti.put( { 'class' : 'getlist',
-                                       'listname' : 'phones',
-                                       'function' : 'updatestatus',
-                                       'tipbxid' : self.ipbxid,
-                                       'tid' : p,
-                                       'status' : {'reg' : reg}
-                                       } )
+                self.events_cti.put({'class': 'getlist',
+                                     'listname': 'phones',
+                                     'function': 'updatestatus',
+                                     'tipbxid': self.ipbxid,
+                                     'tid': p,
+                                     'status': {'reg': reg}})
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []
@@ -971,16 +990,16 @@ class Safe:
             phoneprops = self.xod_config.get('phones').keeplist.get(phoneid)
             userid = str(phoneprops.get('iduserfeatures'))
             userprops = self.xod_config.get('users').keeplist.get(userid)
-            usersummary = { 'phonenumber' : phoneprops.get('number'),
-                            'userid' : userid,
-                            'context' : phoneprops.get('context'),
-                            'fullname' : userprops.get('fullname') }
+            usersummary = {'phonenumber': phoneprops.get('number'),
+                           'userid': userid,
+                           'context': phoneprops.get('context'),
+                           'fullname': userprops.get('fullname')}
         return usersummary
 
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel
-        chanprops.properties['talkingto_id'] = peerchannel # XXX
+        chanprops.properties['talkingto_id'] = peerchannel
         if peerchannel and self.channels.get(peerchannel).relations:
             for k in self.channels.get(peerchannel).relations:
                 if k.startswith('phone'):
@@ -1014,7 +1033,6 @@ class Safe:
         rep.append('--------------')
         return rep
 
-
     def user_connection_status(self, userid):
         pass
 
@@ -1044,16 +1062,18 @@ class Safe:
             if agentid in agents_keeplist:
                 agentnumber = agents_keeplist[agentid].get('number')
                 actionid = ''.join(random.sample(ALPHANUMS, 10))
-                params = {
-                    'mode' : 'presence',
-                    'amicommand' : 'queuelog',
-                    'amiargs' : ('NONE', 'PRESENCE', 'NONE',
-                                 'Agent/%s' % agentnumber,
-                                 '%s|agent:%s/%s|user:%s/%s'
-                                 % (truestate, self.ipbxid, agentid, self.ipbxid, userid))
+                params = {'mode': 'presence',
+                          'amicommand': 'queuelog',
+                          'amiargs': ('NONE', 'PRESENCE', 'NONE',
+                                      'Agent/%s' % agentnumber,
+                                      '%s|agent:%s/%s|user:%s/%s'
+                                      % (truestate,
+                                         self.ipbxid,
+                                         agentid,
+                                         self.ipbxid,
+                                         userid))
                     }
                 self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
-            # XXX log to ctilog self.__fill_user_ctilog__(userinfo, 'cticommand:%s' % classcomm)
             self.appendcti('users', 'updatestatus', userid)
             self.presence_action(userid)
 
@@ -1121,28 +1141,18 @@ class Safe:
         return term
 
     def zphones(self, protocol, name):
-        idfound = None
-        if not protocol:
-            return idfound
-        for k, v in self.xod_config['phones'].keeplist.iteritems():
-            if v.get('protocol') == protocol.lower() and v.get('name') == name:
-                idfound = k
-                break
-        # print self.xod_status['phones']
-        return idfound
+        if protocol:
+            for phone_id, phone_config in self.xod_config['phones'].keeplist.iteritems():
+                if phone_config.get('protocol') == protocol.lower() and phone_config.get('name') == name:
+                    return phone_id
 
     def ztrunks(self, protocol, name):
-        idfound = None
-        if not protocol:
-            return idfound
-        for k, v in self.xod_config['trunks'].keeplist.iteritems():
-            if v.get('protocol') == protocol.lower() and v.get('name') == name:
-                idfound = k
-                break
-        # print self.xod_status['trunks']
-        return idfound
+        if protocol:
+            for trunk_id, trunk_config in self.xod_config['trunks'].keeplist.iteritems():
+                if trunk_config.get('protocol') == protocol.lower() and trunk_config.get('name') == name:
+                    return trunk_id
 
-    def fill_user_ctilog(self, uri, userid, what, options = '', callduration = None):
+    def fill_user_ctilog(self, uri, userid, what, options='', callduration=None):
         request = "INSERT INTO ctilog (${columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
@@ -1161,7 +1171,7 @@ class Safe:
             connection['cur'].query(request, columns, arguments)
             connection['conn'].commit()
 
-    def sheetsend(self, where, channel, outdest = None):
+    def sheetsend(self, where, channel, outdest=None):
         if 'sheets' not in self._config.getconfig():
             return
         bsheets = self._config.getconfig('sheets')
@@ -1212,12 +1222,11 @@ class Safe:
 
             # 7. send the payload
             self._ctiserver.sendsheettolist(tosendlist,
-                                      { 'class' : 'sheet',
-                                        'channel' : channel,
-                                        'serial' : sheet.serial,
-                                        'compressed' : sheet.compressed,
-                                        'payload' : sheet.payload,
-                                        })
+                                      {'class': 'sheet',
+                                       'channel': channel,
+                                       'serial': sheet.serial,
+                                       'compressed': sheet.compressed,
+                                       'payload': sheet.payload})
 
     # Timers/Synchro stuff - begin
 
@@ -1383,8 +1392,8 @@ class Safe:
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
 
         elif function == 'callerid_forphones':
-            if self.channels.has_key(channel):
-                uniqueiddefs = self.channels.get(channel)
+            if channel in self.channels:
+                uniqueiddefs = self.channels[channel]
                 calleridsolved = None
 ##                if uniqueiddefs.has_key('dialplan_data'):
 ##                    dialplan_data = uniqueiddefs['dialplan_data']
@@ -1473,23 +1482,23 @@ class Safe:
         Define here the tasks one would like to complete on a regular basis.
         """
         # like self.logout_all_agents(), according to 'regupdates'
-        self.update_directories() 
-    
+        self.update_directories()
+
     def update_directories(self):
         # This function must be called after a certain amount of initialization
         # went by in the _ctiserver object since some of the directories depends on
         # some information which is not available during this Safe __init__
         display_contents = self._config.getconfig('displays')
         self.displays_mgr.update(display_contents)
-        
+
         directories_contents = self._config.getconfig('directories')
         self.directories_mgr.update(self._ctiserver, directories_contents)
-        
+
         contexts_contents = self._config.getconfig('contexts')
         self.contexts_mgr.update(self.displays_mgr.displays,
                                  self.directories_mgr.directories,
                                  contexts_contents)
-    
+
     def version(self):
         return '1.2-skaro-githash-gitdate'
 
@@ -1497,12 +1506,12 @@ class Safe:
         # fetch faxcallerid, db settings (cdr and features)
         # TODO ??
         return
-    
+
     def set_ctilog(self, ctilog):
         # ctilog db
         # TODO ??
         return
-    
+
     def set_contextlist(self, ctx):
         # TODO ??
         return
@@ -1553,6 +1562,7 @@ class Safe:
                     'resultlist': resultlist}
 
     # directory lookups entry points - STOP
+
 
 class Channel:
     def __init__(self, channel, context):
