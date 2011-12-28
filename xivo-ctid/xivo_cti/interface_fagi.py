@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -46,15 +46,11 @@ class FAGI(Interfaces):
         self.innerdata = self._ctiserver.safe.get(self.ipbxid)
 
     def manage_connection(self, msg):
-        for t in msg.split(self.sep):
-            self.stack.append(t)
+        self.stack.extend(msg.split(self.sep))
         if self.stack[-1] == '' and self.stack[-2] == '':
             # that should be when we have received the whole event
-            self.agidetails = {}
-            for k in self.stack:
-                if k:
-                    o = k.split(': ')
-                    self.agidetails[o[0]] = o[1]
+            self.agidetails = dict([line.split(': ', 1)
+                                    for line in self.stack if line])
             self.channel = self.agidetails.get('agi_channel')
             nscript = self.agidetails.get('agi_network_script')
             self.log.info('%s %s' % (self.channel, nscript))

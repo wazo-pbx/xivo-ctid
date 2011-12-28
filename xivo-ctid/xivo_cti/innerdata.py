@@ -42,6 +42,7 @@ from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti import cti_config
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
+CALLERID_UNKNOWN_NUM = '0'
 
 
 class Safe:
@@ -1300,10 +1301,10 @@ class Safe:
         if fagistruct.channel in self.fagichannels:
             self.log.warning('fagi_setup for %s already done ... (%s)',
                              fagistruct.channel, fagistruct.agidetails.get('agi_network_script'))
-        tm = threading.Timer(0.2, self.cb_timer, ({'action' : 'fagi_noami',
-                                                   'properties' : fagistruct},))
-        self.fagichannels[fagistruct.channel] = { 'timer' : tm,
-                                                  'fagistruct' : fagistruct }
+        tm = threading.Timer(0.2, self.cb_timer, ({'action': 'fagi_noami',
+                                                   'properties': fagistruct}))
+        self.fagichannels[fagistruct.channel] = {'timer': tm,
+                                                 'fagistruct': fagistruct}
         tm.setName('Thread-fagi-%s' % fagistruct.channel)
         tm.start()
 
@@ -1336,8 +1337,8 @@ class Safe:
         try:
             function = agievent.get('agi_network_script')
             uniqueid = agievent.get('agi_uniqueid')
-            channel  = agievent.get('agi_channel')
-            context  = agievent.get('agi_context')
+            channel = agievent.get('agi_channel')
+            context = agievent.get('agi_context')
 
             # context = fastagi.get_variable('XIVO_REAL_CONTEXT')
 
@@ -1420,7 +1421,7 @@ class Safe:
             if calleridnum in ['', 'unknown']:
                 calleridnum = CALLERID_UNKNOWN_NUM
             if calleridname in ['', 'unknown']:
-                calleridname = calleridnum
+                calleridname = calleridnum if calleridnum != CALLERID_UNKNOWN_NUM else 'unknown'
             else:
                 self.log.warning('handle_fagi %s : (number) there is already a calleridname="%s"',
                                  function, calleridname)
@@ -1442,34 +1443,6 @@ class Safe:
         elif function == 'queueholdtime':
             # used to set XIVO_QUEUEHOLDTIME according to some previously fed statistics
             pass
-
-        elif function == 'cti2dialplan':
-            if len(fastagi.args) > 1:
-                dp_varname = fastagi.args[0]
-                cti_varname = fastagi.args[1]
-            else:
-                self.log.warning('handle_fagi %s not enough arguments : %s',
-                                 function, fastagi.args)
-                return
-            if self.uniqueids.has_key(uniqueid):
-                uniqueiddefs = self.uniqueids[uniqueid]
-                if uniqueiddefs.has_key('dialplan_data'):
-                    dialplan_data = uniqueiddefs['dialplan_data']
-                    if dialplan_data.has_key(cti_varname):
-                        fastagi.set_variable(dp_varname, dialplan_data[cti_varname])
-                    else:
-                        self.log.warning('handle_fagi %s no such variable %s in dialplan data',
-                                         function, cti_varname)
-                        ## XXX fastagi.set_variable(empty)
-                else:
-                    self.log.warning('handle_fagi %s no dialplan_data received yet',
-                                     function)
-                    ## XXX fastagi.set_variable(not yet)
-            else:
-                self.log.warning('handle_fagi %s no such uniqueid received yet : %s %s',
-                                 function, uniqueid, channel)
-                ## XXX fastagi.set_variable(not yet (uniqueid))
-
         else:
             self.log.warning('handle_fagi %s : unknown function', function)
 
