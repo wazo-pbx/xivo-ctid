@@ -357,7 +357,6 @@ class Command(object):
         if capaid != self._ctiserver.safe[ipbxid].xod_config['users'].keeplist[userid]['profileclient']:
             return 'wrongprofile'
         # XXX : too much users ?
-        return
 
     def __connect_user__(self, availstate, c):
         cdetails = self._connection.connection_details

@@ -72,7 +72,6 @@ class INFO(Interfaces):
         Interfaces.__init__(self, ctiserver)
         self.dumpami_enable = []
         self.dumpami_disable = []
-        return
 
     def connected(self, connid):
         Interfaces.connected(self, connid)
@@ -80,7 +79,6 @@ class INFO(Interfaces):
     def disconnected(self, msg):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), msg))
         Interfaces.disconnected(self, msg)
-        return
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
@@ -393,4 +391,3 @@ class INFO(Interfaces):
         except Exception:
             logger.exception('INFO connection [%s] : KO when sending to %s',
                              replylines, self.requester)
-        return

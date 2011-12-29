@@ -57,7 +57,6 @@ class AMIClass(object):
         self.password  = password
         self.events    = events
         self.actionid = None
-        return
 
     # \brief Connection to a socket.
     def connect(self):
@@ -140,7 +139,6 @@ class AMIClass(object):
 
     def setactionid(self, actionid):
         self.actionid = actionid
-        return
 
     # \brief Requesting the Queues' Status.
     def sendqueuestatus(self, queue = None):

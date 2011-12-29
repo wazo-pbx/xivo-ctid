@@ -57,7 +57,6 @@ class Records(object):
                      columns,
                      params)
         self.dbconn.commit()
-        return
 
     # update methods
 

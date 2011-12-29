@@ -42,22 +42,18 @@ class Sheet(object):
         self.fields = {}
         # output
         self.linestosend = []
-        return
 
     def setoptions(self, options):
         if options:
             self.options = options
-        return
 
     def setdisplays(self, displays):
         if displays:
             self.displays = displays
-        return
 
     def addinternal(self, varname, varvalue):
         self.linestosend.append('<internal name="%s"><![CDATA[%s]]></internal>'
                                 % (varname, varvalue))
-        return
 
     def buildresult(self, lineprops):
         # line if disabled if disabled = 1
@@ -119,7 +115,6 @@ class Sheet(object):
                 logger.warning('sheetpart %s contents %s', sheetpart, v) 
         # print self.fields
         # linestosend.extend(self.__build_xmlqtui__('sheet_qtui', actionopt, itemdir))
-        return
 
     def serialize(self):
         if True:
@@ -166,14 +161,12 @@ class Sheet(object):
         else:
             self.payload = base64.b64encode(self.xmlstring)
             self.compressed = False
-        return
 
     def makejson(self):
         self.serial = 'json'
         self.compressed = False
         self.payload = { 'internal' : self.internaldata,
                          'fields' : self.fields }
-        return
 
     def setconditions(self, conditions):
         self.conditions = conditions

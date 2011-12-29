@@ -96,25 +96,20 @@ class AnyList(object):
 
     def setcommandclass(self, commandclass):
         self.commandclass = commandclass
-        return
 
     def setgetter(self, getter):
         self.getter = getter
-        return
 
     def __clean_urls__(self):
         self.requested_list = {}
-        return
 
     def __add_urls__(self, newurls):
         for url in newurls:
             if url not in self.requested_list:
                 self.requested_list[url] = cti_urllist.UrlList(url)
-        return
 
     def setandupdate(self, newurls):
         self.__add_urls__(newurls)
         if len(self.requested_list) == 0:
             return
         self.update()
-        return

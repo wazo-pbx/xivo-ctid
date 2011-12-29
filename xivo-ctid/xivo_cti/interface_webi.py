@@ -72,14 +72,12 @@ class WEBI(Interfaces):
     sep = '\\n' # this instead of \n is done in order to match wrong WEBI implementation
     def __init__(self, ctiserver):
         Interfaces.__init__(self, ctiserver)
-        return
 
     def connected(self, connid):
         Interfaces.connected(self, connid)
 
     def disconnected(self, msg):
         Interfaces.disconnected(self, msg)
-        return
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
@@ -131,7 +129,6 @@ class WEBI(Interfaces):
         except Exception:
             logger.exception('WEBI connection [%s] : KO when sending to %s',
                              replylines, self.requester)
-        return
 
     def makereply_close(self, actionid, status, reply = []):
         if self.connid:

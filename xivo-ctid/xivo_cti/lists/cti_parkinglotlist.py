@@ -32,7 +32,6 @@ class ParkinglotList(AnyList):
                                     'urloptions' : (0,0,False)
                                     }
         AnyList.__init__(self, newurls)
-        return
 
     def set_default_parking(self, default_parking):
         """

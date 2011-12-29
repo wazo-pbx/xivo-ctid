@@ -40,7 +40,6 @@ class ClientConnection(object):
         self.isClosed = False
         self.toClose = False
         self.separator = sep
-        return
 
     # useful for select
     def fileno(self):
@@ -60,7 +59,6 @@ class ClientConnection(object):
         if(len(data) > 0):
             self.sendqueue.append(data)
             self.process_sending()
-        return
 
     # synonym for send
     def sendall(self, data):
@@ -85,7 +83,6 @@ class ClientConnection(object):
                     raise self.CloseException(_errno)
                 else:
                     raise socket.error(_errno, string)
-        return
 
     # do we have some data to be sent ?
     def need_sending(self):
@@ -110,7 +107,6 @@ class ClientConnection(object):
                 raise self.CloseException(_errno)
             elif _errno != errno.EAGAIN: # really an error
                 raise socket.error(_errno, string)
-        return
 
     # return a line if available or None
     # use the separator to split "lines"

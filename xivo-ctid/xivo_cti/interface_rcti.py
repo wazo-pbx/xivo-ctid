@@ -43,7 +43,6 @@ class RCTI(Interfaces):
         self.username = config.get('username')
         self.password = config.get('password')
         self.encrypt = config.get('encrypt', False)
-        return
 
     def connect(self):
         ret = None
@@ -67,7 +66,6 @@ class RCTI(Interfaces):
 
     def disconnect(self):
         self.socket.close()
-        return
 
     def connected(self):
         ret = None
@@ -91,7 +89,6 @@ class RCTI(Interfaces):
     def handle_event(self, buf):
         for b in buf.strip().split('\n'):
             self.handle_event_line(b)
-        return
 
     def handle_event_line(self, buf):
         if buf.startswith('XiVO'):
@@ -145,7 +142,6 @@ class RCTI(Interfaces):
                     logger.warning('unknown class : %s', classname)
             else:
                 print 'unknown value', t
-        return
 
     def login_id(self, userlogin):
         z = { 'class' : 'login_id',
@@ -157,7 +153,6 @@ class RCTI(Interfaces):
               'git_date' : '0'
               }
         self.sendsock(z)
-        return
 
     def login_pass(self, sessionid, password):
         tohash = '%s:%s' % (sessionid, password)
@@ -166,7 +161,6 @@ class RCTI(Interfaces):
               'hashedpassword' : sha1sum
               }
         self.sendsock(z)
-        return
 
     def login_capas(self, state, capaid):
         z = { 'class' : 'login_capas',
@@ -176,7 +170,6 @@ class RCTI(Interfaces):
               'loginkind' : 'user'
               }
         self.sendsock(z)
-        return
 
     def getlist(self, listname):
         z = { 'class' : 'getlist',
@@ -184,7 +177,6 @@ class RCTI(Interfaces):
               'listname' : listname
               }
         self.sendsock(z)
-        return
 
     def getconfig(self, listname, itemkey):
         z = { 'class' : 'getlist',
@@ -193,7 +185,6 @@ class RCTI(Interfaces):
               'tid' : itemkey
               }
         self.sendsock(z)
-        return
 
     def getstatus(self, listname, itemkey):
         z = { 'class' : 'getlist',
@@ -202,8 +193,6 @@ class RCTI(Interfaces):
               'tid' : itemkey
               }
         self.sendsock(z)
-        return
 
     def sendsock(self, z):
         self.socket.sendall(cjson.encode(z) + '\n')
-        return

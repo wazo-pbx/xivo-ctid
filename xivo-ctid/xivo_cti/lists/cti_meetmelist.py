@@ -32,7 +32,6 @@ class MeetmeList(AnyList):
                                     'urloptions' : (1, 5, True)
                                     }
         AnyList.__init__(self, newurls)
-        return
 
     def update(self):
         ret = AnyList.update(self)
@@ -52,4 +51,3 @@ class MeetmeList(AnyList):
         idx = self.reverse_index.get(roomnumber)
         if idx in self.keeplist:
             return idx
-        return

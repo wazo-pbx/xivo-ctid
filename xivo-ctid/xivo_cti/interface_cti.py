@@ -33,9 +33,6 @@ logger = logging.getLogger('interface_cti')
 
 
 class serialJson(object):
-    def __init__(self):
-        return
-
     def decode(self, linein):
         # Output of the cjson.decode is a Unicode object, even though the
         # non-ASCII characters have not been decoded.

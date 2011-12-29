@@ -97,7 +97,6 @@ class queue_logger(object):
 
         queue_logger._trace_event(ev)
         queue_logger._store_in_db(sql)
-        return
 
     @staticmethod
     def AgentConnect(ev):
@@ -113,7 +112,6 @@ class queue_logger(object):
 
         queue_logger._trace_event(ev)
         queue_logger._store_in_db(sql)
-        return
 
     @staticmethod
     def AgentComplete(ev):
@@ -130,7 +128,6 @@ class queue_logger(object):
         del queue_logger.cache[ev['Queue']][ev['Uniqueid']]
 
         queue_logger._store_in_db(sql)
-        return
 
     @staticmethod
     def Leave(ev):
@@ -155,5 +152,3 @@ class queue_logger(object):
                 del queue_logger.cache[ev['Queue']][ev['Uniqueid']]
         else:
             queue_logger._clean_cache()
-        return
-

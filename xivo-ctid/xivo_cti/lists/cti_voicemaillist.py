@@ -30,7 +30,6 @@ class VoicemailList(AnyList):
         self.anylist_properties = { 'name' : 'voicemail',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
-        return
 
     def update(self):
         ret = AnyList.update(self)

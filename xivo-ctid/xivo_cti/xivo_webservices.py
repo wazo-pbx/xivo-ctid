@@ -35,14 +35,12 @@ class xws(object):
         self.path = '/service/ipbx/json.php/private/pbx_settings/users'
         if self.ipaddress not in ['localhost', '127.0.0.1']:
             self.path = '/service/ipbx/json.php/restricted/pbx_settings/users'
-        return
 
     def connect(self):
         if self.ipport == 443:
             self.myconn = httplib.HTTPSConnection(self.ipaddress, self.ipport)
         else:
             self.myconn = httplib.HTTPConnection(self.ipaddress, self.ipport)
-        return
 
     def serviceget(self, userid):
         uri = '%s/?act=view&id=%s' % (self.path, userid)
@@ -62,7 +60,6 @@ class xws(object):
         self.myconn.request('POST', uri, cjson.encode({'userfeatures': values}), headers)
         z = self.myconn.getresponse()
         z.read()
-        return
 
     def close(self):
         self.myconn.close()

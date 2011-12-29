@@ -33,7 +33,6 @@ class PhoneList(AnyList):
         self.anylist_properties = { 'name' : 'phones',
                                     'urloptions' : (1, 12, False) }
         AnyList.__init__(self, newurls)
-        return
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -64,7 +63,6 @@ class PhoneList(AnyList):
         while (linenum in usedlines):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
-        return
 
     def updatechan(self, phoneid, infos, commid=None):
         logger.debug('phone::updatechan %s %s', phoneid, infos)
@@ -103,7 +101,6 @@ class PhoneList(AnyList):
                      'calleridnum' : puidsrc.get('calleridnum')
                      }
             self.__createorupdate_comm__(phoneiddst, uiddst, infos)
-        return
 
     def ami_link(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst):
         logger.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
@@ -142,7 +139,6 @@ class PhoneList(AnyList):
                 self.__createorupdate_comm__(phoneiddst, uiddst, infos)
                 logger.debug('phonelist::ami_link %s not found (dst)', uiddst)
             logger.debug('phonelist::ami_link gruik %s %s', phoneiddst, self.keeplist[phoneiddst]['comms'])
-        return
 
     def ami_unlink(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
         if phoneidsrc in self.keeplist:
@@ -157,7 +153,6 @@ class PhoneList(AnyList):
                          'time-link' : 0,
                          'timestamp-link' : time.time() }
                 self.keeplist[phoneiddst]['comms'][uiddst].update(infos)
-        return
 
     def ami_rename(self, oldphoneid, newphoneid, oldname, newname, uid):
         # rename channels
@@ -175,7 +170,6 @@ class PhoneList(AnyList):
                 del self.keeplist[oldphoneid]['comms'][uid]
             else:
                 logger.warning('(ami_rename) %s : could not move from %s to %s', uid, oldphoneid, newphoneid)
-        return
 
     def ami_rename_totrunk(self, oldphoneid, oldname, newname, uid):
         tomove = None
@@ -207,7 +201,6 @@ class PhoneList(AnyList):
             self.setlinenum(newphoneid, uid)
         else:
             logger.warning('(ami_rename_fromtrunk) %s : could not set %s', uid, newphoneid)
-        return
 
     def ami_hold(self, phoneid, uid):
         if self.keeplist.has_key(phoneid):
@@ -217,7 +210,6 @@ class PhoneList(AnyList):
                 logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
         else:
             logger.warning('ami_hold : no phoneid %s', phoneid)
-        return
 
     def ami_unhold(self, phoneid, uid):
         if self.keeplist.has_key(phoneid):
@@ -229,7 +221,6 @@ class PhoneList(AnyList):
                 logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
         else:
             logger.warning('ami_hold : no phoneid %s', phoneid)
-        return
 
     def ami_hangup(self, uid):
         phoneidlist = []
@@ -251,7 +242,6 @@ class PhoneList(AnyList):
 
     def setdisplayhints(self, dh):
         self.display_hints = dh
-        return
 
     def ami_extstatus(self, phoneid, status):
         if phoneid in self.keeplist:
@@ -274,7 +264,6 @@ class PhoneList(AnyList):
                      'calleridnum' : exten,
                      'calleridname' : '<parked>' }
             self.__createorupdate_comm__(phoneid, uid, infos)
-        return
 
     def ami_unparkedcall(self, phoneid, uid, ctuid):
         if phoneid in self.keeplist:
@@ -298,7 +287,6 @@ class PhoneList(AnyList):
                          'timestamp-link' : time.time() }
                 self.keeplist[phoneid]['comms'][uid] = infos
                 self.setlinenum(phoneid, uid)
-        return
 
     def status(self, phoneid):
         tosend = {}
@@ -317,4 +305,3 @@ class PhoneList(AnyList):
                           'calleridname' : '<meetme>',
                           'calleridnum' : meetmenum }
                 self.keeplist[phoneid]['comms'][uid].update(infos)
-        return

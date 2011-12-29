@@ -56,11 +56,9 @@ class Config(object):
         # the aim of the urilist would be to handle the URI's one after the other
         # when there is a reachability issue (like it can happen in first steps ...)
         self.update_uri(self.urilist[0])
-        return
 
     def set_ipwebs(self, ipwebs):
         self.ipwebs = ipwebs
-        return
 
     def update_uri(self, uri):
         if uri.find('json') < 0:
@@ -96,8 +94,6 @@ class Config(object):
         if self.overconf:
             self.xc_json['ipbxes'] = self.overconf
 
-        return
-
     def translate(self):
         """
         Translate the config fetched from the remote IP ipwebs
@@ -118,7 +114,6 @@ class Config(object):
             cdruri = v.get('cdr_db_uri')
             if cdruri:
                 v['cdr_db_uri'] = cdruri.replace('@localhost/', '@%s/' % self.ipwebs)
-        return
 
     def getconfig(self, key = None):
         if key:
@@ -141,7 +136,6 @@ class Config(object):
             'xlets': None,
             'services' : None
             }
-        return
 
     def set_rcti_override_ipbxes(self, overconf):
         self.overconf = overconf

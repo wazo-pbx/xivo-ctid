@@ -57,7 +57,6 @@ class XivoRecords(object):
         self.cron_filename = '/etc/cron.d/xivo_records_purge'
         self.records_db = xivo_records_db.Records(self.records_db_path,
                                                   self.records_db_table)
-        return
 
 
     def __level_rules__(self, hlevel_r, hlevel_i, action):
@@ -382,7 +381,6 @@ class XivoRecords(object):
         except:
             logger.exception('fetch_config')
             self.recordcampaignconfig = {}
-        return
 
 
     def __lsdir__(self, any_path):
@@ -484,9 +482,6 @@ class XivoRecords(object):
             if dopurge:
                 if self.__remove_files__(resultitem):
                     logger.info('RECCAMP:auto:remove:-:-:%s', action, idv)
-
-        return
-
 
     def __match_filters__(self, filters,
                           direction, queueid, agentid, skillrule):
@@ -659,8 +654,6 @@ class XivoRecords(object):
                 'svichoices' : ','.join(sc)
                 }
             self.records_db.new_call(calldata)
-        return
-
 
     def hangup_if_started(self, channel, uniqueid):
         # end of record = end of call => to change to Monitor event when exists ...

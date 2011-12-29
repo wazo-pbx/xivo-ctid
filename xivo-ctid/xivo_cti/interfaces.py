@@ -27,7 +27,6 @@ class Interfaces(object):
         self.logintimer = None
         self.connid = None
         self.requester = None
-        return
 
     def connected(self, connid):
         self.connid = connid

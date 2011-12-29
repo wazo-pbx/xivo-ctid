@@ -47,7 +47,6 @@ class asyncActionsThread(threading.Thread):
         z = open(self.tmpfilepath, 'w')
         z.write(decodedfile)
         z.close()
-        return
 
     def converttotiff(self):
         reply = 'ko;unknown'
@@ -72,7 +71,6 @@ class asyncActionsThread(threading.Thread):
             ret = -1
         print reply
         os.unlink(self.tmpfilepath)
-        return
 
     def notify_step(self, stepname):
         innerdata = self.params.get('innerdata')
@@ -80,7 +78,6 @@ class asyncActionsThread(threading.Thread):
         innerdata.cb_timer({'action' : 'fax',
                             'properties' : {'step' : stepname,
                                             'fileid' : fileid}},)
-        return
 
     def run(self):
         self.decodefile()
@@ -88,7 +85,6 @@ class asyncActionsThread(threading.Thread):
         self.converttotiff()
         self.notify_step('file_converted')
         logger.info('%s thread is over', self.getName())
-        return
 
 
 
@@ -99,7 +95,6 @@ class Fax(object):
 
         filename = 'astsendfax-%s' % self.fileid
         self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL_ASTERISK_TMP, filename)
-        return
 
     def setfaxparameters(self, userid, context, number, hide):
         self.userid = userid
@@ -112,24 +107,19 @@ class Fax(object):
             phoneid = linelist[0]
             phoneinfo = self.innerdata.xod_config['phones'].keeplist[phoneid]
             self.callerid = phoneinfo['callerid']
-        return
 
     def setfileparameters(self, size):
         self.size = size
-        return
 
     def setsocketref(self, socketref):
         self.socketref = socketref
-        return
 
     def setrequester(self, requester):
         self.requester = requester
-        return
 
     def setbuffer(self, rawfile):
         """Set on the 2nd opened soocket"""
         self.rawfile = rawfile
-        return
 
     def launchasyncs(self):
         sthread = asyncActionsThread('fax-%s' % self.fileid,
@@ -138,7 +128,6 @@ class Fax(object):
                                        'rawfile' : self.rawfile
                                        } )
         sthread.start()
-        return
 
     def step(self, stepname):
         removeme = False

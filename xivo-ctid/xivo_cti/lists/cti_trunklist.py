@@ -33,7 +33,6 @@ class TrunkList(AnyList):
         self.anylist_properties = { 'name' : 'trunk',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
-        return
 
     def update(self):
         ret = AnyList.update(self)
@@ -67,7 +66,6 @@ class TrunkList(AnyList):
                     'calleridnum' : puidsrc.get('calleridnum')
                     }
                 self.keeplist[trunkiddst]['comms'][uiddst] = infos
-        return
 
     def ami_link(self, trunkidsrc, trunkiddst, uidsrc, uiddst, puidsrc, puiddst):
         if trunkidsrc in self.keeplist:
@@ -84,7 +82,6 @@ class TrunkList(AnyList):
                     'timestamp-link' : time.time()
                     }
                 self.keeplist[trunkiddst]['comms'][uiddst].update(infos)
-        return
 
     def ami_unlink(self, trunkidsrc, trunkiddst, uidsrc, uiddst, puidsrc, puiddst):
         if trunkidsrc in self.keeplist:
@@ -101,7 +98,6 @@ class TrunkList(AnyList):
                     'timestamp-link' : time.time()
                     }
                 self.keeplist[trunkiddst]['comms'][uiddst].update(infos)
-        return
 
     def ami_hangup(self, uid):
         trunkidlist = []
@@ -134,7 +130,6 @@ class TrunkList(AnyList):
                 del self.keeplist[oldtrunkid]['comms'][uid]
             else:
                 logger.warning('(ami_rename) %s : could not move from %s to %s', uid, oldtrunkid, newtrunkid)
-        return
 
     def ami_rename_tophone(self, oldtrunkid, oldname, newname, uid):
         tomove = None
@@ -165,7 +160,6 @@ class TrunkList(AnyList):
             self.keeplist[newtrunkid]['comms'][uid] = tomove
         else:
             logger.warning('(ami_rename_fromphone) %s : could not set %s', uid, newtrunkid)
-        return
 
     def status(self, trunkid):
         tosend = {}

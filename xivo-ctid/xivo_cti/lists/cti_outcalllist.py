@@ -29,7 +29,6 @@ class OutcallList(AnyList):
         self.anylist_properties = { 'name' : 'outcall',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
-        return
     
     def update(self):
         ret = AnyList.update(self)

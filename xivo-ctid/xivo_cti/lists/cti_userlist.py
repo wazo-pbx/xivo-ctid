@@ -31,7 +31,6 @@ class UserList(AnyList):
         # a dictionary where keys are user id (string) and values are
         # (<alarm clock>, <timezone) tuple
         self.alarm_clk_changes = {}
-        return
 
     def update(self):
         delta = AnyList.update(self)
@@ -74,7 +73,6 @@ class UserList(AnyList):
         for a, b in newuserlist.iteritems():
             if a not in self.keeplist:
                 self.keeplist[a] = b
-        return
 
     def finduser(self, userid, company = None):
         if company:
@@ -116,9 +114,7 @@ class UserList(AnyList):
             self.keeplist[username] = {}
             for f in self.commandclass.userfields:
                 self.keeplist[username][f] = inparams[f]
-        return
 
     def deluser(self, username):
         if self.keeplist.has_key(username):
             self.keeplist.pop(username)
-        return

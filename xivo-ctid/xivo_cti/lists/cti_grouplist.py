@@ -32,7 +32,6 @@ class GroupList(AnyList):
         self.anylist_properties = { 'name' : 'groups',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
-        return
     
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
@@ -58,7 +57,6 @@ class GroupList(AnyList):
             idx = self.reverse_index[queuename]
             if idx in self.keeplist:
                 return idx
-        return
 
     def getcontext(self, queueid):
         return self.keeplist[queueid]['context']
@@ -73,7 +71,6 @@ class GroupList(AnyList):
                                oldchan, queueid)
         else:
             logger.warning('queueentry_rename : no such queueid %s', queueid)
-        return
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
         if queueid in self.keeplist:
@@ -83,7 +80,6 @@ class GroupList(AnyList):
                                                             'calleridname' : calleridname }
         else:
             logger.warning('queueentry_update : no such queueid %s', queueid)
-        return
 
     def queueentry_remove(self, queueid, channel):
         if queueid in self.keeplist:
@@ -94,7 +90,6 @@ class GroupList(AnyList):
                             channel, queueid)
         else:
             logger.warning('queueentry_remove : no such queueid %s', queueid)
-        return
 
     def queuememberupdate(self, queueid, location, event):
         changed = False

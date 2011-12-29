@@ -1461,24 +1461,24 @@ class Safe(object):
     def set_configs(self, cfgs):
         # fetch faxcallerid, db settings (cdr and features)
         # TODO ??
-        return
+        pass
 
     def set_ctilog(self, ctilog):
         # ctilog db
         # TODO ??
-        return
+        pass
 
     def set_contextlist(self, ctx):
         # TODO ??
-        return
+        pass
 
     def read_internatprefixes(self, ipf):
         # TODO ??
-        return
+        pass
 
     def set_partings(self, pic):
         # TODO ??
-        return
+        pass
 
     # directory lookups entry points - START
 
@@ -1581,7 +1581,7 @@ class Channel(object):
     def update_term(self):
         # define what (agent, queue, ...)
         # define index
-        return
+        pass
 
     # extra dialplan data that may be reachable from sheets
 

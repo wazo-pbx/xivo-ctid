@@ -32,7 +32,6 @@ class AgentList(AnyList):
         self.anylist_properties = { 'name' : 'agents',
                                     'urloptions' : (1, 4, True) }
         AnyList.__init__(self, newurls)
-        return
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
@@ -83,7 +82,6 @@ class AgentList(AnyList):
                             self.keeplist[idx][qorg][queuename][prop] = event.get(prop)
                 else:
                     logger.warning('queuememberadded : %s already there', queuename)
-        return
 
     def queuememberremoved(self, queuename, queueorgroup, agentnumber, event):
         qorg = '%s_by_agent' % queueorgroup
@@ -94,10 +92,8 @@ class AgentList(AnyList):
                     del self.keeplist[idx][qorg][queuename]
                 else:
                     logger.warning('queuememberremoved : %s not there', queuename)
-        return
 
     def idbyagentnumber(self, agentnumber):
         idx = self.reverse_index.get(agentnumber)
         if idx in self.keeplist:
             return idx
-        return
