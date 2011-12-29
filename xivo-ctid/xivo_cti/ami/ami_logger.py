@@ -33,16 +33,15 @@ class AMILogger(object):
                      'Shutdown')
 
     def __init__(self):
-        self._log = None
+        self._logger = None
 
-    def set_logger(self, function):
-        self._log = function
+    def set_logger(self, logger):
+        self._logger = logger
 
     def log_ami_event(self, event):
         msg = ('Event received:%s' %
                ' '.join(['%s=>%s' % (key, value) for key, value in event.iteritems()]))
-        function = self._log
-        function(msg)
+        self._logger.log.info(msg)
 
     @classmethod
     def register_callbacks(cls):
@@ -54,7 +53,6 @@ class AMILogger(object):
     @classmethod
     def get_instance(cls):
         if not cls._instance:
-            cls.instance = AMILogger()
-            log = logging.getLogger('AMI logger')
-            cls.instance.set_logger(log.info)
-        return cls.instance
+            cls._instance = AMILogger()
+            cls._instance.set_logger(logging.getLogger('AMI logger'))
+        return cls._instance

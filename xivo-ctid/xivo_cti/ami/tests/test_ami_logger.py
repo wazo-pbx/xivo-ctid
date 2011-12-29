@@ -24,6 +24,7 @@
 import unittest
 
 from xivo_cti.ami import ami_logger
+from tests.mock import Mock
 
 
 class Test(unittest.TestCase):
@@ -35,26 +36,32 @@ class Test(unittest.TestCase):
         pass
 
     def test_ami_set_logger(self):
-        def func(msg):
-            print msg
 
-        self.logger.set_logger(func)
+        class test_logger(object):
+            pass
 
-        self.assertEqual(self.logger._log, func)
+        self.logger.set_logger(test_logger)
+
+        self.assertEqual(self.logger._logger, test_logger)
 
     def test_log_ami_event(self):
         event = {'Event': 'LogTest',
                  'First': 'one',
                  'Second': 'two'}
 
-        def func(msg):
-            self.assertTrue(msg.startswith('Event received:'))
-            self.assertTrue('Event=>LogTest' in msg)
-            self.assertTrue('First=>one' in msg)
-            self.assertTrue('Second=>two' in msg)
+        logger = Mock()
+        logger.log = Mock()
+        logger.log.info = Mock()
 
-        self.logger.set_logger(func)
+        self.logger.set_logger(logger)
         self.logger.log_ami_event(event)
+
+        received = logger.log.info.call_args[0][0]
+
+        self.assertTrue(received.startswith('Event received:'))
+        self.assertTrue('Event=>LogTest' in received)
+        self.assertTrue('First=>one' in received)
+        self.assertTrue('Second=>two' in received)
 
 
 if __name__ == "__main__":
