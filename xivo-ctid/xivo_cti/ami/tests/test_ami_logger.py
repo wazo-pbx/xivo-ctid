@@ -55,7 +55,7 @@ class Test(unittest.TestCase):
         self.logger.set_logger(logger)
         self.logger.log_ami_event(event)
 
-        received = logger.info.call_args[0][0]
+        received = logger.info.call_args[0][0] % logger.info.call_args[0][1]
 
         self.assertTrue(received.startswith('Event received:'))
         self.assertTrue('Event=>LogTest' in received)
