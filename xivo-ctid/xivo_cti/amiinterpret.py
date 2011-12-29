@@ -60,12 +60,11 @@ class AMI_1_8:
         self.fagiportstring = ':%s/' % fagiport
 
     def ami_fullybooted(self, event):
-        self.log.info('ami_fullybooted : %s' % (event))
         if self.ipbxid == self._ctiserver.myipbxid:
             self._ctiserver.myami[self.ipbxid].initrequest(0)
 
     def ami_shutdown(self, event):
-        self.log.info('ami_shutdown : %s' % (event))
+        return
 
     def ami_channelreload(self, event):
         # Occurs when there is a reload and the SIP config has changed
@@ -156,20 +155,7 @@ class AMI_1_8:
                 self.innerdata.channels[destination].properties['timestamp'] = time.time()
                 self.innerdata.setpeerchannel(destination, channel)
                 self.innerdata.update(destination)
-            self.log.info('ami_dial (%s) %s %s - %s' % (subevent, channel, destination, event))
             self.innerdata.sheetsend('dial', channel)
-        elif subevent == 'End':
-            # one receives this one just before the hangup (in regular calls)
-            dialstatus = event['DialStatus']
-            if dialstatus in ['CONGESTION', 'CANCEL', 'BUSY', 'ANSWER']:
-                self.log.info('ami_dial %s %s %s'
-                              % (subevent, dialstatus, channel))
-            else:
-                self.log.info('ami_dial %s %s %s - %s'
-                         % (subevent, dialstatus, channel, event))
-        else:
-            self.log.info('ami_dial %s %s - %s'
-                     % (subevent, channel, event))
 
     def ami_extensionstatus(self, event):
         hint = event['Hint']
@@ -179,10 +165,6 @@ class AMI_1_8:
     def ami_bridge(self, event):
         channel1 = event['Channel1']
         channel2 = event['Channel2']
-        bridgetype = event['Bridgetype']
-        bridgestate = event['Bridgestate']
-        self.log.info('ami_bridge %s %s (%s %s) - %s'
-                 % (channel1, channel2, bridgetype, bridgestate, event))
         if channel1 in self.innerdata.channels:
             self.innerdata.channels[channel1].properties['talkingto_kind'] = 'channel'
             self.innerdata.channels[channel1].properties['talkingto_id'] = channel2

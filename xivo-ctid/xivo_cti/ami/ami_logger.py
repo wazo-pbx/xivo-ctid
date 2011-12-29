@@ -28,7 +28,9 @@ from xivo_cti.ami import ami_callback_handler
 class AMILogger(object):
     _instance = None
     logged_events = ('Dial',
-                     'Bridge')
+                     'Bridge',
+                     'FullyBooted',
+                     'Shutdown')
 
     def __init__(self):
         self._log = None
