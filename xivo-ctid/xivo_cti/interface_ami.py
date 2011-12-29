@@ -31,7 +31,10 @@ import time
 
 from xivo_cti import xivo_ami, cti_config
 from xivo_cti import asterisk_ami_definitions as ami_def
-from xivo_cti.ami import ami_callback_handler, ami_logger, ami_event_complete_logger
+from xivo_cti.ami import ami_callback_handler
+from xivo_cti.ami import ami_logger
+from xivo_cti.ami import ami_event_complete_logger
+from xivo_cti.ami import ami_status_request_logger
 
 logger = logging.getLogger('interface_ami')
 
@@ -62,6 +65,7 @@ class AMI(object):
         self.amicl = None
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
+        ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
 
     def connect(self):
         try:

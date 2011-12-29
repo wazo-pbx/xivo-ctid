@@ -28,7 +28,7 @@ from xivo_cti.ami import ami_callback_handler
 class AMILogger(object):
     _instance = None
     _log_header = 'AMI logger'
-    logged_events = ('Agentcallbacklogin',
+    logged_events = ['Agentcallbacklogin',
                      'Agentcallbacklogoff',
                      'AgentCalled',
                      'AgentComplete',
@@ -72,7 +72,7 @@ class AMILogger(object):
                      'Transfer',
                      'Unlink',
                      'UnParkedCall',
-                     )
+                     ]
 
     def __init__(self):
         self._logger = None
@@ -87,13 +87,13 @@ class AMILogger(object):
     @classmethod
     def register_callbacks(cls):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        logger = cls.get_instance()
+        ami_logger = cls.get_instance()
         for event_name in cls.logged_events:
-            callback_handler.register_callback(event_name, logger.log_ami_event)
+            callback_handler.register_callback(event_name, ami_logger.log_ami_event)
 
     @classmethod
     def get_instance(cls):
         if not cls._instance:
-            cls._instance = AMILogger()
+            cls._instance = cls()
             cls._instance.set_logger(logging.getLogger(cls._log_header))
         return cls._instance

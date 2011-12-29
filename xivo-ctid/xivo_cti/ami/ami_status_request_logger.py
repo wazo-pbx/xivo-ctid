@@ -23,26 +23,19 @@
 
 from xivo_cti.ami.ami_logger import AMILogger
 
-log_ami_events_complete = False
+log_ami_events_statusrequest = True
 
 
-class AMIEventCompleteLogger(AMILogger):
+class AMIStatusRequestLogger(AMILogger):
     _instance = None
-    _log_header = 'AMI event complete logger'
-    logged_events = ['AgentsComplete',
-                     'CoreShowChannelsComplete',
-                     'DAHDIShowChannelsComplete',
-                     'MeetmeListComplete',
-                     'ParkedCallsComplete',
-                     'PeerlistComplete',
-                     'QueueStatusComplete',
-                     'QueueSummaryComplete',
-                     'RegistrationsComplete',
-                     'ShowDialPlanComplete',
-                     'StatusComplete',
-                     'VoicemailUserEntryComplete',
+    _log_header = 'AMI status request logger'
+    logged_events = ['Agents',
+                     'CoreShowChannel',
+                     'ParkedCallStatus',
+                     'RegistryEntry',
+                     'Status',
                      ]
 
     def log_ami_event(self, event):
-        if log_ami_events_complete:
-            super(AMIEventCompleteLogger, self).log_ami_event(event)
+        if log_ami_events_statusrequest:
+            super(AMIStatusRequestLogger, self).log_ami_event(event)

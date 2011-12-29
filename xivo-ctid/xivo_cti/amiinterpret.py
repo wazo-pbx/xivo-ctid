@@ -30,8 +30,6 @@ from queue_logger import queue_logger
 from xivo_cti import xivo_webservices
 from xivo_cti import cti_config
 
-log_ami_events_statusrequest = True
-
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 logger = logging.getLogger('AMI_1.8')
@@ -525,14 +523,6 @@ class AMI_1_8(object):
             logger.info('ami_peerentry %s:%s %s %s',
                         ipaddress, ipport, event['Channeltype'], event['ObjectName'])
 
-    def ami_registryentry(self, event):
-        if log_ami_events_statusrequest:
-            logger.info('ami_registryentry %s', event)
-
-    def ami_parkedcallstatus(self, event):
-        if log_ami_events_statusrequest:
-            logger.info('ami_parkedcallstatus %s', event)
-
     def ami_meetmelist(self, event):
         opts = {'usernum': event['UserNumber'],
                 'admin': 'Yes' in event['Admin'],
@@ -542,10 +532,6 @@ class AMI_1_8(object):
         return self.innerdata.meetmeupdate(event['Conference'],
                                            event['Channel'], opts)
 
-    def ami_status(self, event):
-        if log_ami_events_statusrequest:
-            logger.info('ami_status %s', event)
-
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
         context = event['Context']
@@ -553,10 +539,6 @@ class AMI_1_8(object):
         bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
         timestamp_start = self.timeconvert(event['Duration'])
-
-        if log_ami_events_statusrequest:
-            logger.info('ami_coreshowchannel %s application=%s : %s',
-                        channel, application, event)
 
         self.innerdata.newchannel(channel, context, state)
         channelstruct = self.innerdata.channels[channel]
@@ -579,11 +561,6 @@ class AMI_1_8(object):
             self.innerdata.newchannel(bridgedchannel, context, state)
             self.innerdata.setpeerchannel(channel, bridgedchannel)
             self.innerdata.setpeerchannel(bridgedchannel, channel)
-
-    def ami_agents(self, event):
-        if log_ami_events_statusrequest:
-            logger.info('ami_agents %s', event)
-        self.innerdata.agentstatus(event['Agent'], event['Status'])
 
     def ami_queuemember(self, event):
         membername = event['Name']
