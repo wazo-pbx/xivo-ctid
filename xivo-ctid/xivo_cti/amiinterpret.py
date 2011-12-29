@@ -31,7 +31,6 @@ from xivo_cti import xivo_webservices
 from xivo_cti import cti_config
 
 log_ami_events_statusrequest = True
-log_ami_events_complete = False
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -630,54 +629,6 @@ class AMI_1_8(object):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['monitored'] = False
-
-    def ami_peerlistcomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_peerlistcomplete %s', event)
-
-    def ami_parkedcallscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_parkedcallscomplete %s', event)
-
-    def ami_meetmelistcomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_meetmelistcomplete %s', event)
-
-    def ami_statuscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_statuscomplete %s', event)
-
-    def ami_agentscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_agentscomplete %s', event)
-
-    def ami_queuestatuscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_queuestatuscomplete %s', event)
-
-    def ami_queuesummarycomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_queuesummarycomplete %s', event)
-
-    def ami_coreshowchannelscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_coreshowchannelscomplete %s', event)
-
-    def ami_registrationscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_registrationscomplete %s', event)
-
-    def ami_showdialplancomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_showdialplancomplete %s', event)
-
-    def ami_dahdishowchannelscomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_dahdishowchannelscomplete %s', event)
-
-    def ami_voicemailuserentrycomplete(self, event):
-        if log_ami_events_complete:
-            logger.info('ami_voicemailuserentrycomplete %s', event)
 
     def amiresponse_extensionstatus(self, event):
         if 'Hint' in event:

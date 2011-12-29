@@ -27,6 +27,7 @@ from xivo_cti.ami import ami_callback_handler
 
 class AMILogger(object):
     _instance = None
+    _log_header = 'AMI logger'
     logged_events = ('Agentcallbacklogin',
                      'Agentcallbacklogoff',
                      'AgentCalled',
@@ -94,5 +95,5 @@ class AMILogger(object):
     def get_instance(cls):
         if not cls._instance:
             cls._instance = AMILogger()
-            cls._instance.set_logger(logging.getLogger('AMI logger'))
+            cls._instance.set_logger(logging.getLogger(cls._log_header))
         return cls._instance
