@@ -378,8 +378,6 @@ class Safe(object):
                                      'status': self.xod_status[listname][tid]})
 
     def update_config_list(self, listname):
-        if listname not in self.xod_config:
-            logger.warning('no such listname %s', listname)
         try:
             try:
                 deltas = self.xod_config[listname].update()
@@ -627,8 +625,6 @@ class Safe(object):
             # (end)
             status['pseudochan'] = None
             status['channels'] = {}
-        logger.info('Channel statuses %s',
-                    self.xod_status['meetmes'][mid]['channels'])
         self.handle_cti_stack('empty_stack')
 
     def agentlogin(self, agentnumber, channel):
@@ -716,8 +712,6 @@ class Safe(object):
             self._update_queue_member_status(queue_member_id, queue_member_status)
         elif queue_member_id in self.queuemembers:
             self._remove_queue_member(queue_member_id)
-        else:
-            logger.warning('%s no more in queuemembers', queue_member_id)
 
     def queuememberupdate(self, queuename, location, props=None):
         if self.xod_config['queues'].hasqueue(queuename):
@@ -806,24 +800,16 @@ class Safe(object):
         if listname == 'channels':
             if item_id and item_id in self.channels:
                 return self.channels.get(item_id).properties
-            else:
-                logger.warning('%s not in channels', item_id)
         elif listname == 'queuemembers':
             if item_id and item_id in self.queuemembers:
                 return self.queuemembers.get(item_id)
-            else:
-                logger.warning('%s not in queuemembers', item_id)
         else:
             if item_id and item_id in self.xod_status[listname]:
                 return self.xod_status[listname].get(item_id)
-            else:
-                logger.warning('%s not in xod_status for %s', item_id, listname)
 
     def appendcti(self, listname, which, item_id, status=None):
-        if status is None and item_id:
+        if status or (status is None and int(item_id) > 0):
             status = self.statusbylist(listname, item_id)
-        else:
-            logger.warning('XXX item_id is None (why ?) %s %s', listname, which)
         if status:
             evt = {'class': 'getlist',
                    'listname': listname,
@@ -843,8 +829,6 @@ class Safe(object):
         """
         if action == 'set':
             (listname, _, item) = event
-            if item is None:
-                logger.warning('XXX id is None %s', event)
             thisstatus = copy.deepcopy(self.statusbylist(listname, item))
             self.ctistack.append((event, thisstatus))
         elif action == 'setforce':
@@ -853,8 +837,6 @@ class Safe(object):
             while self.ctistack:
                 (oldevent, oldstatus) = self.ctistack.pop()
                 (listname, _, item) = oldevent
-                if item is None:
-                    logger.warning('XXX id is None 2 %s', event)
                 newstatus = self.statusbylist(listname, item)
                 if oldstatus != newstatus:
                     if oldstatus is None:
@@ -878,8 +860,6 @@ class Safe(object):
                     if channel in chanlist:
                         chanlist.remove(channel)
                         self.appendcti('phones', 'updatestatus', phoneid)
-                    else:
-                        logger.warning('%s not in channel list for phoneid %s', channel, phoneid)
             del self.channels[channel]
             self.events_cti.put({'class': 'getlist',
                                  'listname': 'channels',
@@ -888,7 +868,6 @@ class Safe(object):
                                  'list': [channel]})
         else:
             logger.warning('channel %s not there ...', channel)
-        logger.info('remaining channels : %s', self.channels.keys())
 
     def updatehint(self, hint, status):
         termination = self.ast_channel_to_termination(hint)
@@ -897,7 +876,6 @@ class Safe(object):
             oldstatus = self.xod_status['phones'][p]['hintstatus']
             self.xod_status['phones'][p]['hintstatus'] = status
             if status != oldstatus:
-                logger.info('updatehint %s : %s => %s', hint, oldstatus, status)
                 self.events_cti.put({'class': 'getlist',
                                      'listname': 'phones',
                                      'function': 'updatestatus',
@@ -912,8 +890,6 @@ class Safe(object):
             oldreg = self.xod_status['phones'][p]['reg']
             self.xod_status['phones'][p]['reg'] = reg
             if reg != oldreg:
-                logger.info('registration for %s : <%s> => <%s>',
-                            peer, oldreg, reg)
                 self.events_cti.put({'class': 'getlist',
                                      'listname': 'phones',
                                      'function': 'updatestatus',
@@ -951,7 +927,6 @@ class Safe(object):
             logger.exception('find termination according to channel %s', channel)
 
     def masquerade(self, oldchannel, newchannel):
-        logger.info('masquerading channel %s into %s', oldchannel, newchannel)
         oldrelations = self.channels[oldchannel].relations
         newrelations = self.channels[newchannel].relations
 
@@ -970,16 +945,6 @@ class Safe(object):
         newfirstchannel = self.channels[newchannel].peerchannel
         if newfirstchannel:
             self.setpeerchannel(newfirstchannel, newchannel)
-        else:
-            if oldchannel.startswith('SIPPeer'):
-                logger.info('no peerchannel setting, since parking action (A) (%s %s)',
-                            oldchannel, newchannel)
-            elif oldchannel.startswith('Parked'):
-                logger.info('no peerchannel setting, since parking action (B) (%s %s)',
-                            oldchannel, newchannel)
-            else:
-                logger.warning('no peerchannel setting ... why ? %s %s',
-                               oldchannel, newchannel)
 
     def usersummary_from_phoneid(self, phoneid):
         usersummary = {}
@@ -1128,10 +1093,6 @@ class Safe(object):
             cutchan2 = cutchan1[1].split('-')
             name = cutchan2[0]
             term = {'protocol': protocol, 'name': name}
-        elif len(cutchan1) < 2:
-            logger.warning('not enough /es in %s', cutchan1)
-        elif len(cutchan1) > 2:
-            logger.warning('too much /es in %s ?', cutchan1)
         return term
 
     def zphones(self, protocol, name):
@@ -1174,11 +1135,9 @@ class Safe(object):
         self.sheetconditions = bsheets.get('conditions')
 
         if where not in self.sheetevents:
-            logger.warning('sheet event "%s" is not in %s', where, self.sheetevents.keys())
             return
 
         if channel not in self.channels and not channel.startswith('special'):
-            logger.warning('channel "%s" is not in %s', channel, self.channels.keys())
             return
 
         for se in self.sheetevents[where]:
@@ -1224,7 +1183,6 @@ class Safe(object):
     # Timers/Synchro stuff - begin
 
     def checkqueue(self):
-        logger.info('entering checkqueue')
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
@@ -1250,7 +1208,6 @@ class Safe(object):
 
     def cb_timer(self, *args):
         try:
-            logger.info('cb_timer (timer finished at %s) %s', time.asctime(), args)
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'innerdata:%s\n' % self.ipbxid)
         except Exception:
@@ -1290,9 +1247,6 @@ class Safe(object):
             logger.exception('problem when closing channel %s', channel)
 
     def fagi_setup(self, fagistruct):
-        if fagistruct.channel in self.fagichannels:
-            logger.warning('fagi_setup for %s already done ... (%s)',
-                           fagistruct.channel, fagistruct.agidetails.get('agi_network_script'))
         tm = threading.Timer(0.2, self.cb_timer, ({'action': 'fagi_noami',
                                                    'properties': fagistruct}))
         self.fagichannels[fagistruct.channel] = {'timer': tm,
@@ -1301,9 +1255,7 @@ class Safe(object):
         tm.start()
 
     def fagi_handle(self, channel, where):
-        logger.info('handle FAGI for channel %s, sync comes from %s', channel, where)
         if channel not in self.fagichannels:
-            logger.warning('fagi_setup for %s not done', channel)
             return
 
         # handle fagi event
@@ -1324,7 +1276,6 @@ class Safe(object):
     def fagi_handle_real(self, agievent):
         # check capas !
         varstoset = {}
-        logger.info('agievent %s', agievent)
         try:
             function = agievent.get('agi_network_script')
             uniqueid = agievent.get('agi_uniqueid')
@@ -1342,9 +1293,6 @@ class Safe(object):
                 cidnumstrs.append('agi_calleridani=%s' % calleridani)
             if callingani2 != '0':
                 cidnumstrs.append('agi_callingani2=%s' % callingani2)
-
-            logger.info('handle_fagi (%s) context=%s uid=%s chan=%s %s',
-                        function, context, uniqueid, channel, ' '.join(cidnumstrs))
         except Exception:
             logger.exception('handle_fagi %s', agievent)
             return varstoset
@@ -1383,51 +1331,23 @@ class Safe(object):
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
 
         elif function == 'callerid_forphones':
-            if channel in self.channels:
-                calleridsolved = None
-            else:
-                logger.warning('handle_fagi %s no such uniqueid received yet : %s %s',
-                               function, uniqueid, channel)
-                calleridsolved = None
+            calleridsolved = None
 
             calleridname = agievent.get('agi_calleridname')
             if calleridsolved:
                 td = 'handle_fagi %s : calleridsolved="%s"' % (function, calleridsolved)
-                logger.info('%s', td.encode('utf8'))
                 if calleridname in ['', 'unknown', calleridnum]:
                     calleridname = calleridsolved
-                else:
-                    logger.warning('handle_fagi %s : (solved) there is already a calleridname="%s"',
-                                   function, calleridname)
-
             # to set according to os.getenv('LANG') or os.getenv('LANGUAGE') later on ?
             if calleridnum in ['', 'unknown']:
                 calleridnum = CALLERID_UNKNOWN_NUM
             if calleridname in ['', 'unknown']:
                 calleridname = calleridnum if calleridnum != CALLERID_UNKNOWN_NUM else 'unknown'
-            else:
-                logger.warning('handle_fagi %s : (number) there is already a calleridname="%s"',
-                               function, calleridname)
-
             calleridtoset = '"%s"<%s>' % (calleridname, calleridnum)
             td = 'handle_fagi %s : the callerid will be set to %s' % (function,
                                                                       calleridtoset.decode('utf8'))
             logger.info('%s', td.encode('utf8'))
             varstoset['CALLERID'] = calleridtoset
-
-        elif function == 'queuestatus':
-            # used to set XIVO_QUEUESTATUS and XIVO_QUEUEID with a queue's status summary
-            pass
-
-        elif function == 'queueentries':
-            # used to set XIVO_QUEUEENTRIES with the time since a entry has been there
-            pass
-
-        elif function == 'queueholdtime':
-            # used to set XIVO_QUEUEHOLDTIME according to some previously fed statistics
-            pass
-        else:
-            logger.warning('handle_fagi %s : unknown function', function)
 
         return varstoset
 
@@ -1488,14 +1408,12 @@ class Safe(object):
         number -- the calling number, i.e. the number we want to get
           information about
         """
-        logger.debug('findreverse %s %s %s', context, did_number, number)
         try:
             context_obj = self.contexts_mgr.contexts[context]
         except KeyError:
             logger.error('findreverse: undefined context: %s', context)
             return {}
         else:
-            logger.info('Reverse lookup in context %s', context)
             lookup_results = context_obj.lookup_reverse(did_number, number)
             result = {}
             for lookup_result in lookup_results:
@@ -1510,7 +1428,6 @@ class Safe(object):
             logger.error('getcustomers: undefined context: %s', context)
             return {'status': 'ko', 'reason': 'undefined_context'}
         else:
-            logger.info('Direct lookup in context %s', context)
             headers, resultlist = context_obj.lookup_direct(pattern)
             # remove any duplicated line
             resultlist = list(set(resultlist))

@@ -115,14 +115,12 @@ class UrlList(object):
                     logger.warning('%s : Internal Error (500)', self.url)
                 elif http_code == 304:
                     self.urlmd5 = savemd5
-                    logger.info('%s : received no-update (304) from WEBI', self.url)
                     ret = 2
                 elif http_code == 204:
-                    logger.info('%s : received no-data (204) from WEBI', self.url)
+                    pass
                 elif http_code == 200:  # XXX temporary compatibility
                     if fulltable == 'XIVO-WEBI: no-update':
                         self.urlmd5 = savemd5
-                        logger.info('%s : received no-update from WEBI', self.url)
                         ret = 2
                 else:
                     logger.warning('%s : unknown code (%d)', self.url, http_code)

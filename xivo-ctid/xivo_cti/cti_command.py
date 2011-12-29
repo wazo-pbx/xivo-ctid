@@ -150,13 +150,10 @@ class Command(object):
                     else:
                         messagebase.update(ztmp)
                 except Exception:
-                    logger.exception('calling %s', methodname)
                     messagebase['warning_string'] = 'exception'
             else:
-                logger.warning('no such method %s', methodname)
                 messagebase['warning_string'] = 'unimplemented'
         else:
-            logger.warning('unknown command %s', self.command)
             messagebase['warning_string'] = 'unknown'
 
         ackmessage = {'message': messagebase}
@@ -633,7 +630,6 @@ class Command(object):
         reply = {}
         self.ipbxcommand = self._commanddict.get('command')
         if not self.ipbxcommand:
-            logger.warning('no command given')
             return reply
         reply['command'] = self.ipbxcommand
         if self.ipbxcommand not in IPBXCOMMANDS:
@@ -976,7 +972,6 @@ class Command(object):
             extentodial = dst.get('id')
         elif dst.get('type') == 'voicemail':
             # *97 vm number
-            logger.debug('transfer to voicemail %s', self._commanddict)
             if dst['id'] in innerdata.xod_config['voicemails'].keeplist:
                 voicemail = innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']

@@ -188,7 +188,6 @@ class CTIServer(object):
         return found_ipbxid
 
     def checkqueue(self):
-        logger.info('entering checkqueue')
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
@@ -201,9 +200,7 @@ class CTIServer(object):
                     got_ip_address = sockparams[0]
                     ipbxid = self.find_matching_ipbxid(got_ip_address)
                     if ipbxid:
-                        if self.myami[ipbxid].connected():
-                            logger.info('do NOT attempt to reconnect to the AMI for %s', ipbxid)
-                        else:
+                        if not self.myami[ipbxid].connected():
                             logger.info('attempt to reconnect to the AMI for %s', ipbxid)
                             z = self.myami[ipbxid].connect()
                             if z:
@@ -222,8 +219,6 @@ class CTIServer(object):
                 connc.close()
                 if connc in self.fdlist_established:
                     del self.fdlist_established[connc]
-                else:
-                    logger.warning('could not remove connexion : already done ...')
             else:
                 logger.warning('checkqueue : unknown action received : %s', action)
         return ncount
@@ -356,7 +351,6 @@ class CTIServer(object):
                 z = self.mycti[ipbxid].connect()
                 if z:
                     self.fdlist_remote_cti[z] = self.mycti[ipbxid]
-        # }
 
         logger.info('# STARTING %s # (3/3) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
         # opens the listening socket for incoming (CTI, WEBI, FAGI, INFO) connections
@@ -509,7 +503,6 @@ class CTIServer(object):
                         if cn not in fdtodel:
                             fdtodel.append(cn)
             if fdtodel:
-                logger.warning('there are fd to delete : %s', fdtodel)
                 for cn in fdtodel:
                     del self.fdlist_established[cn]
 
@@ -538,11 +531,11 @@ class CTIServer(object):
                            self.fdlist_ami.keys())
             logger.warning('(select) current open TCP connections : (RCTI) %s',
                            self.fdlist_remote_cti.keys())
-            
+
             # we must close the scheduler early since scheduled jobs depends
             # on the AMI connection
             self.scheduler.shutdown()
-            
+
             for s in self.fdlist_full:
                 if s in self.fdlist_established:
                     if self.askedtoquit:
@@ -554,7 +547,6 @@ class CTIServer(object):
                     s.close()
 
             if self.askedtoquit:
-                # self.commandclass.reset('stop') # used to call __fill_ctilog__('daemon stop', mode)
                 time_uptime = int(time.time() - time.mktime(self.time_start))
                 logger.info('# STOPPING XiVO CTI Server %s (pid %d) / git:%s # uptime %d s (since %s)',
                             self.xivoversion, os.getpid(), self.revision,
@@ -574,8 +566,6 @@ class CTIServer(object):
 
         try:
             # connexions ready for sending(writing)
-            if sels_o:
-                logger.warning('got some sels_o %s', sels_o)
             for sel_o in sels_o:
                 try:
                     sel_o.process_sending()
@@ -587,9 +577,6 @@ class CTIServer(object):
                         kind.disconnected('end_sending')
                         sel_o.close()
                         del self.fdlist_established[sel_o]
-
-            if sels_e:
-                logger.warning('got some sels_e %s', sels_e)
 
             if sels_i:
                 for sel_i in sels_i:
@@ -635,7 +622,6 @@ class CTIServer(object):
                         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
                         if kind == 'ANNOUNCE':
                             [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
-                            logger.info('UDP %s <%s> %s', kind, data.strip(), sockparams)
                             # scheduling AMI reconnection
                             k = threading.Timer(1, self.cb_timer,
                                                 ({'action': 'ipbxup',
@@ -727,7 +713,7 @@ class CTIServer(object):
                                     # if requester in self.commandclass.transfers_ref:
                                     #   self.commandclass.transfer_endbuf(requester)
                                     logger.info('TCP socket %s closed(A %s) on %s', kind.kind, cexc, requester)
-                            else: # {
+                            else:
                                 try:
                                     msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
                                     lmsg = len(msg)
@@ -742,7 +728,6 @@ class CTIServer(object):
                                         logger.exception('handling %s (%s)', requester, kind)
                                 else:
                                     closemenow = True
-                                    # XXX connc : kind.manage_logout('end_receiving')
 
                             if closemenow:
                                 kind.disconnected('by_client')
@@ -780,7 +765,6 @@ class CTIServer(object):
                                             nactions = self.safe[where].checkqueue()
                                         elif kind == 'ami':
                                             nactions = self.myami[where].checkqueue()
-                                        logger.info('handled %d actions for %s', nactions, kind)
                                     elif kind == 'alarmclk':
                                         userid = where
                                         params = {'amicommand': 'alarmclk',
@@ -822,7 +806,6 @@ class CTIServer(object):
 
             if not sels_i and not sels_o and not sels_e:
                 # when nothing happens on the sockets, we fall here
-                logger.info('[%s] updates (select timeout) %s', self.xdname, time.asctime())
                 for ipbxid, safe in self.safe.iteritems():
                     if ipbxid == self.myipbxid:
                         try:

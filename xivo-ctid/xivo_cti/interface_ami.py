@@ -115,7 +115,6 @@ class AMI(object):
             logger.exception('cb_timer %s', args)
 
     def checkqueue(self):
-        logger.info('entering checkqueue')
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
@@ -276,12 +275,7 @@ class AMI(object):
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
-        if not actionid:
-            logger.info('amiresponse_success (no ActionID) %s', event)
-        elif actionid not in self.actionids:
-            logger.warning('amiresponse_success %s (no record) : %s',
-                           actionid, event)
-        else:
+        if actionid:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
             if mode == 'newchannel':
@@ -290,16 +284,8 @@ class AMI(object):
                 self._handle_useraction_success(event, actionid, properties, mode)
             elif mode == 'extension':
                 self._handle_extension_success(event, actionid, properties, mode)
-            elif mode == 'init':
-                logger.info('amiresponse_success %s %s : %s',
-                            actionid, mode, event)
-            elif mode == 'presence':
-                pass
             elif mode == 'vmupdate':
                 self._handle_vmupdate_success(event, properties)
-            else:
-                logger.info('amiresponse_success %s %s (?) : %s',
-                            actionid, mode, event)
 
     def amiresponse_error(self, event):
         actionid = event.get('ActionID')

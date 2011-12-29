@@ -83,15 +83,12 @@ class AMI_1_8(object):
         channel = event['Channel']
         if application == 'AGI':
             if self.fagiportstring in appdata:  # match against ~ ':5002/' in appdata
-                logger.info('ami_newexten %s %s : %s %s', application, channel, appdata, event)
                 # warning : this might cause problems if AMI not connected
                 if self.innerdata.fagi_sync('get', channel, 'agi'):
                     self.innerdata.fagi_sync('clear', channel)
                     self.innerdata.fagi_handle(channel, 'AMI')
                 else:
                     self.innerdata.fagi_sync('set', channel, 'ami')
-        elif application == 'VoiceMail':
-            logger.info('ami_newexten %s %s : %s', application, channel, appdata)
 
     def ami_hangup(self, event):
         channel = event.pop('Channel')
@@ -163,8 +160,6 @@ class AMI_1_8(object):
         status = event['Status']
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['holded'] = (status == 'On')
-        else:
-            logger.warning('ami_hold : unknown channel %s', channel)
 
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
@@ -253,48 +248,23 @@ class AMI_1_8(object):
                                         event['Position'])
 
     def ami_queuememberstatus(self, event):
-        membername = event['MemberName']
-        location = event['Location']
-        if location != membername:
-            logger.warning('ami_queuememberstatus : %s and %s are not the same',
-                           location, membername)
-        self.innerdata.queuememberupdate(event['Queue'], location, (event['Status'],
-                                                                    event['Paused'],
-                                                                    event['Membership'],
-                                                                    event['CallsTaken'],
-                                                                    event['Penalty'],
-                                                                    event['LastCall']))
+        self.innerdata.queuememberupdate(event['Queue'],
+                                         event['Location'],
+                                         (event['Status'],
+                                          event['Paused'],
+                                          event['Membership'],
+                                          event['CallsTaken'],
+                                          event['Penalty'],
+                                          event['LastCall']))
 
     def ami_queuememberadded(self, event):
         self.ami_queuememberstatus(event)
 
     def ami_queuememberremoved(self, event):
-        membername = event['MemberName']
-        location = event['Location']
-        if location != membername:
-            logger.warning('ami_queuememberremoved : %s and %s are not the same',
-                           location, membername)
-        self.innerdata.queuememberupdate(event['Queue'], location)
+        self.innerdata.queuememberupdate(event['Queue'], event['Location'])
 
     def ami_queuememberpaused(self, event):
-        membername = event['MemberName']
-        location = event['Location']
-        if location != membername:
-            logger.warning('ami_queuememberremoved : %s and %s are not the same',
-                           location, membername)
-        self.innerdata.queuememberupdate(event['Queue'], location, (event['Paused'],))
-
-    def ami_agentcalled(self, event):
-        agentname = event['AgentName']
-        agentcalled = event['AgentCalled']
-        if agentname != agentcalled:
-            logger.warning('ami_agentcalled : %s %s', agentname, agentcalled)
-
-    def ami_agentconnect(self, event):
-        member = event['Member']
-        membername = event['MemberName']
-        if member != membername:
-            logger.warning('ami_agentconnect %s %s', member, membername)
+        self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
 
     def ami_agentlogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Channel'])
@@ -479,16 +449,10 @@ class AMI_1_8(object):
                 methodname = 'userevent_%s' % eventname.lower()
                 if hasattr(self, methodname):
                     chanprops = self.innerdata.channels[channel]
-                    logger.info('ami_userevent %s %s : %s', eventname, channel, event)
                     getattr(self, methodname)(chanprops, event)
 
     def handle_fagi(self, fastagi):
-        envdict = fastagi.env
-        args = fastagi.args
-        channel = envdict['agi_channel']
-        function = envdict['agi_network_script']
-        # syntax in dialplan : exten = xx,n,AGI(agi://ip:port/function,arg1,arg2)
-        logger.info('handle_fagi %s %s : %s', function, channel, args)
+        return
 
     def ami_messagewaiting(self, event):
         try:
@@ -556,17 +520,14 @@ class AMI_1_8(object):
             self.innerdata.setpeerchannel(bridgedchannel, channel)
 
     def ami_queuemember(self, event):
-        membername = event['Name']
-        location = event['Location']
-        if location != membername:
-            logger.warning('ami_queuemember : %s and %s are not the same',
-                           location, membername)
-        self.innerdata.queuememberupdate(event['Queue'], location, (event['Status'],
-                                                                    event['Paused'],
-                                                                    event['Membership'],
-                                                                    event['CallsTaken'],
-                                                                    event['Penalty'],
-                                                                    event['LastCall']))
+        self.innerdata.queuememberupdate(event['Queue'],
+                                         event['Location'],
+                                         (event['Status'],
+                                          event['Paused'],
+                                          event['Membership'],
+                                          event['CallsTaken'],
+                                          event['Penalty'],
+                                          event['LastCall']))
 
     def ami_queueentry(self, event):
         timestart = self.timeconvert(event['Wait'])
