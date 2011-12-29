@@ -41,7 +41,7 @@ switch_originates = False
 
 ## \class AMIClass
 # AMI definition in order to interact with the Asterisk AMI.
-class AMIClass:
+class AMIClass(object):
     class AMIError(Exception):
         def __init__(self, msg):
             self.msg = msg

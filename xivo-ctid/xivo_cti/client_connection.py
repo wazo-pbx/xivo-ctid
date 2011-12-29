@@ -26,7 +26,7 @@ from collections import deque
 
 BUFSIZE_LARGE = 262144
 
-class ClientConnection:
+class ClientConnection(object):
     class CloseException(Exception):
         def __init__(self, errno = -1):
             self.args = (errno,)

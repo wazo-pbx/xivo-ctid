@@ -30,7 +30,7 @@ import zlib
 logger = logging.getLogger('sheet')
 
 
-class Sheet:
+class Sheet(object):
     def __init__(self, where, ipbxid, channel):
         self.internaldata = { 'where' : where,
                               'ipbxid' : ipbxid,

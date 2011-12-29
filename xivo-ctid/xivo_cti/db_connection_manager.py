@@ -29,7 +29,7 @@ from xivo.BackSQL import backsqlite
 from xivo.BackSQL import backsqlite3
 from xivo.BackSQL import backpostgresql
 
-class DbConnectionPool:
+class DbConnectionPool(object):
     '''Connection manager for DB connections.
 
     A single connection will be established for any given URI and a connection

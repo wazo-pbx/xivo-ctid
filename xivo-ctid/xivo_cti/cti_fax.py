@@ -92,7 +92,7 @@ class asyncActionsThread(threading.Thread):
 
 
 
-class Fax:
+class Fax(object):
     def __init__(self, innerdata, fileid):
         self.innerdata = innerdata
         self.fileid = fileid

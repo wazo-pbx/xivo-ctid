@@ -26,7 +26,7 @@ import cti_urllist
 logger = logging.getLogger('anylist')
 
 
-class AnyList:
+class AnyList(object):
     def __init__(self, newurls):
         self.commandclass = None
         self.requested_list = {}

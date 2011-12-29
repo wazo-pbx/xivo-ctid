@@ -21,7 +21,7 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-class Interfaces():
+class Interfaces(object):
     def __init__(self, ctiserver):
         self._ctiserver = ctiserver
         self.logintimer = None

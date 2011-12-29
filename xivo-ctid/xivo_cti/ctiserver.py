@@ -57,7 +57,7 @@ from xivo_cti.dao.alchemy import dbconnection
 logger = logging.getLogger('main')
 
 
-class CTIServer:
+class CTIServer(object):
 
     xivoversion = '1.2'
     revision = 'githash'

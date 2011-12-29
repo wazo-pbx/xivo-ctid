@@ -30,13 +30,13 @@ CMD_LOGIN_PASS = 1 << 2
 CMD_LOGIN_CAPAS = 1 << 3
 CMD_TRANSFER = 1 << 10
 
-class Command:
+class Command(object):
     def __init__(self, commandname, commandargs):
         self.name = commandname
         self.args = commandargs
         self.type = None
 
-class BaseCommand:
+class BaseCommand(object):
 
     ctiseparator = '\n'
 

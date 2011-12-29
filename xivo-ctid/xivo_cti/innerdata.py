@@ -47,7 +47,7 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 CALLERID_UNKNOWN_NUM = '0'
 
 
-class Safe:
+class Safe(object):
     # matches between CTI lists and WEBI-given fields
     urlvars = {
         'users': 'urllist_users',
@@ -1520,7 +1520,7 @@ class Safe:
     # directory lookups entry points - STOP
 
 
-class Channel:
+class Channel(object):
     def __init__(self, channel, context):
         self.channel = channel
         self.peerchannel = None

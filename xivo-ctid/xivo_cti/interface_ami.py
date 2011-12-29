@@ -36,7 +36,7 @@ from xivo_cti.ami import ami_callback_handler, ami_logger
 logger = logging.getLogger('interface_ami')
 
 
-class AMI:
+class AMI(object):
     kind = 'AMI'
     LINE_SEPARATOR = '\r\n'
     EVENT_SEPARATOR = '\r\n\r\n'

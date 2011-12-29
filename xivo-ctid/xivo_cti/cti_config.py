@@ -42,7 +42,7 @@ XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
 XIVO_CONF_OVER = None
 
 
-class Config:
+class Config(object):
 
     instance = None
 

@@ -29,7 +29,7 @@ from xivo_cti import db_connection_manager
 logger = logging.getLogger('XiVO queue logger')
 
 
-class queue_logger:
+class queue_logger(object):
     _uri = None
     last_transaction = None
     cache = None

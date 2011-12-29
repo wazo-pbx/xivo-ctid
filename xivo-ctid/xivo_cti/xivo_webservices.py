@@ -27,7 +27,7 @@ import httplib
 headers = { 'Content-type': 'application/json',
             'Accept': 'text/plain' }
 
-class xws():
+class xws(object):
     def __init__(self, ipaddress, ipport):
         self.myconn = None
         self.ipaddress = ipaddress

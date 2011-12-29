@@ -34,7 +34,7 @@ ASTERISK_RECORDS_PATH = '/var/spool/asterisk/monitor'
 logger = logging.getLogger('records_base')
 
 
-class XivoRecords():
+class XivoRecords(object):
 
     HIERARCHY_MIN = 0
     HIERARCHY_AGENT = 1

@@ -36,7 +36,7 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         return result
 
 
-class UrlList:
+class UrlList(object):
     def __init__(self, url):
         self.list = {}
         self.url = url.replace('\\/', '/')

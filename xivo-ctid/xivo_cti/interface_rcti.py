@@ -26,11 +26,12 @@ import hashlib
 import logging
 import ssl
 import socket
+from xivo_cti.interfaces import Interfaces
 
 logger = logging.getLogger('interface_rcti')
 
 
-class RCTI:
+class RCTI(Interfaces):
     kind = 'RCTI'
 
     def __init__(self, ctiserver, ipbxid, config):

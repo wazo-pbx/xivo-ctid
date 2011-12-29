@@ -38,7 +38,7 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 logger = logging.getLogger('AMI_1.8')
 
 
-class AMI_1_8:
+class AMI_1_8(object):
 
     userevents = ('Feature',
                   'OutCall',

@@ -36,7 +36,7 @@ from xivo.BackSQL import backpostgresql
 logger = logging.getLogger('records_db')
 
 
-class Records:
+class Records(object):
     def __init__(self, uri, table):
         self.uri = uri
         self.tablename = table

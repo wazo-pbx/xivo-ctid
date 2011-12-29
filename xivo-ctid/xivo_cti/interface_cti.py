@@ -32,7 +32,7 @@ from xivo_cti import cti_command
 logger = logging.getLogger('interface_cti')
 
 
-class serialJson():
+class serialJson(object):
     def __init__(self):
         return
 

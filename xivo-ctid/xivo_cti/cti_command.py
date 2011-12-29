@@ -92,7 +92,7 @@ XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
-class Command:
+class Command(object):
     def __init__(self, connection, thiscommand):
         self._config = cti_config.Config.get_instance()
         self._connection = connection
