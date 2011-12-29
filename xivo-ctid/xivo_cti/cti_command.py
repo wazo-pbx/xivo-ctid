@@ -93,36 +93,36 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 class Command:
     def __init__(self, connection, thiscommand):
         self._config = cti_config.Config.get_instance()
-        self.connection = connection
-        self._ctiserver = self.connection._ctiserver
-        self.commanddict = thiscommand
-        self.othermessages = list()
+        self._connection = connection
+        self._ctiserver = self._connection._ctiserver
+        self._commanddict = thiscommand
+        self._othermessages = list()
         self._queue_statistic_manager = QueueStatisticManager()
         self._queue_statistic_encoder = QueueStatisticEncoder()
-        self.log = logging.getLogger('cti_command(%s:%d)' % self.connection.requester)
+        self.log = logging.getLogger('cti_command(%s:%d)' % self._connection.requester)
 
     def parse(self):
-        self.command = self.commanddict.get('class', None)
-        self.commandid = self.commanddict.get('commandid', None)
+        self.command = self._commanddict.get('class')
+        self.commandid = self._commanddict.get('commandid')
 
-        self.ipbxid = self.connection.connection_details.get('ipbxid')
-        self.userid = self.connection.connection_details.get('userid')
+        self.ipbxid = self._connection.connection_details.get('ipbxid')
+        self.userid = self._connection.connection_details.get('userid')
         self.innerdata = self._ctiserver.safe.get(self.ipbxid)
 
         # identifiers for the requester
-        self.ripbxid = self.commanddict.get('ipbxid', self.ipbxid)
-        self.ruserid = self.commanddict.get('userid', self.userid)
+        self.ripbxid = self._commanddict.get('ipbxid', self.ipbxid)
+        self.ruserid = self._commanddict.get('userid', self.userid)
         self.rinnerdata = self._ctiserver.safe.get(self.ripbxid)
 
         # identifiers for the requested
-        self.tipbxid = self.commanddict.get('tipbxid', self.ipbxid)
+        self.tipbxid = self._commanddict.get('tipbxid', self.ipbxid)
         self.tinnerdata = self._ctiserver.safe.get(self.tipbxid)
 
         messagebase = {'class': self.command}
         if self.commandid:
             messagebase['replyid'] = self.commandid
 
-        if self.command in REGCOMMANDS and not self.connection.connection_details.get('logged'):
+        if self.command in REGCOMMANDS and not self._connection.connection_details.get('logged'):
             messagebase['error_string'] = 'notloggedyet'
 
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
@@ -158,12 +158,12 @@ class Command:
             self.log.warning('unknown command %s' % self.command)
             messagebase['warning_string'] = 'unknown'
 
-        ackmessage = { 'message' : messagebase }
+        ackmessage = {'message': messagebase}
         if 'error_string' in messagebase:
             ackmessage['closemenow'] = True
 
         z = [ackmessage]
-        for extramessage in self.othermessages:
+        for extramessage in self._othermessages:
             bmsg = extramessage.get('message')
             bmsg['class'] = self.command
             z.append( { 'dest' : extramessage.get('dest'),
@@ -174,28 +174,28 @@ class Command:
         head = 'LOGINFAIL - login_id'
         missings = []
         for argum in COMPULSORY_LOGIN_ID:
-            if argum not in self.commanddict:
+            if argum not in self._commanddict:
                 missings.append(argum)
         if len(missings) > 0:
             self.log.warning('%s - missing args - %s' % (head, missings))
             return 'missing:%s' % ','.join(missings)
 
         # warns that the former session did not exit correctly (on a given computer)
-        if 'lastlogout-stopper' in self.commanddict and 'lastlogout-datetime' in self.commanddict:
-            if not self.commanddict['lastlogout-stopper'] or not self.commanddict['lastlogout-datetime']:
+        if 'lastlogout-stopper' in self._commanddict and 'lastlogout-datetime' in self._commanddict:
+            if not self._commanddict['lastlogout-stopper'] or not self._commanddict['lastlogout-datetime']:
                 self.log.warning('lastlogout userlogin=%s stopper=%s datetime=%s'
-                            % (self.commanddict['userlogin'],
-                               self.commanddict['lastlogout-stopper'],
-                               self.commanddict['lastlogout-datetime']))
+                            % (self._commanddict['userlogin'],
+                               self._commanddict['lastlogout-stopper'],
+                               self._commanddict['lastlogout-datetime']))
 
         # trivial checks (version, client kind) dealing with the software used
-        xivoversion = self.commanddict.get('xivoversion')
+        xivoversion = self._commanddict.get('xivoversion')
         if xivoversion != XIVOVERSION_NUM:
             self.log.warning('%s - wrong XiVO major version : %s' % (head, xivoversion))
             return 'xivoversion_client:%s;%s' % (xivoversion, XIVOVERSION_NUM)
-        rcsversion = '%s-%s' % (self.commanddict.get('git_date'), self.commanddict.get('git_hash'))
+        rcsversion = '%s-%s' % (self._commanddict.get('git_date'), self._commanddict.get('git_hash'))
 
-        ident = self.commanddict.get('ident')
+        ident = self._commanddict.get('ident')
         whatsmyos = ident.split('-')[0]
         if whatsmyos.lower() not in ['x11', 'win', 'mac',
                                      'ctiserver',
@@ -204,24 +204,24 @@ class Command:
             return 'wrong_client_os_identifier:%s' % whatsmyos
 
         # user match
-        if self.commanddict.get('userlogin'):
+        if self._commanddict.get('userlogin'):
             ipbxid = self._ctiserver.myipbxid
             saferef = self._ctiserver.safe.get(ipbxid)
             self.log.info('searching user %s in %s'
-                          % (self.commanddict.get('userlogin'), ipbxid))
-            userid = saferef.user_find(self.commanddict.get('userlogin'),
-                                       self.commanddict.get('company'))
+                          % (self._commanddict.get('userlogin'), ipbxid))
+            userid = saferef.user_find(self._commanddict.get('userlogin'),
+                                       self._commanddict.get('company'))
             if userid:
-                self.connection.connection_details.update({ 'ipbxid' : ipbxid,
+                self._connection.connection_details.update({ 'ipbxid' : ipbxid,
                                                             'userid' : userid })
 
-        if not self.connection.connection_details.get('userid'):
-            self.log.warning('%s - unknown login : %s' % (head, self.commanddict.get('userlogin')))
+        if not self._connection.connection_details.get('userid'):
+            self.log.warning('%s - unknown login : %s' % (head, self._commanddict.get('userlogin')))
             # do not give a hint that the login might be good or wrong
             # since this is the first part of the handshake, we shall anyway proceed "as if"
             # until the password step, before sending a "wrong password" message ...
 
-        self.connection.connection_details['prelogin'] = {
+        self._connection.connection_details['prelogin'] = {
             'cticlientos' : whatsmyos,
             'version' : rcsversion,
             'sessionid' : ''.join(random.sample(ALPHANUMS, 10))
@@ -229,24 +229,23 @@ class Command:
 
         reply = { 'xivoversion' : XIVOVERSION_NUM,
                   'version' : '7777',
-                  'sessionid' : self.connection.connection_details['prelogin']['sessionid']
+                  'sessionid' : self._connection.connection_details['prelogin']['sessionid']
                   }
         return reply
-
 
     def regcommand_login_pass(self):
         head = 'LOGINFAIL - login_pass'
         # user authentication
         missings = []
         for argum in ['hashedpassword']:
-            if argum not in self.commanddict:
+            if argum not in self._commanddict:
                 missings.append(argum)
         if len(missings) > 0:
             self.log.warning('%s - missing args : %s' % (head, missings))
             return 'missing:%s' % ','.join(missings)
 
-        this_hashed_password = self.commanddict.get('hashedpassword')
-        cdetails = self.connection.connection_details
+        this_hashed_password = self._commanddict.get('hashedpassword')
+        cdetails = self._connection.connection_details
 
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
@@ -268,7 +267,7 @@ class Command:
         head = 'LOGINFAIL - login_capas'
         missings = []
         for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
-            if argum not in self.commanddict:
+            if argum not in self._commanddict:
                 missings.append(argum)
         if len(missings) > 0:
             self.log.warning('%s - missing args : %s' % (head, missings))
@@ -276,10 +275,10 @@ class Command:
 
         # settings (in agent mode for instance)
         # userinfo['agent']['phonenum'] = phonenum
-        cdetails = self.connection.connection_details
+        cdetails = self._connection.connection_details
 
-        state = self.commanddict.get('state')
-        capaid = self.commanddict.get('capaid')
+        state = self._commanddict.get('state')
+        capaid = self._commanddict.get('capaid')
 
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
@@ -288,7 +287,7 @@ class Command:
 
         iserr = self.__check_user_connection__()
         if iserr is not None:
-            self.log.warning('%s - user connection : %s' % (head, iserr))
+            self.log.warning('%s - user _connection : %s' % (head, iserr))
             return iserr
 
         self.__connect_user__(state, capaid)
@@ -333,8 +332,8 @@ class Command:
                  'capas': capastruct,
                  'presence': 'available'}
 
-        self.connection.connection_details['logged'] = True
-        self.connection.logintimer.cancel()
+        self._connection.connection_details['logged'] = True
+        self._connection.logintimer.cancel()
         return reply
 
     def regcommand_logout(self):
@@ -350,7 +349,7 @@ class Command:
         return
 
     def __check_capa_connection__(self, capaid):
-        cdetails = self.connection.connection_details
+        cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         if capaid not in self._config.getconfig('profiles').keys():
@@ -361,18 +360,18 @@ class Command:
         return
 
     def __connect_user__(self, availstate, c):
-        cdetails = self.connection.connection_details
+        cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['_connection'] = 'yes'
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
 
     def __disconnect_user__(self):
-        cdetails = self.connection.connection_details
+        cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = None
-        availstate = self.commanddict.get('availstate')
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['_connection'] = None
+        availstate = self._commanddict.get('availstate')
         # disconnected vs. invisible vs. recordstatus ?
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
 
@@ -383,16 +382,16 @@ class Command:
 
     def regcommand_chitchat(self):
         reply = {}
-        chitchattext = self.commanddict.get('text')
-        self.othermessages.append({'dest': self.commanddict.get('to'),
-                                   'message': {'to': self.commanddict.get('to'),
+        chitchattext = self._commanddict.get('text')
+        self._othermessages.append({'dest': self._commanddict.get('to'),
+                                   'message': {'to': self._commanddict.get('to'),
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
                                                 'text': chitchattext}})
         return reply
 
     def regcommand_actionfiche(self):
         reply = {}
-        infos = self.commanddict.get('infos')
+        infos = self._commanddict.get('infos')
         uri = self._config.getconfig('ipbxes').get(self.ripbxid).get('cdr_db_uri')
         self.rinnerdata.fill_user_ctilog(uri,
                                          self.ruserid,
@@ -414,9 +413,9 @@ class Command:
         if user is None:
             return {'status': 'KO', 'error_string': 'unknown %d user' % self.ruserid}
 
-        func   = self.commanddict.get('function')
-        values = self.commanddict.get('value') if func == 'fwd' else\
-            {func: self.commanddict.get('value')}
+        func   = self._commanddict.get('function')
+        values = self._commanddict.get('value') if func == 'fwd' else\
+            {func: self._commanddict.get('value')}
     
         changed = False
         for k, v in values.iteritems():
@@ -442,7 +441,7 @@ class Command:
         #
         # This implies is that it's useless to add more "directory context"
         # in the CTI server configuration.
-        result = self.rinnerdata.getcustomers('default', self.commanddict.get('pattern'))
+        result = self.rinnerdata.getcustomers('default', self._commanddict.get('pattern'))
         return result
 
     def regcommand_history(self):
@@ -461,8 +460,8 @@ class Command:
         return None
 
     def _get_history_for_phone(self, phone):
-        mode = int(self.commanddict['mode'])
-        limit = int(self.commanddict['size'])
+        mode = int(self._commanddict['mode'])
+        limit = int(self._commanddict['size'])
         endpoint = self._get_endpoint_from_phone(phone)
         if mode == 0:
             return self._get_outgoing_history_for_endpoint(endpoint, limit)
@@ -508,7 +507,7 @@ class Command:
         if history is None:
             return {}
         else:
-            mode = int(self.commanddict['mode'])
+            mode = int(self._commanddict['mode'])
             return {'mode': mode, 'history': history}
 
     def regcommand_parking(self):
@@ -526,15 +525,15 @@ class Command:
     def regcommand_logfromclient(self):
         self.log.warning('logfromclient from user %s (level %s) : %s : %s'
                          % (self.ruserid,
-                            self.commanddict.get('level'),
-                            self.commanddict.get('classmethod'),
-                            self.commanddict.get('message')))
+                            self._commanddict.get('level'),
+                            self._commanddict.get('classmethod'),
+                            self._commanddict.get('message')))
 
     def regcommand_getqueuesstats(self):
-        if 'on' not in self.commanddict:
+        if 'on' not in self._commanddict:
             return {}
         statistic_results = {}
-        for queue_id, params in self.commanddict['on'].iteritems():
+        for queue_id, params in self._commanddict['on'].iteritems():
             queue_name = self.innerdata.xod_config['queues'].keeplist[queue_id]['name']
             statistic_results[queue_id] = self._queue_statistic_manager.get_statistics(queue_name,
                                                                                         int(params['xqos']),
@@ -542,9 +541,9 @@ class Command:
         return self._queue_statistic_encoder.encode(statistic_results)
 
     def regcommand_keepalive(self):
-        nbytes = self.commanddict.get('rate-bytes', -1)
-        nmsec = self.commanddict.get('rate-msec', -1)
-        nsamples = self.commanddict.get('rate-samples', -1)
+        nbytes = self._commanddict.get('rate-bytes', -1)
+        nmsec = self._commanddict.get('rate-msec', -1)
+        nsamples = self._commanddict.get('rate-samples', -1)
         if nbytes > 0:
             if nmsec > 0:
                 rate = float(nbytes) / nmsec
@@ -555,24 +554,24 @@ class Command:
                          % (self.ruserid, nsamples, nbytes, float(nbytes)))
 
     def regcommand_availstate(self):
-        availstate = self.commanddict.get('availstate')
+        availstate = self._commanddict.get('availstate')
         self.rinnerdata.update_presence(self.ruserid, availstate)
         return {}
 
     def regcommand_filetransfer(self):
         reply = {}
-        function = self.commanddict.get('command')
-        socketref = self.commanddict.get('socketref')
-        fileid = self.commanddict.get('fileid')
+        function = self._commanddict.get('command')
+        socketref = self._commanddict.get('socketref')
+        fileid = self._commanddict.get('fileid')
         if fileid:
             self.rinnerdata.faxes[fileid].setsocketref(socketref)
-            self.rinnerdata.faxes[fileid].setfileparameters(self.commanddict.get('file_size'))
+            self.rinnerdata.faxes[fileid].setfileparameters(self._commanddict.get('file_size'))
             if function == 'get_announce':
                 self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 's2c')
             elif function == 'put_announce':
                 self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 'c2s')
         else:
-            self.log.warning('empty fileid given %s' % self.commanddict)
+            self.log.warning('empty fileid given %s' % self._commanddict)
         return reply
 
     def regcommand_faxsend(self):
@@ -583,9 +582,9 @@ class Command:
         context = 'default'
         self.rinnerdata.faxes[fileid].setfaxparameters(self.ruserid,
                                                        context,
-                                                       self.commanddict.get('destination'),
-                                                       self.commanddict.get('hide'))
-        self.rinnerdata.faxes[fileid].setrequester(self.connection)
+                                                       self._commanddict.get('destination'),
+                                                       self._commanddict.get('hide'))
+        self.rinnerdata.faxes[fileid].setrequester(self._connection)
         return reply
 
     def regcommand_getipbxlist(self):
@@ -593,8 +592,8 @@ class Command:
 
     def regcommand_getlist(self):
         reply = {}
-        listname = self.commanddict.get('listname')
-        function = self.commanddict.get('function')
+        listname = self._commanddict.get('listname')
+        function = self._commanddict.get('function')
 
         if function == 'listid':
             if listname in self.tinnerdata.xod_config:
@@ -612,7 +611,7 @@ class Command:
                 self.log.warning('no such list %s' % listname)
 
         elif function == 'updateconfig':
-            tid = self.commanddict.get('tid')
+            tid = self._commanddict.get('tid')
             g = self.tinnerdata.get_config(listname, tid)
             reply = {'function': 'updateconfig',
                      'listname': listname,
@@ -621,7 +620,7 @@ class Command:
                      'config': g}
 
         elif function == 'updatestatus':
-            tid = self.commanddict.get('tid')
+            tid = self._commanddict.get('tid')
             g = self.tinnerdata.get_status(listname, tid)
             reply = { 'function' : 'updatestatus',
                       'listname' : listname,
@@ -633,7 +632,7 @@ class Command:
 
     def regcommand_ipbxcommand(self):
         reply = {}
-        self.ipbxcommand = self.commanddict.get('command')
+        self.ipbxcommand = self._commanddict.get('command')
         if not self.ipbxcommand:
             self.log.warning('no command given')
             return reply
@@ -672,7 +671,7 @@ class Command:
         for z in zs:
             if 'amicommand' in z:
                 params = {'mode': 'useraction',
-                          'request': {'requester': self.connection,
+                          'request': {'requester': self._connection,
                                       'ipbxcommand': self.ipbxcommand,
                                       'commandid': self.commandid},
                           'amicommand': z.get('amicommand'),
@@ -712,7 +711,7 @@ class Command:
         return []
 
     def ipbxcommand_dial(self):
-        self.commanddict['source'] = 'user:%s/%s' % (self.ripbxid, self.ruserid)
+        self._commanddict['source'] = 'user:%s/%s' % (self.ripbxid, self.ruserid)
         reply = self.ipbxcommand_originate()
         return reply
 
@@ -730,10 +729,10 @@ class Command:
 
     # origination
     def ipbxcommand_originate(self):
-        src = self.parseid(self.commanddict.get('source'))
+        src = self.parseid(self._commanddict.get('source'))
         if not src:
             return [{'error': 'source'}]
-        dst = self.parseid(self.commanddict.get('destination'))
+        dst = self.parseid(self._commanddict.get('destination'))
         if not dst:
             return [{'error': 'destination'}]
 
@@ -839,8 +838,8 @@ class Command:
         return [rep]
 
     def ipbxcommand_meetme(self):
-        function = self.commanddict['function']
-        args = self.commanddict['functionargs']
+        function = self._commanddict['function']
+        args = self._commanddict['functionargs']
 
         if function in ('record', ) and len(args) >= 4:
             mxid, usernum, adminnum, status = args[:4]
@@ -881,9 +880,9 @@ class Command:
                      'amiargs': (meetme_conf['confno'], usernum)}]
 
     def ipbxcommand_sipnotify(self):
-        if 'variables' in self.commanddict:
-            variables = self.commanddict.get('variables')
-        channel = self.commanddict.get('channel')
+        if 'variables' in self._commanddict:
+            variables = self._commanddict.get('variables')
+        channel = self._commanddict.get('channel')
         if channel == 'user:special:me':
             uinfo = self.rinnerdata.xod_config['users'].keeplist[self.userid]
             # TODO: Choose the appropriate line if more than one
@@ -896,17 +895,17 @@ class Command:
         """
         Send a MailboxCount ami command
         """
-        if 'mailbox' in self.commanddict:
+        if 'mailbox' in self._commanddict:
             return [{'amicommand': 'mailboxcount',
-                      'amiargs': (self.commanddict['mailbox'],
-                                    self.commanddict['context'])}]
+                      'amiargs': (self._commanddict['mailbox'],
+                                    self._commanddict['context'])}]
 
     # transfers
     def ipbxcommand_parking(self):
-        src = self.parseid(self.commanddict.get('source'))
+        src = self.parseid(self._commanddict.get('source'))
         if not src:
             return [{'error': 'source'}]
-        dst = self.parseid(self.commanddict.get('destination'))
+        dst = self.parseid(self._commanddict.get('destination'))
         if not dst:
             return {'error': 'destination'}
 
@@ -938,10 +937,10 @@ class Command:
 
     # direct transfers
     def ipbxcommand_transfer(self):
-        src = self.parseid(self.commanddict.get('source'))
+        src = self.parseid(self._commanddict.get('source'))
         if not src:
             return [{'error': 'source'}]
-        dst = self.parseid(self.commanddict.get('destination'))
+        dst = self.parseid(self._commanddict.get('destination'))
         if not dst:
             return [{'error': 'destination'}]
 
@@ -978,7 +977,7 @@ class Command:
             extentodial = dst.get('id')
         elif dst.get('type') == 'voicemail':
             # *97 vm number
-            self.log.debug('transfer to voicemail %s', self.commanddict)
+            self.log.debug('transfer to voicemail %s', self._commanddict)
             if dst['id'] in innerdata.xod_config['voicemails'].keeplist:
                 voicemail = innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
@@ -1007,8 +1006,8 @@ class Command:
     def ipbxcommand_atxfer(self):
         rep = {}
         try:
-            src = self.parseid(self.commanddict.get('source'))
-            dst = self.parseid(self.commanddict.get('destination'))
+            src = self.parseid(self._commanddict.get('source'))
+            dst = self.parseid(self._commanddict.get('destination'))
             exten = dst['id']
             if src['id'] in self.innerdata.channels:
                 channel = self.innerdata.channels[src['id']]
@@ -1018,16 +1017,16 @@ class Command:
                                    exten,
                                    context)}
         except KeyError:
-            self.log.warning('Atxfer failed %s', self.commanddict)
+            self.log.warning('Atxfer failed %s', self._commanddict)
         return [rep, ]
 
     def ipbxcommand_transfercancel(self):
-        print self.ipbxcommand, self.commanddict
+        print self.ipbxcommand, self._commanddict
         return []
 
     def ipbxcommand_intercept(self):
-        self.commanddict['source'] = self.commanddict['tointercept']
-        self.commanddict['destination'] = self.commanddict['catcher']
+        self._commanddict['source'] = self._commanddict['tointercept']
+        self._commanddict['destination'] = self._commanddict['catcher']
         # ami transfer mode
         reps = self.ipbxcommand_transfer()
         # what about origination with '*8' ?
@@ -1035,30 +1034,30 @@ class Command:
 
     # hangup and one's own line management
     def ipbxcommand_hangup(self):
-        channel = self.parseid(self.commanddict.get('channelids'))
+        channel = self.parseid(self._commanddict.get('channelids'))
         rep = {'amicommand': 'hangup',
                'amiargs': (channel.get('id'))}
         return [rep, ]
 
     def ipbxcommand_answer(self):
-        print self.ipbxcommand, self.commanddict
+        print self.ipbxcommand, self._commanddict
         return []
 
     def ipbxcommand_cancel(self):
-        print self.ipbxcommand, self.commanddict
+        print self.ipbxcommand, self._commanddict
         return []
 
     def ipbxcommand_refuse(self):
-        print self.ipbxcommand, self.commanddict
+        print self.ipbxcommand, self._commanddict
         return []
 
     def ipbxcommand_agentlogin(self):
-        agentphonenumber = self.commanddict.get('agentphonenumber')
+        agentphonenumber = self._commanddict.get('agentphonenumber')
         memberstatus = None
         agentnumber = None
         agentcontext = None
-        if 'member' in self.commanddict:
-            member = self.parseid(self.commanddict.get('member'))
+        if 'member' in self._commanddict:
+            member = self.parseid(self._commanddict.get('member'))
             innerdata = self._ctiserver.safe.get(member.get('ipbxid'))
             if member.get('id') in innerdata.xod_config.get('agents').keeplist:
                 memberstruct = innerdata.xod_config.get('agents').keeplist.get(member.get('id'))
@@ -1083,8 +1082,8 @@ class Command:
     def ipbxcommand_agentlogout(self):
         agentnumber = None
         memberstatus = None
-        if 'member' in self.commanddict:
-            member = self.parseid(self.commanddict.get('member'))
+        if 'member' in self._commanddict:
+            member = self.parseid(self._commanddict.get('member'))
             innerdata = self._ctiserver.safe.get(member.get('ipbxid'))
             if member.get('id') in innerdata.xod_config.get('agents').keeplist:
                 memberstruct = innerdata.xod_config.get('agents').keeplist.get(member.get('id'))
@@ -1158,10 +1157,10 @@ class Command:
         return interfaces
 
     def queue_generic(self, command, dopause=None):
-        member = self.parseid(self.commanddict.get('member'))
+        member = self.parseid(self._commanddict.get('member'))
         if not member:
             return [{'error': 'member'}]
-        queue = self.parseid(self.commanddict.get('queue'))
+        queue = self.parseid(self._commanddict.get('queue'))
         if not queue:
             return [{'error': 'queue'}]
 
@@ -1214,7 +1213,7 @@ class Command:
         return reps
 
     def ipbxcommand_queueadd(self):
-        return self.queue_generic('add', self.commanddict.get('paused'))
+        return self.queue_generic('add', self._commanddict.get('paused'))
 
     def ipbxcommand_queueremove(self):
         return self.queue_generic('remove')
@@ -1231,20 +1230,20 @@ class Command:
     # the one that is most useful is the second case
 
     def ipbxcommand_queuepause_all(self):
-        self.commanddict['queue'] = 'queue:xivo/all'
+        self._commanddict['queue'] = 'queue:xivo/all'
         return self.queue_generic('pause', 'true')
 
     def ipbxcommand_queueunpause_all(self):
-        self.commanddict['queue'] = 'queue:xivo/all'
+        self._commanddict['queue'] = 'queue:xivo/all'
         return self.queue_generic('pause', 'false')
 
     def ipbxcommand_queueremove_all(self):
-        self.commanddict['queue'] = 'queue:xivo/all'
+        self._commanddict['queue'] = 'queue:xivo/all'
         return self.queue_generic('remove')
 
     def ipbxcommand_record(self):
-        subcommand = self.commanddict.pop('subcommand')
-        channel = self.commanddict.pop('channel')
+        subcommand = self._commanddict.pop('subcommand')
+        channel = self._commanddict.pop('channel')
         # XX take into account ipbxid
         if subcommand == 'start':
             datestring = time.strftime('%Y%m%d-%H%M%S', time.localtime())
@@ -1262,11 +1261,11 @@ class Command:
         return [rep]
 
     def ipbxcommand_listen(self):
-        subcommand = self.commanddict.pop('subcommand')
-        channel = self.commanddict.pop('channel')
+        subcommand = self._commanddict.pop('subcommand')
+        channel = self._commanddict.pop('channel')
         # channel might not exist any more
         if subcommand == 'start':
-            listener = self.commanddict.pop('listener')
+            listener = self._commanddict.pop('listener')
             (listener_protocol, listener_id) = listener.split('/')
             rep = { 'amicommand' : 'origapplication',
                     'amiargs' : ('ChanSpy',
