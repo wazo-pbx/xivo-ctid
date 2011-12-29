@@ -31,7 +31,8 @@ from xivo_cti import xivo_records_db
 LENGTH_AGENT = 6
 ASTERISK_RECORDS_PATH = '/var/spool/asterisk/monitor'
 
-log = logging.getLogger('records_base')
+logger = logging.getLogger('records_base')
+
 
 class XivoRecords():
 
@@ -108,13 +109,13 @@ class XivoRecords():
                         # if the requested does not match a hierarchy indicator,
                         # give him the highest hierarchy
                         hlevel_i = self.__hierarchy_value__(z, self.HIERARCHY_MAX)
-                        log.info('request %s : levels are %s and %s' % (action, hlevel_r, hlevel_i))
+                        logger.info('request %s : levels are %s and %s', action, hlevel_r, hlevel_i)
                         if self.__level_rules__(hlevel_r, hlevel_i, action):
                             allowed = True
                 else:
-                    log.warning('no agentid for agent channel %s' % agentchannel)
+                    logger.warning('no agentid for agent channel %s', agentchannel)
             else:
-                log.warning('agent channel %s is not an agent' % agentchannel)
+                logger.warning('agent channel %s is not an agent', agentchannel)
 
         return allowed
 
@@ -128,7 +129,7 @@ class XivoRecords():
         # if the requester does not match a hierarchy indicator,
         # give him the lowest hierarchy
         self._hlevel_r = self.__hierarchy_value__(userinfo, self.HIERARCHY_MIN)
-        log.info('requester %s : hierarchy level is %s' % (userinfo.get('user'), self._hlevel_r))
+        logger.info('requester %s : hierarchy level is %s', userinfo.get('user'), self._hlevel_r)
 
         return self._parse_campain_function()
 
@@ -225,8 +226,8 @@ class XivoRecords():
             tagdefs = self.recordcampaignconfig.get('tags')
             if tag in tagdefs:
                 action = tagdefs.get(tag).get('action')
-                log.info('tag request from %s on id %s : tag=%s => action=%s'
-                         % (self._userinfo.get('user'), idv, tag, action))
+                logger.info('tag request from %s on id %s : tag=%s => action=%s',
+                            self._userinfo.get('user'), idv, tag, action)
 
                 if action == 'keep':
                     if recordstatus in ['rec_notag', 'rec_topurge']:
@@ -234,12 +235,12 @@ class XivoRecords():
                         calldata.update({'recordstatus' : 'rec_tokeep'})
                         self.records_db.update_call(idv, calldata)
                         retvalue = 'ok'
-                        log.info('RECCAMP:manual:%s:%s:%s:%s'
-                                 % (self._function, action, self._userinfo.get('user'), idv))
+                        logger.info('RECCAMP:manual:%s:%s:%s:%s',
+                                    self._function, action, self._userinfo.get('user'), idv)
                     else:
                         retvalue = 'ko:badstatus:%s' % recordstatus
-                        log.warning('bad current recordstatus %s for action %s'
-                                    % (recordstatus, action))
+                        logger.warning('bad current recordstatus %s for action %s',
+                                       recordstatus, action)
 
                 elif action == 'purge':
                     if recordstatus in ['rec_notag', 'rec_tokeep']:
@@ -247,12 +248,12 @@ class XivoRecords():
                         calldata.update({'recordstatus' : 'rec_topurge'})
                         self.records_db.update_call(idv, calldata)
                         retvalue = 'ok'
-                        log.info('RECCAMP:manual:%s:%s:%s:%s'
-                                 % (self._function, action, self._userinfo.get('user'), idv))
+                        logger.info('RECCAMP:manual:%s:%s:%s:%s',
+                                    self._function, action, self._userinfo.get('user'), idv)
                     else:
                         retvalue = 'ko:badstatus:%s' % recordstatus
-                        log.warning('bad current recordstatus %s for action %s'
-                                    % (recordstatus, action))
+                        logger.warning('bad current recordstatus %s for action %s',
+                                       recordstatus, action)
 
                 elif action == 'removenow':
                     if recordstatus in ['rec_notag', 'rec_topurge', 'rec_tokeep']:
@@ -261,27 +262,27 @@ class XivoRecords():
                         # XXX if the file can not be deleted, update the status anyway ?
                         if self.__remove_files__(resultitem):
                             self.records_db.update_call(idv, calldata)
-                            log.info('RECCAMP:manual:%s:%s:%s:%s'
-                                     % (self._function, action, self._userinfo.get('user'), idv))
+                            logger.info('RECCAMP:manual:%s:%s:%s:%s',
+                                        self._function, action, self._userinfo.get('user'), idv)
                             retvalue = 'ok'
                         else:
                             retvalue = 'ko:nofile'
                     else:
                         retvalue = 'ko:badstatus:%s' % recordstatus
-                        log.warning('bad current recordstatus %s for action %s'
-                                    % (recordstatus, action))
+                        logger.warning('bad current recordstatus %s for action %s',
+                                       recordstatus, action)
                 else:
                     retvalue = 'ko:badaction:%s' % action
-                    log.warning('unknown action request %s from %s on id %s'
-                                % (action, self._userinfo.get('user'), idv))
+                    logger.warning('unknown action request %s from %s on id %s',
+                                   action, self._userinfo.get('user'), idv)
             else:
                 retvalue = 'ko:badtag:%s' % tag
-                log.warning('unknown tag request %s from %s on id %s'
-                            % (tag, self._userinfo.get('user'), idv))
+                logger.warning('unknown tag request %s from %s on id %s',
+                               tag, self._userinfo.get('user'), idv)
         else:
             retvalue = 'ko:unallowed'
-            log.warning('unallowed tag request from %s on id %s : tag=%s'
-                        % (self._userinfo.get('user'), idv, tag))
+            logger.warning('unallowed tag request from %s on id %s : tag=%s',
+                           self._userinfo.get('user'), idv, tag)
 
         tosend = { 'class' : 'records_campaign',
                    'function' : self._function,
@@ -303,11 +304,11 @@ class XivoRecords():
             calldata = {'callrecordcomment' : comment}
             self.records_db.update_call(idv, calldata)
             retvalue = 'ok'
-            log.info('RECCAMP:manual:%s:-:%s:%s' % (self._function, self._userinfo.get('user'), idv))
+            logger.info('RECCAMP:manual:%s:-:%s:%s', self._function, self._userinfo.get('user'), idv)
         else:
             retvalue = 'ko:unallowed'
-            log.warning('unallowed comment request from %s on id %s : comment=%s'
-                        % (self._userinfo.get('user'), idv, comment))
+            logger.warning('unallowed comment request from %s on id %s : comment=%s',
+                           self._userinfo.get('user'), idv, comment)
 
         tosend = { 'class' : 'records_campaign',
                    'function' : self._function,
@@ -357,21 +358,21 @@ class XivoRecords():
                     when = '%s %s * * *' % (cron_min, cron_hour)
                     print >>outfile, '%s root %s' % (when, action)
                 except:
-                    log.exception('problem when reading item %s %s' % (k, v))
+                    logger.exception('problem when reading item %s %s', k, v)
             outfile.close()
 
             try:
                 os.rename(tmpfilename, self.cron_filename)
             except:
-                log.exception('moving %s to %s' % (tmpfilename, self.cron_filename))
+                logger.exception('moving %s to %s', tmpfilename, self.cron_filename)
         except:
-            log.exception('trying to update %s' % self.cronfilename)
+            logger.exception('trying to update %s', self.cronfilename)
 
 
     def fetch_config(self, astid):
         try:
             self.configurl = self.cset.weblist.get('callcenter_campaigns').get(astid).url
-            log.info('fetching records configuration ... from %s' % self.configurl)
+            logger.info('fetching records configuration ... from %s', self.configurl)
             urlobj = urllib.urlopen(self.configurl)
             rl = urlobj.readlines()
             urlobj.close()
@@ -379,7 +380,7 @@ class XivoRecords():
             self.recordcampaignconfig = cjson.decode(flattext)
             self.__make_cron__()
         except:
-            log.exception('fetch_config')
+            logger.exception('fetch_config')
             self.recordcampaignconfig = {}
         return
 
@@ -391,11 +392,11 @@ class XivoRecords():
             if os.path.isdir(any_path):
                 lsdir = os.listdir(any_path)
                 if not lsdir:
-                    log.warning('__lsdir__ : %s directory is empty' % any_path)
+                    logger.warning('__lsdir__ : %s directory is empty', any_path)
             else:
-                log.warning('__lsdir__ : %s does not exist as a directory' % any_path)
+                logger.warning('__lsdir__ : %s does not exist as a directory', any_path)
         except:
-            log.exception('__lsdir__ : %s' % any_path)
+            logger.exception('__lsdir__ : %s', any_path)
 
         return lsdir
 
@@ -413,21 +414,21 @@ class XivoRecords():
             outfile = '%s-out.wav' % prefix
 
             if infile in lsdir:
-                log.info('%s file is in %s, removing it now' % (infile, record_path))
+                logger.info('%s file is in %s, removing it now', infile, record_path)
                 os.unlink('%s/%s-in.wav' % (record_path, prefix))
                 ret = True
 
                 calldata = { 'recordstatus' : 'auto_purged' }
                 self.records_db.update_call(idv, calldata)
             else:
-                log.warning('did not find %s' % infile)
+                logger.warning('did not find %s', infile)
 
             if outfile in lsdir:
-                log.info('%s file is in %s, removing it now' % (outfile, record_path))
+                logger.info('%s file is in %s, removing it now', outfile, record_path)
                 os.unlink('%s/%s-out.wav' % (record_path, prefix))
                 ret = ret & True
             else:
-                log.warning('did not find %s' % infile)
+                logger.warning('did not find %s', infile)
         return ret
 
     def purge_records(self, arguments):
@@ -456,13 +457,13 @@ class XivoRecords():
         # database fetch for matching results
         ddate = time.time() - delay
         ascdate = time.asctime(time.localtime(ddate))
-        log.info('looking for calls beginning before now - N=%d seconds (%s) + "%s"'
-                 % (delay, ascdate, dbrequest))
+        logger.info('looking for calls beginning before now - N=%d seconds (%s) + "%s"',
+                    delay, ascdate, dbrequest)
         requested = ('id', 'uniqueid', 'channel',
                      'callstop', 'callstart',
                      'filename', 'callstatus', 'recordstatus')
         res = self.records_db.get_before_date(requested, { 'campaignkind' : dbrequest }, ddate)
-        log.info('found %d results matching the request (%s, "%s")' % (len(res), ascdate, dbrequest))
+        logger.info('found %d results matching the request (%s, "%s")', len(res), ascdate, dbrequest)
 
         for resultitem in res:
             dopurge = False
@@ -475,22 +476,22 @@ class XivoRecords():
                 if action == 'purge':
                     dopurge = True
                 else:
-                    log.warning('record status is %s and action %s : do not purge'
-                                % (recordstatus, action))
+                    logger.warning('record status is %s and action %s : do not purge',
+                                   recordstatus, action)
             else:
-                log.warning('record status is %s : do not purge' % recordstatus)
+                logger.warning('record status is %s : do not purge', recordstatus)
 
             if dopurge:
                 if self.__remove_files__(resultitem):
-                    log.info('RECCAMP:auto:remove:-:-:%s' % (action, idv))
+                    logger.info('RECCAMP:auto:remove:-:-:%s', action, idv)
 
         return
 
 
     def __match_filters__(self, filters,
                           direction, queueid, agentid, skillrule):
-        log.info('__match_filter__ %s : %s %s %s %s'
-                 % (filters, direction, queueid, agentid, skillrule))
+        logger.info('__match_filter__ %s : %s %s %s %s',
+                    filters, direction, queueid, agentid, skillrule)
 
         # the result is an and between filters, which are true when not defined
 
@@ -520,8 +521,8 @@ class XivoRecords():
                     dmc = True
                     break
 
-        log.info('result is %s %s %s %s'
-                 % (dmd, dmq, dma, dmc))
+        logger.info('result is %s %s %s %s',
+                    dmd, dmq, dma, dmc)
         domatches = (dmd and dmq and dma and dmc)
         return domatches
 
@@ -578,22 +579,22 @@ class XivoRecords():
                     t_defineddate_already = time.mktime(time.strptime(defineddate_already, fmt))
                     t_defineddate = time.mktime(time.strptime(defineddate, fmt))
                     if t_defineddate > t_defineddate_already:
-                        log.info('replacing %s by %s'
-                                 % (defineddate_already, defineddate))
+                        logger.info('replacing %s by %s',
+                                    defineddate_already, defineddate)
                         electedcampaign = { 'defineddate' : defineddate,
                                             'details' : v
                                             }
                     else:
-                        log.info('keeping %s, rejecting %s' %
-                                 (defineddate_already, defineddate))
+                        logger.info('keeping %s, rejecting %s',
+                                    defineddate_already, defineddate)
                 else:
-                    log.info('selecting %s' % defineddate)
+                    logger.info('selecting %s', defineddate)
                     electedcampaign = { 'defineddate' : defineddate,
                                         'details' : v
                                         }
 
         if electedcampaign:
-            log.info('channel %s uniqueid %s' % (channel, uniqueid))
+            logger.info('channel %s uniqueid %s', channel, uniqueid)
 
             #  check against "already started"
             #  action (monitor, filename, mix false)
@@ -688,11 +689,11 @@ class XivoRecords():
             lsdir = self.__lsdir__(source_records_path)
             if lsdir:
                 if not os.path.isdir(target_records_path):
-                    log.warning('destination path %s did not exist : creating it' % target_records_path)
+                    logger.warning('destination path %s did not exist : creating it', target_records_path)
                     try:
                         os.makedirs(target_records_path)
                     except:
-                        log.exception('mkdir %s' % target_records_path)
+                        logger.exception('mkdir %s', target_records_path)
 
                 fullfilename = callmatch.get('filename')
                 record_path = os.path.dirname(fullfilename)
@@ -701,21 +702,18 @@ class XivoRecords():
                 infile = '%s-in.wav' % prefix
                 outfile = '%s-out.wav' % prefix
                 if infile in lsdir:
-                    log.info('ok for %s : will move it' % infile)
+                    logger.info('ok for %s : will move it', infile)
                     src = '%s/%s' % (source_records_path, infile)
                     dst = '%s/%s' % (target_records_path, infile)
                     try:
                         os.rename(src, dst)
                     except:
-                        log.exception('moving %s to %s' % (src, dst))
+                        logger.exception('moving %s to %s', src, dst)
                 if outfile in lsdir:
-                    log.info('ok for %s : will move it' % outfile)
+                    logger.info('ok for %s : will move it', outfile)
                     src = '%s/%s' % (source_records_path, outfile)
                     dst = '%s/%s' % (target_records_path, outfile)
                     try:
                         os.rename(src, dst)
                     except:
-                        log.exception('moving %s to %s' % (src, dst))
-
-            # sox to mix ?
-    # XXX log misc actions to file
+                        logger.exception('moving %s to %s', src, dst)

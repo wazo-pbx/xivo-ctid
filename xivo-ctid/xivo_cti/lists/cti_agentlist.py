@@ -24,7 +24,8 @@ import logging
 import time
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('agentlist')
+logger = logging.getLogger('agentlist')
+
 
 class AgentList(AnyList):
     def __init__(self, newurls = [], useless = None):
@@ -43,7 +44,7 @@ class AgentList(AnyList):
             if ag['number'] not in self.reverse_index:
                 self.reverse_index[ag['number']] = idx
             else:
-                log.warning('2 agents have the same number')
+                logger.warning('2 agents have the same number')
         return ret
 
     def queuememberupdate(self, queuename, queueorgroup, agentnumber, event):
@@ -81,7 +82,7 @@ class AgentList(AnyList):
                         if prop in event:
                             self.keeplist[idx][qorg][queuename][prop] = event.get(prop)
                 else:
-                    log.warning('queuememberadded : %s already there' % queuename)
+                    logger.warning('queuememberadded : %s already there', queuename)
         return
 
     def queuememberremoved(self, queuename, queueorgroup, agentnumber, event):
@@ -92,7 +93,7 @@ class AgentList(AnyList):
                 if queuename in self.keeplist[idx][qorg]:
                     del self.keeplist[idx][qorg][queuename]
                 else:
-                    log.warning('queuememberremoved : %s not there' % queuename)
+                    logger.warning('queuememberremoved : %s not there', queuename)
         return
 
     def idbyagentnumber(self, agentnumber):

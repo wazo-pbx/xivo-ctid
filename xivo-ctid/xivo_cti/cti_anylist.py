@@ -23,7 +23,7 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import logging
 import cti_urllist
 
-log = logging.getLogger('anylist')
+logger = logging.getLogger('anylist')
 
 
 class AnyList:
@@ -77,13 +77,13 @@ class AnyList:
             del self.keeplist[a]
 
         if len(lstadd) > 0:
-            log.info('%d new %s from %s' % (len(lstadd),
+            logger.info('%d new %s from %s', len(lstadd),
                                             self.anylist_properties['name'],
-                                            self.requested_list.keys()))
+                                            self.requested_list.keys())
         if len(lstdel) > 0:
-            log.info('%d old %s from %s' % (len(lstdel),
+            logger.info('%d old %s from %s', len(lstdel),
                                             self.anylist_properties['name'],
-                                            self.requested_list.keys()))
+                                            self.requested_list.keys())
         return { 'add' : lstadd,
                  'del' : lstdel,
                  'change' : lstchange }

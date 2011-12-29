@@ -25,21 +25,20 @@ import commands
 import logging
 import os
 import threading
-import time
+
+logger = logging.getLogger('async')
 
 PATH_SPOOL_ASTERISK     = '/var/spool/asterisk'
 PATH_SPOOL_ASTERISK_FAX = PATH_SPOOL_ASTERISK + '/fax'
 PATH_SPOOL_ASTERISK_TMP = PATH_SPOOL_ASTERISK + '/tmp'
 PDF2FAX = '/usr/bin/xivo_pdf2fax'
 
+
 class asyncActionsThread(threading.Thread):
     def __init__(self, name, params):
         threading.Thread.__init__(self)
         self.setName(name)
         self.params = params
-        fileid = self.params.get('fileid')
-        self.log = logging.getLogger('async(%s)' % fileid)
-        return
 
     def decodefile(self):
         decodedfile = base64.b64decode(self.params.get('rawfile').strip())
@@ -57,19 +56,19 @@ class asyncActionsThread(threading.Thread):
         if brieffile == 'PDF document,':
             self.faxfilepath = self.tmpfilepath + '.tif'
             pdf2fax_command = '%s -o %s %s' % (PDF2FAX, self.faxfilepath, self.tmpfilepath)
-            self.log.info('(ref %s) PDF to TIF(F) : %s' % (self.tmpfilepath, pdf2fax_command))
+            logger.info('(ref %s) PDF to TIF(F) : %s', self.tmpfilepath, pdf2fax_command)
             reply = 'ko;convert-pdftif'
             sysret = os.system(pdf2fax_command)
             ret = os.WEXITSTATUS(sysret)
             if ret:
-                self.log.warning('(ref %s) PDF to TIF(F) returned : %s (exitstatus = %s, stopsignal = %s)'
-                                 % (self.tmpfilepath, sysret, ret, os.WSTOPSIG(sysret)))
+                logger.warning('(ref %s) PDF to TIF(F) returned : %s (exitstatus = %s, stopsignal = %s)',
+                               self.tmpfilepath, sysret, ret, os.WSTOPSIG(sysret))
             else:
                 reply = 'ok;'
         else:
             reply = 'ko;filetype'
-            self.log.warning('(ref %s) the file received is a <%s> one : format not supported'
-                             % (self.reference, brieffile))
+            logger.warning('(ref %s) the file received is a <%s> one : format not supported',
+                           self.reference, brieffile)
             ret = -1
         print reply
         os.unlink(self.tmpfilepath)
@@ -88,7 +87,7 @@ class asyncActionsThread(threading.Thread):
         self.notify_step('file_decoded')
         self.converttotiff()
         self.notify_step('file_converted')
-        self.log.info('%s thread is over' % self.getName())
+        logger.info('%s thread is over', self.getName())
         return
 
 
@@ -97,7 +96,6 @@ class Fax:
     def __init__(self, innerdata, fileid):
         self.innerdata = innerdata
         self.fileid = fileid
-        self.log = logging.getLogger('fax(%s)' % self.fileid)
 
         filename = 'astsendfax-%s' % self.fileid
         self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL_ASTERISK_TMP, filename)

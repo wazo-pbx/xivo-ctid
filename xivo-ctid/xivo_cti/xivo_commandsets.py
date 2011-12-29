@@ -23,8 +23,6 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 """
 Base class for miscellaneous Command Sets
 """
-import logging
-log = logging.getLogger('commandset')
 
 CMD_OTHER = 1 << 0
 CMD_LOGIN_ID = 1 << 1

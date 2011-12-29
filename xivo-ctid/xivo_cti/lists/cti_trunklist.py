@@ -25,7 +25,8 @@ import logging
 import time
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('trunklist')
+logger = logging.getLogger('trunklist')
+
 
 class TrunkList(AnyList):
     def __init__(self, newurls = [], useless = None):
@@ -132,7 +133,7 @@ class TrunkList(AnyList):
                 self.keeplist[newtrunkid]['comms'][uid] = self.keeplist[oldtrunkid]['comms'][uid]
                 del self.keeplist[oldtrunkid]['comms'][uid]
             else:
-                log.warning('(ami_rename) %s : could not move from %s to %s' % (uid, oldtrunkid, newtrunkid))
+                logger.warning('(ami_rename) %s : could not move from %s to %s', uid, oldtrunkid, newtrunkid)
         return
 
     def ami_rename_tophone(self, oldtrunkid, oldname, newname, uid):
@@ -150,7 +151,7 @@ class TrunkList(AnyList):
             # del self.keeplist[oldtrunkid]['comms'][uid]
             self.keeplist[oldtrunkid]['comms'][uid]['status'] = 'hangup'
         else:
-            log.warning('(ami_rename_tophone) %s : could not remove %s' % (uid, oldtrunkid))
+            logger.warning('(ami_rename_tophone) %s : could not remove %s', uid, oldtrunkid)
         return tomove
 
     def ami_rename_fromphone(self, newtrunkid, oldname, newname, uid, tomove):
@@ -163,7 +164,7 @@ class TrunkList(AnyList):
         if tomove and uid not in self.keeplist[newtrunkid]['comms']:
             self.keeplist[newtrunkid]['comms'][uid] = tomove
         else:
-            log.warning('(ami_rename_fromphone) %s : could not set %s' % (uid, newtrunkid))
+            logger.warning('(ami_rename_fromphone) %s : could not set %s', uid, newtrunkid)
         return
 
     def status(self, trunkid):

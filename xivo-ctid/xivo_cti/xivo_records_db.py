@@ -26,7 +26,6 @@ Record Features.
 """
 
 import logging
-import time
 
 from xivo import anysql
 from xivo.BackSQL import backmysql
@@ -34,7 +33,8 @@ from xivo.BackSQL import backsqlite
 from xivo.BackSQL import backsqlite3
 from xivo.BackSQL import backpostgresql
 
-log = logging.getLogger('records_db')
+logger = logging.getLogger('records_db')
+
 
 class Records:
     def __init__(self, uri, table):
@@ -46,7 +46,7 @@ class Records:
     # insert methods
 
     def new_call(self, calldata):
-        log.info('new call entered into DB : %s' % calldata)
+        logger.info('new call entered into DB : %s', calldata)
         columns = tuple(calldata.keys())
         params = tuple(calldata.values())
         args = ', '.join(['%s'] * len(columns))
@@ -62,7 +62,7 @@ class Records:
     # update methods
 
     def update_call(self, idv, calldata):
-        log.info('updating call %s in DB with %s' % (idv, calldata))
+        logger.info('updating call %s in DB with %s', idv, calldata)
         columns = tuple(calldata.keys())
         params = tuple(calldata.values())
         args = []
@@ -79,7 +79,7 @@ class Records:
     # select methods
 
     def get_one_record(self, calldata, columns):
-        log.info('DB id requested for call : %s' % calldata)
+        logger.info('DB id requested for call : %s', calldata)
         args = []
         for c in tuple(calldata.keys()):
             args.append('%s = %%s' % c)
@@ -94,7 +94,7 @@ class Records:
         return dict(zip(columns, result))
 
     def get_before_date(self, requested, tomatch, callstartdate):
-        log.info('DB date requested for records : %s' % callstartdate)
+        logger.info('DB date requested for records : %s', callstartdate)
         columns = tuple(requested)
         args = []
         for c in tuple(tomatch.keys()):
@@ -115,7 +115,7 @@ class Records:
         return dresults
 
     def get(self, requested):
-        log.info('DB data requested for call : %s' % (requested,))
+        logger.info('DB data requested for call : %s', requested)
         columns = tuple(requested)
         query = 'SELECT ${columns} FROM %s' % self.tablename
 

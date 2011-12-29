@@ -25,7 +25,7 @@ import logging
 import time
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('grouplist')
+logger = logging.getLogger('grouplist')
 
 class GroupList(AnyList):
     def __init__(self, newurls = [], virtual = False):
@@ -47,7 +47,7 @@ class GroupList(AnyList):
             if ag['name'] not in self.reverse_index:
                 self.reverse_index[ag['name']] = idx
             else:
-                log.warning('2 groups have the same name')
+                logger.warning('2 groups have the same name')
         return ret
 
     def hasqueue(self, queuename):
@@ -69,10 +69,10 @@ class GroupList(AnyList):
                 self.keeplist[queueid]['channels'][newchan] = self.keeplist[queueid]['channels'][oldchan]
                 del self.keeplist[queueid]['channels'][oldchan]
             else:
-                log.warning('queueentry_rename : channel %s is not in queueid %s'
-                            % (oldchan, queueid))
+                logger.warning('queueentry_rename : channel %s is not in queueid %s',
+                               oldchan, queueid)
         else:
-            log.warning('queueentry_rename : no such queueid %s' % queueid)
+            logger.warning('queueentry_rename : no such queueid %s', queueid)
         return
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
@@ -82,7 +82,7 @@ class GroupList(AnyList):
                                                             'calleridnum' : calleridnum,
                                                             'calleridname' : calleridname }
         else:
-            log.warning('queueentry_update : no such queueid %s' % queueid)
+            logger.warning('queueentry_update : no such queueid %s', queueid)
         return
 
     def queueentry_remove(self, queueid, channel):
@@ -90,10 +90,10 @@ class GroupList(AnyList):
             if channel in self.keeplist[queueid]['channels']:
                 del self.keeplist[queueid]['channels'][channel]
             else:
-                log.warning('queueentry_remove : channel %s is not in queueid %s'
-                            % (channel, queueid))
+                logger.warning('queueentry_remove : channel %s is not in queueid %s',
+                            channel, queueid)
         else:
-            log.warning('queueentry_remove : no such queueid %s' % queueid)
+            logger.warning('queueentry_remove : no such queueid %s', queueid)
         return
 
     def queuememberupdate(self, queueid, location, event):
@@ -116,7 +116,7 @@ class GroupList(AnyList):
                 thisqueuelocation['Xivo-QueueMember-StateTime'] = time.time()
                 changed = True
         else:
-            log.warning('queuememberupdate : no such queueid %s' % queueid)
+            logger.warning('queuememberupdate : no such queueid %s', queueid)
         return changed
     
     def queuememberremove(self, queueid, location):
@@ -126,7 +126,7 @@ class GroupList(AnyList):
                 del self.keeplist[queueid]['agents_in_queue'][location]
                 changed = True
         else:
-            log.warning('queuememberremove : no such queueid %s' % queueid)
+            logger.warning('queuememberremove : no such queueid %s', queueid)
         return changed
     
     def update_queuestats(self, queueid, event):
@@ -143,7 +143,7 @@ class GroupList(AnyList):
                         thisqueuestats[statfield] = event.get(statfield)
                         changed = True
         else:
-            log.warning('update_queuestats : no such queueid %s' % queueid)
+            logger.warning('update_queuestats : no such queueid %s', queueid)
         return changed
     
     def get_queues(self):
@@ -159,8 +159,8 @@ class GroupList(AnyList):
                     if v in agprop:
                         lst[v] = agprop[v]
                     else:
-                        log.warning('get_queues_byagent : no property %s for agent %s in queue %s'
-                                    % (v, agid, qref))
+                        logger.warning('get_queues_byagent : no property %s for agent %s in queue %s',
+                                       v, agid, qref)
             lst['context'] = ql['context']
             queuelist[qref] = lst
         return queuelist

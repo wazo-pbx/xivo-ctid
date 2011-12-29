@@ -25,7 +25,8 @@ import logging
 import time
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('phonelist')
+logger = logging.getLogger('phonelist')
+
 
 class PhoneList(AnyList):
     def __init__(self, newurls = [], useless = None):
@@ -38,12 +39,13 @@ class PhoneList(AnyList):
         comms = self.keeplist[phoneid]['comms']
         if commid in self.keeplist[phoneid]['comms']:
             if infos.has_key('calleridnum') and comms[commid].get('calleridnum') != infos.get('calleridnum'):
-                log.debug('  __createorupdate_comm__ changed calleridnum[%s %s] %s => %s'
-                          % (commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos.get('calleridnum')))
+                logger.debug('  __createorupdate_comm__ changed calleridnum[%s %s] %s => %s',
+                          commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos.get('calleridnum'))
             self.keeplist[phoneid]['comms'][commid].update(infos)
         else:
             if infos.has_key('calleridnum'):
-                log.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s' % (commid, infos.get('thischannel'), infos.get('calleridnum')))
+                logger.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s',
+                          commid, infos.get('thischannel'), infos.get('calleridnum'))
             self.keeplist[phoneid]['comms'][commid] = infos
             self.setlinenum(phoneid, commid)
 
@@ -65,7 +67,7 @@ class PhoneList(AnyList):
         return
 
     def updatechan(self, phoneid, infos, commid=None):
-        log.debug('phone::updatechan %s %s' % (phoneid, infos))
+        logger.debug('phone::updatechan %s %s', phoneid, infos)
         # we are gessing which "comm" because there is only one !
         if commid is None and len(self.keeplist[phoneid]['comms'].keys()) == 1:
             commid = self.keeplist[phoneid]['comms'].keys()[0]
@@ -104,8 +106,8 @@ class PhoneList(AnyList):
         return
 
     def ami_link(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst):
-        log.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                  % (phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst))
+        logger.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                     phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst)
         if phoneidsrc in self.keeplist:
             infos = {'time-link' : 0,
                      'peerchannel' : puidsrc['link'],
@@ -121,8 +123,8 @@ class PhoneList(AnyList):
             else:
                 infos['thischannel'] = puidsrc['channel']
                 self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
-                log.debug('phonelist::ami_link %s not found (src)' % (uidsrc))
-            log.debug('phonelist::ami_link gruik %s %s' % (phoneidsrc, self.keeplist[phoneidsrc]['comms']))
+                logger.debug('phonelist::ami_link %s not found (src)', uidsrc)
+            logger.debug('phonelist::ami_link gruik %s %s', phoneidsrc, self.keeplist[phoneidsrc]['comms'])
         if phoneiddst in self.keeplist:
             infos = {'time-link' : 0,
                      'peerchannel' : puiddst['link'],
@@ -138,8 +140,8 @@ class PhoneList(AnyList):
             else:
                 infos['thischannel'] = puiddst['channel']
                 self.__createorupdate_comm__(phoneiddst, uiddst, infos)
-                log.debug('phonelist::ami_link %s not found (dst)' % (uiddst))
-            log.debug('phonelist::ami_link gruik %s %s' % (phoneiddst, self.keeplist[phoneiddst]['comms']))
+                logger.debug('phonelist::ami_link %s not found (dst)', uiddst)
+            logger.debug('phonelist::ami_link gruik %s %s', phoneiddst, self.keeplist[phoneiddst]['comms'])
         return
 
     def ami_unlink(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
@@ -172,8 +174,7 @@ class PhoneList(AnyList):
                 self.setlinenum(newphoneid, uid)
                 del self.keeplist[oldphoneid]['comms'][uid]
             else:
-                log.warning('(ami_rename) %s : could not move from %s to %s' % (uid, oldphoneid, newphoneid))
-                #log.warning('(ami_rename) %s : %s ---- %s' % (uid, self.keeplist[oldphoneid]['comms'], self.keeplist[oldphoneid]['comms']))
+                logger.warning('(ami_rename) %s : could not move from %s to %s', uid, oldphoneid, newphoneid)
         return
 
     def ami_rename_totrunk(self, oldphoneid, oldname, newname, uid):
@@ -191,7 +192,7 @@ class PhoneList(AnyList):
             # del self.keeplist[oldphoneid]['comms'][uid]
             self.keeplist[oldphoneid]['comms'][uid]['status'] = 'hangup'
         else:
-            log.warning('(ami_rename_totrunk) %s : could not remove %s' % (uid, oldphoneid))
+            logger.warning('(ami_rename_totrunk) %s : could not remove %s', uid, oldphoneid)
         return tomove
 
     def ami_rename_fromtrunk(self, newphoneid, oldname, newname, uid, tomove):
@@ -205,7 +206,7 @@ class PhoneList(AnyList):
             self.keeplist[newphoneid]['comms'][uid] = tomove
             self.setlinenum(newphoneid, uid)
         else:
-            log.warning('(ami_rename_fromtrunk) %s : could not set %s' % (uid, newphoneid))
+            logger.warning('(ami_rename_fromtrunk) %s : could not set %s', uid, newphoneid)
         return
 
     def ami_hold(self, phoneid, uid):
@@ -213,9 +214,9 @@ class PhoneList(AnyList):
             if self.keeplist[phoneid]['comms'].has_key(uid):
                 self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
             else:
-                log.warning('ami_hold : no uid %s for phoneid %s' % (uid, phoneid))
+                logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
         else:
-            log.warning('ami_hold : no phoneid %s' % phoneid)
+            logger.warning('ami_hold : no phoneid %s', phoneid)
         return
 
     def ami_unhold(self, phoneid, uid):
@@ -225,9 +226,9 @@ class PhoneList(AnyList):
                     del self.keeplist[phoneid]['comms'][uid]['time-hold']
                 self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
             else:
-                log.warning('ami_hold : no uid %s for phoneid %s' % (uid, phoneid))
+                logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
         else:
-            log.warning('ami_hold : no phoneid %s' % phoneid)
+            logger.warning('ami_hold : no phoneid %s', phoneid)
         return
 
     def ami_hangup(self, uid):
@@ -258,7 +259,6 @@ class PhoneList(AnyList):
                 status = '-2'
             #changed = not (self.keeplist[phoneid]['hintstatus'] == self.display_hints.get(status))
             changed = not isinstance(self.keeplist[phoneid]['hintstatus'], dict) or not (self.keeplist[phoneid]['hintstatus'].get('code') == status)
-            #log.debug('ami_extstatus : %s %s => %s' % (changed, self.keeplist[phoneid]['hintstatus'], self.display_hints.get(status)) )
             if changed:
                 self.keeplist[phoneid]['hintstatus'] = self.display_hints.get(status)
                 self.keeplist[phoneid]['hintstatus']['code'] = status
@@ -278,7 +278,7 @@ class PhoneList(AnyList):
 
     def ami_unparkedcall(self, phoneid, uid, ctuid):
         if phoneid in self.keeplist:
-            log.debug('phone::ami_unparkedcall %s %s %s' % (phoneid, uid, ctuid))
+            logger.debug('phone::ami_unparkedcall %s %s %s', phoneid, uid, ctuid)
             if uid in self.keeplist[phoneid]['comms']:
                 # parked channel
                 infos = {'status' : 'linked-called',

@@ -20,10 +20,8 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('userlist')
 
 class UserList(AnyList):
     def __init__(self, newurls = []):

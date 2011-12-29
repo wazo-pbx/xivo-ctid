@@ -23,7 +23,8 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import logging
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('meetmelist')
+logger = logging.getLogger('meetmelist')
+
 
 class MeetmeList(AnyList):
     def __init__(self, newurls = [], useless = None):
@@ -40,7 +41,7 @@ class MeetmeList(AnyList):
             if ag['confno'] not in self.reverse_index:
                 self.reverse_index[ag['confno']] = idx
             else:
-                log.warning('2 meetme have the same room number')
+                logger.warning('2 meetme have the same room number')
         return ret
 
     def update_computed_fields(self, newlist):

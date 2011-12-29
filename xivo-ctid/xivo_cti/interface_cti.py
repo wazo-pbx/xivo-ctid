@@ -29,6 +29,8 @@ import time
 from xivo_cti.interfaces import Interfaces
 from xivo_cti import cti_command
 
+logger = logging.getLogger('interface_cti')
+
 
 class serialJson():
     def __init__(self):
@@ -62,22 +64,21 @@ class CTI(Interfaces):
         Send a banner at login time
         """
         Interfaces.connected(self, connid)
-        self.log = logging.getLogger('interface_cti(%s:%d)' % self.requester)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
 
     def disconnected(self, msg):
-        self.log.info('disconnected %s' % msg)
+        logger.info('disconnected %s', msg)
         self.logintimer.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
-            self.log.info('%s got the file ...' % self.transferconnection.get('faxobj').fileid)
+            logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         try:
             ipbxid = self.connection_details['ipbxid']
             id = self.connection_details['userid']
             self._manage_logout(ipbxid, id, msg)
         except KeyError:
-            self.log.warning('Could not retrieve the user id %s',
-                             self.connection_details)
+            logger.warning('Could not retrieve the user id %s',
+                           self.connection_details)
 
     def manage_connection(self, msg):
         z = list()
@@ -85,7 +86,7 @@ class CTI(Interfaces):
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
                 self.logintimer.cancel()
-                self.log.info('%s transfer connection : %d received' % (faxobj.fileid, len(msg)))
+                logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
                 faxobj.setbuffer(msg)
                 faxobj.launchasyncs()
         else:
@@ -97,7 +98,7 @@ class CTI(Interfaces):
         return z
 
     def set_as_transfer(self, direction, faxobj):
-        self.log.info('%s set_as_transfer %s' % (faxobj.fileid, direction))
+        logger.info('%s set_as_transfer %s', faxobj.fileid, direction)
         self.transferconnection = {'direction': direction,
                                    'faxobj': faxobj}
 
@@ -105,7 +106,7 @@ class CTI(Interfaces):
         if self.transferconnection:
             if self.transferconnection.get('direction') == 's2c':
                 self.connid.sendall(msg)
-                self.log.info('transfer connection %d sent' % len(msg))
+                logger.info('transfer connection %d sent', len(msg))
         else:
             self.connid.sendall(self.serial.encode(msg) + '\n')
 
@@ -113,12 +114,12 @@ class CTI(Interfaces):
         """
         Clean up code for user disconnection
         """
-        self.log.info('logout (%s) user:%s/%s', msg, ipbxid, user_id)
+        logger.info('logout (%s) user:%s/%s', msg, ipbxid, user_id)
         self._disconnect_user(ipbxid, user_id)
 
     def loginko(self, errorstring):
-        self.log.warning('user can not connect (%s) : sending %s'
-                         % (self.details, errorstring))
+        logger.warning('user can not connect (%s) : sending %s',
+                       self.details, errorstring)
         # self.logintimer.cancel() + close
         tosend = {'class': 'loginko',
                   'error_string': errorstring}
@@ -137,7 +138,7 @@ class CTI(Interfaces):
             userstatus['last-logouttimestamp'] = time.time()
             innerdata.handle_cti_stack('empty_stack')
         except KeyError:
-            self.log.warning('Could not update user status %s', user_id)
+            logger.warning('Could not update user status %s', user_id)
 
 
 class CTIS(CTI):

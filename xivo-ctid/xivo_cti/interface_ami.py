@@ -33,6 +33,8 @@ from xivo_cti import xivo_ami, cti_config
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler, ami_logger
 
+logger = logging.getLogger('interface_ami')
+
 
 class AMI:
     kind = 'AMI'
@@ -45,7 +47,6 @@ class AMI:
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
         self.innerdata = self._ctiserver.safe.get(self.ipbxid)
-        self.log = logging.getLogger('interface_ami(%s)' % self.ipbxid)
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
@@ -71,7 +72,7 @@ class AMI:
             self.amicl.login()
             return self.amicl.sock
         except Exception:
-            self.log.exception('unable to connect/login')
+            logger.exception('unable to connect/login')
 
     def disconnect(self):
         self.amicl.sock.close()
@@ -100,16 +101,16 @@ class AMI:
 
     def cb_timer(self, *args):
         try:
-            self.log.info('cb_timer (timer finished at %s) %s' %
-                          (time.asctime(), args))
+            logger.info('cb_timer (timer finished at %s) %s',
+                        time.asctime(), args)
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
                       self.ipbxid)
         except Exception:
-            self.log.exception('cb_timer %s' % args)
+            logger.exception('cb_timer %s', args)
 
     def checkqueue(self):
-        self.log.info('entering checkqueue')
+        logger.info('entering checkqueue')
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
@@ -122,7 +123,7 @@ class AMI:
                     sockparams.makereply_close(actionid, 'timeout')
                     del self.waiting_actionid[actionid]
                 else:
-                    self.log.warning('timeout on actionid %s but no more in our structure' % actionid)
+                    logger.warning('timeout on actionid %s but no more in our structure', actionid)
         return ncount
 
     def delayed_action(self, usefulmsg, replyto):
@@ -149,7 +150,7 @@ class AMI:
             try:
                 decoded_event = raw_event.decode('utf8')
             except Exception:
-                self.log.exception('could not decode event %r' % (raw_event))
+                logger.exception('could not decode event %r', raw_event)
                 continue
             event = {}
             nocolon = []
@@ -160,12 +161,12 @@ class AMI:
                         if len(key_value) == 2:
                             event[key_value[0]] = key_value[1]
                         elif line.startswith('Asterisk Call Manager'):
-                            self.log.info('%s' % (line))
+                            logger.info('%s', line)
                 else:
                     nocolon.append(line)
 
             if len(nocolon) > 1:
-                self.log.warning('nocolon is %s' % (nocolon))
+                logger.warning('nocolon is %s', nocolon)
 
             if 'Event' in event and event['Event'] is not None:
                 event_name = event['Event']
@@ -199,7 +200,7 @@ class AMI:
                             args = [a for a in line.split('\n') if a not in to_ignore]
                             reply.extend(args)
                             if len(args):
-                                self.log.info('Response : %s' % (args))
+                                logger.info('Response : %s', args)
 
                         if 'ActionID' in event:
                             actionid = event['ActionID']
@@ -211,18 +212,18 @@ class AMI:
                                 del self.waiting_actionid[actionid]
 
                     except Exception, e:
-                        self.log.exception('(command reply)')
+                        logger.exception('(command reply)')
                         print e
                     try:
                         self.amiresponse_follows(event)
                     except Exception:
-                        self.log.exception('response_follows (%s) (%s)' % (event, nocolon))
+                        logger.exception('response_follows (%s) (%s)', event, nocolon)
 
                 elif response == 'Success':
                     try:
                         self.amiresponse_success(event)
                     except Exception:
-                        self.log.exception('response_success (%s) (%s)' % (event, nocolon))
+                        logger.exception('response_success (%s) (%s)', event, nocolon)
 
                 elif response == 'Error':
                     if 'ActionID' in event:
@@ -236,16 +237,16 @@ class AMI:
                     try:
                         self.amiresponse_error(event)
                     except Exception:
-                        self.log.exception('response_error (%s) (%s)' % (event, nocolon))
+                        logger.exception('response_error (%s) (%s)', event, nocolon)
                 else:
-                    self.log.warning('Response=%s (untracked) : %s' % (response, event))
+                    logger.warning('Response=%s (untracked) : %s', response, event)
             elif len(event) > 0:
-                self.log.warning('XXX: %s' % (event))
+                logger.warning('XXX: %s', event)
             else:
-                self.log.warning('Other : %s' % (event))
+                logger.warning('Other : %s', event)
         event_count = len(events)
         if event_count > 200:
-            self.log.info('handled %d (> 200) events' % (event_count))
+            logger.info('handled %d (> 200) events', event_count)
 
     def handle_ami_function(self, evfunction, event):
         """
@@ -264,17 +265,17 @@ class AMI:
                 try:
                     function(event)
                 except KeyError:
-                    self.log.error('Missing fields to handle this event: %s', event)
+                    logger.error('Missing fields to handle this event: %s', event)
         except Exception:
-            self.log.exception('%s : event %s' % (evfunction, event))
+            logger.exception('%s : event %s', evfunction, event)
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
         if not actionid:
-            self.log.info('amiresponse_success (no ActionID) %s' % event)
+            logger.info('amiresponse_success (no ActionID) %s', event)
         elif actionid not in self.actionids:
-            self.log.warning('amiresponse_success %s (no record) : %s'
-                             % (actionid, event))
+            logger.warning('amiresponse_success %s (no record) : %s',
+                           actionid, event)
         else:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
@@ -285,28 +286,28 @@ class AMI:
             elif mode == 'extension':
                 self._handle_extension_success(event, actionid, properties, mode)
             elif mode == 'init':
-                self.log.info('amiresponse_success %s %s : %s'
-                              % (actionid, mode, event))
+                logger.info('amiresponse_success %s %s : %s',
+                            actionid, mode, event)
             elif mode == 'presence':
                 pass
             elif mode == 'vmupdate':
                 self._handle_vmupdate_success(event, properties)
             else:
-                self.log.info('amiresponse_success %s %s (?) : %s'
-                              % (actionid, mode, event))
+                logger.info('amiresponse_success %s %s (?) : %s',
+                            actionid, mode, event)
 
     def amiresponse_error(self, event):
         actionid = event.get('ActionID')
         if not actionid:
-            self.log.warning('amiresponse_error (no ActionID) %s' % event)
+            logger.warning('amiresponse_error (no ActionID) %s', event)
         elif actionid not in self.actionids:
-            self.log.warning('amiresponse_error %s (no record) : %s'
-                             % (actionid, event))
+            logger.warning('amiresponse_error %s (no record) : %s',
+                           actionid, event)
         else:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
-            self.log.warning('amiresponse_error %s %s : %s - %s'
-                             % (actionid, mode, event, properties))
+            logger.warning('amiresponse_error %s %s : %s - %s',
+                           actionid, mode, event, properties)
             if mode == 'useraction':
                 request = properties.get('request')
                 cn = request.get('requester')
@@ -318,15 +319,15 @@ class AMI:
     def amiresponse_follows(self, event):
         actionid = event.get('ActionID')
         if not actionid:
-            self.log.warning('amiresponse_follows (no ActionID) %s' % event)
+            logger.warning('amiresponse_follows (no ActionID) %s', event)
         elif actionid not in self.actionids:
-            self.log.warning('amiresponse_follows %s (no record) : %s'
-                             % (actionid, event))
+            logger.warning('amiresponse_follows %s (no record) : %s',
+                           actionid, event)
         else:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
-            self.log.info('amiresponse_follows %s %s : %s - %s'
-                          % (actionid, mode, event, properties))
+            logger.info('amiresponse_follows %s %s : %s - %s',
+                        actionid, mode, event, properties)
 
     def execute_and_track(self, actionid, params):
         conn_ami = self.amicl
@@ -339,11 +340,11 @@ class AMI:
                 amiargs = params.get('amiargs')
                 return getattr(conn_ami, amicommand)(* amiargs)
             else:
-                self.log.warning('mode %s : no such AMI command %s' %
-                                 (mode, amicommand))
+                logger.warning('mode %s : no such AMI command %s',
+                               mode, amicommand)
                 return 'unknown'
         else:
-            self.log.warning('mode %s : no AMI connection' % mode)
+            logger.warning('mode %s : no AMI connection', mode)
             return 'noconn'
 
     def _handle_newchannel_success(self, event, properties):
@@ -364,8 +365,8 @@ class AMI:
         if msg and msg == 'Extension Status':
             self._ctiserver.commandclass.amiresponse_extensionstatus(event)
         else:
-            self.log.warning('amiresponse_success %s %s : %s - %s - unknown msg %s' %
-                             (actionid, mode, event, properties, msg))
+            logger.warning('amiresponse_success %s %s : %s - %s - unknown msg %s',
+                           actionid, mode, event, properties, msg)
 
     def _handle_vmupdate_success(self, event, properties):
         try:
@@ -374,11 +375,11 @@ class AMI:
                                            event['NewMessages'],
                                            event['OldMessages'])
         except KeyError:
-            self.log.warning('Could not update voicemail info: %s', event)
+            logger.warning('Could not update voicemail info: %s', event)
 
     def _handle_useraction_success(self, event, actionid, properties, mode):
-        self.log.info('amiresponse_success %s %s : %s - %s'
-                      % (actionid, mode, event, properties))
+        logger.info('amiresponse_success %s %s : %s - %s',
+                    actionid, mode, event, properties)
         request = properties.get('request')
         cn = request.get('requester')
         try:

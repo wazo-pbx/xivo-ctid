@@ -23,7 +23,7 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import logging
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('voicemaillist')
+logger = logging.getLogger('voicemaillist')
 
 class VoicemailList(AnyList):
     def __init__(self, newurls = [], useless = None):
@@ -40,5 +40,5 @@ class VoicemailList(AnyList):
             if rev not in self.reverse_index:
                 self.reverse_index[rev] = idx
             else:
-                log.warning('2 voicemails have the same mailbox@context')
+                logger.warning('2 voicemails have the same mailbox@context')
         return ret

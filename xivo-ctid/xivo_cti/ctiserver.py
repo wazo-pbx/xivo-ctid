@@ -54,6 +54,8 @@ from xivo_cti.alarm import scheduler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
 
+logger = logging.getLogger('main')
+
 
 class CTIServer:
 
@@ -78,8 +80,6 @@ class CTIServer:
 
     def _set_logger(self):
         logging.basicConfig(level=logging.INFO)
-        global log
-        log = logging.getLogger('main')
         try:
             logfilehandler = RotatingFileHandler(cti_config.LOGFILENAME)
             formatter = logging.Formatter(
@@ -91,7 +91,7 @@ class CTIServer:
             if cti_config.DEBUG_MODE:
                 root_logger.setLevel(logging.DEBUG)
         except Exception:
-            log.exception('logfilehandler')
+            logger.exception('logfilehandler')
 
     def _daemonize(self):
         if not cti_config.DEBUG_MODE:
@@ -102,7 +102,7 @@ class CTIServer:
         try:
             system_zone = alarm.get_system_zone()
         except Exception as e:
-            log.warning('Error while getting system zone: %s', e)
+            logger.warning('Error while getting system zone: %s', e)
             system_zone = None
         self.alarm_mgr = alarm.AlarmClockManager(
             self.scheduler, persister, self._alarm_callback, system_zone)
@@ -125,7 +125,7 @@ class CTIServer:
             try:
                 self.main_loop()
             except Exception:
-                log.exception('main loop has crashed ... retrying in 5 seconds ...')
+                logger.exception('main loop has crashed ... retrying in 5 seconds ...')
                 time.sleep(5)
 
     def _alarm_callback(self, data):
@@ -137,8 +137,8 @@ class CTIServer:
     # \param signum signal number
     # \param frame frame
     def sighandler(self, signum, frame):
-        log.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits'
-                    % (signum, frame.f_lineno, self.askedtoquit))
+        logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
+                       signum, frame.f_lineno, self.askedtoquit)
         self.scheduler.shutdown()
         for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
             print '--- living thread <%s>' % (t.getName())
@@ -149,8 +149,8 @@ class CTIServer:
     # \param signum signal number
     # \param frame frame
     def sighandler_reload(self, signum, frame):
-        log.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads'
-                    % (signum, frame.f_lineno, self.askedtoquit))
+        logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
+                       signum, frame.f_lineno, self.askedtoquit)
         self.askedtoquit = False
 
     def manage_tcp_connections(self, sel_i, msg, kind):
@@ -173,7 +173,7 @@ class CTIServer:
                     elif 'warning' in reply:
                         kind.reply(reply.get('warning'))
         else:
-            log.warning('unknown connection kind %s' % kind)
+            logger.warning('unknown connection kind %s', kind)
         return closemenow
 
     def find_matching_ipbxid(self, ipaddress):
@@ -188,7 +188,7 @@ class CTIServer:
         return found_ipbxid
 
     def checkqueue(self):
-        log.info('entering checkqueue')
+        logger.info('entering checkqueue')
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
@@ -202,15 +202,15 @@ class CTIServer:
                     ipbxid = self.find_matching_ipbxid(got_ip_address)
                     if ipbxid:
                         if self.myami[ipbxid].connected():
-                            log.info('do NOT attempt to reconnect to the AMI for %s' % ipbxid)
+                            logger.info('do NOT attempt to reconnect to the AMI for %s', ipbxid)
                         else:
-                            log.info('attempt to reconnect to the AMI for %s' % ipbxid)
+                            logger.info('attempt to reconnect to the AMI for %s', ipbxid)
                             z = self.myami[ipbxid].connect()
                             if z:
                                 self.fdlist_ami[z] = self.myami[ipbxid]
                     else:
-                        log.warning('did not found a matching ipbxid for the address %s'
-                                    % got_ip_address)
+                        logger.warning('did not found a matching ipbxid for the address %s',
+                                       got_ip_address)
             elif action == 'xivoremote':
                 for _, v in self.mycti.iteritems():
                     if not v.connected():
@@ -223,20 +223,20 @@ class CTIServer:
                 if connc in self.fdlist_established:
                     del self.fdlist_established[connc]
                 else:
-                    log.warning('could not remove connexion : already done ...')
+                    logger.warning('could not remove connexion : already done ...')
             else:
-                log.warning('checkqueue : unknown action received : %s' % action)
+                logger.warning('checkqueue : unknown action received : %s', action)
         return ncount
 
     def cb_timer(self, *args):
         try:
             tname = threading.currentThread()
             tname.setName('Thread-main')
-            log.info('cb_timer (timer finished at %s) %s' % (time.asctime(), args))
+            logger.info('cb_timer (timer finished at %s) %s', time.asctime(), args)
             self.timeout_queue.put(args)
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:
-            log.exception('cb_timer %s' % args)
+            logger.exception('cb_timer %s', args)
 
     def updates_period(self):
         return int(self._config.getconfig('main').get('updates_period', '3600'))
@@ -258,8 +258,8 @@ class CTIServer:
         self.askedtoquit = False
 
         self.time_start = time.localtime()
-        log.info('# STARTING XiVO CTI Server %s (pid %d) / git:%s # (0/3) Starting (%d)'
-                 % (self.xivoversion, os.getpid(), self.revision, self.nreload))
+        logger.info('# STARTING XiVO CTI Server %s (pid %d) / git:%s # (0/3) Starting (%d)',
+                    self.xivoversion, os.getpid(), self.revision, self.nreload)
         self.nreload += 1
 
         # global default definitions
@@ -300,7 +300,7 @@ class CTIServer:
         self.fdlist_ami = {}
         self.fdlist_remote_cti = {}
 
-        log.info("the monitored ipbx's is/are : %s" % self._config.getconfig('ipbxes').keys())
+        logger.info("the monitored ipbx's is/are : %s", self._config.getconfig('ipbxes').keys())
 
         for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
             if 'ipbx_connection' in ipbxconfig:
@@ -309,7 +309,7 @@ class CTIServer:
         else:
             self.myipbxid = None
 
-        log.info('# STARTING %s # (1/3) Local AMI socket connection' % self.xdname)
+        logger.info('# STARTING %s # (1/3) Local AMI socket connection', self.xdname)
         if self.myipbxid:
             ipbxconfig = self._config.getconfig('ipbxes').get(self.myipbxid)
             # interface : safe deposit
@@ -320,8 +320,8 @@ class CTIServer:
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
             self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
 
-            log.info('# STARTING %s / git:%s / %d'
-                     % (self.xdname, self.safe[self.myipbxid].version(), self.nreload))
+            logger.info('# STARTING %s / git:%s / %d',
+                        self.xdname, self.safe[self.myipbxid].version(), self.nreload)
 
             self.safe[self.myipbxid].set_ctilog(ctilog)
             self.safe[self.myipbxid].read_internatprefixes(prefixfile)
@@ -337,18 +337,18 @@ class CTIServer:
             try:
                 self.safe[self.myipbxid].update_config_list_all()
             except Exception:
-                log.exception('%s : commandclass.updates()' % self.myipbxid)
+                logger.exception('%s : commandclass.updates()', self.myipbxid)
 
-        log.info('# STARTING %s # (2/3) Remote CTI connections' % self.xdname)
+        logger.info('# STARTING %s # (2/3) Remote CTI connections', self.xdname)
         for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
             if ipbxid != self.myipbxid:
-                log.info('other ipbx to connect to : %s' % ipbxid)
+                logger.info('other ipbx to connect to : %s', ipbxid)
                 try:
                     self.safe[ipbxid] = innerdata.Safe(self, ipbxid)
                     self.mycti[ipbxid] = interface_rcti.RCTI(self, ipbxid,
                                                              ipbxconfig.get('cti_connection'))
                 except:
-                    log.exception('remote CTI connection to %s' % ipbxid)
+                    logger.exception('remote CTI connection to %s', ipbxid)
 
                 self.update_userlist[ipbxid] = []
                 self.lastrequest_time[ipbxid] = time.time()
@@ -358,14 +358,14 @@ class CTIServer:
                     self.fdlist_remote_cti[z] = self.mycti[ipbxid]
         # }
 
-        log.info('# STARTING %s # (3/3) listening sockets (CTI, WEBI, FAGI, INFO)' % self.xdname)
+        logger.info('# STARTING %s # (3/3) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
         # opens the listening socket for incoming (CTI, WEBI, FAGI, INFO) connections
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
                 allow_kind = bind_and_port[2]
             if not allow_kind:
-                log.warning('%s kind listening socket has been explicitly disabled' % kind)
+                logger.warning('%s kind listening socket has been explicitly disabled', kind)
                 continue
             try:
                 (bind, port) = bind_and_port[:2]
@@ -380,14 +380,14 @@ class CTIServer:
                 UIsock.listen(10)
                 self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
             except Exception:
-                log.exception('tcp %s %d' % (bind, trueport))
+                logger.exception('tcp %s %d', bind, trueport)
 
         for kind, bind_and_port in xivoconf_general.get('incoming_udp', {}).iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
                 allow_kind = bind_and_port[2]
             if not allow_kind:
-                log.warning('%s kind listening socket has been explicitly disabled' % kind)
+                logger.warning('%s kind listening socket has been explicitly disabled', kind)
                 continue
             try:
                 (bind, port) = bind_and_port[:2]
@@ -401,12 +401,12 @@ class CTIServer:
                 UIsock.bind(bindtuple)
                 self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
             except Exception:
-                log.exception('udp %s %d' % (bind, trueport))
+                logger.exception('udp %s %d', bind, trueport)
 
         # Main select() loop - Receive messages
         if not self._config.getconfig():
             nsecs = 5
-            log.info('waiting %d seconds in case a config would be available ...' % nsecs)
+            logger.info('waiting %d seconds in case a config would be available ...', nsecs)
             try:
                 time.sleep(nsecs)
                 # select.select([], [], [], nsecs)
@@ -479,7 +479,7 @@ class CTIServer:
         global_zone = self._config.getconfig('ipbxes').get(self.myipbxid, {}).get('timezone')
         userlist = self.safe[self.myipbxid].xod_config['users']
         if global_zone != self.global_zone:
-            log.info('Global zone changed to %s', global_zone)
+            logger.info('Global zone changed to %s', global_zone)
             for userid, user in userlist.keeplist.iteritems():
                 # ignore 'remote users'
                 if not userid.startswith('cs:'):
@@ -489,7 +489,7 @@ class CTIServer:
             self.global_zone = global_zone
         if userlist.alarm_clk_changes:
             for userid, (alarmclock, zone) in userlist.alarm_clk_changes.iteritems():
-                log.info('Alarm clock changed for user %s', userid)
+                logger.info('Alarm clock changed for user %s', userid)
                 if not zone:
                     zone = global_zone
                 self.alarm_mgr.test_update_alarm_clock(int(userid), alarmclock, zone)
@@ -509,7 +509,7 @@ class CTIServer:
                         if cn not in fdtodel:
                             fdtodel.append(cn)
             if fdtodel:
-                log.warning('there are fd to delete : %s' % fdtodel)
+                logger.warning('there are fd to delete : %s', fdtodel)
                 for cn in fdtodel:
                     del self.fdlist_established[cn]
 
@@ -529,15 +529,15 @@ class CTIServer:
                                                      self.updates_period())
 
         except Exception:
-            log.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
-            log.warning('(select) self.askedtoquit=%s fdlist_full=%s'
-                        % (self.askedtoquit, self.fdlist_full))
-            log.warning('(select) current open TCP connections : (CTI, WEBI, FAGI, INFO) %s'
-                        % self.fdlist_established)
-            log.warning('(select) current open TCP connections : (AMI) %s'
-                        % self.fdlist_ami.keys())
-            log.warning('(select) current open TCP connections : (RCTI) %s'
-                        % self.fdlist_remote_cti.keys())
+            logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
+            logger.warning('(select) self.askedtoquit=%s fdlist_full=%s',
+                           self.askedtoquit, self.fdlist_full)
+            logger.warning('(select) current open TCP connections : (CTI, WEBI, FAGI, INFO) %s',
+                           self.fdlist_established)
+            logger.warning('(select) current open TCP connections : (AMI) %s',
+                           self.fdlist_ami.keys())
+            logger.warning('(select) current open TCP connections : (RCTI) %s',
+                           self.fdlist_remote_cti.keys())
             
             # we must close the scheduler early since scheduled jobs depends
             # on the AMI connection
@@ -556,9 +556,9 @@ class CTIServer:
             if self.askedtoquit:
                 # self.commandclass.reset('stop') # used to call __fill_ctilog__('daemon stop', mode)
                 time_uptime = int(time.time() - time.mktime(self.time_start))
-                log.info('# STOPPING XiVO CTI Server %s (pid %d) / git:%s # uptime %d s (since %s)'
-                         % (self.xivoversion, os.getpid(), self.revision,
-                            time_uptime, time.asctime(self.time_start)))
+                logger.info('# STOPPING XiVO CTI Server %s (pid %d) / git:%s # uptime %d s (since %s)',
+                            self.xivoversion, os.getpid(), self.revision,
+                            time_uptime, time.asctime(self.time_start))
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (stop) killing thread <%s>' % t.getName()
                     t._Thread__stop()
@@ -575,21 +575,21 @@ class CTIServer:
         try:
             # connexions ready for sending(writing)
             if sels_o:
-                log.warning('got some sels_o %s' % sels_o)
+                logger.warning('got some sels_o %s', sels_o)
             for sel_o in sels_o:
                 try:
                     sel_o.process_sending()
                 except ClientConnection.CloseException, cexc:
                     if sel_o in self.fdlist_established:
                         kind = self.fdlist_established[sel_o]
-                        log.info('TCP socket %s closed(sending %s) on %s'
-                                 % (kind, cexc, sel_o.getpeername()))
+                        logger.info('TCP socket %s closed(sending %s) on %s',
+                                    kind, cexc, sel_o.getpeername())
                         kind.disconnected('end_sending')
                         sel_o.close()
                         del self.fdlist_established[sel_o]
 
             if sels_e:
-                log.warning('got some sels_e %s' % sels_e)
+                logger.warning('got some sels_e %s', sels_e)
 
             if sels_i:
                 for sel_i in sels_i:
@@ -600,7 +600,7 @@ class CTIServer:
                             ipbxid = amiint.ipbxid
                             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
                             if len(buf) == 0:
-                                log.warning('AMI %s : CLOSING (%s)' % (ipbxid, time.asctime()))
+                                logger.warning('AMI %s : CLOSING (%s)', ipbxid, time.asctime())
                                 del self.fdlist_ami[sel_i]
                                 sel_i.close()
                                 amiint.disconnect()
@@ -608,9 +608,9 @@ class CTIServer:
                                 try:
                                     amiint.handle_event(buf)
                                 except Exception:
-                                    log.exception('(handle_event) %s' % ipbxid)
+                                    logger.exception('(handle_event) %s', ipbxid)
                         except Exception:
-                            log.exception('(amilist)')
+                            logger.exception('(amilist)')
 
                     elif sel_i in self.fdlist_remote_cti.keys():
                         try:
@@ -618,7 +618,7 @@ class CTIServer:
                             ipbxid = cticonn.ipbxid
                             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
                             if len(buf) == 0:
-                                log.warning('RCTI %s : CLOSING' % ipbxid)
+                                logger.warning('RCTI %s : CLOSING', ipbxid)
                                 del self.fdlist_remote_cti[sel_i]
                                 sel_i.close()
                                 cticonn.disconnect()
@@ -626,16 +626,16 @@ class CTIServer:
                                 try:
                                     cticonn.handle_event(buf)
                                 except Exception:
-                                    log.exception('(handle_event) %s' % ipbxid)
+                                    logger.exception('(handle_event) %s', ipbxid)
                         except Exception:
-                            log.exception('(remotecti)')
+                            logger.exception('(remotecti)')
 
                     # } the UDP messages (ANNOUNCE) are catched here
                     elif sel_i in self.fdlist_udp_cti: # {
                         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
                         if kind == 'ANNOUNCE':
                             [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
-                            log.info('UDP %s <%s> %s' % (kind, data.strip(), sockparams))
+                            logger.info('UDP %s <%s> %s', kind, data.strip(), sockparams)
                             # scheduling AMI reconnection
                             k = threading.Timer(1, self.cb_timer,
                                                 ({'action': 'ipbxup',
@@ -644,15 +644,15 @@ class CTIServer:
                             k.setName('Thread-ipbxup-%s' % data.strip())
                             k.start()
                         else:
-                            log.warning('unknown kind %s received' % kind)
+                            logger.warning('unknown kind %s received', kind)
 
                     # } the new TCP connections (CTI, WEBI, FAGI, INFO) are catched here
                     elif sel_i in self.fdlist_listen_cti: # {
                         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
                         [connc, sockparams] = sel_i.accept()
                         ctiseparator = '\n'
-                        log.info('TCP socket %s opened on %s:%d' % (kind,
-                                                                    sockparams[0], sockparams[1]))
+                        logger.info('TCP socket %s opened on %s:%d', kind,
+                                    sockparams[0], sockparams[1])
 
                         if kind == 'CTI':
                             connc = ClientConnection(connc, sockparams, ctiseparator)
@@ -665,10 +665,10 @@ class CTIServer:
                                                              ssl_version = cti_config.SSLPROTO)
                                 connc = ClientConnection(connstream, sockparams, ctiseparator)
                             except ssl.SSLError:
-                                log.exception('%s:%s:%d cert=%s key=%s)'
-                                              % (kind, sockparams[0], sockparams[1],
+                                logger.exception('%s:%s:%d cert=%s key=%s)',
+                                                 kind, sockparams[0], sockparams[1],
                                                  self._config.getconfig('certfile'),
-                                                 self._config.getconfig('keyfile')))
+                                                 self._config.getconfig('keyfile'))
                                 connc.close()
                                 connc = None
                         # appending the opened socket to the ones watched
@@ -691,8 +691,8 @@ class CTIServer:
                                 if ipbxid:
                                     nc.set_ipbxid(ipbxid)
                                 else:
-                                    log.warning('(%s interface) did not find a matching ipbxid for %s'
-                                                % (kind, sockparams[0]))
+                                    logger.warning('(%s interface) did not find a matching ipbxid for %s',
+                                                   kind, sockparams[0])
 
                             if kind in ['CTI', 'CTIS']:
                                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
@@ -703,7 +703,7 @@ class CTIServer:
                                 nc.logintimer.start()
                             self.fdlist_established[connc] = nc
                         else:
-                            log.warning('connc is not defined ...')
+                            logger.warning('connc is not defined ...')
 
                     # } incoming TCP connections (CTI, WEBI, AGI, INFO)
                     elif sel_i in self.fdlist_established: # {
@@ -726,20 +726,20 @@ class CTIServer:
                                     del self.fdlist_established[sel_i]
                                     # if requester in self.commandclass.transfers_ref:
                                     #   self.commandclass.transfer_endbuf(requester)
-                                    log.info('TCP socket %s closed(A %s) on %s' % (kind.kind, cexc, requester))
+                                    logger.info('TCP socket %s closed(A %s) on %s', kind.kind, cexc, requester)
                             else: # {
                                 try:
                                     msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
                                     lmsg = len(msg)
                                 except Exception:
-                                    log.exception('connection to %s (%s)' % (requester, kind))
+                                    logger.exception('connection to %s (%s)', requester, kind)
                                     lmsg = 0
 
                                 if lmsg > 0:
                                     try:
                                         closemenow = self.manage_tcp_connections(sel_i, msg, kind)
                                     except Exception:
-                                        log.exception('handling %s (%s)' % (requester, kind))
+                                        logger.exception('handling %s (%s)', requester, kind)
                                 else:
                                     closemenow = True
                                     # XXX connc : kind.manage_logout('end_receiving')
@@ -750,24 +750,24 @@ class CTIServer:
                                 del self.fdlist_established[sel_i]
                                 # if requester in self.commandclass.transfers_ref:
                                 #   self.commandclass.transfer_endbuf(requester)
-                                log.info('TCP socket %s closed(B) on %s' % (kind.kind, requester))
+                                logger.info('TCP socket %s closed(B) on %s', kind.kind, requester)
                         except Exception:
                             # socket.error : exc.args[0]
-                            log.exception('[%s] %s' % (kind, sel_i))
+                            logger.exception('[%s] %s', kind, sel_i)
                             try:
-                                log.warning('unexpected socket breakup')
+                                logger.warning('unexpected socket breakup')
                                 kind.disconnected('exception')
                                 sel_i.close()
                                 del self.fdlist_established[sel_i]
                             except Exception:
-                                log.exception('[%s] (2nd exception)' % kind)
+                                logger.exception('[%s] (2nd exception)', kind)
 
                     # local pipe fd
                     elif self.pipe_queued_threads[0] == sel_i:
                         try:
                             pipebuf = os.read(sel_i, 1024)
                             if len(pipebuf) == 0:
-                                log.warning('pipe_queued_threads has been closed')
+                                logger.warning('pipe_queued_threads has been closed')
                             else:
                                 for pb in pipebuf.split('\n'):
                                     if not pb:
@@ -780,16 +780,16 @@ class CTIServer:
                                             nactions = self.safe[where].checkqueue()
                                         elif kind == 'ami':
                                             nactions = self.myami[where].checkqueue()
-                                        log.info('handled %d actions for %s' % (nactions, kind))
+                                        logger.info('handled %d actions for %s', nactions, kind)
                                     elif kind == 'alarmclk':
                                         userid = where
                                         params = {'amicommand': 'alarmclk',
                                                   'amiargs': (userid,)}
                                         self.myami[self.myipbxid].execute_and_track(None, params)
                                     else:
-                                        log.warning('unknown kind for %s' % pb)
+                                        logger.warning('unknown kind for %s', pb)
                         except Exception:
-                            log.exception('[pipe_queued_threads]')
+                            logger.exception('[pipe_queued_threads]')
 
                     self.loop_over_cti_queues()
 
@@ -797,15 +797,15 @@ class CTIServer:
                         if ipbxid == self.myipbxid:
                             if (time.time() - self.lastrequest_time[ipbxid]) > self.updates_period() or self.update_userlist[ipbxid]:
                                 self.lastrequest_time[ipbxid] = time.time()
-                                log.info('[%s] %s : updates (computed timeout) %s (%s)'
-                                         % (self.xdname, ipbxid, time.asctime(), self.update_userlist[ipbxid]))
+                                logger.info('[%s] %s : updates (computed timeout) %s (%s)',
+                                            self.xdname, ipbxid, time.asctime(), self.update_userlist[ipbxid])
                                 try:
                                     # manage_connection.update_amisocks(ipbxid, self)
                                     self._config.update()
                                     safe.regular_update()
                                 except Exception:
-                                    log.exception('%s : failed while updating lists and sockets (computed timeout)'
-                                                  % ipbxid)
+                                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
+                                                     ipbxid)
                                 try:
                                     if self.update_userlist[ipbxid]:
                                         while self.update_userlist[ipbxid]:
@@ -818,17 +818,17 @@ class CTIServer:
                                         safe.update_config_list_all()
                                         self.loop_over_cti_queues()
                                 except Exception:
-                                    log.exception('%s : commandclass.updates() (computed timeout)' % ipbxid)
+                                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
 
             if not sels_i and not sels_o and not sels_e:
                 # when nothing happens on the sockets, we fall here
-                log.info('[%s] updates (select timeout) %s' % (self.xdname, time.asctime()))
+                logger.info('[%s] updates (select timeout) %s', self.xdname, time.asctime())
                 for ipbxid, safe in self.safe.iteritems():
                     if ipbxid == self.myipbxid:
                         try:
                             safe.update_config_list_all()
                         except Exception:
-                            log.exception('%s : commandclass.updates() (select timeout)' % ipbxid)
+                            logger.exception('%s : commandclass.updates() (select timeout)', ipbxid)
 
                         self.lastrequest_time[ipbxid] = time.time()
 
@@ -837,6 +837,6 @@ class CTIServer:
                             self._config.update()
                             safe.regular_update()
                         except Exception:
-                            log.exception('%s : failed while updating lists and sockets (select timeout)' % ipbxid)
+                            logger.exception('%s : failed while updating lists and sockets (select timeout)', ipbxid)
         except Exception:
-            log.exception('select step')
+            logger.exception('select step')

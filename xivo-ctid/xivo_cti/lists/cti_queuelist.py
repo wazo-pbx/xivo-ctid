@@ -23,8 +23,9 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 import logging
 import time
-
 from xivo_cti.cti_anylist import AnyList
+
+logger = logging.getLogger('queuelist')
 
 
 class QueueList(AnyList):
@@ -36,7 +37,6 @@ class QueueList(AnyList):
         self.anylist_properties = { 'name' : 'queues',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
-        self.log = logging.getLogger('queuelist')
 
     def update(self):
         ret = AnyList.update(self)
@@ -45,7 +45,7 @@ class QueueList(AnyList):
             if ag['name'] not in self.reverse_index:
                 self.reverse_index[ag['name']] = idx
             else:
-                self.log.warning('2 queues have the same name')
+                logger.warning('2 queues have the same name')
         return ret
 
     def hasqueue(self, queuename):
@@ -66,10 +66,10 @@ class QueueList(AnyList):
                 self.keeplist[queueid]['channels'][newchan] = self.keeplist[queueid]['channels'][oldchan]
                 del self.keeplist[queueid]['channels'][oldchan]
             else:
-                self.log.warning('queueentry_rename : channel %s is not in queueid %s'
-                            % (oldchan, queueid))
+                logger.warning('queueentry_rename : channel %s is not in queueid %s',
+                               oldchan, queueid)
         else:
-            self.log.warning('queueentry_rename : no such queueid %s' % queueid)
+            logger.warning('queueentry_rename : no such queueid %s', queueid)
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
         if queueid in self.keeplist:
@@ -83,10 +83,10 @@ class QueueList(AnyList):
             if channel in self.keeplist[queueid]['channels']:
                 del self.keeplist[queueid]['channels'][channel]
             else:
-                self.log.warning('queueentry_remove : channel %s is not in queueid %s'
-                            % (channel, queueid))
+                logger.warning('queueentry_remove : channel %s is not in queueid %s',
+                               channel, queueid)
         else:
-            self.log.warning('queueentry_remove : no such queueid %s' % queueid)
+            logger.warning('queueentry_remove : no such queueid %s', queueid)
 
     def queuememberupdate(self, queueid, location, event):
         changed = False
@@ -108,7 +108,7 @@ class QueueList(AnyList):
                 thisqueuelocation['Xivo-QueueMember-StateTime'] = time.time()
                 changed = True
         else:
-            self.log.warning('queuememberupdate : no such queueid %s' % queueid)
+            logger.warning('queuememberupdate : no such queueid %s', queueid)
         return changed
     
     def queuememberremove(self, queueid, location):
@@ -118,7 +118,7 @@ class QueueList(AnyList):
                 del self.keeplist[queueid]['agents_in_queue'][location]
                 changed = True
         else:
-            self.log.warning('queuememberremove : no such queueid %s' % queueid)
+            logger.warning('queuememberremove : no such queueid %s', queueid)
         return changed
     
     def get_queues(self):
@@ -134,8 +134,8 @@ class QueueList(AnyList):
                     if v in agprop:
                         lst[v] = agprop[v]
                     else:
-                        self.log.warning('get_queues_byagent : no property %s for agent %s in queue %s'
-                                    % (v, agid, qref))
+                        logger.warning('get_queues_byagent : no property %s for agent %s in queue %s',
+                                       v, agid, qref)
             lst['context'] = ql['context']
             queuelist[qref] = lst
         return queuelist

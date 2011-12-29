@@ -30,7 +30,7 @@ import ldap
 import logging
 from xivo import urisup
 
-log = logging.getLogger('ldap')
+logger = logging.getLogger('ldap')
 
 ## \class xivo_ldap
 class xivo_ldap:
@@ -41,7 +41,7 @@ class xivo_ldap:
         self.dbname  = None
 
         try:
-            log.info('LDAP URI requested: %r', iuri)
+            logger.info('LDAP URI requested: %r', iuri)
 
             if isinstance(iuri, unicode):
                 ldapuri = urisup.uri_help_split(iuri.encode('utf8'))
@@ -105,7 +105,7 @@ class xivo_ldap:
             debuglevel = 0
             self.ldapobj = ldap.initialize(self.uri, debuglevel)
 
-            log.info('LDAP URI understood: %r / filter: %r', self.uri, self.base_filter)
+            logger.info('LDAP URI understood: %r / filter: %r', self.uri, self.base_filter)
 
             # actual cases where these options are useful and used would be
             # to be investigated further, since it does not look like the proper
@@ -119,7 +119,7 @@ class xivo_ldap:
             #   float(ldapquery.get('network_timeout')))
 
             self.ldapobj.simple_bind_s(ldapuser, ldappass)
-            log.info('LDAP : simple bind done on %r %r', ldapuser, ldappass)
+            logger.info('LDAP : simple bind done on %r %r', ldapuser, ldappass)
 
             # XXX how should we handle the starttls option ?
             # if uri_scheme == 'ldap' and int(ldapquery.get('tls', 0)):
@@ -129,7 +129,7 @@ class xivo_ldap:
                 self.ldapobj.set_option(ldap.OPT_X_TLS, 1)
 
         except ldap.LDAPError, exc:
-            log.exception('__init__: ldap.LDAPError (%r, %r, %r)', self.ldapobj, iuri, exc)
+            logger.exception('__init__: ldap.LDAPError (%r, %r, %r)', self.ldapobj, iuri, exc)
             self.ldapobj = None
 
     def getldap(self, search_filter, search_attributes, searchpattern):
@@ -150,8 +150,8 @@ class xivo_ldap:
         else:
             actual_scope = ldap.SCOPE_SUBTREE
 
-        log.info('getldap : performing a request with scope %s, filter %s and attribute %s'
-                 % (actual_scope, actual_filter, search_attributes))
+        logger.info('getldap : performing a request with scope %s, filter %s and attribute %s',
+                    actual_scope, actual_filter, search_attributes)
 
         try:
             result = self.ldapobj.search_s(self.dbname,
@@ -161,8 +161,8 @@ class xivo_ldap:
             return result
         except (AttributeError, ldap.LDAPError), exc1:
             # display exc1 since sometimes the error stack looks too long for the logfile
-            log.exception('getldap: ldap.LDAPError (%r, %r, %r) retrying to connect',
-                          self.ldapobj, self.uri, exc1)
+            logger.exception('getldap: ldap.LDAPError (%r, %r, %r) retrying to connect',
+                             self.ldapobj, self.uri, exc1)
             self.__init__(self.iuri)
             try:
                 result = self.ldapobj.search_s(self.dbname,
@@ -171,5 +171,5 @@ class xivo_ldap:
                                                search_attributes)
                 return result
             except ldap.LDAPError, exc2:
-                log.exception('getldap: ldap.LDAPError (%r, %r, %r) could not reconnect',
-                              self.ldapobj, self.uri, exc2)
+                logger.exception('getldap: ldap.LDAPError (%r, %r, %r) could not reconnect',
+                                 self.ldapobj, self.uri, exc2)

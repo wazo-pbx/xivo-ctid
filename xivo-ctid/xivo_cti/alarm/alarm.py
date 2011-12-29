@@ -1,8 +1,6 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__version__   = '$Revision$'
-__date__      = '$Date$'
 __copyright__ = 'Copyright (C) 2011  Avencall'
 
 # This program is free software; you can redistribute it and/or modify

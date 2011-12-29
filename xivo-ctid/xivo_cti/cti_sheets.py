@@ -27,12 +27,14 @@ import struct
 import urllib2
 import zlib
 
+logger = logging.getLogger('sheet')
+
+
 class Sheet:
     def __init__(self, where, ipbxid, channel):
         self.internaldata = { 'where' : where,
                               'ipbxid' : ipbxid,
                               'channel' : channel }
-        self.log = logging.getLogger('sheet(%s,%s,%s)' % (ipbxid, where, channel))
         # config items
         self.options = {}
         self.displays = {}
@@ -114,7 +116,7 @@ class Sheet:
                     self.fields[sheetpart] = {'10' : {'name' : 'qtui',
                                                       'contents' : qtui_data}}
             else:
-                self.log.warning('sheetpart %s contents %s' % (sheetpart, v)) 
+                logger.warning('sheetpart %s contents %s', sheetpart, v) 
         # print self.fields
         # linestosend.extend(self.__build_xmlqtui__('sheet_qtui', actionopt, itemdir))
         return

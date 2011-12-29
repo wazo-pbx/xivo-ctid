@@ -26,7 +26,7 @@ import logging
 import hashlib
 import urllib2
 
-log = logging.getLogger('urllist')
+logger = logging.getLogger('urllist')
 
 
 class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
@@ -54,7 +54,7 @@ class UrlList:
                     f = urllib2.urlopen(self.trueurl[0])
                     http_contenttype = ['application/json']
                 elif kind in ['mysql', 'sqlite', 'ldap']:
-                    log.warning('URL kind %s not supported yet' % kind)
+                    logger.warning('URL kind %s not supported yet', kind)
                 elif kind in ['http', 'https']:
                     request = '%s?sum=%s' % (self.trueurl[0], self.urlmd5)
                     urequest = urllib2.Request(request)
@@ -63,24 +63,24 @@ class UrlList:
                     http_contenttype = f.headers.getheaders('Content-Type')
                     http_code = f.code
                 else:
-                    log.warning('URL kind %s not supported' % kind)
+                    logger.warning('URL kind %s not supported', kind)
                     return -1
             else:
-                log.warning('No URL has been defined')
+                logger.warning('No URL has been defined')
                 return -1
         except urllib2.URLError, uerr:
             errnum = uerr.reason[0]
             if errnum == 113:  # No route to host
-                log.error('(UrlList) %s %s : %s' % (self.url, uerr.args[0].__class__, uerr.reason))
+                logger.error('(UrlList) %s %s : %s', self.url, uerr.args[0].__class__, uerr.reason)
             elif errnum == 111:  # Connection refused
-                log.error('(UrlList) %s %s : %s' % (self.url, uerr.args[0].__class__, uerr.reason))
+                logger.error('(UrlList) %s %s : %s', self.url, uerr.args[0].__class__, uerr.reason)
             else:
                 # The connect operation timed out
                 # The read operation timed out
-                log.exception('(UrlList) %s %s : (untracked) %s' % (self.url, uerr.args[0].__class__, uerr.reason))
+                logger.exception('(UrlList) %s %s : (untracked) %s', self.url, uerr.args[0].__class__, uerr.reason)
             return -1
         except Exception:
-            log.exception('(UrlList) unable to open URL %s' % self.url)
+            logger.exception('(UrlList) unable to open URL %s', self.url)
             return -1
 
         ret = -1
@@ -102,30 +102,30 @@ class UrlList:
                             k[var] = val
                     self.urlmd5 = self.listmd5
                 except Exception:
-                    log.exception('(UrlList) trying to enforce setting %s' % self.url)
+                    logger.exception('(UrlList) trying to enforce setting %s', self.url)
                 ret = 2
             elif http_contenttype == [] or http_contenttype == ['text/html; charset=UTF-8']:
                 if http_code == 403:
-                    log.warning('%s : Forbidden (403)' % self.url)
+                    logger.warning('%s : Forbidden (403)', self.url)
                 elif http_code == 401:
-                    log.warning('%s : Unauthorized (401)' % self.url)
+                    logger.warning('%s : Unauthorized (401)', self.url)
                 elif http_code == 404:
-                    log.warning('%s : Not Found (404)' % self.url)
+                    logger.warning('%s : Not Found (404)', self.url)
                 elif http_code == 500:
-                    log.warning('%s : Internal Error (500)' % self.url)
+                    logger.warning('%s : Internal Error (500)', self.url)
                 elif http_code == 304:
                     self.urlmd5 = savemd5
-                    log.info('%s : received no-update (304) from WEBI' % self.url)
+                    logger.info('%s : received no-update (304) from WEBI', self.url)
                     ret = 2
                 elif http_code == 204:
-                    log.info('%s : received no-data (204) from WEBI' % self.url)
+                    logger.info('%s : received no-data (204) from WEBI', self.url)
                 elif http_code == 200:  # XXX temporary compatibility
                     if fulltable == 'XIVO-WEBI: no-update':
                         self.urlmd5 = savemd5
-                        log.info('%s : received no-update from WEBI' % self.url)
+                        logger.info('%s : received no-update from WEBI', self.url)
                         ret = 2
                 else:
-                    log.warning('%s : unknown code (%d)' % (self.url, http_code))
+                    logger.warning('%s : unknown code (%d)', self.url, http_code)
             else:
                 csvreader = csv.reader(mytab, delimiter='|')
                 # builds the users list
@@ -138,15 +138,14 @@ class UrlList:
                                 self.list[line[index]] = line
                     elif len(line) == 1:
                         if line[0] == 'XIVO-WEBI: no-data':
-                            log.info('received no-data from WEBI')
+                            logger.info('received no-data from WEBI')
                         elif line[0] == 'XIVO-WEBI: no-update':
-                            log.info('received no-update from WEBI')
+                            logger.info('received no-update from WEBI')
                             self.urlmd5 = savemd5
                     else:
-                        # log.warning('unallowed line length %d' % len(line))
                         pass
                 ret = 1
         except Exception:
-            log.exception('(UrlList) problem occured when retrieving list for %s' % self.url)
+            logger.exception('(UrlList) problem occured when retrieving list for %s', self.url)
             ret = -1
         return ret

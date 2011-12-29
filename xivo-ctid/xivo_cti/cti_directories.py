@@ -47,7 +47,7 @@ from xivo_cti import db_connection_manager
 from xivo_cti import xivo_ldap
 from xivo_cti import cti_config
 
-log = logging.getLogger('directories')
+logger = logging.getLogger('directories')
 
 # XXX str/unicode is handled the same way as in 1.1, it might need to be
 #     reviewed more carefully since it seems a bit inconsistent/incomplete
@@ -75,12 +75,12 @@ class Context(object):
             raise Exception('No display defined for this context')
         directory_results = []
         for directory in self._directories:
-            log.info('Direct lookup in directory %s', directory.name)
+            logger.info('Direct lookup in directory %s', directory.name)
             try:
                 directory_result = directory.lookup_direct(string)
             except Exception:
-                log.error('Error while looking up in directory %s for %s',
-                          directory.name, string, exc_info=True)
+                logger.error('Error while looking up in directory %s for %s',
+                             directory.name, string, exc_info=True)
             else:
                 directory_results.append(directory_result)
         combined_results = chain.from_iterable(directory_results)
@@ -94,17 +94,17 @@ class Context(object):
         elif '*' in self._didextens:
             directories = self._didextens['*']
         else:
-            log.warning('No directories for DID %s', did_number)
+            logger.warning('No directories for DID %s', did_number)
             return []
         
         directory_results = []
         for directory in directories:
-            log.info('Reverse lookup in directory %s', directory.name)
+            logger.info('Reverse lookup in directory %s', directory.name)
             try:
                 directory_result = directory.lookup_reverse(number)
             except Exception:
-                log.error('Error while looking up in directory %s for %s',
-                          directory.name, number, exc_info=True)
+                logger.error('Error while looking up in directory %s for %s',
+                             directory.name, number, exc_info=True)
             else:
                 directory_results.append(directory_result)
         combined_results = list(chain.from_iterable(directory_results))
@@ -215,7 +215,7 @@ class CSVFileDirectoryDataSource(object):
         delimiter -- the character used to separate fields in the CSV file
         key_mapping -- a dictionary mapping std key to list of CSV field name
         """
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._csv_file = csv_file
         self._delimiter = delimiter
         self._key_mapping = key_mapping
@@ -245,8 +245,8 @@ class CSVFileDirectoryDataSource(object):
     def _new_filter_function(self, string, requested_fields, available_fields):
         lookup_fields = list(set(available_fields).intersection(requested_fields))
         if not lookup_fields:
-            log.warning('Requested fields %s but only fields %s are available',
-                        requested_fields, available_fields)
+            logger.warning('Requested fields %s but only fields %s are available',
+                           requested_fields, available_fields)
         lowered_string = string.lower()
         def aux(row):
             for field in lookup_fields:
@@ -260,8 +260,8 @@ class CSVFileDirectoryDataSource(object):
                        (std_key, src_key) in self._key_mapping.iteritems() if
                        src_key in available_fields)
         if not mapping:
-            log.warning('Key mapping %s but only fields %s are available',
-                        self._key_mapping, available_fields)
+            logger.warning('Key mapping %s but only fields %s are available',
+                           self._key_mapping, available_fields)
         def aux(row):
             return dict((std_key, row[src_key]) for (std_key, src_key) in mapping)
         return aux
@@ -280,7 +280,7 @@ class CSVFileDirectoryDataSource(object):
 
 class SQLDirectoryDataSource(object):
     def __init__(self, db_uri, key_mapping):
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._db_uri = db_uri
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
@@ -288,7 +288,7 @@ class SQLDirectoryDataSource(object):
     def lookup(self, string, fields):
         # handle when fields is empty to simplify implementation
         if not fields:
-            log.warning('No requested fields')
+            logger.warning('No requested fields')
             return []
         
         table, test_columns = self._get_table_and_columns_from_fields(fields)
@@ -302,7 +302,7 @@ class SQLDirectoryDataSource(object):
         connection = conn_mgr.get()
         try:
             cursor = connection['cur']
-            log.debug('Doing SQL request: %s', request)
+            logger.debug('Doing SQL request: %s', request)
             cursor.query(request, columns, params)
             def generator():
                 try:
@@ -344,7 +344,7 @@ class SQLDirectoryDataSource(object):
 
 class InternalDirectoryDataSource(object):
     def __init__(self, db_uri, key_mapping):
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._db_uri = db_uri
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
@@ -352,7 +352,7 @@ class InternalDirectoryDataSource(object):
     def lookup(self, string, fields):
         # handle when fields is empty to simplify implementation
         if not fields:
-            log.warning('No requested fields')
+            logger.warning('No requested fields')
             return []
 
         test_columns = fields
@@ -368,7 +368,7 @@ class InternalDirectoryDataSource(object):
         connection = conn_mgr.get()
         try:
             cursor = connection['cur']
-            log.debug('Doing SQL request: %s', request % params)
+            logger.debug('Doing SQL request: %s', request % params)
             cursor.query(request, columns, params)
             def generator():
                 try:
@@ -399,7 +399,7 @@ class InternalDirectoryDataSource(object):
 
 class LDAPDirectoryDataSource(object):
     def __init__(self, uri, key_mapping):
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._uri = uri
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
@@ -419,7 +419,7 @@ class LDAPDirectoryDataSource(object):
                 results = ldapid.getldap('(|%s)' % ''.join(ldap_filter),
                                          ldap_attributes, string)
             except Exception, e:
-                log.warning('Error with LDAP request: %s', e)
+                logger.warning('Error with LDAP request: %s', e)
                 self._xivo_ldap = None
             else:
                 if results is not None:
@@ -454,7 +454,7 @@ class LDAPDirectoryDataSource(object):
 
 class HTTPDirectoryDataSource(object):
     def __init__(self, base_uri, delimiter, key_mapping):
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._base_uri = base_uri
         self._delimiter = delimiter
         self._key_mapping = key_mapping
@@ -521,7 +521,7 @@ class HTTPDirectoryDataSource(object):
 
 class PhonebookDirectoryDataSource(object):
     def __init__(self, phonebook_list, key_mapping):
-        log.debug('New directory data source %s', self.__class__.__name__)
+        logger.debug('New directory data source %s', self.__class__.__name__)
         self._phonebook_list = phonebook_list
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_function()
@@ -594,23 +594,23 @@ class ContextsMgr(object):
         self._old_contents = {}
     
     def update(self, avail_displays, avail_directories, contents):
-        log.debug('Updating contexts in manager')
+        logger.debug('Updating contexts in manager')
         # remove old contexts
         # deleting a key will raise a RuntimeError if you do not use .keys() here
         for context_id in self.contexts.keys():
             if context_id not in contents:
-                log.info('Removing context %s', context_id)
+                logger.info('Removing context %s', context_id)
                 del self.contexts[context_id]
         # add/update contexts
         for context_id, context_contents in contents.iteritems():
             if context_contents != self._old_contents.get(context_id):
-                log.info('Adding/updating context %s', context_id)
+                logger.info('Adding/updating context %s', context_id)
                 try:
                     self.contexts[context_id] = Context.new_from_contents(
                             avail_displays, avail_directories, context_contents)
                 except Exception:
-                    log.error('Error while creating context %s from %s',
-                              context_id, context_contents, exc_info=True)
+                    logger.error('Error while creating context %s from %s',
+                                 context_id, context_contents, exc_info=True)
         self._old_contents = contents
 
 
@@ -620,22 +620,22 @@ class DisplaysMgr(object):
         self._old_contents = {}
     
     def update(self, contents):
-        log.debug('Updating displays in manager')
+        logger.debug('Updating displays in manager')
         # remove old displays
         # deleting a key will raise a RuntimeError if you do not use .keys() here
         for display_id in self.displays.keys():
             if display_id not in contents:
-                log.info('Removing display %s', display_id)
+                logger.info('Removing display %s', display_id)
                 del self.displays[display_id]
         # add/update displays
         for display_id, display_contents in contents.iteritems():
             if display_contents != self._old_contents.get(display_id):
-                log.info('Adding/updating display %s', display_id)
+                logger.info('Adding/updating display %s', display_id)
                 try:
                     self.displays[display_id] = Display.new_from_contents(display_contents)
                 except Exception:
-                    log.error('Error while creating display %s from %s',
-                              display_id, display_contents, exc_info=True)
+                    logger.error('Error while creating display %s from %s',
+                                 display_id, display_contents, exc_info=True)
         self._old_contents = contents
 
 
@@ -657,25 +657,25 @@ class DirectoriesMgr(object):
         self._old_contents = {}
     
     def update(self, ctid, contents):
-        log.debug('Updating directories in manager')
+        logger.debug('Updating directories in manager')
         # remove old directories
         # deleting a key will raise a RuntimeError if you do not use .keys() here
         for directory_id in self.directories.keys():
             if directory_id not in contents:
-                log.info('Removing directory %s', directory_id)
+                logger.info('Removing directory %s', directory_id)
                 del self.directories[directory_id]
         # add/update directories
         for directory_id, directory_contents in contents.iteritems():
             if directory_contents != self._old_contents.get(directory_id):
-                log.info('Adding/updating directory %s', directory_id)
+                logger.info('Adding/updating directory %s', directory_id)
                 try:
                     class_ = self._get_directory_class(directory_contents)
                     directory_src = class_.new_from_contents(ctid, directory_contents)
                     directory = DirectoryAdapter.new_from_contents(directory_src, directory_contents)
                     self.directories[directory_id] = directory
                 except Exception:
-                    log.error('Error while creating directory %s from %s',
-                              directory_id, directory_contents, exc_info=True)
+                    logger.error('Error while creating directory %s from %s',
+                                 directory_id, directory_contents, exc_info=True)
         self._old_contents = contents
     
     def _get_directory_class(self, directory_contents):

@@ -29,6 +29,8 @@ import re
 
 from xivo_cti.interfaces import Interfaces
 
+logger = logging.getLogger('interface_webi')
+
 XIVO_CLI_WEBI_HEADER = 'XIVO-CLI-WEBI'
 
 AMI_REQUESTS = [
@@ -74,8 +76,6 @@ class WEBI(Interfaces):
 
     def connected(self, connid):
         Interfaces.connected(self, connid)
-        self.log = logging.getLogger('interface_webi(%s:%d)' % self.requester)
-        return
 
     def disconnected(self, msg):
         Interfaces.disconnected(self, msg)
@@ -96,29 +96,29 @@ class WEBI(Interfaces):
             try:
                 if usefulmsg == 'xivo[daemon,reload]':
                     self._ctiserver.askedtoquit = True
-                    self.log.info('WEBI requested (reload) %s' % usefulmsg)
+                    logger.info('WEBI requested (reload) %s', usefulmsg)
 
                 elif usefulmsg in UPDATE_REQUESTS:
                     self._ctiserver.update_userlist[self.ipbxid].append(usefulmsg)
-                    self.log.info('WEBI requested (update) %s' % usefulmsg)
+                    logger.info('WEBI requested (update) %s', usefulmsg)
 
                 elif usefulmsg in AMI_REQUESTS:
                     self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
-                    self.log.info('WEBI requested (ami) %s' % usefulmsg)
+                    logger.info('WEBI requested (ami) %s', usefulmsg)
                     closemenow = False
 
                 else:
                     recomp = re.compile('sip show peer .* load')
                     if re.match(recomp, usefulmsg):
                         self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
-                        self.log.info('WEBI requested (ami RE) %s' % usefulmsg)
+                        logger.info('WEBI requested (ami RE) %s', usefulmsg)
                         closemenow = False
                     else:
-                        self.log.warning('WEBI did an unexpected request %s' % usefulmsg)
+                        logger.warning('WEBI did an unexpected request %s', usefulmsg)
 
             except Exception:
-                self.log.exception('WEBI connection [%s] : KO when defining for %s'
-                                   % (usefulmsg, self.requester))
+                logger.exception('WEBI connection [%s] : KO when defining for %s',
+                                 usefulmsg, self.requester)
 
         freply = [ { 'message' : clireply,
                      'closemenow' : closemenow } ]
@@ -129,8 +129,8 @@ class WEBI(Interfaces):
             for replyline in replylines:
                 self.connid.sendall('%s\n' % replyline)
         except Exception:
-            self.log.exception('WEBI connection [%s] : KO when sending to %s'
-                               % (replylines, self.requester))
+            logger.exception('WEBI connection [%s] : KO when sending to %s',
+                             replylines, self.requester)
         return
 
     def makereply_close(self, actionid, status, reply = []):
@@ -140,12 +140,11 @@ class WEBI(Interfaces):
                 for r in reply:
                     self.connid.sendall('%s\n' % r)
                 self.connid.sendall('%s:%s\n' % (XIVO_CLI_WEBI_HEADER, status))
-                self.log.info('did a WEBI reply %s for %s' % (status, actionid))
+                logger.info('did a WEBI reply %s for %s', status, actionid)
             except Exception:
-                self.log.warning('failed a WEBI reply %s for %s (disconnected)' % (status, actionid))
+                logger.warning('failed a WEBI reply %s for %s (disconnected)', status, actionid)
             if self.connid in self._ctiserver.fdlist_established:
                 del self._ctiserver.fdlist_established[self.connid]
             self.connid.close()
         else:
-            self.log.warning('failed a WEBI reply %s for %s (connid None)' % (status, actionid))
-        return
+            logger.warning('failed a WEBI reply %s for %s (connid None)', status, actionid)

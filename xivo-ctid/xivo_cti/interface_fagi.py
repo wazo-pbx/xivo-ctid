@@ -25,6 +25,8 @@ import logging
 
 from xivo_cti.interfaces import Interfaces
 
+logger = logging.getLogger('interface_fagi')
+
 
 class FAGI(Interfaces):
     kind = 'FAGI'
@@ -36,7 +38,6 @@ class FAGI(Interfaces):
 
     def connected(self, connid):
         Interfaces.connected(self, connid)
-        self.log = logging.getLogger('interface_fagi(%s:%d)' % self.requester)
 
     def disconnected(self, msg):
         Interfaces.disconnected(self, msg)
@@ -53,7 +54,7 @@ class FAGI(Interfaces):
                                     for line in self.stack if line])
             self.channel = self.agidetails.get('agi_channel')
             nscript = self.agidetails.get('agi_network_script')
-            self.log.info('%s %s' % (self.channel, nscript))
+            logger.info('%s %s', self.channel, nscript)
             self.innerdata.fagi_setup(self)
             if self.innerdata.fagi_sync('get', self.channel, 'ami'):
                 self.innerdata.fagi_sync('clear', self.channel)

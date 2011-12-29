@@ -25,7 +25,7 @@ import urllib2
 import cjson
 import ssl
 
-log = logging.getLogger('cti_config')
+logger = logging.getLogger('cti_config')
 
 
 DAEMONNAME = 'xivo-ctid'
@@ -76,7 +76,7 @@ class Config:
             self.json_config = response.read().replace('\/', '/')
             self.xc_json = cjson.decode(self.json_config)
         except Exception:
-            log.exception('fetch url %s' % uri)
+            logger.exception('fetch url %s', uri)
 
         for profile, profdef in self.xc_json.get('profiles', {}).iteritems():
             if profdef['xlets']:

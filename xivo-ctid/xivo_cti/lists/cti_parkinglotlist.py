@@ -1,7 +1,5 @@
 # XiVO CTI Server
 
-__version__   = '$Revision$'
-__date__      = '$Date$'
 __copyright__ = 'Copyright (C) 2011  Avencall'
 
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +20,8 @@ __copyright__ = 'Copyright (C) 2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 from xivo_cti.cti_anylist import AnyList
 
-log = logging.getLogger('parkinglotlist')
 
 class ParkinglotList(AnyList):
 

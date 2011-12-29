@@ -26,6 +26,9 @@ import logging
 
 from xivo_cti import db_connection_manager
 
+logger = logging.getLogger('XiVO queue logger')
+
+
 class queue_logger:
     _uri = None
     last_transaction = None
@@ -35,8 +38,6 @@ class queue_logger:
 
     @staticmethod
     def init(uri):
-        global log
-        log = logging.getLogger('XiVO queue logger')
         queue_logger._uri = uri
         queue_logger.last_transaction = time.time()
         queue_logger.cache = {}
@@ -67,7 +68,7 @@ class queue_logger:
         count = 0
         for key, value in queue_logger.cache.iteritems():
             count += len(value)
-        log.info('Cache size: %s\ncache = %s' % (count, queue_logger.cache))
+        logger.info('Cache size: %s\ncache = %s', count, queue_logger.cache)
 
     @staticmethod
     def _clean_cache():

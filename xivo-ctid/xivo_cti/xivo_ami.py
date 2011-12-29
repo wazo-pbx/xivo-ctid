@@ -31,6 +31,8 @@ import socket
 import string
 import time
 
+logger = logging.getLogger('xivo_ami')
+
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 __dialallowed__ = '[0-9*#+]'
 __specialextensions__ = ['s', 'BUSY']
@@ -49,7 +51,6 @@ class AMIClass:
     # \brief Class initialization.
     def __init__(self, ipbxid, ipaddress, ipport, loginname, password, events):
         self.ipbxid    = ipbxid
-        self.log = logging.getLogger('xivo_ami(%s)' % self.ipbxid)
         self.ipaddress = ipaddress
         self.ipport    = ipport
         self.loginname = loginname
@@ -63,14 +64,13 @@ class AMIClass:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockret = self.sock.connect_ex((self.ipaddress, self.ipport))
         if sockret:
-            self.log.warning('unable to connect to %s:%d - reason %d'
-                             % (self.ipaddress, self.ipport, sockret))
+            logger.warning('unable to connect to %s:%d - reason %d',
+                           self.ipaddress, self.ipport, sockret)
         else:
             self.sock.settimeout(30)
             self.fd = self.sock.fileno()
-            self.log.info('connection properties : here=%s remote=%s fd=%s'
-                          % (self.sock.getsockname(), self.sock.getpeername(), self.fd))
-        return
+            logger.info('connection properties : here=%s remote=%s fd=%s',
+                        self.sock.getsockname(), self.sock.getpeername(), self.fd)
 
     # \brief Sending any AMI command.
     def sendcommand(self, action, args, loopnum = 0):
@@ -82,8 +82,8 @@ class AMIClass:
                 try:
                     towritefields.append('%s: %s' % (name, value))
                 except Exception:
-                    self.log.exception('(sendcommand build %s : %s = %s (%r))'
-                                  % (action, name, value, value))
+                    logger.exception('(sendcommand build %s : %s = %s (%r))',
+                                     action, name, value, value)
             if self.actionid:
                 towritefields.append('ActionId: %s' % self.actionid)
             towritefields.append('\r\n')
@@ -96,27 +96,27 @@ class AMIClass:
             self.sock.sendall(ustr)
             ret = True
         except UnicodeEncodeError:
-            self.log.exception('(sendcommand UnicodeEncodeError (%s %s %s))'
-                               % (towritefields, self.actionid, self.fd))
+            logger.exception('(sendcommand UnicodeEncodeError (%s %s %s))',
+                             towritefields, self.actionid, self.fd)
             ret = True
         except UnicodeDecodeError:
-            self.log.exception('(sendcommand UnicodeDecodeError (%s %s %s))'
-                               % (action, self.actionid, self.fd))
+            logger.exception('(sendcommand UnicodeDecodeError (%s %s %s))',
+                             action, self.actionid, self.fd)
             ret = True
         except socket.timeout:
             t1 = time.time()
-            self.log.exception('(sendcommand timeout (%s %s %s) timespent=%f)'
-                               % (action, self.actionid, self.fd, (t1 - t0)))
+            logger.exception('(sendcommand timeout (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
             ret = False
         except Exception:
             t1 = time.time()
-            self.log.exception('(sendcommand other (%s %s %s) timespent=%f)'
-                               % (action, self.actionid, self.fd, (t1 - t0)))
+            logger.exception('(sendcommand other (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
             ret = False
         if ret == False:
             if loopnum == 0:
-                self.log.warning('second attempt for AMI command (%s %s %s)'
-                                 % (action, self.actionid, self.fd))
+                logger.warning('second attempt for AMI command (%s %s %s)',
+                               action, self.actionid, self.fd)
                 # tries to reconnect
                 try:
                     self.sock.close()
@@ -127,13 +127,13 @@ class AMIClass:
                         # "retrying AMI command=<%s> args=<%s>" % (action, str(args)))
                         self.sendcommand(action, args, 1)
                     else:
-                        self.log.warning('self is undefined %s' % self)
+                        logger.warning('self is undefined %s', self)
                 except Exception:
-                    self.log.exception('reconnection (%s %s %s)'
-                                       % (action, self.actionid, self.fd))
+                    logger.exception('reconnection (%s %s %s)',
+                                     action, self.actionid, self.fd)
             else:
-                self.log.warning('2 attempts have failed for AMI command (%s %s %s)'
-                                 % (action, self.actionid, self.fd))
+                logger.warning('2 attempts have failed for AMI command (%s %s %s)',
+                               action, self.actionid, self.fd)
         if self.actionid:
             self.actionid = None
         return ret
@@ -188,7 +188,7 @@ class AMIClass:
     def hangup(self, channel, channel_peer=None):
         ret = 0
         try:
-            self.log.info('hanging up %s as requested' % (channel))
+            logger.info('hanging up %s as requested', channel)
             self.sendcommand('Hangup',
                              [('Channel', channel)])
             ret += 1
@@ -199,7 +199,7 @@ class AMIClass:
 
         if channel_peer:
             try:
-                self.log.info('hanging up %s (peer) as requested' % (channel_peer))
+                logger.info('hanging up %s (peer) as requested', channel_peer)
                 self.sendcommand('Hangup',
                                  [('Channel', channel_peer)])
                 ret += 2
@@ -345,8 +345,8 @@ class AMIClass:
     # \brief Handle moderation commands for meetmes
     # MeetmeAccept, MeetmeKick, MeetmeTalk
     def meetmemoderation(self, command, meetme, usernum, adminnum):
-        self.log.info('meetmemoderation %s %s %s %s' %
-                      (command, meetme, usernum, adminnum))
+        logger.info('meetmemoderation %s %s %s %s',
+                    command, meetme, usernum, adminnum)
         try:
             return self.sendcommand(command, (('Meetme', meetme),
                                                ('Usernum', usernum),
@@ -358,7 +358,7 @@ class AMIClass:
 
     # \brief Pauses and unpause a meetme room
     def meetmepause(self, meetme, status):
-        self.log.info('meetmepause %s %s' % (meetme, status))
+        logger.info('meetmepause %s %s', meetme, status)
         try:
             return self.sendcommand('MeetmePause', (('Meetme', meetme),
                                                      ('Status', status)))

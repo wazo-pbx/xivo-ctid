@@ -26,7 +26,9 @@ import hashlib
 import logging
 import ssl
 import socket
-import time
+
+logger = logging.getLogger('interface_rcti')
+
 
 class RCTI:
     kind = 'RCTI'
@@ -34,7 +36,6 @@ class RCTI:
     def __init__(self, ctiserver, ipbxid, config):
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
-        self.log = logging.getLogger('interface_rcti(%s)' % self.ipbxid)
         self.innerdata = self._ctiserver.safe.get(self.ipbxid)
         self.ipaddress = config.get('ipaddress')
         self.ipport = int(config.get('ipport'))
@@ -59,8 +60,8 @@ class RCTI:
                     self.socket.connect(bindtuple)
                 ret = self.socket
             except Exception, exc:
-                self.log.warning('unable to connect to %s:%d - reason %d'
-                                 % (self.ipaddress, self.ipport, exc.errno))
+                logger.warning('unable to connect to %s:%d - reason %d',
+                               self.ipaddress, self.ipport, exc.errno)
         return ret
 
     def disconnect(self):
@@ -93,7 +94,7 @@ class RCTI:
 
     def handle_event_line(self, buf):
         if buf.startswith('XiVO'):
-            self.log.info('got banner : %s' % (buf.strip()))
+            logger.info('got banner : %s', buf.strip())
             self.login_id(self.username)
         else:
             t = self.handle_reply(buf)
@@ -103,17 +104,17 @@ class RCTI:
                 classname = t.get('class')
                 if classname == 'login_id':
                     if 'error_string' in t:
-                        self.log.warning('step %s error %s' % (classname, t.get('error_string')))
+                        logger.warning('step %s error %s', classname, t.get('error_string'))
                     else:
                         sessionid = t.get('sessionid')
                         self.login_pass(sessionid, self.password)
                 elif classname == 'login_pass':
                     if 'error_string' in t:
-                        self.log.warning('step %s error %s' % (classname, t.get('error_string')))
+                        logger.warning('step %s error %s', classname, t.get('error_string'))
                     else:
                         self.login_capas('onlystate', t.get('capalist')[0])
                 elif classname == 'login_capas':
-                    self.log.info('got my capabilities : %s' % t)
+                    logger.info('got my capabilities : %s', t)
                     self.getlist('users')
                 elif classname == 'getlist':
                     tipbxid = t.get('tipbxid')
@@ -137,10 +138,10 @@ class RCTI:
                             if self.innerdata:
                                 self.innerdata.config_from_external(ln, t)
                 elif classname == 'chitchat':
-                    self.log.info('got %s' % t)
+                    logger.info('got %s', t)
                     self._ctiserver.send_to_cti_client(t.get('to'), t)
                 else:
-                    self.log.warning('unknown class : %s' % classname)
+                    logger.warning('unknown class : %s', classname)
             else:
                 print 'unknown value', t
         return
