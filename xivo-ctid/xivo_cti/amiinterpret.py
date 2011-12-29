@@ -35,6 +35,8 @@ log_ami_events_complete = False
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
+logger = logging.getLogger('AMI_1.8')
+
 
 class AMI_1_8:
 
@@ -54,7 +56,6 @@ class AMI_1_8:
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
         self.innerdata = self._ctiserver.safe.get(self.ipbxid)
-        self.log = logging.getLogger('AMI_1.8(%s)' % self.ipbxid)
         fagiport = (cti_config.Config.get_instance().getconfig('main')
                     .get('incoming_tcp').get('FAGI')[1])
         self.fagiportstring = ':%s/' % fagiport
@@ -63,25 +64,8 @@ class AMI_1_8:
         if self.ipbxid == self._ctiserver.myipbxid:
             self._ctiserver.myami[self.ipbxid].initrequest(0)
 
-    def ami_shutdown(self, event):
-        return
-
-    def ami_channelreload(self, event):
-        # Occurs when there is a reload and the SIP config has changed
-        self.log.info('ami_channelreload : %s' % (event))
-
-    def ami_reload(self, event):
-        # Occurs when there is a reload and the CDR or Manager config has changed
-        self.log.info('ami_reload : %s' % (event))
-
-    def ami_registry(self, event):
-        # Occurs when there is a reload and the IAX config has changed and there is a registered trunk
-        self.log.info('ami_registry : %s' % (event))
-
     def ami_newstate(self, event):
-        channel = event['Channel']
-        channelstate = event['ChannelState']
-        self.innerdata.newstate(channel, channelstate)
+        self.innerdata.newstate(event['Channel'], event['ChannelState'])
 
     def ami_newchannel(self, event):
         channel = event['Channel']
@@ -103,7 +87,7 @@ class AMI_1_8:
         channel = event['Channel']
         if application == 'AGI':
             if self.fagiportstring in appdata:  # match against ~ ':5002/' in appdata
-                self.log.info('ami_newexten %s %s : %s %s' % (application, channel, appdata, event))
+                logger.info('ami_newexten %s %s : %s %s', application, channel, appdata, event)
                 # warning : this might cause problems if AMI not connected
                 if self.innerdata.fagi_sync('get', channel, 'agi'):
                     self.innerdata.fagi_sync('clear', channel)
@@ -111,10 +95,7 @@ class AMI_1_8:
                 else:
                     self.innerdata.fagi_sync('set', channel, 'ami')
         elif application == 'VoiceMail':
-            self.log.info('ami_newexten %s %s : %s' % (application, channel, appdata))
-
-    def ami_newaccountcode(self, event):
-        return
+            logger.info('ami_newexten %s %s : %s', application, channel, appdata)
 
     def ami_hangup(self, event):
         channel = event.pop('Channel')
@@ -131,12 +112,6 @@ class AMI_1_8:
         # 34 - Circuit/channel congestion
         self.innerdata.hangup(channel)
         self.innerdata.sheetsend('hangup', channel)
-
-    def ami_hanguprequest(self, event):
-        self.log.info('ami_hanguprequest : %s' % event)
-
-    def ami_softhanguprequest(self, event):
-        self.log.info('ami_softhanguprequest : %s' % event)
 
     def ami_dial(self, event):
         channel = event['Channel']
@@ -158,9 +133,7 @@ class AMI_1_8:
             self.innerdata.sheetsend('dial', channel)
 
     def ami_extensionstatus(self, event):
-        hint = event['Hint']
-        status = event['Status']
-        self.innerdata.updatehint(hint, status)
+        self.innerdata.updatehint(event['Hint'], event['Status'])
 
     def ami_bridge(self, event):
         channel1 = event['Channel1']
@@ -181,31 +154,11 @@ class AMI_1_8:
             self.innerdata.update(channel2)
 
     def ami_unlink(self, event):
-        channel1 = event['Channel1']
-        channel2 = event['Channel2']
-        self.log.info('ami_unlink %s %s : %s' % (channel1, channel2, event))
-        self.innerdata.sheetsend('unlink', channel1)
-
-    def ami_inherit(self, event):
-        parentchannel = event['Parent']
-        childchannel = event['Child']
-        self.log.info('ami_inherit %s => %s' % (parentchannel, childchannel))
-
-    def ami_transfer(self, event):
-        self.log.info('ami_transfer %s' % (event))
+        self.innerdata.sheetsend('unlink', event['Channel1'])
 
     def ami_masquerade(self, event):
         original = event['Original']
         clone = event['Clone']
-        originalstate = event['OriginalState']
-        clonestate = event['CloneState']
-        self.log.info('ami_masquerade %s %s : %s' % (original, clone, event))
-        if originalstate == 'Ringing':
-            self.log.info('ami_masquerade %s %s (Interception ?) %s %s'
-                     % (original, clone, originalstate, clonestate))
-        elif originalstate == 'Up':
-            self.log.info('ami_masquerade %s %s (Regular Transfer ?) %s %s'
-                     % (original, clone, originalstate, clonestate))
         self.innerdata.masquerade(original, clone)
         self.innerdata.update_parking_parked(original, clone)
 
@@ -215,27 +168,17 @@ class AMI_1_8:
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['holded'] = (status == 'On')
         else:
-            self.log.warning('ami_hold : unknown channel %s' % channel)
+            logger.warning('ami_hold : unknown channel %s', channel)
 
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
         # when the call is outgoing, one never receives the callno-remote
         channeltype = event['Channeltype']
         if channeltype == 'IAX2':
-            cnlocal = event['IAX2-callno-local']
-            cnremote = event['IAX2-callno-remote']
-            # cnremote = 0 : first step, when remote not joined yet
-            self.log.info('ami_channelupdate %s : %s - %s : %s'
-                          % (channeltype, cnlocal, cnremote, event))
-
-    def ami_pickup(self, event):
-        self.log.info('ami_pickup %s' % (event))
-
-    def ami_rename(self, event):
-        # it looks like we don't need this event and that Masquerade event already
-        #    provides all the data for this, but this could happen to be wrong one day
-        # self.log.info('ami_rename %s' % (event))
-        return
+            logger.info('ami_channelupdate %s : %s - %s : %s',
+                        channeltype, event['IAX2-callno-local'],
+                        event['IAX2-callno-remote'],
+                        event)
 
     def ami_originateresponse(self, event):
         channel = event['Channel']
@@ -260,14 +203,11 @@ class AMI_1_8:
             except Exception:
                 # when requester is not connected any more ...
                 pass
-            self.log.info('ami_originateresponse %s %s %s %s'
-                          % (actionid, channel, reason, event))
         else:
-            self.log.warning('ami_originateresponse %s %s %s %s (not in list)'
-                             % (actionid, channel, reason, event))
+            logger.warning('ami_originateresponse %s %s %s %s (not in list)',
+                           actionid, channel, reason, event)
 
     def ami_meetmejoin(self, event):
-        self.log.info('ami_meetmejoin %s' % event)
         opts = {'usernum': event['Usernum'],
                 'pseudochan': event['PseudoChan'],
                 'admin': 'Yes' in event['Admin'],
@@ -279,32 +219,22 @@ class AMI_1_8:
                                            opts)
 
     def ami_meetmeleave(self, event):
-        self.log.info('ami_meetmeleave %s' % event)
         opts = {'usernum': event['Usernum'], 'leave': True, }
         return self.innerdata.meetmeupdate(event['Meetme'],
                                            event['Channel'],
                                            opts)
 
     def ami_meetmeend(self, event):
-        self.log.info('ami_meetmeend %s' % event)
         return self.innerdata.meetmeupdate(event['Meetme'])
 
     def ami_meetmemute(self, event):
-        self.log.info('ami_meetmemute %s' % event)
         opts = {'muted': 'on' in event['Status'],
                 'usernum': event['Usernum'], }
         return self.innerdata.meetmeupdate(event['Meetme'],
                                            event['Channel'],
                                            opts)
 
-    def ami_meetmetalking(self, event):
-        self.log.info('ami_meetmetalking %s' % (event))
-
-    def ami_meetmetalkrequest(self, event):
-        self.log.info('ami_meetmetalkrequest %s' % (event))
-
     def ami_meetmenoauthed(self, event):
-        self.log.info('ami_meetmenoauthed %s' % event)
         opts = {'usernum': event['Usernum'],
                 'authed': 'off' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'],
@@ -312,12 +242,8 @@ class AMI_1_8:
                                            opts)
 
     def ami_meetmepause(self, event):
-        self.log.info('ami_meetmepause %s' % event)
         opts = {'paused': 'on' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
-
-    def ami_dahdichannel(self, event):
-        self.log.info('ami_dahdichannel %s' % (event))
 
     def ami_join(self, event):
         queue_logger.Join(event)
@@ -336,8 +262,8 @@ class AMI_1_8:
         membername = event['MemberName']
         location = event['Location']
         if location != membername:
-            self.log.warning('ami_queuememberstatus : %s and %s are not the same' %
-                             (location, membername))
+            logger.warning('ami_queuememberstatus : %s and %s are not the same',
+                           location, membername)
         self.innerdata.queuememberupdate(event['Queue'], location, (event['Status'],
                                                                     event['Paused'],
                                                                     event['Membership'],
@@ -352,73 +278,45 @@ class AMI_1_8:
         membername = event['MemberName']
         location = event['Location']
         if location != membername:
-            self.log.warning('ami_queuememberremoved : %s and %s are not the same' %
-                             (location, membername))
+            logger.warning('ami_queuememberremoved : %s and %s are not the same',
+                           location, membername)
         self.innerdata.queuememberupdate(event['Queue'], location)
 
     def ami_queuememberpaused(self, event):
         membername = event['MemberName']
         location = event['Location']
         if location != membername:
-            self.log.warning('ami_queuememberremoved : %s and %s are not the same' %
-                             (location, membername))
+            logger.warning('ami_queuememberremoved : %s and %s are not the same',
+                           location, membername)
         self.innerdata.queuememberupdate(event['Queue'], location, (event['Paused'],))
-
-    def ami_queuecallerabandon(self, event):
-        self.log.info('ami_queuecallerabandon %s' % (event))
 
     def ami_agentcalled(self, event):
         agentname = event['AgentName']
         agentcalled = event['AgentCalled']
         if agentname != agentcalled:
-            self.log.warning('ami_agentcalled : %s %s' % (agentname, agentcalled))
-        # agent case : dchannel = agentcalled
-        self.log.info('ami_agentcalled %s->%s->%s %s'
-                         % (event['ChannelCalling'],
-                            event['Queue'],
-                            event['DestinationChannel'], event))
+            logger.warning('ami_agentcalled : %s %s', agentname, agentcalled)
 
     def ami_agentconnect(self, event):
         queue_logger.AgentConnect(event)
         member = event['Member']
         membername = event['MemberName']
         if member != membername:
-            self.log.warning('ami_agentconnect %s %s' % (member, membername))
-        self.log.info('ami_agentconnect %s %s : %s' % (event['Queue'], member, event))
+            logger.warning('ami_agentconnect %s %s', member, membername)
 
     def ami_agentcomplete(self, event):
-        self.log.info('ami_agentcomplete %s' % (event))
         queue_logger.AgentComplete(event)
 
-    def ami_agentringnoanswer(self, event):
-        self.log.info('ami_agentringnoanswer %s' % (event))
-
     def ami_agentlogin(self, event):
-        agent = event['Agent']
-        channel = event['Channel']
-        self.innerdata.agentlogin(agent, channel)
-        self.log.info('ami_agentlogin %s %s : %s' % (agent, channel, event))
+        self.innerdata.agentlogin(event['Agent'], event['Channel'])
 
     def ami_agentlogoff(self, event):
-        agent = event['Agent']
-        self.innerdata.agentlogout(agent)
-        self.log.info('ami_agentlogoff %s : %s' % (agent, event))
+        self.innerdata.agentlogout(event['Agent'])
 
     def ami_agentcallbacklogin(self, event):
-        agent = event['Agent']
-        loginchan = event['Loginchan']
-        self.innerdata.agentlogin(agent, loginchan)
-        self.log.info('ami_agentcallbacklogin %s %s : %s' % (agent, loginchan, event))
+        self.innerdata.agentlogin(event['Agent'], event['Loginchan'])
 
     def ami_agentcallbacklogoff(self, event):
-        agent = event['Agent']
-        self.innerdata.agentlogout(agent)
-        self.log.info('ami_agentcallbacklogoff %s : %s' % (agent, event))
-
-    def ami_musiconhold(self, event):
-        self.log.info('ami_musiconhold %s %s %s' % (event['Channel'],
-                                                    event['State'],
-                                                    event.get('Class')))
+        self.innerdata.agentlogout(event['Agent'])
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
@@ -426,7 +324,6 @@ class AMI_1_8:
         parkinglot = event['Parkinglot']
         if parkinglot.startswith('parkinglot_'):
             parkinglot = '_'.join(parkinglot.split('_')[1:])
-        self.log.info('ami_parkedcall %s %s %s %s' % (channel, parkinglot, exten, event))
         parkingevent = {
             'parker': event.pop('From'),
             'parked': channel,
@@ -441,40 +338,21 @@ class AMI_1_8:
 
     def ami_unparkedcall(self, event):
         channel = event['Channel']
-        self.log.info('ami_unparkedcall %s %s' % (channel, event))
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
         self.innerdata.unpark(channel)
 
     def ami_parkedcalltimeout(self, event):
         channel = event['Channel']
-        self.log.info('ami_parkedcalltimeout %s %s' % (channel, event))
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
         self.innerdata.unpark(channel)
 
     def ami_parkedcallgiveup(self, event):
-        channel = event['Channel']
-        self.log.info('ami_parkedcallgiveup %s %s' % (channel, event))
-        self.innerdata.unpark(channel)
-
-    def ami_jitterbufstats(self, event):
-        return
-
-    def ami_varset(self, event):
-        return
+        self.innerdata.unpark(event['Channel'])
 
     def ami_peerstatus(self, event):
         self.innerdata.updateregistration(event['Peer'], event.get('Address', ''))
-
-    def ami_cdr(self, event):
-        return
-
-    def ami_cel(self, event):
-        return
-
-    def ami_dtmf(self, event):
-        self.log.info('ami_dtmf %s' % (event))
 
     def userevent_user(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
@@ -555,10 +433,6 @@ class AMI_1_8:
         chanprops.set_extra_data('xivo', 'calleridton', calleridton)
         # directory lookup : update chanprops
 
-    def userevent_localcall(self, chanprops, event):
-        # for ChanSpy + XIVO_ORIGAPPLI + XIVO_ORIGACTIONID
-        return
-
     def userevent_feature(self, chanprops, ev):
         reply = {}
         if 'XIVO_USERID' in ev and 'Function' in ev and 'Status' in ev:
@@ -596,9 +470,6 @@ class AMI_1_8:
             z.close()
         return reply
 
-    def userevent_custom(self, chanprops, event):
-        return
-
     def userevent_dialplan2cti(self, chanprops, event):
         # why "UserEvent + dialplan2cti" and not "Newexten + Set" ?
         # - more selective
@@ -618,11 +489,8 @@ class AMI_1_8:
                 methodname = 'userevent_%s' % eventname.lower()
                 if hasattr(self, methodname):
                     chanprops = self.innerdata.channels[channel]
-                    self.log.info('ami_userevent %s %s : %s' % (eventname, channel, event))
+                    logger.info('ami_userevent %s %s : %s', eventname, channel, event)
                     getattr(self, methodname)(chanprops, event)
-
-    def ami_agiexec(self, event):
-        return
 
     def handle_fagi(self, fastagi):
         envdict = fastagi.env
@@ -630,7 +498,7 @@ class AMI_1_8:
         channel = envdict['agi_channel']
         function = envdict['agi_network_script']
         # syntax in dialplan : exten = xx,n,AGI(agi://ip:port/function,arg1,arg2)
-        self.log.info('handle_fagi %s %s : %s' % (function, channel, args))
+        logger.info('handle_fagi %s %s : %s', function, channel, args)
 
     def ami_messagewaiting(self, event):
         try:
@@ -649,22 +517,22 @@ class AMI_1_8:
                 actionid = ''.join(random.sample(ALPHANUMS, 10))
                 self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
         except KeyError:
-            self.log.warning('ami_messagewaiting Failed to update mailbox')
+            logger.warning('ami_messagewaiting Failed to update mailbox')
 
     def ami_peerentry(self, event):
         ipaddress = event['IPaddress']
         ipport = event['IPport']
         if ipport != '0' and ipaddress != '-none-':
-            self.log.info('ami_peerentry %s:%s %s %s'
-                     % (ipaddress, ipport, event['Channeltype'], event['ObjectName']))
+            logger.info('ami_peerentry %s:%s %s %s',
+                        ipaddress, ipport, event['Channeltype'], event['ObjectName'])
 
     def ami_registryentry(self, event):
         if log_ami_events_statusrequest:
-            self.log.info('ami_registryentry %s' % (event))
+            logger.info('ami_registryentry %s', event)
 
     def ami_parkedcallstatus(self, event):
         if log_ami_events_statusrequest:
-            self.log.info('ami_parkedcallstatus %s' % (event))
+            logger.info('ami_parkedcallstatus %s', event)
 
     def ami_meetmelist(self, event):
         opts = {'usernum': event['UserNumber'],
@@ -677,7 +545,7 @@ class AMI_1_8:
 
     def ami_status(self, event):
         if log_ami_events_statusrequest:
-            self.log.info('ami_status %s' % (event))
+            logger.info('ami_status %s', event)
 
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
@@ -688,7 +556,8 @@ class AMI_1_8:
         timestamp_start = self.timeconvert(event['Duration'])
 
         if log_ami_events_statusrequest:
-            self.log.info('ami_coreshowchannel %s application=%s : %s' % (channel, application, event))
+            logger.info('ami_coreshowchannel %s application=%s : %s',
+                        channel, application, event)
 
         self.innerdata.newchannel(channel, context, state)
         channelstruct = self.innerdata.channels[channel]
@@ -714,20 +583,15 @@ class AMI_1_8:
 
     def ami_agents(self, event):
         if log_ami_events_statusrequest:
-            self.log.info('ami_agents %s' % (event))
+            logger.info('ami_agents %s', event)
         self.innerdata.agentstatus(event['Agent'], event['Status'])
-
-    def ami_queueparams(self, event):
-        return
-
-    def ami_queuesummary(self, event):
-        return
 
     def ami_queuemember(self, event):
         membername = event['Name']
         location = event['Location']
         if location != membername:
-            self.log.warning('ami_queuemember : %s and %s are not the same' (location, membername))
+            logger.warning('ami_queuemember : %s and %s are not the same',
+                           location, membername)
         self.innerdata.queuememberupdate(event['Queue'], location, (event['Status'],
                                                                     event['Paused'],
                                                                     event['Membership'],
@@ -761,91 +625,59 @@ class AMI_1_8:
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['monitored'] = True
-        self.log.info('ami_monitorstart %s %s' % (channel, event))
 
     def ami_monitorstop(self, event):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['monitored'] = False
-        self.log.info('ami_monitorstop %s %s' % (channel, event))
-
-    def ami_chanspystart(self, event):
-        self.log.info('ami_chanspystart : %s spied by %s' % (event['SpyeeChannel'],
-                                                             event['SpyerChannel']))
-
-    def ami_chanspystop(self, event):
-        # actually, we get here only once the spied channel has hangup
-        self.log.info('ami_chanspystop %s spied by nobody' % event['SpyeeChannel'])
 
     def ami_peerlistcomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_peerlistcomplete %s' % (event))
+            logger.info('ami_peerlistcomplete %s', event)
 
     def ami_parkedcallscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_parkedcallscomplete %s' % (event))
+            logger.info('ami_parkedcallscomplete %s', event)
 
     def ami_meetmelistcomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_meetmelistcomplete %s' % (event))
+            logger.info('ami_meetmelistcomplete %s', event)
 
     def ami_statuscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_statuscomplete %s' % (event))
+            logger.info('ami_statuscomplete %s', event)
 
     def ami_agentscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_agentscomplete %s' % (event))
+            logger.info('ami_agentscomplete %s', event)
 
     def ami_queuestatuscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_queuestatuscomplete %s' % (event))
+            logger.info('ami_queuestatuscomplete %s', event)
 
     def ami_queuesummarycomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_queuesummarycomplete %s' % (event))
+            logger.info('ami_queuesummarycomplete %s', event)
 
     def ami_coreshowchannelscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_coreshowchannelscomplete %s' % (event))
+            logger.info('ami_coreshowchannelscomplete %s', event)
 
     def ami_registrationscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_registrationscomplete %s' % (event))
+            logger.info('ami_registrationscomplete %s', event)
 
     def ami_showdialplancomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_showdialplancomplete %s' % (event))
+            logger.info('ami_showdialplancomplete %s', event)
 
     def ami_dahdishowchannelscomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_dahdishowchannelscomplete %s' % (event))
+            logger.info('ami_dahdishowchannelscomplete %s', event)
 
     def ami_voicemailuserentrycomplete(self, event):
         if log_ami_events_complete:
-            self.log.info('ami_voicemailuserentrycomplete %s' % (event))
-
-    # receive this kind of events once DTMF has been exchanged between 2 SIP phones
-    def ami_rtcpreceived(self, event):
-        return
-
-    def ami_rtcpsent(self, event):
-        return
-
-    def ami_moduleloadreport(self, event):
-        self.log.info('ami_moduleloadreport %s' % (event))
-
-    def ami_receivefax(self, event):
-        return
-
-    def ami_receivefaxstatus(self, event):
-        return
-
-    def ami_sendfax(self, event):
-        return
-
-    def ami_sendfaxstatus(self, event):
-        return
+            logger.info('ami_voicemailuserentrycomplete %s', event)
 
     def amiresponse_extensionstatus(self, event):
         if 'Hint' in event:
