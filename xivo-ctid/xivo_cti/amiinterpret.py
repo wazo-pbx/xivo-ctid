@@ -28,7 +28,6 @@ import time
 
 from xivo_cti import xivo_webservices
 from xivo_cti import cti_config
-from xivo_cti.queue_logger import QueueLogger
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -243,14 +242,12 @@ class AMI_1_8(object):
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
     def ami_join(self, event):
-        QueueLogger.Join(event)
         self.innerdata.queueentryupdate(event['Queue'],
                                         event['Channel'],
                                         event['Position'],
                                         time.time())
 
     def ami_leave(self, event):
-        QueueLogger.Leave(event)
         self.innerdata.queueentryupdate(event['Queue'],
                                         event['Channel'],
                                         event['Position'])
@@ -294,14 +291,10 @@ class AMI_1_8(object):
             logger.warning('ami_agentcalled : %s %s', agentname, agentcalled)
 
     def ami_agentconnect(self, event):
-        QueueLogger.AgentConnect(event)
         member = event['Member']
         membername = event['MemberName']
         if member != membername:
             logger.warning('ami_agentconnect %s %s', member, membername)
-
-    def ami_agentcomplete(self, event):
-        QueueLogger.AgentComplete(event)
 
     def ami_agentlogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Channel'])

@@ -1,8 +1,8 @@
 # vim: set expandtab ts=4 sw=4 sts=4 fileencoding=utf-8:
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -25,6 +25,7 @@ import time
 import logging
 
 from xivo_cti import db_connection_manager
+from xivo_cti.ami import ami_callback_handler
 
 logger = logging.getLogger('XiVO queue logger')
 
@@ -41,6 +42,15 @@ class QueueLogger(object):
         cls._uri = uri
         cls.last_transaction = time.time()
         cls.cache = {}
+        cls._register_ami_callbacks()
+
+    @classmethod
+    def _register_ami_callbacks(cls):
+        ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        ami_handler.register_callback('Join', cls.Join)
+        ami_handler.register_callback('Leave', cls.Leave)
+        ami_handler.register_callback('AgentConnect', cls.AgentConnect)
+        ami_handler.register_callback('AgentComplete', cls.AgentComplete)
 
     @classmethod
     def _store_in_db(cls, sql):
@@ -50,23 +60,25 @@ class QueueLogger(object):
 
     @classmethod
     def _trace_event(cls, ev):
-        if not cls.cache.has_key(ev['Queue']):
-            cls.cache[ev['Queue']] = {}
+        queue = ev['Queue']
+        if not queue in cls.cache:
+            cls.cache[queue] = {}
 
-        if not cls.cache[ev['Queue']].has_key(ev['Uniqueid']):
-            cls.cache[ev['Queue']][ev['Uniqueid']] = ev
+        uniqueid = ev['Uniqueid']
+        if not uniqueid in cls.cache[queue]:
+            cls.cache[queue][uniqueid] = ev
         else:
-            cls.cache[ev['Queue']][ev['Uniqueid']] = \
-                dict(cls.cache[ev['Queue']][ev['Uniqueid']].items() + ev.items())
+            cls.cache[queue][uniqueid] = dict(cls.cache[queue][uniqueid].items() + ev.items())
 
     @classmethod
     def _is_traced_event(cls, ev):
-        return cls.cache.has_key(ev['Queue']) and  cls.cache[ev['Queue']].has_key(ev['Uniqueid'])
+        queue = ev['Queue']
+        return queue in cls.cache and ev['Uniqueid'] in cls.cache[queue]
 
     @classmethod
     def _show_cache(cls):
         count = 0
-        for key, value in cls.cache.iteritems():
+        for value in cls.cache.itervalues():
             count += len(value)
         logger.info('Cache size: %s\ncache = %s', count, cls.cache)
 
