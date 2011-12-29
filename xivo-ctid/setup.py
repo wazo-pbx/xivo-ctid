@@ -13,6 +13,7 @@ setup(
     packages=['xivo_cti',
               'xivo_cti.model',
               'xivo_cti.alarm',
+              'xivo_cti.ami',
               'xivo_cti.lists',
               'xivo_cti.statistics',
               'xivo_cti.dao',

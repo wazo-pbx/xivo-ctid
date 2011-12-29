@@ -31,6 +31,7 @@ import time
 
 from xivo_cti import xivo_ami, cti_config
 from xivo_cti import asterisk_ami_definitions as ami_def
+from xivo_cti.ami import ami_callback_handler, ami_logger
 
 
 class AMI:
@@ -58,6 +59,7 @@ class AMI:
         self.ami_pass = ipbxconfig.get('password', 'xivouser')
         self.timeout_queue = Queue.Queue()
         self.amicl = None
+        ami_logger.AMILogger.register_callbacks()
 
     def connect(self):
         try:
@@ -250,18 +252,19 @@ class AMI:
         Handles the AMI events related to a given function (i.e. containing the Event field).
         It roughly only dispatches them to the relevant commandset's methods.
         """
+        functions = []
+        if 'Event' in event:
+            functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event['Event']))
         try:
             if evfunction in ami_def.evfunction_to_method_name:
                 methodname = ami_def.evfunction_to_method_name.get(evfunction)
                 if hasattr(self._ctiserver.commandclass, methodname):
-                    try:
-                        getattr(self._ctiserver.commandclass, methodname)(event)
-                    except KeyError:
-                        self.log.error('Missing fields to handle this event: %s in method: %s\n%s',
-                                       evfunction, methodname, event)
-                else:
-                    self.log.warning('No matching method found (%s): %s'
-                                     % (methodname, event))
+                    functions.append(getattr(self._ctiserver.commandclass, methodname))
+            for function in set(functions):
+                try:
+                    function(event)
+                except KeyError:
+                    self.log.error('Missing fields to handle this event: %s', event)
         except Exception:
             self.log.exception('%s : event %s' % (evfunction, event))
 
