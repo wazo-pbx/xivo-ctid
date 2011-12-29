@@ -48,11 +48,11 @@ from xivo_cti import interface_fagi
 from xivo_cti import interface_info
 from xivo_cti import interface_rcti
 from xivo_cti import interface_webi
-from xivo_cti import queue_logger
 from xivo_cti.alarm import alarm
 from xivo_cti.alarm import scheduler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
+from xivo_cti.queue_logger import QueueLogger
 
 logger = logging.getLogger('main')
 
@@ -251,7 +251,7 @@ class CTIServer(object):
 
     def _init_queue_stats(self):
         queue_stats_uri = self._config.getconfig('main')['asterisk_queuestat_db']
-        queue_logger.queue_logger.init(queue_stats_uri)
+        QueueLogger.init(queue_stats_uri)
         dbconnection.add_connection_as(queue_stats_uri, 'queue_stats')
 
     def main_loop(self):    # {

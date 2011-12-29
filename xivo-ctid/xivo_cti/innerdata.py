@@ -1521,6 +1521,15 @@ class Safe(object):
 
 
 class Channel(object):
+
+    extra_vars = {
+        'xivo': ['time', 'date', 'origin', 'direction', 'context', 'did',
+                 'calleridnum', 'calleridname', 'calleridrdnis',
+                 'calleridton', 'calledidnum', 'calledidname', 'queuename',
+                 'agentnumber', 'userid', 'directory', 'desttype', 'destid'],
+                  'dp': [],
+                  'db': []}
+
     def __init__(self, channel, context):
         self.channel = channel
         self.peerchannel = None
@@ -1584,14 +1593,6 @@ class Channel(object):
         pass
 
     # extra dialplan data that may be reachable from sheets
-
-    extra_vars = {
-        'xivo': ['time', 'date', 'origin', 'direction', 'context', 'did',
-                 'calleridnum', 'calleridname', 'calleridrdnis',
-                 'calleridton', 'calledidnum', 'calledidname', 'queuename',
-                 'agentnumber', 'userid', 'directory', 'desttype', 'destid'],
-                  'dp': [],
-                  'db': []}
 
     def set_extra_data(self, family, varname, varvalue):
         if family not in self.extra_vars:
