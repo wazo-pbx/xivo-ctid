@@ -41,7 +41,7 @@ class AMILogger(object):
     def log_ami_event(self, event):
         msg = ('Event received:%s' %
                ' '.join(['%s=>%s' % (key, value) for key, value in event.iteritems()]))
-        self._logger.log.info(msg)
+        self._logger.info(msg)
 
     @classmethod
     def register_callbacks(cls):

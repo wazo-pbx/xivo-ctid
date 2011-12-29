@@ -50,13 +50,12 @@ class Test(unittest.TestCase):
                  'Second': 'two'}
 
         logger = Mock()
-        logger.log = Mock()
-        logger.log.info = Mock()
+        logger.info = Mock()
 
         self.logger.set_logger(logger)
         self.logger.log_ami_event(event)
 
-        received = logger.log.info.call_args[0][0]
+        received = logger.info.call_args[0][0]
 
         self.assertTrue(received.startswith('Event received:'))
         self.assertTrue('Event=>LogTest' in received)
