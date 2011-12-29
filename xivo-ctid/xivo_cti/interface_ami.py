@@ -254,7 +254,11 @@ class AMI:
             if evfunction in ami_def.evfunction_to_method_name:
                 methodname = ami_def.evfunction_to_method_name.get(evfunction)
                 if hasattr(self._ctiserver.commandclass, methodname):
-                    getattr(self._ctiserver.commandclass, methodname)(event)
+                    try:
+                        getattr(self._ctiserver.commandclass, methodname)(event)
+                    except KeyError:
+                        self.log.error('Missing fields to handle this event: %s in method: %s\n%s',
+                                       evfunction, methodname, event)
                 else:
                     self.log.warning('No matching method found (%s): %s'
                                      % (methodname, event))
