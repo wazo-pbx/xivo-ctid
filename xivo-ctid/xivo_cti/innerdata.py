@@ -808,8 +808,9 @@ class Safe(object):
                 return self.xod_status[listname].get(item_id)
 
     def appendcti(self, listname, which, item_id, status=None):
-        if status or (status is None and int(item_id) > 0):
+        if not status and int(item_id) > 0:
             status = self.statusbylist(listname, item_id)
+
         if status:
             evt = {'class': 'getlist',
                    'listname': listname,
