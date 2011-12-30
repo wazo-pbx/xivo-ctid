@@ -106,8 +106,6 @@ class AMI(object):
 
     def cb_timer(self, *args):
         try:
-            logger.info('cb_timer (timer finished at %s) %s',
-                        time.asctime(), args)
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
                       self.ipbxid)
@@ -126,8 +124,6 @@ class AMI(object):
                     sockparams = self.waiting_actionid.get(actionid)
                     sockparams.makereply_close(actionid, 'timeout')
                     del self.waiting_actionid[actionid]
-                else:
-                    logger.warning('timeout on actionid %s but no more in our structure', actionid)
         return ncount
 
     def delayed_action(self, usefulmsg, replyto):
@@ -169,9 +165,6 @@ class AMI(object):
                 else:
                     nocolon.append(line)
 
-            if len(nocolon) > 1:
-                logger.warning('nocolon is %s', nocolon)
-
             if 'Event' in event and event['Event'] is not None:
                 event_name = event['Event']
                 for ik, interface in self._ctiserver.fdlist_established.iteritems():
@@ -203,8 +196,6 @@ class AMI(object):
                             to_ignore = ('', '--END COMMAND--')
                             args = [a for a in line.split('\n') if a not in to_ignore]
                             reply.extend(args)
-                            if len(args):
-                                logger.info('Response : %s', args)
 
                         if 'ActionID' in event:
                             actionid = event['ActionID']
@@ -215,9 +206,8 @@ class AMI(object):
                                     connreply.makereply_close(actionid, 'OK', reply)
                                 del self.waiting_actionid[actionid]
 
-                    except Exception, e:
+                    except Exception:
                         logger.exception('(command reply)')
-                        print e
                     try:
                         self.amiresponse_follows(event)
                     except Exception:
@@ -242,15 +232,6 @@ class AMI(object):
                         self.amiresponse_error(event)
                     except Exception:
                         logger.exception('response_error (%s) (%s)', event, nocolon)
-                else:
-                    logger.warning('Response=%s (untracked) : %s', response, event)
-            elif len(event) > 0:
-                logger.warning('XXX: %s', event)
-            else:
-                logger.warning('Other : %s', event)
-        event_count = len(events)
-        if event_count > 200:
-            logger.info('handled %d (> 200) events', event_count)
 
     def handle_ami_function(self, evfunction, event):
         """
@@ -269,7 +250,7 @@ class AMI(object):
                 try:
                     function(event)
                 except KeyError:
-                    logger.error('Missing fields to handle this event: %s', event)
+                    logger.exception('Missing fields to handle this event: %s', event)
         except Exception:
             logger.exception('%s : event %s', evfunction, event)
 
@@ -289,12 +270,7 @@ class AMI(object):
 
     def amiresponse_error(self, event):
         actionid = event.get('ActionID')
-        if not actionid:
-            logger.warning('amiresponse_error (no ActionID) %s', event)
-        elif actionid not in self.actionids:
-            logger.warning('amiresponse_error %s (no record) : %s',
-                           actionid, event)
-        else:
+        if actionid and actionid in self.actionids:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
             logger.warning('amiresponse_error %s %s : %s - %s',
@@ -309,12 +285,7 @@ class AMI(object):
 
     def amiresponse_follows(self, event):
         actionid = event.get('ActionID')
-        if not actionid:
-            logger.warning('amiresponse_follows (no ActionID) %s', event)
-        elif actionid not in self.actionids:
-            logger.warning('amiresponse_follows %s (no record) : %s',
-                           actionid, event)
-        else:
+        if actionid and actionid in self.actionids:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
             logger.info('amiresponse_follows %s %s : %s - %s',
@@ -355,9 +326,6 @@ class AMI(object):
         msg = event.get('Message')
         if msg and msg == 'Extension Status':
             self._ctiserver.commandclass.amiresponse_extensionstatus(event)
-        else:
-            logger.warning('amiresponse_success %s %s : %s - %s - unknown msg %s',
-                           actionid, mode, event, properties, msg)
 
     def _handle_vmupdate_success(self, event, properties):
         try:
@@ -369,8 +337,6 @@ class AMI(object):
             logger.warning('Could not update voicemail info: %s', event)
 
     def _handle_useraction_success(self, event, actionid, properties, mode):
-        logger.info('amiresponse_success %s %s : %s - %s',
-                    actionid, mode, event, properties)
         request = properties.get('request')
         cn = request.get('requester')
         try:

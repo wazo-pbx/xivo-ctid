@@ -134,8 +134,6 @@ class CTIServer(object):
         os.write(self.pipe_queued_threads[1], 'alarmclk:%s\n' % userid)
 
     ## \brief Handler for catching signals (in the main thread)
-    # \param signum signal number
-    # \param frame frame
     def sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
@@ -146,8 +144,6 @@ class CTIServer(object):
         self.askedtoquit = True
 
     ## \brief Handler for catching signals (in the main thread)
-    # \param signum signal number
-    # \param frame frame
     def sighandler_reload(self, signum, frame):
         logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
                        signum, frame.f_lineno, self.askedtoquit)
@@ -227,7 +223,6 @@ class CTIServer(object):
         try:
             tname = threading.currentThread()
             tname.setName('Thread-main')
-            logger.info('cb_timer (timer finished at %s) %s', time.asctime(), args)
             self.timeout_queue.put(args)
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:
@@ -572,8 +567,6 @@ class CTIServer(object):
                 except ClientConnection.CloseException, cexc:
                     if sel_o in self.fdlist_established:
                         kind = self.fdlist_established[sel_o]
-                        logger.info('TCP socket %s closed(sending %s) on %s',
-                                    kind, cexc, sel_o.getpeername())
                         kind.disconnected('end_sending')
                         sel_o.close()
                         del self.fdlist_established[sel_o]
@@ -633,13 +626,10 @@ class CTIServer(object):
                             logger.warning('unknown kind %s received', kind)
 
                     # } the new TCP connections (CTI, WEBI, FAGI, INFO) are catched here
-                    elif sel_i in self.fdlist_listen_cti: # {
+                    elif sel_i in self.fdlist_listen_cti:
                         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
                         [connc, sockparams] = sel_i.accept()
                         ctiseparator = '\n'
-                        logger.info('TCP socket %s opened on %s:%d', kind,
-                                    sockparams[0], sockparams[1])
-
                         if kind == 'CTI':
                             connc = ClientConnection(connc, sockparams, ctiseparator)
                         elif kind == 'CTIS':
@@ -710,9 +700,6 @@ class CTIServer(object):
                                     kind.disconnected('end_receiving')
                                     # don't close since it has been done
                                     del self.fdlist_established[sel_i]
-                                    # if requester in self.commandclass.transfers_ref:
-                                    #   self.commandclass.transfer_endbuf(requester)
-                                    logger.info('TCP socket %s closed(A %s) on %s', kind.kind, cexc, requester)
                             else:
                                 try:
                                     msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
@@ -733,9 +720,6 @@ class CTIServer(object):
                                 kind.disconnected('by_client')
                                 sel_i.close()
                                 del self.fdlist_established[sel_i]
-                                # if requester in self.commandclass.transfers_ref:
-                                #   self.commandclass.transfer_endbuf(requester)
-                                logger.info('TCP socket %s closed(B) on %s', kind.kind, requester)
                         except Exception:
                             # socket.error : exc.args[0]
                             logger.exception('[%s] %s', kind, sel_i)

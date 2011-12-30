@@ -1,7 +1,7 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -42,14 +42,14 @@ class AnyList(object):
         newlist = {}
 
         # Get new list from Web services.
-        for url, urllist in self.requested_list.iteritems():
+        for urllist in self.requested_list.itervalues():
             gl = urllist.getlist(* self.anylist_properties['urloptions'])
             if gl == 2:
                 tmplist = getattr(self.commandclass, self.getter)(urllist.jsonreply)
                 newlist.update(tmplist)
 
         # Update computed fields, if any.
-        self.update_computed_fields(newlist);
+        self.update_computed_fields(newlist)
 
         # Compare old (self.keeplist) and new (newlist) list:
         # Compute the differences and update the current list.
@@ -76,17 +76,9 @@ class AnyList(object):
         for a in lstdel:
             del self.keeplist[a]
 
-        if len(lstadd) > 0:
-            logger.info('%d new %s from %s', len(lstadd),
-                                            self.anylist_properties['name'],
-                                            self.requested_list.keys())
-        if len(lstdel) > 0:
-            logger.info('%d old %s from %s', len(lstdel),
-                                            self.anylist_properties['name'],
-                                            self.requested_list.keys())
-        return { 'add' : lstadd,
-                 'del' : lstdel,
-                 'change' : lstchange }
+        return {'add': lstadd,
+                'del': lstdel,
+                'change': lstchange}
 
     def update_computed_fields(self, newlist):
         # "Virtual" function

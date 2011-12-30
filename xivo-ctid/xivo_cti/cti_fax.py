@@ -84,8 +84,6 @@ class asyncActionsThread(threading.Thread):
         self.notify_step('file_decoded')
         self.converttotiff()
         self.notify_step('file_converted')
-        logger.info('%s thread is over', self.getName())
-
 
 
 class Fax(object):

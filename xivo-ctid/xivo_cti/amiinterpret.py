@@ -473,13 +473,6 @@ class AMI_1_8(object):
         except KeyError:
             logger.warning('ami_messagewaiting Failed to update mailbox')
 
-    def ami_peerentry(self, event):
-        ipaddress = event['IPaddress']
-        ipport = event['IPport']
-        if ipport != '0' and ipaddress != '-none-':
-            logger.info('ami_peerentry %s:%s %s %s',
-                        ipaddress, ipport, event['Channeltype'], event['ObjectName'])
-
     def ami_meetmelist(self, event):
         opts = {'usernum': event['UserNumber'],
                 'admin': 'Yes' in event['Admin'],

@@ -53,8 +53,6 @@ class UrlList(object):
                 if kind == 'file' or kind == self.url:
                     f = urllib2.urlopen(self.trueurl[0])
                     http_contenttype = ['application/json']
-                elif kind in ['mysql', 'sqlite', 'ldap']:
-                    logger.warning('URL kind %s not supported yet', kind)
                 elif kind in ['http', 'https']:
                     request = '%s?sum=%s' % (self.trueurl[0], self.urlmd5)
                     urequest = urllib2.Request(request)

@@ -21,11 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
 from xivo_cti.interfaces import Interfaces
-
-logger = logging.getLogger('interface_fagi')
 
 
 class FAGI(Interfaces):
@@ -53,8 +49,6 @@ class FAGI(Interfaces):
             self.agidetails = dict([line.split(': ', 1)
                                     for line in self.stack if line])
             self.channel = self.agidetails.get('agi_channel')
-            nscript = self.agidetails.get('agi_network_script')
-            logger.info('%s %s', self.channel, nscript)
             self.innerdata.fagi_setup(self)
             if self.innerdata.fagi_sync('get', self.channel, 'ami'):
                 self.innerdata.fagi_sync('clear', self.channel)

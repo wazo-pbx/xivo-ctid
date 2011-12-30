@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -53,7 +53,7 @@ class RCTI(Interfaces):
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 if self.encrypt:
-                    ssl_sock = ssl.wrap_socket(self.socket, ssl_version = ssl.PROTOCOL_TLSv1)
+                    ssl_sock = ssl.wrap_socket(self.socket, ssl_version=ssl.PROTOCOL_TLSv1)
                     ssl_sock.connect(bindtuple)
                     self.socket = ssl_sock
                 else:
@@ -92,7 +92,6 @@ class RCTI(Interfaces):
 
     def handle_event_line(self, buf):
         if buf.startswith('XiVO'):
-            logger.info('got banner : %s', buf.strip())
             self.login_id(self.username)
         else:
             t = self.handle_reply(buf)
@@ -112,7 +111,6 @@ class RCTI(Interfaces):
                     else:
                         self.login_capas('onlystate', t.get('capalist')[0])
                 elif classname == 'login_capas':
-                    logger.info('got my capabilities : %s', t)
                     self.getlist('users')
                 elif classname == 'getlist':
                     tipbxid = t.get('tipbxid')
@@ -136,7 +134,6 @@ class RCTI(Interfaces):
                             if self.innerdata:
                                 self.innerdata.config_from_external(ln, t)
                 elif classname == 'chitchat':
-                    logger.info('got %s', t)
                     self._ctiserver.send_to_cti_client(t.get('to'), t)
                 else:
                     logger.warning('unknown class : %s', classname)

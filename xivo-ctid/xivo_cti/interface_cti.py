@@ -71,10 +71,10 @@ class CTI(Interfaces):
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         try:
             ipbxid = self.connection_details['ipbxid']
-            id = self.connection_details['userid']
-            self._manage_logout(ipbxid, id, msg)
+            user_id = self.connection_details['userid']
+            self._manage_logout(ipbxid, user_id, msg)
         except KeyError:
-            logger.warning('Could not retrieve the user id %s',
+            logger.warning('Could not retrieve the user user_id %s',
                            self.connection_details)
 
     def manage_connection(self, msg):
@@ -108,10 +108,6 @@ class CTI(Interfaces):
             self.connid.sendall(self.serial.encode(msg) + '\n')
 
     def _manage_logout(self, ipbxid, user_id, msg):
-        """
-        Clean up code for user disconnection
-        """
-        logger.info('logout (%s) user:%s/%s', msg, ipbxid, user_id)
         self._disconnect_user(ipbxid, user_id)
 
     def loginko(self, errorstring):

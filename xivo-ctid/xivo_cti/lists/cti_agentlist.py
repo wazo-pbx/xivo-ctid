@@ -1,7 +1,7 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+#Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -28,13 +28,14 @@ logger = logging.getLogger('agentlist')
 
 
 class AgentList(AnyList):
-    def __init__(self, newurls = [], useless = None):
-        self.anylist_properties = { 'name' : 'agents',
-                                    'urloptions' : (1, 4, True) }
-        AnyList.__init__(self, newurls)
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
+
+    def __init__(self, newurls=[], useless=None):
+        self.anylist_properties = {'name': 'agents',
+                                   'urloptions': (1, 4, True)}
+        AnyList.__init__(self, newurls)
 
     def update(self):
         ret = AnyList.update(self)
@@ -80,8 +81,6 @@ class AgentList(AnyList):
                     for prop in self.queuelocationprops:
                         if prop in event:
                             self.keeplist[idx][qorg][queuename][prop] = event.get(prop)
-                else:
-                    logger.warning('queuememberadded : %s already there', queuename)
 
     def queuememberremoved(self, queuename, queueorgroup, agentnumber, event):
         qorg = '%s_by_agent' % queueorgroup
@@ -90,8 +89,6 @@ class AgentList(AnyList):
             if idx in self.keeplist:
                 if queuename in self.keeplist[idx][qorg]:
                     del self.keeplist[idx][qorg][queuename]
-                else:
-                    logger.warning('queuememberremoved : %s not there', queuename)
 
     def idbyagentnumber(self, agentnumber):
         idx = self.reverse_index.get(agentnumber)

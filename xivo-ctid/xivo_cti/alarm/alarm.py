@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2011  Avencall'
-
+# Copyright (C) 2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 _ALARM_CLOCK_REGEX = re.compile(r'^(\d\d):(\d\d)$')
 
+
 def _parse_alarm_clock(alarm_clock):
     """Return a (hour, minute) tuple from an alarm clock string.
     
@@ -58,6 +59,7 @@ def _parse_alarm_clock(alarm_clock):
 
 _ONE_DAY = datetime.timedelta(days=1)
 
+
 def _compute_due_datetime(alarm_clock, zone, utc_now=None):
     """Return an UTC localized due datetime from an alarm clock string and
     a timezone name.
@@ -78,25 +80,26 @@ def _compute_due_datetime(alarm_clock, zone, utc_now=None):
     # one day to an aware timezone really means adding 24 hours, which is
     # not what we want if there's a DST change during these 24 hours
     alarm_hour, alarm_minute = _parse_alarm_clock(alarm_clock)
-    
+
     loc_timezone = pytz.timezone(zone)
     if utc_now is None:
         utc_now = pytz.utc.localize(datetime.datetime.utcnow())
     loc_now = utc_now.astimezone(loc_timezone)
     loc_now_naive = loc_now.replace(tzinfo=None)
-    
+
     loc_alarm_naive = loc_now_naive.replace(hour=alarm_hour, minute=alarm_minute,
                                             second=0, microsecond=0)
     if loc_alarm_naive < loc_now_naive:
         # schedule alarm for the next day
         loc_alarm_naive += _ONE_DAY
-    
+
     loc_alarm = loc_timezone.localize(loc_alarm_naive)
     utc_alarm = loc_alarm.astimezone(pytz.utc)
     return utc_alarm
 
 
 _FORMAT = '%Y-%m-%d %H:%M'
+
 
 def _utc_datetime_to_string(utc_datetime):
     # WARNING: datetime must be in UTC or you'll lose information
@@ -133,19 +136,19 @@ class AlarmClockManager(object):
         self._alarms = {}
         self._lock = threading.Lock()
         self._load_persisted_alarm()
-    
+
     def _load_persisted_alarm(self):
         for userid, alarm_clock, zone, utc_datetime, data in self._persister.list():
             logger.info('Loaded persisted alarm for user %s', userid)
             self._add_alarm(userid, alarm_clock, zone, utc_datetime, data, persist=False)
-    
+
     def _add_alarm(self, userid, alarm_clock, zone, utc_datetime, data, persist=True):
         with self._lock:
             job_id = self._sched.add_job(utc_datetime, self._alarm_callback, (data,))
             self._alarms[userid] = _Alarm(job_id, alarm_clock, zone)
             if persist:
                 self._persister.add(userid, alarm_clock, zone, utc_datetime, data)
-    
+
     def _try_cancel_alarm(self, userid):
         # Cancel alarm if it has not yet run/if it is present
         with self._lock:
@@ -156,7 +159,7 @@ class AlarmClockManager(object):
             else:
                 logger.debug('Ignoring cancel for user %s since no alarm is set',
                              userid)
-    
+
     def update_alarm_clock(self, userid, alarm_clock, zone=None):
         """
         userid -- the user ID (userfeaturesid) as an integer, i.e. 2 for example
@@ -168,13 +171,11 @@ class AlarmClockManager(object):
         logger.info('Updating alarm clock to %r (%s) for user %s', alarm_clock,
                     zone, userid)
         if not alarm_clock:
-            logger.debug('Cancelling alarm for user %s', userid)
             self._try_cancel_alarm(userid)
         else:
-            logger.debug('Setting alarm for user %s', userid)
             # cancel any pending alarm for user
             self._try_cancel_alarm(userid)
-            
+
             # add a new alarm
             if not zone:
                 if self._default_zone is None:
@@ -184,12 +185,11 @@ class AlarmClockManager(object):
             utc_datetime = _compute_due_datetime(alarm_clock, zone)
             data = {'userid': userid}
             self._add_alarm(userid, alarm_clock, zone, utc_datetime, data)
-            logger.info('Alarm scheduled at %s for user %s', utc_datetime, userid)
-    
+
     def test_update_alarm_clock(self, userid, alarm_clock, zone=None):
         """Update the alarm clock for the given user only if its current alarm
         clock and timezone is different.
-        
+
         """
         logger.info('Test updating alarm clock to %r (%s) for user %s', alarm_clock,
                     zone, userid)
@@ -210,7 +210,7 @@ class AlarmClockManager(object):
             else:
                 logger.info('Not updating alarm clock for user %s: same alarms',
                             userid)
-    
+
     def _alarm_callback(self, data):
         # WARNING: we are in the scheduler thread
         userid = data['userid']
@@ -229,10 +229,10 @@ class NullPersister(object):
     """An alarm persister that doesn't persist alarm."""
     def add(self, userid, alarm_clock, zone, utc_datetime, data):
         pass
-    
+
     def remove(self, userid):
         pass
-    
+
     def list(self):
         return []
 
@@ -245,7 +245,7 @@ class JSONPersister(object):
     def __init__(self, directory):
         self._directory = directory
         self._test_mkdir = True
-    
+
     def add(self, userid, alarm_clock, zone, utc_datetime, data):
         logger.debug('Persisting alarm for user %s', userid)
         filename = self._get_filename(userid)
@@ -256,16 +256,16 @@ class JSONPersister(object):
         self._mkdir_if_missing()
         with open(filename, 'w') as fobj:
             json.dump(content, fobj)
-    
+
     def _mkdir_if_missing(self):
         if self._test_mkdir:
             if not os.path.isdir(self._directory):
                 os.mkdir(self._directory)
             self._test_mkdir = False
-    
+
     def _get_filename(self, userid):
         return os.path.join(self._directory, str(userid))
-    
+
     def remove(self, userid):
         logger.debug('Removing persisted alarm for user %s', userid)
         filename = self._get_filename(userid)
@@ -276,7 +276,7 @@ class JSONPersister(object):
                 logger.info('No scheduled alarm persisted for user %s', userid)
             else:
                 raise
-    
+
     def list(self):
         self._mkdir_if_missing()
         for filename in os.listdir(self._directory):
@@ -309,13 +309,13 @@ class MaxDeltaPersisterDecorator(object):
         """
         self._max_delta = max_delta
         self._persister = persister
-    
+
     def add(self, userid, alarm_clock, zone, utc_datetime, data):
         self._persister.add(userid, alarm_clock, zone, utc_datetime, data)
-    
+
     def remove(self, userid):
         self._persister.remove(userid)
-    
+
     def list(self):
         utc_now = pytz.utc.localize(datetime.datetime.utcnow())
         for userid, alarm_clock, zone, utc_datetime, data in self._persister.list():

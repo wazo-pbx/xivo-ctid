@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2011  Avencall'
-
+# Copyright (C) 2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -47,7 +47,7 @@ class _Job(object):
         self.func = func
         self.args = args
         self.kwargs = kwargs
-    
+
     def __lt__(self, other):
         try:
             if self.utc_datetime < other.utc_datetime:
@@ -58,7 +58,7 @@ class _Job(object):
                 return False
         except AttributeError:
             return TypeError('Job_ can only be compared with other job objects')
-    
+
     def __repr__(self):
         return '<_Job(%s, datetime=%s)>' % (self.job_id, self.utc_datetime)
 
@@ -79,10 +79,10 @@ class Scheduler(object):
     they are localized.
     
     """
-    
+
     _ADD_MSG = 'add'
     _REMOVE_MSG = 'remove'
-    
+
     def __init__(self, daemonic=True):
         """
         daemonic -- the daemonic status of the scheduler thread
@@ -97,24 +97,23 @@ class Scheduler(object):
         self._thread = None
         # this date structures are only modified by the scheduler thread
         self._jobs = []
-    
+
     def _new_id_generator(self, start=1):
         n = start
         while True:
             yield str(n)
-            n += 1 
-    
+            n += 1
+
     def start(self):
         if self.running:
-            logger.info('Scheduler is already started')
             return
-        
+
         logger.debug('Starting scheduler')
         self._stopped = False
         self._thread = threading.Thread(target=self._main_loop, name='Scheduler')
         self._thread.setDaemon(self.daemonic)
         self._thread.start()
-    
+
     def shutdown(self, wait=True):
         """
         
@@ -124,19 +123,19 @@ class Scheduler(object):
         """
         if not self.running:
             return
-        
+
         logger.debug('Shutting down scheduler')
         with self._condition:
             self._stopped = True
             self._condition.notify()
-        
+
         if wait:
             self._thread.join()
-    
+
     @property
     def running(self):
         return not self._stopped and self._thread and self._thread.isAlive()
-    
+
     def add_job(self, utc_datetime, func, args=None, kwargs=None):
         """Return an opaque job ID, the only guaranteed being that it's a
         string and it's unique for the lifetime of the scheduled job.
@@ -146,24 +145,24 @@ class Scheduler(object):
         msg = (self._ADD_MSG, (job,))
         self._queue_msg(msg)
         return job.job_id
-    
+
     def _new_job(self, utc_datetime, func, args, kwargs):
         job_id = self._id_generator.next()
         return _Job(job_id, utc_datetime, func, args, kwargs)
-    
+
     def _queue_msg(self, msg):
         with self._condition:
             self._msgs.append(msg)
             self._condition.notify()
-    
+
     def remove_job(self, job_id):
         msg = (self._REMOVE_MSG, (job_id,))
         self._queue_msg(msg)
-    
+
     def _main_loop(self):
         logger.info('Scheduler started')
         timeout = self._compute_next_timeout()
-        
+
         while True:
             # be extremely careful if you modify the next few lines if you
             # don't want potentially wrong behaviour to pop up
@@ -173,16 +172,15 @@ class Scheduler(object):
                     self._condition.wait(timeout)
                 new_msgs = self._msgs
                 self._msgs = []
-            
-            logger.debug('Scheduler loop processing')
+
             if self._stopped:
                 break
             self._process_new_msgs(new_msgs)
             self._execute_due_jobs()
             timeout = self._compute_next_timeout()
-        
+
         logger.info('Scheduler has been shut down')
-    
+
     def _process_new_msgs(self, new_msgs):
         # NOTE: to be called only from the scheduler thread
         for msg in new_msgs:
@@ -197,7 +195,7 @@ class Scheduler(object):
                     fun(msg_data)
             except Exception:
                 logger.error('Error while processing message %s', msg, exc_info=True)
-    
+
     def _process_msg_add(self, msg_data):
         # This method is called 'dynamically' by the _process_new_msgs method
         # NOTE: to be called only from the scheduler thread
@@ -207,9 +205,8 @@ class Scheduler(object):
             logger.error('Could not schedule job %s because ID already in use',
                          job)
         else:
-            logger.debug('Inserting job %s', job)
             heapq.heappush(self._jobs, job)
-    
+
     def _process_msg_remove(self, msg_data):
         # This method is called 'dynamically' by the _process_new_msgs method
         # NOTE: to be called only from the scheduler thread
@@ -218,14 +215,13 @@ class Scheduler(object):
         if idx == -1:
             logger.debug('No job with ID %s', job_id)
         else:
-            logger.debug('Removing job with ID %s', job_id)
             # It's unfortunate the heapq module doesn't provide a function to
             # remove an arbitrary element from a heap. That said, since removing
             # a job should not be the most frequent operation, I guess this
             # maybe not too efficient solution is fine
             del self._jobs[idx]
             heapq.heapify(self._jobs)
-    
+
     def _find_job(self, job_id):
         # Return the idx at which job with the given ID can be found
         # NOTE: to be called only from the scheduler thread
@@ -233,7 +229,7 @@ class Scheduler(object):
             if job.job_id == job_id:
                 return idx
         return -1
-    
+
     def _execute_due_jobs(self):
         # NOTE: to be called only from the scheduler thread
         while self._jobs:
@@ -244,13 +240,12 @@ class Scheduler(object):
                 break
             job = heapq.heappop(self._jobs)
             try:
-                logger.debug('Executing job %s at %s', job, utc_now)
                 args = () if job.args is None else job.args
                 kwargs = {} if job.kwargs is None else job.kwargs
                 job.func(*args, **kwargs)
             except Exception:
                 logger.error('Error while executing job %s', job, exc_info=True)
-    
+
     def _compute_next_timeout(self):
         # Return a floating point representing the number of seconds to wait before
         # needing to execute the next job

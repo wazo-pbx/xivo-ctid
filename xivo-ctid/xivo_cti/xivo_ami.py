@@ -39,16 +39,15 @@ __specialextensions__ = ['s', 'BUSY']
 
 switch_originates = False
 
-## \class AMIClass
-# AMI definition in order to interact with the Asterisk AMI.
+
 class AMIClass(object):
     class AMIError(Exception):
         def __init__(self, msg):
             self.msg = msg
+
         def __str__(self):
             return self.msg
 
-    # \brief Class initialization.
     def __init__(self, ipbxid, ipaddress, ipport, loginname, password, events):
         self.ipbxid    = ipbxid
         self.ipaddress = ipaddress
@@ -58,7 +57,6 @@ class AMIClass(object):
         self.events    = events
         self.actionid = None
 
-    # \brief Connection to a socket.
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockret = self.sock.connect_ex((self.ipaddress, self.ipport))
@@ -68,11 +66,8 @@ class AMIClass(object):
         else:
             self.sock.settimeout(30)
             self.fd = self.sock.fileno()
-            logger.info('connection properties : here=%s remote=%s fd=%s',
-                        self.sock.getsockname(), self.sock.getpeername(), self.fd)
 
-    # \brief Sending any AMI command.
-    def sendcommand(self, action, args, loopnum = 0):
+    def sendcommand(self, action, args, loopnum=0):
         ret = False
         try:
             t0 = time.time()
@@ -125,8 +120,6 @@ class AMIClass(object):
                     if self:
                         # "retrying AMI command=<%s> args=<%s>" % (action, str(args)))
                         self.sendcommand(action, args, 1)
-                    else:
-                        logger.warning('self is undefined %s', self)
                 except Exception:
                     logger.exception('reconnection (%s %s %s)',
                                      action, self.actionid, self.fd)
@@ -140,8 +133,7 @@ class AMIClass(object):
     def setactionid(self, actionid):
         self.actionid = actionid
 
-    # \brief Requesting the Queues' Status.
-    def sendqueuestatus(self, queue = None):
+    def sendqueuestatus(self, queue=None):
         if queue is None:
             ret = self.sendcommand('QueueStatus', [])
         else:
@@ -182,11 +174,9 @@ class AMIClass(object):
         except Exception:
             return False
 
-    # \brief Hangs up a Channel.
     def hangup(self, channel, channel_peer=None):
         ret = 0
         try:
-            logger.info('hanging up %s as requested', channel)
             self.sendcommand('Hangup',
                              [('Channel', channel)])
             ret += 1
@@ -197,7 +187,6 @@ class AMIClass(object):
 
         if channel_peer:
             try:
-                logger.info('hanging up %s (peer) as requested', channel_peer)
                 self.sendcommand('Hangup',
                                  [('Channel', channel_peer)])
                 ret += 2
@@ -207,7 +196,7 @@ class AMIClass(object):
                 pass
         return ret
 
-    def setvar(self, var, val, chan = None):
+    def setvar(self, var, val, chan=None):
         try:
             if chan is None:
                 ret = self.sendcommand('Setvar', [('Variable', var),
@@ -340,11 +329,7 @@ class AMIClass(object):
         except Exception:
             return False
 
-    # \brief Handle moderation commands for meetmes
-    # MeetmeAccept, MeetmeKick, MeetmeTalk
     def meetmemoderation(self, command, meetme, usernum, adminnum):
-        logger.info('meetmemoderation %s %s %s %s',
-                    command, meetme, usernum, adminnum)
         try:
             return self.sendcommand(command, (('Meetme', meetme),
                                                ('Usernum', usernum),
@@ -354,9 +339,7 @@ class AMIClass(object):
         except Exception:
             return False
 
-    # \brief Pauses and unpause a meetme room
     def meetmepause(self, meetme, status):
-        logger.info('meetmepause %s %s', meetme, status)
         try:
             return self.sendcommand('MeetmePause', (('Meetme', meetme),
                                                      ('Status', status)))
@@ -365,8 +348,7 @@ class AMIClass(object):
         except Exception:
             return False
 
-    # \brief Adds an Interface into a Queue
-    def queueadd(self, queuename, interface, paused, skills = ''):
+    def queueadd(self, queuename, interface, paused, skills=''):
         try:
             # it looks like not specifying Paused is the same as setting it to false
             ret = self.sendcommand('QueueAdd', [('Queue', queuename),
