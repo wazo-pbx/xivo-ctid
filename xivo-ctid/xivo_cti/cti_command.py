@@ -34,7 +34,7 @@ from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 
 logger = logging.getLogger('cti_command')
 
-COMPULSORY_LOGIN_ID = ['company', 'userlogin', 'ident',
+REQUIRED_LOGIN_FIELD = ['company', 'userlogin', 'ident',
                        'xivoversion', 'git_hash', 'git_date']
 
 LOGINCOMMANDS = [
@@ -171,7 +171,7 @@ class Command(object):
     def regcommand_login_id(self):
         head = 'LOGINFAIL - login_id'
         missings = []
-        for argum in COMPULSORY_LOGIN_ID:
+        for argum in REQUIRED_LOGIN_FIELD:
             if argum not in self._commanddict:
                 missings.append(argum)
         if len(missings) > 0:
