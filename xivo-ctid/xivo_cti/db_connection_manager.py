@@ -29,6 +29,7 @@ from xivo.BackSQL import backsqlite
 from xivo.BackSQL import backsqlite3
 from xivo.BackSQL import backpostgresql
 
+
 class DbConnectionPool(object):
     '''Connection manager for DB connections.
 
@@ -46,7 +47,7 @@ class DbConnectionPool(object):
 
     def __init__(self, db_uri):
         self._db_uri = db_uri
-        if not DbConnectionPool._pool.has_key(db_uri):
+        if not db_uri in DbConnectionPool._pool:
             DbConnectionPool._pool[db_uri] = Queue.Queue()
             connection = {}
             connection['conn'] = anysql.connect_by_uri(db_uri)
@@ -58,10 +59,10 @@ class DbConnectionPool(object):
 
     def __exit__(self, type, value, traceback):
         self.put()
-    
+
     def get(self):
         self._connection = DbConnectionPool._pool[self._db_uri].get()
         return self._connection
-    
+
     def put(self):
         DbConnectionPool._pool[self._db_uri].put(self._connection)

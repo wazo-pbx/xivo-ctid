@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -27,18 +27,20 @@ from xivo_cti.cti_anylist import AnyList
 
 logger = logging.getLogger('grouplist')
 
+
 class GroupList(AnyList):
-    def __init__(self, newurls = [], virtual = False):
-        self.anylist_properties = { 'name' : 'groups',
-                                    'urloptions' : (1, 5, True) }
-        AnyList.__init__(self, newurls)
-    
+
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
     queuestats = ['Abandoned', 'Max', 'Completed', 'ServiceLevel', 'Weight', 'Holdtime',
                   'Xivo-Join', 'Xivo-Link', 'Xivo-Lost', 'Xivo-Wait', 'Xivo-TalkingTime', 'Xivo-Rate',
                   'Calls']
-    
+
+    def __init__(self, newurls=[], virtual=False):
+        self.anylist_properties = {'name': 'groups',
+                                   'urloptions': (1, 5, True)}
+        AnyList.__init__(self, newurls)
+
     def update(self):
         ret = AnyList.update(self)
         self.reverse_index = {}
@@ -50,7 +52,7 @@ class GroupList(AnyList):
         return ret
 
     def hasqueue(self, queuename):
-        return self.reverse_index.has_key(queuename)
+        return queuename in self.reverse_index
 
     def idbyqueuename(self, queuename):
         if queuename in self.reverse_index:

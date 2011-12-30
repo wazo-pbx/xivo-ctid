@@ -76,7 +76,7 @@ class Config(object):
         except Exception:
             logger.exception('fetch url %s', uri)
 
-        for profile, profdef in self.xc_json.get('profiles', {}).iteritems():
+        for profdef in self.xc_json.get('profiles', {}).itervalues():
             if profdef['xlets']:
                 for xlet_attr in profdef['xlets']:
                     if 'N/A' in xlet_attr:
