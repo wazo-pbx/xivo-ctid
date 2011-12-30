@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -32,9 +32,9 @@ logger = logging.getLogger('sheet')
 
 class Sheet(object):
     def __init__(self, where, ipbxid, channel):
-        self.internaldata = { 'where' : where,
-                              'ipbxid' : ipbxid,
-                              'channel' : channel }
+        self.internaldata = {'where': where,
+                             'ipbxid': ipbxid,
+                             'channel': channel}
         # config items
         self.options = {}
         self.displays = {}

@@ -32,7 +32,7 @@ from xivo import urisup
 
 logger = logging.getLogger('ldap')
 
-## \class xivo_ldap
+
 class xivo_ldap(object):
     def __init__(self, iuri):
         self.iuri    = iuri

@@ -1,7 +1,7 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2009-2011  Avencall'
-
+# Copyright (C) 2009-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -26,12 +26,13 @@ from collections import deque
 
 BUFSIZE_LARGE = 262144
 
+
 class ClientConnection(object):
     class CloseException(Exception):
-        def __init__(self, errno = -1):
+        def __init__(self, errno=-1):
             self.args = (errno,)
-    
-    def __init__(self, socket, address=None, sep = '\n'):
+
+    def __init__(self, socket, address=None, sep='\n'):
         self.socket = socket
         self.address = address
         self.socket.setblocking(0)
@@ -74,7 +75,7 @@ class ClientConnection(object):
                     self.sendqueue.appendleft(data[n:])
             except socket.error, (_errno, string):
                 if _errno == errno.EAGAIN:
-                    self.sendqueue.appendleft(data) # try next time !
+                    self.sendqueue.appendleft(data)  # try next time !
                     return
                 elif _errno in [errno.EPIPE, errno.ECONNRESET, errno.ENOTCONN, errno.ETIMEDOUT, errno.EHOSTUNREACH]:
                     self.close()
@@ -105,7 +106,7 @@ class ClientConnection(object):
             elif _errno in [errno.EBADF]:
                 # already closed !
                 raise self.CloseException(_errno)
-            elif _errno != errno.EAGAIN: # really an error
+            elif _errno != errno.EAGAIN:  # really an error
                 raise socket.error(_errno, string)
 
     # return a line if available or None
@@ -114,8 +115,8 @@ class ClientConnection(object):
         self.recv()
         try:
             k = self.readbuff.index(self.separator)
-            ret = self.readbuff[0:k+1]
-            self.readbuff = self.readbuff[k+1:]
+            ret = self.readbuff[0:k + 1]
+            self.readbuff = self.readbuff[k + 1:]
             return ret
         except:
             return None
