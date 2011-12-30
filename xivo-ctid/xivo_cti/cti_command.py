@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -175,7 +175,6 @@ class Command(object):
             if argum not in self._commanddict:
                 missings.append(argum)
         if len(missings) > 0:
-            logger.warning('%s - missing args - %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
         # warns that the former session did not exit correctly (on a given computer)
@@ -189,7 +188,6 @@ class Command(object):
         # trivial checks (version, client kind) dealing with the software used
         xivoversion = self._commanddict.get('xivoversion')
         if xivoversion != XIVOVERSION_NUM:
-            logger.warning('%s - wrong XiVO major version : %s', head, xivoversion)
             return 'xivoversion_client:%s;%s' % (xivoversion, XIVOVERSION_NUM)
         rcsversion = '%s-%s' % (self._commanddict.get('git_date'), self._commanddict.get('git_hash'))
 
@@ -198,20 +196,17 @@ class Command(object):
         if whatsmyos.lower() not in ['x11', 'win', 'mac',
                                      'ctiserver',
                                      'web', 'android', 'ios']:
-            logger.warning('%s - wrong OS identifier : %s', head, ident)
             return 'wrong_client_os_identifier:%s' % whatsmyos
 
         # user match
         if self._commanddict.get('userlogin'):
             ipbxid = self._ctiserver.myipbxid
             saferef = self._ctiserver.safe.get(ipbxid)
-            logger.info('searching user %s in %s',
-                        self._commanddict.get('userlogin'), ipbxid)
             userid = saferef.user_find(self._commanddict.get('userlogin'),
                                        self._commanddict.get('company'))
             if userid:
-                self._connection.connection_details.update({ 'ipbxid' : ipbxid,
-                                                            'userid' : userid })
+                self._connection.connection_details.update({'ipbxid': ipbxid,
+                                                            'userid': userid})
 
         if not self._connection.connection_details.get('userid'):
             logger.warning('%s - unknown login : %s', head, self._commanddict.get('userlogin'))
@@ -220,15 +215,14 @@ class Command(object):
             # until the password step, before sending a "wrong password" message ...
 
         self._connection.connection_details['prelogin'] = {
-            'cticlientos' : whatsmyos,
-            'version' : rcsversion,
-            'sessionid' : ''.join(random.sample(ALPHANUMS, 10))
+            'cticlientos': whatsmyos,
+            'version': rcsversion,
+            'sessionid': ''.join(random.sample(ALPHANUMS, 10))
             }
 
-        reply = { 'xivoversion' : XIVOVERSION_NUM,
-                  'version' : '7777',
-                  'sessionid' : self._connection.connection_details['prelogin']['sessionid']
-                  }
+        reply = {'xivoversion': XIVOVERSION_NUM,
+                 'version': '7777',
+                 'sessionid': self._connection.connection_details['prelogin']['sessionid']}
         return reply
 
     def regcommand_login_pass(self):
@@ -320,8 +314,6 @@ class Command(object):
                         summarycapas[capakind] = tt
                 else:
                     capastruct[capakind] = {}
-        else:
-            logger.warning('empty profilespecs %s', profilespecs)
 
         reply = {'ipbxid': self.ipbxid,
                  'userid': self.userid,
@@ -396,7 +388,7 @@ class Command(object):
         return reply
 
     def regcommand_featuresget(self):
-        z = xivo_webservices.xws(self._config.ipwebs, 80)
+        z = xivo_webservices.XivoWebService(self._config.ipwebs, 80)
         z.connect()
         services = z.serviceget(self.ruserid)
         z.close()
@@ -412,18 +404,19 @@ class Command(object):
         func   = self._commanddict.get('function')
         values = self._commanddict.get('value') if func == 'fwd' else\
             {func: self._commanddict.get('value')}
-    
+
         changed = False
         for k, v in values.iteritems():
             if v != user.get(k, None):
-                changed = True; break
+                changed = True
+                break
 
         # feature values has not been changed
         if not changed:
             return {'status': 'OK', 'warning_string': 'no changes'}
 
         #user.update(values)
-        z = xivo_webservices.xws(self._config.ipwebs, 80)
+        z = xivo_webservices.XivoWebService(self._config.ipwebs, 80)
         z.connect()
         z.serviceput(self.ruserid, values)
         z.close()
@@ -536,19 +529,6 @@ class Command(object):
                                                                                         int(params['window']))
         return self._queue_statistic_encoder.encode(statistic_results)
 
-    def regcommand_keepalive(self):
-        nbytes = self._commanddict.get('rate-bytes', -1)
-        nmsec = self._commanddict.get('rate-msec', -1)
-        nsamples = self._commanddict.get('rate-samples', -1)
-        if nbytes > 0:
-            if nmsec > 0:
-                rate = float(nbytes) / nmsec
-                logger.info('keepalive from user:%s (%d %d/%d = %.1f bytes/ms)',
-                            self.ruserid, nsamples, nbytes, nmsec, rate)
-            else:
-                logger.info('keepalive from user:%s (%d %d/0 > %.1f bytes/ms)',
-                            self.ruserid, nsamples, nbytes, float(nbytes))
-
     def regcommand_availstate(self):
         availstate = self._commanddict.get('availstate')
         self.rinnerdata.update_presence(self.ruserid, availstate)
@@ -653,8 +633,6 @@ class Command(object):
                 zs = getattr(self, methodname)()
             except Exception:
                 logger.warning('exception when calling %s', methodname)
-        else:
-            logger.warning('no such ipbx method %s', methodname)
 
         # if some actions have been requested ...
         if self.commandid:  # pass the commandid on the actionid # 'user action - forwarded'
@@ -797,7 +775,7 @@ class Command(object):
                 else:
                     extentodial = None
             except KeyError:
-                logger.info('Missing info to call this voicemail')
+                logger.exception('Missing info to call this voicemail')
                 extentodial = None
             # XXX especially for the 'dial' command, actually
             # XXX display password on phone in order for the user to know what to type

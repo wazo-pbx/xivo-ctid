@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -24,10 +24,11 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import cjson
 import httplib
 
-headers = { 'Content-type': 'application/json',
-            'Accept': 'text/plain' }
+headers = {'Content-type': 'application/json',
+           'Accept': 'text/plain'}
 
-class xws(object):
+
+class XivoWebService(object):
     def __init__(self, ipaddress, ipport):
         self.myconn = None
         self.ipaddress = ipaddress
@@ -52,7 +53,6 @@ class xws(object):
 
     def serviceput(self, userid, values):
         """
-
             values: dict of function:value
         """
         uri = '%s/?act=edit&id=%s' % (self.path, userid)

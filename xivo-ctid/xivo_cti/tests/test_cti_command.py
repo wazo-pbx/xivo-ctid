@@ -11,11 +11,9 @@ from xivo_cti.lists.cti_queuelist import QueueList
 
 class Test(unittest.TestCase):
 
-
     def setUp(self):
         self.conn = Mock()
         self.conn.requester = ('test_requester', 1)
-
 
     def tearDown(self):
         pass
@@ -28,9 +26,9 @@ class Test(unittest.TestCase):
 
     def test_regcommand_getqueuesstats_one_queue(self):
         queueList = Mock(QueueList)
-        queueList.keeplist ={'3':{'name':'service'}}
+        queueList.keeplist = {'3': {'name': 'service'}}
         safe = Mock(Safe)
-        safe.xod_config = {'queues':queueList}
+        safe.xod_config = {'queues': queueList}
 
         message = {"class": "getqueuesstats",
                    "commandid": 1234,
@@ -57,11 +55,11 @@ class Test(unittest.TestCase):
         from xivo_cti import cti_command
         from xivo_cti import cti_config
         xws_inst = Mock()
-        xws_inst.connect    = Mock()
+        xws_inst.connect = Mock()
         xws_inst.serviceput = Mock()
         xws = Mock()
         xws.__init__(return_value=xws_inst)
-        cti_command.xivo_webservices.xws = xws
+        cti_command.xivo_webservices.XivoWebService = xws
         cti_config.Config.get_instance = Mock()
         config = Mock(cti_config.Config)
         config.ipwebs = 'localhost'
