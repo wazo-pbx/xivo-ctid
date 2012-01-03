@@ -35,8 +35,6 @@ import time
 import threading
 import urllib
 
-from logging.handlers import RotatingFileHandler
-
 from xivo import daemonize
 
 from xivo_cti import amiinterpret
@@ -81,7 +79,7 @@ class CTIServer(object):
     def _set_logger(self):
         logging.basicConfig(level=logging.INFO)
         try:
-            logfilehandler = RotatingFileHandler(cti_config.LOGFILENAME)
+            logfilehandler = logging.FileHandler(cti_config.LOGFILENAME)
             formatter = logging.Formatter(
                 '%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
                 % cti_config.DAEMONNAME)
