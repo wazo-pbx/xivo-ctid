@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+
 class QueueStatisticEncoder(object):
 
     def encode(self, statistics):
@@ -9,7 +10,7 @@ class QueueStatisticEncoder(object):
                                'Xivo-Join': statistic.received_call_count,
                                'Xivo-Link': statistic.answered_call_count,
                                'Xivo-Lost': statistic.abandonned_call_count,
-                               'Xivo-Rate' : statistic.efficiency,
+                               'Xivo-Rate': statistic.efficiency,
                                'Xivo-Qos': statistic.qos,
                                'Xivo-Holdtime-max': statistic.max_hold_time
                                }
