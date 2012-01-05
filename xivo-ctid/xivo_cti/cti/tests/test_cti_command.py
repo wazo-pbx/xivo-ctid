@@ -2,6 +2,7 @@ import unittest
 
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.missing_field_exception import MissingFieldException
+from tests.mock import Mock
 
 
 class Test(unittest.TestCase):
@@ -48,6 +49,20 @@ class Test(unittest.TestCase):
         self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match'}))
         self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match', 'other': 'not_checked'}))
         self.assertFalse(CTICommand.match_message({'class': 'test_command'}))
+
+    def test_register_callback(self):
+        command = CTICommand({'class': 'callback_test'})
+
+        self.assertEqual(command.callbacks, [])
+
+        function = Mock()
+        CTICommand.register_callback(function)
+
+        self.assertTrue(function in CTICommand._callbacks)
+
+        command = CTICommand({'class': 'callback_test'})
+        self.assertTrue(function in command.callbacks)
+        self.assertEqual(len(command.callbacks), 1)
 
 
 if __name__ == "__main__":

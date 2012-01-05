@@ -5,12 +5,14 @@ class CTICommand(object):
 
     required_fields = ['class']
     conditions = None
+    _callbacks = []
 
     def __init__(self, msg):
         self._msg = msg
         self._check_required_fields()
         self._commandid = self._msg.get('commandid')
         self._command_class = self._msg['class']
+        self.callbacks = self.__class__._callbacks
 
     def _check_required_fields(self):
         for field in self.__class__.required_fields:
@@ -28,3 +30,7 @@ class CTICommand(object):
             except KeyError:
                 return False
         return True
+
+    @classmethod
+    def register_callback(cls, function):
+        cls._callbacks.append(function)
