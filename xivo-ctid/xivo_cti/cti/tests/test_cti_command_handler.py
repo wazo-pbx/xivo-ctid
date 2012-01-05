@@ -18,11 +18,6 @@ class Test(unittest.TestCase):
 
         self.assertTrue(cti_handler is not None)
 
-    def test_parse_input(self):
-        cti_handler = CTICommandHandler()
-
-        cti_handler.parse(self._msg_1)
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         self.assertEqual(cti_command._commandid, commandid)
         self.assertEqual(cti_command._command_class, command_class)
 
-        self.assertEqual(len(CTICommand._required_fields), 1)
+        self.assertEqual(len(CTICommand.required_fields), 1)
 
     def test_required_fields(self):
         try:
@@ -40,6 +40,14 @@ class Test(unittest.TestCase):
             self.assertTrue(True, u'Should not raise an exception')
         except MissingFieldException:
             self.assertTrue(False, u'Should raise an exception')
+
+    def test_match_message(self):
+        self.assertFalse(CTICommand.match_message({}))
+
+        CTICommand.conditions = [('class', 'test_command'), ('value', 'to_match')]
+        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match'}))
+        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match', 'other': 'not_checked'}))
+        self.assertFalse(CTICommand.match_message({'class': 'test_command'}))
 
 
 if __name__ == "__main__":

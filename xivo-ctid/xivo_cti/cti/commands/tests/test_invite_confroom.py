@@ -28,5 +28,10 @@ class Test(unittest.TestCase):
         self.assertEqual(command._command_class, self._command_class)
         self.assertEqual(command._invitee, invitee)
 
+    def test_match_message(self):
+        self.assertFalse(InviteConfroom.match_message({}))
+        self.assertFalse(InviteConfroom.match_message({'class': 'invite_confroom*'}))
+        self.assertTrue(InviteConfroom.match_message({'class': 'invite_confroom'}))
+
 if __name__ == "__main__":
     unittest.main()
