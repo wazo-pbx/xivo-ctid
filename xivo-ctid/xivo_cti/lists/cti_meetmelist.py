@@ -23,15 +23,18 @@
 from xivo_cti.cti_anylist import AnyList
 
 import logging
+from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 
 logger = logging.getLogger('meetmelist')
 
 
 class MeetmeList(AnyList):
+
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'meetme',
                                    'urloptions': (1, 5, True)}
         AnyList.__init__(self, newurls)
+        InviteConfroom.register_callback(self.invite)
 
     def update(self):
         ret = AnyList.update(self)
@@ -51,3 +54,18 @@ class MeetmeList(AnyList):
         idx = self.reverse_index.get(roomnumber)
         if idx in self.keeplist:
             return idx
+
+    def invite(self, invite_confroom_command):
+        logger.debug('Received: %s', invite_confroom_command)
+        ami = self._ctiserver.myami[self._ipbxid].amicl
+        params = [('Channel', 'SIP/eh51sh'),
+                  ('Exten', '800'),
+                  ('Context', 'default'),
+                  ('Priority', '1'),
+                  ('CallerID', 'Meetme')]
+        rep = ami.sendcommand('originate', params)  # True
+        logger.debug('reply: %s', rep)
+        message = {'class': 'invite_confroom'}
+        if invite_confroom_command._commandid:
+            message['replyid'] = invite_confroom_command._commandid
+        return {'message': message}

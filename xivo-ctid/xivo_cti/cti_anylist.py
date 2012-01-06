@@ -29,6 +29,8 @@ logger = logging.getLogger('anylist')
 class AnyList(object):
     def __init__(self, newurls):
         self.commandclass = None
+        self._ctiserver = None
+        self._ipbxid = None
         self.requested_list = {}
         self.keeplist = {}
         self.__clean_urls__()
@@ -88,6 +90,8 @@ class AnyList(object):
 
     def setcommandclass(self, commandclass):
         self.commandclass = commandclass
+        self._ctiserver = self.commandclass._ctiserver
+        self._ipbxid = self.commandclass.ipbxid
 
     def setgetter(self, getter):
         self.getter = getter
