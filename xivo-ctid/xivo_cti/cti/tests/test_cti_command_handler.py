@@ -5,7 +5,7 @@ from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from tests.mock import Mock
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.interface_cti import CTI
+from xivo_cti.interfaces.interface_cti import CTI
 
 
 class Test(unittest.TestCase):
