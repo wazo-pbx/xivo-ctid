@@ -56,16 +56,22 @@ class MeetmeList(AnyList):
             return idx
 
     def invite(self, invite_confroom_command):
-        logger.debug('Received: %s', invite_confroom_command)
         ami = self._ctiserver.myami[self._ipbxid].amicl
         params = [('Channel', 'SIP/eh51sh'),
                   ('Exten', '800'),
                   ('Context', 'default'),
                   ('Priority', '1'),
                   ('CallerID', 'Meetme')]
-        rep = ami.sendcommand('originate', params)  # True
-        logger.debug('reply: %s', rep)
-        message = {'class': 'invite_confroom'}
-        if invite_confroom_command._commandid:
-            message['replyid'] = invite_confroom_command._commandid
-        return {'message': message}
+
+        if ami.sendcommand('originate', params):  # True
+            message = {'class': 'invite_confroom',
+                       'message': 'Command sent succesfully'}
+            if invite_confroom_command._commandid:
+                message['replyid'] = invite_confroom_command._commandid
+            return {'message': message}
+        else:
+            message = {'class': 'invite_confroom',
+                       'message': 'AMI sendcommand failed'}
+            if invite_confroom_command._commandid:
+                message['replyid'] = invite_confroom_command._commandid
+            return {'warning': message}
