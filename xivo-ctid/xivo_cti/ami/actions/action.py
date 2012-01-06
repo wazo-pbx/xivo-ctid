@@ -32,4 +32,4 @@ class AMIAction(object):
         return []
 
     def send(self, ami):
-        ami.sendcommand(self.action, self._get_args())
+        return ami.sendcommand(self.action, self._get_args())
