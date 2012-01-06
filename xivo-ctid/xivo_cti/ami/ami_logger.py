@@ -38,7 +38,6 @@ class AMILogger(object):
                      'ModuleLoadReport',
                      'MonitorStart',
                      'MonitorStop',
-                     'MusicOnHold',
                      'OriginateResponse',
                      'ParkedCall',
                      'ParkedCallGiveUp',
