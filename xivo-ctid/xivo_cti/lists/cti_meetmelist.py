@@ -1,7 +1,7 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -20,17 +20,17 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 from xivo_cti.cti_anylist import AnyList
+
+import logging
 
 logger = logging.getLogger('meetmelist')
 
 
 class MeetmeList(AnyList):
-    def __init__(self, newurls = [], useless = None):
-        self.anylist_properties = { 'name' : 'meetme',
-                                    'urloptions' : (1, 5, True)
-                                    }
+    def __init__(self, newurls=[], useless=None):
+        self.anylist_properties = {'name': 'meetme',
+                                   'urloptions': (1, 5, True)}
         AnyList.__init__(self, newurls)
 
     def update(self):
@@ -44,7 +44,7 @@ class MeetmeList(AnyList):
         return ret
 
     def update_computed_fields(self, newlist):
-        for tid, item in newlist.iteritems():
+        for item in newlist.itervalues():
             item['pin_needed'] = 'pin' in item and len(item['pin']) > 0
 
     def idbyroomnumber(self, roomnumber):
