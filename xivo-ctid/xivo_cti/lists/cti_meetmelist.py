@@ -63,7 +63,7 @@ class MeetmeList(AnyList):
                   ('Priority', '1'),
                   ('CallerID', 'Meetme')]
 
-        if ami.sendcommand('originate', params):  # True
+        if ami.sendcommand('originate', params):
             message = {'class': 'invite_confroom',
                        'message': 'Command sent succesfully'}
             if invite_confroom_command._commandid:
