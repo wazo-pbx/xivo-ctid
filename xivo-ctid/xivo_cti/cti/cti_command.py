@@ -10,6 +10,7 @@ class CTICommand(object):
     def __init__(self, msg):
         self._msg = msg
         self._check_required_fields()
+        self.cti_connection = None
         self._commandid = self._msg.get('commandid')
         self._command_class = self._msg['class']
         self.callbacks = self.__class__._callbacks

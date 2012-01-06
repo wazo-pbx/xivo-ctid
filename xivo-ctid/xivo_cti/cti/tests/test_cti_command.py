@@ -25,6 +25,7 @@ class Test(unittest.TestCase):
 
         self.assertEqual(cti_command._commandid, commandid)
         self.assertEqual(cti_command._command_class, command_class)
+        self.assertEqual(cti_command.cti_connection, None)
 
         self.assertEqual(len(CTICommand.required_fields), 1)
 

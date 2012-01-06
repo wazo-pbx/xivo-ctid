@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -26,6 +26,8 @@ import logging
 import os
 import time
 
+
+from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.interfaces import Interfaces
 from xivo_cti import cti_command
 
@@ -47,6 +49,7 @@ class serialJson(object):
 
 
 class CTI(Interfaces):
+
     kind = 'CTI'
     sep = '\n'
 
@@ -55,12 +58,14 @@ class CTI(Interfaces):
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
+        self._cti_command_handler = None
 
     def connected(self, connid):
         """
         Send a banner at login time
         """
         Interfaces.connected(self, connid)
+        self._cti_command_handler = CTICommandHandler(self)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
 
