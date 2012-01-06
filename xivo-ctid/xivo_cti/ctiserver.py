@@ -40,17 +40,17 @@ from xivo import daemonize
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
-from xivo_cti import interface_ami
-from xivo_cti import interface_cti
-from xivo_cti import interface_fagi
-from xivo_cti import interface_info
-from xivo_cti import interface_rcti
-from xivo_cti import interface_webi
 from xivo_cti.alarm import alarm
 from xivo_cti.alarm import scheduler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
+from xivo_cti.interfaces import interface_ami
+from xivo_cti.interfaces import interface_rcti
+from xivo_cti.interfaces import interface_info
+from xivo_cti.interfaces import interface_webi
+from xivo_cti.interfaces import interface_cti
+from xivo_cti.interfaces import interface_fagi
 
 logger = logging.getLogger('main')
 
