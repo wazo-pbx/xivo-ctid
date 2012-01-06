@@ -50,6 +50,7 @@ class Test(unittest.TestCase):
 
         self.assertTrue(ret_val in ret)
         function.assert_called_once_with(command)
+        self.assertEqual(len(cti_handler._commands_to_run), 0)
 
 
 if __name__ == "__main__":

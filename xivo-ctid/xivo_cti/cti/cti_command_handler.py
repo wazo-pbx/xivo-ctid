@@ -15,7 +15,8 @@ class CTICommandHandler(object):
 
     def run_commands(self):
         functions = []
-        for command in self._commands_to_run:
+        while self._commands_to_run:
+            command = self._commands_to_run.pop()
             if not command.cti_connection:
                 command.cti_connection = self._cti_connection
             functions.extend(command.callbacks)
