@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: UTF-8 -*-
 
 # Copyright (C) 2011       Avencall
 # Copyright (C) 2007-2010  Proformatique
@@ -17,53 +17,56 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__author__ = 'Corentin Le Gall'
-
-import getopt
-import os
+import argparse
 import sys
-
 from xivo_cti import ctiserver
 from xivo_cti import cti_config
 
-try:
-    cti_config.DAEMONNAME = os.path.basename(sys.argv[0])
-except:
-    cti_config.DAEMONNAME = 'ctid'
 
-GETOPT_SHORTOPTS = 'dc:C:p:l:i:P:'
-GETOPT_LONGOPTS = ['debug',
-                   'config=',
-                   'confoverride=',
-                   'pidfile=',
-                   'logfile=',
-                   'ip=',
-                   'portdelta=',
-                   ]
-
-
-def parse_command_line():
-    for opt, arg in getopt.getopt(sys.argv[1:], GETOPT_SHORTOPTS, GETOPT_LONGOPTS)[0]:
-        if opt == '-d':
-            cti_config.DEBUG_MODE = True
-        elif opt == '-c':
-            cti_config.XIVO_CONF_FILE = arg
-        elif opt == '-C':
-            cti_config.XIVO_CONF_OVER = arg
-        elif opt == '-p':
-            cti_config.PIDFILE = arg
-        elif opt == '-l':
-            cti_config.LOGFILENAME = arg
-        elif opt == '-i':
-            cti_config.XIVOIP = arg
-        elif opt == '-P':
-            cti_config.PORTDELTA = int(arg)
-
-
-if __name__ == '__main__':
-    parse_command_line()
-    if cti_config.XIVOIP != 'localhost':
-        cti_config.XIVO_CONF_FILE = 'https://%s/cti/json.php/restricted/configuration' % cti_config.XIVOIP
+def main():
+    _parse_args(sys.argv[1:])
     ctid = ctiserver.CTIServer()
     ctid.setup()
     ctid.run()
+
+
+def _parse_args(args):
+    parser = _new_parser()
+    parsed_args = parser.parse_args(args)
+    _process_parsed_args(parsed_args)
+
+
+def _new_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-c', '--config')
+    parser.add_argument('-C', '--confoverride')
+    parser.add_argument('-p', '--pidfile')
+    parser.add_argument('-l', '--logfile')
+    parser.add_argument('-i', '--ip')
+    parser.add_argument('-P', '--portdelta', type=int)
+    return parser
+
+
+def _process_parsed_args(parsed_args):
+    if parsed_args.debug:
+        cti_config.DEBUG_MODE = parsed_args.debug
+    if parsed_args.config:
+        cti_config.XIVO_CONF_FILE = parsed_args.config
+    if parsed_args.confoverride:
+        cti_config.XIVO_CONF_OVER = parsed_args.confoverride
+    if parsed_args.pidfile:
+        cti_config.PIDFILE = parsed_args.pidfile
+    if parsed_args.logfile:
+        cti_config.LOGFILENAME = parsed_args.logfile
+    if parsed_args.ip:
+        cti_config.XIVOIP = parsed_args.ip
+    if parsed_args.portdelta:
+        cti_config.PORTDELTA = parsed_args.portdelta
+
+    if cti_config.XIVOIP != 'localhost':
+        cti_config.XIVO_CONF_FILE = 'https://%s/cti/json.php/restricted/configuration' % cti_config.XIVOIP
+
+
+if __name__ == '__main__':
+    main()
