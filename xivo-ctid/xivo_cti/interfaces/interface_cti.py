@@ -28,8 +28,8 @@ import time
 
 
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.interfaces import Interfaces
 from xivo_cti import cti_command
+from xivo_cti.interfaces import interfaces
 
 logger = logging.getLogger('interface_cti')
 
@@ -48,13 +48,13 @@ class serialJson(object):
         return cjson.encode(obj)
 
 
-class CTI(Interfaces):
+class CTI(interfaces.Interfaces):
 
     kind = 'CTI'
     sep = '\n'
 
     def __init__(self, ctiserver):
-        Interfaces.__init__(self, ctiserver)
+        interfaces.Interfaces.__init__(self, ctiserver)
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
@@ -64,7 +64,7 @@ class CTI(Interfaces):
         """
         Send a banner at login time
         """
-        Interfaces.connected(self, connid)
+        interfaces.Interfaces.connected(self, connid)
         self._cti_command_handler = CTICommandHandler(self)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
@@ -83,7 +83,6 @@ class CTI(Interfaces):
                            self.connection_details)
 
     def manage_connection(self, msg):
-        z = list()
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
@@ -95,9 +94,21 @@ class CTI(Interfaces):
             multimsg = msg.split(self.sep)
             for usefulmsgpart in multimsg:
                 cmd = self.serial.decode(usefulmsgpart)
-                nc = cti_command.Command(self, cmd)
-                z.extend(nc.parse())
-        return z
+                return self._run_functions(cmd)
+        return []
+
+    def _run_functions(self, decoded_command):
+        replies = []
+
+        # Commands from the cti_command.Command class
+        command = cti_command.Command(self, decoded_command)
+        replies.extend(command.parse())
+
+        # Commands from the CTICommandHandler
+        self._cti_command_handler.parse_message(decoded_command)
+        replies.extend(self._cti_command_handler.run_commands())
+
+        return [reply for reply in replies if reply]
 
     def set_as_transfer(self, direction, faxobj):
         logger.info('%s set_as_transfer %s', faxobj.fileid, direction)

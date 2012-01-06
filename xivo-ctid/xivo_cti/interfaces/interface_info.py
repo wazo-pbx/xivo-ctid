@@ -24,10 +24,10 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 Info Interface
 """
 
+from xivo_cti.interfaces import interfaces
+
 import logging
 import time
-
-from xivo_cti.interfaces import Interfaces
 
 logger = logging.getLogger('interface_info')
 
@@ -65,20 +65,23 @@ infohelptext = ['',
                 'reverse <dirname> <number>   : lookup the number in the given directory',
                 '']
 
-class INFO(Interfaces):
+
+class INFO(interfaces.Interfaces):
+
     kind = 'INFO'
     sep = '\n'
+
     def __init__(self, ctiserver):
-        Interfaces.__init__(self, ctiserver)
+        interfaces.Interfaces.__init__(self, ctiserver)
         self.dumpami_enable = []
         self.dumpami_disable = []
 
     def connected(self, connid):
-        Interfaces.connected(self, connid)
+        interfaces.Interfaces.connected(self, connid)
 
     def disconnected(self, msg):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), msg))
-        Interfaces.disconnected(self, msg)
+        interfaces.Interfaces.disconnected(self, msg)
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid

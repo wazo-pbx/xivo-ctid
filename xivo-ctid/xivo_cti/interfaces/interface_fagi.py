@@ -21,22 +21,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.interfaces import Interfaces
+
+from xivo_cti.interfaces import interfaces
 
 
-class FAGI(Interfaces):
+class FAGI(interfaces.Interfaces):
     kind = 'FAGI'
     sep = '\n'
 
     def __init__(self, ctiserver):
-        Interfaces.__init__(self, ctiserver)
+        interfaces.Interfaces.__init__(self, ctiserver)
         self.stack = list()
 
     def connected(self, connid):
-        Interfaces.connected(self, connid)
+        interfaces.Interfaces.connected(self, connid)
 
     def disconnected(self, msg):
-        Interfaces.disconnected(self, msg)
+        interfaces.Interfaces.disconnected(self, msg)
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid

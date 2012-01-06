@@ -21,17 +21,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_cti.interfaces import interfaces
+
 import cjson
 import hashlib
 import logging
 import ssl
 import socket
-from xivo_cti.interfaces import Interfaces
 
 logger = logging.getLogger('interface_rcti')
 
 
-class RCTI(Interfaces):
+class RCTI(interfaces.Interfaces):
     kind = 'RCTI'
 
     def __init__(self, ctiserver, ipbxid, config):

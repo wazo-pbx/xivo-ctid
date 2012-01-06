@@ -1,6 +1,5 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
-
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 # This program is free software; you can redistribute it and/or modify
@@ -23,11 +22,10 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 """
 WEBI Interface
 """
+from xivo_cti.interfaces import interfaces
 
 import logging
 import re
-
-from xivo_cti.interfaces import Interfaces
 
 logger = logging.getLogger('interface_webi')
 
@@ -68,18 +66,19 @@ UPDATE_REQUESTS = [
     ]
 
 
-class WEBI(Interfaces):
+class WEBI(interfaces.Interfaces):
+
     kind = 'WEBI'
     sep = '\\n'  # this instead of \n is done in order to match wrong WEBI implementation
 
     def __init__(self, ctiserver):
-        Interfaces.__init__(self, ctiserver)
+        interfaces.Interfaces.__init__(self, ctiserver)
 
     def connected(self, connid):
-        Interfaces.connected(self, connid)
+        interfaces.Interfaces.connected(self, connid)
 
     def disconnected(self, msg):
-        Interfaces.disconnected(self, msg)
+        interfaces.Interfaces.disconnected(self, msg)
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid

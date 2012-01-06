@@ -15,6 +15,7 @@ setup(
               'xivo_cti.alarm',
               'xivo_cti.ami',
               'xivo_cti.lists',
+              'xivo_cti.interfaces',
               'xivo_cti.statistics',
               'xivo_cti.dao',
               'xivo_cti.dao.alchemy',
