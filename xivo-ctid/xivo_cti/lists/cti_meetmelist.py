@@ -23,7 +23,9 @@
 from xivo_cti.cti_anylist import AnyList
 
 import logging
+
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
+from xivo_cti.ami.actions.originate import Originate
 
 logger = logging.getLogger('meetmelist')
 
@@ -57,13 +59,14 @@ class MeetmeList(AnyList):
 
     def invite(self, invite_confroom_command):
         ami = self._ctiserver.myami[self._ipbxid].amicl
-        params = [('Channel', 'SIP/eh51sh'),
-                  ('Exten', '800'),
-                  ('Context', 'default'),
-                  ('Priority', '1'),
-                  ('CallerID', 'Meetme')]
+        originate = Originate()
+        originate.channel = 'SIP/eh51sh'
+        originate.exten = '800'
+        originate.context = 'default'
+        originate.priority = '1'
+        originate.callerid = 'Conference 800'
 
-        if ami.sendcommand('originate', params):
+        if originate.send(ami):
             message = {'class': 'invite_confroom',
                        'message': 'Command sent succesfully'}
             if invite_confroom_command._commandid:
