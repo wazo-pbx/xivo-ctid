@@ -65,6 +65,48 @@ class Test(unittest.TestCase):
         self.assertTrue(function in command.callbacks)
         self.assertEqual(len(command.callbacks), 1)
 
+    def test_get_reply(self):
+        command_class = 'return_test'
+        command = CTICommand({'class': command_class})
+        command._command_class = command_class
+
+        reply = command.get_reply('message', 'This is the test message', close_connection=False)
+
+        self.assertFalse('closemenow' in reply)
+        self.assertTrue('message' in reply)
+        self.assertEqual(reply['message']['message'], 'This is the test message')
+        self.assertEqual(reply['class'], command_class)
+        self.assertFalse('replyid' in reply)
+
+        commandid = '12345'
+        command._commandid = commandid
+
+        reply = command.get_reply('message', 'Test 2', True)
+
+        self.assertTrue('closemenow' in reply)
+        self.assertEqual(reply['replyid'], commandid)
+
+    def test_get_warning(self):
+        command_class = 'warning_test'
+        command = CTICommand({'class': command_class})
+        command._command_class = command_class
+
+        reply = command.get_warning('Unknown command')
+
+        self.assertTrue('warning' in reply)
+        self.assertEqual(reply['warning']['message'], 'Unknown command')
+
+    def test_get_message(self):
+        command_class = 'message_test'
+        command = CTICommand({'class': command_class})
+        command._command_class = command_class
+
+        reply = command.get_message('Test completed successfully', True)
+
+        self.assertTrue('closemenow' in reply, 'closemenow should be present when passing close_connection -> True')
+        self.assertTrue('message' in reply)
+        self.assertEqual(reply['message']['message'], 'Test completed successfully')
+
 
 if __name__ == "__main__":
     unittest.main()

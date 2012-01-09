@@ -164,8 +164,8 @@ class Command(object):
         for extramessage in self._othermessages:
             bmsg = extramessage.get('message')
             bmsg['class'] = self.command
-            z.append( { 'dest' : extramessage.get('dest'),
-                        'message' : bmsg } )
+            z.append({'dest': extramessage.get('dest'),
+                      'message': bmsg})
         return z
 
     def regcommand_login_id(self):

@@ -26,6 +26,7 @@ import logging
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.ami.actions.originate import Originate
+from xivo_cti.cti.missing_field_exception import MissingFieldException
 
 logger = logging.getLogger('meetmelist')
 
@@ -60,38 +61,32 @@ class MeetmeList(AnyList):
     def invite(self, invite_confroom_command):
         ami = self._ctiserver.myami[self._ipbxid].amicl
 
-        (_, invitee_id) = invite_confroom_command._invitee.split('/', 1)
+        try:
+            (_, invitee_id) = invite_confroom_command._invitee.split('/', 1)
 
-        originate = Originate()
+            originate = Originate()
 
-        phones = self.commandclass.xod_config['phones'].keeplist
-        user_id = int(invite_confroom_command.cti_connection.connection_details['userid'])
-        for phone in phones.itervalues():
-            if phone['iduserfeatures'] == int(invitee_id):
-                originate.channel = '%s/%s' % (phone['protocol'], phone['name'])
-            if phone['iduserfeatures'] == user_id:
-                requesters_channel = '%s/%s' % (phone['protocol'].upper(), phone['name'])
+            phones = self.commandclass.xod_config['phones'].keeplist
+            user_id = int(invite_confroom_command.cti_connection.connection_details['userid'])
+            for phone in phones.itervalues():
+                if phone['iduserfeatures'] == int(invitee_id):
+                    originate.channel = '%s/%s' % (phone['protocol'], phone['name'])
+                if phone['iduserfeatures'] == user_id:
+                    requesters_channel = '%s/%s' % (phone['protocol'].upper(), phone['name'])
 
-        meetmes_status = self.commandclass.xod_status['meetmes']
-        for meetid, status in meetmes_status.iteritems():
-            channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
-            if requesters_channel in channels:
-                meetme = self.commandclass.xod_config['meetmes'].keeplist[meetid]
-
-        originate.exten = meetme['confno']
-        originate.context = meetme['context']
-        originate.priority = '1'
-        originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
+            meetmes_status = self.commandclass.xod_status['meetmes']
+            for meetid, status in meetmes_status.iteritems():
+                channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
+                if requesters_channel in channels:
+                    meetme = self.keeplist[meetid]
+                    originate.exten = meetme['confno']
+                    originate.context = meetme['context']
+                    originate.priority = '1'
+                    originate.callerid = 'Conference %s <%s>' % (meetme.get('name', ''), meetme['confno'])
+        except KeyError, MissingFieldException:
+            return invite_confroom_command.get_warning('Cannot complete command, missing info')
 
         if originate.send(ami):
-            message = {'class': 'invite_confroom',
-                       'message': 'Command sent succesfully'}
-            if invite_confroom_command._commandid:
-                message['replyid'] = invite_confroom_command._commandid
-            return {'message': message}
+            return invite_confroom_command.get_message('Command sent succesfully')
         else:
-            message = {'class': 'invite_confroom',
-                       'message': 'AMI sendcommand failed'}
-            if invite_confroom_command._commandid:
-                message['replyid'] = invite_confroom_command._commandid
-            return {'warning': message}
+            return invite_confroom_command.get_warning('Failed to send the AMI command')
