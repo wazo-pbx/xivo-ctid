@@ -14,6 +14,7 @@ setup(
               'xivo_cti.model',
               'xivo_cti.alarm',
               'xivo_cti.ami',
+              'xivo_cti.ami.actions',
               'xivo_cti.lists',
               'xivo_cti.interfaces',
               'xivo_cti.statistics',
