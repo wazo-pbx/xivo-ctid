@@ -58,6 +58,15 @@ class MeetmeList(AnyList):
         if idx in self.keeplist:
             return idx
 
+    def find_phone_member(self, protocol, name):
+        protocol = protocol.upper()
+        channel_start = '%s/%s' % (protocol, name)
+        statuses = self.commandclass.xod_status['meetmes']
+        for meetme_id, status in statuses.iteritems():
+            channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
+            if channel_start in channels:
+                return meetme_id
+
     def invite(self, invite_confroom_command):
         ami = self._ctiserver.myami[self._ipbxid].amicl
 
@@ -72,17 +81,14 @@ class MeetmeList(AnyList):
                 if phone['iduserfeatures'] == int(invitee_id):
                     originate.channel = '%s/%s' % (phone['protocol'], phone['name'])
                 if phone['iduserfeatures'] == user_id:
-                    requesters_channel = '%s/%s' % (phone['protocol'].upper(), phone['name'])
+                    meetme_id = self.find_phone_member(phone['protocol'], phone['name'])
 
-            meetmes_status = self.commandclass.xod_status['meetmes']
-            for meetid, status in meetmes_status.iteritems():
-                channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
-                if requesters_channel in channels:
-                    meetme = self.keeplist[meetid]
-                    originate.exten = meetme['confno']
-                    originate.context = meetme['context']
-                    originate.priority = '1'
-                    originate.callerid = 'Conference %s <%s>' % (meetme.get('name', ''), meetme['confno'])
+            if meetme_id:
+                meetme = self.keeplist[meetme_id]
+                originate.exten = meetme['confno']
+                originate.context = meetme['context']
+                originate.priority = '1'
+                originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
         except KeyError, MissingFieldException:
             return invite_confroom_command.get_warning('Cannot complete command, missing info')
 
