@@ -365,9 +365,6 @@ class Command(object):
 
     # end of login/logout related commands
 
-    def regcommand_callcampaign(self):
-        return {}
-
     def regcommand_chitchat(self):
         reply = {}
         chitchattext = self._commanddict.get('text')
@@ -679,9 +676,6 @@ class Command(object):
     # hangup : any channel is hanged up
 
     # for transfers, hangups, ...
-
-    def ipbxcommand_hangupme(self):
-        return []
 
     def ipbxcommand_dial(self):
         self._commanddict['source'] = 'user:%s/%s' % (self.ripbxid, self.ruserid)
