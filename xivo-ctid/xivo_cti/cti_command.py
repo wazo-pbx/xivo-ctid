@@ -1007,18 +1007,6 @@ class Command(object):
                'amiargs': (channel.get('id'))}
         return [rep, ]
 
-    def ipbxcommand_answer(self):
-        print self.ipbxcommand, self._commanddict
-        return []
-
-    def ipbxcommand_cancel(self):
-        print self.ipbxcommand, self._commanddict
-        return []
-
-    def ipbxcommand_refuse(self):
-        print self.ipbxcommand, self._commanddict
-        return []
-
     def ipbxcommand_agentlogin(self):
         agentphonenumber = self._commanddict.get('agentphonenumber')
         memberstatus = None
