@@ -992,10 +992,6 @@ class Command(object):
             logger.warning('Atxfer failed %s', self._commanddict)
         return [rep, ]
 
-    def ipbxcommand_transfercancel(self):
-        print self.ipbxcommand, self._commanddict
-        return []
-
     def ipbxcommand_intercept(self):
         self._commanddict['source'] = self._commanddict['tointercept']
         self._commanddict['destination'] = self._commanddict['catcher']
