@@ -279,7 +279,7 @@ class Command(object):
 
         iserr = self.__check_user_connection__()
         if iserr is not None:
-            logger.warning('%s - user _connection : %s', head, iserr)
+            logger.warning('%s - user connection : %s', head, iserr)
             return iserr
 
         self.__connect_user__(state, capaid)
@@ -351,14 +351,14 @@ class Command(object):
         cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['_connection'] = 'yes'
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
 
     def __disconnect_user__(self):
         cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['_connection'] = None
+        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = None
         availstate = self._commanddict.get('availstate')
         # disconnected vs. invisible vs. recordstatus ?
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
