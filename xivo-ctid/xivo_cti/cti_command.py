@@ -998,7 +998,7 @@ class Command(object):
     def ipbxcommand_hangup(self):
         channel = self.parseid(self._commanddict.get('channelids'))
         rep = {'amicommand': 'hangup',
-               'amiargs': (channel.get('id'))}
+               'amiargs': [channel.get('id')]}
         return [rep, ]
 
     def ipbxcommand_agentlogin(self):
