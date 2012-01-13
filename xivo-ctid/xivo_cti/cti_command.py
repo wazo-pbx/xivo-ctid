@@ -55,7 +55,6 @@ REGCOMMANDS = [
     'filetransfer',
     'chitchat',
 
-    'callcampaign',
     'logfromclient',
     'getqueuesstats',
     'sheet',
@@ -65,14 +64,13 @@ REGCOMMANDS = [
     ]
 
 IPBXCOMMANDS = [
-    'answer', 'refuse',
     # originate-like commands
     'dial', 'originate',
     # transfer-like commands
     'intercept', 'parking',
     'transfer', 'atxfer',
     # hangup-like commands
-    'hangup', 'hangupme', 'cancel', 'transfercancel',
+    'hangup',
 
     'sipnotify',
     'mailboxcount',
@@ -665,13 +663,8 @@ class Command(object):
 
     # intercept
     # transfer
-    # transfercancel
     # atxfer
     # park
-
-    # hangupme : the requester hangs up one of his channels
-    # answer : the requester answers one of its calls
-    # refuse : the requester refuses one of its calls
 
     # hangup : any channel is hanged up
 
