@@ -27,7 +27,7 @@ from xivo_cti.ami.actions.action import AMIAction
 class Originate(AMIAction):
 
     _required_fields = ['channel']
-    _optionnal_dependencies = [('exten', 'context', 'priority'),
+    _optional_dependencies = [('exten', 'context', 'priority'),
                                ('application', 'data')]
 
     def __init__(self):
@@ -70,6 +70,6 @@ class Originate(AMIAction):
             args.append(('Account', self.account))
         if self.async:
             args.append(('Async', self.async))
-        if len(self.codecs):
+        if self.codecs:
             args.append(('Codecs', ','.join(self.codecs)))
         return args

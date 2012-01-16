@@ -27,23 +27,27 @@ from xivo_cti.cti.missing_field_exception import MissingFieldException
 class AMIAction(object):
 
     _required_fields = []  # Required fields to send this action
-    _optionnal_dependencies = []  # List of tupple of mutualy exclusive dependencies see originate
+    _optional_dependencies = []  # List of tupple of mutualy exclusive dependencies see originate
 
     def __init__(self):
         self.action = None
-        self.actionid = None
 
     def _fields_missing(self):
-        for field in self.__class__._required_fields:
-            if not hasattr(self, field) or not getattr(self, field):
+        for field in self._required_fields:
+            if not self._has_field(field):
                 return True
-        return self._optionnal_dependency_missing()
+        return self._optional_dependencies_missing()
 
-    def _optionnal_dependency_missing(self):
-        for dependency_list in self.__class__._optionnal_dependencies:
+    def _has_field(self, field_name):
+        if hasattr(self, field_name) and getattr(self, field_name):
+            return True
+        return False
+
+    def _optional_dependencies_missing(self):
+        for dependency_list in self._optional_dependencies:
             missed_field = False
             for field in dependency_list:
-                if not hasattr(self, field) or not getattr(self, field):
+                if not self._has_field(field):
                     missed_field = True
             if not missed_field:
                 return False
@@ -51,7 +55,7 @@ class AMIAction(object):
 
     def _get_args(self):
         if self._fields_missing():
-            raise MissingFieldException('Cannot send AMI action %s' % self.action)
+            raise MissingFieldException('Cannot send AMI action %r' % self.action)
         return []
 
     def send(self, ami):

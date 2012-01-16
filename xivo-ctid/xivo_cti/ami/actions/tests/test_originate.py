@@ -44,7 +44,6 @@ class Test(unittest.TestCase):
     def test_originate(self):
         originate = Originate()
         self.assertEqual(originate.action, 'Originate')
-        self.assertEqual(originate.actionid, None)
         self.assertEqual(originate.channel, None)
         self.assertEqual(originate.exten, None)
         self.assertEqual(originate.context, None)
@@ -67,16 +66,16 @@ class Test(unittest.TestCase):
     def test_optionnal_dependency_missing(self):
         originate = Originate()
         originate.channel = 'SIP/123'
-        self.assertTrue(originate._optionnal_dependency_missing())
+        self.assertTrue(originate._optional_dependencies_missing())
         originate.exten = '1234'
         originate.context = 'default'
         originate.priority = 1
-        self.assertFalse(originate._optionnal_dependency_missing())
+        self.assertFalse(originate._optional_dependencies_missing())
         del originate.priority
-        self.assertTrue(originate._optionnal_dependency_missing())
+        self.assertTrue(originate._optional_dependencies_missing())
         originate.application = 'MyApp'
         originate.data = 'mydata'
-        self.assertFalse(originate._optionnal_dependency_missing())
+        self.assertFalse(originate._optional_dependencies_missing())
 
     def test_get_arg(self):
         originate = Originate()
@@ -107,7 +106,3 @@ class Test(unittest.TestCase):
                                                  ('Exten', '800'),
                                                  ('Context', 'default'),
                                                  ('Priority', 1)])
-
-
-if __name__ == "__main__":
-    unittest.main()
