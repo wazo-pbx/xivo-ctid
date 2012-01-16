@@ -1,7 +1,4 @@
 import weakref
-import logging
-
-logger = logging.getLogger('weakmethod')
 
 #    http://code.activestate.com/recipes/81253-weakmethod/
 
@@ -16,7 +13,6 @@ class WeakMethodBound(object):
         if self.instance() == None:
             raise TypeError('Method call on a dead object')
         ret = self.function(self.instance(), *args)
-        logger.debug('returning %s', ret)
         return ret
 
     def dead(self):
