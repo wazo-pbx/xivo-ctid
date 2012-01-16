@@ -38,7 +38,7 @@ REQUIRED_LOGIN_FIELD = ['company', 'userlogin', 'ident',
                        'xivoversion', 'git_hash', 'git_date']
 
 LOGINCOMMANDS = [
-    'login_id', 'login_pass', 'login_capas'
+    'login_pass', 'login_capas'
     ]
 
 REGCOMMANDS = [
@@ -165,63 +165,6 @@ class Command(object):
             z.append({'dest': extramessage.get('dest'),
                       'message': bmsg})
         return z
-
-    def regcommand_login_id(self):
-        head = 'LOGINFAIL - login_id'
-        missings = []
-        for argum in REQUIRED_LOGIN_FIELD:
-            if argum not in self._commanddict:
-                missings.append(argum)
-        if len(missings) > 0:
-            return 'missing:%s' % ','.join(missings)
-
-        # warns that the former session did not exit correctly (on a given computer)
-        if 'lastlogout-stopper' in self._commanddict and 'lastlogout-datetime' in self._commanddict:
-            if not self._commanddict['lastlogout-stopper'] or not self._commanddict['lastlogout-datetime']:
-                logger.warning('lastlogout userlogin=%s stopper=%s datetime=%s',
-                               self._commanddict['userlogin'],
-                               self._commanddict['lastlogout-stopper'],
-                               self._commanddict['lastlogout-datetime'])
-
-        # trivial checks (version, client kind) dealing with the software used
-        xivoversion = self._commanddict.get('xivoversion')
-        if xivoversion != XIVOVERSION_NUM:
-            return 'xivoversion_client:%s;%s' % (xivoversion, XIVOVERSION_NUM)
-        rcsversion = '%s-%s' % (self._commanddict.get('git_date'), self._commanddict.get('git_hash'))
-
-        ident = self._commanddict.get('ident')
-        whatsmyos = ident.split('-')[0]
-        if whatsmyos.lower() not in ['x11', 'win', 'mac',
-                                     'ctiserver',
-                                     'web', 'android', 'ios']:
-            return 'wrong_client_os_identifier:%s' % whatsmyos
-
-        # user match
-        if self._commanddict.get('userlogin'):
-            ipbxid = self._ctiserver.myipbxid
-            saferef = self._ctiserver.safe.get(ipbxid)
-            userid = saferef.user_find(self._commanddict.get('userlogin'),
-                                       self._commanddict.get('company'))
-            if userid:
-                self._connection.connection_details.update({'ipbxid': ipbxid,
-                                                            'userid': userid})
-
-        if not self._connection.connection_details.get('userid'):
-            logger.warning('%s - unknown login : %s', head, self._commanddict.get('userlogin'))
-            # do not give a hint that the login might be good or wrong
-            # since this is the first part of the handshake, we shall anyway proceed "as if"
-            # until the password step, before sending a "wrong password" message ...
-
-        self._connection.connection_details['prelogin'] = {
-            'cticlientos': whatsmyos,
-            'version': rcsversion,
-            'sessionid': ''.join(random.sample(ALPHANUMS, 10))
-            }
-
-        reply = {'xivoversion': XIVOVERSION_NUM,
-                 'version': '7777',
-                 'sessionid': self._connection.connection_details['prelogin']['sessionid']}
-        return reply
 
     def regcommand_login_pass(self):
         head = 'LOGINFAIL - login_pass'

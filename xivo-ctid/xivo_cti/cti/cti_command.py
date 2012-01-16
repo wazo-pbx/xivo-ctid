@@ -30,13 +30,18 @@ class CTICommand(object):
     conditions = None
     _callbacks = []
 
-    def __init__(self, msg):
+    def __init__(self):
+        self._msg = None
+        self.cti_connection = None
+        self.command_class = None
+        self.commandid = None
+        self.callbacks = list(self.__class__._callbacks)
+
+    def _init_from_dict(self, msg):
         self._msg = msg
         self._check_required_fields()
-        self.cti_connection = None
-        self._commandid = self._msg.get('commandid')
-        self._command_class = self._msg['class']
-        self.callbacks = self.__class__._callbacks
+        self.commandid = self._msg.get('commandid')
+        self.command_class = self._msg['class']
 
     def _check_required_fields(self):
         for field in self.__class__.required_fields:
@@ -44,10 +49,10 @@ class CTICommand(object):
                 raise MissingFieldException(u'Missing %s in CTI command' % field)
 
     def get_reply(self, message_type, message, close_connection=False):
-        rep = {'class': self._command_class,
+        rep = {'class': self.command_class,
                message_type: {'message': message}}
-        if self._commandid:
-            rep['replyid'] = self._commandid
+        if self.commandid:
+            rep['replyid'] = self.commandid
         if close_connection:
             rep['closemenow'] = True
         return rep
@@ -73,3 +78,9 @@ class CTICommand(object):
     @classmethod
     def register_callback(cls, function):
         cls._callbacks.append(function)
+
+    @classmethod
+    def from_dict(cls, msg):
+        instance = cls()
+        instance._init_from_dict(msg)
+        return instance

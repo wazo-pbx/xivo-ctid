@@ -24,6 +24,7 @@ import logging
 import urllib2
 import cjson
 import ssl
+import string
 
 logger = logging.getLogger('cti_config')
 
@@ -40,6 +41,8 @@ XIVOIP = 'localhost'
 XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
 XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
 XIVO_CONF_OVER = None
+XIVOVERSION_NUM = '1.2'
+ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
 class Config(object):

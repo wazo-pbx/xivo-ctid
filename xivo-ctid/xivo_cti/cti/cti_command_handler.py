@@ -34,7 +34,7 @@ class CTICommandHandler(object):
     def parse_message(self, message):
         command_classes = self._command_factory.get_command(message)
         for command_class in command_classes:
-            self._commands_to_run.append(command_class(message))
+            self._commands_to_run.append(command_class.from_dict(message))
 
     def run_commands(self):
         functions = []

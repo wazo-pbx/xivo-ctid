@@ -29,6 +29,7 @@ from tests.mock import Mock
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.cti.commands.login_id import LoginID
 
 
 class Test(unittest.TestCase):
@@ -60,13 +61,40 @@ class Test(unittest.TestCase):
         command = cti_handler._commands_to_run[0]
         self.assertTrue(isinstance(command, InviteConfroom))
 
+    def test_parse_login_id(self):
+        cti_handler = CTICommandHandler(self._cti_connection)
+
+        self.assertEqual(len(cti_handler._commands_to_run), 0)
+
+        login_id_msg = {"class": "login_id",
+                        "commandid": 1215825599,
+                        "company": "default",
+                        "git_date": "1326300351",
+                        "git_hash": "17484c6",
+                        "ident": "X11-LE-28863",
+                        "lastlogout-datetime": "2012-01-16T07:43:34",
+                        "lastlogout-stopper": "connection_lost",
+                        "userlogin": "pascal",
+                        "version": "9999",
+                        "xivoversion": "1.2"}
+
+        cti_handler.parse_message(login_id_msg)
+
+        self.assertEqual(len(cti_handler._commands_to_run), 1)
+
+        command = cti_handler._commands_to_run[0]
+
+        self.assertTrue(isinstance(command, LoginID))
+
     def test_run_command(self):
         function = Mock()
+        function2 = Mock()
         ret_val = {'message': 'test_return'}
         function.return_value = ret_val
         CTICommand.register_callback(function)
+        InviteConfroom.register_callback(function2)
         cti_handler = CTICommandHandler(self._cti_connection)
-        command = CTICommand({'class': 'test_function'})
+        command = CTICommand.from_dict({'class': 'test_function'})
         cti_handler._commands_to_run.append(command)
 
         ret = cti_handler.run_commands()
@@ -74,7 +102,3 @@ class Test(unittest.TestCase):
         self.assertTrue(ret_val in ret)
         function.assert_called_once_with(command)
         self.assertEqual(len(cti_handler._commands_to_run), 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

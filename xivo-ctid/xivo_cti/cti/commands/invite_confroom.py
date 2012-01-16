@@ -29,9 +29,13 @@ class InviteConfroom(CTICommand):
 
     required_fields = ['class', 'invitee']
     conditions = [('class', 'invite_confroom')]
+    _callbacks = []
 
-    def __init__(self, msg):
-        super(InviteConfroom, self).__init__(msg)
+    def __init__(self):
+        super(InviteConfroom, self).__init__()
+
+    def _init_from_dict(self, msg):
+        super(InviteConfroom, self)._init_from_dict(msg)
         self._invitee = msg['invitee']
 
 CTICommandFactory.register_class(InviteConfroom)

@@ -37,31 +37,34 @@ class Test(unittest.TestCase):
         pass
 
     def test_cti_command(self):
+        cti_command = CTICommand()
+
+        self.assertEqual(cti_command.commandid, None)
+        self.assertEqual(cti_command.command_class, None)
+        self.assertEqual(cti_command._msg, None)
+
+    def test_from_dict(self):
         command_class = u'test_command'
-        cti_command = CTICommand({'class': command_class})
-
-        self.assertEqual(cti_command._commandid, None)
-        self.assertEqual(cti_command._command_class, command_class)
-
         commandid = '12345'
-        cti_command = CTICommand({'class': command_class, 'commandid': commandid})
+        cti_command = CTICommand.from_dict({'class': command_class, 'commandid': commandid})
 
-        self.assertEqual(cti_command._commandid, commandid)
-        self.assertEqual(cti_command._command_class, command_class)
+        self.assertEqual(cti_command.commandid, commandid)
+        self.assertEqual(cti_command.command_class, command_class)
         self.assertEqual(cti_command.cti_connection, None)
 
         self.assertEqual(len(CTICommand.required_fields), 1)
 
     def test_required_fields(self):
         try:
-            CTICommand({})
+            cti_command = CTICommand()
+            cti_command._init_from_dict({})
             self.assertTrue(False, u'Should raise an exception')
         except MissingFieldException:
             self.assertTrue(True, u'Should raise an exception')
 
         try:
             command_class = u'test_command'
-            CTICommand({'class': command_class})
+            CTICommand.from_dict({'class': command_class})
             self.assertTrue(True, u'Should not raise an exception')
         except MissingFieldException:
             self.assertTrue(False, u'Should raise an exception')
@@ -75,7 +78,7 @@ class Test(unittest.TestCase):
         self.assertFalse(CTICommand.match_message({'class': 'test_command'}))
 
     def test_register_callback(self):
-        command = CTICommand({'class': 'callback_test'})
+        command = CTICommand().from_dict({'class': 'callback_test'})
 
         self.assertEqual(command.callbacks, [])
 
@@ -84,14 +87,14 @@ class Test(unittest.TestCase):
 
         self.assertTrue(function in CTICommand._callbacks)
 
-        command = CTICommand({'class': 'callback_test'})
+        command = CTICommand.from_dict({'class': 'callback_test'})
         self.assertTrue(function in command.callbacks)
         self.assertEqual(len(command.callbacks), 1)
 
     def test_get_reply(self):
         command_class = 'return_test'
-        command = CTICommand({'class': command_class})
-        command._command_class = command_class
+        command = CTICommand.from_dict({'class': command_class})
+        command.command_class = command_class
 
         reply = command.get_reply('message', 'This is the test message', close_connection=False)
 
@@ -102,7 +105,7 @@ class Test(unittest.TestCase):
         self.assertFalse('replyid' in reply)
 
         commandid = '12345'
-        command._commandid = commandid
+        command.commandid = commandid
 
         reply = command.get_reply('message', 'Test 2', True)
 
@@ -111,8 +114,8 @@ class Test(unittest.TestCase):
 
     def test_get_warning(self):
         command_class = 'warning_test'
-        command = CTICommand({'class': command_class})
-        command._command_class = command_class
+        command = CTICommand.from_dict({'class': command_class})
+        command.command_class = command_class
 
         reply = command.get_warning('Unknown command')
 
@@ -121,8 +124,8 @@ class Test(unittest.TestCase):
 
     def test_get_message(self):
         command_class = 'message_test'
-        command = CTICommand({'class': command_class})
-        command._command_class = command_class
+        command = CTICommand.from_dict({'class': command_class})
+        command.command_class = command_class
 
         reply = command.get_message('Test completed successfully', True)
 

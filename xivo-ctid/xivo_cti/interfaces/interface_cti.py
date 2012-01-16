@@ -28,10 +28,14 @@ import time
 
 
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti import cti_command
+from xivo_cti import cti_command, cti_config
 from xivo_cti.interfaces import interfaces
+from xivo_cti.cti.commands.login_id import LoginID
+import random
 
 logger = logging.getLogger('interface_cti')
+
+ALLOWED_OS = ['x11', 'win', 'mac', 'ctiserver', 'web', 'android', 'ios']
 
 
 class serialJson(object):
@@ -68,6 +72,10 @@ class CTI(interfaces.Interfaces):
         self._cti_command_handler = CTICommandHandler(self)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
+        self._register_login_callbacks()
+
+    def _register_login_callbacks(self):
+        LoginID.register_callback(self.receive_login_id)
 
     def disconnected(self, msg):
         logger.info('disconnected %s', msg)
@@ -148,6 +156,40 @@ class CTI(interfaces.Interfaces):
             innerdata.handle_cti_stack('empty_stack')
         except KeyError:
             logger.warning('Could not update user status %s', user_id)
+
+    def receive_login_id(self, login_id):
+        if not login_id.lastlogout_stopper or not login_id.lastlogout_datetime:
+            logger.warning('lastlogout userlogin=%s stopper=%s datetime=%s',
+                           login_id.userlogin,
+                           login_id.lastlogout_stopper,
+                           login_id.lastlogout_datetime)
+
+        if login_id.xivo_version != cti_config.XIVOVERSION_NUM:
+            # Fix this line to report the error properly
+            return 'xivoversion_client:%s;%s' % (login_id.xivo_version, cti_config.XIVOVERSION_NUM)
+
+        client_os = login_id.ident.split('-')[0]
+        if client_os.lower() not in ALLOWED_OS:
+            # Fix this line to report the error properly
+            return 'wrong_client_os_identifier:%s' % client_os
+
+        ipbxid = self._ctiserver.myipbxid
+        safe = self._ctiserver.safe[ipbxid]
+        userid = safe.user_find(login_id.userlogin,
+                                login_id.company)
+
+        if userid:
+            self.connection_details.update({'ipbxid': ipbxid,
+                                                        'userid': userid})
+
+        self.connection_details['prelogin'] = {'cticlientos': client_os,
+                                               'version': '%s-%s' % (login_id.git_date, login_id.git_hash),
+                                               'sessionid': ''.join(random.sample(cti_config.ALPHANUMS, 10))}
+
+        reply = {'xivoversion': cti_config.XIVOVERSION_NUM,
+                 'version': '7777',
+                 'sessionid': self.connection_details['prelogin']['sessionid']}
+        return reply
 
 
 class CTIS(CTI):
