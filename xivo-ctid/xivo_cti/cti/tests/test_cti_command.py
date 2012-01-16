@@ -26,6 +26,8 @@ import unittest
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.missing_field_exception import MissingFieldException
 from tests.mock import Mock
+import weakref
+from xivo_cti.tools import weak_method
 
 
 class Test(unittest.TestCase):
@@ -34,7 +36,7 @@ class Test(unittest.TestCase):
         pass
 
     def tearDown(self):
-        pass
+        CTICommand._callbacks = []
 
     def test_cti_command(self):
         cti_command = CTICommand()
@@ -80,23 +82,40 @@ class Test(unittest.TestCase):
     def test_register_callback(self):
         command = CTICommand().from_dict({'class': 'callback_test'})
 
-        self.assertEqual(command.callbacks, [])
+        self.assertEqual(command.callbacks(), [])
 
         function = Mock()
         CTICommand.register_callback(function)
 
-        self.assertTrue(function in CTICommand._callbacks)
-
         command = CTICommand.from_dict({'class': 'callback_test'})
-        self.assertTrue(function in command.callbacks)
-        self.assertEqual(len(command.callbacks), 1)
+        self.assertEqual(len(command.callbacks()), 1)
+
+    def test_callback_memory_usage(self):
+        class Test(object):
+            def __init__(self):
+                CTICommand.register_callback(self.parse)
+
+            def parse(self):
+                pass
+
+        command = CTICommand.from_dict({CTICommand.CLASS: 'callback_test'})
+
+        def run_test():
+            self.assertEqual(len(command.callbacks()), 0)
+            test_object = Test()
+            self.assertEqual(len(command.callbacks()), 1)
+            test_object.parse()
+
+        run_test()
+
+        self.assertEqual(len(command.callbacks()), 0)
 
     def test_get_reply(self):
         command_class = 'return_test'
         command = CTICommand.from_dict({'class': command_class})
         command.command_class = command_class
 
-        reply = command.get_reply('message', 'This is the test message', close_connection=False)
+        reply = command.get_reply('message', {'message': 'This is the test message'}, close_connection=False)
 
         self.assertFalse('closemenow' in reply)
         self.assertTrue('message' in reply)
@@ -117,7 +136,7 @@ class Test(unittest.TestCase):
         command = CTICommand.from_dict({'class': command_class})
         command.command_class = command_class
 
-        reply = command.get_warning('Unknown command')
+        reply = command.get_warning({'message': 'Unknown command'})
 
         self.assertTrue('warning' in reply)
         self.assertEqual(reply['warning']['message'], 'Unknown command')
@@ -127,12 +146,8 @@ class Test(unittest.TestCase):
         command = CTICommand.from_dict({'class': command_class})
         command.command_class = command_class
 
-        reply = command.get_message('Test completed successfully', True)
+        reply = command.get_message({'message': 'Test completed successfully'}, True)
 
         self.assertTrue('closemenow' in reply, 'closemenow should be present when passing close_connection -> True')
         self.assertTrue('message' in reply)
         self.assertEqual(reply['message']['message'], 'Test completed successfully')
-
-
-if __name__ == "__main__":
-    unittest.main()

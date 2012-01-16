@@ -1,4 +1,5 @@
 from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti.cti_command import CTICommand
 
 import unittest
 
@@ -57,3 +58,37 @@ class Test(unittest.TestCase):
         self.assertEqual(login_id.userlogin, userlogin)
         self.assertEqual(login_id.version, version)
         self.assertEqual(login_id.xivo_version, xivo_version)
+
+    def test_get_reply_ok(self):
+        session_id = "vZ4J0R1xti"
+        commandid = 297319475
+        version = '9999'
+        xivo_version = '1.2'
+        login_id = LoginID.from_dict({'class': "login_id",
+                                      'commandid': commandid,
+                                      'company': 'default',
+                                      'git_date': '1326300351',
+                                      'git_hash': '17484c6',
+                                      'ident': 'X11-LE-25439',
+                                      'lastlogout-datetime': '2012-01-13T08:34:19',
+                                      'lastlogout-stopper': 'disconnect',
+                                      'userlogin': 'test_user',
+                                      'version': version,
+                                      'xivoversion': xivo_version})
+
+        reply = login_id.get_reply_ok(session_id)
+
+        self.assertTrue(CTICommand.CLASS in reply)
+        self.assertEqual(reply[CTICommand.CLASS], LoginID.COMMAND_CLASS)
+
+        self.assertTrue(CTICommand.REPLYID in reply)
+        self.assertEqual(reply[CTICommand.REPLYID], commandid)
+
+        self.assertTrue(LoginID.SESSIONID in reply)
+        self.assertEqual(reply[LoginID.SESSIONID], session_id)
+
+        self.assertTrue(LoginID.VERSION in reply)
+        self.assertEqual(reply[LoginID.VERSION], version)
+
+        self.assertTrue(LoginID.XIVO_VERSION in reply)
+        self.assertEqual(reply[LoginID.XIVO_VERSION], xivo_version)

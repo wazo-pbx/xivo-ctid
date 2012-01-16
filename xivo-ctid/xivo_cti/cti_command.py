@@ -152,7 +152,7 @@ class Command(object):
             else:
                 messagebase['warning_string'] = 'unimplemented'
         else:
-            messagebase['warning_string'] = 'unknown'
+            return []
 
         ackmessage = {'message': messagebase}
         if 'error_string' in messagebase:

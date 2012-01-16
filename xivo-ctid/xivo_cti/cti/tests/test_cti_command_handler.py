@@ -87,10 +87,14 @@ class Test(unittest.TestCase):
         self.assertTrue(isinstance(command, LoginID))
 
     def test_run_command(self):
-        function = Mock()
-        function2 = Mock()
         ret_val = {'message': 'test_return'}
-        function.return_value = ret_val
+        self.called = False
+
+        def function(command):
+            self.called = True
+            return ret_val
+
+        function2 = Mock()
         CTICommand.register_callback(function)
         InviteConfroom.register_callback(function2)
         cti_handler = CTICommandHandler(self._cti_connection)
@@ -100,5 +104,5 @@ class Test(unittest.TestCase):
         ret = cti_handler.run_commands()
 
         self.assertTrue(ret_val in ret)
-        function.assert_called_once_with(command)
+        self.assertTrue(self.called)
         self.assertEqual(len(cti_handler._commands_to_run), 0)

@@ -27,8 +27,10 @@ from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 class InviteConfroom(CTICommand):
 
-    required_fields = ['class', 'invitee']
-    conditions = [('class', 'invite_confroom')]
+    INVITEE = 'invitee'
+
+    required_fields = [CTICommand.CLASS, INVITEE]
+    conditions = [(CTICommand.CLASS, 'invite_confroom')]
     _callbacks = []
 
     def __init__(self):
@@ -36,6 +38,6 @@ class InviteConfroom(CTICommand):
 
     def _init_from_dict(self, msg):
         super(InviteConfroom, self)._init_from_dict(msg)
-        self._invitee = msg['invitee']
+        self._invitee = msg[self.INVITEE]
 
 CTICommandFactory.register_class(InviteConfroom)

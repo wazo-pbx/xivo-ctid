@@ -23,10 +23,16 @@
 
 from xivo_cti.cti.missing_field_exception import MissingFieldException
 
+from xivo_cti.tools import weak_method
+
 
 class CTICommand(object):
 
-    required_fields = ['class']
+    CLASS = 'class'
+    COMMANDID = 'commandid'
+    REPLYID = 'replyid'
+
+    required_fields = [CLASS]
     conditions = None
     _callbacks = []
 
@@ -35,22 +41,24 @@ class CTICommand(object):
         self.cti_connection = None
         self.command_class = None
         self.commandid = None
-        self.callbacks = list(self.__class__._callbacks)
+
+    def callbacks(self):
+        return [callback for callback in self._callbacks if not callback.dead()]
 
     def _init_from_dict(self, msg):
         self._msg = msg
         self._check_required_fields()
-        self.commandid = self._msg.get('commandid')
-        self.command_class = self._msg['class']
+        self.commandid = self._msg.get(self.COMMANDID)
+        self.command_class = self._msg[self.CLASS]
 
     def _check_required_fields(self):
-        for field in self.__class__.required_fields:
+        for field in self.required_fields:
             if field not in self._msg:
                 raise MissingFieldException(u'Missing %s in CTI command' % field)
 
     def get_reply(self, message_type, message, close_connection=False):
         rep = {'class': self.command_class,
-               message_type: {'message': message}}
+               message_type: message}
         if self.commandid:
             rep['replyid'] = self.commandid
         if close_connection:
@@ -77,7 +85,7 @@ class CTICommand(object):
 
     @classmethod
     def register_callback(cls, function):
-        cls._callbacks.append(function)
+        cls._callbacks.append(weak_method.WeakCallable(function))
 
     @classmethod
     def from_dict(cls, msg):

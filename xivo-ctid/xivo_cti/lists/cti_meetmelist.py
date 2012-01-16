@@ -90,9 +90,9 @@ class MeetmeList(AnyList):
                 originate.priority = '1'
                 originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
         except KeyError, MissingFieldException:
-            return invite_confroom_command.get_warning('Cannot complete command, missing info')
+            return invite_confroom_command.get_warning({'message': 'Cannot complete command, missing info'})
 
         if originate.send(ami):
-            return invite_confroom_command.get_message('Command sent succesfully')
+            return invite_confroom_command.get_message({'message': 'Command sent succesfully'})
         else:
-            return invite_confroom_command.get_warning('Failed to send the AMI command')
+            return invite_confroom_command.get_warning({'message': 'Failed to send the AMI command'})

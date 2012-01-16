@@ -42,6 +42,6 @@ class CTICommandHandler(object):
             command = self._commands_to_run.pop()
             if not command.cti_connection:
                 command.cti_connection = self._cti_connection
-            functions.extend(command.callbacks)
+            functions.extend(command.callbacks())
         return_values = [function(command) for function in functions]
         return [return_value for return_value in return_values if return_value]
