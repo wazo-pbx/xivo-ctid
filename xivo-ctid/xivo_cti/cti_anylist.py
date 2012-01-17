@@ -22,6 +22,7 @@
 
 import logging
 import cti_urllist
+from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('anylist')
 
@@ -109,3 +110,13 @@ class AnyList(object):
         if len(self.requested_list) == 0:
             return
         self.update()
+
+    def filter_context(self, contexts):
+        if not Config.get_instance().part_context():
+            return self.keeplist
+        else:
+            ret = {}
+            for item_id, item in self.keeplist.iteritems():
+                if 'context' in item and item['context'] in contexts:
+                    ret[item_id] = item
+            return ret

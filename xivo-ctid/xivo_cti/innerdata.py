@@ -519,9 +519,9 @@ class Safe(object):
     def user_get_all(self):
         return self.xod_config['users'].keeplist.keys()
 
-    def get_config(self, listname, item_id, limit=None):
+    def get_config(self, listname, item_id, limit=None, user_contexts=None):
         reply = {}
-        configdict = self.xod_config.get(listname).keeplist
+        configdict = self.xod_config.get(listname).filter_context(user_contexts)
         if not isinstance(configdict, dict):
             logger.warning('get_config : problem with listname %s', listname)
             return reply

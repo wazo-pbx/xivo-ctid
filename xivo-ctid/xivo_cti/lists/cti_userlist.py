@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_config import Config
 
 
 class UserList(AnyList):
@@ -119,3 +120,15 @@ class UserList(AnyList):
     def get_contexts(self, userid):
         phones = self.commandclass.xod_config['phones'].keeplist
         return [phone['context'] for phone in phones.itervalues() if int(userid) == int(phone['iduserfeatures'])]
+
+    def filter_context(self, contexts):
+        if not Config.get_instance().part_context():
+            return self.keeplist
+        else:
+            ret = {}
+            for user_id, user in self.keeplist.iteritems():
+                user_context = self.get_contexts(user_id)
+                for context in user_context:
+                    if context in contexts:
+                        ret[user_id] = user
+            return ret
