@@ -274,7 +274,7 @@ class CTIServer(object):
         ctilog = xivoconf_general.get('ctilog_db_uri')
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         prefixfile = xivoconf_general.get('prefixfile')
-        parting_ipbxid_context = xivoconf_general.get('parting_ipbxid_context')
+        self._config.set_parting_options(xivoconf_general.get('parting_astid_context'))
 
         socket.setdefaulttimeout(socktimeout)
 
@@ -313,7 +313,6 @@ class CTIServer(object):
 
             self.safe[self.myipbxid].set_ctilog(ctilog)
             self.safe[self.myipbxid].read_internatprefixes(prefixfile)
-            self.safe[self.myipbxid].set_partings(parting_ipbxid_context)
 
             self.update_userlist[self.myipbxid] = []
             self.lastrequest_time[self.myipbxid] = time.time()

@@ -47,6 +47,8 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 class Config(object):
 
+    PART_OPTION_CONTEXT = 'context'
+
     instance = None
 
     def __init__(self, * urilist):
@@ -54,6 +56,7 @@ class Config(object):
         self.ipwebs = None
         self.xc_json = {}
         self.overconf = None
+        self._parting_options = []
 
     def update(self):
         # the aim of the urilist would be to handle the URI's one after the other
@@ -142,6 +145,13 @@ class Config(object):
 
     def set_rcti_override_ipbxes(self, overconf):
         self.overconf = overconf
+
+    def set_parting_options(self, parting_options=None):
+        self._parting_options = parting_options if parting_options else []
+        logger.debug('New parting options: %s', self._parting_options)
+
+    def part_context(self):
+        return self.PART_OPTION_CONTEXT in self._parting_options
 
     @classmethod
     def get_instance(cls):

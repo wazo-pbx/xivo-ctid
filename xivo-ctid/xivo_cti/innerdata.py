@@ -1397,10 +1397,6 @@ class Safe(object):
         # TODO ??
         pass
 
-    def set_partings(self, pic):
-        # TODO ??
-        pass
-
     # directory lookups entry points - START
 
     def findreverse(self, context, did_number, number):
