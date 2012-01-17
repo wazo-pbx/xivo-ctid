@@ -1,7 +1,7 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+# Copyright (C) 2007-2011  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -24,9 +24,9 @@ from xivo_cti.cti_anylist import AnyList
 
 
 class UserList(AnyList):
-    def __init__(self, newurls = []):
-        self.anylist_properties = { 'name' : 'users',
-                                    'urloptions' : (0, 11, True) }
+    def __init__(self, newurls=[]):
+        self.anylist_properties = {'name': 'users',
+                                   'urloptions': (0, 11, True)}
         AnyList.__init__(self, newurls)
         # a dictionary where keys are user id (string) and values are
         # (<alarm clock>, <timezone) tuple
@@ -36,7 +36,7 @@ class UserList(AnyList):
         delta = AnyList.update(self)
         self._update_alarm_clock_changes(delta)
         return delta
-    
+
     def _update_alarm_clock_changes(self, delta):
         delta_add = delta.get('add')
         if delta_add:
@@ -48,17 +48,17 @@ class UserList(AnyList):
                     fixed_timezone = user['timezone'].replace('\\/', '/')
                     user['timezone'] = fixed_timezone
                     self.alarm_clk_changes[id] = (user['alarmclock'], fixed_timezone)
-        
+
         delta_del = delta.get('del')
         if delta_del:
             for id in delta_del:
                 # ignore 'remote user'
                 if not id.startswith('cs:'):
                     self.alarm_clk_changes[id] = ('', '')
-        
+
         delta_change = delta.get('change')
         if delta_change:
-            for id, changed_keys in delta_change.iteritems():
+            for changed_keys in delta_change.itervalues():
                 # ignore 'remote user'
                 if not id.startswith('cs:'):
                     if 'alarmclock' in changed_keys or 'timezone' in changed_keys:
@@ -67,14 +67,14 @@ class UserList(AnyList):
                         fixed_timezone = user['timezone'].replace('\\/', '/')
                         user['timezone'] = fixed_timezone
                         self.alarm_clk_changes[id] = (user['alarmclock'], fixed_timezone)
-    
+
     def update_noinput(self):
         newuserlist = self.commandclass.getuserslist()
         for a, b in newuserlist.iteritems():
             if a not in self.keeplist:
                 self.keeplist[a] = b
 
-    def finduser(self, userid, company = None):
+    def finduser(self, userid, company=None):
         if company:
             uinfo = None
 ##            for userinfo in self.keeplist.itervalues():
@@ -83,7 +83,7 @@ class UserList(AnyList):
 ##                    break
 # the company/context/entity vs. multiple servers is to be solved one day XXXX
             if uinfo == None:
-                for kk, userinfo in self.keeplist.iteritems():
+                for userinfo in self.keeplist.itervalues():
                     if userinfo and userinfo.get('enableclient') and \
                            userinfo.get('loginclient') == userid:
                         uinfo = userinfo
@@ -107,14 +107,15 @@ class UserList(AnyList):
 
     def adduser(self, inparams):
         username = inparams['user']
-        if self.keeplist.has_key(username):
-            # updates
-            pass
-        else:
+        if not username in self.keeplist:
             self.keeplist[username] = {}
             for f in self.commandclass.userfields:
                 self.keeplist[username][f] = inparams[f]
 
     def deluser(self, username):
-        if self.keeplist.has_key(username):
+        if username in self.keeplist:
             self.keeplist.pop(username)
+
+    def get_contexts(self, userid):
+        phones = self.commandclass.xod_config['phones'].keeplist
+        return [phone['context'] for phone in phones.itervalues() if int(userid) == int(phone['iduserfeatures'])]
