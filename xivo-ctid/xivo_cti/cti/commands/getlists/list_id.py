@@ -31,8 +31,7 @@ class ListID(GetList):
     COMMAND_CLASS = 'getlist'
     FUNCTION_NAME = 'listid'
 
-    required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME,
-                       GetList.ITEM_ID, GetList.IPBX_ID]
+    required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
     _callbacks = []
@@ -40,5 +39,13 @@ class ListID(GetList):
     def __init__(self):
         super(ListID, self).__init__()
         self.function = self.FUNCTION_NAME
+
+    def get_reply_list(self, item_list):
+        return {CTICommand.CLASS: GetList.COMMAND_CLASS,
+                GetList.FUNCTION: ListID.FUNCTION_NAME,
+                'list': item_list,
+                GetList.LIST_NAME: self.list_name,
+                'replyid': self.commandid,
+                GetList.IPBX_ID: self.ipbx_id}
 
 CTICommandFactory.register_class(ListID)

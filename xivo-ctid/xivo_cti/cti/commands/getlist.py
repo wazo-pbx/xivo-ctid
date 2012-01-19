@@ -34,7 +34,7 @@ class GetList(CTICommand):
     ITEM_ID = 'tid'
     IPBX_ID = 'tipbxid'
 
-    required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, ITEM_ID, IPBX_ID]
+    required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, IPBX_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
 
@@ -50,7 +50,7 @@ class GetList(CTICommand):
         super(GetList, self)._init_from_dict(msg)
         self.function = msg[self.FUNCTION]
         self.list_name = msg[self.LIST_NAME]
-        self.item_id = msg[self.ITEM_ID]
+        self.item_id = msg.get(self.ITEM_ID)
         self.ipbx_id = msg[self.IPBX_ID]
 
 CTICommandFactory.register_class(GetList)

@@ -29,22 +29,21 @@ from xivo_cti.cti.cti_command import CTICommand
 from mock import Mock
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
+from xivo_cti.tools.weak_method import WeakMethodFree
 
 
 class TestListID(unittest.TestCase):
 
-    def __init__(self, methodName='runTest'):
-        super(TestListID, self).__init__(methodName)
-        self._commandid = 1446226295
-        self._list_name = 'users'
-        self._item_id = '1'
-        self._ipbx_id = 'xivo'
-        self._msg_dict = {CTICommand.CLASS: GetList.COMMAND_CLASS,
-                          CTICommand.COMMANDID: self._commandid,
-                          GetList.FUNCTION: ListID.FUNCTION_NAME,
-                          GetList.LIST_NAME: self._list_name,
-                          GetList.ITEM_ID: self._item_id,
-                          GetList.IPBX_ID: self._ipbx_id}
+    _commandid = 1446226295
+    _list_name = 'users'
+    _item_id = '1'
+    _ipbx_id = 'xivo'
+    _msg_dict = {CTICommand.CLASS: GetList.COMMAND_CLASS,
+                 CTICommand.COMMANDID: _commandid,
+                 GetList.FUNCTION: ListID.FUNCTION_NAME,
+                 GetList.LIST_NAME: _list_name,
+                 GetList.ITEM_ID: _item_id,
+                 GetList.IPBX_ID: _ipbx_id}
 
     def test_list_id(self):
         list_id = ListID()
@@ -55,6 +54,7 @@ class TestListID(unittest.TestCase):
     def test_from_dict(self):
         list_id = ListID.from_dict(self._msg_dict)
 
+        self.assertTrue(isinstance(list_id, ListID))
         self.assertEqual(list_id.command_class, ListID.COMMAND_CLASS)
         self.assertEqual(list_id.commandid, self._commandid)
         self.assertEqual(list_id.function, ListID.FUNCTION_NAME)
@@ -78,3 +78,33 @@ class TestListID(unittest.TestCase):
                 found = True
 
         self.assertTrue(found)
+
+    def test_get_reply_list(self):
+        list_id = ListID.from_dict(self._msg_dict)
+        replied_list = ['1', '2', '7']
+
+        ret = list_id.get_reply_list(replied_list)
+
+        self.assertTrue(CTICommand.CLASS in ret and ret[CTICommand.CLASS] == GetList.COMMAND_CLASS)
+        self.assertTrue(GetList.FUNCTION in ret and ret[GetList.FUNCTION] == ListID.FUNCTION_NAME)
+        self.assertTrue('list' in ret and ret['list'] == replied_list)
+        self.assertTrue(GetList.LIST_NAME in ret and ret[GetList.LIST_NAME] == self._list_name)
+        self.assertTrue('replyid' in ret and ret['replyid'] == self._commandid)
+        self.assertTrue(GetList.IPBX_ID in ret and ret[GetList.IPBX_ID] == self._ipbx_id)
+
+    def test_get_callbacks(self):
+        def func1(param):
+            pass
+
+        def func2(param):
+            pass
+
+        GetList.register_callback(func1)
+        ListID.register_callback(func2)
+
+        list_id = ListID.from_dict(self._msg_dict)
+
+        callbacks = list_id.callbacks()
+
+        self.assertEqual(len(callbacks), 1)
+        self.assertEqual(WeakMethodFree(func2), callbacks[0])
