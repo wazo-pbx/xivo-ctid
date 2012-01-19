@@ -208,7 +208,7 @@ class TestCELChannel(unittest.TestCase):
 
     def test_peers_uniqueid(self):
         cdr_uri = 'sqlite:///:memory:'
-        cti_config.Config.get_instance = Mock()
+        old_config, cti_config.Config.get_instance = cti_config.Config.get_instance, Mock()
         config = Mock(cti_config.Config)
         cti_config.Config.get_instance.return_value = config
         config.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri}}
@@ -237,9 +237,11 @@ class TestCELChannel(unittest.TestCase):
         self.assertTrue('2' in unique_ids)
         self.assertEqual(len(unique_ids), 1)
 
+        cti_config.Config.get_instance = old_config
+
     def test_peers_exten(self):
         cdr_uri = 'sqlite:///:memory:'
-        cti_config.Config.get_instance = Mock()
+        old_config, cti_config.Config.get_instance = cti_config.Config.get_instance, Mock()
         config = Mock(cti_config.Config)
         cti_config.Config.get_instance.return_value = config
         config.getconfig.return_value = {'xivoid': {'cdr_db_uri': cdr_uri}}
@@ -270,6 +272,8 @@ class TestCELChannel(unittest.TestCase):
         cel_channel.peers_uniqueids = lambda: set('2')
 
         self.assertEqual(cel_channel.peers_exten(), '113')
+
+        cti_config.Config.get_instance = old_config
 
 
 class TestCELDAO(unittest.TestCase):

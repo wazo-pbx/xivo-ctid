@@ -26,14 +26,9 @@ import unittest
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.missing_field_exception import MissingFieldException
 from tests.mock import Mock
-import weakref
-from xivo_cti.tools import weak_method
 
 
 class Test(unittest.TestCase):
-
-    def setUp(self):
-        pass
 
     def tearDown(self):
         CTICommand._callbacks = []

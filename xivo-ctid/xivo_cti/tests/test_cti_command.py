@@ -60,7 +60,7 @@ class Test(unittest.TestCase):
         xws = Mock()
         xws.__init__(return_value=xws_inst)
         cti_command.xivo_webservices.XivoWebService = xws
-        cti_config.Config.get_instance = Mock()
+        old_config_get_instance, cti_config.Config.get_instance = cti_config.Config.get_instance, Mock()
         config = Mock(cti_config.Config)
         config.ipwebs = 'localhost'
         cti_config.Config.get_instance.return_value = config
@@ -126,12 +126,8 @@ class Test(unittest.TestCase):
         cmd.rinnerdata = Mock()
         cmd.regcommand_featuresput()
 
-        self.assertEqual(res['status'],'OK')
+        self.assertEqual(res['status'], 'OK')
         self.assertTrue(xws_inst.connect.called)
         xws_inst.serviceput.assert_called_with(1, {'enablerna': True, 'destrna': '123'})
 
-
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
-
+        cti_config.Config.get_instance = old_config_get_instance
