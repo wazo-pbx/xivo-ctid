@@ -1,5 +1,6 @@
 import unittest
 from xivo_cti.tools import weak_method
+from xivo_cti.tools.weak_method import WeakMethodBound, WeakMethodFree
 
 
 class Test(unittest.TestCase):
@@ -53,3 +54,36 @@ class Test(unittest.TestCase):
         self.assertFalse(f.dead())
         del func
         self.assertTrue(f.dead())
+
+    def test_weak_method_bound_equal(self):
+        class TestClass(object):
+            def func1(self):
+                pass
+
+            def func2(self):
+                pass
+
+        instance = TestClass()
+
+        ref1 = WeakMethodBound(instance.func1)
+        ref2 = WeakMethodBound(instance.func1)
+        ref3 = WeakMethodBound(instance.func2)
+
+        self.assertEqual(ref1, ref2)
+
+        self.assertNotEqual(ref1, ref3)
+
+    def test_weak_method_free_equal(self):
+        def func1(param):
+            pass
+
+        def func2(param):
+            pass
+
+        ref1 = WeakMethodFree(func1)
+        ref2 = WeakMethodFree(func1)
+        ref3 = WeakMethodFree(func2)
+
+        self.assertEqual(ref1, ref2)
+
+        self.assertNotEqual(ref1, ref3)

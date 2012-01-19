@@ -15,6 +15,9 @@ class WeakMethodBound(object):
         ret = self.function(self.instance(), *args)
         return ret
 
+    def __eq__(self, other):
+        return hasattr(other, 'instance') and self.instance() == other.instance() and self.function == other.function
+
     def dead(self):
         return self.instance is None or self.instance() is None
 
@@ -28,6 +31,9 @@ class WeakMethodFree(object):
         if self.function() == None:
             raise TypeError('Function no longer exist')
         return (self.function()(*arg))
+
+    def __eq__(self, other):
+        return self.function() == other.function()
 
     def dead(self):
         return self.function is None or self.function() is None
