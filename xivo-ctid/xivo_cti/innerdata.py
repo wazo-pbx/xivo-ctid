@@ -40,6 +40,9 @@ from xivo_cti import cti_sheets
 from xivo_cti import db_connection_manager
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti import cti_config
+from xivo_cti.cti.commands.getlists.list_id import ListID
+from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
+from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 
 logger = logging.getLogger('innerdata')
 
@@ -248,6 +251,26 @@ class Safe(object):
 
         if cnf:
             self.add_default_parking()
+
+    def register_cti_handlers(self):
+        ListID.register_callback(self.handle_getlist_list_id)
+        UpdateConfig.register_callback(self.handle_getlist_update_config)
+        UpdateStatus.register_callback(self.handle_getlist_update_status)
+
+    def handle_getlist_list_id(self, command):
+        if command.list_name in self.xod_config:
+            user_id = command.cti_connection.connection_details['userid']
+            user_contexts = self.xod_config['users'].get_contexts(user_id)
+            item_ids = [item_id for item_id in self.xod_config[command.list_name].filter_context(user_contexts) if item_id.isdigit()]
+            return command.get_message(command.get_reply_list(item_ids))
+        else:
+            logger.debug('no such list %s', command.list_name)
+
+    def handle_getlist_update_config(self, update_config_command):
+        logger.debug('updateconfig received %s', update_config_command)
+
+    def handle_getlist_update_status(self, update_status_command):
+        logger.debug('updatestatus received %s', update_status_command)
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''

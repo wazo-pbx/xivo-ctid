@@ -303,6 +303,7 @@ class CTIServer(object):
             # interface : safe deposit
             self.safe[self.myipbxid] = innerdata.Safe(self, self.myipbxid,
                                                       ipbxconfig.get('urllists'))
+            self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].update_directories()
             # interface : AMI
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)

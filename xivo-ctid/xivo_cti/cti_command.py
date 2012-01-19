@@ -31,7 +31,6 @@ from xivo_cti import cti_fax
 from xivo_cti import cti_config
 from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
 from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
-from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('cti_command')
 
@@ -491,7 +490,7 @@ class Command(object):
 
     def regcommand_faxsend(self):
         fileid = ''.join(random.sample(ALPHANUMS, 10))
-        reply = {'fileid' : fileid}
+        reply = {'fileid': fileid}
         self.rinnerdata.faxes[fileid] = cti_fax.Fax(self.rinnerdata, fileid)
         # ruserid gives an entity, which doesn't give a context right away ...
         context = 'default'
@@ -512,23 +511,7 @@ class Command(object):
         user_id = self._connection.connection_details['userid']
         user_contexts = self.tinnerdata.xod_config['users'].get_contexts(user_id)
 
-        if function == 'listid':
-            if listname in self.tinnerdata.xod_config:
-                g = list()
-                #for gg in self.tinnerdata.xod_config[listname].keeplist.keys():
-                for gg in self.tinnerdata.xod_config[listname].filter_context(user_contexts).keys():
-                    if gg.isdigit():
-                        # there could be other criteria, this one is to prevent displaying
-                        # the account for remote cti servers
-                        g.append(gg)
-                reply = {'function': 'listid',
-                         'listname': listname,
-                         'tipbxid': self.tipbxid,
-                         'list': g}
-            else:
-                logger.warning('no such list %s', listname)
-
-        elif function == 'updateconfig':
+        if function == 'updateconfig':
             tid = self._commanddict.get('tid')
             g = self.tinnerdata.get_config(listname, tid, user_contexts=user_contexts)
             reply = {'function': 'updateconfig',
