@@ -32,6 +32,7 @@ from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.commands.getlist import GetList
+from xivo_cti.cti.commands.directory import Directory
 
 
 class TestSafe(unittest.TestCase):
@@ -61,13 +62,13 @@ class TestSafe(unittest.TestCase):
         self.assertTrue(WeakMethodBound(safe.handle_getlist_list_id) in ListID._callbacks)
         self.assertTrue(WeakMethodBound(safe.handle_getlist_update_config) in UpdateConfig._callbacks)
         self.assertTrue(WeakMethodBound(safe.handle_getlist_update_status) in UpdateStatus._callbacks)
+        self.assertTrue(WeakMethodBound(safe.getcustomers) in Directory._callbacks)
 
         self.assertFalse(WeakMethodBound(safe.handle_getlist_list_id) in GetList._callbacks)
         self.assertFalse(WeakMethodBound(safe.handle_getlist_update_config) in GetList._callbacks)
         self.assertFalse(WeakMethodBound(safe.handle_getlist_update_status) in GetList._callbacks)
 
     def test_handle_getlist_listid(self):
-        list_name = 'users'
         item_id = '1'
         commandid = 12345
         list_id = ListID.from_dict({CTICommand.CLASS: GetList.COMMAND_CLASS,

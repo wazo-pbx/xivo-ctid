@@ -43,6 +43,7 @@ from xivo_cti import cti_config
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
+from xivo_cti.cti.commands.directory import Directory
 
 logger = logging.getLogger('innerdata')
 
@@ -256,6 +257,7 @@ class Safe(object):
         ListID.register_callback(self.handle_getlist_list_id)
         UpdateConfig.register_callback(self.handle_getlist_update_config)
         UpdateStatus.register_callback(self.handle_getlist_update_status)
+        Directory.register_callback(self.getcustomers)
 
     def handle_getlist_list_id(self, command):
         if command.list_name in self.xod_config:
@@ -1443,18 +1445,17 @@ class Safe(object):
             result['xivo-reverse-nresults'] = str(len(lookup_results))
             return result
 
-    def getcustomers(self, context, pattern):
+    def getcustomers(self, command):
         try:
-            context_obj = self.contexts_mgr.contexts[context]
+            contexts = self.xod_config['users'].get_contexts(command.user_id())
+            context_obj = self.contexts_mgr.contexts[contexts[0]]
         except KeyError:
-            logger.error('getcustomers: undefined context: %s', context)
-            return {'status': 'ko', 'reason': 'undefined_context'}
+            logger.error('getcustomers: undefined context: %s', contexts)
+            return command.get_warning({'status': 'ko', 'reason': 'undefined_context'})
         else:
-            headers, resultlist = context_obj.lookup_direct(pattern)
-            # remove any duplicated line
+            headers, resultlist = context_obj.lookup_direct(command.pattern, contexts=contexts)
             resultlist = list(set(resultlist))
-            return {'status': 'ok', 'headers': headers,
-                    'resultlist': resultlist}
+            return command.get_message(command.get_reply_list(headers, resultlist))
 
     # directory lookups entry points - STOP
 

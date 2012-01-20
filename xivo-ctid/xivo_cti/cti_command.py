@@ -48,7 +48,6 @@ REGCOMMANDS = [
     'availstate', 'keepalive',
 
     'featuresget', 'featuresput',
-    'directory',
     'history',
     'faxsend',
     'filetransfer',
@@ -338,7 +337,7 @@ class Command(object):
         if user is None:
             return {'status': 'KO', 'error_string': 'unknown %d user' % self.ruserid}
 
-        func   = self._commanddict.get('function')
+        func = self._commanddict.get('function')
         values = self._commanddict.get('value') if func == 'fwd' else\
             {func: self._commanddict.get('value')}
 
@@ -359,16 +358,6 @@ class Command(object):
         z.close()
 
         return {'status': 'OK'}
-
-    def regcommand_directory(self):
-        # Since there's no direct, unique link between a user and a context in
-        # xivo 1.2, contrarily to xivo 1.1, we always search for "customers"
-        # in the "default" directory context.
-        #
-        # This implies is that it's useless to add more "directory context"
-        # in the CTI server configuration.
-        result = self.rinnerdata.getcustomers('default', self._commanddict.get('pattern'))
-        return result
 
     def regcommand_history(self):
         phone = self._get_phone_from_user_id(self.ruserid, self.rinnerdata)
@@ -1049,10 +1038,8 @@ class Command(object):
                     amiargs = (queuename, interface, dopause)
                 elif command == 'pause':
                     amiargs = (queuename, interface, dopause)
-                rep = {
-                    'amicommand' : amicommand,
-                    'amiargs' : amiargs
-                    }
+                rep = {'amicommand': amicommand,
+                       'amiargs': amiargs}
                 reps.append(rep)
         print reps
         return reps
@@ -1097,12 +1084,12 @@ class Command(object):
             kind = 'phone'
             idv = '7'
             filename = 'cti-monitor-%s-%s-%s' % (datestring, kind, idv)
-            rep = { 'amicommand' : 'monitor',
-                    'amiargs' : (channel, filename, 'false') }
+            rep = {'amicommand': 'monitor',
+                   'amiargs': (channel, filename, 'false')}
             # wait the AMI event ack in order to fill status for channel
         elif subcommand == 'stop':
-            rep = { 'amicommand' : 'stopmonitor',
-                    'amiargs' : (channel,) }
+            rep = {'amicommand': 'stopmonitor',
+                   'amiargs': (channel,)}
         return [rep]
 
     def ipbxcommand_listen(self):
@@ -1112,13 +1099,13 @@ class Command(object):
         if subcommand == 'start':
             listener = self._commanddict.pop('listener')
             (listener_protocol, listener_id) = listener.split('/')
-            rep = { 'amicommand' : 'origapplication',
-                    'amiargs' : ('ChanSpy',
-                                 '%s,q' % channel,
-                                 listener_protocol,
-                                 listener_id,
-                                 '000',
-                                 'mamaop') }
+            rep = {'amicommand': 'origapplication',
+                   'amiargs': ('ChanSpy',
+                               '%s,q' % channel,
+                               listener_protocol,
+                               listener_id,
+                               '000',
+                               'mamaop')}
         elif subcommand == 'stop':
             # XXX hangup appropriate channel
             rep = {}

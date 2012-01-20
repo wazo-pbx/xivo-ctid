@@ -1,5 +1,6 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
+from xivo_cti.cti_config import Config
 
 __copyright__ = 'Copyright (C) 2010-2011  Avencall'
 
@@ -69,14 +70,14 @@ class Context(object):
         self._display = display
         self._didextens = didextens
 
-    def lookup_direct(self, string):
+    def lookup_direct(self, string, contexts=None):
         """Return a tuple (<headers>, <resultlist>)."""
         if self._display is None:
             raise Exception('No display defined for this context')
         directory_results = []
         for directory in self._directories:
             try:
-                directory_result = directory.lookup_direct(string)
+                directory_result = directory.lookup_direct(string, contexts)
             except Exception:
                 logger.error('Error while looking up in directory %s for %s',
                              directory.name, string, exc_info=True)
@@ -217,7 +218,7 @@ class CSVFileDirectoryDataSource(object):
         self._delimiter = delimiter
         self._key_mapping = key_mapping
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         """Do a lookup using string to match on the given list of src fields."""
         encoded_string = string.encode('UTF-8')
         fobj = urllib2.urlopen(self._csv_file)
@@ -281,7 +282,7 @@ class SQLDirectoryDataSource(object):
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         # handle when fields is empty to simplify implementation
         if not fields:
             logger.warning('No requested fields')
@@ -343,7 +344,7 @@ class InternalDirectoryDataSource(object):
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         # handle when fields is empty to simplify implementation
         if not fields:
             logger.warning('No requested fields')
@@ -354,7 +355,14 @@ class InternalDirectoryDataSource(object):
                 'LEFT JOIN linefeatures ON userfeatures.id = linefeatures.iduserfeatures ' \
                 'WHERE '
         request_end = ' OR '.join('%s LIKE %%s' % column for column in test_columns)
-        request = request_beg + request_end
+        if Config.get_instance().part_context():
+            if contexts:
+                request_contexts = ' OR '.join("linefeatures.context = '%s'" % context for context in contexts)
+            else:
+                request_contexts = '1 = 0'
+            request = request_beg + '(' + request_end + ') and (' + request_contexts + ')'
+        else:
+            request = request_beg + request_end
         params = ('%' + string + '%',) * len(test_columns)
         columns = tuple(self._key_mapping.itervalues())
 
@@ -397,7 +405,7 @@ class LDAPDirectoryDataSource(object):
         self._map_fun = self._new_map_fun()
         self._xivo_ldap = None
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         ldap_filter = ['(%s=*%s*)' % (field, string) for field in fields]
         ldap_attributes = []
         for src_key in self._key_mapping.itervalues():
@@ -450,7 +458,7 @@ class HTTPDirectoryDataSource(object):
         self._delimiter = delimiter
         self._key_mapping = key_mapping
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         uri = self._build_uri(string, fields)
         fobj = urllib2.urlopen(uri)
         try:
@@ -516,7 +524,7 @@ class PhonebookDirectoryDataSource(object):
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_function()
 
-    def lookup(self, string, fields):
+    def lookup(self, string, fields, contexts=None):
         filter_fun = self._new_filter_function(string, fields)
         return imap(self._map_fun, ifilter(filter_fun,
                                            self._phonebook_list.keeplist.itervalues()))
@@ -564,8 +572,8 @@ class DirectoryAdapter(object):
             return result
         return aux
     
-    def lookup_direct(self, string):
-        return imap(self._map_fun, self._directory_src.lookup(string, self._match_direct))
+    def lookup_direct(self, string, contexts=None):
+        return imap(self._map_fun, self._directory_src.lookup(string, self._match_direct, contexts))
     
     def lookup_reverse(self, string):
         return self._directory_src.lookup(string, self._match_reverse)
