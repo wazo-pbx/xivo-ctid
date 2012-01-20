@@ -30,6 +30,8 @@ class UpdateConfig(GetList):
 
     FUNCTION_NAME = 'updateconfig'
 
+    CONFIG = 'config'
+
     required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME,
                        GetList.ITEM_ID, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
@@ -39,5 +41,14 @@ class UpdateConfig(GetList):
     def __init__(self):
         super(UpdateConfig, self).__init__()
         self.function = self.FUNCTION_NAME
+
+    def get_reply_item(self, item):
+        return {self.CLASS: self.COMMAND_CLASS,
+                self.CONFIG: item,
+                self.FUNCTION: self.FUNCTION_NAME,
+                self.LIST_NAME: self.list_name,
+                self.REPLYID: self.commandid,
+                self.ITEM_ID: self.item_id,
+                self.IPBX_ID: self.ipbx_id}
 
 CTICommandFactory.register_class(UpdateConfig)

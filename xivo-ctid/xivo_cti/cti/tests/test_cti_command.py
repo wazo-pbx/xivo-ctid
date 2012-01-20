@@ -26,6 +26,7 @@ import unittest
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.missing_field_exception import MissingFieldException
 from tests.mock import Mock
+from xivo_cti.interfaces.interface_cti import CTI
 
 
 class Test(unittest.TestCase):
@@ -146,3 +147,13 @@ class Test(unittest.TestCase):
         self.assertTrue('closemenow' in reply, 'closemenow should be present when passing close_connection -> True')
         self.assertTrue('message' in reply)
         self.assertEqual(reply['message']['message'], 'Test completed successfully')
+
+    def test_user_id(self):
+        command = CTICommand()
+
+        self.assertEqual(command.user_id(), None)
+
+        command.cti_connection = Mock(CTI)
+        command.cti_connection.connection_details = {'userid': 42}
+
+        self.assertEqual(command.user_id(), 42)

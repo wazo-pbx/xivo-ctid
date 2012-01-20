@@ -259,18 +259,19 @@ class Safe(object):
 
     def handle_getlist_list_id(self, command):
         if command.list_name in self.xod_config:
-            user_id = command.cti_connection.connection_details['userid']
-            user_contexts = self.xod_config['users'].get_contexts(user_id)
+            user_contexts = self.xod_config['users'].get_contexts(command.user_id())
             item_ids = [item_id for item_id in self.xod_config[command.list_name].filter_context(user_contexts) if item_id.isdigit()]
             return command.get_message(command.get_reply_list(item_ids))
         else:
             logger.debug('no such list %s', command.list_name)
 
-    def handle_getlist_update_config(self, update_config_command):
-        logger.debug('updateconfig received %s', update_config_command)
+    def handle_getlist_update_config(self, command):
+        user_contexts = self.xod_config['users'].get_contexts(command.user_id())
+        item = self.get_config(command.list_name, command.item_id, user_contexts=user_contexts)
+        return command.get_message(command.get_reply_item(item))
 
     def handle_getlist_update_status(self, update_status_command):
-        logger.debug('updatestatus received %s', update_status_command)
+        pass
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''
@@ -544,7 +545,7 @@ class Safe(object):
 
     def get_config(self, listname, item_id, limit=None, user_contexts=None):
         reply = {}
-        configdict = self.xod_config.get(listname).filter_context(user_contexts)
+        configdict = self.xod_config[listname].filter_context(user_contexts)
         if not isinstance(configdict, dict):
             logger.warning('get_config : problem with listname %s', listname)
             return reply

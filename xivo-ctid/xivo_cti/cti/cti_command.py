@@ -71,6 +71,10 @@ class CTICommand(object):
     def get_message(self, message, close_connection=False):
         return self.get_reply('message', message, close_connection)
 
+    def user_id(self):
+        if self.cti_connection and 'userid' in self.cti_connection.connection_details:
+            return self.cti_connection.connection_details['userid']
+
     @classmethod
     def match_message(cls, message):
         if not cls.conditions:

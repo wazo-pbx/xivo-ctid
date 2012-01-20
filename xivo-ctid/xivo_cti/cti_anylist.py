@@ -116,6 +116,7 @@ class AnyList(object):
             return self.keeplist
         else:
             ret = {}
+            contexts = contexts if contexts else []
             for item_id, item in self.keeplist.iteritems():
                 if 'context' in item and item['context'] in contexts:
                     ret[item_id] = item

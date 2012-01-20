@@ -76,3 +76,16 @@ class TestUpdateConfig(unittest.TestCase):
                 found = True
 
         self.assertTrue(found)
+
+    def test_get_reply_item(self):
+        update_config = UpdateConfig.from_dict(self._msg_dict)
+        item = {'field': 'value'}
+        ret = update_config.get_reply_item(item)
+
+        self.assertTrue(CTICommand.CLASS in ret and ret[CTICommand.CLASS] == GetList.COMMAND_CLASS)
+        self.assertTrue(UpdateConfig.CONFIG in ret and ret[UpdateConfig.CONFIG] == item)
+        self.assertTrue(UpdateConfig.FUNCTION in ret and ret[UpdateConfig.FUNCTION] == UpdateConfig.FUNCTION_NAME)
+        self.assertTrue(GetList.LIST_NAME in ret and ret[GetList.LIST_NAME] == self._list_name)
+        self.assertTrue(CTICommand.REPLYID in ret and ret[CTICommand.REPLYID] == self._commandid)
+        self.assertTrue(GetList.ITEM_ID in ret and ret[GetList.ITEM_ID] == self._item_id)
+        self.assertTrue(GetList.IPBX_ID in ret and ret[GetList.IPBX_ID] == self._ipbx_id)

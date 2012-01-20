@@ -511,16 +511,7 @@ class Command(object):
         user_id = self._connection.connection_details['userid']
         user_contexts = self.tinnerdata.xod_config['users'].get_contexts(user_id)
 
-        if function == 'updateconfig':
-            tid = self._commanddict.get('tid')
-            g = self.tinnerdata.get_config(listname, tid, user_contexts=user_contexts)
-            reply = {'function': 'updateconfig',
-                     'listname': listname,
-                     'tipbxid': self.tipbxid,
-                     'tid': tid,
-                     'config': g}
-
-        elif function == 'updatestatus':
+        if function == 'updatestatus':
             tid = self._commanddict.get('tid')
             g = self.tinnerdata.get_status(listname, tid)
             reply = {'function': 'updatestatus',
