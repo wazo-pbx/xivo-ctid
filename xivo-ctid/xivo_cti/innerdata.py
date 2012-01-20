@@ -271,7 +271,8 @@ class Safe(object):
         return command.get_message(command.get_reply_item(item))
 
     def handle_getlist_update_status(self, command):
-        return command.get_message(command.get_reply_item(self.get_status(command.list_name, command.item_id)))
+        item = self.get_status(command.list_name, command.item_id)
+        return command.get_message(command.get_reply_item(item))
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''
