@@ -43,7 +43,6 @@ LOGINCOMMANDS = [
 
 REGCOMMANDS = [
     'logout',
-    'getlist',
 
     'getipbxlist',
     'availstate', 'keepalive',
@@ -503,23 +502,6 @@ class Command(object):
 
     def regcommand_getipbxlist(self):
         return {'ipbxlist': self._config.getconfig('ipbxes').keys()}
-
-    def regcommand_getlist(self):
-        reply = {}
-        listname = self._commanddict.get('listname')
-        function = self._commanddict.get('function')
-        user_id = self._connection.connection_details['userid']
-        user_contexts = self.tinnerdata.xod_config['users'].get_contexts(user_id)
-
-        if function == 'updatestatus':
-            tid = self._commanddict.get('tid')
-            g = self.tinnerdata.get_status(listname, tid)
-            reply = {'function': 'updatestatus',
-                     'listname': listname,
-                     'tipbxid': self.tipbxid,
-                     'tid': tid,
-                     'status': g}
-        return reply
 
     def regcommand_ipbxcommand(self):
         reply = {}

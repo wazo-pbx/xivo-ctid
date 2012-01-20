@@ -30,6 +30,8 @@ class UpdateStatus(GetList):
 
     FUNCTION_NAME = 'updatestatus'
 
+    STATUS = 'status'
+
     required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME,
                        GetList.ITEM_ID, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
@@ -39,5 +41,14 @@ class UpdateStatus(GetList):
     def __init__(self):
         super(UpdateStatus, self).__init__()
         self.function = self.FUNCTION_NAME
+
+    def get_reply_item(self, item_dict):
+        return {self.CLASS: self.COMMAND_CLASS,
+                self.FUNCTION: self.FUNCTION_NAME,
+                self.LIST_NAME: self.list_name,
+                self.REPLYID: self.commandid,
+                self.STATUS: item_dict,
+                self.ITEM_ID: self.item_id,
+                self.IPBX_ID: self.ipbx_id}
 
 CTICommandFactory.register_class(UpdateStatus)
