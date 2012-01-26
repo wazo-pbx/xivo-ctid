@@ -59,7 +59,7 @@ class UserList(AnyList):
 
         delta_change = delta.get('change')
         if delta_change:
-            for changed_keys in delta_change.itervalues():
+            for id, changed_keys in delta_change.iteritems():
                 # ignore 'remote user'
                 if not id.startswith('cs:'):
                     if 'alarmclock' in changed_keys or 'timezone' in changed_keys:
