@@ -406,28 +406,25 @@ class AMI_1_8(object):
                 user['callrecord'] = status
             if 'incallfilter' in fn:
                 user['incallfilter'] = status
-            if 'unc' in fn:
-                fn = 'unableunc'
+            if 'unc' == fn:
+                fn = 'enableunc'
                 user[fn] = status
                 user['destunc'] = ev.get('Value')
-            if 'rna' in fn:
+            if 'rna' == fn:
                 fn = 'enablerna'
                 user[fn] = status
                 user['destrna'] = ev.get('Value')
-            if 'busy' in fn:
+            if 'busy' == fn:
                 fn = 'enablebusy'
                 user[fn] = status
                 user['destbusy'] = ev.get('Value')
-            self.innerdata.events_cti.put({'class': 'getlist',
-                                            'listname': 'users',
-                                            'function': 'updateconfig',
-                                            'tipbxid': self.ipbxid,
-                                            'tid': userid,
-                                            'config': user})
-            z = xivo_webservices.XivoWebService(cti_config.Config.get_instance().ipwebs, 80)
-            z.connect()
-            z.serviceput(userid, {fn: status})
-            z.close()
+            event = {'class': 'getlist',
+                     'listname': 'users',
+                     'function': 'updateconfig',
+                     'tipbxid': self.ipbxid,
+                     'tid': userid,
+                     'config': user}
+            self.innerdata.events_cti.put(event)
         return reply
 
     def userevent_dialplan2cti(self, chanprops, event):
