@@ -341,8 +341,10 @@ class Command(object):
             else:
                 self.user_service_manager.disable_dnd(self.ruserid)
         elif funct == 'incallfilter':
+            if (self._commanddict.get('value') == True):
                 self.user_service_manager.enable_filter(self.ruserid)
-
+            else:
+                self.user_service_manager.disable_filter(self.ruserid)
 
         return {'status': 'OK'}
 #        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)

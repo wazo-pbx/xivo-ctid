@@ -34,3 +34,7 @@ class UserServiceNotifier(object):
 
     def filter_enabled(self, user_id):
         self.events_cti.put(self._prepare_filter_message(True, user_id))
+
+    def filter_disabled(self, user_id):
+        self.events_cti.put(self._prepare_filter_message(False, user_id))
+

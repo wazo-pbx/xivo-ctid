@@ -112,7 +112,7 @@ class Test(unittest.TestCase):
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
     def test_enable_filter(self):
-        user_id = self._insert_user_filter_not_set()
+        user_id = self._insert_user_with_filter(0)
         dao = UserFeaturesDAO(self.session)
         dao._innerdata = self._innerdata
 
@@ -121,9 +121,19 @@ class Test(unittest.TestCase):
         self._check_filter_in_db(user_id, 1)
         self._check_filter_in_inner_data(user_id, 1)
 
-    def _insert_user_filter_not_set(self):
+    def test_disable_filter(self):
+        user_id = self._insert_user_with_filter(1)
+        dao = UserFeaturesDAO(self.session)
+        dao._innerdata = self._innerdata
+
+        dao.disable_filter(user_id)
+
+        self._check_filter_in_db(user_id, 0)
+        self._check_filter_in_inner_data(user_id, 0)
+
+    def _insert_user_with_filter(self, filter_status):
         user_features = UserFeatures()
-        user_features.incallfilter = 0
+        user_features.incallfilter = filter_status
         user_features.firstname = 'firstname_filter not set'
         self.session.add(user_features)
         self.session.commit()
@@ -138,7 +148,7 @@ class Test(unittest.TestCase):
 
     def _check_filter_in_inner_data(self, user_id, value):
         if value == 0:
-            self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'],'inner data not updated for filter')
+            self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
         elif value == 1:
-            self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'],'inner data not updated for filter')
+            self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 

@@ -69,6 +69,15 @@ class Test(unittest.TestCase):
         self.user_service_manager.enable_filter.assert_called_once_with(user_id)
         self.assertEqual(reply, return_success)
 
+    def test_features_put_disable_filter(self):
+        user_id = 143
+        return_success = {'status': 'OK'}
+        cti_command = self._create_featureput_command("incallfilter",user_id,False)
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.disable_filter.assert_called_once_with(user_id)
+        self.assertEqual(reply, return_success)
 
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}

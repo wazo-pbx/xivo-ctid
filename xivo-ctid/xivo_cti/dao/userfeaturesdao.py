@@ -17,10 +17,15 @@ class UserFeaturesDAO(object):
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = False
 
-    def enable_filter(self,user_id):
+    def enable_filter(self, user_id):
         self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 1})
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = True
+
+    def disable_filter(self, user_id):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 0})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
 
     @classmethod
     def new_from_uri(cls, uri):

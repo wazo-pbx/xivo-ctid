@@ -67,3 +67,18 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertTrue(self.notifier.events_cti.qsize() > 0)
         event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)
+
+    def test_filter_disabled(self):
+        user_id=932
+
+        expected = {"class": "getlist",
+                    "config": {"incallfilter": False},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.filter_disabled(user_id)
+        self.assertTrue(self.notifier.events_cti.qsize() > 0, 'No event in queue for filter disabled')
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)
