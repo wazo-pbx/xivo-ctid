@@ -111,3 +111,34 @@ class Test(unittest.TestCase):
     def _check_dnd_is_not_set_in_inner_data(self, user_id):
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
+    def test_enable_filter(self):
+        user_id = self._insert_user_filter_not_set()
+        dao = UserFeaturesDAO(self.session)
+        dao._innerdata = self._innerdata
+
+        dao.enable_filter(user_id)
+
+        self._check_filter_in_db(user_id, 1)
+        self._check_filter_in_inner_data(user_id, 1)
+
+    def _insert_user_filter_not_set(self):
+        user_features = UserFeatures()
+        user_features.incallfilter = 0
+        user_features.firstname = 'firstname_filter not set'
+        self.session.add(user_features)
+        self.session.commit()
+        user_id = user_features.id
+        self._userlist.keeplist[user_id] = {'incallfilter': False}
+        return user_id
+
+    def _check_filter_in_db(self, user_id, value):
+        user_features = (self.session.query(UserFeatures)
+                         .filter(UserFeatures.id == user_id))[0]
+        self.assertEquals(user_features.incallfilter, value)
+
+    def _check_filter_in_inner_data(self, user_id, value):
+        if value == 0:
+            self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'],'inner data not updated for filter')
+        elif value == 1:
+            self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'],'inner data not updated for filter')
+

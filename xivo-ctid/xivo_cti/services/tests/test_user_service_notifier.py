@@ -7,7 +7,10 @@ import Queue
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.ipbx_id = 'xivo_test'
+        self.notifier = UserServiceNotifier()
+        self.notifier.events_cti = Queue.Queue()
+        self.notifier.ipbx_id = self.ipbx_id
 
     def tearDown(self):
         pass
@@ -48,4 +51,19 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.assertTrue(notifier.events_cti.qsize() > 0)
         event = notifier.events_cti.get()
+        self.assertEqual(event, expected)
+
+    def test_filter_enabled(self):
+        user_id=32
+
+        expected = {"class": "getlist",
+                    "config": {"incallfilter": True},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.filter_enabled(user_id)
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)

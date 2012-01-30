@@ -334,10 +334,15 @@ class Command(object):
 
     def regcommand_featuresput(self):
 
-        if (self._commanddict.get('value') == True):
-            self.user_service_manager.enable_dnd(self.ruserid)
-        else:
-            self.user_service_manager.disable_dnd(self.ruserid)
+        funct = self._commanddict.get('function')
+        if funct == 'enablednd':
+            if (self._commanddict.get('value') == True):
+                self.user_service_manager.enable_dnd(self.ruserid)
+            else:
+                self.user_service_manager.disable_dnd(self.ruserid)
+        elif funct == 'incallfilter':
+                self.user_service_manager.enable_filter(self.ruserid)
+
 
         return {'status': 'OK'}
 #        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)

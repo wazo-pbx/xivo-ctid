@@ -31,3 +31,7 @@ class UserServiceManager(object):
     def disable_dnd(self, user_id):
         self.user_features_dao.disable_dnd(user_id)
         self.user_service_notifier.dnd_disabled(user_id)
+
+    def enable_filter(self, user_id):
+        self.user_features_dao.enable_filter(user_id)
+        self.user_service_notifier.filter_enabled(user_id)

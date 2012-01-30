@@ -22,40 +22,53 @@ class Test(unittest.TestCase):
         self.conn.requester = ('test_requester', 1)
         self.conn._ctiserver = self._ctiserver
         self._ctiserver.safe = {self._ipbxid: self._innerdata}
+        self.user_service_manager = Mock(UserServiceManager)
+
+
+
+    def _create_featureput_command(self, funct, user_id, value):
+        command = {'class': "featuresput",
+                   "commandid": 819690795,
+                   "function": funct,
+                   "value": value}
+        cti_command = Command(self.conn, command)
+        cti_command.user_service_manager = self.user_service_manager
+        cti_command.ruserid = user_id
+        return cti_command
 
     def test_features_put_enable_dnd(self):
         user_id = 13
         return_success = {'status': 'OK'}
-        command = {'class': "featuresput",
-                   "commandid": 819690795,
-                   "function": "enablednd",
-                   "value": True}
-        cti_command = Command(self.conn, command)
-        user_service_manager = Mock(UserServiceManager)
-        cti_command.user_service_manager = user_service_manager
-        cti_command.ruserid = user_id
+
+        cti_command = self._create_featureput_command("enablednd",user_id,True)
 
         reply = cti_command.regcommand_featuresput()
 
-        user_service_manager.enable_dnd.assert_called_once_with(user_id)
+        self.user_service_manager.enable_dnd.assert_called_once_with(user_id)
         self.assertEqual(reply, return_success)
 
     def test_features_put_disable_dnd(self):
         user_id = 13
         return_success = {'status': 'OK'}
-        command = {'class': "featuresput",
-                   "commandid": 819690795,
-                   "function": "enablednd",
-                   "value": False}
-        cti_command = Command(self.conn, command)
-        user_service_manager = Mock(UserServiceManager)
-        cti_command.user_service_manager = user_service_manager
-        cti_command.ruserid = user_id
+
+        cti_command = self._create_featureput_command("enablednd",user_id,False)
 
         reply = cti_command.regcommand_featuresput()
 
-        user_service_manager.disable_dnd.assert_called_once_with(user_id)
+        self.user_service_manager.disable_dnd.assert_called_once_with(user_id)
+
         self.assertEqual(reply, return_success)
+
+    def test_features_put_enable_filter(self):
+        user_id = 14
+        return_success = {'status': 'OK'}
+        cti_command = self._create_featureput_command("incallfilter",user_id,True)
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.enable_filter.assert_called_once_with(user_id)
+        self.assertEqual(reply, return_success)
+
 
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}

@@ -31,3 +31,14 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.disable_dnd(user_id)
 
         self.user_features_dao.disable_dnd.assert_called_once_with(user_id)
+        self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
+
+
+    def test_enable_filter(self):
+        user_id = 789
+
+        self.user_service_manager.enable_filter(user_id)
+
+        self.user_features_dao.enable_filter.assert_called_once_with(user_id)
+        self.user_service_notifier.filter_enabled.assert_called_once_with(user_id)
+
