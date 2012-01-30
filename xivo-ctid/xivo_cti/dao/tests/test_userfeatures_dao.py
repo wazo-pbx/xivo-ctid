@@ -64,13 +64,33 @@ class Test(unittest.TestCase):
 
         dao.enable_dnd(user_id)
 
-        dbconnection.unregister_db_connection_pool()
         self._check_dnd_is_set(user_id)
+
+
+    def test_unset_dnd(self):
+        user_id = self._insert_user_dnd_set()
+        dao = UserFeaturesDAO(self.session)
+        dao._innerdata = self._innerdata
+
+        dao.disable_dnd(user_id)
+
+        self._check_dnd_is_not_set(user_id)
+        self._check_dnd_is_not_set_in_inner_data(user_id)
+
+    def _insert_user_dnd_set(self):
+        user_features = UserFeatures()
+        user_features.enablednd = 1
+        user_features.firstname = 'firstname_test'
+        self.session.add(user_features)
+        self.session.commit()
+        user_id = user_features.id
+        self._userlist.keeplist[user_id] = {'enablednd': True}
+        return user_id
 
     def _insert_user_dnd_not_set(self):
         user_features = UserFeatures()
         user_features.enablednd = 0
-        user_features.firstname = 'firstname_test'
+        user_features.firstname = 'firstname_dnd not set'
         self.session.add(user_features)
         self.session.commit()
         user_id = user_features.id
@@ -82,3 +102,12 @@ class Test(unittest.TestCase):
                          .filter(UserFeatures.id == user_id))[0]
         self.assertTrue(self._userlist.keeplist[user_id]['enablednd'])
         self.assertTrue(user_features.enablednd)
+
+    def _check_dnd_is_not_set(self, user_id):
+        user_features = (self.session.query(UserFeatures)
+                         .filter(UserFeatures.id == user_id))[0]
+        self.assertFalse(user_features.enablednd)
+
+    def _check_dnd_is_not_set_in_inner_data(self, user_id):
+        self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
+

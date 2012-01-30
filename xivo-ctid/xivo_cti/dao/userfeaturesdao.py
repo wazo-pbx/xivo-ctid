@@ -12,6 +12,11 @@ class UserFeaturesDAO(object):
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = True
 
+    def disable_dnd(self, user_id):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 0})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = False
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

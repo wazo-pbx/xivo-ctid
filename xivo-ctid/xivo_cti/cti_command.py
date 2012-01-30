@@ -333,7 +333,12 @@ class Command(object):
         return {'userfeatures': services.get('userfeatures')}
 
     def regcommand_featuresput(self):
-        self.user_service_manager.enable_dnd(self.ruserid)
+
+        if (self._commanddict.get('value') == True):
+            self.user_service_manager.enable_dnd(self.ruserid)
+        else:
+            self.user_service_manager.disable_dnd(self.ruserid)
+
         return {'status': 'OK'}
 #        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)
 #        if user is None:

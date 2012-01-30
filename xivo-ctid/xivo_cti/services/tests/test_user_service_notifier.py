@@ -30,3 +30,22 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertTrue(notifier.events_cti.qsize() > 0)
         event = notifier.events_cti.get()
         self.assertEqual(event, expected)
+
+    def test_dnd_disabled(self):
+        user_id = 34
+        ipbx_id = 'xivo_test'
+        notifier = UserServiceNotifier()
+        notifier.events_cti = Queue.Queue()
+        notifier.ipbx_id = ipbx_id
+        expected = {"class": "getlist",
+                    "config": {"enablednd": False},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": ipbx_id}
+
+        notifier.dnd_disabled(user_id)
+
+        self.assertTrue(notifier.events_cti.qsize() > 0)
+        event = notifier.events_cti.get()
+        self.assertEqual(event, expected)

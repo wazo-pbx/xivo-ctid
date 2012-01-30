@@ -40,6 +40,23 @@ class Test(unittest.TestCase):
         user_service_manager.enable_dnd.assert_called_once_with(user_id)
         self.assertEqual(reply, return_success)
 
+    def test_features_put_disable_dnd(self):
+        user_id = 13
+        return_success = {'status': 'OK'}
+        command = {'class': "featuresput",
+                   "commandid": 819690795,
+                   "function": "enablednd",
+                   "value": False}
+        cti_command = Command(self.conn, command)
+        user_service_manager = Mock(UserServiceManager)
+        cti_command.user_service_manager = user_service_manager
+        cti_command.ruserid = user_id
+
+        reply = cti_command.regcommand_featuresput()
+
+        user_service_manager.disable_dnd.assert_called_once_with(user_id)
+        self.assertEqual(reply, return_success)
+
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
         cti_command = Command(self.conn, message)
