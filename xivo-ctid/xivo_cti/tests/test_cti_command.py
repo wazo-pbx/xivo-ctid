@@ -1,22 +1,44 @@
 # -*- coding: UTF-8 -*-
 
 import unittest
+
 from tests.mock import Mock
 from xivo_cti.cti_command import Command
 from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
 from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_queuelist import QueueList
+from xivo_cti.ctiserver import CTIServer
+from xivo_cti.user_service_manager import UserServiceManager
 
 
 class Test(unittest.TestCase):
 
     def setUp(self):
+        self._ctiserver = Mock(CTIServer)
+        self._ipbxid = 'my_ipbx_id'
+        self._innerdata = Mock(Safe)
         self.conn = Mock()
         self.conn.requester = ('test_requester', 1)
+        self.conn._ctiserver = self._ctiserver
+        self._ctiserver.safe = {self._ipbxid: self._innerdata}
 
-    def tearDown(self):
-        pass
+    def test_features_put_enable_dnd(self):
+        user_id = 13
+        return_success = {'status': 'OK'}
+        command = {'class': "featuresput",
+                   "commandid": 819690795,
+                   "function": "enablednd",
+                   "value": True}
+        cti_command = Command(self.conn, command)
+        user_service_manager = Mock(UserServiceManager)
+        cti_command.user_service_manager = user_service_manager
+        cti_command.ruserid = user_id
+
+        reply = cti_command.regcommand_featuresput()
+
+        user_service_manager.enable_dnd.assert_called_once_with(user_id)
+        self.assertEqual(reply, return_success)
 
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
@@ -50,84 +72,3 @@ class Test(unittest.TestCase):
 
         queueStatistics.get_statistics.assert_called_with('service', 60, 3600)
         encoder.encode.assert_called_with(statisticsToEncode)
-
-    def test_regcommand_featuresput(self):
-        from xivo_cti import cti_command
-        from xivo_cti import cti_config
-        xws_inst = Mock()
-        xws_inst.connect = Mock()
-        xws_inst.serviceput = Mock()
-        xws = Mock()
-        xws.__init__(return_value=xws_inst)
-        cti_command.xivo_webservices.XivoWebService = xws
-        old_config_get_instance, cti_config.Config.get_instance = cti_config.Config.get_instance, Mock()
-        config = Mock(cti_config.Config)
-        config.ipwebs = 'localhost'
-        cti_config.Config.get_instance.return_value = config
-
-        conn = Mock()
-        conn.requester = ('test_requester', 3)
-
-        ##
-        message = {'class': 'featuresput',
-            'commandid': 1235,
-            'function': 'callrecord',
-            'value': True}
-
-        ## 1. invalid/unknown user
-        cmd = Command(conn, message)
-        cmd.ruserid = -1
-        cmd.rinnerdata = Mock()
-
-        m_users = Mock()
-        m_users.finduser = Mock(return_value=None)
-        cmd.rinnerdata.xod_config = {'users':m_users}
-        res = cmd.regcommand_featuresput()
-
-        self.assertFalse(xws_inst.serviceput.called)
-        self.assertEqual(res, {'status':'KO','error_string': 'unknown -1 user'})
-
-        ## 2. value not changed
-        cmd = Command(conn, message)
-        cmd.ruserid = 1
-        cmd.rinnerdata = Mock()
-
-        user    = Mock()
-        user.get = Mock(return_value=True)
-        m_users = Mock()
-        m_users.finduser = Mock(return_value=user)
-        cmd.rinnerdata.xod_config = {'users':m_users}
-        res = cmd.regcommand_featuresput()
-
-        self.assertFalse(xws_inst.serviceput.called)
-        self.assertEqual(res, {'status':'OK','warning_string': 'no changes'})
-
-        ## 3. ok (simple feature)
-        cmd = Command(conn, message)
-        cmd.ruserid = 1
-        cmd.rinnerdata = Mock()
-        res = cmd.regcommand_featuresput()
-
-        self.assertEqual(res['status'],'OK')
-        self.assertTrue(xws_inst.connect.called)
-        xws_inst.serviceput.assert_called_with(1, {'callrecord': True})
-        xws.inst.connect.reset_mock()
-        xws_inst.serviceput.reset_mock()
-
-        ## 4. ok (feature with value)
-        message = {'class': 'featuresput',
-            'commandid': 1522263052,
-            'function': 'fwd',
-            'value': {'destrna': '123', 'enablerna': True}
-        }
-
-        cmd = Command(conn, message)
-        cmd.ruserid = 1
-        cmd.rinnerdata = Mock()
-        cmd.regcommand_featuresput()
-
-        self.assertEqual(res['status'], 'OK')
-        self.assertTrue(xws_inst.connect.called)
-        xws_inst.serviceput.assert_called_with(1, {'enablerna': True, 'destrna': '123'})
-
-        cti_config.Config.get_instance = old_config_get_instance

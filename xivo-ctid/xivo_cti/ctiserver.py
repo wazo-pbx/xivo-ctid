@@ -51,6 +51,9 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_fagi
+from xivo_cti.user_service_manager import UserServiceManager
+from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
+from xivo_cti.services.user_service_notifier import UserServiceNotifier
 
 logger = logging.getLogger('main')
 
@@ -70,6 +73,7 @@ class CTIServer(object):
         self.pipe_queued_threads = None
         self.scheduler = None
         self._config = None
+        self._user_service_manager = None
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self.sighandler)
@@ -108,6 +112,7 @@ class CTIServer(object):
 
     def setup(self):
         self._config = cti_config.Config.get_instance()
+        self._config.update()
         self._set_logger()
         self._daemonize()
         self.timeout_queue = Queue.Queue()
@@ -117,6 +122,13 @@ class CTIServer(object):
                                                      persister)
         self._setup_zones_and_alarms(persister, alarm)
         self._set_signal_handlers()
+        self._init_db_connection_pool()
+        self._init_queue_stats()
+        self._user_service_manager = UserServiceManager()
+        self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
+        self._user_service_manager.user_features_dao = self._user_features_dao
+        self._user_service_notifier = UserServiceNotifier()
+        self._user_service_manager.user_service_notifier = self._user_service_notifier
 
     def run(self):
         while True:
@@ -254,8 +266,6 @@ class CTIServer(object):
         self.update_userlist = {}
         self.lastrequest_time = {}
 
-        self._init_db_connection_pool()
-
         self._config.set_ipwebs(cti_config.XIVOIP)
         if cti_config.XIVO_CONF_OVER:
             urldata = urllib.urlopen(cti_config.XIVO_CONF_OVER)
@@ -265,8 +275,6 @@ class CTIServer(object):
             self._config.set_rcti_override_ipbxes(overconf)
         self._config.update()
         self._config.set_rcti_special_profile()
-
-        self._init_queue_stats()
 
         xivoconf_general = self._config.getconfig('main')
 
@@ -301,8 +309,12 @@ class CTIServer(object):
         if self.myipbxid:
             ipbxconfig = self._config.getconfig('ipbxes').get(self.myipbxid)
             # interface : safe deposit
-            self.safe[self.myipbxid] = innerdata.Safe(self, self.myipbxid,
+            safe = innerdata.Safe(self, self.myipbxid,
                                                       ipbxconfig.get('urllists'))
+            self.safe[self.myipbxid] = safe
+            self._user_features_dao._innerdata = safe
+            self._user_service_notifier.events_cti = safe.events_cti
+            self._user_service_notifier.ipbx_id = self.myipbxid
             self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].update_directories()
             # interface : AMI
@@ -655,6 +667,7 @@ class CTIServer(object):
                                 nc = interface_webi.WEBI(self)
                             elif kind in ['CTI', 'CTIS']:
                                 nc = getattr(interface_cti, kind)(self)
+                                nc.user_service_manager = self._user_service_manager
                             elif kind == 'FAGI':
                                 nc = interface_fagi.FAGI(self)
 

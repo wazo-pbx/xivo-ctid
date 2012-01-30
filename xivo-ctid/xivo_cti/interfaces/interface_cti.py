@@ -63,6 +63,7 @@ class CTI(interfaces.Interfaces):
         self.serial = serialJson()
         self.transferconnection = {}
         self._cti_command_handler = None
+        self.user_service_manager = None
 
     def connected(self, connid):
         """
@@ -110,6 +111,7 @@ class CTI(interfaces.Interfaces):
 
         # Commands from the cti_command.Command class
         command = cti_command.Command(self, decoded_command)
+        command.user_service_manager = self.user_service_manager
         replies.extend(command.parse())
 
         # Commands from the CTICommandHandler
