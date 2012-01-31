@@ -353,13 +353,18 @@ class Command(object):
                         self.user_service_manager.enable_unconditional_fwd(self.ruserid, value['destunc'])
                     else:
                         self.user_service_manager.disable_unconditional_fwd(self.ruserid, value['destunc'])
-                elif 'destrna' in value:
+                if 'destrna' in value:
                     enabled = value.get('enablerna', False)
                     if enabled and value['destrna']:
                         self.user_service_manager.enable_rna_fwd(self.ruserid, value['destrna'])
                     else:
                         self.user_service_manager.disable_rna_fwd(self.ruserid, value['destrna'])
-
+                if 'destbusy' in value:
+                    enabled = value.get('enablebusy', False)
+                    if enabled and value['destbusy']:
+                        self.user_service_manager.enable_busy_fwd(self.ruserid, value['destbusy'])
+                    else:
+                        self.user_service_manager.disable_busy_fwd(self.ruserid, value['destbusy'])
             return {'status': 'OK'}
         except Exception, e:
             logger.debug(e)

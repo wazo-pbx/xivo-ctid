@@ -55,3 +55,11 @@ class UserServiceManager(object):
     def disable_rna_fwd(self, user_id, destination):
         self.user_features_dao.disable_rna_fwd(user_id, destination)
         self.user_service_notifier.rna_fwd_disabled(user_id, destination)
+
+    def enable_busy_fwd(self, user_id, destination):
+        self.user_features_dao.enable_busy_fwd(user_id, destination)
+        self.user_service_notifier.busy_fwd_enabled(user_id, destination)
+
+    def disable_busy_fwd(self, user_id, destination):
+        self.user_features_dao.disable_busy_fwd(user_id, destination)
+        self.user_service_notifier.busy_fwd_disabled(user_id, destination)

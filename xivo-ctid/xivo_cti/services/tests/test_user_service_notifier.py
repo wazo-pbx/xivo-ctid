@@ -133,3 +133,41 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertTrue(self.notifier.events_cti.qsize() > 0)
         event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)
+
+    def test_busy_fwd_enabled(self):
+        user_id = 456
+        destination = '234'
+        expected = {"class": "getlist",
+                    "config": {"enablebusy": True,
+                               'destbusy': destination},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.busy_fwd_enabled(user_id, destination)
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)
+
+    def test_busy_fwd_disabled(self):
+        user_id = 456
+        destination = '234'
+        expected = {"class": "getlist",
+                    "config": {"enablebusy": False,
+                               'destbusy': destination},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.busy_fwd_disabled(user_id, destination)
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)
+
+    def test_prepare_message(self):
+        self.notifier._prepare_message('123')
+        self.assertEqual(self.notifier.STATUS_MESSAGE['tid'], '')
