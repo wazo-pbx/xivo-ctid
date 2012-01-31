@@ -41,6 +41,34 @@ class UserFeaturesDAO(object):
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = False
 
+    def enable_rna_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 1,
+                                                                                     'destrna': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = True
+        self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
+
+    def disable_rna_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 0,
+                                                                                     'destrna': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
+        self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = False
+
+    def enable_busy_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 1,
+                                                                                     'destbusy': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = True
+        self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
+
+    def disable_busy_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 0,
+                                                                                     'destbusy': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
+        self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

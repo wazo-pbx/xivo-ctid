@@ -36,6 +36,50 @@ class Test(unittest.TestCase):
         cti_command.ruserid = user_id
         return cti_command
 
+    def test_features_put_enable_rna_fwd(self):
+        user_id = 6789
+        destination = '105'
+        cti_command = self._create_featureput_command('fwd', user_id, {'destrna': destination,
+                                                                       'enablerna': True})
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.enable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.assertEqual(reply, self.features_return_success)
+
+    def test_features_put_disable_busy_fwd(self):
+        user_id = 189
+        destination = '123'
+        cti_command = self._create_featureput_command('fwd', user_id, {'destbusy': destination,
+                                                                       'enablebusy': False})
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.disable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.assertEqual(reply, self.features_return_success)
+
+    def test_features_put_enable_busy_fwd(self):
+        user_id = 679
+        destination = '109'
+        cti_command = self._create_featureput_command('fwd', user_id, {'destbusy': destination,
+                                                                       'enablebusy': True})
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.enable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.assertEqual(reply, self.features_return_success)
+
+    def test_features_put_disable_rna_fwd(self):
+        user_id = 6789
+        destination = '105'
+        cti_command = self._create_featureput_command('fwd', user_id, {'destrna': destination,
+                                                                       'enablerna': False})
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.disable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.assertEqual(reply, self.features_return_success)
+
     def test_features_put_enable_unconditional_fwd(self):
         user_id = 4567
         destination = '101'
