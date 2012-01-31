@@ -367,32 +367,7 @@ class Command(object):
                         self.user_service_manager.disable_busy_fwd(self.ruserid, value['destbusy'])
             return {'status': 'OK'}
         except Exception, e:
-            logger.debug(e)
-#        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)
-#        if user is None:
-#            return {'status': 'KO', 'error_string': 'unknown %d user' % self.ruserid}
-#
-#        func = self._commanddict.get('function')
-#        values = self._commanddict.get('value') if func == 'fwd' else\
-#            {func: self._commanddict.get('value')}
-#
-#        changed = False
-#        for k, v in values.iteritems():
-#            if v != user.get(k, None):
-#                changed = True
-#                break
-#
-#        # feature values has not been changed
-#        if not changed:
-#            return {'status': 'OK', 'warning_string': 'no changes'}
-#
-#        #user.update(values)
-#        z = xivo_webservices.XivoWebService(self._config.ipwebs, 80)
-#        z.connect()
-#        z.serviceput(self.ruserid, values)
-#        z.close()
-#
-#        return {'status': 'OK'}
+            return {'status': 'KO', 'error_string': '%s' % e}
 
     def regcommand_history(self):
         phone = self._get_phone_from_user_id(self.ruserid, self.rinnerdata)
