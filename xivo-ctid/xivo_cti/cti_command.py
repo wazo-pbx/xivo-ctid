@@ -345,6 +345,10 @@ class Command(object):
                 self.user_service_manager.enable_filter(self.ruserid)
             else:
                 self.user_service_manager.disable_filter(self.ruserid)
+        elif funct == 'fwd' and 'value' in self._commanddict:
+            value = self._commanddict['value']
+            if 'destunc' in value:
+                self.user_service_manager.set_unconditional_dest(self.ruserid, value['destunc'])
 
         return {'status': 'OK'}
 #        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)

@@ -50,4 +50,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_features_dao.disable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
 
+    def test_set_dest_unc(self):
+        user_id = 543
+        destination = '1234'
+
+        self.user_service_manager.set_unconditional_dest(user_id, destination)
+
+        self.user_features_dao.unconditional_dest.assert_called_once_with(user_id, destination)
+        self.user_service_notifier.unconditional_dest_setted.assert_called_once_with(user_id, destination)
 

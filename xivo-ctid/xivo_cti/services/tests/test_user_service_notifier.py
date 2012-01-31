@@ -82,3 +82,21 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertTrue(self.notifier.events_cti.qsize() > 0, 'No event in queue for filter disabled')
         event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)
+
+    def test_unconditional_dest_setted(self):
+        user_id = 765
+        destination = '098'
+        expected = {"class": "getlist",
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.unconditional_dest_setted(user_id, destination)
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertTrue('config' in event)
+        config = event.pop('config')
+        self.assertTrue('destunc' in config and config['destunc'] == destination)
+        self.assertEqual(event, expected)

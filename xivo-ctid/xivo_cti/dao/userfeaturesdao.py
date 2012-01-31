@@ -27,6 +27,11 @@ class UserFeaturesDAO(object):
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
 
+    def unconditional_dest(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'destunc': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

@@ -26,6 +26,13 @@ class UserServiceNotifier(object):
         filter_status_msg['tipbxid'] = self.ipbx_id
         return filter_status_msg
 
+    def _prepare_unconditional_destination(self, destination, user_id):
+        unconditional_destination_msg = self.STATUS_MESSAGE
+        unconditional_destination_msg.update({'config': {'destunc': destination},
+                                              'tid': user_id,
+                                              'tipbxid': self.ipbx_id})
+        return unconditional_destination_msg
+
     def dnd_enabled(self, user_id):
         self.events_cti.put(self._prepare_dnd_message(True, user_id))
 
@@ -37,4 +44,7 @@ class UserServiceNotifier(object):
 
     def filter_disabled(self, user_id):
         self.events_cti.put(self._prepare_filter_message(False, user_id))
+
+    def unconditional_dest_setted(self, user_id, destination):
+        self.events_cti.put(self._prepare_unconditional_destination(destination, user_id))
 

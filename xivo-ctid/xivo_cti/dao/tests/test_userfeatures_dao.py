@@ -152,3 +152,31 @@ class Test(unittest.TestCase):
         elif value == 1:
             self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
+    def test_unconditional_dest(self):
+        destination = '4321'
+        user_id = self._insert_user_with_unconditional_destination('')
+        dao = UserFeaturesDAO(self.session)
+        dao._innerdata = self._innerdata
+
+        dao.unconditional_dest(user_id, destination)
+
+        self._check_unconditional_dest_in_db(user_id, destination)
+        self._check_unconditional_dest_in_inner_data(user_id, destination)
+
+    def _insert_user_with_unconditional_destination(self, destination):
+        user_features = UserFeatures()
+        user_features.firstname = 'firstname_unconditional_destination not set'
+        user_features.destunc = destination
+        self.session.add(user_features)
+        self.session.commit()
+        user_id = user_features.id
+        self._userlist.keeplist[user_id] = {'destunc': destination}
+        return user_id
+
+    def _check_unconditional_dest_in_inner_data(self, user_id, destination):
+        self.assertEqual(self._userlist.keeplist[user_id]['destunc'], destination, 'inner data not updated for unconditional destination')
+
+    def _check_unconditional_dest_in_db(self, user_id, destination):
+        user_features = (self.session.query(UserFeatures)
+                         .filter(UserFeatures.id == user_id))[0]
+        self.assertEquals(user_features.destunc, destination)

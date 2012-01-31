@@ -24,8 +24,6 @@ class Test(unittest.TestCase):
         self._ctiserver.safe = {self._ipbxid: self._innerdata}
         self.user_service_manager = Mock(UserServiceManager)
 
-
-
     def _create_featureput_command(self, funct, user_id, value):
         command = {'class': "featuresput",
                    "commandid": 819690795,
@@ -35,6 +33,18 @@ class Test(unittest.TestCase):
         cti_command.user_service_manager = self.user_service_manager
         cti_command.ruserid = user_id
         return cti_command
+
+    def test_features_put_fwd_unc_dest(self):
+        user_id = 555
+        destination = '101'
+        return_success = {'status': 'OK'}
+        cti_command = self._create_featureput_command('fwd', user_id, {'enableunc': False,
+                                                                       'destunc': destination})
+
+        reply = cti_command.regcommand_featuresput()
+
+        self.user_service_manager.set_unconditional_dest.assert_called_once_with(user_id, destination)
+        self.assertEqual(reply, return_success)
 
     def test_features_put_enable_dnd(self):
         user_id = 13
