@@ -33,6 +33,14 @@ class UserServiceNotifier(object):
                                   'tipbxid': self.ipbx_id})
         return filter_status_msg
 
+    def _prepare_rna_fwd_message(self, status, destination, user_id):
+        filter_status_msg = self.STATUS_MESSAGE
+        filter_status_msg.update({'config': {'enablerna': status,
+                                             'destrna': destination},
+                                  'tid': user_id,
+                                  'tipbxid': self.ipbx_id})
+        return filter_status_msg
+
     def dnd_enabled(self, user_id):
         self.events_cti.put(self._prepare_dnd_message(True, user_id))
 
@@ -50,3 +58,9 @@ class UserServiceNotifier(object):
 
     def unconditional_fwd_disabled(self, user_id, destination):
         self.events_cti.put(self._prepare_unconditional_fwd_message(False, destination, user_id))
+
+    def rna_fwd_enabled(self, user_id, destination):
+        self.events_cti.put(self._prepare_rna_fwd_message(True, destination, user_id))
+
+    def rna_fwd_disabled(self, user_id, destination):
+        self.events_cti.put(self._prepare_rna_fwd_message(False, destination, user_id))

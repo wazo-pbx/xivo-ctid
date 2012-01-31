@@ -64,3 +64,21 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_disabled.assert_called_once_with(user_id, destination)
+
+    def test_enable_rna_fwd(self):
+        user_id = 2345
+        destination = '3456'
+
+        self.user_service_manager.enable_rna_fwd(user_id, destination)
+
+        self.user_features_dao.enable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, destination)
+
+    def test_disable_rna_fwd(self):
+        user_id = 2345
+        destination = '3456'
+
+        self.user_service_manager.disable_rna_fwd(user_id, destination)
+
+        self.user_features_dao.disable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)

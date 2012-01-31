@@ -47,3 +47,11 @@ class UserServiceManager(object):
     def disable_unconditional_fwd(self, user_id, destination):
         self.user_features_dao.disable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_disabled(user_id, destination)
+
+    def enable_rna_fwd(self, user_id, destination):
+        self.user_features_dao.enable_rna_fwd(user_id, destination)
+        self.user_service_notifier.rna_fwd_enabled(user_id, destination)
+
+    def disable_rna_fwd(self, user_id, destination):
+        self.user_features_dao.disable_rna_fwd(user_id, destination)
+        self.user_service_notifier.rna_fwd_disabled(user_id, destination)

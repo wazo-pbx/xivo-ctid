@@ -99,3 +99,37 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertTrue(self.notifier.events_cti.qsize() > 0)
         event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)
+
+    def test_rna_fwd_enabled(self):
+        user_id = 456
+        destination = '234'
+        expected = {"class": "getlist",
+                    "config": {"enablerna": True,
+                               'destrna': destination},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.rna_fwd_enabled(user_id, destination)
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)
+
+    def test_rna_fwd_disabled(self):
+        user_id = 456
+        destination = '234'
+        expected = {"class": "getlist",
+                    "config": {"enablerna": False,
+                               'destrna': destination},
+                    "function": "updateconfig",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.rna_fwd_disabled(user_id, destination)
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)
