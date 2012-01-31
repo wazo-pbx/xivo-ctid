@@ -51,9 +51,9 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_fagi
-from xivo_cti.user_service_manager import UserServiceManager
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
+from xivo_cti.services.user_service_manager import UserServiceManager
 
 logger = logging.getLogger('main')
 
