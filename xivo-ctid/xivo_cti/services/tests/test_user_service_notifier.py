@@ -54,7 +54,7 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertEqual(event, expected)
 
     def test_filter_enabled(self):
-        user_id=32
+        user_id = 32
 
         expected = {"class": "getlist",
                     "config": {"incallfilter": True},
@@ -69,7 +69,7 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.assertEqual(event, expected)
 
     def test_filter_disabled(self):
-        user_id=932
+        user_id = 932
 
         expected = {"class": "getlist",
                     "config": {"incallfilter": False},
@@ -83,20 +83,19 @@ class TestUserServiceNotifier(unittest.TestCase):
         event = self.notifier.events_cti.get()
         self.assertEqual(event, expected)
 
-    def test_unconditional_dest_setted(self):
-        user_id = 765
-        destination = '098'
+    def test_unconditional_fwd_enabled(self):
+        user_id = 456
+        destination = '234'
         expected = {"class": "getlist",
+                    "config": {"enableunc": True,
+                               'destunc': destination},
                     "function": "updateconfig",
                     "listname": "users",
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.unconditional_dest_setted(user_id, destination)
+        self.notifier.unconditional_fwd_enabled(user_id, destination)
 
         self.assertTrue(self.notifier.events_cti.qsize() > 0)
         event = self.notifier.events_cti.get()
-        self.assertTrue('config' in event)
-        config = event.pop('config')
-        self.assertTrue('destunc' in config and config['destunc'] == destination)
         self.assertEqual(event, expected)

@@ -333,24 +333,30 @@ class Command(object):
         return {'userfeatures': services.get('userfeatures')}
 
     def regcommand_featuresput(self):
+        try:
+            funct = self._commanddict.get('function')
+            if funct == 'enablednd':
+                if (self._commanddict.get('value') == True):
+                    self.user_service_manager.enable_dnd(self.ruserid)
+                else:
+                    self.user_service_manager.disable_dnd(self.ruserid)
+            elif funct == 'incallfilter':
+                if (self._commanddict.get('value') == True):
+                    self.user_service_manager.enable_filter(self.ruserid)
+                else:
+                    self.user_service_manager.disable_filter(self.ruserid)
+            elif funct == 'fwd' and 'value' in self._commanddict:
+                value = self._commanddict['value']
+                if 'destunc' in value:
+                    enabled = value.get('enableunc', False)
+                    if enabled and value['destunc']:
+                        self.user_service_manager.enable_unconditional_fwd(self.ruserid, value['destunc'])
+                    else:
+                        self.user_service_manager.disable_unconditional_fwd(self.ruserid, value['destunc'])
 
-        funct = self._commanddict.get('function')
-        if funct == 'enablednd':
-            if (self._commanddict.get('value') == True):
-                self.user_service_manager.enable_dnd(self.ruserid)
-            else:
-                self.user_service_manager.disable_dnd(self.ruserid)
-        elif funct == 'incallfilter':
-            if (self._commanddict.get('value') == True):
-                self.user_service_manager.enable_filter(self.ruserid)
-            else:
-                self.user_service_manager.disable_filter(self.ruserid)
-        elif funct == 'fwd' and 'value' in self._commanddict:
-            value = self._commanddict['value']
-            if 'destunc' in value:
-                self.user_service_manager.set_unconditional_dest(self.ruserid, value['destunc'])
-
-        return {'status': 'OK'}
+            return {'status': 'OK'}
+        except Exception, e:
+            logger.debug(e)
 #        user = self.rinnerdata.xod_config.get('users').finduser(self.ruserid)
 #        if user is None:
 #            return {'status': 'KO', 'error_string': 'unknown %d user' % self.ruserid}

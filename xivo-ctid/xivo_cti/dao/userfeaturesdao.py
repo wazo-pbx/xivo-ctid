@@ -27,10 +27,19 @@ class UserFeaturesDAO(object):
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
 
-    def unconditional_dest(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'destunc': destination})
+    def enable_unconditional_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 1,
+                                                                                     'destunc': destination})
+        self._session.commit()
+        self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = True
+        self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
+
+    def disable_unconditional_fwd(self, user_id, destination):
+        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 0,
+                                                                                     'destunc': destination})
         self._session.commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
+        self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = False
 
     @classmethod
     def new_from_uri(cls, uri):
