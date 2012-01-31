@@ -26,7 +26,6 @@ import random
 import string
 import threading
 import time
-from xivo_cti import xivo_webservices
 from xivo_cti import cti_fax
 from xivo_cti import cti_config
 from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
@@ -47,7 +46,7 @@ REGCOMMANDS = [
     'getipbxlist',
     'availstate', 'keepalive',
 
-    'featuresget', 'featuresput',
+    'featuresput',
     'history',
     'faxsend',
     'filetransfer',
@@ -322,15 +321,6 @@ class Command(object):
                                          'cticommand:actionfiche',
                                          infos.get('buttonname'))
         return reply
-
-    def regcommand_featuresget(self):
-        z = xivo_webservices.XivoWebService(self._config.ipwebs, 80)
-        z.connect()
-        services = z.serviceget(self.ruserid)
-        z.close()
-        # looks like this nice information is in userfeatures
-        services.get('userfeatures').pop('passwdclient')
-        return {'userfeatures': services.get('userfeatures')}
 
     def regcommand_featuresput(self):
         try:

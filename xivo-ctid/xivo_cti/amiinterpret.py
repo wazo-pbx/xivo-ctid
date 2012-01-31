@@ -26,7 +26,6 @@ import random
 import string
 import time
 
-from xivo_cti import xivo_webservices
 from xivo_cti import cti_config
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
