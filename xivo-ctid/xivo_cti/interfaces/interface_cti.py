@@ -32,6 +32,7 @@ from xivo_cti import cti_command, cti_config
 from xivo_cti.interfaces import interfaces
 from xivo_cti.cti.commands.login_id import LoginID
 import random
+from xivo_cti.cti.cti_command_runner import CTICommandRunner
 
 logger = logging.getLogger('interface_cti')
 
@@ -62,7 +63,8 @@ class CTI(interfaces.Interfaces):
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
-        self._cti_command_handler = None
+        self._cti_command_handler = CTICommandHandler(self)
+        self._cti_command_runner = CTICommandRunner()
         self.user_service_manager = None
 
     def connected(self, connid):
@@ -70,7 +72,6 @@ class CTI(interfaces.Interfaces):
         Send a banner at login time
         """
         interfaces.Interfaces.connected(self, connid)
-        self._cti_command_handler = CTICommandHandler(self)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
         self._register_login_callbacks()

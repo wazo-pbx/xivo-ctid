@@ -1,5 +1,9 @@
+import logging
+
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy import dbconnection
+
+logger = logging.getLogger("UserFeaturesDAO")
 
 
 class UserFeaturesDAO(object):

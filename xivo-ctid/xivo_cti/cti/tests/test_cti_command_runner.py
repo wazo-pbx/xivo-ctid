@@ -23,6 +23,7 @@ class Test(unittest.TestCase):
                 self.color = color
                 self.shape= shape
                 self.description = description
+        reply_ok = {"status": "OK"}
         handler = Handler()
         TestCommand.register_callback_params(handler.handle_test, ['color', 'shape', 'get_description'])
         color = 'blue'
@@ -31,11 +32,12 @@ class Test(unittest.TestCase):
 
         runner = CTICommandRunner()
 
-        runner.run(command)
+        reply = runner.run(command)
 
         self.assertEqual(handler.color, color)
         self.assertEqual(handler.shape, shape)
         self.assertEqual(handler.description, '%s %s' % (color, shape))
+        self.assertEqual(reply, reply_ok)
 
     def test_run_command_typo(self):
         class TestCommand(CTICommand):

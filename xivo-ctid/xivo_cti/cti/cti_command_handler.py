@@ -22,6 +22,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command_runner import CTICommandRunner
+
+import logging
+
+logger = logging.getLogger('CTICommandHandler')
 
 
 class CTICommandHandler(object):
@@ -30,6 +35,7 @@ class CTICommandHandler(object):
         self._command_factory = CTICommandFactory()
         self._cti_connection = cti_connection
         self._commands_to_run = []
+        self._command_runner = CTICommandRunner()
 
     def parse_message(self, message):
         command_classes = self._command_factory.get_command(message)
@@ -38,11 +44,13 @@ class CTICommandHandler(object):
 
     def run_commands(self):
         functions = []
+        return_values = []
         while self._commands_to_run:
             command = self._commands_to_run.pop()
             if not command.cti_connection:
                 command.cti_connection = self._cti_connection
+            return_values.append(self._command_runner.run(command))
             for callback in command.callbacks():
                 functions.append((callback, command))
-        return_values = [function(command) for function, command in functions]
+        return_values.extend([function(command) for function, command in functions])
         return [return_value for return_value in return_values if return_value]

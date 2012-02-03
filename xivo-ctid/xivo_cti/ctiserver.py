@@ -54,6 +54,7 @@ from xivo_cti.interfaces import interface_fagi
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 
 logger = logging.getLogger('main')
 
@@ -132,7 +133,7 @@ class CTIServer(object):
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
-        pass
+        EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
 
     def run(self):
         while True:

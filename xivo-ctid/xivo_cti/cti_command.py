@@ -327,7 +327,7 @@ class Command(object):
             funct = self._commanddict.get('function')
             if funct == 'enablednd':
                 if (self._commanddict.get('value') == True):
-                    self.user_service_manager.enable_dnd(self.ruserid)
+                    pass
                 else:
                     self.user_service_manager.disable_dnd(self.ruserid)
             elif funct == 'incallfilter':

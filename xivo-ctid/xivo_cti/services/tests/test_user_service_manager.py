@@ -1,9 +1,9 @@
 import unittest
 
-from xivo_cti.user_service_manager import UserServiceManager
 from tests.mock import Mock
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
+from xivo_cti.services.user_service_manager import UserServiceManager
 
 
 class TestUserServiceManager(unittest.TestCase):
