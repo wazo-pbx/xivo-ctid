@@ -37,7 +37,7 @@ class MeetmeList(AnyList):
         self.anylist_properties = {'name': 'meetme',
                                    'urloptions': (1, 5, True)}
         AnyList.__init__(self, newurls)
-        InviteConfroom.register_callback(self.invite)
+        InviteConfroom.register_callback_params(self.invite, ['invitee', 'cti_connection'])
 
     def update(self):
         ret = AnyList.update(self)
@@ -67,16 +67,16 @@ class MeetmeList(AnyList):
             if channel_start in channels:
                 return meetme_id
 
-    def invite(self, invite_confroom_command):
+    def invite(self, invitee, connection):
         ami = self._ctiserver.myami[self._ipbxid].amicl
 
         try:
-            (_, invitee_id) = invite_confroom_command._invitee.split('/', 1)
+            (_, invitee_id) = invitee.split('/', 1)
 
             originate = Originate()
 
             phones = self.commandclass.xod_config['phones'].keeplist
-            user_id = int(invite_confroom_command.cti_connection.connection_details['userid'])
+            user_id = int(connection.connection_details['userid'])
             for phone in phones.itervalues():
                 if phone['iduserfeatures'] == int(invitee_id):
                     originate.channel = '%s/%s' % (phone['protocol'], phone['name'])
@@ -90,9 +90,9 @@ class MeetmeList(AnyList):
                 originate.priority = '1'
                 originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
         except KeyError, MissingFieldException:
-            return invite_confroom_command.get_warning({'message': 'Cannot complete command, missing info'})
+            return 'warning', {'message': 'Cannot complete command, missing info'}
 
         if originate.send(ami):
-            return invite_confroom_command.get_message({'message': 'Command sent succesfully'})
+            return 'message', {'message': 'Command sent succesfully'}
         else:
-            return invite_confroom_command.get_warning({'message': 'Failed to send the AMI command'})
+            return 'warning', {'message': 'Failed to send the AMI command'}

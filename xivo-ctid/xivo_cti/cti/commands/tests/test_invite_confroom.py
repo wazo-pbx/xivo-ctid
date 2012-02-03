@@ -49,7 +49,7 @@ class Test(unittest.TestCase):
         invitee = 'user:myxivo/123'
         command = InviteConfroom.from_dict({'class': self.command_class, 'invitee': invitee})
         self.assertEqual(command.command_class, self.command_class)
-        self.assertEqual(command._invitee, invitee)
+        self.assertEqual(command.invitee, invitee)
 
     def test_match_message(self):
         self.assertFalse(InviteConfroom.match_message({}))
