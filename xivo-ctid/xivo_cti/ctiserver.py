@@ -57,6 +57,7 @@ from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
+from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
 
 logger = logging.getLogger('main')
 
@@ -138,6 +139,7 @@ class CTIServer(object):
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter,['user_id'])
+        DisableFilter.register_callback_params(self._user_service_manager.disable_filter,['user_id'])
 
     def run(self):
         while True:

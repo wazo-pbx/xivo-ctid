@@ -325,10 +325,7 @@ class Command(object):
     def regcommand_featuresput(self):
         try:
             funct = self._commanddict.get('function')
-            if funct == 'incallfilter':
-                if (self._commanddict.get('value') == False):
-                    self.user_service_manager.disable_filter(self.ruserid)
-            elif funct == 'fwd' and 'value' in self._commanddict:
+            if funct == 'fwd' and 'value' in self._commanddict:
                 value = self._commanddict['value']
                 if 'destunc' in value:
                     enabled = value.get('enableunc', False)
