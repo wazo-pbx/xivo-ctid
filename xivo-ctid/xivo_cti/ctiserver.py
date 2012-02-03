@@ -59,6 +59,7 @@ from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
 from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
+from xivo_cti.cti.commands.user_service.disable_unconditional_forward import DisableUnconditionalForward
 
 logger = logging.getLogger('main')
 
@@ -142,6 +143,7 @@ class CTIServer(object):
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter,['user_id'])
         DisableFilter.register_callback_params(self._user_service_manager.disable_filter,['user_id'])
         EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd,['user_id', 'destination'])
+        DisableUnconditionalForward.register_callback_params(self._user_service_manager.disable_unconditional_fwd,['user_id', 'destination'])
 
     def run(self):
         while True:

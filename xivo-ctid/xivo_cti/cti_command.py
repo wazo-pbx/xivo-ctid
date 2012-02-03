@@ -327,12 +327,6 @@ class Command(object):
             funct = self._commanddict.get('function')
             if funct == 'fwd' and 'value' in self._commanddict:
                 value = self._commanddict['value']
-                if 'destunc' in value:
-                    enabled = value.get('enableunc', False)
-                    if enabled and value['destunc']:
-                        pass
-                    else:
-                        self.user_service_manager.disable_unconditional_fwd(self.ruserid, value['destunc'])
                 if 'destrna' in value:
                     enabled = value.get('enablerna', False)
                     if enabled and value['destrna']:
