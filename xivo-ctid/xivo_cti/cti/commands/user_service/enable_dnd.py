@@ -1,6 +1,6 @@
-from xivo_cti.cti.commands.set_user_service import SetUserService
 from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.commands.set_user_service import SetUserService
 
 
 class EnableDND(SetUserService):

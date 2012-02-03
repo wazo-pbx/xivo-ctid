@@ -129,6 +129,10 @@ class CTIServer(object):
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
+        self._register_cti_callbacks()
+
+    def _register_cti_callbacks(self):
+        pass
 
     def run(self):
         while True:
