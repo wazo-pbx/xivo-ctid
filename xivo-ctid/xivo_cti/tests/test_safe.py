@@ -62,7 +62,7 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(ListID, safe.handle_getlist_list_id)
         self.assert_callback_registered(UpdateConfig, safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, safe.handle_getlist_update_status)
-        self.assertTrue(WeakMethodBound(safe.getcustomers) in Directory._callbacks)
+        self.assert_callback_registered(Directory, safe.getcustomers)
 
     def test_handle_getlist_listid(self):
         safe = Safe(self._ctiserver, self._ipbx_id)

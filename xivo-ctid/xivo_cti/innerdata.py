@@ -257,7 +257,7 @@ class Safe(object):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
-        Directory.register_callback(self.getcustomers)
+        Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config:
@@ -1459,17 +1459,21 @@ class Safe(object):
             result['xivo-reverse-nresults'] = str(len(lookup_results))
             return result
 
-    def getcustomers(self, command):
+    def getcustomers(self, user_id, pattern, commandid):
         try:
-            contexts = self.xod_config['users'].get_contexts(command.user_id())
+            contexts = self.xod_config['users'].get_contexts(user_id)
             context_obj = self.contexts_mgr.contexts[contexts[0]]
         except KeyError:
             logger.error('getcustomers: undefined context: %s', contexts)
-            return command.get_warning({'status': 'ko', 'reason': 'undefined_context'})
+            return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
         else:
-            headers, resultlist = context_obj.lookup_direct(command.pattern, contexts=contexts)
+            headers, resultlist = context_obj.lookup_direct(pattern, contexts=contexts)
             resultlist = list(set(resultlist))
-            return command.get_message(command.get_reply_list(headers, resultlist))
+            return 'message', {'class': 'directory',
+                               'headers': headers,
+                               'replyid': commandid,
+                               'resultlist': resultlist,
+                               'status': 'ok'}
 
     # directory lookups entry points - STOP
 
