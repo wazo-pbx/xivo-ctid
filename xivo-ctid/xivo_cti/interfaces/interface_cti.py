@@ -66,6 +66,7 @@ class CTI(interfaces.Interfaces):
         self._cti_command_handler = CTICommandHandler(self)
         self._cti_command_runner = CTICommandRunner()
         self.user_service_manager = None
+        self._register_login_callbacks()
 
     def connected(self, connid):
         """
@@ -74,10 +75,12 @@ class CTI(interfaces.Interfaces):
         interfaces.Interfaces.connected(self, connid)
         self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
                             % (' '.join(os.uname()[:3])))
-        self._register_login_callbacks()
 
     def _register_login_callbacks(self):
-        LoginID.register_callback(self.receive_login_id)
+        LoginID.register_callback_params(self.receive_login_id, ['userlogin',
+                                                                 'company',
+                                                                 'xivo_version',
+                                                                 'cti_connection'])
 
     def disconnected(self, msg):
         logger.info('disconnected %s', msg)
@@ -160,40 +163,27 @@ class CTI(interfaces.Interfaces):
         except KeyError:
             logger.warning('Could not update user status %s', user_id)
 
-    def receive_login_id(self, login_id_command):
-        if login_id_command.cti_connection != self:
+    def receive_login_id(self, login, company, version, connection):
+        if connection != self:
             return []
 
-        if not login_id_command.lastlogout_stopper or not login_id_command.lastlogout_datetime:
-            logger.warning('lastlogout userlogin=%s stopper=%s datetime=%s',
-                           login_id_command.userlogin,
-                           login_id_command.lastlogout_stopper,
-                           login_id_command.lastlogout_datetime)
-
-        if login_id_command.xivo_version != cti_config.XIVOVERSION_NUM:
-            return login_id_command.get_warning('xivoversion_client:%s;%s'
-                                 % (login_id_command.xivo_version, cti_config.XIVOVERSION_NUM))
-
-        client_os = login_id_command.ident.split('-')[0]
-        if client_os.lower() not in ALLOWED_OS:
-            return login_id_command.get_warning({'message': 'wrong_client_os_identifier:%s' % client_os}, True)
+        if version != cti_config.XIVOVERSION_NUM:
+            return 'warning', 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM)
 
         ipbxid = self._ctiserver.myipbxid
         safe = self._ctiserver.safe[ipbxid]
-        userid = safe.user_find(login_id_command.userlogin,
-                                login_id_command.company)
+        userid = safe.user_find(login, company)
 
         if userid:
             self.connection_details.update({'ipbxid': ipbxid,
                                             'userid': userid})
 
-        self.connection_details['prelogin'] = {'cticlientos': client_os,
-                                               'version': '%s-%s' % (login_id_command.git_date, login_id_command.git_hash),
-                                               'sessionid': ''.join(random.sample(cti_config.ALPHANUMS, 10))}
+        session_id = ''.join(random.sample(cti_config.ALPHANUMS, 10))
+        self.connection_details['prelogin'] = {'sessionid': session_id}
 
-        reply = login_id_command.get_reply_ok(self.connection_details['prelogin']['sessionid'])
-
-        return login_id_command.get_message(reply)
+        return 'message', {'sessionid': session_id,
+                           'class': 'login_id',
+                           'xivoversion': version}
 
 
 class CTIS(CTI):

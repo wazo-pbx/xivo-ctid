@@ -1,4 +1,5 @@
 import logging
+from xivo_cti.cti.cti_reply_generator import CTIReplyGenerator
 
 logger = logging.getLogger('CTICommandRunner')
 
@@ -6,7 +7,7 @@ logger = logging.getLogger('CTICommandRunner')
 class CTICommandRunner(object):
 
     def __init__(self):
-        pass
+        self._reply_generator = CTIReplyGenerator()
 
     def _get_arguments(self, command, args):
         return [getattr(command, arg) if not callable(getattr(command, arg)) else getattr(command, arg)() for arg in args]
@@ -15,5 +16,7 @@ class CTICommandRunner(object):
         for callback in command.callbacks_with_params():
             function, args = callback
             arg_list = self._get_arguments(command, args)
-            function(*arg_list)
+            reply = function(*arg_list)
+            if reply:
+                return self._reply_generator.get_reply(reply[0], command, reply[1])
         return {'status': 'OK'}
