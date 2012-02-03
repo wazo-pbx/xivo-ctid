@@ -23,6 +23,7 @@ setup(
               'xivo_cti.cti',
               'xivo_cti.cti.commands',
               'xivo_cti.cti.commands.getlists',
+              'xivo_cti.cti.commands.user_service',
               'xivo_cti.services',
               'xivo_cti.tools'],
     scripts=['bin/xivo-ctid'],
