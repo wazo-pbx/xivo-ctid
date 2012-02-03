@@ -326,9 +326,7 @@ class Command(object):
         try:
             funct = self._commanddict.get('function')
             if funct == 'incallfilter':
-                if (self._commanddict.get('value') == True):
-                    self.user_service_manager.enable_filter(self.ruserid)
-                else:
+                if (self._commanddict.get('value') == False):
                     self.user_service_manager.disable_filter(self.ruserid)
             elif funct == 'fwd' and 'value' in self._commanddict:
                 value = self._commanddict['value']
