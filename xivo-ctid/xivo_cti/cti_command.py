@@ -330,7 +330,7 @@ class Command(object):
                 if 'destunc' in value:
                     enabled = value.get('enableunc', False)
                     if enabled and value['destunc']:
-                        self.user_service_manager.enable_unconditional_fwd(self.ruserid, value['destunc'])
+                        pass
                     else:
                         self.user_service_manager.disable_unconditional_fwd(self.ruserid, value['destunc'])
                 if 'destrna' in value:

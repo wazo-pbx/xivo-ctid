@@ -68,12 +68,26 @@ class Test(unittest.TestCase):
             self.assertTrue(False, u'Should raise an exception')
 
     def test_match_message(self):
-        self.assertFalse(CTICommand.match_message({}))
 
         CTICommand.conditions = [('class', 'test_command'), ('value', 'to_match')]
         self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match'}))
         self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match', 'other': 'not_checked'}))
         self.assertFalse(CTICommand.match_message({'class': 'test_command'}))
+
+    def test_match_message_invalid_key(self):
+        self.assertFalse(CTICommand.match_message({}))
+
+    def test_match_message_with_dict_inside(self):
+        self.assertFalse(CTICommand.match_message({}))
+
+        CTICommand.conditions = [('class', 'test_command'), (('value', 'subvalue'), 'to_match')]
+        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value':{'subvalue': 'to_match'}}))
+
+    def test_match_message_with_dict_invalid_key(self):
+        CTICommand.conditions = [('class', 'test_command'), (('value', 'moult'), 'to_match')]
+        self.assertFalse(CTICommand.match_message({'class': 'test_command', 'value':{'subvalue': 'to_match'}}))
+
+
 
     def test_register_callback(self):
         command = CTICommand().from_dict({'class': 'callback_test'})

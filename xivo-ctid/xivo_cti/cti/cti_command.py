@@ -85,7 +85,12 @@ class CTICommand(object):
             return False
         for (field, value) in cls.conditions:
             try:
-                if not message[field] == value:
+                if isinstance(field, tuple):
+                    (field1,subfield) = field
+                    message_field = message[field1][subfield]
+                else:
+                    message_field = message[field]
+                if not message_field == value:
                     return False
             except KeyError:
                 return False

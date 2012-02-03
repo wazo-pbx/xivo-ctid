@@ -80,17 +80,6 @@ class Test(unittest.TestCase):
         self.user_service_manager.disable_rna_fwd.assert_called_once_with(user_id, destination)
         self.assertEqual(reply, self.features_return_success)
 
-    def test_features_put_enable_unconditional_fwd(self):
-        user_id = 4567
-        destination = '101'
-        cti_command = self._create_featureput_command('fwd', user_id, {"destunc": destination,
-                                                                       "enableunc": True})
-
-        reply = cti_command.regcommand_featuresput()
-
-        self.user_service_manager.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
-        self.assertEqual(reply, self.features_return_success)
-
     def test_features_put_disable_unconditional_fwd(self):
         user_id = 555
         destination = '101'
