@@ -35,6 +35,7 @@ class ListID(GetList):
     conditions = [(CTICommand.CLASS, COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(ListID, self).__init__()

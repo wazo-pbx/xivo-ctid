@@ -59,26 +59,21 @@ class TestSafe(unittest.TestCase):
 
         safe.register_cti_handlers()
 
-        self.assertTrue(WeakMethodBound(safe.handle_getlist_list_id) in ListID._callbacks)
-        self.assertTrue(WeakMethodBound(safe.handle_getlist_update_config) in UpdateConfig._callbacks)
-        self.assertTrue(WeakMethodBound(safe.handle_getlist_update_status) in UpdateStatus._callbacks)
+        self.assert_callback_registered(ListID, safe.handle_getlist_list_id)
+        self.assert_callback_registered(UpdateConfig, safe.handle_getlist_update_config)
+        self.assert_callback_registered(UpdateStatus, safe.handle_getlist_update_status)
         self.assertTrue(WeakMethodBound(safe.getcustomers) in Directory._callbacks)
 
-        self.assertFalse(WeakMethodBound(safe.handle_getlist_list_id) in GetList._callbacks)
-        self.assertFalse(WeakMethodBound(safe.handle_getlist_update_config) in GetList._callbacks)
-        self.assertFalse(WeakMethodBound(safe.handle_getlist_update_status) in GetList._callbacks)
-
     def test_handle_getlist_listid(self):
-        item_id = '1'
-        commandid = 12345
-        list_id = ListID.from_dict({CTICommand.CLASS: GetList.COMMAND_CLASS,
-                                    CTICommand.COMMANDID: commandid,
-                                    GetList.FUNCTION: ListID.FUNCTION_NAME,
-                                    GetList.LIST_NAME: 'not_a_list',
-                                    GetList.ITEM_ID: item_id,
-                                    GetList.IPBX_ID: self._ipbx_id})
         safe = Safe(self._ctiserver, self._ipbx_id)
 
-        ret = safe.handle_getlist_list_id(list_id)
+        ret = safe.handle_getlist_list_id('not_a_list', '1')
 
         self.assertEqual(ret, None)
+
+    def assert_callback_registered(self, cls, fn):
+        found = False
+        for callback in cls._callbacks_with_params:
+            if fn == callback[0]:
+                found = True
+        self.assertTrue(found, 'Could not find callback to function %s' % fn)

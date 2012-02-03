@@ -254,27 +254,41 @@ class Safe(object):
             self.add_default_parking()
 
     def register_cti_handlers(self):
-        ListID.register_callback(self.handle_getlist_list_id)
-        UpdateConfig.register_callback(self.handle_getlist_update_config)
-        UpdateStatus.register_callback(self.handle_getlist_update_status)
+        ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
+        UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
+        UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback(self.getcustomers)
 
-    def handle_getlist_list_id(self, command):
-        if command.list_name in self.xod_config:
-            user_contexts = self.xod_config['users'].get_contexts(command.user_id())
-            item_ids = [item_id for item_id in self.xod_config[command.list_name].filter_context(user_contexts) if item_id.isdigit()]
-            return command.get_message(command.get_reply_list(item_ids))
+    def handle_getlist_list_id(self, listname, user_id):
+        if listname in self.xod_config:
+            user_contexts = self.xod_config['users'].get_contexts(user_id)
+            item_ids = [item_id for item_id in self.xod_config[listname].filter_context(user_contexts) if item_id.isdigit()]
+            return 'message', {'function': 'listid',
+                               'listname': listname,
+                               'tipbxid': self.ipbxid,
+                               'list': item_ids,
+                               'class': 'getlist'}
         else:
-            logger.debug('no such list %s', command.list_name)
+            logger.debug('no such list %s', listname)
 
-    def handle_getlist_update_config(self, command):
-        user_contexts = self.xod_config['users'].get_contexts(command.user_id())
-        item = self.get_config(command.list_name, command.item_id, user_contexts=user_contexts)
-        return command.get_message(command.get_reply_item(item))
+    def handle_getlist_update_config(self, user_id, list_name, item_id):
+        user_contexts = self.xod_config['users'].get_contexts(user_id)
+        item = self.get_config(list_name, item_id, user_contexts=user_contexts)
+        return 'message', {'function': 'updateconfig',
+                           'listname': list_name,
+                           'tipbxid': self.ipbxid,
+                           'tid': item_id,
+                           'class': 'getlist',
+                           'config': item}
 
-    def handle_getlist_update_status(self, command):
-        item = self.get_status(command.list_name, command.item_id)
-        return command.get_message(command.get_reply_item(item))
+    def handle_getlist_update_status(self, list_name, item_id):
+        item = self.get_status(list_name, item_id)
+        return 'message', {'function': 'updatestatus',
+                           'listname': list_name,
+                           'tipbxid': self.ipbxid,
+                           'tid': item_id,
+                           'class': 'getlist',
+                           'status': item}
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''

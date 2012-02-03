@@ -37,6 +37,7 @@ class UpdateStatus(GetList):
     conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(UpdateStatus, self).__init__()
