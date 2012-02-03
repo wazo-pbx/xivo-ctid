@@ -102,17 +102,6 @@ class Test(unittest.TestCase):
         self.user_service_manager.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.assertEqual(reply, self.features_return_success)
 
-    def test_features_put_disable_dnd(self):
-        user_id = 13
-
-        cti_command = self._create_featureput_command("enablednd", user_id, False)
-
-        reply = cti_command.regcommand_featuresput()
-
-        self.user_service_manager.disable_dnd.assert_called_once_with(user_id)
-
-        self.assertEqual(reply, self.features_return_success)
-
     def test_features_put_enable_filter(self):
         user_id = 14
         cti_command = self._create_featureput_command("incallfilter", user_id, True)

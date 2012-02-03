@@ -325,12 +325,7 @@ class Command(object):
     def regcommand_featuresput(self):
         try:
             funct = self._commanddict.get('function')
-            if funct == 'enablednd':
-                if (self._commanddict.get('value') == True):
-                    pass
-                else:
-                    self.user_service_manager.disable_dnd(self.ruserid)
-            elif funct == 'incallfilter':
+            if funct == 'incallfilter':
                 if (self._commanddict.get('value') == True):
                     self.user_service_manager.enable_filter(self.ruserid)
                 else:
