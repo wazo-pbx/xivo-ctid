@@ -35,6 +35,7 @@ class CTICommand(object):
     required_fields = [CLASS]
     conditions = None
     _callbacks = []
+    callbacks_with_params = []
 
     def __init__(self):
         self._msg = None
@@ -90,6 +91,12 @@ class CTICommand(object):
     @classmethod
     def register_callback(cls, function):
         cls._callbacks.append(weak_method.WeakCallable(function))
+
+    @classmethod
+    def register_callback_params(cls, function, params=None):
+        if not params:
+            params = []
+        cls.callbacks_with_params.append((function, params))
 
     @classmethod
     def from_dict(cls, msg):
