@@ -9,7 +9,7 @@ from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_queuelist import QueueList
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.user_service_manager import UserServiceManager
+from xivo_cti.services.user_service_manager import UserServiceManager
 
 
 class Test(unittest.TestCase):
@@ -100,16 +100,6 @@ class Test(unittest.TestCase):
         reply = cti_command.regcommand_featuresput()
 
         self.user_service_manager.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
-        self.assertEqual(reply, self.features_return_success)
-
-    def test_features_put_enable_dnd(self):
-        user_id = 13
-
-        cti_command = self._create_featureput_command("enablednd", user_id, True)
-
-        reply = cti_command.regcommand_featuresput()
-
-        self.user_service_manager.enable_dnd.assert_called_once_with(user_id)
         self.assertEqual(reply, self.features_return_success)
 
     def test_features_put_disable_dnd(self):

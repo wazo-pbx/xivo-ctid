@@ -2,13 +2,7 @@ import unittest
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 
 
-class Test(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class TestEnableDND(unittest.TestCase):
 
     def test_from_dict(self):
         commandid = 12327

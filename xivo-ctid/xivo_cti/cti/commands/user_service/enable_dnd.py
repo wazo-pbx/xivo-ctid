@@ -12,5 +12,6 @@ class EnableDND(SetUserService):
                   (SetUserService.FUNCTION, FUNCTION_NAME),
                   (SetUserService.VALUE, True)]
     _callbacks = []
+    _callbacks_with_params = []
 
 CTICommandFactory.register_class(EnableDND)

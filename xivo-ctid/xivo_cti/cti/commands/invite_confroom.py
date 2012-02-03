@@ -32,6 +32,7 @@ class InviteConfroom(CTICommand):
     required_fields = [CTICommand.CLASS, INVITEE]
     conditions = [(CTICommand.CLASS, 'invite_confroom')]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(InviteConfroom, self).__init__()

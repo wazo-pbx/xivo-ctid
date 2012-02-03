@@ -37,6 +37,7 @@ class GetList(CTICommand):
     required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, IPBX_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(GetList, self).__init__()

@@ -43,6 +43,7 @@ class LoginID(CTICommand):
     required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY, GIT_DATE, GIT_HASH, XIVO_VERSION]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(LoginID, self).__init__()

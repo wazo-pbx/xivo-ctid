@@ -39,6 +39,7 @@ class Directory(CTICommand):
     required_fields = [CTICommand.CLASS]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(Directory, self).__init__()
