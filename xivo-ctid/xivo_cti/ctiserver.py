@@ -60,6 +60,7 @@ from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
 from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
 from xivo_cti.cti.commands.user_service.disable_unconditional_forward import DisableUnconditionalForward
+from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
 
 logger = logging.getLogger('main')
 
@@ -140,10 +141,11 @@ class CTIServer(object):
     def _register_cti_callbacks(self):
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
-        EnableFilter.register_callback_params(self._user_service_manager.enable_filter,['user_id'])
-        DisableFilter.register_callback_params(self._user_service_manager.disable_filter,['user_id'])
-        EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd,['user_id', 'destination'])
-        DisableUnconditionalForward.register_callback_params(self._user_service_manager.disable_unconditional_fwd,['user_id', 'destination'])
+        EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
+        DisableFilter.register_callback_params(self._user_service_manager.disable_filter, ['user_id'])
+        EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd, ['user_id', 'destination'])
+        DisableUnconditionalForward.register_callback_params(self._user_service_manager.disable_unconditional_fwd, ['user_id', 'destination'])
+        EnableNoAnswerForward.register_callback_params(self._user_service_manager.enable_rna_fwd, ['user_id', 'destination'])
 
     def run(self):
         while True:
@@ -660,10 +662,10 @@ class CTIServer(object):
                         elif kind == 'CTIS':
                             try:
                                 connstream = ssl.wrap_socket(connc,
-                                                             server_side = True,
-                                                             certfile = self._config.getconfig('certfile'),
-                                                             keyfile = self._config.getconfig('keyfile'),
-                                                             ssl_version = cti_config.SSLPROTO)
+                                                             server_side=True,
+                                                             certfile=self._config.getconfig('certfile'),
+                                                             keyfile=self._config.getconfig('keyfile'),
+                                                             ssl_version=cti_config.SSLPROTO)
                                 connc = ClientConnection(connstream, sockparams, ctiseparator)
                             except ssl.SSLError:
                                 logger.exception('%s:%s:%d cert=%s key=%s)',
