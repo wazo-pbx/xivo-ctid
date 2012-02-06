@@ -47,17 +47,6 @@ class Test(unittest.TestCase):
         self.user_service_manager.disable_busy_fwd.assert_called_once_with(user_id, destination)
         self.assertEqual(reply, self.features_return_success)
 
-    def test_features_put_enable_busy_fwd(self):
-        user_id = 679
-        destination = '109'
-        cti_command = self._create_featureput_command('fwd', user_id, {'destbusy': destination,
-                                                                       'enablebusy': True})
-
-        reply = cti_command.regcommand_featuresput()
-
-        self.user_service_manager.enable_busy_fwd.assert_called_once_with(user_id, destination)
-        self.assertEqual(reply, self.features_return_success)
-
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
         cti_command = Command(self.conn, message)

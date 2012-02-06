@@ -330,7 +330,7 @@ class Command(object):
                 if 'destbusy' in value:
                     enabled = value.get('enablebusy', False)
                     if enabled and value['destbusy']:
-                        self.user_service_manager.enable_busy_fwd(self.ruserid, value['destbusy'])
+                        pass
                     else:
                         self.user_service_manager.disable_busy_fwd(self.ruserid, value['destbusy'])
             return {'status': 'OK'}
