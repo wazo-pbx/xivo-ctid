@@ -29,22 +29,21 @@ logger = logging.getLogger('phonelist')
 
 
 class PhoneList(AnyList):
-    def __init__(self, newurls = [], useless = None):
-        self.anylist_properties = { 'name' : 'phones',
-                                    'urloptions' : (1, 12, False) }
+    def __init__(self, newurls=[], useless=None):
+        self.anylist_properties = {'name': 'phones',
+                                   'urloptions': (1, 12, False)}
         AnyList.__init__(self, newurls)
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
         if commid in self.keeplist[phoneid]['comms']:
-            if infos.has_key('calleridnum') and comms[commid].get('calleridnum') != infos.get('calleridnum'):
+            if 'calleridnum' in infos and comms[commid].get('calleridnum') != infos['calleridnum']:
                 logger.debug('  __createorupdate_comm__ changed calleridnum[%s %s] %s => %s',
-                          commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos.get('calleridnum'))
+                          commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos['calleridnum'])
             self.keeplist[phoneid]['comms'][commid].update(infos)
-        else:
-            if infos.has_key('calleridnum'):
-                logger.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s',
-                          commid, infos.get('thischannel'), infos.get('calleridnum'))
+        elif 'calleridnum' in infos:
+            logger.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s',
+                         commid, infos.get('thischannel'), infos['calleridnum'])
             self.keeplist[phoneid]['comms'][commid] = infos
             self.setlinenum(phoneid, commid)
 
@@ -56,9 +55,9 @@ class PhoneList(AnyList):
         to the line numbers on the physical phones.
         """
         usedlines = []
-        for cid, cinfo in self.keeplist[phoneid]['comms'].iteritems():
+        for cinfo in self.keeplist[phoneid]['comms'].itervalues():
             if 'linenum' in cinfo:
-                usedlines.append(cinfo.get('linenum'))
+                usedlines.append(cinfo['linenum'])
         linenum = 1
         while (linenum in usedlines):
             linenum += 1
@@ -74,31 +73,31 @@ class PhoneList(AnyList):
 
     def ami_newchannel(self, phoneid, uid, channel):
         # we could store the "callerid" in order to use it later.
-        self.__createorupdate_comm__(phoneid, uid, {'thischannel' : channel,
-                                                    'calleridname' : '<unknown>'})
+        self.__createorupdate_comm__(phoneid, uid, {'thischannel': channel,
+                                                    'calleridname': '<unknown>'})
 
     def ami_newstate(self, phoneid, uid, channel, status):
-        self.__createorupdate_comm__(phoneid, uid, {'status' : status})
+        self.__createorupdate_comm__(phoneid, uid, {'status': status})
 
     def ami_dial(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
         if phoneidsrc in self.keeplist:
-            infos = {'thischannel' : puidsrc.get('channel'),
-                     'peerchannel' : puidsrc.get('dial'),
-                     'status' : 'calling',
-                     'time-dial' : 0,
-                     'timestamp-dial' : time.time(),
+            infos = {'thischannel': puidsrc.get('channel'),
+                     'peerchannel': puidsrc.get('dial'),
+                     'status': 'calling',
+                     'time-dial': 0,
+                     'timestamp-dial': time.time(),
                      #'calleridname' : puidsrc.get('calleridname'),
-                     'calleridnum' : puidsrc.get('extension')
+                     'calleridnum': puidsrc.get('extension')
                      }
             self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
         if phoneiddst in self.keeplist:
-            infos = {'thischannel' : puiddst.get('channel'),
-                     'peerchannel' : puiddst.get('dial'),
-                     'status' : 'ringing',
-                     'time-dial' : 0,
-                     'timestamp-dial' : time.time(),
-                     'calleridname' : puidsrc.get('calleridname'),
-                     'calleridnum' : puidsrc.get('calleridnum')
+            infos = {'thischannel': puiddst.get('channel'),
+                     'peerchannel': puiddst.get('dial'),
+                     'status': 'ringing',
+                     'time-dial': 0,
+                     'timestamp-dial': time.time(),
+                     'calleridname': puidsrc.get('calleridname'),
+                     'calleridnum': puidsrc.get('calleridnum')
                      }
             self.__createorupdate_comm__(phoneiddst, uiddst, infos)
 
@@ -106,14 +105,14 @@ class PhoneList(AnyList):
         logger.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                      phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst)
         if phoneidsrc in self.keeplist:
-            infos = {'time-link' : 0,
-                     'peerchannel' : puidsrc['link'],
-                     'status' : 'linked-caller',
-                     'timestamp-link' : time.time()
+            infos = {'time-link': 0,
+                     'peerchannel': puidsrc['link'],
+                     'status': 'linked-caller',
+                     'timestamp-link': time.time()
                      }
-            if clidnamedst is not None:# and not self.keeplist[phoneidsrc]['comms'][uidsrc].has_key('calleridname'):
+            if clidnamedst is not None:
                 infos['calleridname'] = clidnamedst
-            if cliddst is not None:# and not self.keeplist[phoneidsrc]['comms'][uidsrc].has_key('calleridnum'):
+            if cliddst is not None:
                 infos['calleridnum'] = cliddst
             if uidsrc in self.keeplist[phoneidsrc]['comms']:
                 self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
@@ -123,14 +122,14 @@ class PhoneList(AnyList):
                 logger.debug('phonelist::ami_link %s not found (src)', uidsrc)
             logger.debug('phonelist::ami_link gruik %s %s', phoneidsrc, self.keeplist[phoneidsrc]['comms'])
         if phoneiddst in self.keeplist:
-            infos = {'time-link' : 0,
-                     'peerchannel' : puiddst['link'],
-                     'status' : 'linked-called',
-                     'timestamp-link' : time.time()
+            infos = {'time-link': 0,
+                     'peerchannel': puiddst['link'],
+                     'status': 'linked-called',
+                     'timestamp-link': time.time()
                      }
-            if clidnamesrc is not None:# and not self.keeplist[phoneiddst]['comms'][uiddst].has_key('calleridname'):
+            if clidnamesrc is not None:
                 infos['calleridname'] = clidnamesrc
-            if clidsrc is not None:# and not self.keeplist[phoneiddst]['comms'][uiddst].has_key('calleridnum'):
+            if clidsrc is not None:
                 infos['calleridnum'] = clidsrc
             if uiddst in self.keeplist[phoneiddst]['comms']:
                 self.__createorupdate_comm__(phoneiddst, uiddst, infos)
@@ -143,21 +142,21 @@ class PhoneList(AnyList):
     def ami_unlink(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
         if phoneidsrc in self.keeplist:
             if uidsrc in self.keeplist[phoneidsrc]['comms']:
-                infos = {'status' : 'unlinked-caller',
-                         'time-link' : 0,
-                         'timestamp-link' : time.time() }
+                infos = {'status': 'unlinked-caller',
+                         'time-link': 0,
+                         'timestamp-link': time.time()}
                 self.keeplist[phoneidsrc]['comms'][uidsrc].update(infos)
         if phoneiddst in self.keeplist:
             if uiddst in self.keeplist[phoneiddst]['comms']:
-                infos = {'status' : 'unlinked-called',
-                         'time-link' : 0,
-                         'timestamp-link' : time.time() }
+                infos = {'status': 'unlinked-called',
+                         'time-link': 0,
+                         'timestamp-link': time.time()}
                 self.keeplist[phoneiddst]['comms'][uiddst].update(infos)
 
     def ami_rename(self, oldphoneid, newphoneid, oldname, newname, uid):
         # rename channels
-        for phoneid, v in self.keeplist.iteritems():
-            for k, kk in v['comms'].iteritems():
+        for v in self.keeplist.itervalues():
+            for kk in v['comms'].itervalues():
                 if kk.get('thischannel') == oldname:
                     kk['thischannel'] = newname
                 if kk.get('peerchannel') == oldname:
@@ -173,8 +172,8 @@ class PhoneList(AnyList):
 
     def ami_rename_totrunk(self, oldphoneid, oldname, newname, uid):
         tomove = None
-        for phoneid, v in self.keeplist.iteritems():
-            for k, kk in v['comms'].iteritems():
+        for v in self.keeplist.itervalues():
+            for kk in v['comms'].itervalues():
                 if kk.get('thischannel') == oldname:
                     kk['thischannel'] = newname
                 if kk.get('peerchannel') == oldname:
@@ -190,8 +189,8 @@ class PhoneList(AnyList):
         return tomove
 
     def ami_rename_fromtrunk(self, newphoneid, oldname, newname, uid, tomove):
-        for phoneid, v in self.keeplist.iteritems():
-            for k, kk in v['comms'].iteritems():
+        for v in self.keeplist.itervalues():
+            for kk in v['comms'].itervalues():
                 if kk.get('thischannel') == oldname:
                     kk['thischannel'] = newname
                 if kk.get('peerchannel') == oldname:
@@ -203,8 +202,8 @@ class PhoneList(AnyList):
             logger.warning('(ami_rename_fromtrunk) %s : could not set %s', uid, newphoneid)
 
     def ami_hold(self, phoneid, uid):
-        if self.keeplist.has_key(phoneid):
-            if self.keeplist[phoneid]['comms'].has_key(uid):
+        if phoneid in self.keeplist:
+            if uid in self.keeplist[phoneid]['comms']:
                 self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
             else:
                 logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
@@ -212,8 +211,8 @@ class PhoneList(AnyList):
             logger.warning('ami_hold : no phoneid %s', phoneid)
 
     def ami_unhold(self, phoneid, uid):
-        if self.keeplist.has_key(phoneid):
-            if self.keeplist[phoneid]['comms'].has_key(uid):
+        if phoneid in self.keeplist:
+            if uid in self.keeplist[phoneid]['comms']:
                 if 'time-hold' in self.keeplist[phoneid]['comms'][uid]:
                     del self.keeplist[phoneid]['comms'][uid]['time-hold']
                 self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
@@ -258,11 +257,11 @@ class PhoneList(AnyList):
     def ami_parkedcall(self, phoneid, uid, ctuid, exten):
         if phoneid in self.keeplist:
             # write "parque" in unicode !
-            infos = {'status' : 'linked-caller',
-                     'time-link' : 0,
-                     'timestamp-link' : time.time(),
-                     'calleridnum' : exten,
-                     'calleridname' : '<parked>' }
+            infos = {'status': 'linked-caller',
+                     'time-link': 0,
+                     'timestamp-link': time.time(),
+                     'calleridnum': exten,
+                     'calleridname': '<parked>'}
             self.__createorupdate_comm__(phoneid, uid, infos)
 
     def ami_unparkedcall(self, phoneid, uid, ctuid):
@@ -270,38 +269,38 @@ class PhoneList(AnyList):
             logger.debug('phone::ami_unparkedcall %s %s %s', phoneid, uid, ctuid)
             if uid in self.keeplist[phoneid]['comms']:
                 # parked channel
-                infos = {'status' : 'linked-called',
-                         'thischannel' : ctuid['channel'],
-                         'peerchannel' : ctuid['peerchannel'],
-                         'time-link' : 0,
+                infos = {'status': 'linked-called',
+                         'thischannel': ctuid['channel'],
+                         'peerchannel': ctuid['peerchannel'],
+                         'time-link': 0,
                          #'calleridnum' : ctuid['parkexten-callback'],
-                         'timestamp-link' : time.time() }
+                         'timestamp-link': time.time()}
                 self.keeplist[phoneid]['comms'][uid].update(infos)
             else:
                 # cfrom
-                infos = {'status' : 'linked-caller',
-                         'thischannel' : ctuid['channel'],
-                         'peerchannel' : ctuid['peerchannel'],
-                         'time-link' : 0,
+                infos = {'status': 'linked-caller',
+                         'thischannel': ctuid['channel'],
+                         'peerchannel': ctuid['peerchannel'],
+                         'time-link': 0,
                          #'calleridnum' : ctuid['parkexten-callback']
-                         'timestamp-link' : time.time() }
+                         'timestamp-link': time.time()}
                 self.keeplist[phoneid]['comms'][uid] = infos
                 self.setlinenum(phoneid, uid)
 
     def status(self, phoneid):
         tosend = {}
         if phoneid in self.keeplist:
-            tosend = { 'class' : 'phones',
-                       'direction' : 'client',
-                       'function' : 'update',
-                       'phoneid' : phoneid,
-                       'status' : self.keeplist[phoneid] }
+            tosend = {'class': 'phones',
+                      'direction': 'client',
+                      'function': 'update',
+                      'phoneid': phoneid,
+                      'status': self.keeplist[phoneid]}
         return tosend
 
     def ami_meetmejoin(self, phoneid, uid, meetmenum):
         if phoneid in self.keeplist:
             if uid in self.keeplist[phoneid]['comms']:
-                infos = { 'timestamp-link' : time.time(),
-                          'calleridname' : '<meetme>',
-                          'calleridnum' : meetmenum }
+                infos = {'timestamp-link': time.time(),
+                         'calleridname': '<meetme>',
+                         'calleridnum': meetmenum}
                 self.keeplist[phoneid]['comms'][uid].update(infos)
