@@ -327,12 +327,6 @@ class Command(object):
             funct = self._commanddict.get('function')
             if funct == 'fwd' and 'value' in self._commanddict:
                 value = self._commanddict['value']
-                if 'destrna' in value:
-                    enabled = value.get('enablerna', False)
-                    if enabled and value['destrna']:
-                        pass
-                    else:
-                        self.user_service_manager.disable_rna_fwd(self.ruserid, value['destrna'])
                 if 'destbusy' in value:
                     enabled = value.get('enablebusy', False)
                     if enabled and value['destbusy']:
