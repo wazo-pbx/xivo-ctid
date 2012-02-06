@@ -43,14 +43,10 @@ class CTICommandHandler(object):
             self._commands_to_run.append(command_class.from_dict(message))
 
     def run_commands(self):
-        functions = []
         return_values = []
         while self._commands_to_run:
             command = self._commands_to_run.pop()
             if not command.cti_connection:
                 command.cti_connection = self._cti_connection
             return_values.append(self._command_runner.run(command))
-            for callback in command.callbacks():
-                functions.append((callback, command))
-        return_values.extend([function(command) for function, command in functions])
         return [return_value for return_value in return_values if return_value]

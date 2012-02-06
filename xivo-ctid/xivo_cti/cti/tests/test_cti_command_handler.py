@@ -26,13 +26,13 @@ import unittest
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from tests.mock import Mock
-from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti.cti_command import CTICommand
 
 
-class Test(unittest.TestCase):
+class TestCTICommandHandler(unittest.TestCase):
 
     def setUp(self):
         self._msg_1 = {"class": "invite_confroom",
@@ -40,9 +40,6 @@ class Test(unittest.TestCase):
                        "invitee": "user:pcmdev/3"}
         self._ctiserver = Mock(CTIServer)
         self._cti_connection = CTI(self._ctiserver)
-
-    def tearDown(self):
-        pass
 
     def test_cti_command_handler(self):
         cti_handler = CTICommandHandler(self._cti_connection)
@@ -87,22 +84,18 @@ class Test(unittest.TestCase):
         self.assertTrue(isinstance(command, LoginID))
 
     def test_run_command(self):
-        ret_val = {'message': 'test_return'}
         self.called = False
 
-        def function(command):
-            self.called = True
-            return ret_val
+        def func(x, y):
+            self.called = x == 'test name' and y == 25
 
-        function2 = Mock()
-        CTICommand.register_callback(function)
-        InviteConfroom.register_callback(function2)
-        cti_handler = CTICommandHandler(self._cti_connection)
-        command = CTICommand.from_dict({'class': 'test_function'})
-        cti_handler._commands_to_run.append(command)
+        CTICommand.register_callback_params(func, ['name', 'age'])
+        command = CTICommand()
+        command.name = 'test name'
+        command.age = lambda: 25
+        handler = CTICommandHandler(self._cti_connection)
+        handler._commands_to_run.append(command)
 
-        ret = cti_handler.run_commands()
+        handler.run_commands()
 
-        self.assertTrue(ret_val in ret)
         self.assertTrue(self.called)
-        self.assertEqual(len(cti_handler._commands_to_run), 0)

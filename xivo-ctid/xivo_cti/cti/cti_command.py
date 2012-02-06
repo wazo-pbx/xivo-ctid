@@ -34,7 +34,6 @@ class CTICommand(object):
 
     required_fields = [CLASS]
     conditions = None
-    _callbacks = []
     _callbacks_with_params = []
 
     def __init__(self):
@@ -43,11 +42,8 @@ class CTICommand(object):
         self.command_class = None
         self.commandid = None
 
-    def callbacks(self):
-        return [callback for callback in self._callbacks if not callback.dead()]
-
     def callbacks_with_params(self):
-        return [callback for callback in self._callbacks_with_params]
+        return [callback for callback in self._callbacks_with_params if not callback[0].dead()]
 
     def _init_from_dict(self, msg):
         self._msg = msg
@@ -97,14 +93,10 @@ class CTICommand(object):
         return True
 
     @classmethod
-    def register_callback(cls, function):
-        cls._callbacks.append(weak_method.WeakCallable(function))
-
-    @classmethod
     def register_callback_params(cls, function, params=None):
         if not params:
             params = []
-        cls._callbacks_with_params.append((function, params))
+        cls._callbacks_with_params.append((weak_method.WeakCallable(function), params))
 
     @classmethod
     def from_dict(cls, msg):

@@ -27,12 +27,10 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.cti_config import Config
 from xivo_cti.cti.commands.getlists.list_id import ListID
-from xivo_cti.tools.weak_method import WeakMethodBound
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.commands.getlist import GetList
 from xivo_cti.cti.commands.directory import Directory
+from xivo_cti.tools.weak_method import WeakCallable
 
 
 class TestSafe(unittest.TestCase):
@@ -74,6 +72,6 @@ class TestSafe(unittest.TestCase):
     def assert_callback_registered(self, cls, fn):
         found = False
         for callback in cls._callbacks_with_params:
-            if fn == callback[0]:
+            if WeakCallable(fn) == callback[0]:
                 found = True
         self.assertTrue(found, 'Could not find callback to function %s' % fn)

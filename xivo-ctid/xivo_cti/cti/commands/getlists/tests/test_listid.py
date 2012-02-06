@@ -99,12 +99,12 @@ class TestListID(unittest.TestCase):
         def func2(param):
             pass
 
-        GetList.register_callback(func1)
-        ListID.register_callback(func2)
+        GetList.register_callback_params(func1)
+        ListID.register_callback_params(func2)
 
         list_id = ListID.from_dict(self._msg_dict)
 
-        callbacks = list_id.callbacks()
+        callbacks = list_id.callbacks_with_params()
 
         self.assertEqual(len(callbacks), 1)
-        self.assertEqual(WeakMethodFree(func2), callbacks[0])
+        self.assertEqual(WeakMethodFree(func2), callbacks[0][0])

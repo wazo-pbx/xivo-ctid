@@ -32,7 +32,7 @@ from xivo_cti.interfaces.interface_cti import CTI
 class Test(unittest.TestCase):
 
     def tearDown(self):
-        CTICommand._callbacks = []
+        CTICommand._callbacks_with_params = []
 
     def test_cti_command(self):
         cti_command = CTICommand()
@@ -92,18 +92,18 @@ class Test(unittest.TestCase):
     def test_register_callback(self):
         command = CTICommand().from_dict({'class': 'callback_test'})
 
-        self.assertEqual(command.callbacks(), [])
+        self.assertEqual(command.callbacks_with_params(), [])
 
         function = Mock()
-        CTICommand.register_callback(function)
+        CTICommand.register_callback_params(function)
 
         command = CTICommand.from_dict({'class': 'callback_test'})
-        self.assertEqual(len(command.callbacks()), 1)
+        self.assertEqual(len(command.callbacks_with_params()), 1)
 
     def test_callback_memory_usage(self):
         class Test(object):
             def __init__(self):
-                CTICommand.register_callback(self.parse)
+                CTICommand.register_callback_params(self.parse)
 
             def parse(self):
                 pass
@@ -111,14 +111,14 @@ class Test(unittest.TestCase):
         command = CTICommand.from_dict({CTICommand.CLASS: 'callback_test'})
 
         def run_test():
-            self.assertEqual(len(command.callbacks()), 0)
+            self.assertEqual(len(command.callbacks_with_params()), 0)
             test_object = Test()
-            self.assertEqual(len(command.callbacks()), 1)
+            self.assertEqual(len(command.callbacks_with_params()), 1)
             test_object.parse()
 
         run_test()
 
-        self.assertEqual(len(command.callbacks()), 0)
+        self.assertEqual(len(command.callbacks_with_params()), 0)
 
     def test_get_reply(self):
         command_class = 'return_test'
