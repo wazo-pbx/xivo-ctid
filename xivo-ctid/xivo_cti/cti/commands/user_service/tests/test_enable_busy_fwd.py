@@ -2,7 +2,7 @@ import unittest
 from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
 
 
-class TestEnableNoAnswerForward(unittest.TestCase):
+class TestEnableBusyForward(unittest.TestCase):
 
     def test_from_dict(self):
         commandid = 12327

@@ -46,7 +46,6 @@ REGCOMMANDS = [
     'getipbxlist',
     'availstate', 'keepalive',
 
-    'featuresput',
     'history',
     'faxsend',
     'filetransfer',
@@ -321,21 +320,6 @@ class Command(object):
                                          'cticommand:actionfiche',
                                          infos.get('buttonname'))
         return reply
-
-    def regcommand_featuresput(self):
-        try:
-            funct = self._commanddict.get('function')
-            if funct == 'fwd' and 'value' in self._commanddict:
-                value = self._commanddict['value']
-                if 'destbusy' in value:
-                    enabled = value.get('enablebusy', False)
-                    if enabled and value['destbusy']:
-                        pass
-                    else:
-                        self.user_service_manager.disable_busy_fwd(self.ruserid, value['destbusy'])
-            return {'status': 'OK'}
-        except Exception, e:
-            return {'status': 'KO', 'error_string': '%s' % e}
 
     def regcommand_history(self):
         phone = self._get_phone_from_user_id(self.ruserid, self.rinnerdata)

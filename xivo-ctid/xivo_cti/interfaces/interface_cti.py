@@ -115,7 +115,6 @@ class CTI(interfaces.Interfaces):
 
         # Commands from the cti_command.Command class
         command = cti_command.Command(self, decoded_command)
-        command.user_service_manager = self.user_service_manager
         replies.extend(command.parse())
 
         # Commands from the CTICommandHandler

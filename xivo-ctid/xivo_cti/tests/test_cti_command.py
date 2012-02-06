@@ -9,7 +9,6 @@ from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_queuelist import QueueList
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.services.user_service_manager import UserServiceManager
 
 
 class Test(unittest.TestCase):
@@ -24,28 +23,6 @@ class Test(unittest.TestCase):
         self.conn.requester = ('test_requester', 1)
         self.conn._ctiserver = self._ctiserver
         self._ctiserver.safe = {self._ipbxid: self._innerdata}
-        self.user_service_manager = Mock(UserServiceManager)
-
-    def _create_featureput_command(self, funct, user_id, value):
-        command = {'class': "featuresput",
-                   "commandid": 819690795,
-                   "function": funct,
-                   "value": value}
-        cti_command = Command(self.conn, command)
-        cti_command.user_service_manager = self.user_service_manager
-        cti_command.ruserid = user_id
-        return cti_command
-
-    def test_features_put_disable_busy_fwd(self):
-        user_id = 189
-        destination = '123'
-        cti_command = self._create_featureput_command('fwd', user_id, {'destbusy': destination,
-                                                                       'enablebusy': False})
-
-        reply = cti_command.regcommand_featuresput()
-
-        self.user_service_manager.disable_busy_fwd.assert_called_once_with(user_id, destination)
-        self.assertEqual(reply, self.features_return_success)
 
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
