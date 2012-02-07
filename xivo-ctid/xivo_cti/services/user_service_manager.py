@@ -37,10 +37,12 @@ class UserServiceManager(object):
     def enable_filter(self, user_id):
         self.user_features_dao.enable_filter(user_id)
         self.user_service_notifier.filter_enabled(user_id)
+        self.funckey_manager.call_filter_in_use(user_id, True)
 
     def disable_filter(self, user_id):
         self.user_features_dao.disable_filter(user_id)
         self.user_service_notifier.filter_disabled(user_id)
+        self.funckey_manager.call_filter_in_use(user_id, False)
 
     def enable_unconditional_fwd(self, user_id, destination):
         self.user_features_dao.enable_unconditional_fwd(user_id, destination)

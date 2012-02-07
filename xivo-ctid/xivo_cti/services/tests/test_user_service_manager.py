@@ -66,6 +66,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_enabled.assert_called_once_with(user_id)
+        self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, True)
 
     def test_disable_filter(self):
         user_id = 834
@@ -74,6 +75,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
+        self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
 
     def test_enable_unconditional_fwd(self):
         user_id = 543321

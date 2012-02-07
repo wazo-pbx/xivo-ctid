@@ -42,6 +42,7 @@ class TestFunckeyManager(unittest.TestCase):
 
         self._funckey_exten = '_*735'
         self._enablednd_exten = '*25'
+        self._call_filter_exten = '*27'
 
     def tearDown(self):
         pass
@@ -61,3 +62,19 @@ class TestFunckeyManager(unittest.TestCase):
         self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._enablednd_exten
 
         self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')])
+
+    def test_call_filter_in_use(self):
+        xivo_helpers.fkey_extension.return_value = '*735123***227'
+        self.manager.call_filter_in_use(self.user_id, True)
+
+        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_filter_exten
+
+        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 INUSE')])
+
+    def test_call_filter_not_in_use(self):
+        xivo_helpers.fkey_extension.return_value = '*735123***227'
+        self.manager.call_filter_in_use(self.user_id, False)
+
+        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_filter_exten
+
+        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')])
