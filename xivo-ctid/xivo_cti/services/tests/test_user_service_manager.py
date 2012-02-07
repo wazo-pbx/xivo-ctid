@@ -132,12 +132,16 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
     def test_disable_busy_fwd(self):
         user_id = 2345
         destination = '3456'
+        fwd_key_dest = '666'
+        self.phone_funckey_dao.get_dest_busy.return_value = fwd_key_dest
 
         self.user_service_manager.disable_busy_fwd(user_id, destination)
 
         self.user_features_dao.disable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)

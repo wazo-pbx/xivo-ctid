@@ -69,7 +69,10 @@ class UserServiceManager(object):
     def enable_busy_fwd(self, user_id, destination):
         self.user_features_dao.enable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled(user_id, destination)
+        self.funckey_manager.busy_fwd_in_use(user_id, destination, True)
 
     def disable_busy_fwd(self, user_id, destination):
         self.user_features_dao.disable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled(user_id, destination)
+        key_dest = self.phone_funckey_dao.get_dest_busy(user_id)
+        self.funckey_manager.busy_fwd_in_use(user_id, key_dest, False)

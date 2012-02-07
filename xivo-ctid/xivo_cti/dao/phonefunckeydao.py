@@ -42,6 +42,9 @@ class PhoneFunckeyDAO(object):
     def get_dest_rna(self, user_id):
         return self._get_dest(user_id, 'fwdrna')
 
+    def get_dest_busy(self, user_id):
+        return self._get_dest(user_id, 'fwdbusy')
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
