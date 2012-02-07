@@ -1,7 +1,7 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: UTF-8 -*-
 
-# Copyright (C) 2007-2011  Avencall
+# XiVO CTI Server
+# Copyright (C) 2009-2011  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

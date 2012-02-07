@@ -20,3 +20,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from xivo_cti.dao.alchemy.extension import Extension
+from xivo_cti.dao.alchemy import dbconnection
+
+
+class ExtensionsDAO(object):
+
+    def __init__(self, session):
+        self._session = session
+
+    def exten_by_name(self, funckey_name):
+        extens = [exten for exten, name in self._session.query(Extension.exten, Extension.name) if name == funckey_name]
+        return extens[0] if extens else ''
+
+    @classmethod
+    def new_from_uri(cls, uri):
+        connection = dbconnection.get_connection(uri)
+        return cls(connection.get_session())

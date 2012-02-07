@@ -64,6 +64,8 @@ from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoA
 from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableNoAnswerForward
 from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
+from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.dao.extensionsdao import ExtensionsDAO
 
 logger = logging.getLogger('main')
 
@@ -135,7 +137,11 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_queue_stats()
         self._user_service_manager = UserServiceManager()
+        self._funckey_manager = FunckeyManager()
+        self._user_service_manager.funckey_manager = self._funckey_manager
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
+        self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
+        self._funckey_manager.extensionsdao = self._extensions_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
@@ -356,6 +362,7 @@ class CTIServer(object):
             z = self.myami[self.myipbxid].connect()
             if z:
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
+                self._funckey_manager.ami = self.myami[self.myipbxid].amicl
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()

@@ -1,9 +1,33 @@
+#!/usr/bin/python
+# vim: set fileencoding=utf-8 :
+
+# Copyright (C) 2007-2011  Avencall
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Alternatively, XiVO CTI Server is available under other licenses directly
+# contracted with Pro-formatique SARL. See the LICENSE file at top of the
+# source tree or delivered in the installable package in which XiVO CTI Server
+# is distributed for more details.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 
 from tests.mock import Mock
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.funckey.funckey_manager import FunckeyManager
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -12,8 +36,10 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
         self.user_service_manager.user_features_dao = self.user_features_dao
+        self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.user_service_manager.user_service_notifier = self.user_service_notifier
+        self.user_service_manager.funckey_manager = self.funckey_manager
 
     def test_enable_dnd(self):
         user_id = 123
@@ -22,6 +48,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_dnd.assert_called_once_with(user_id)
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
+        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id)
 
     def test_disable_dnd(self):
         user_id = 241

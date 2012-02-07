@@ -25,6 +25,7 @@ setup(
               'xivo_cti.cti.commands.getlists',
               'xivo_cti.cti.commands.user_service',
               'xivo_cti.services',
+              'xivo_cti.funckey',
               'xivo_cti.tools'],
     scripts=['bin/xivo-ctid'],
     data_files=[('/etc/pf-xivo/xivo-ctid', ['etc/allowedxlets.json',

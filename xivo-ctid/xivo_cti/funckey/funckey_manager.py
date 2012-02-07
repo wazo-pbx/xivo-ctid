@@ -20,3 +20,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from xivo import xivo_helpers
+
+
+class FunckeyManager(object):
+
+    DEVICE_PATTERN = 'Custom:%s'
+    INUSE = 'INUSE'
+
+    def dnd_in_use(self, user_id):
+        device = (self.DEVICE_PATTERN %
+                  xivo_helpers.fkey_extension(self.extensionsdao.exten_by_name('phoneprogfunckey'),
+                                              (user_id,
+                                               self.extensionsdao.exten_by_name('enablednd'),
+                                               '')))
+        self.ami.sendcommand('Command', [('Command', 'devstate change %s %s' % (device, self.INUSE))])
