@@ -43,6 +43,7 @@ class TestFunckeyManager(unittest.TestCase):
         self._funckey_exten = '_*735'
         self._enablednd_exten = '*25'
         self._call_filter_exten = '*27'
+        self._unc_fwd = "*21."
 
     def tearDown(self):
         pass
@@ -78,3 +79,21 @@ class TestFunckeyManager(unittest.TestCase):
         self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_filter_exten
 
         self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')])
+
+    def test_fwd_unc_in_use(self):
+        destination = '123'
+        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        self.manager.unconditional_fwd_in_use(self.user_id, destination, True)
+
+        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_unc_fwd
+
+        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 INUSE')])
+
+    def test_fwd_unc_not_in_use(self):
+        destination = '123'
+        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        self.manager.unconditional_fwd_in_use(self.user_id, destination, False)
+
+        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_unc_fwd
+
+        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')])

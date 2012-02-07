@@ -28,6 +28,7 @@ from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -35,7 +36,9 @@ class TestUserServiceManager(unittest.TestCase):
     def setUp(self):
         self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
+        self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
         self.user_service_manager.user_features_dao = self.user_features_dao
+        self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.user_service_manager.user_service_notifier = self.user_service_notifier
@@ -85,15 +88,19 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
     def test_disable_unconditional_fwd(self):
         user_id = 543
         destination = '1234'
+        fwd_key_dest = '102'
+        self.phone_funckey_dao.get_dest_unc.return_value = fwd_key_dest
 
         self.user_service_manager.disable_unconditional_fwd(user_id, destination)
 
         self.user_features_dao.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_disabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
 
     def test_enable_rna_fwd(self):
         user_id = 2345

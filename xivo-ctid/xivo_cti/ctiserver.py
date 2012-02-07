@@ -66,6 +66,7 @@ from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyFor
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
+from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 
 logger = logging.getLogger('main')
 
@@ -141,8 +142,10 @@ class CTIServer(object):
         self._user_service_manager.funckey_manager = self._funckey_manager
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
+        self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
+        self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
         self._register_cti_callbacks()
