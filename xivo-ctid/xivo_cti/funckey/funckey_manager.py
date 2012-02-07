@@ -28,11 +28,12 @@ class FunckeyManager(object):
 
     DEVICE_PATTERN = 'Custom:%s'
     INUSE = 'INUSE'
+    NOT_INUSE = 'NOT_INUSE'
 
-    def dnd_in_use(self, user_id):
+    def dnd_in_use(self, user_id, status):
         device = (self.DEVICE_PATTERN %
                   xivo_helpers.fkey_extension(self.extensionsdao.exten_by_name('phoneprogfunckey'),
                                               (user_id,
                                                self.extensionsdao.exten_by_name('enablednd'),
                                                '')))
-        self.ami.sendcommand('Command', [('Command', 'devstate change %s %s' % (device, self.INUSE))])
+        self.ami.sendcommand('Command', [('Command', 'devstate change %s %s' % (device, self.INUSE if status else self.NOT_INUSE))])

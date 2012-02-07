@@ -48,8 +48,16 @@ class TestFunckeyManager(unittest.TestCase):
 
     def test_dnd_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
-        self.manager.dnd_in_use(self.user_id)
+        self.manager.dnd_in_use(self.user_id, True)
 
         self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._enablednd_exten
 
         self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 INUSE')])
+
+    def test_dnd_not_in_use(self):
+        xivo_helpers.fkey_extension.return_value = '*735123***225'
+        self.manager.dnd_in_use(self.user_id, False)
+
+        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._enablednd_exten
+
+        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')])

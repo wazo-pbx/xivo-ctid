@@ -48,7 +48,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_dnd.assert_called_once_with(user_id)
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
-        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id)
+        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 
     def test_disable_dnd(self):
         user_id = 241
@@ -57,6 +57,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_dnd.assert_called_once_with(user_id)
         self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
+        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
 
     def test_enable_filter(self):
         user_id = 789
