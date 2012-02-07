@@ -49,3 +49,7 @@ class FunckeyManager(object):
     def unconditional_fwd_in_use(self, user_id, destination, status):
         device = self._device(user_id, 'fwdunc', destination)
         self._send(device, status)
+
+    def rna_fwd_in_use(self, user_id, destination, status):
+        device = self._device(user_id, 'fwdrna', destination)
+        self._send(device, status)

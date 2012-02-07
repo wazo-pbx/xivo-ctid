@@ -110,15 +110,19 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
     def test_disable_rna_fwd(self):
         user_id = 2345
         destination = '3456'
+        fwd_key_dest = '987'
+        self.phone_funckey_dao.get_dest_rna.return_value = fwd_key_dest
 
         self.user_service_manager.disable_rna_fwd(user_id, destination)
 
         self.user_features_dao.disable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
 
     def test_enable_busy_fwd(self):
         user_id = 2345

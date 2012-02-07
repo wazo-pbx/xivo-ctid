@@ -24,21 +24,23 @@
 from xivo_cti.dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_cti.dao.alchemy import dbconnection
 
-import logging
-
-logger = logging.getLogger('PhoneFunckeyDAO    ')
-
 
 class PhoneFunckeyDAO(object):
 
     def __init__(self, session):
         self._session = session
 
-    def get_dest_unc(self, user_id):
+    def _get_dest(self, user_id, fwd_type):
         extens = (self._session.query(PhoneFunckey.exten)
                     .filter(PhoneFunckey.iduserfeatures == user_id)
-                    .filter(PhoneFunckey.typevalextenumbers == 'fwdunc'))
+                    .filter(PhoneFunckey.typevalextenumbers == fwd_type))
         return extens[0][0] if extens else ''
+
+    def get_dest_unc(self, user_id):
+        return self._get_dest(user_id, 'fwdunc')
+
+    def get_dest_rna(self, user_id):
+        return self._get_dest(user_id, 'fwdrna')
 
     @classmethod
     def new_from_uri(cls, uri):
