@@ -112,3 +112,27 @@ class TestFunckeyManager(unittest.TestCase):
         for dest in unc_dest:
             if dest:
                 self.assertEqual(fn.call_count, 3)
+
+    def test_disable_all_fwd_rna(self):
+        rna_dest = ['123', '666', '', '012']
+        fn = Mock()
+        self.manager.rna_fwd_in_use = fn
+        self.phone_funckey_dao.get_dest_rna.return_value = rna_dest
+
+        self.manager.disable_all_rna_fwd(self.user_id)
+
+        for dest in rna_dest:
+            if dest:
+                self.assertEqual(fn.call_count, 3)
+
+    def test_disable_all_fwd_busy(self):
+        busy_dest = ['123', '666', '', '012']
+        fn = Mock()
+        self.manager.busy_fwd_in_use = fn
+        self.phone_funckey_dao.get_dest_busy.return_value = busy_dest
+
+        self.manager.disable_all_busy_fwd(self.user_id)
+
+        for dest in busy_dest:
+            if dest:
+                self.assertEqual(fn.call_count, 3)

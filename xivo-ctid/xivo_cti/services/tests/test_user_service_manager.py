@@ -112,6 +112,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
         self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
     def test_disable_rna_fwd(self):
@@ -124,7 +125,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)
-        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
+        self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
 
     def test_enable_busy_fwd(self):
         user_id = 2345
@@ -136,6 +137,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
         self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
     def test_disable_busy_fwd(self):
@@ -148,7 +150,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
-        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
+        self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
 
     def test_enable_busy_fwd_not_funckey(self):
         user_id = 2345

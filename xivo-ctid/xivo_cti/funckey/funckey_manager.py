@@ -62,3 +62,13 @@ class FunckeyManager(object):
         for destination in self.phone_funckey_dao.get_dest_unc(user_id):
             if destination:
                 self.unconditional_fwd_in_use(user_id, destination, False)
+
+    def disable_all_rna_fwd(self, user_id):
+        for destination in self.phone_funckey_dao.get_dest_rna(user_id):
+            if destination:
+                self.rna_fwd_in_use(user_id, destination, False)
+
+    def disable_all_busy_fwd(self, user_id):
+        for destination in self.phone_funckey_dao.get_dest_busy(user_id):
+            if destination:
+                self.busy_fwd_in_use(user_id, destination, False)
