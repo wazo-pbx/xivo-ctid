@@ -58,11 +58,11 @@ class TestPhoneFunckey(unittest.TestCase):
 
         reply = dao.get_dest_unc(self._user_id)
 
-        self.assertEqual(reply, self._destination_unc)
+        self.assertEqual(reply, [self._destination_unc])
 
     def test_get_destination_rna(self):
         dao = PhoneFunckeyDAO(self.session)
 
         reply = dao.get_dest_rna(self._user_id)
 
-        self.assertEqual(reply, self._destination_rna)
+        self.assertEqual(reply, [self._destination_rna])
