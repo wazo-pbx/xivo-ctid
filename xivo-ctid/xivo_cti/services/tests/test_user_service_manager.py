@@ -83,6 +83,7 @@ class TestUserServiceManager(unittest.TestCase):
     def test_enable_unconditional_fwd(self):
         user_id = 543321
         destination = '234'
+        self.user_service_manager.phone_funckey_dao.get_dest_unc.return_value = destination
 
         self.user_service_manager.enable_unconditional_fwd(user_id, destination)
 
@@ -105,6 +106,7 @@ class TestUserServiceManager(unittest.TestCase):
     def test_enable_rna_fwd(self):
         user_id = 2345
         destination = '3456'
+        self.user_service_manager.phone_funckey_dao.get_dest_rna.return_value = destination
 
         self.user_service_manager.enable_rna_fwd(user_id, destination)
 
@@ -127,6 +129,8 @@ class TestUserServiceManager(unittest.TestCase):
     def test_enable_busy_fwd(self):
         user_id = 2345
         destination = '3456'
+        fwd_key_dest = '3456'
+        self.phone_funckey_dao.get_dest_busy.return_value = fwd_key_dest
 
         self.user_service_manager.enable_busy_fwd(user_id, destination)
 
@@ -144,4 +148,16 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.disable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
+        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
+
+    def test_enable_busy_fwd_not_funckey(self):
+        user_id = 2345
+        destination = '3456'
+        fwd_key_dest = '666'
+        self.phone_funckey_dao.get_dest_busy.return_value = fwd_key_dest
+
+        self.user_service_manager.enable_busy_fwd(user_id, destination)
+
+        self.user_features_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, fwd_key_dest, False)
