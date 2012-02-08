@@ -144,6 +144,7 @@ class CTIServer(object):
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._funckey_manager.extensionsdao = self._extensions_dao
+        self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()

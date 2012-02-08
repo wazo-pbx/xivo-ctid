@@ -57,3 +57,8 @@ class FunckeyManager(object):
     def busy_fwd_in_use(self, user_id, destination, status):
         device = self._device(user_id, 'fwdbusy', destination)
         self._send(device, status)
+
+    def disable_all_unconditional_fwd(self, user_id):
+        for destination in self.phone_funckey_dao.get_dest_unc(user_id):
+            if destination:
+                self.unconditional_fwd_in_use(user_id, destination, False)

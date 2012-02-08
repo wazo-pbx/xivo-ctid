@@ -28,6 +28,7 @@ from tests.mock import Mock
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 
 
 class TestFunckeyManager(unittest.TestCase):
@@ -36,6 +37,8 @@ class TestFunckeyManager(unittest.TestCase):
         self.user_id = 123
         self.manager = FunckeyManager()
         self.manager.extensionsdao = Mock(ExtensionsDAO)
+        self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
+        self.manager.phone_funckey_dao = self.phone_funckey_dao
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami
@@ -97,3 +100,15 @@ class TestFunckeyManager(unittest.TestCase):
         self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_unc_fwd
 
         self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')])
+
+    def test_disable_all_fwd_unc(self):
+        unc_dest = ['123', '666', '', '012']
+        fn = Mock()
+        self.manager.unconditional_fwd_in_use = fn
+        self.phone_funckey_dao.get_dest_unc.return_value = unc_dest
+
+        self.manager.disable_all_unconditional_fwd(self.user_id)
+
+        for dest in unc_dest:
+            if dest:
+                self.assertEqual(fn.call_count, 3)

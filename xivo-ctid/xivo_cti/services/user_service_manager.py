@@ -47,35 +47,35 @@ class UserServiceManager(object):
     def enable_unconditional_fwd(self, user_id, destination):
         self.user_features_dao.enable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled(user_id, destination)
-        key_dest = self.phone_funckey_dao.get_dest_unc(user_id)
-        self.funckey_manager.unconditional_fwd_in_use(user_id, key_dest, destination == key_dest)
+        self.funckey_manager.disable_all_unconditional_fwd(user_id)
+        if destination in self.phone_funckey_dao.get_dest_unc(user_id):
+            self.funckey_manager.unconditional_fwd_in_use(user_id, destination, True)
 
     def disable_unconditional_fwd(self, user_id, destination):
         self.user_features_dao.disable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_disabled(user_id, destination)
-        key_dest = self.phone_funckey_dao.get_dest_unc(user_id)
-        self.funckey_manager.unconditional_fwd_in_use(user_id, key_dest, False)
+        self.funckey_manager.disable_all_unconditional_fwd(user_id)
 
     def enable_rna_fwd(self, user_id, destination):
         self.user_features_dao.enable_rna_fwd(user_id, destination)
         self.user_service_notifier.rna_fwd_enabled(user_id, destination)
         key_dest = self.phone_funckey_dao.get_dest_rna(user_id)
-        self.funckey_manager.rna_fwd_in_use(user_id, key_dest, destination == key_dest)
+        self.funckey_manager.rna_fwd_in_use(user_id, destination, destination in key_dest)
 
     def disable_rna_fwd(self, user_id, destination):
         self.user_features_dao.disable_rna_fwd(user_id, destination)
         self.user_service_notifier.rna_fwd_disabled(user_id, destination)
-        key_dest = self.phone_funckey_dao.get_dest_rna(user_id)
-        self.funckey_manager.rna_fwd_in_use(user_id, key_dest, False)
+        for func_dest in self.phone_funckey_dao.get_dest_rna(user_id):
+            self.funckey_manager.rna_fwd_in_use(user_id, func_dest, False)
 
     def enable_busy_fwd(self, user_id, destination):
         self.user_features_dao.enable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled(user_id, destination)
         key_dest = self.phone_funckey_dao.get_dest_busy(user_id)
-        self.funckey_manager.busy_fwd_in_use(user_id, key_dest, destination == key_dest)
+        self.funckey_manager.busy_fwd_in_use(user_id, destination, destination in key_dest)
 
     def disable_busy_fwd(self, user_id, destination):
         self.user_features_dao.disable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled(user_id, destination)
-        key_dest = self.phone_funckey_dao.get_dest_busy(user_id)
-        self.funckey_manager.busy_fwd_in_use(user_id, key_dest, False)
+        for func_dest in self.phone_funckey_dao.get_dest_busy(user_id):
+            self.funckey_manager.busy_fwd_in_use(user_id, func_dest, False)
