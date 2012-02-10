@@ -124,10 +124,10 @@ class CTIServer(object):
         self.global_zone = None
 
     def setup(self):
-        self._config = cti_config.Config.get_instance()
-        self._config.update()
         self._set_logger()
         self._daemonize()
+        self._config = cti_config.Config.get_instance()
+        self._config.update()
         self.timeout_queue = Queue.Queue()
         self.scheduler = scheduler.Scheduler()
         persister = alarm.JSONPersister(cti_config.ALARM_DIRECTORY)

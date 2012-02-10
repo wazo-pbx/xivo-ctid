@@ -25,6 +25,7 @@ import urllib2
 import cjson
 import ssl
 import string
+import time
 
 logger = logging.getLogger('cti_config')
 
@@ -74,13 +75,16 @@ class Config(object):
 
         # web-interface/tpl/www/bloc/cti/general.php
         # web-interface/action/www/cti/web_services/configuration.php
-
-        try:
-            response = urllib2.urlopen(uri)
-            self.json_config = response.read().replace('\/', '/')
-            self.xc_json = cjson.decode(self.json_config)
-        except Exception:
-            logger.exception('fetch url %s', uri)
+        got_webi_answer = False
+        while not got_webi_answer:
+            try:
+                response = urllib2.urlopen(uri)
+                self.json_config = response.read().replace('\/', '/')
+                self.xc_json = cjson.decode(self.json_config)
+                got_webi_answer = True
+            except Exception:
+                logger.warning('Waiting for XiVO web services')
+                time.sleep(5)
 
         for profdef in self.xc_json.get('profiles', {}).itervalues():
             if profdef['xlets']:
