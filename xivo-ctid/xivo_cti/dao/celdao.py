@@ -3,7 +3,6 @@
 import logging
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.cel import CEL
-from xivo_cti import cti_config
 
 logger = logging.getLogger(__name__)
 
