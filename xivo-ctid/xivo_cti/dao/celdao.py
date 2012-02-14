@@ -58,7 +58,7 @@ class CELChannel(object):
         chan_start_exten = self._chan_start_event.exten
         exten = chan_start_exten
         if self.is_originate():
-            exten = self.peers_exten()
+            exten = self._hangup_event.cid_num
         return exten
 
     def linked_id(self):
@@ -66,28 +66,6 @@ class CELChannel(object):
 
     def is_originate(self):
         return self._chan_start_event.exten == u's'
-
-    def peers_uniqueids(self):
-        uniqueid = self._chan_start_event.uniqueid
-        linked_id = self.linked_id()
-        for config in cti_config.Config.get_instance().getconfig('ipbxes').itervalues():
-            cel_uri = config['cdr_db_uri']
-            celdao = CELDAO.new_from_uri(cel_uri)
-            cel_entries_with_uniqueid = celdao.cels_by_linked_id(linked_id)
-            return set([cel.uniqueid for cel in cel_entries_with_uniqueid if cel.uniqueid != uniqueid])
-
-    def peers_exten(self):
-        try:
-            peers_unique_id = self.peers_uniqueids().pop()
-            for config in cti_config.Config.get_instance().getconfig('ipbxes').itervalues():
-                cel_uri = config['cdr_db_uri']
-                celdao = CELDAO.new_from_uri(cel_uri)
-                peers_channel = celdao.channel_by_unique_id(peers_unique_id)
-                if peers_channel:
-                    return peers_channel._chan_start_event.cid_num
-        except KeyError:
-            pass
-        return 'unknown'
 
 
 class CELDAO(object):
@@ -174,7 +152,8 @@ class CELDAO(object):
                  .filter(CEL.channame.like(channel_pattern))
                  .filter(CEL.eventtype == 'CHAN_START')
                  .filter(CEL.uniqueid == CEL.linkedid)
-                 .order_by(CEL.eventtime.desc()))
+                 .order_by(CEL.eventtime.desc())
+                 .limit(limit))
         channels = []
         for unique_id, in query:
             try:
