@@ -1,0 +1,158 @@
+# vim: set fileencoding=utf-8 :
+# XiVO CTI Server
+
+# Copyright (C) 2007-2011  Avencall
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Alternatively, XiVO CTI Server is available under other licenses directly
+# contracted with Pro-formatique SARL. See the LICENSE file at top of the
+# source tree or delivered in the installable package in which XiVO CTI Server
+# is distributed for more details.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import unittest
+from xivo_cti.lists.cti_phonelist import PhoneList
+
+
+class Test(unittest.TestCase):
+
+    PHONE_1 = {'protocol': 'sip',
+              'buggymwi': None,
+              'amaflags': 'default',
+              'sendrpid': None,
+              'videosupport': None,
+              'regseconds': '0',
+              'maxcallbitrate': None,
+              'registertrying': None,
+              'session-minse': None,
+              'maxforwards': None,
+              'internal': False,
+              'rtpholdtimeout': None,
+              'session-expires': None,
+              'defaultip': None,
+              'ignoresdpversion': None,
+              'ipfrom': '192.168.32.157',
+              'vmexten': None,
+              'name': 'yp0ra4',
+              'callingpres': None,
+              'textsupport': None,
+              'unsolicited_mailbox': None,
+              'outboundproxy': None,
+              'fromuser': None,
+              'cid_number': None,
+              'commented': False,
+              'useclientcode': None,
+              'rules_type': '',
+              'call-limit': '10',
+              'num': 1,
+              'initialized': False,
+              'progressinband': None,
+              'port': None,
+              'transport': None,
+              'category': 'user',
+              'md5secret': '',
+              'regserver': None,
+              'directmedia': None,
+              'mailbox': None,
+              'qualifyfreq': None,
+              'host': 'dynamic',
+              'promiscredir': None,
+              'disallow': None,
+              'allowoverlap': None,
+              'accountcode': None,
+              'dtmfmode': None,
+              'language': 'fr_FR',
+              'usereqphone': None,
+              'qualify': None,
+              'pickupgroup': None,
+              'useridentity': 'User2 ',
+              'trustrpid': None,
+              'context': 'default',
+              'timert1': None,
+              'session-refresher': None,
+              'provisioningid': 152530,
+              'mohinterpret': None,
+              'allowsubscribe': None,
+              'number': '102',
+              'session-timers': None,
+              'busylevel': None,
+              'callcounter': None,
+              'callgroup': None,
+              'rules_time': '30',
+              'callerid': '"User2" <102>',
+              'line_num': 0,
+              'configregistrar': 'default',
+              'encryption': False,
+              'remotesecret': None,
+              'secret': 'XM5Y4J',
+              'use_q850_reason': None,
+              'type': 'friend',
+              'username': None,
+              'callbackextension': None,
+              'protocolid': 19,
+              'disallowed_methods': None,
+              'rules_group': '',
+              'rfc2833compensate': None,
+              'g726nonstandard': None,
+              'contactdeny': None,
+              'iduserfeatures': 11,
+              'snom_aoc_enabled': None,
+              'fullname': None,
+              'rules_order': 1,
+              't38pt_udptl': None,
+              'subscribemwi': '0',
+              'mohsuggest': None,
+              'id': 19,
+              'autoframing': None,
+              't38pt_usertpsource': None,
+              'ipaddr': '',
+              'fromdomain': None,
+              'allowtransfer': None,
+              'nat': None,
+              'config': '',
+              'setvar': 'XIVO_USERID=11',
+              'contactpermit': None,
+              'rtpkeepalive': None,
+              'description': '',
+              'insecure': None,
+              'permit': None,
+              'parkinglot': None,
+              'lastms': '',
+              'device': '7',
+              'subscribecontext': None,
+              'regexten': None,
+              'identity': 'SIP\\/yp0ra4',
+              'deny': None,
+              'timerb': None,
+              'rtptimeout': None,
+              'allow': None}
+
+    def test_find_phone_by_channel_no_result(self):
+        phone_list = PhoneList([])
+        phone_list.keeplist[self.PHONE_1['id']] = self.PHONE_1
+        channel = 'SIP/k8fh45-000000023'
+
+        phone = phone_list.find_phone_by_channel(channel)
+
+        self.assertEqual(phone, None)
+
+    def test_find_phone_by_channel(self):
+        phone_list = PhoneList([])
+        phone_list.keeplist[self.PHONE_1['id']] = self.PHONE_1
+        channel = 'SIP/yp0ra4-000000023'
+
+        phone = phone_list.find_phone_by_channel(channel)
+
+        self.assertEqual(phone, self.PHONE_1)

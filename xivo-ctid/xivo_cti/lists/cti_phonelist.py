@@ -304,3 +304,13 @@ class PhoneList(AnyList):
                          'calleridname': '<meetme>',
                          'calleridnum': meetmenum}
                 self.keeplist[phoneid]['comms'][uid].update(infos)
+
+    def find_phone_by_channel(self, channel):
+        protocol, name = channel.split('-', 1)[0].split('/', 1)
+
+        def match_phone(phone):
+            return phone['protocol'].lower() == protocol.lower() and phone['name'] == name
+
+        phones = filter(match_phone, self.keeplist.itervalues())
+
+        return phones[0] if phones else None
