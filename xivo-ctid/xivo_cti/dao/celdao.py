@@ -57,7 +57,7 @@ class CELChannel(object):
         chan_start_exten = self._chan_start_event.exten
         exten = chan_start_exten
         if self.is_originate():
-            exten = self._hangup_event.cid_num
+            exten = self._hangup_event.cid_ani
         return exten
 
     def linked_id(self):
