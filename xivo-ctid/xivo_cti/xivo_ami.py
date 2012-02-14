@@ -37,7 +37,7 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 __dialallowed__ = '[0-9*#+]'
 __specialextensions__ = ['s', 'BUSY']
 
-switch_originates = False
+switch_originates = True
 
 
 class AMIClass(object):

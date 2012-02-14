@@ -1373,23 +1373,12 @@ class Safe(object):
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
 
         elif function == 'callerid_forphones':
-            calleridsolved = None
+            phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
 
-            calleridname = agievent.get('agi_calleridname')
-            if calleridsolved:
-                td = 'handle_fagi %s : calleridsolved="%s"' % (function, calleridsolved)
-                if calleridname in ['', 'unknown', calleridnum]:
-                    calleridname = calleridsolved
-            # to set according to os.getenv('LANG') or os.getenv('LANGUAGE') later on ?
-            if calleridnum in ['', 'unknown']:
-                calleridnum = CALLERID_UNKNOWN_NUM
-            if calleridname in ['', 'unknown']:
-                calleridname = calleridnum if calleridnum != CALLERID_UNKNOWN_NUM else 'unknown'
-            calleridtoset = '"%s"<%s>' % (calleridname, calleridnum)
-            td = 'handle_fagi %s : the callerid will be set to %s' % (function,
-                                                                      calleridtoset.decode('utf8'))
-            logger.info('%s', td.encode('utf8'))
-            varstoset['CALLERID'] = calleridtoset
+            if 'callerid' in phone and phone['callerid']:
+                varstoset['CALLERID(name)'] = phone['callerid']
+            if 'number' in phone and phone['number']:
+                varstoset['CALLERID(num)'] = phone['number']
 
         return varstoset
 
