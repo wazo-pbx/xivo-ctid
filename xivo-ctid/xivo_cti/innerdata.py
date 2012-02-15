@@ -1376,9 +1376,12 @@ class Safe(object):
             phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
             if phone:
                 if 'callerid' in phone and phone['callerid']:
-                    varstoset['CALLERID(name)'] = phone['callerid']
-                if 'number' in phone and phone['number']:
-                    varstoset['CALLERID(num)'] = phone['number']
+                    if '<' in phone['callerid'] and '>' in phone['callerid']:
+                        varstoset['CALLERID(all)'] = phone['callerid']
+                    else:
+                        varstoset['CALLERID(name)'] = phone['callerid']
+                        if 'number' in phone and phone['number']:
+                            varstoset['CALLERID(num)'] = phone['number']
 
         return varstoset
 
