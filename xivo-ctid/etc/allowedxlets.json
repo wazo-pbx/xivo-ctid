@@ -9,7 +9,6 @@
 "calls" : ["dial"],
 "switchboard" : ["dial"],
 "operator" : ["dial"],
-"popcaastra" : ["dial"],
 
 "fax" : ["fax"],
 "features" : ["features"],
@@ -28,7 +27,5 @@
 "mylocaldir" : [],
 "callcampaign" : [],
 
-"xletweb" : [],
 "tabber" : [],
-"video" : []
 }
