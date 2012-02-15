@@ -1374,11 +1374,11 @@ class Safe(object):
 
         elif function == 'callerid_forphones':
             phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
-
-            if 'callerid' in phone and phone['callerid']:
-                varstoset['CALLERID(name)'] = phone['callerid']
-            if 'number' in phone and phone['number']:
-                varstoset['CALLERID(num)'] = phone['number']
+            if phone:
+                if 'callerid' in phone and phone['callerid']:
+                    varstoset['CALLERID(name)'] = phone['callerid']
+                if 'number' in phone and phone['number']:
+                    varstoset['CALLERID(num)'] = phone['number']
 
         return varstoset
 
