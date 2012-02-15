@@ -44,6 +44,7 @@ from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
+from xivo_cti.tools.caller_id import build_caller_id
 
 logger = logging.getLogger('innerdata')
 
@@ -1373,15 +1374,12 @@ class Safe(object):
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
 
         elif function == 'callerid_forphones':
-            phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
-            if phone:
-                if 'callerid' in phone and phone['callerid']:
-                    if '<' in phone['callerid'] and '>' in phone['callerid']:
-                        varstoset['CALLERID(all)'] = phone['callerid']
-                    else:
-                        varstoset['CALLERID(name)'] = phone['callerid']
-                        if 'number' in phone and phone['number']:
-                            varstoset['CALLERID(num)'] = phone['number']
+            try:
+                phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
+                user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
+                varstoset['CALLERID(all)'] = build_caller_id(phone['callerid'], phone['number'], user['fullname'])
+            except KeyError:
+                logger.exception('Could not set the caller id')
 
         return varstoset
 
