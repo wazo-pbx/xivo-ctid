@@ -1,31 +1,28 @@
 {
 "identity" : ["dial"],
 "dial" : ["dial"],
-"customerinfo" : ["customerinfo"],
 "history" : ["history"],
 "search" : ["dial"],
 "directory" : ["directory"],
-
-"calls" : ["dial"],
-"switchboard" : ["dial"],
-"operator" : ["dial"],
 
 "fax" : ["fax"],
 "features" : ["features"],
 "conference" : ["conference"],
 
+"datetime" : [],
+"tabber" : [],
+
+"mylocaldir" : [],
+
+"customerinfo" : ["customerinfo"],
+"calls" : ["dial"],
+"switchboard" : ["dial"],
+"operator" : ["dial"],
 "agents" : ["agents"],
 "agentsnext" : ["agents"],
 "agentdetails" : ["agents"],
-
 "queues" : ["agents"],
 "queuedetails" : ["agents"],
 "queueentrydetails" : ["agents"],
-
-"datetime" : [],
-
-"mylocaldir" : [],
-"callcampaign" : [],
-
-"tabber" : [],
+"callcampaign" : []
 }
