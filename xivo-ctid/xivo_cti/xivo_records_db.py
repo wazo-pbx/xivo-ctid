@@ -28,9 +28,6 @@ Record Features.
 import logging
 
 from xivo import anysql
-from xivo.BackSQL import backmysql
-from xivo.BackSQL import backsqlite
-from xivo.BackSQL import backsqlite3
 from xivo.BackSQL import backpostgresql
 
 logger = logging.getLogger('records_db')

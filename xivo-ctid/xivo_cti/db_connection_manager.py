@@ -24,9 +24,6 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import Queue
 
 from xivo import anysql
-from xivo.BackSQL import backmysql
-from xivo.BackSQL import backsqlite
-from xivo.BackSQL import backsqlite3
 from xivo.BackSQL import backpostgresql
 
 
