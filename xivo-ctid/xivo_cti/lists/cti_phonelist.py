@@ -314,3 +314,8 @@ class PhoneList(AnyList):
         phones = filter(match_phone, self.keeplist.itervalues())
 
         return phones[0] if phones else None
+
+    def get_main_line(self, user_id):
+        users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]
+        sorted_phones = sorted(users_phones, key=lambda phone: phone['rules_order'])
+        return sorted_phones[0] if sorted_phones else None

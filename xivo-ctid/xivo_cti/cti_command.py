@@ -767,28 +767,20 @@ class Command(object):
         if 'type' in src and 'chan' in src['type']:
             if src.get('id') in innerdata.channels:
                 channel = src.get('id')
-                src_context = innerdata.channels.get(channel).context
-                # phone relations ('phone:24') innerdata.channels.get(channel).relations
-        else:
-            pass
 
-        dst_context = src_context
+        main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
+        dst_context = main_line['context']
         phoneidstruct_dst = {}
         extentodial = None
 
-        if dst.get('type') == 'user':
-            if dst.get('id') in innerdata.xod_config.get('users').keeplist:
-                for k, v in innerdata.xod_config.get('phones').keeplist.iteritems():
-                    if dst.get('id') == str(v.get('iduserfeatures')):
-                        phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(k)
-                        break
-                # if not phoneidstruct_dst: lookup over agents ?
-        elif dst.get('type') == 'phone':
+        if dst['type'] == 'user':
+            phoneidstruct_dst = innerdata.xod_config['phones'].get_main_line(dst['id'])
+        elif dst['type'] == 'phone':
             if dst.get('id') in innerdata.xod_config.get('phones').keeplist:
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
-        elif dst.get('type') == 'exten':
+        elif dst['type'] == 'exten':
             extentodial = dst.get('id')
-        elif dst.get('type') == 'voicemail':
+        elif dst['type'] == 'voicemail':
             # *97 vm number
             if dst['id'] in innerdata.xod_config['voicemails'].keeplist:
                 voicemail = innerdata.xod_config['voicemails'].keeplist[dst['id']]
@@ -797,15 +789,13 @@ class Command(object):
                 prefix = prefix[:len(prefix) - 1]
                 extentodial = prefix + vm_number
                 dst_context = voicemail['context']
-        elif dst.get('type') == 'meetme':
-            if dst.get('id') in innerdata.xod_config.get('meetmes').keeplist:
+        elif dst['type'] == 'meetme':
+            if dst['id'] in innerdata.xod_config.get('meetmes').keeplist:
                 meetmestruct = innerdata.xod_config.get('meetmes').keeplist.get(dst.get('id'))
                 extentodial = meetmestruct.get('confno')
-        else:
-            pass
 
         if phoneidstruct_dst:
-            extentodial = phoneidstruct_dst.get('number')
+            extentodial = phoneidstruct_dst['number']
 
         rep = {}
         if extentodial:
@@ -818,18 +808,19 @@ class Command(object):
     def ipbxcommand_atxfer(self):
         rep = {}
         try:
-            src = self.parseid(self._commanddict.get('source'))
-            dst = self.parseid(self._commanddict.get('destination'))
+            src = self.parseid(self._commanddict['source'])
+            dst = self.parseid(self._commanddict['destination'])
             exten = dst['id']
             if src['id'] in self.innerdata.channels:
-                channel = self.innerdata.channels[src['id']]
-                context = channel.context
+                main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
+                context = main_line['context']
                 rep = {'amicommand': 'atxfer',
                        'amiargs': (src['id'],
                                    exten,
                                    context)}
         except KeyError:
-            logger.warning('Atxfer failed %s', self._commanddict)
+            logger.exception('Atxfer failed %s', self._commanddict)
+            return [{'error': 'Incomplete info'}]
         return [rep, ]
 
     def ipbxcommand_intercept(self):
