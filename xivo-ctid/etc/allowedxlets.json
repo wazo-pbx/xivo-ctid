@@ -14,6 +14,8 @@
 
 "mylocaldir" : [],
 
+"xletweb" : [],
+
 "customerinfo" : ["customerinfo"],
 "calls" : ["dial"],
 "switchboard" : ["dial"],
