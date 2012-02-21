@@ -319,6 +319,7 @@ class Command(object):
                                          self.ruserid,
                                          'cticommand:actionfiche',
                                          infos.get('buttonname'))
+        logger.info('Received from client : %s' % infos.get('variables'))
         return reply
 
     def regcommand_history(self):
