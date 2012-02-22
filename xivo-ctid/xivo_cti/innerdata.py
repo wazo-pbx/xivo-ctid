@@ -1282,7 +1282,7 @@ class Safe(object):
         try:
             cid = fagistruct.connid
             for k, v in varstoset.iteritems():
-                cid.sendall('SET VARIABLE %s "%s"\n' % (k, v))
+                cid.sendall('SET VARIABLE %s "%s"\n' % (k, v.encode('utf8')))
             cid.close()
             del self._ctiserver.fdlist_established[cid]
             del self.fagichannels[channel]
