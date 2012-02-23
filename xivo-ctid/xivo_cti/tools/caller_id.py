@@ -23,14 +23,15 @@
 
 import re
 
-COMPLETE_CALLER_ID_PATTERN = re.compile('\".*\" \<\d+\>')
+COMPLETE_CALLER_ID_PATTERN = re.compile('\"(.*)\" \<(\d+)\>')
 
 
 def build_caller_id(caller_id, name, number):
     if _complete_caller_id(caller_id):
-        return caller_id
+        cid_name, cid_number = COMPLETE_CALLER_ID_PATTERN.search(caller_id).groups()
+        return caller_id, cid_name, cid_number
     else:
-        return '"%s" <%s>' % (name, number)
+        return '"%s" <%s>' % (name, number), name, number
 
 
 def _complete_caller_id(caller_id):

@@ -10,18 +10,22 @@ class TestCallerID(unittest.TestCase):
         name = 'User One'
         number = '123'
 
-        caller_id = build_caller_id(begin, name, number)
+        cid_all, cid_name, cid_number = build_caller_id(begin, name, number)
 
-        self.assertEqual(caller_id, '"%s" <%s>' % (name, number))
+        self.assertEqual(cid_all, '"%s" <%s>' % (name, number))
+        self.assertEqual(cid_name, name)
+        self.assertEqual(cid_number, number)
 
     def test_caller_id_number(self):
         begin = '"User One" <123>'
         name = 'User One'
         number = '123'
 
-        caller_id = build_caller_id(begin, name, number)
+        cid_all, cid_name, cid_number = build_caller_id(begin, name, number)
 
-        self.assertEqual(caller_id, '"%s" <%s>' % (name, number))
+        self.assertEqual(cid_all, '"%s" <%s>' % (name, number))
+        self.assertEqual(cid_name, name)
+        self.assertEqual(cid_number, number)
 
     def test_complete_caller_id(self):
         cid = '"User One" <1234>'
