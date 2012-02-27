@@ -79,7 +79,6 @@ class CTI(interfaces.Interfaces):
     def _register_login_callbacks(self):
         LoginID.register_callback_params(self.receive_login_id, ['userlogin',
                                                                  'company',
-                                                                 'xivo_version',
                                                                  'cti_connection'])
 
     def disconnected(self, msg):
@@ -162,12 +161,9 @@ class CTI(interfaces.Interfaces):
         except KeyError:
             logger.warning('Could not update user status %s', user_id)
 
-    def receive_login_id(self, login, company, version, connection):
+    def receive_login_id(self, login, company, connection):
         if connection != self:
             return []
-
-        if version != cti_config.XIVOVERSION_NUM:
-            return 'warning', 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM)
 
         ipbxid = self._ctiserver.myipbxid
         safe = self._ctiserver.safe[ipbxid]
@@ -181,8 +177,7 @@ class CTI(interfaces.Interfaces):
         self.connection_details['prelogin'] = {'sessionid': session_id}
 
         return 'message', {'sessionid': session_id,
-                           'class': 'login_id',
-                           'xivoversion': version}
+                           'class': 'login_id'}
 
 
 class CTIS(CTI):
