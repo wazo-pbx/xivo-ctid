@@ -44,7 +44,6 @@ class AMILogger(object):
                      'ParkedCallTimeOut',
                      'Pickup',
                      'QueueCallerAbandon',
-                     'Registry',
                      'Reload',
                      'Shutdown',
                      'SoftHangupRequest',
