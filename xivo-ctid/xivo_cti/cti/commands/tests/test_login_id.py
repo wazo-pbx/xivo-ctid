@@ -19,7 +19,6 @@ class Test(unittest.TestCase):
         self.assertEqual(login_id.company, None)
         self.assertEqual(login_id.ident, None)
         self.assertEqual(login_id.userlogin, None)
-        self.assertEqual(login_id.xivo_version, None)
 
     def test_from_dict(self):
         commandid = 476707713
@@ -31,10 +30,8 @@ class Test(unittest.TestCase):
                                       'commandid': commandid,
                                       'company': company,
                                       'ident': ident,
-                                      'userlogin': userlogin,
-                                      'xivoversion': xivo_version})
+                                      'userlogin': userlogin})
         self.assertEqual(login_id.commandid, commandid)
         self.assertEqual(login_id.company, company)
         self.assertEqual(login_id.ident, ident)
         self.assertEqual(login_id.userlogin, userlogin)
-        self.assertEqual(login_id.xivo_version, xivo_version)
