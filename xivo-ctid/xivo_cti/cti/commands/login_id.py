@@ -32,9 +32,10 @@ class LoginID(CTICommand):
     COMPANY = 'company'
     IDENT = 'ident'
     USERLOGIN = 'userlogin'
+    XIVO_VERSION = 'xivoversion'
     SESSIONID = 'sessionid'
 
-    required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY]
+    required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY, XIVO_VERSION]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
     _callbacks_with_params = []
@@ -45,12 +46,14 @@ class LoginID(CTICommand):
         self.company = None
         self.ident = None
         self.userlogin = None
+        self.xivo_version = None
 
     def _init_from_dict(self, msg):
         super(LoginID, self)._init_from_dict(msg)
         self.company = msg[self.COMPANY]
         self.ident = msg[self.IDENT]
         self.userlogin = msg[self.USERLOGIN]
+        self.xivo_version = msg[self.XIVO_VERSION]
 
 
 CTICommandFactory.register_class(LoginID)
