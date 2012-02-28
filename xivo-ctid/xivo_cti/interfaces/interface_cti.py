@@ -167,7 +167,8 @@ class CTI(interfaces.Interfaces):
             return []
 
         if version != cti_config.XIVOVERSION_NUM:
-            return 'warning', 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM)
+            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM),
+                             'class': 'login_id'}
 
         ipbxid = self._ctiserver.myipbxid
         safe = self._ctiserver.safe[ipbxid]
