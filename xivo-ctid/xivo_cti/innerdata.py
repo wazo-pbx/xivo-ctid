@@ -1375,12 +1375,13 @@ class Safe(object):
 
         elif function == 'callerid_forphones':
             try:
-                phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
-                user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
-                (cid_all, name, number) = build_caller_id(phone['callerid'], phone['number'], user['fullname'])
-                varstoset['CALLERID(all)'] = cid_all
-                varstoset['CALLERID(name)'] = name
-                varstoset['CALLERID(number)'] = number
+                if 'Local/' not in agievent['agi_channel']:
+                    phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
+                    user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
+                    (cid_all, name, number) = build_caller_id(phone['callerid'], phone['number'], user['fullname'])
+                    varstoset['CALLERID(all)'] = cid_all
+                    varstoset['CALLERID(name)'] = name
+                    varstoset['CALLERID(number)'] = number
             except KeyError:
                 logger.exception('Could not set the caller id')
 
