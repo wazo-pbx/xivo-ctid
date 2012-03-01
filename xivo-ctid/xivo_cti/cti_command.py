@@ -842,7 +842,10 @@ class Command(object):
     def get_agent_info(self, command_dict):
         if 'agentids' not in command_dict or command_dict['agentids'] == 'agent:special:me':
             command_dict['agentids'] = self.innerdata.xod_config['users'].keeplist[self.userid]['agentid']
-        ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
+        if '/' in command_dict['agentids']:
+            ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
+        else:
+            ipbx_id, agent_id = self.ipbxid, command_dict['agentids']
         innerdata = self._ctiserver.safe[ipbx_id]
         if agent_id in innerdata.xod_config['agents'].keeplist:
             agent = innerdata.xod_config['agents'].keeplist[agent_id]
