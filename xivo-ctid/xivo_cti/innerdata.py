@@ -623,15 +623,18 @@ class Safe(object):
     def newstate(self, channel, state):
         self.channels[channel].update_state(state)
 
-    def newchannel(self, channel, context, state):
-        if not channel:
+    def newchannel(self, channel_name, context, state, event=None):
+        if not channel_name:
             return
-        if channel not in self.channels:
+        if channel_name not in self.channels:
             # might occur when requesting channels at launch time
-            self.channels[channel] = Channel(channel, context)
-            self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel))
-        self.updaterelations(channel)
-        self.channels[channel].update_state(state)
+            channel = Channel(channel_name, context)
+            if event:
+                channel.update_from_event(event)
+            self.channels[channel_name] = channel
+            self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+        self.updaterelations(channel_name)
+        self.channels[channel_name].update_state(state)
         self.handle_cti_stack('empty_stack')
 
     def meetmeupdate(self, confno, channel=None, opts={}):
@@ -1556,6 +1559,10 @@ class Channel(object):
                 self.extra_data[family][varname] = varvalue
         else:
             self.extra_data[family][varname] = varvalue
+
+    def update_from_event(self, event):
+        if 'CallerIDName' in event and self.properties['thisdisplay'] == None:
+            self.properties['thisdisplay'] = event['CallerIDName']
 
     def get_extra_data(self, family, varname):
         if family == 'xivo':
