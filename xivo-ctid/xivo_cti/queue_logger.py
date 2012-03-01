@@ -92,7 +92,7 @@ class QueueLogger(object):
             for event, values in events.iteritems():
                 if 'Holdtime' not in values:
                     continue
-                leave_time = values['call_time_t'] + values['Holdtime']
+                leave_time = values['call_time_t'] + int(values['Holdtime'])
                 if 'Member' not in values and leave_time < max_time:
                     to_delete.append((queue, event))
         for queue, event in to_delete:
