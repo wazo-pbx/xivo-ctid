@@ -1354,10 +1354,8 @@ class Safe(object):
                 if agiargs:
                     presences = self._config.getconfig('userstatus')
 
-                    prescountdict = {}
+                    prescountdict = dict.fromkeys(presences, {})
                     for k, v in presences.iteritems():
-                        if k not in prescountdict:
-                            prescountdict[k] = {}
                         for kk in v.keys():
                             prescountdict[k][kk] = 0
 

@@ -852,11 +852,25 @@ class Command(object):
             status = innerdata.xod_status['agents'][agent_id]
             return agent, status
 
+    def _get_agent_exten(self, command_dict):
+        if '/' in command_dict['agentids']:
+            _, agent_id = command_dict['agentids'].split('/', 1)
+        else:
+            _, agent_id = self.ipbxid, command_dict['agentids']
+        if 'agentphonenumber' in command_dict:
+            return command_dict['agentphonenumber']
+        user_ids = [user['id'] for user in self.innerdata.xod_config['users'].keeplist.itervalues() if user['agentid'] == agent_id]
+        return self.innerdata.xod_config['phones'].get_main_line(user_ids[0])['number'] if user_ids else None
+
     def ipbxcommand_agentlogin(self):
         agent, status = self.get_agent_info(self._commanddict)
+        exten = self._get_agent_exten(self._commanddict)
         if status['status'] not in ['AGENT_IDLE', 'AGENT_ONCALL']:
             return [{'amicommand': 'agentcallbacklogin',
-                     'amiargs': (agent['number'], None, agent['context'], True)}]
+                     'amiargs': (agent['number'],
+                                 exten,
+                                 agent['context'],
+                                 False)}]
 
     def ipbxcommand_agentlogout(self):
         agent, status = self.get_agent_info(self._commanddict)
