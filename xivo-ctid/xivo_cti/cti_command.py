@@ -866,7 +866,7 @@ class Command(object):
                      'amiargs': (agent['number'],
                                  exten,
                                  agent['context'],
-                                 False)}]
+                                 False if agent['ackcall'] == 'no' else True)}]
 
     def ipbxcommand_agentlogout(self):
         agent, status = self.get_agent_info(self._commanddict)
