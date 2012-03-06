@@ -853,6 +853,8 @@ class Command(object):
             return agent, status
 
     def _get_agent_exten(self, command_dict):
+        if 'agentids' not in command_dict or command_dict['agentids'] == 'agent:special:me':
+            command_dict['agentids'] = self.innerdata.xod_config['users'].keeplist[self.userid]['agentid']
         if '/' in command_dict['agentids']:
             _, agent_id = command_dict['agentids'].split('/', 1)
         else:
