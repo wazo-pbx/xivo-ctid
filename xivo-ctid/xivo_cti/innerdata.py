@@ -301,11 +301,6 @@ class Safe(object):
         extenfeatures.getlist(0, 0, False)
         self.extenfeatures = extenfeatures.jsonreply
 
-    # def make_ctiserver_account(self, ipbxid, username, password):
-    # self.xod_status['users'][actualid] = {'connection' : None,
-    # 'availstate' : 'unknown'
-    # }
-
     def update_config_list_all(self):
         for listname in self.urlvars:
             self.update_config_list(listname)
@@ -530,11 +525,10 @@ class Safe(object):
         return domatch
 
     def user_getcontexts(self, userid):
-        user_cfg = self.xod_config.get('users').keeplist.get(userid)
-        entityid = user_cfg.get('entityid')
+        user = self.user_features_dao.get(userid)
         contexts = list()
         for context_id, context_config in self.xod_config.get('contexts').keeplist.iteritems():
-            if context_config.get('context').get('entityid') == str(entityid):
+            if context_config.get('context').get('entityid') == str(user.entityid):
                 contexts.append(context_id)
         return contexts
 
@@ -543,12 +537,9 @@ class Safe(object):
         if uinfo:
             return str(uinfo.get('id'))  # XXX redmine#2169
 
-    def user_status(self, userid):
-        print self.xod_config['users'].keeplist[userid]
-
     def user_get_hashed_password(self, userid, sessionid):
         tohash = '%s:%s' % (sessionid,
-                            self.xod_config['users'].keeplist[userid].get('passwdclient'))
+                            self.user_features_dao.get(userid).passwdclient)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
@@ -1067,7 +1058,7 @@ class Safe(object):
         truestate = newstate
         if truestate != oldstate:
             self.xod_status.get('users').get(userid)['availstate'] = truestate
-            agentid = self.xod_config.get('users').keeplist.get(userid).get('agentid')
+            agentid = self.user_features_dao.get(userid).agentid
             agents_keeplist = self.xod_config.get('agents').keeplist
             if agentid in agents_keeplist:
                 agentnumber = agents_keeplist[agentid].get('number')
@@ -1160,12 +1151,11 @@ class Safe(object):
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
         datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        loginclient = self.xod_config.get('users').keeplist.get(userid).get('loginclient')
-        entityid = self.xod_config.get('users').keeplist.get(userid).get('entityid')
+        user = self.user_features_dao.get(userid)
         userstatus = self.xod_status.get('users').get(userid).get('availstate')
         arguments = (datetime,
-                     loginclient,
-                     entityid,
+                     user.loginclient,
+                     user.entityid,
                      userstatus,
                      what, options, callduration)
 
