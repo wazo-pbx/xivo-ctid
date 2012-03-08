@@ -553,7 +553,7 @@ class Safe(object):
         return sha1sum
 
     def user_get_ctiprofile(self, userid):
-        return self.xod_config.get('users').keeplist.get(userid).get('profileclient')
+        return self.user_features_dao.get(userid).profileclient
 
     def user_get_userstatuskind(self, userid):
         profileclient = self.user_get_ctiprofile(userid)
