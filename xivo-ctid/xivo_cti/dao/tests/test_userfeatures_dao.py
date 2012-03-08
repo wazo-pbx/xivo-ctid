@@ -54,8 +54,20 @@ class Test(unittest.TestCase):
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
 
+        self.dao = UserFeaturesDAO(self.session)
+
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
+
+    def test_get_one_result(self):
+        user_id = self._insert_user('first')
+
+        user = self.dao.get(user_id)
+
+        self.assertEqual(user.id, user_id)
+
+    def test_get_no_result(self):
+        self.assertRaises(LookupError, lambda: self.dao.get(1))
 
     def test_set_dnd(self):
         user_id = self._insert_user_dnd_not_set()
@@ -75,6 +87,13 @@ class Test(unittest.TestCase):
 
         self._check_dnd_is_not_set(user_id)
         self._check_dnd_is_not_set_in_inner_data(user_id)
+
+    def _insert_user(self, firstname):
+        user = UserFeatures()
+        user.firstname = firstname
+        self.session.add(user)
+        self.session.commit()
+        return user.id
 
     def _insert_user_dnd_set(self):
         user_features = UserFeatures()

@@ -210,6 +210,7 @@ class Safe(object):
         self.ipbxid = ipbxid
         self.xod_config = {}
         self.xod_status = {}
+        self.user_features_dao = None
 
         self.events_cti = Queue.Queue()
         self.timeout_queue = Queue.Queue()
@@ -512,12 +513,13 @@ class Safe(object):
             domatch = True
 
         if domatch and 'profileids' in tomatch:
-            user_cfg = self.xod_config.get('users').keeplist.get(userid)
-            if user_cfg.get('profileclient') not in tomatch.get('profileids'):
+            user = self.user_features_dao.get(userid)
+            if user.profileclient not in tomatch.get('profileids'):
                 domatch = False
+
         if domatch and 'entities' in tomatch:
             pass
-            # print 'e', user_cfg.get('entityid'), tomatch.get('entities')
+
         if domatch and 'contexts' in tomatch:
             domatch = False
             for ctx in self.user_getcontexts(userid):
