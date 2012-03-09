@@ -31,6 +31,7 @@ from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
+from xivo_cti import innerdata
 
 
 class TestSafe(unittest.TestCase):
@@ -68,6 +69,14 @@ class TestSafe(unittest.TestCase):
         ret = safe.handle_getlist_list_id('not_a_list', '1')
 
         self.assertEqual(ret, None)
+
+    def test_split_channel(self):
+        sip_trunk_channel = 'SIP/test-ha-1-03745898564'
+
+        proto, name = innerdata.split_channel(sip_trunk_channel)
+
+        self.assertEqual(proto, 'SIP')
+        self.assertEqual(name, 'test-ha-1')
 
     def assert_callback_registered(self, cls, fn):
         found = False

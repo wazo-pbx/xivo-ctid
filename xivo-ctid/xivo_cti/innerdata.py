@@ -1311,6 +1311,23 @@ class Safe(object):
         # the AGI handling has been done, exiting ...
         self.fagi_close(fagistruct, varstoset)
 
+    def _get_cid_for_phone(self, channel):
+        phone = self.xod_config['phones'].find_phone_by_channel(channel)
+        user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
+        cid_all, cid_name, cid_number = build_caller_id(phone['callerid'], user['fullname'], phone['number'])
+        return cid_all, cid_name, cid_number
+
+    def _get_cid_directory_lookup(self, original_cid, name, pattern, contexts):
+        context_obj = self.contexts_mgr.contexts[contexts[0]]
+        _, resultlist = context_obj.lookup_direct(pattern, contexts=contexts)
+        resultlist = list(set(resultlist))
+        if resultlist:
+            res = resultlist[0]
+            name, number = res.split(';')[0:2]
+            return  build_caller_id(original_cid, name, number)
+        else:
+            return None, None, None
+
     def fagi_handle_real(self, agievent):
         # check capas !
         varstoset = {}
@@ -1368,17 +1385,45 @@ class Safe(object):
 
         elif function == 'callerid_forphones':
             try:
-                if 'Local/' not in agievent['agi_channel']:
-                    phone = self.xod_config['phones'].find_phone_by_channel(agievent['agi_channel'])
-                    user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
-                    (cid_all, name, number) = build_caller_id(phone['callerid'], phone['number'], user['fullname'])
+                proto, name = split_channel(agievent['agi_channel'])
+                cid_all, cid_name, cid_number = None, None, None
+                incoming_number = agievent['agi_callerid']
+
+                if agievent['agi_channel'] in self.channels and self._is_phone_channel(proto, name):
+                    cid_all, cid_name, cid_number = self._get_cid_for_phone(agievent['agi_channel'])
+                else:
+                    if proto == 'Local':
+                        contexts = [name.split('@', 1)[1]]
+                    elif self._is_trunk_channel(proto, name):
+                        contexts = [self.xod_config['trunks'].keeplist[self.ztrunks(proto, name)]['context']]
+                    else:
+                        logger.debug('not a channel not local')
+                        contexts = []
+                    cid_all, cid_name, cid_number = self._get_cid_directory_lookup(
+                                    agievent['agi_callerid'], name, incoming_number, contexts)
+
+                if cid_all:
                     varstoset['CALLERID(all)'] = cid_all
-                    varstoset['CALLERID(name)'] = name
-                    varstoset['CALLERID(number)'] = number
+                if cid_name:
+                    varstoset['CALLERID(name)'] = cid_name
+                if cid_number:
+                    varstoset['CALLERID(number)'] = cid_number
             except KeyError:
-                logger.exception('Could not set the caller id')
+                logger.info('Could not set the caller id for channel %s, keeping the old one', agievent['agi_channel'])
 
         return varstoset
+
+    def _is_phone_channel(self, proto, name):
+        return self._is_listmember_channel(proto, name, 'phones')
+
+    def _is_trunk_channel(self, proto, name):
+        return self._is_listmember_channel(proto, name, 'trunks')
+
+    def _is_listmember_channel(self, proto, name, listname):
+        for item in self.xod_config[listname].keeplist.itervalues():
+            if item['protocol'].lower() == proto.lower() and item['name'] == name:
+                return True
+        return False
 
     # FAGI stuff - end
 
@@ -1426,25 +1471,6 @@ class Safe(object):
         pass
 
     # directory lookups entry points - START
-
-    def findreverse(self, context, did_number, number):
-        """
-        did_number -- the called number
-        number -- the calling number, i.e. the number we want to get
-          information about
-        """
-        try:
-            context_obj = self.contexts_mgr.contexts[context]
-        except KeyError:
-            logger.error('findreverse: undefined context: %s', context)
-            return {}
-        else:
-            lookup_results = context_obj.lookup_reverse(did_number, number)
-            result = {}
-            for lookup_result in lookup_results:
-                result.update(lookup_result)
-            result['xivo-reverse-nresults'] = str(len(lookup_results))
-            return result
 
     def getcustomers(self, user_id, pattern, commandid):
         try:
@@ -1563,3 +1589,9 @@ class Channel(object):
                 self.extra_data[family] = {}
             varvalue = self.extra_data.get(family).get(varname, '')
         return varvalue
+
+
+def split_channel(channel):
+    protocol, end = channel.split('/', 1)
+    name = '-'.join(end.split('-')[0:end.count('-')])
+    return protocol, name

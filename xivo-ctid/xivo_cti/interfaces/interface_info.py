@@ -288,19 +288,6 @@ class INFO(interfaces.Interfaces):
                         clireply.append('  conn   TCP : %s %s' % (k, v))
                     clireply.append('  full : %s' % self._ctiserver.fdlist_full)
 
-                elif usefulmsg.startswith('reverse '):
-                    command_args = usefulmsg.split()
-                    if len(command_args) > 2:
-                        context = command_args[1]
-                        numbers = command_args[2:]
-                        for number in numbers:
-                            reverses = self._ctiserver.safe[self._ctiserver.myipbxid].findreverse(context, '*', number)
-                            for number, rep in reverses.iteritems():
-                                if isinstance(rep, unicode):
-                                    clireply.append('%s %s' % (number, rep.encode('utf8')))
-                                else:
-                                    clireply.append('%s %s' % (number, rep))
-
                 elif usefulmsg.startswith('disc '):
                     command_args = usefulmsg.split()
                     if len(command_args) > 2:
