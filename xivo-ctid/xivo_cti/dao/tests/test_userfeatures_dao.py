@@ -59,6 +59,13 @@ class Test(unittest.TestCase):
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
 
+    def test_fullanme(self):
+        user_id = self._insert_user('firstname')
+        user = self.dao.get(user_id)
+        user.lastname = 'lastname'
+
+        self.assertEqual(user.fullname, 'firstname lastname')
+
     def test_get_one_result(self):
         user_id = self._insert_user('first')
 

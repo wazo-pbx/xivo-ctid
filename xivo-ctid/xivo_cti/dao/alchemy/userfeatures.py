@@ -75,3 +75,7 @@ class UserFeatures(Base):
     pitchdirection = Column(String(16))
     commented = Column(Integer, nullable=False, default=0)
     description = Column(Text)
+
+    @property
+    def fullname(self):
+        return ' '.join([self.firstname, self.lastname])
