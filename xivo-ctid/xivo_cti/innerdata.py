@@ -196,11 +196,11 @@ class Safe(object):
                     'contexts': {},
                     'parkinglots': {}}
 
-    user_props_send_extra = ('mailbox',
+    user_props_send_extra = ['mailbox',
                              'subscribemwi',
                              'pickupgroup',
                              'callgroup',
-                             'callerid')
+                             'callerid']
     # 'queueskills',
     # links towards other properties
 
@@ -948,7 +948,7 @@ class Safe(object):
             if p:
                 self.channels[channel].addrelation('phone:%s' % p)
                 userid = str(self.xod_config['phones'].keeplist[p]['iduserfeatures'])
-                self.channels[channel].properties['thisdisplay'] = self.xod_config['users'].keeplist[userid]['fullname']
+                self.channels[channel].properties['thisdisplay'] = self.user_features_dao.get(userid).fullname
                 oldchans = self.xod_status['phones'][p].get('channels')
                 if channel not in oldchans:
                     self.handle_cti_stack('set', ('phones', 'updatestatus', p))
@@ -990,11 +990,11 @@ class Safe(object):
         if phoneid and phoneid in self.xod_config.get('phones').keeplist.keys():
             phoneprops = self.xod_config.get('phones').keeplist.get(phoneid)
             userid = str(phoneprops.get('iduserfeatures'))
-            userprops = self.xod_config.get('users').keeplist.get(userid)
+            user = self.user_features_dao.get(userid)
             usersummary = {'phonenumber': phoneprops.get('number'),
                            'userid': userid,
                            'context': phoneprops.get('context'),
-                           'fullname': userprops.get('fullname')}
+                           'fullname': user.fullname}
         return usersummary
 
     def setpeerchannel(self, channel, peerchannel):
@@ -1313,8 +1313,8 @@ class Safe(object):
 
     def _get_cid_for_phone(self, channel):
         phone = self.xod_config['phones'].find_phone_by_channel(channel)
-        user = self.xod_config['users'].keeplist[str(phone['iduserfeatures'])]
-        cid_all, cid_name, cid_number = build_caller_id(phone['callerid'], user['fullname'], phone['number'])
+        user = self.user_features_dao.get(phone['iduserfeatures'])
+        cid_all, cid_name, cid_number = build_caller_id(phone['callerid'], user.fullname, phone['number'])
         return cid_all, cid_name, cid_number
 
     def _get_cid_directory_lookup(self, original_cid, name, pattern, contexts):

@@ -73,6 +73,13 @@ class Test(unittest.TestCase):
 
         self.assertEqual(user.id, user_id)
 
+    def test_get_string_id(self):
+        user_id = self._insert_user('first')
+
+        user = self.dao.get(str(user_id))
+
+        self.assertEqual(user.id, user_id)
+
     def test_get_no_result(self):
         self.assertRaises(LookupError, lambda: self.dao.get(1))
 
