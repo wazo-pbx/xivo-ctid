@@ -113,13 +113,14 @@ class CTI(interfaces.Interfaces):
     def _run_functions(self, decoded_command):
         replies = []
 
-        # Commands from the cti_command.Command class
-        command = cti_command.Command(self, decoded_command)
-        replies.extend(command.parse())
-
         # Commands from the CTICommandHandler
         self._cti_command_handler.parse_message(decoded_command)
         replies.extend(self._cti_command_handler.run_commands())
+
+        # Commands from the cti_command.Command class
+        if len(replies) == 0:
+            command = cti_command.Command(self, decoded_command)
+            replies.extend(command.parse())
 
         return [reply for reply in replies if reply]
 
