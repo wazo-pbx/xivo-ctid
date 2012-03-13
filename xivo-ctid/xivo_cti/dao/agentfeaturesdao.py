@@ -23,6 +23,7 @@
 
 
 from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
+from xivo_cti.dao.alchemy import dbconnection
 
 
 class AgentFeaturesDAO(object):
@@ -44,3 +45,8 @@ class AgentFeaturesDAO(object):
         if res.count() == 0:
             raise LookupError('No such agent')
         return res[0]
+
+    @classmethod
+    def new_from_uri(cls, uri):
+        connection = dbconnection.get_connection(uri)
+        return cls(connection.get_session())

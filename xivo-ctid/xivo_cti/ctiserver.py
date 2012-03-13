@@ -67,7 +67,7 @@ from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyF
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
-from xivo_cti.dao.AgentFeaturesDAO import AgentFeaturesDAO
+from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 logger = logging.getLogger('main')
 
