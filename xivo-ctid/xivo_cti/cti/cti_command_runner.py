@@ -18,5 +18,5 @@ class CTICommandRunner(object):
             arg_list = self._get_arguments(command, args)
             reply = function(*arg_list)
             if reply:
-                return self._reply_generator.get_reply(reply[0], command, reply[1])
+                return self._reply_generator.get_reply(reply[0], command, reply[1], reply[2] if len(reply) >= 3 else False)
         return {'status': 'OK'}
