@@ -26,7 +26,7 @@ import unittest
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
 from xivo_cti.dao.alchemy.base import Base
-from xivo_cti.dao.AgentFeaturesDAO import AgentFeaturesDAO
+from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 
 class TestAgentFeaturesDAO(unittest.TestCase):
