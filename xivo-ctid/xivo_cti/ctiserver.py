@@ -67,6 +67,7 @@ from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyF
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_cti.dao.AgentFeaturesDAO import AgentFeaturesDAO
 
 logger = logging.getLogger('main')
 
@@ -143,6 +144,7 @@ class CTIServer(object):
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
+        self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
@@ -354,6 +356,7 @@ class CTIServer(object):
             # interface : AMI
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
             self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
+            self.commandclass.user_features_dao = self._user_features_dao
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)
