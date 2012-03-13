@@ -28,19 +28,19 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 class TestAgentLogin(unittest.TestCase):
 
     def setUp(self):
-        self.id = '5'
+        self.agent_id = '5'
         self.number = '6666'
         self.agent_dict = {'commandid': 1588880676,
                            'command': 'agentlogin',
                            'class': 'ipbxcommand',
                            'agentphonenumber': self.number,
-                           'agentids': self.id}
+                           'agentids': self.agent_id}
 
     def test_agent_login_with_number(self):
         agent_login = AgentLogin.from_dict(self.agent_dict)
 
         self.assertEqual(agent_login.agent_phone_number, self.number)
-        self.assertEqual(agent_login.agent_id, self.id)
+        self.assertEqual(agent_login.agent_id, self.agent_id)
 
     def test_agent_login_no_number(self):
         self.agent_dict.pop('agentphonenumber')
@@ -48,4 +48,4 @@ class TestAgentLogin(unittest.TestCase):
         agent_login = AgentLogin.from_dict(self.agent_dict)
 
         self.assertEqual(agent_login.agent_phone_number, None)
-        self.assertEqual(agent_login.agent_id, self.id)
+        self.assertEqual(agent_login.agent_id, self.agent_id)
