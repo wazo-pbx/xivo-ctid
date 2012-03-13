@@ -68,6 +68,9 @@ from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_cti.agent_manager import AgentManager
+from xivo_cti.cti.commands.agent_login import AgentLogin
+from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 
 logger = logging.getLogger('main')
 
@@ -145,15 +148,22 @@ class CTIServer(object):
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
+        self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
+        self._agent_manager = AgentManager()
+        self._agent_manager.line_features_dao = self._line_features_dao
+        self._agent_manager.agent_features_dao = self._agent_features_dao
+        self._agent_manager.user_features_dao = self._user_features_dao
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
+        AgentLogin.register_callback_params(self._agent_manager.log_agent,
+                                            ['user_id', 'agent_id', 'agent_phone_number'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
@@ -371,6 +381,7 @@ class CTIServer(object):
             if z:
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
+                self._agent_manager.ami = self.myami[self.myipbxid].amicl
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()

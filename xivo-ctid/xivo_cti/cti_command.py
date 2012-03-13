@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ IPBXCOMMANDS = [
     'record',
     'listen',
 
-    'agentlogin', 'agentlogout',
+    'agentlogout',
     'queueadd', 'queueremove',
     'queuepause', 'queueunpause',
     'queueremove_all',
@@ -462,8 +462,7 @@ class Command(object):
             return reply
         reply['command'] = self.ipbxcommand
         if self.ipbxcommand not in IPBXCOMMANDS:
-            logger.warning('unknown ipbxcommand %s', self.ipbxcommand)
-            return reply
+            return None
         profileclient = self.rinnerdata.xod_config['users'].keeplist[self.ruserid].get('profileclient')
         profilespecs = self._config.getconfig('profiles').get(profileclient)
         ipbxcommands_id = profilespecs.get('ipbxcommands')
@@ -857,16 +856,6 @@ class Command(object):
             return command_dict['agentphonenumber']
         user_ids = [user['id'] for user in self.innerdata.xod_config['users'].keeplist.itervalues() if user['agentid'] == str(agent_id)]
         return self.innerdata.xod_config['phones'].get_main_line(user_ids[0])['number'] if user_ids else None
-
-    def ipbxcommand_agentlogin(self):
-        agent, status = self.get_agent_info(self._commanddict)
-        exten = self._get_agent_exten(self._commanddict, agent['id'])
-        if status['status'] not in ['AGENT_IDLE', 'AGENT_ONCALL']:
-            return [{'amicommand': 'agentcallbacklogin',
-                     'amiargs': (agent['number'],
-                                 exten,
-                                 agent['context'],
-                                 False if agent['ackcall'] == 'no' else True)}]
 
     def ipbxcommand_agentlogout(self):
         agent, status = self.get_agent_info(self._commanddict)
