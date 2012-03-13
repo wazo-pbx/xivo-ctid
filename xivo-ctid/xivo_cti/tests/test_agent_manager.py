@@ -32,7 +32,6 @@ from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
-from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
