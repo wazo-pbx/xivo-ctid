@@ -1,16 +1,8 @@
 from xivo_cti.cti.commands.login_id import LoginID
-from xivo_cti.cti.cti_command import CTICommand
-
 import unittest
 
 
 class Test(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_login_id(self):
         login_id = LoginID()
