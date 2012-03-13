@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 # XiVO CTI Server
-# Copyright (C) 2009-2011  Avencall
+# Copyright (C) 2009-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,13 +58,6 @@ class Test(unittest.TestCase):
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
-
-    def test_fullanme(self):
-        user_id = self._insert_user('firstname')
-        user = self.dao.get(user_id)
-        user.lastname = 'lastname'
-
-        self.assertEqual(user.fullname, 'firstname lastname')
 
     def test_get_one_result(self):
         user_id = self._insert_user('first')
@@ -317,6 +310,38 @@ class Test(unittest.TestCase):
         self._check_busy_fwd_in_inner_data(user_id, 1)
         self._check_busy_dest_in_db(user_id, destination)
         self._check_busy_dest_in_inner_data(user_id, destination)
+
+    def test_find_by_agent_id(self):
+        agent_id = 5
+        user = UserFeatures()
+
+        user.firstname = 'test_agent'
+        user.agentid = agent_id
+
+        self.session.add(user)
+        self.session.commit()
+
+        dao = UserFeaturesDAO(self.session)
+
+        user_ids = dao.find_by_agent_id(agent_id)
+
+        self.assertEqual(user_ids[0], user.id)
+
+    def test_agent_id(self):
+        agent_id = 5
+        user = UserFeatures()
+
+        user.firstname = 'test_agent'
+        user.agentid = agent_id
+
+        self.session.add(user)
+        self.session.commit()
+
+        dao = UserFeaturesDAO(self.session)
+
+        res = dao.agent_id(user.id)
+
+        self.assertEqual(res, agent_id)
 
     def _insert_user_with_busy_fwd(self, destination, enabled):
         user_features = UserFeatures()

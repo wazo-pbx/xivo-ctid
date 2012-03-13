@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -101,6 +101,13 @@ class UserFeaturesDAO(object):
         if res.count() == 0:
             raise LookupError
         return res[0]
+
+    def find_by_agent_id(self, agent_id):
+        res = self._session.query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))
+        return [user.id for user in res]
+
+    def agent_id(self, user_id):
+        return self.get(user_id).agentid
 
     @classmethod
     def new_from_uri(cls, uri):
