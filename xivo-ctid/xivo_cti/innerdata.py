@@ -1331,9 +1331,7 @@ class Safe(object):
         # check capas !
         varstoset = {}
         try:
-            script = agievent['agi_network_script']
-            function = script if ' ' not in script else script.split(' ', 1)[0]
-            args = [] if ' ' not in script else script.split(' ')[1:]
+            function = agievent['agi_network_script']
             uniqueid = agievent.get('agi_uniqueid')
             channel = agievent.get('agi_channel')
             context = agievent.get('agi_context')
@@ -1388,7 +1386,7 @@ class Safe(object):
                 varstoset.update(self._resolve_incoming_caller_id(agievent['agi_channel'],
                                                                   agievent['agi_calleridname'],
                                                                   agievent['agi_callerid'],
-                                                                  args[0] if args else None))
+                                                                  agievent.get('agi_arg_1', None)))
             except Exception:
                 logger.info('Could not set the caller ID for channel %s', agievent.get('agi_channel'))
 
