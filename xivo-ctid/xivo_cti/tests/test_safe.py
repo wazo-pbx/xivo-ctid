@@ -32,6 +32,8 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import innerdata
+from tests.mock import Mock
+from xivo_cti.tools.caller_id import build_agi_caller_id
 
 
 class TestSafe(unittest.TestCase):
@@ -77,6 +79,85 @@ class TestSafe(unittest.TestCase):
 
         self.assertEqual(proto, 'SIP')
         self.assertEqual(name, 'test-ha-1')
+
+    def test_resolve_incoming_caller_id_already_set(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+
+        ret = safe._resolve_incoming_caller_id('SIP/test-123', 'Tester', '6666', None)
+
+        self.assertEqual(ret, {})
+
+    def test_resolve_incoming_caller_id_phone(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+
+        channel_id = 'SIP/abcdef-1234'
+        safe._get_cid_for_phone = Mock()
+        safe._is_phone_channel = Mock()
+        name = 'tester'
+        number = '1234'
+        full = '"%s" <%s>' % (name, number)
+        safe._get_cid_for_phone.return_value = (full, name, number)
+        safe._is_phone_channel.return_value = True
+
+        expected = build_agi_caller_id(full, name, number)
+
+        ret = safe._resolve_incoming_caller_id(channel_id, number, number, None)
+
+        self.assertEqual(expected, ret)
+
+    def test_resolve_incoming_caller_id_trunk(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+
+        safe._is_phone_channel = Mock()
+        safe._is_phone_channel.return_value = False
+        safe._is_trunk_channel = Mock()
+        safe._is_trunk_channel.return_value = True
+        trunks = {1: {'name': 'my-test-trunk',
+                      'protocol': 'sip',
+                      'context': 'from-extern'}}
+        safe.user_getcontexts = Mock()
+        safe.user_getcontexts.return_value = ['test_context']
+        safe.xod_config['trunks'].keeplist = trunks
+        safe._get_cid_directory_lookup = Mock()
+        channel_id = 'SIP/my-test-trunk-123456'
+        name = 'tester'
+        number = '666'
+        full = '"%s" <%s>' % (name, number)
+        safe._get_cid_directory_lookup.return_value = (full, name, number)
+
+        expected = build_agi_caller_id(full, name, number)
+
+        ret = safe._resolve_incoming_caller_id(channel_id, number, number, 1)
+
+        self.assertEqual(ret, expected)
+
+    def test_resolve_incoming_caller_id_queue_internal(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+        channel = 'Local/1000@default-19e6;2'
+        name = 'tester'
+        number = '1234'
+
+        ret = safe._resolve_incoming_caller_id(channel, name, number, None)
+
+        self.assertEqual(ret, {})
+
+    def test_resolve_incoming_caller_id_queue_trunk(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+        channel = 'Local/1000@default-19e6;2'
+        number = '1234'
+        name = 'Tester'
+        full = '"%s" <%s>' % (name, number)
+        safe._get_cid_directory_lookup = Mock()
+        safe._get_cid_directory_lookup.return_value = ('"%s" <%s>' % (name, number),
+                                                       name, number)
+        safe.user_getcontexts = Mock()
+        safe.user_getcontexts.return_value = ['test']
+
+        expected = build_agi_caller_id(full, name, number)
+
+        ret = safe._resolve_incoming_caller_id(channel, number, number, None)
+
+        self.assertEqual(ret, expected)
 
     def assert_callback_registered(self, cls, fn):
         found = False

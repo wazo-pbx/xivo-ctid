@@ -44,7 +44,7 @@ from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
-from xivo_cti.tools.caller_id import build_caller_id
+from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
 
 logger = logging.getLogger('innerdata')
 
@@ -961,7 +961,7 @@ class Safe(object):
                 oldchans = self.xod_status['trunks'][t].get('channels')
                 if channel not in oldchans:
                     oldchans.append(channel)
-                self.xod_status['phones'][t]['channels'] = oldchans
+                self.xod_status['trunks'][t]['channels'] = oldchans
         except Exception:
             logger.exception('find termination according to channel %s', channel)
 
@@ -1321,18 +1321,19 @@ class Safe(object):
         context_obj = self.contexts_mgr.contexts[contexts[0]]
         _, resultlist = context_obj.lookup_direct(pattern, contexts=contexts)
         resultlist = list(set(resultlist))
-        if resultlist:
-            res = resultlist[0]
+        for res in resultlist:
             name, number = res.split(';')[0:2]
-            return  build_caller_id(original_cid, name, number)
-        else:
-            return None, None, None
+            if number == pattern:  # CID only match on complete number
+                return  build_caller_id(original_cid, name, number)
+        return None, None, None
 
     def fagi_handle_real(self, agievent):
         # check capas !
         varstoset = {}
         try:
-            function = agievent.get('agi_network_script')
+            script = agievent['agi_network_script']
+            function = script if ' ' not in script else script.split(' ', 1)[0]
+            args = [] if ' ' not in script else script.split(' ')[1:]
             uniqueid = agievent.get('agi_uniqueid')
             channel = agievent.get('agi_channel')
             context = agievent.get('agi_context')
@@ -1382,36 +1383,29 @@ class Safe(object):
         elif function == 'callerid_extend':
             if 'agi_callington' in agievent:
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
-
         elif function == 'callerid_forphones':
             try:
-                proto, name = split_channel(agievent['agi_channel'])
-                cid_all, cid_name, cid_number = None, None, None
-                incoming_number = agievent['agi_callerid']
-
-                if agievent['agi_channel'] in self.channels and self._is_phone_channel(proto, name):
-                    cid_all, cid_name, cid_number = self._get_cid_for_phone(agievent['agi_channel'])
-                else:
-                    if proto == 'Local':
-                        contexts = [name.split('@', 1)[1]]
-                    elif self._is_trunk_channel(proto, name):
-                        contexts = [self.xod_config['trunks'].keeplist[self.ztrunks(proto, name)]['context']]
-                    else:
-                        logger.debug('not a channel not local')
-                        contexts = []
-                    cid_all, cid_name, cid_number = self._get_cid_directory_lookup(
-                                    agievent['agi_callerid'], name, incoming_number, contexts)
-
-                if cid_all:
-                    varstoset['CALLERID(all)'] = cid_all
-                if cid_name:
-                    varstoset['CALLERID(name)'] = cid_name
-                if cid_number:
-                    varstoset['CALLERID(number)'] = cid_number
-            except KeyError:
-                logger.info('Could not set the caller id for channel %s, keeping the old one', agievent['agi_channel'])
+                varstoset.update(self._resolve_incoming_caller_id(agievent['agi_channel'],
+                                                                  agievent['agi_calleridname'],
+                                                                  agievent['agi_callerid'],
+                                                                  args[0] if args else None))
+            except Exception:
+                logger.info('Could not set the caller ID for channel %s', agievent.get('agi_channel'))
 
         return varstoset
+
+    def _resolve_incoming_caller_id(self, channel, cid_name, cid_number, dest_user_id):
+        chan_proto, chan_name = split_channel(channel)
+        if cid_name == cid_number:
+            if self._is_phone_channel(chan_proto, chan_name):
+                return build_agi_caller_id(*self._get_cid_for_phone(channel))
+            elif self._is_trunk_channel(chan_proto, chan_name):
+                return build_agi_caller_id(*self._get_cid_directory_lookup(
+                    cid_number, chan_name, cid_number, self.user_getcontexts(dest_user_id)))
+            elif chan_proto == 'Local':
+                return build_agi_caller_id(*self._get_cid_directory_lookup(
+                    cid_number, chan_name, cid_number, [chan_name.split('@')[1]]))
+        return build_agi_caller_id(None, None, None)
 
     def _is_phone_channel(self, proto, name):
         return self._is_listmember_channel(proto, name, 'phones')
@@ -1424,8 +1418,6 @@ class Safe(object):
             if item['protocol'].lower() == proto.lower() and item['name'] == name:
                 return True
         return False
-
-    # FAGI stuff - end
 
     def regular_update(self):
         """

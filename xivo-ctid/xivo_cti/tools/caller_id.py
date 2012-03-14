@@ -36,3 +36,12 @@ def build_caller_id(caller_id, name, number):
 
 def _complete_caller_id(caller_id):
     return True if COMPLETE_CALLER_ID_PATTERN.match(caller_id) else False
+
+
+def build_agi_caller_id(cid_all, cid_name, cid_number):
+    cid = dict()
+    (cid_all and cid.update({'CALLERID(all)': cid_all}))
+    (cid_name and cid.update({'CALLERID(name)': cid_name}))
+    (cid_number and cid.update({'CALLERID(number)': cid_number}))
+
+    return cid
