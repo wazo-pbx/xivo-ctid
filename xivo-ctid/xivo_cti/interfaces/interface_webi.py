@@ -95,6 +95,8 @@ class WEBI(interfaces.Interfaces):
             try:
                 if usefulmsg == 'xivo[daemon,reload]':
                     self._ctiserver.askedtoquit = True
+                elif usefulmsg == 'xivo[queuememberlist,update]':
+                    self.queuemember_service_manager.update_config()
                 elif usefulmsg in UPDATE_REQUESTS:
                     self._ctiserver.update_userlist[self.ipbxid].append(usefulmsg)
                 elif usefulmsg in AMI_REQUESTS:

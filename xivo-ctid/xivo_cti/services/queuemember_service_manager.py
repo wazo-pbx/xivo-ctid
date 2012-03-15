@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # XiVO CTI Server
-# Copyright (C) 2009-2011  Avencall
+# Copyright (C) 2009-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,5 +25,8 @@
 class QueueMemberServiceManager(object):
 
     def update_config(self):
+        print 'update_config'
         new_queuemembers = self.queuemember_dao.get_queuemembers()
-        self.queuemember_notifier.config_updated()
+        old_queuemembers = self.innerdata_dao.get_queuemembers()
+        delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
+        self.queuemember_notifier.config_updated(delta)

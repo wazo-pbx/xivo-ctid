@@ -54,6 +54,7 @@ from xivo_cti.interfaces import interface_fagi
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
@@ -142,6 +143,7 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_queue_stats()
         self._user_service_manager = UserServiceManager()
+        self._queuemember_service_manager = QueueMemberServiceManager()
         self._funckey_manager = FunckeyManager()
         self._user_service_manager.funckey_manager = self._funckey_manager
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
@@ -714,6 +716,7 @@ class CTIServer(object):
                                 nc = interface_info.INFO(self)
                             elif kind == 'WEBI':
                                 nc = interface_webi.WEBI(self)
+                                nc.queuemember_service_manager = self._queuemember_service_manager
                             elif kind in ['CTI', 'CTIS']:
                                 nc = getattr(interface_cti, kind)(self)
                                 nc.user_service_manager = self._user_service_manager

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 import unittest
 
-from tests.mock import Mock, call
+from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 
 
@@ -34,11 +34,17 @@ class TestUserServiceManager(unittest.TestCase):
 
     def test_update_config(self):
         self.queuemember_service_manager.queuemember_dao = Mock()
+        self.queuemember_service_manager.innerdata_dao = Mock()
+        self.queuemember_service_manager.delta_computer = Mock()
         self.queuemember_service_manager.queuemember_notifier = Mock()
 
         self.queuemember_service_manager.update_config()
 
         dao_method_calls = self.queuemember_service_manager.queuemember_dao.method_calls
-        self.assertTrue(dao_method_calls == [call.get_queuemembers()])
+        innerdata_dao_method_calls = self.queuemember_service_manager.innerdata_dao.method_calls
+        delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
         notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertTrue(notifier_method_calls == [call.config_updated()])
+        self.assertTrue(dao_method_calls == [call.get_queuemembers()])
+        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers()])
+        self.assertTrue(delta_computer_method_calls == [call.compute_delta(ANY,ANY)])
+        self.assertTrue(notifier_method_calls == [call.config_updated(ANY)])
