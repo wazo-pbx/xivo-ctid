@@ -55,6 +55,8 @@ class TestAgentManager(unittest.TestCase):
         Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
         Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
         Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
+        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
+        Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
 
         self.agent_1_exten = '1000'
 
