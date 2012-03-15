@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from xivo_cti.dao.alchemy.base import Base
+from xivo_cti.dao.alchemy.base import Base, Type
 from sqlalchemy.schema import Column
 from sqlalchemy.types import Integer, String, Text, Enum
 
@@ -36,9 +36,9 @@ class QueueMember(Base):
     call_limit = Column(Integer, nullable=False, server_default='0')
     paused = Column(Integer)
     commented = Column(Integer, nullable=False, server_default='0')
-    usertype = Column(Enum('user', 'agent', name='queuemember_usertype'), nullable=False)
+    usertype = Column(Enum('user', 'agent', name='queuemember_usertype', metadata=Type.metadata), nullable=False)
     userid = Column(Integer, nullable=False)
     channel = Column(String(25), nullable=False)
-    category = Column(Enum('queue', 'group', name='queue_category'), nullable=False)
+    category = Column(Enum('queue', 'group', name='queue_category', metadata=Type.metadata), nullable=False)
     skills = Column(String(64), nullable=False, server_default='')
     state_interface = Column(String(128), nullable=False, server_default='')
