@@ -51,11 +51,11 @@ class TestAgentManager(unittest.TestCase):
 
         self.session = connection.get_session()
 
-        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS linefeatures CASCADE")
         Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS userfeatures CASCADE")
         Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS agentfeatures CASCADE")
         Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
 
         self.agent_1_exten = '1000'

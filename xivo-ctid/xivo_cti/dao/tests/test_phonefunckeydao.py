@@ -18,8 +18,8 @@ class TestPhoneFunckey(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [PhoneFunckey().__table__])
-        Base.metadata.create_all(connection.get_engine(), [PhoneFunckey().__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS phonefunckey CASCADE")
+        Base.metadata.create_all(connection.get_engine(), [PhoneFunckey.__table__])
 
         self.session = connection.get_session()
 

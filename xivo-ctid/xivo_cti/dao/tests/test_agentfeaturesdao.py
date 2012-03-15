@@ -43,7 +43,7 @@ class TestAgentFeaturesDAO(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS agentfeatures CASCADE")
         Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
 
         self.session = connection.get_session()

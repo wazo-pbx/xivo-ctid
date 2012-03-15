@@ -17,8 +17,8 @@ class Test(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'queue_stats')
         connection = dbconnection.get_connection('queue_stats')
 
-        Base.metadata.drop_all(connection.get_engine(), [QueueInfo().__table__])
-        Base.metadata.create_all(connection.get_engine(), [QueueInfo().__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS queue_info CASCADE")
+        Base.metadata.create_all(connection.get_engine(), [QueueInfo.__table__])
 
         self.session = connection.get_session()
 

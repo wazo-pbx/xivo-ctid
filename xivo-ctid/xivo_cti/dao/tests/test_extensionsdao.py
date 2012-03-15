@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ class TestExtensionsDAO(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [Extension().__table__])
-        Base.metadata.create_all(connection.get_engine(), [Extension().__table__])
+        connection.get_engine().execute("DROP TABLE IF EXISTS extensions CASCADE")
+        Base.metadata.create_all(connection.get_engine(), [Extension.__table__])
 
         self.session = connection.get_session()
 
