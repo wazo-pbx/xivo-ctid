@@ -27,7 +27,7 @@ from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 
 
-class TestUserServiceManager(unittest.TestCase):
+class TestQueueMemberServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.queuemember_service_manager = QueueMemberServiceManager()
