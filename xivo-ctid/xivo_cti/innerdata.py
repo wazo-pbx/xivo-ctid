@@ -49,7 +49,6 @@ from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
 logger = logging.getLogger('innerdata')
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
-CALLERID_UNKNOWN_NUM = '0'
 
 
 class Safe(object):
@@ -1328,33 +1327,16 @@ class Safe(object):
         return None, None, None
 
     def fagi_handle_real(self, agievent):
-        # check capas !
         varstoset = {}
         try:
             function = agievent['agi_network_script']
-            uniqueid = agievent.get('agi_uniqueid')
-            channel = agievent.get('agi_channel')
-            context = agievent.get('agi_context')
-
-            # context = fastagi.get_variable('XIVO_REAL_CONTEXT')
-
-            calleridnum = agievent.get('agi_callerid')
-            calleridani = agievent.get('agi_calleridani')
-            callingani2 = agievent.get('agi_callingani2')
-
-            cidnumstrs = ['agi_callerid=%s' % calleridnum]
-            if calleridnum != calleridani:
-                cidnumstrs.append('agi_calleridani=%s' % calleridani)
-            if callingani2 != '0':
-                cidnumstrs.append('agi_callingani2=%s' % callingani2)
-        except Exception:
+            agiargs = {}
+            for k, v in agievent.iteritems():
+                if k.startswith('agi_arg_'):
+                    agiargs[k[8:]] = v
+        except KeyError:
             logger.exception('handle_fagi %s', agievent)
             return varstoset
-
-        agiargs = {}
-        for k, v in agievent.iteritems():
-            if k.startswith('agi_arg_'):
-                agiargs[k[8:]] = v
 
         if function == 'presence':
             # see https://projects.xivo.fr/issues/1995
@@ -1377,7 +1359,6 @@ class Safe(object):
                     varstoset['XIVO_PRESENCE'] = cjson.encode(prescountdict)
             except Exception:
                 logger.exception('handle_fagi %s : %s', function, agiargs)
-
         elif function == 'callerid_extend':
             if 'agi_callington' in agievent:
                 varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
