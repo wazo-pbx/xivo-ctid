@@ -39,7 +39,7 @@ class TestExtensionsDAO(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        connection.get_engine().execute("DROP TABLE IF EXISTS extensions CASCADE")
+        Base.metadata.drop_all(connection.get_engine(), [Extension.__table__])
         Base.metadata.create_all(connection.get_engine(), [Extension.__table__])
 
         self.session = connection.get_session()
