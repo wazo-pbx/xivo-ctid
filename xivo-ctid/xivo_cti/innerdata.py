@@ -202,6 +202,11 @@ class Safe(object):
                              'callerid']
     # 'queueskills',
     # links towards other properties
+    services_actions_list = ['enablevoicemail', 'callrecord', 'incallfilter', 'enablednd',
+                             'enableunc', 'enablebusy', 'enablerna']
+    queues_actions_list = ['queueadd', 'queueremove', 'queuepause', 'queueunpause',
+                           'queuepause_all', 'queueunpause_all']
+    permission_kinds = ['regcommands', 'userstatus']
 
     def __init__(self, ctiserver, ipbxid, cnf=None):
         self._config = cti_config.Config.get_instance()
@@ -1092,12 +1097,6 @@ class Safe(object):
                 print 'presence_action (service)', availstate, actionname, actionopt
             if actionname in self.queues_actions_list:
                 print 'presence_action (queues)', availstate, actionname, actionopt
-
-    services_actions_list = ['enablevoicemail', 'callrecord', 'incallfilter', 'enablednd',
-                             'enableunc', 'enablebusy', 'enablerna']
-    queues_actions_list = ['queueadd', 'queueremove', 'queuepause', 'queueunpause',
-                           'queuepause_all', 'queueunpause_all']
-    permission_kinds = ['regcommands', 'userstatus']
 
     def get_user_permissions(self, kind, userid):
         ret = {}
