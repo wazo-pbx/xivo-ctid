@@ -44,7 +44,12 @@ AMI_REQUESTS = [
     'module reload chan_agent.so',
     'module reload app_meetme.so',
     'features reload',
-    'voicemail reload'
+    'voicemail reload',
+    'module reload chan_sccp.so',
+    'sccp show version',
+    'sccp show devices',
+    'sccp show config',
+    'sccp update config',
     ]
 
 UPDATE_REQUESTS = [
