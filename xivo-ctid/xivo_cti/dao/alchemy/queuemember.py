@@ -33,7 +33,7 @@ class QueueMember(Base):
     queue_name = Column(String(128), primary_key=True)
     interface = Column(String(128), primary_key=True)
     penalty = Column(Integer, nullable=False)
-    call_limit = Column(Integer, nullable=False, server_default='0')
+    call_limit = Column('call-limit', Integer, nullable=False, server_default='0')
     paused = Column(Integer)
     commented = Column(Integer, nullable=False, server_default='0')
     usertype = Column(Enum('user', 'agent', name='queuemember_usertype', metadata=Type.metadata), nullable=False)
