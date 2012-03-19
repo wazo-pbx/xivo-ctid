@@ -45,6 +45,6 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
         notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
         self.assertTrue(dao_method_calls == [call.get_queuemembers()])
-        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers()])
+        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
         self.assertTrue(delta_computer_method_calls == [call.compute_delta(ANY,ANY)])
-        self.assertTrue(notifier_method_calls == [call.config_updated(ANY)])
+        self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])

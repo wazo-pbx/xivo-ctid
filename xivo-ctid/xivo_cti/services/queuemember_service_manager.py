@@ -26,6 +26,6 @@ class QueueMemberServiceManager(object):
 
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
-        old_queuemembers = self.innerdata_dao.get_queuemembers()
+        old_queuemembers = self.innerdata_dao.get_queuemembers_config()
         delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
-        self.queuemember_notifier.config_updated(delta)
+        self.queuemember_notifier.queuemember_config_updated(delta)
