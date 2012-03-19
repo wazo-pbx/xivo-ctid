@@ -29,3 +29,12 @@ class InnerdataDAO(object):
 
     def get_queuemembers_config(self):
         return self.innerdata.queuemembers_config
+
+    def apply_queuemember_delta(self, delta):
+        if delta.add:
+            self.innerdata.queuemembers_config.update(delta.add)
+        if delta.change:
+            self.innerdata.queuemembers_config.update(delta.change)
+        if delta.delete:
+            for deleted_key in delta.delete:
+                self.innerdata.queuemembers_config.pop(deleted_key)
