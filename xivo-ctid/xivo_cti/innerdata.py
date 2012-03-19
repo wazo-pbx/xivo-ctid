@@ -160,7 +160,10 @@ class Safe(object):
                                     'positions',
                                     'description',
                                     'duration'],
-                    'phonebooks': []}
+                    'phonebooks': [],
+                    'queuemembers': ['queue_name',
+                                     'interface',
+                                     'paused']}
 
     props_status = {'users': {'connection': None,
                               'availstate': 'disconnected'},
@@ -221,6 +224,7 @@ class Safe(object):
 
         self.channels = {}
         self.queuemembers = {}
+        self.queuemembers_config = {}
         self.faxes = {}
 
         self.displays_mgr = cti_directories.DisplaysMgr()

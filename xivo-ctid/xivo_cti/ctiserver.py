@@ -54,7 +54,6 @@ from xivo_cti.interfaces import interface_fagi
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
-from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
@@ -72,6 +71,11 @@ from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.agent_manager import AgentManager
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
+from xivo_cti.dao.queuememberdao import QueueMemberDAO
+from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.tools.delta_computer import DeltaComputer
+from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
 logger = logging.getLogger('main')
 
@@ -143,7 +147,6 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_queue_stats()
         self._user_service_manager = UserServiceManager()
-        self._queuemember_service_manager = QueueMemberServiceManager()
         self._funckey_manager = FunckeyManager()
         self._user_service_manager.funckey_manager = self._funckey_manager
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
@@ -161,6 +164,13 @@ class CTIServer(object):
         self._agent_manager.line_features_dao = self._line_features_dao
         self._agent_manager.agent_features_dao = self._agent_features_dao
         self._agent_manager.user_features_dao = self._user_features_dao
+        self._queuemember_service_manager = QueueMemberServiceManager()
+        self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
+        self._queuemember_service_manager.innerdata_dao = InnerdataDAO()
+        self._queuemember_service_manager.delta_computer = DeltaComputer()
+        self._queuemember_service_notifier = QueueMemberServiceNotifier()
+        self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
+        self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -363,6 +373,9 @@ class CTIServer(object):
             self._user_features_dao._innerdata = safe
             self._user_service_notifier.events_cti = safe.events_cti
             self._user_service_notifier.ipbx_id = self.myipbxid
+            self._queuemember_service_manager.innerdata_dao.innerdata = safe
+            self._queuemember_service_notifier.events_cti = safe.events_cti
+            self._queuemember_service_notifier.ipbx_id = self.myipbxid
             self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].update_directories()
             # interface : AMI
