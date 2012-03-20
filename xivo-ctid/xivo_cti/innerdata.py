@@ -270,9 +270,12 @@ class Safe(object):
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
 
     def handle_getlist_list_id(self, listname, user_id):
-        if listname in self.xod_config:
-            user_contexts = self.xod_config['users'].get_contexts(user_id)
-            item_ids = [item_id for item_id in self.xod_config[listname].filter_context(user_contexts) if item_id.isdigit()]
+        if listname in self.xod_config or listname == 'queuemembers':
+            if listname in self.xod_config:
+                user_contexts = self.xod_config['users'].get_contexts(user_id)
+                item_ids = [item_id for item_id in self.xod_config[listname].filter_context(user_contexts) if item_id.isdigit()]
+            elif listname == 'queuemembers':
+                item_ids = self.queuemembers_config.keys()
             return 'message', {'function': 'listid',
                                'listname': listname,
                                'tipbxid': self.ipbxid,
@@ -564,6 +567,12 @@ class Safe(object):
 
     def get_config(self, listname, item_id, limit=None, user_contexts=None):
         reply = {}
+        if listname == 'queuemembers':
+            if item_id in self.queuemembers_config:
+                reply = self.queuemembers_config[item_id]
+            else:
+                reply = {}
+            return reply
         configdict = self.xod_config[listname].filter_context(user_contexts)
         if not isinstance(configdict, dict):
             logger.warning('get_config : problem with listname %s', listname)

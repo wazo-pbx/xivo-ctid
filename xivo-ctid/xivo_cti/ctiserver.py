@@ -402,6 +402,7 @@ class CTIServer(object):
                 self.safe[self.myipbxid].update_config_list_all()
             except Exception:
                 logger.exception('%s : commandclass.updates()', self.myipbxid)
+            self._queuemember_service_manager.update_config()
 
         logger.info('# STARTING %s # (2/3) Remote CTI connections', self.xdname)
         for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
