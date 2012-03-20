@@ -20,6 +20,7 @@ setup(
               'xivo_cti.statistics',
               'xivo_cti.dao',
               'xivo_cti.dao.alchemy',
+              'xivo_cti.dao.helpers',
               'xivo_cti.cti',
               'xivo_cti.cti.commands',
               'xivo_cti.cti.commands.getlists',
