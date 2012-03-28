@@ -37,3 +37,9 @@ class DeltaComputer(object):
                         if new_key in old_dict
                         and old_dict[new_key] != new_dict[new_key]])
         return DictDelta(added_items, changed, removed)
+
+    @classmethod
+    def compute_delta_no_delete(cls, new_dict, old_dict):
+        delta_delete = cls.compute_delta(new_dict, old_dict)
+        delta_no_delete = DictDelta(delta_delete.add, delta_delete.change, [])
+        return delta_no_delete

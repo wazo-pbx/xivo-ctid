@@ -55,6 +55,13 @@ class TestQueueMemberFormatter(unittest.TestCase):
             'CallsTaken': '0',
             'Penalty': '0',
             'LastCall': 'none'}
+        self.ami_event_formatted = {'agent1,queue1': {
+            'queue_name': 'queue1',
+            'interface': 'agent1',
+            'membership': 'dynamic',
+            'penalty': '0',
+            'status': 'status1',
+            'paused': 'yes'}}
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
@@ -191,13 +198,7 @@ class TestQueueMemberFormatter(unittest.TestCase):
 
     def test_format_queuemember_from_ami_add(self):
         ami_event = self.ami_event
-        expected_result = {'agent1,queue1': {
-            'queue_name': 'queue1',
-            'interface': 'agent1',
-            'membership': 'dynamic',
-            'penalty': '0',
-            'status': 'status1',
-            'paused': 'yes'}}
+        expected_result = self.ami_event_formatted
 
         result = QueueMemberFormatter.format_queuemember_from_ami_add(ami_event)
 
@@ -213,6 +214,13 @@ class TestQueueMemberFormatter(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_format_queuemember_from_ami_update(self):
+        ami_event = self.ami_event
+        expected_result = self.ami_event_formatted
+
+        result = QueueMemberFormatter.format_queuemember_from_ami_update(ami_event)
+
+        self.assertEqual(result, expected_result)
 
     def test_extract_ami(self):
         field_list = ['queue_name', 'interface', 'membership']

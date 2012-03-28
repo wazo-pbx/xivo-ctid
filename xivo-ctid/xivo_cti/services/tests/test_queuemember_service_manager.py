@@ -85,3 +85,17 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
         self.assertEqual(formatter_method_calls, [call.format_queuemember_from_ami_remove(self.ami_event)])
         self.assertEqual(notifier_method_calls, [call.queuemember_config_updated(ANY)])
+
+    def test_update_queuemember(self):
+        ami_event = self.ami_event
+        self.queuemember_service_manager.innerdata_dao = Mock()
+        self.queuemember_service_manager.delta_computer = Mock()
+
+        self.queuemember_service_manager.update_one_queuemember(ami_event)
+
+        innerdata_dao_method_calls = self.queuemember_service_manager.innerdata_dao.method_calls
+        delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
+        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
+        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
+        self.assertTrue(delta_computer_method_calls == [call.compute_delta_no_delete(ANY,ANY)])
+        self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
