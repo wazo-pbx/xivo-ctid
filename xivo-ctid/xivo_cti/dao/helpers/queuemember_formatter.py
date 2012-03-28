@@ -27,15 +27,14 @@ class QueueMemberFormatter(object):
     def format_queuemembers(cls, queuemembers):
         ret = {}
         for queuemember in queuemembers:
-            key = cls._generate_key(queuemember)
-            value = cls._convert_row_to_dict(queuemember)
-            ret[key] = value
+            queuemember_formatted = cls._convert_row_to_dict(queuemember)
+            key = cls._generate_key(queuemember_formatted)
+            ret[key] = queuemember_formatted
         return ret
 
     @staticmethod
-    def _generate_key(row):
-        key_tuple = (unicode(row.queue_name), unicode(row.interface))
-        return str(key_tuple)
+    def _generate_key(queuemember):
+        return '%s,%s' % (queuemember['interface'], queuemember['queue_name'])
 
     @staticmethod
     def _convert_row_to_dict(row):
@@ -53,3 +52,39 @@ class QueueMemberFormatter(object):
             'skills': row.skills,
             'state_interface': row.state_interface
         }
+
+    @classmethod
+    def format_queuemember_from_ami_add(cls, ami_event):
+        fields_to_extract = ['queue_name',
+                             'interface',
+                             'membership',
+                             'penalty',
+                             'status',
+                             'paused']
+        formatted_queuemembers = cls._extract_ami(fields_to_extract, ami_event)
+        return formatted_queuemembers
+
+    @classmethod
+    def format_queuemember_from_ami_remove(cls, ami_event):
+        fields_to_extract = ['queue_name',
+                             'interface']
+        formatted_queuemember = cls._extract_ami(fields_to_extract, ami_event)
+        return formatted_queuemember
+
+
+    @classmethod
+    def _extract_ami(cls, expected_field_list, ami_event):
+        ami_map = {
+            'queue_name': 'Queue',
+            'interface': 'Location',
+            'membership': 'Membership',
+            'penalty': 'Penalty',
+            'status': 'Status',
+            'paused': 'Paused'}
+        queuemember = {}
+        for expected_field in expected_field_list:
+            if expected_field in ami_map:
+                ami_field = ami_map[expected_field]
+                queuemember[expected_field] = ami_event[ami_field]
+        key = cls._generate_key(queuemember)
+        return {key: queuemember}

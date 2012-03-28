@@ -21,6 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_cti.dao.helpers import queuemember_formatter
+from xivo_cti.tools.delta_computer import DictDelta
 
 class QueueMemberServiceManager(object):
 
@@ -28,4 +30,14 @@ class QueueMemberServiceManager(object):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
         old_queuemembers = self.innerdata_dao.get_queuemembers_config()
         delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
+        self.queuemember_notifier.queuemember_config_updated(delta)
+
+    def add_dynamic_queuemember(self, ami_event):
+        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add(ami_event)
+        delta = DictDelta(queuemember_formatted, {}, [])
+        self.queuemember_notifier.queuemember_config_updated(delta)
+
+    def remove_dynamic_queuemember(self, ami_event):
+        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove(ami_event)
+        delta = DictDelta({}, {}, queuemember_formatted.keys())
         self.queuemember_notifier.queuemember_config_updated(delta)

@@ -258,9 +258,11 @@ class AMI_1_8(object):
 
     def ami_queuememberadded(self, event):
         self.ami_queuememberstatus(event)
+        self.queuemember_service_manager.add_dynamic_queuemember(event)
 
     def ami_queuememberremoved(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'])
+        self.queuemember_service_manager.remove_dynamic_queuemember(event)
 
     def ami_queuememberpaused(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))

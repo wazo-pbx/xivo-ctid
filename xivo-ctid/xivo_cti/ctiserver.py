@@ -382,6 +382,7 @@ class CTIServer(object):
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
             self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
             self.commandclass.user_features_dao = self._user_features_dao
+            self.commandclass.queuemember_service_manager = self._queuemember_service_manager
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)

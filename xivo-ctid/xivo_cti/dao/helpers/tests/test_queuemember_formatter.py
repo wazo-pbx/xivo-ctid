@@ -44,6 +44,17 @@ class TestQueueMemberFormatter(unittest.TestCase):
         self.session = connection.get_session()
 
         self._insert_data()
+        self._define_expected()
+
+        self.ami_event = {
+            'Queue': 'queue1',
+            'Location': 'agent1',
+            'Status': 'status1',
+            'Paused': 'yes',
+            'Membership': 'dynamic',
+            'CallsTaken': '0',
+            'Penalty': '0',
+            'LastCall': 'none'}
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
@@ -91,49 +102,126 @@ class TestQueueMemberFormatter(unittest.TestCase):
         self.session.add(self.queuem4)
         self.session.commit()
 
-    def test_format_queuemembers(self):
-        query_result = self.session.query(QueueMember)
-        expected_result = {
-            QueueMemberFormatter._generate_key(self.queuem1):
-                QueueMemberFormatter._convert_row_to_dict(self.queuem1),
-            QueueMemberFormatter._generate_key(self.queuem2):
-                QueueMemberFormatter._convert_row_to_dict(self.queuem2),
-            QueueMemberFormatter._generate_key(self.queuem3):
-                QueueMemberFormatter._convert_row_to_dict(self.queuem3),
-            QueueMemberFormatter._generate_key(self.queuem4):
-                QueueMemberFormatter._convert_row_to_dict(self.queuem4)
-        }
-        result = QueueMemberFormatter.format_queuemembers(query_result)
-
-        self.assertEqual(result, expected_result)
-
-    def test_generate_key(self):
-        query_result = self.session.query(QueueMember).filter(QueueMember.queue_name == 'queue1')
-        row = query_result[0]
-        expected_result = "(u'queue1', u'agent1')"
-
-        result = QueueMemberFormatter._generate_key(row)
-
-        self.assertEqual(result, expected_result)
-
-    def test_convert_row_to_dict(self):
-        query_result = self.session.query(QueueMember).filter(QueueMember.queue_name == 'queue1')
-        row = query_result[0]
-        expected_result = {
-            'queue_name': 'queue1',
-            'interface': 'agent1',
+    def _define_expected(self):
+        self.queuem1_dict = {
+            'queue_name': u'queue1',
+            'interface': u'agent1',
             'penalty': 0,
             'call_limit': 0,
             'paused': 0,
             'commented': 0,
             'usertype': 'user',
             'userid': 1,
-            'channel': 'chan1',
+            'channel': u'chan1',
             'category': 'queue',
-            'skills': '',
-            'state_interface': ''
+            'skills': u'',
+            'state_interface': u''
+        }
+        self.queuem2_dict = {
+            'queue_name': u'queue2',
+            'interface': u'agent2',
+            'penalty': 0,
+            'call_limit': 0,
+            'paused': 0,
+            'commented': 0,
+            'usertype': 'agent',
+            'userid': 2,
+            'channel': u'chan2',
+            'category': 'queue',
+            'skills': u'',
+            'state_interface': u''
+        }
+        self.queuem3_dict = {
+            'queue_name': u'queue3',
+            'interface': u'agent3',
+            'penalty': 0,
+            'call_limit': 0,
+            'paused': 0,
+            'commented': 0,
+            'usertype': 'user',
+            'userid': 3,
+            'channel': u'chan3',
+            'category': 'group',
+            'skills': u'',
+            'state_interface': u''
+        }
+        self.queuem4_dict = {
+            'queue_name': u'queue4',
+            'interface': u'agent4',
+            'penalty': 0,
+            'call_limit': 0,
+            'paused': 0,
+            'commented': 0,
+            'usertype': 'agent',
+            'userid': 4,
+            'channel': u'chan4',
+            'category': 'group',
+            'skills': u'',
+            'state_interface': u''
         }
 
+    def test_format_queuemembers(self):
+        query_result = self.session.query(QueueMember)
+        expected_result = {
+            'agent1,queue1': self.queuem1_dict,
+            'agent2,queue2': self.queuem2_dict,
+            'agent3,queue3': self.queuem3_dict,
+            'agent4,queue4': self.queuem4_dict
+        }
+        result = QueueMemberFormatter.format_queuemembers(query_result)
+
+        self.assertEqual(result, expected_result)
+
+    def test_generate_key(self):
+        queuemember = self.queuem1_dict
+        expected_result = 'agent1,queue1'
+
+        result = QueueMemberFormatter._generate_key(queuemember)
+
+        self.assertEqual(result, expected_result)
+
+    def test_convert_row_to_dict(self):
+        query_result = self.session.query(QueueMember).filter(QueueMember.queue_name == 'queue1')
+        row = query_result[0]
+        expected_result = self.queuem1_dict
+
         result = QueueMemberFormatter._convert_row_to_dict(row)
+
+        self.assertEqual(result, expected_result)
+
+    def test_format_queuemember_from_ami_add(self):
+        ami_event = self.ami_event
+        expected_result = {'agent1,queue1': {
+            'queue_name': 'queue1',
+            'interface': 'agent1',
+            'membership': 'dynamic',
+            'penalty': '0',
+            'status': 'status1',
+            'paused': 'yes'}}
+
+        result = QueueMemberFormatter.format_queuemember_from_ami_add(ami_event)
+
+        self.assertEqual(result, expected_result)
+
+    def test_format_queuemember_from_ami_remove(self):
+        ami_event = self.ami_event
+        expected_result = {'agent1,queue1': {
+                'queue_name': 'queue1',
+                'interface': 'agent1'}}
+
+        result = QueueMemberFormatter.format_queuemember_from_ami_remove(ami_event)
+
+        self.assertEqual(result, expected_result)
+
+
+    def test_extract_ami(self):
+        field_list = ['queue_name', 'interface', 'membership']
+        ami_event = self.ami_event
+        expected_result = {'agent1,queue1': {
+            'queue_name': 'queue1',
+            'interface': 'agent1',
+            'membership': 'dynamic'}}
+
+        result = QueueMemberFormatter._extract_ami(field_list, ami_event)
 
         self.assertEqual(result, expected_result)
