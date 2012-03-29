@@ -222,6 +222,19 @@ class TestQueueMemberFormatter(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_format_queuemember_from_ami_pause(self):
+        ami_event = {'Queue': 'queue1',
+                     'Location': 'agent1',
+                     'Paused': '0'}
+        expected_result = {'agent1,queue1': {
+                'queue_name': 'queue1',
+                'interface': 'agent1',
+                'paused': '0'}}
+
+        result = QueueMemberFormatter.format_queuemember_from_ami_pause(ami_event)
+
+        self.assertEqual(result, expected_result)
+
     def test_extract_ami(self):
         field_list = ['queue_name', 'interface', 'membership']
         ami_event = self.ami_event

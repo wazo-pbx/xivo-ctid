@@ -174,3 +174,13 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         result = self.queuemember_service_manager._get_queuemembers_to_remove(delta)
 
         self.assertEqual(result, expected_result)
+
+    def test_toggle_pause(self):
+        self.queuemember_service_manager.queuemember_notifier = Mock()
+
+        self.queuemember_service_manager.toggle_pause(self.ami_event)
+
+        formatter_method_calls = queuemember_formatter.QueueMemberFormatter.method_calls
+        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
+        self.assertEqual(formatter_method_calls, [call.format_queuemember_from_ami_pause(ANY)])
+        self.assertEqual(notifier_method_calls, [call.queuemember_config_updated(ANY)])

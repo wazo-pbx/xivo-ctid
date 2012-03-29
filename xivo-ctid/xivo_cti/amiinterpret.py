@@ -284,6 +284,7 @@ class AMI_1_8(object):
 
     def ami_queuememberpaused(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
+        self.queuemember_service_manager.toggle_pause(event)
 
     def ami_agentlogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Channel'])

@@ -83,6 +83,14 @@ class QueueMemberFormatter(object):
         return formatted_queuemember
 
     @classmethod
+    def format_queuemember_from_ami_pause(cls, ami_event):
+        fields_to_extract = ['queue_name',
+                             'interface',
+                             'paused']
+        formatted_queuemember = cls._extract_ami(fields_to_extract, ami_event)
+        return formatted_queuemember
+
+    @classmethod
     def _extract_ami(cls, expected_field_list, ami_event):
         ami_map = {
             'queue_name': 'Queue',

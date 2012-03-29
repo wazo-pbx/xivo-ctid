@@ -63,3 +63,8 @@ class QueueMemberServiceManager(object):
 
     def _get_queuemembers_to_remove(self, delta):
         return DictDelta({}, {}, delta.delete)
+
+    def toggle_pause(self, ami_event):
+        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause(ami_event)
+        delta = DictDelta({}, queuemember_formatted, [])
+        self.queuemember_notifier.queuemember_config_updated(delta)
