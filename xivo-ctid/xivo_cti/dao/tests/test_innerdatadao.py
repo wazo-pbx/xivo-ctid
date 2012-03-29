@@ -143,3 +143,16 @@ class TestInnerdataDAO(unittest.TestCase):
         self.innerdata_dao.apply_queuemember_delta(input_delta)
 
         self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
+
+    def test_get_queuemember_inexistant(self):
+        self.innerdata_dao.innerdata.queuemembers_config = {}
+
+        self.assertRaises(KeyError, self.innerdata_dao.get_queuemember, ('queuemember1'))
+
+    def test_get_queuemember_existant(self):
+        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
+        expected_result = self.queuemember1['queuemember1_id']
+
+        result = self.innerdata_dao.get_queuemember('queuemember1_id')
+
+        self.assertEqual(result, expected_result)

@@ -38,3 +38,6 @@ class InnerdataDAO(object):
         if delta.delete:
             for deleted_key in delta.delete:
                 self.innerdata.queuemembers_config.pop(deleted_key)
+
+    def get_queuemember(self, queuemember_id):
+        return self.innerdata.queuemembers_config[queuemember_id]
