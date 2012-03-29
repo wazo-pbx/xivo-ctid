@@ -260,11 +260,11 @@ class AMIClass(object):
                                ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
                                ('Async', 'true')]
             if switch_originates:
-                command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
+                command_details.append(('CallerID', '"%s"' % cidnamedst))
                 command_details.append(('Variable', 'XIVO_ORIGSRCNAME=%s' % cidnamesrc))
                 command_details.append(('Variable', 'XIVO_ORIGSRCNUM=%s'  % phonesrcnum))
             else:
-                command_details.append(('CallerID', '"%s"<%s>' % (cidnamesrc, phonesrcnum)))
+                command_details.append(('CallerID', '"%s"' % cidnamesrc))
             for var, val in extravars.iteritems():
                 command_details.append(('Variable', '%s=%s'  % (var, val)))
             command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid ))
