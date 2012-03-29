@@ -246,6 +246,24 @@ class AMI_1_8(object):
                                         event['Channel'],
                                         event['Position'])
 
+    def ami_queuemember(self, event):
+        self.innerdata.queuememberupdate(event['Queue'],
+                                         event['Location'],
+                                         (event['Status'],
+                                          event['Paused'],
+                                          event['Membership'],
+                                          event['CallsTaken'],
+                                          event['Penalty'],
+                                          event['LastCall']))
+        self.queuemember_service_manager.update_one_queuemember(event)
+
+    def ami_queueentry(self, event):
+        timestart = self.timeconvert(event['Wait'])
+        self.innerdata.queueentryupdate(event['Queue'],
+                                        event['Channel'],
+                                        event['Position'],
+                                        timestart)
+
     def ami_queuememberstatus(self, event):
         self.innerdata.queuememberupdate(event['Queue'],
                                          event['Location'],
@@ -509,24 +527,6 @@ class AMI_1_8(object):
             self.innerdata.newchannel(bridgedchannel, context, state)
             self.innerdata.setpeerchannel(channel, bridgedchannel)
             self.innerdata.setpeerchannel(bridgedchannel, channel)
-
-    def ami_queuemember(self, event):
-        self.innerdata.queuememberupdate(event['Queue'],
-                                         event['Location'],
-                                         (event['Status'],
-                                          event['Paused'],
-                                          event['Membership'],
-                                          event['CallsTaken'],
-                                          event['Penalty'],
-                                          event['LastCall']))
-        self.queuemember_service_manager.update_one_queuemember(event)
-
-    def ami_queueentry(self, event):
-        timestart = self.timeconvert(event['Wait'])
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'],
-                                        timestart)
 
     def ami_listdialplan(self, event):
         extension = event.get('Extension')

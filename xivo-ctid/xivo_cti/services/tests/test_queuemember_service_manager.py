@@ -26,7 +26,7 @@ import unittest
 from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.dao.helpers import queuemember_formatter
-from xivo_cti.tools.delta_computer import DictDelta
+from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
 
 
 class TestQueueMemberServiceManager(unittest.TestCase):
@@ -48,25 +48,55 @@ class TestQueueMemberServiceManager(unittest.TestCase):
             'Penalty': '0',
             'LastCall': 'none'}
 
+        self.A = {
+            'queue_name': 'queueA',
+            'interface': 'agentA',
+            'penalty': 0}
+        self.keyA = 'agentA,queueA'
+        self.tupleA = ('agentA', 'queueA')
+        self.B = {
+            'queue_name': 'queueB',
+            'interface': 'agentB',
+            'penalty': 1}
+        self.keyB = 'agentB,queueB'
+        self.tupleB = ('agentB', 'queueB')
+        self.C = {
+            'queue_name': 'queueC',
+            'interface': 'agentC',
+            'penalty': 2}
+        self.keyC = 'agentC,queueC'
+        self.tupleC = ('agentC', 'queueC')
+        self.D = {
+            'queue_name': 'queueD',
+            'interface': 'agentD',
+            'penalty': 2}
+        self.keyD = 'agentD,queueD'
+        self.tupleD = ('agentD', 'queueD')
+
     def tearDown(self):
         queuemember_formatter.QueueMemberFormatter = self.old_queuemember_formatter
 
 
-    def test_update_config(self):
-        self.queuemember_service_manager.queuemember_dao = Mock()
-        self.queuemember_service_manager.innerdata_dao = Mock()
-        self.queuemember_service_manager.delta_computer = Mock()
+    def test_update_config_add(self):
+        queuemember_dao = Mock()
+        queuemember_dao.get_queuemembers = Mock()
+        queuemember_dao.get_queuemembers.return_value = {self.keyA: self.A,
+                                            self.keyB: self.B,
+                                            self.keyC: self.C}
+        self.queuemember_service_manager.queuemember_dao = queuemember_dao
+        innerdata_dao = Mock()
+        innerdata_dao.get_queuemembers_config = Mock()
+        innerdata_dao.get_queuemembers_config.return_value = {}
+        self.queuemember_service_manager.innerdata_dao = innerdata_dao
+        self.queuemember_service_manager.delta_computer = DeltaComputer()
+        expected_ami_request = [self.tupleA, self.tupleB, self.tupleC]
+        expected_removed = DictDelta({}, {}, [])
 
         self.queuemember_service_manager.update_config()
 
-        dao_method_calls = self.queuemember_service_manager.queuemember_dao.method_calls
-        innerdata_dao_method_calls = self.queuemember_service_manager.innerdata_dao.method_calls
-        delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
         notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertTrue(dao_method_calls == [call.get_queuemembers()])
-        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
-        self.assertTrue(delta_computer_method_calls == [call.compute_delta(ANY,ANY)])
-        self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
+        self.assertTrue(call.queuemember_config_updated(expected_removed) in notifier_method_calls)
+        self.assertTrue(call.request_queuemembers_to_ami(expected_ami_request) in notifier_method_calls)
 
     def test_add_dynamic_queuemember(self):
 
@@ -99,3 +129,48 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
         self.assertTrue(delta_computer_method_calls == [call.compute_delta_no_delete(ANY,ANY)])
         self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
+
+    def test_get_queuemember_to_request_empty(self):
+        delta = DictDelta({}, {}, [])
+        expected_result = []
+
+        result = self.queuemember_service_manager._get_queuemembers_to_request(delta)
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_queuemember_to_request_full(self):
+        delta = DictDelta({self.keyA: self.A,
+                           self.keyB: self.B},
+                           {self.keyC: {
+                    'penalty': '0'}},
+                          [self.keyD])
+        expected_result = [self.tupleA,
+                           self.tupleB,
+                           self.tupleC]
+        innerdata_dao_get = Mock()
+        innerdata_dao_get.return_value = self.C
+        self.queuemember_service_manager.innerdata_dao = Mock()
+        self.queuemember_service_manager.innerdata_dao.get_queuemember = innerdata_dao_get
+
+        result = self.queuemember_service_manager._get_queuemembers_to_request(delta)
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_queuemember_to_remove_empty(self):
+        delta = DictDelta({}, {}, [])
+        expected_result = DictDelta({}, {}, [])
+
+        result = self.queuemember_service_manager._get_queuemembers_to_remove(delta)
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_queuemember_to_remove_full(self):
+        delta = DictDelta({self.keyA: self.A},
+                           {self.keyB: {
+                    'penalty': '0'}},
+                          [self.keyC, self.keyD])
+        expected_result = DictDelta({}, {}, [self.keyC, self.keyD])
+
+        result = self.queuemember_service_manager._get_queuemembers_to_remove(delta)
+
+        self.assertEqual(result, expected_result)
