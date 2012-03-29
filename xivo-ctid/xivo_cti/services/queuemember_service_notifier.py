@@ -21,6 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 import logging
 
 class QueueMemberServiceNotifier(object):
@@ -60,3 +61,15 @@ class QueueMemberServiceNotifier(object):
             event.update(update)
             ret.append(event)
         return ret
+
+    def request_queuemembers_to_ami(self, queuemembers_list):
+        for (member, queue) in queuemembers_list:
+            actionid = 'request_queuemember-%s-%s-%s' % (member,
+                                                         queue,
+                                                         time.time())
+            params = {'mode': 'request_queuemember',
+                      'amicommand': 'sendcommand',
+                      'amiargs': ('queuestatus',
+                                  [('Member', member),
+                                   ('Queue', queue)])}
+            self.interface_ami.execute_and_track(actionid, params)

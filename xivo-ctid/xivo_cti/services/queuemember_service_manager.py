@@ -30,7 +30,10 @@ class QueueMemberServiceManager(object):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
         old_queuemembers = self.innerdata_dao.get_queuemembers_config()
         delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
-        self.queuemember_notifier.queuemember_config_updated(delta)
+        queuemembers_request = self._get_queuemembers_to_request(delta)
+        delta_remove_only = self._get_queuemembers_to_remove(delta)
+        self.queuemember_notifier.request_queuemembers_to_ami(queuemembers_request)
+        self.queuemember_notifier.queuemember_config_updated(delta_remove_only)
 
     def add_dynamic_queuemember(self, ami_event):
         queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add(ami_event)
@@ -47,3 +50,16 @@ class QueueMemberServiceManager(object):
         old_queuemembers = self.innerdata_dao.get_queuemembers_config()
         delta = self.delta_computer.compute_delta_no_delete(new_queuemembers, old_queuemembers)
         self.queuemember_notifier.queuemember_config_updated(delta)
+
+    def _get_queuemembers_to_request(self, delta):
+        ret = []
+        for queuemember in delta.add.values():
+            ret.append((queuemember['interface'], queuemember['queue_name']))
+        for queuemember in delta.change:
+            queuemember_local = self.innerdata_dao.get_queuemember(queuemember)
+            ret.append((queuemember_local['interface'], queuemember_local['queue_name']))
+        ret.sort()
+        return ret
+
+    def _get_queuemembers_to_remove(self, delta):
+        return DictDelta({}, {}, delta.delete)

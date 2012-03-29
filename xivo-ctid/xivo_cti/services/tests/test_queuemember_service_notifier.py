@@ -186,3 +186,32 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
             cti_events.append(self.notifier.events_cti.get())
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
         self.assertEqual(cti_events, expected_cti_events)
+
+    def test_request_queuemembers_to_ami_empty(self):
+        queuemembers_list = []
+        self.notifier.interface_ami = Mock()
+        expected_ami_method_calls = []
+
+        self.notifier.request_queuemembers_to_ami(queuemembers_list)
+
+        ami_method_calls = self.notifier.interface_ami.method_calls
+        self.assertEqual(ami_method_calls, expected_ami_method_calls)
+
+    def test_request_queuemembers_to_ami_full(self):
+        queuemembers_list = [('agent1', 'queue1'), ('agent2', 'queue2')]
+        params1 = {'mode': 'request_queuemember',
+                   'amicommand': 'sendcommand',
+                   'amiargs': ('queuestatus', [('Member', 'agent1'),
+                                               ('Queue', 'queue1')])}
+        params2 = {'mode': 'request_queuemember',
+                   'amicommand': 'sendcommand',
+                   'amiargs': ('queuestatus', [('Member', 'agent2'),
+                                               ('Queue', 'queue2')])}
+        self.notifier.interface_ami = Mock()
+        expected_ami_method_calls = [call.execute_and_track(ANY, params1),
+                                     call.execute_and_track(ANY, params2)]
+
+        self.notifier.request_queuemembers_to_ami(queuemembers_list)
+
+        ami_method_calls = self.notifier.interface_ami.method_calls
+        self.assertEqual(ami_method_calls, expected_ami_method_calls)
