@@ -953,7 +953,6 @@ class Command(object):
                         print queuename, interfaces
                         if queuename not in queuenames:
                             queuenames.append(queuename)
-
         reps = []
         amicommand = 'queue%s' % command
         for queuename in queuenames:
@@ -967,7 +966,6 @@ class Command(object):
                 rep = {'amicommand': amicommand,
                        'amiargs': amiargs}
                 reps.append(rep)
-        print reps
         return reps
 
     def ipbxcommand_queueadd(self):

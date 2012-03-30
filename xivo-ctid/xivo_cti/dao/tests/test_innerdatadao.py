@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from mock import Mock
+from mock import Mock, call
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DictDelta
 
@@ -141,6 +141,25 @@ class TestInnerdataDAO(unittest.TestCase):
         self.innerdata_dao.apply_queuemember_delta(input_delta)
 
         self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
+
+    def test_delete_other_queuemembers_inexistant(self):
+        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
+        expected_method_calls = []
+
+        self.innerdata_dao._delete_other_queuemembers('queuemember0_id')
+
+        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
+        self.assertEqual(innerdata_method_calls, expected_method_calls)
+
+    def test_delete_other_queuemembers_existant(self):
+        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
+        expected_method_calls = [call.queuememberupdate('queue1', 'agent1')]
+
+        self.innerdata_dao._delete_other_queuemembers('queuemember1_id')
+
+        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
+        self.assertEqual(innerdata_method_calls, expected_method_calls)
+
 
     def test_get_queuemember_inexistant(self):
         self.innerdata_dao.innerdata.queuemembers_config = {}

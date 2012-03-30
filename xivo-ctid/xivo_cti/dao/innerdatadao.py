@@ -45,7 +45,16 @@ class InnerdataDAO(object):
             self.innerdata.queuemembers_config.update(delta.change)
         if delta.delete:
             for deleted_key in delta.delete:
+                self._delete_other_queuemembers(deleted_key)
                 self.innerdata.queuemembers_config.pop(deleted_key)
+
+    def _delete_other_queuemembers(self, deleted_key):
+        queuemembers_config = self.innerdata.queuemembers_config
+        if deleted_key in queuemembers_config:
+            queuemember = queuemembers_config[deleted_key]
+            queue_name = queuemember['queue_name']
+            interface = queuemember['interface']
+            self.innerdata.queuememberupdate(queue_name, interface)
 
     def get_queuemember(self, queuemember_id):
         return self.innerdata.queuemembers_config[queuemember_id]
