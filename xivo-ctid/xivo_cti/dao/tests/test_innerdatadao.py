@@ -108,6 +108,7 @@ class TestInnerdataDAO(unittest.TestCase):
         expected_result = self.allqueuemembers
         expected_result.update(changed_queuemembers)
         self.innerdata_dao.innerdata.queuemembers_config = {}
+        self.innerdata_dao.innerdata.queuemembers_config.update(self.queuemember2)
         self.innerdata_dao.innerdata.queuemembers_config.update(self.queuemember3)
 
         self.innerdata_dao.apply_queuemember_delta(input_delta)
