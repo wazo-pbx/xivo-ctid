@@ -42,7 +42,9 @@ class InnerdataDAO(object):
         if delta.add:
             self.innerdata.queuemembers_config.update(delta.add)
         if delta.change:
-            self.innerdata.queuemembers_config.update(delta.change)
+            for changed_queuemember in delta.change:
+                if changed_queuemember in self.innerdata.queuemembers_config:
+                    self.innerdata.queuemembers_config[changed_queuemember].update(delta.change[changed_queuemember])
         if delta.delete:
             for deleted_key in delta.delete:
                 self._delete_other_queuemembers(deleted_key)

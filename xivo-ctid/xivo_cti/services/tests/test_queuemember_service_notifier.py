@@ -71,19 +71,27 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def test_queuemember_config_updated_change(self):
         input_delta = DictDelta({}, {'key1': 'value1', 'key2': 'value2'}, [])
-        expected_cti_event = {'class': 'getlist',
-                              'function': 'updateconfig',
-                              'listname': 'queuemembers',
-                              'config': input_delta.change,
-                              'tipbxid': self.ipbx_id
-                              }
+        expected_cti_events = [{'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'value1',
+                                'tid': 'key1',
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'value2',
+                                'tid': 'key2',
+                                'tipbxid': self.ipbx_id}]
 
         self.notifier.queuemember_config_updated(input_delta)
 
         innerdata_method_calls = self.notifier.innerdata_dao.method_calls
-        cti_event = self.notifier.events_cti.get()
+        cti_events = []
+        while not self.notifier.events_cti.empty():
+            cti_events.append(self.notifier.events_cti.get())
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
-        self.assertEqual(cti_event, expected_cti_event)
+        self.assertEqual(cti_events.sort(), expected_cti_events.sort())
 
     def test_queuemember_config_updated_add_and_delete(self):
         input_delta = DictDelta({'key1': 'value1', 'key2': 'value2'}, {}, ['key3'])
@@ -112,17 +120,22 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
     def test_queuemember_config_updated_add_and_change(self):
         input_delta = DictDelta({'key1': 'value1', 'key2': 'value2'}, {'key3':'value3', 'key4': 'value4'}, [])
         expected_cti_events = [{'class': 'getlist',
-                              'function': 'addconfig',
-                              'listname': 'queuemembers',
-                              'list': ['key1', 'key2'],
-                              'tipbxid': self.ipbx_id
-                              },
-                              {'class': 'getlist',
-                              'function': 'updateconfig',
-                              'listname': 'queuemembers',
-                              'config': input_delta.change,
-                              'tipbxid': self.ipbx_id
-                              }]
+                                'function': 'addconfig',
+                                'listname': 'queuemembers',
+                                'list': ['key1', 'key2'],
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'key3',
+                                'tid': 'value3',
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'key4',
+                                'tid': 'value4',
+                                'tipbxid': self.ipbx_id}]
 
         self.notifier.queuemember_config_updated(input_delta)
 
@@ -131,22 +144,27 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         while not self.notifier.events_cti.empty():
             cti_events.append(self.notifier.events_cti.get())
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
-        self.assertEqual(cti_events, expected_cti_events)
+        self.assertEqual(cti_events.sort(), expected_cti_events.sort())
 
     def test_queuemember_config_updated_delete_and_change(self):
         input_delta = DictDelta({}, {'key1': 'value1', 'key2': 'value2'}, ['key3', 'key4'])
         expected_cti_events = [{'class': 'getlist',
-                              'function': 'updateconfig',
-                              'listname': 'queuemembers',
-                              'config': input_delta.change,
-                              'tipbxid': self.ipbx_id
-                              },
-                              {'class': 'getlist',
-                              'function': 'delconfig',
-                              'listname': 'queuemembers',
-                              'list': input_delta.delete,
-                              'tipbxid': self.ipbx_id
-                              }]
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'value1',
+                                'tid': 'key1',
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'value2',
+                                'tid': 'key2',
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'delconfig',
+                                'listname': 'queuemembers',
+                                'list': input_delta.delete,
+                                'tipbxid': self.ipbx_id}]
 
         self.notifier.queuemember_config_updated(input_delta)
 
@@ -155,28 +173,26 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         while not self.notifier.events_cti.empty():
             cti_events.append(self.notifier.events_cti.get())
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
-        self.assertEqual(cti_events, expected_cti_events)
+        self.assertEqual(cti_events.sort(), expected_cti_events.sort())
 
     def test_queuemember_config_updated_add_change_and_delete(self):
         input_delta = DictDelta({'key1': 'value1'}, {'key2':'value2'}, ['key3'])
         expected_cti_events = [{'class': 'getlist',
-                              'function': 'addconfig',
-                              'listname': 'queuemembers',
-                              'list': ['key1'],
-                              'tipbxid': self.ipbx_id
-                              },
-                              {'class': 'getlist',
-                              'function': 'updateconfig',
-                              'listname': 'queuemembers',
-                              'config': input_delta.change,
-                              'tipbxid': self.ipbx_id
-                              },
-                              {'class': 'getlist',
-                              'function': 'delconfig',
-                              'listname': 'queuemembers',
-                              'list': input_delta.delete,
-                              'tipbxid': self.ipbx_id
-                              },]
+                                'function': 'addconfig',
+                                'listname': 'queuemembers',
+                                'list': ['key1'],
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'updateconfig',
+                                'listname': 'queuemembers',
+                                'config': 'value2',
+                                'tid': 'key2',
+                                'tipbxid': self.ipbx_id},
+                               {'class': 'getlist',
+                                'function': 'delconfig',
+                                'listname': 'queuemembers',
+                                'list': input_delta.delete,
+                                'tipbxid': self.ipbx_id}]
 
         self.notifier.queuemember_config_updated(input_delta)
 

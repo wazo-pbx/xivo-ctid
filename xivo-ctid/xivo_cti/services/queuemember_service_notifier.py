@@ -47,11 +47,13 @@ class QueueMemberServiceNotifier(object):
             event.update(update)
             ret.append(event)
         if delta.change:
-            event =  dict(return_template)
-            update = {'function': 'updateconfig',
-                      'config': delta.change}
-            event.update(update)
-            ret.append(event)
+            for queuemember_id in delta.change:
+                event =  dict(return_template)
+                update = {'function': 'updateconfig',
+                          'config': delta.change[queuemember_id],
+                          'tid': queuemember_id}
+                event.update(update)
+                ret.append(event)
         if delta.delete:
             event =  dict(return_template)
             del_list = delta.delete
