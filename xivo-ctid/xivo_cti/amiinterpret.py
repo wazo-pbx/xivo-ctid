@@ -273,6 +273,7 @@ class AMI_1_8(object):
                                           event['CallsTaken'],
                                           event['Penalty'],
                                           event['LastCall']))
+        self.queuemember_service_manager.update_one_queuemember(event)
 
     def ami_queuememberadded(self, event):
         self.ami_queuememberstatus(event)
