@@ -34,6 +34,14 @@ class TestIdConverter(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_xid_to_id_input_int(self):
+        identifier = 12
+        expected_result = '12'
+
+        result = IdConverter.xid_to_id(identifier)
+
+        self.assertEqual(result, expected_result)
+
     def test_xid_to_id_input_id(self):
         identifier = '12'
         expected_result = '12'

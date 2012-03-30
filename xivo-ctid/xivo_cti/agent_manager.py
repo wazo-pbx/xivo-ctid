@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from xivo_cti.tools.idconverter import IdConverter
 
 logger = logging.getLogger('Agent Manager')
 
@@ -31,6 +32,7 @@ class AgentManager(object):
     def log_agent(self, user_id, agent_id=None, agent_exten=None):
         if not agent_id or agent_id == 'agent:special:me':
             agent_id = self.user_features_dao.agent_id(user_id)
+        agent_id = IdConverter.xid_to_id(agent_id)
         if agent_exten and not self.line_features_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
