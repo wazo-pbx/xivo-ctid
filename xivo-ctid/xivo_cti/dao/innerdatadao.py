@@ -30,6 +30,14 @@ class InnerdataDAO(object):
     def get_queuemembers_config(self):
         return self.innerdata.queuemembers_config
 
+    def get_queuemembers_static(self):
+        queuemembers_config = self.innerdata.queuemembers_config
+        ret = {}
+        for queuemember in queuemembers_config:
+            if queuemembers_config[queuemember]['membership'] == 'static':
+                ret[queuemember] = queuemembers_config[queuemember]
+        return ret
+
     def apply_queuemember_delta(self, delta):
         if delta.add:
             self.innerdata.queuemembers_config.update(delta.add)

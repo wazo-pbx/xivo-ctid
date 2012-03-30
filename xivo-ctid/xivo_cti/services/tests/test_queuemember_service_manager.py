@@ -85,8 +85,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
                                             self.keyC: self.C}
         self.queuemember_service_manager.queuemember_dao = queuemember_dao
         innerdata_dao = Mock()
-        innerdata_dao.get_queuemembers_config = Mock()
-        innerdata_dao.get_queuemembers_config.return_value = {}
+        innerdata_dao.get_queuemembers_static = Mock()
+        innerdata_dao.get_queuemembers_static.return_value = {}
         self.queuemember_service_manager.innerdata_dao = innerdata_dao
         self.queuemember_service_manager.delta_computer = DeltaComputer()
         expected_ami_request = [self.tupleA, self.tupleB, self.tupleC]

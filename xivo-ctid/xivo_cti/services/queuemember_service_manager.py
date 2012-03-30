@@ -28,7 +28,7 @@ class QueueMemberServiceManager(object):
 
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
-        old_queuemembers = self.innerdata_dao.get_queuemembers_config()
+        old_queuemembers = self.innerdata_dao.get_queuemembers_static()
         delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
         queuemembers_request = self._get_queuemembers_to_request(delta)
         delta_remove_only = self._get_queuemembers_to_remove(delta)
