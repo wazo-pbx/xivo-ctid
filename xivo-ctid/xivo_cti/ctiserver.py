@@ -76,6 +76,7 @@ from xivo_cti.dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
+from sqlalchemy.exc import OperationalError
 
 logger = logging.getLogger('main')
 
@@ -799,6 +800,9 @@ class CTIServer(object):
                                 kind.disconnected('by_client')
                                 sel_i.close()
                                 del self.fdlist_established[sel_i]
+                        except OperationalError:
+                            logger.warning('Postgresql has been stopped, stopping...')
+                            sys.exit(1)
                         except Exception:
                             # socket.error : exc.args[0]
                             logger.exception('[%s] %s', kind, sel_i)
