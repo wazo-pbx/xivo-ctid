@@ -62,6 +62,23 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
 
+    def test_set_dnd(self):
+        old_enable, self.user_service_manager.enable_dnd = self.user_service_manager.enable_dnd, Mock()
+        old_disable, self.user_service_manager.disable_dnd = self.user_service_manager.disable_dnd, Mock()
+
+        user_id = 555
+
+        self.user_service_manager.set_dnd(user_id, True)
+
+        self.user_service_manager.enable_dnd.assert_called_once_with(user_id)
+
+        self.user_service_manager.set_dnd(user_id, False)
+
+        self.user_service_manager.disable_dnd.assert_called_once_with(user_id)
+
+        self.user_service_manager.enable_dnd = old_enable
+        self.user_service_manager.disable_dnd = old_disable
+
     def test_enable_filter(self):
         user_id = 789
 

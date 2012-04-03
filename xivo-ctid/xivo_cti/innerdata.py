@@ -206,10 +206,21 @@ class Safe(object):
                              'callerid']
     # 'queueskills',
     # links towards other properties
-    services_actions_list = ['enablevoicemail', 'callrecord', 'incallfilter', 'enablednd',
-                             'enableunc', 'enablebusy', 'enablerna']
-    queues_actions_list = ['queueadd', 'queueremove', 'queuepause', 'queueunpause',
-                           'queuepause_all', 'queueunpause_all']
+    services_actions_list = ['enablevoicemail',
+                             'callrecord',
+                             'incallfilter',
+                             'enablednd',
+                             'enableunc',
+                             'enablebusy',
+                             'enablerna']
+
+    queues_actions_list = ['queueadd',
+                           'queueremove',
+                           'queuepause',
+                           'queueunpause',
+                           'queuepause_all',
+                           'queueunpause_all']
+
     permission_kinds = ['regcommands', 'userstatus']
 
     def __init__(self, ctiserver, ipbxid, cnf=None):
@@ -1098,20 +1109,24 @@ class Safe(object):
             self.presence_action(userid)
 
     def presence_action(self, userid):
-        availstate = self.xod_status.get('users').get(userid).get('availstate')
-        userstatuses = self.get_user_permissions('userstatus', userid)
-        if availstate not in userstatuses:
-            logger.warning('presence_action for %s : %s not a right state',
-                           userid, availstate)
-            return
+        try:
+            availstate = self.xod_status['users'][userid]['availstate']
+            actions = self.get_user_permissions('userstatus', userid)[availstate].get('actions', {})
+            for action_name, action_param in actions.iteritems():
+                if action_name in self.services_actions_list:
+                    self._launch_presence_service(userid, action_name, action_param == 'true')
+                if action_name in self.queues_actions_list:
+                    raise NotImplementedError('No supported queue actions')
+        except:
+            logger.warning('Could not trigger post presence change actions')
 
-        for actionname, actionopt in userstatuses.get(availstate).get('actions', {}).iteritems():
-            if not actionname or not actionopt:
-                continue
-            if actionname in self.services_actions_list:
-                print 'presence_action (service)', availstate, actionname, actionopt
-            if actionname in self.queues_actions_list:
-                print 'presence_action (queues)', availstate, actionname, actionopt
+    def _launch_presence_service(self, user_id, service_name, params):
+        if service_name in self.services_actions_list:
+            if service_name == 'enablednd':
+                return self.user_service_manager.set_dnd(user_id, params)
+            raise NotImplementedError(service_name)
+        else:
+            raise ValueError('Unknown service %s' % service_name)
 
     def get_user_permissions(self, kind, userid):
         ret = {}

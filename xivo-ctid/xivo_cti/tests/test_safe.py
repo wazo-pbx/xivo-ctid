@@ -34,6 +34,7 @@ from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.tools.caller_id import build_agi_caller_id
+from xivo_cti.services.user_service_manager import UserServiceManager
 
 
 class TestSafe(unittest.TestCase):
@@ -172,6 +173,38 @@ class TestSafe(unittest.TestCase):
         ret = safe._resolve_incoming_caller_id(channel, number, number, None)
 
         self.assertEqual(ret, expected)
+
+    def test_launch_presence_service_dnd(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+        safe.user_service_manager = Mock(UserServiceManager)
+
+        user_id = 1234
+
+        for param in [True, False]:
+            safe._launch_presence_service(user_id, 'enablednd', param)
+            safe.user_service_manager.set_dnd.assert_called_once_with(user_id, param)
+            safe.user_service_manager.reset_mock()
+
+    def test_launch_presence_service_no_handler(self):
+        un_handled = ['enablevoicemail',
+                      'callrecord',
+                      'incallfilter',
+                      'enableunc',
+                      'enablebusy',
+                      'enablerna']
+
+        safe = Safe(self._ctiserver, self._ipbx_id)
+        safe.user_service_manager = Mock(UserServiceManager)
+
+        for service in un_handled:
+            fn = lambda: safe._launch_presence_service('uid', service, True)
+            self.assertRaises(NotImplementedError, fn)
+
+    def test_launch_presence_service_unknown(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+
+        fn = lambda: safe._launch_presence_service('uid', 'unknown', True)
+        self.assertRaises(ValueError, fn)
 
     def assert_callback_registered(self, cls, fn):
         found = False

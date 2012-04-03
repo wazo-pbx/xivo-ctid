@@ -34,6 +34,9 @@ class UserServiceManager(object):
         self.user_service_notifier.dnd_disabled(user_id)
         self.funckey_manager.dnd_in_use(user_id, False)
 
+    def set_dnd(self, user_id, status):
+        self.enable_dnd(user_id) if status else self.disable_dnd(user_id)
+
     def enable_filter(self, user_id):
         self.user_features_dao.enable_filter(user_id)
         self.user_service_notifier.filter_enabled(user_id)

@@ -370,6 +370,7 @@ class CTIServer(object):
             safe = innerdata.Safe(self, self.myipbxid,
                                                       ipbxconfig.get('urllists'))
             self.safe[self.myipbxid] = safe
+            safe.user_service_manager = self._user_service_manager
             safe.user_features_dao = self._user_features_dao
             self._user_features_dao._innerdata = safe
             self._user_service_notifier.events_cti = safe.events_cti
