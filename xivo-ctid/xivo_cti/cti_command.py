@@ -44,7 +44,7 @@ REGCOMMANDS = [
     'logout',
 
     'getipbxlist',
-    'availstate', 'keepalive',
+    'keepalive',
 
     'history',
     'faxsend',
@@ -417,11 +417,6 @@ class Command(object):
                                                                                         int(params['xqos']),
                                                                                         int(params['window']))
         return self._queue_statistic_encoder.encode(statistic_results)
-
-    def regcommand_availstate(self):
-        availstate = self._commanddict.get('availstate')
-        self.rinnerdata.update_presence(self.ruserid, availstate)
-        return {}
 
     def regcommand_filetransfer(self):
         reply = {}

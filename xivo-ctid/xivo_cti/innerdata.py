@@ -45,6 +45,7 @@ from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
+from xivo_cti.cti.commands.availstate import Availstate
 
 logger = logging.getLogger('innerdata')
 
@@ -268,6 +269,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
+        Availstate.register_callback_params(self.update_presence, ['user_id', 'availstate'])
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config or listname == 'queuemembers':

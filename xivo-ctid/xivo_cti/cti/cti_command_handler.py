@@ -24,10 +24,6 @@
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
 
-import logging
-
-logger = logging.getLogger('CTICommandHandler')
-
 
 class CTICommandHandler(object):
 
