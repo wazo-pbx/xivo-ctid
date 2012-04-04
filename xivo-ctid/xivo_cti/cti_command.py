@@ -1026,7 +1026,7 @@ class Command(object):
         if start:
             rep = {'amicommand': 'origapplication',
                    'amiargs': ['ChanSpy',
-                               channel,
+                               '%s,d' % channel,
                                listener_protocol,
                                listener_name,
                                '000',
