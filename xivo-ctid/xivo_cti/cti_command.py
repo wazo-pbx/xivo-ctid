@@ -1012,20 +1012,24 @@ class Command(object):
         return [rep]
 
     def ipbxcommand_listen(self):
-        subcommand = self._commanddict.pop('subcommand')
-        channel = self._commanddict.pop('channel')
-        # channel might not exist any more
-        if subcommand == 'start':
-            listener = self._commanddict.pop('listener')
-            (listener_protocol, listener_id) = listener.split('/')
+        start = self._commanddict['subcommand'] == 'start'
+        listeners_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
+        listener_protocol = listeners_line['protocol']
+        listener_name = listeners_line['name']
+        agent_id = '/'.join(self._commanddict['destination'].split('/')[1:])
+        agent_config = self.innerdata.xod_config['agents'].keeplist[agent_id]
+        agent_number = agent_config['number']
+        channel = 'Agent/%s' % agent_number
+
+        rep = {}
+
+        if start:
             rep = {'amicommand': 'origapplication',
-                   'amiargs': ('ChanSpy',
-                               '%s,q' % channel,
+                   'amiargs': ['ChanSpy',
+                               channel,
                                listener_protocol,
-                               listener_id,
+                               listener_name,
                                '000',
-                               'mamaop')}
-        elif subcommand == 'stop':
-            # XXX hangup appropriate channel
-            rep = {}
+                               'mamaop']}
+
         return [rep]
