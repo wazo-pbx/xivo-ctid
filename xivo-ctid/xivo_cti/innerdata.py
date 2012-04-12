@@ -383,11 +383,12 @@ class Safe(object):
     def get_parking_name_exten(self, channel):
         '''Search for a parking whose parked channel is channel and return
         the parking name and parking bar'''
-        for parking_id in self.xod_status['parkinglots']:
-            for exten in self.xod_status['parkinglots'][parking_id]:
-                parked_chan = self.xod_status['parkinglots'][parking_id][exten].get('parked')
-                if parked_chan and channel in parked_chan:
-                    return (parking_id, exten)
+        if 'parkinglots' in self.xod_status:
+            for parking_id in self.xod_status['parkinglots']:
+                for exten in self.xod_status['parkinglots'][parking_id]:
+                    parked_chan = self.xod_status['parkinglots'][parking_id][exten].get('parked')
+                    if parked_chan and channel in parked_chan:
+                        return (parking_id, exten)
         return (None, None)
 
     def update_parking_parked(self, old, new):
