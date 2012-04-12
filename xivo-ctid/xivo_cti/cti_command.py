@@ -622,7 +622,6 @@ class Command(object):
             else:
                 extentodial = None
         elif dst.get('type') == 'exten':
-            # XXX how to define
             extentodial = dst.get('id')
             dst_identity = extentodial
             dst_context = orig_context
@@ -947,7 +946,6 @@ class Command(object):
                     if lst:
                         interfaces = self.makeinterfaces(innerdata, lst)
                         queuename = queuestruct.get('name')
-                        print queuename, interfaces
                         if queuename not in queuenames:
                             queuenames.append(queuename)
         reps = []
