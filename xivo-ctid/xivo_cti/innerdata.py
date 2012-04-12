@@ -570,11 +570,12 @@ class Safe(object):
         def channel_filter(channel_key):
             '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
             for channel_start in potential_channel_start:
-                if channel_key.lower().startswith(channel_start.lower()) and self.channels[channel_key].peerchannel:
+                if (channel_key.lower().startswith(channel_start.lower())
+                    and self.channels[channel_key].peerchannel
+                    and not self.channels[channel_key].properties['holded']):
                     return True
 
         return filter(channel_filter, self.channels)
-
 
     def user_find(self, ctilogin, company):
         uinfo = self.xod_config.get('users').finduser(ctilogin, company)
