@@ -149,6 +149,17 @@ class TestCELChannel(unittest.TestCase):
         channel = CELChannel(cel_events)
         self.assertEqual(u'100', channel.exten())
 
+    def test_exten_when_from_originate(self):
+        cel_events = [
+            _new_cel(eventtype='CHAN_START', exten=u's'),
+            _new_cel(eventtype='ANSWER', cid_name=u'100'),
+            _new_cel(eventtype='HANGUP'),
+            _new_cel(eventtype='CHAN_END')
+        ]
+
+        channel = CELChannel(cel_events)
+        self.assertEqual(u'100', channel.exten())
+
     def test_linked_id(self):
         cel_events = [
             _new_cel(eventtype='CHAN_START', linkedid='2'),

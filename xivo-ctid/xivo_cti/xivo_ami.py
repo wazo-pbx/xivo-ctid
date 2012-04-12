@@ -264,9 +264,6 @@ class AMIClass(object):
                     command_details.append(('CallerID', '"%s"' % cidnamedst))
                 else:
                     command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
-
-                command_details.append(('Variable', 'XIVO_ORIGSRCNAME=%s' % cidnamesrc))
-                command_details.append(('Variable', 'XIVO_ORIGSRCNUM=%s'  % phonesrcnum))
             else:
                 command_details.append(('CallerID', '"%s"' % cidnamesrc))
             for var, val in extravars.iteritems():

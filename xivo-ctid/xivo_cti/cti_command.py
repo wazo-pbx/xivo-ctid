@@ -580,7 +580,6 @@ class Command(object):
 
         if phoneidstruct_src:
             orig_protocol = phoneidstruct_src.get('protocol')
-            # XXX 'local' might break the XIVO_ORIGSRCNUM mechanism (trick for thomson)
             orig_name = phoneidstruct_src.get('name')
             orig_number = phoneidstruct_src.get('number')
             orig_identity = phoneidstruct_src.get('useridentity')
