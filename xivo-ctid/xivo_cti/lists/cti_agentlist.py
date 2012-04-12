@@ -94,3 +94,7 @@ class AgentList(AnyList):
         idx = self.reverse_index.get(agentnumber)
         if idx in self.keeplist:
             return idx
+
+    def get_agent_by_user(self, user_id):
+        user = self.commandclass.xod_config['users'].keeplist[user_id]
+        return self.keeplist[user['agentid']]

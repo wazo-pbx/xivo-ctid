@@ -556,6 +556,25 @@ class Safe(object):
                 contexts.append(context_id)
         return contexts
 
+    def find_users_channels_with_peer(self, user_id):
+        '''Find a user's channels that that are talking to another channel'''
+        potential_channel_start = []
+        main_line = self.xod_config['phones'].get_main_line(user_id)
+        agent = self.xod_config['agents'].get_agent_by_user(user_id)
+        if main_line:
+            potential_channel_start.append('%s/%s' % (main_line['protocol'], main_line['name']))
+        if agent:
+            potential_channel_start.append('Agent/%s' % agent['number'])
+
+        def channel_filter(channel_key):
+            '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
+            for channel_start in potential_channel_start:
+                if channel_key.lower().startswith(channel_start.lower()) and self.channels[channel_key].peerchannel:
+                    return True
+
+        return filter(channel_filter, self.channels)
+
+
     def user_find(self, ctilogin, company):
         uinfo = self.xod_config.get('users').finduser(ctilogin, company)
         if uinfo:

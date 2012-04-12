@@ -773,7 +773,10 @@ class Command(object):
             if dst.get('id') in innerdata.xod_config.get('phones').keeplist:
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst['type'] == 'exten':
-            extentodial = dst.get('id')
+            extentodial = dst['id']
+            user = self.innerdata.xod_config['users'].keeplist[self.userid]
+            transferers_channel = self.innerdata.find_users_channels_with_peer(user_id)[0]
+            channel = self.innerdata.channels[transferers_channel].peerchannel
         elif dst['type'] == 'voicemail':
             # *97 vm number
             if dst['id'] in innerdata.xod_config['voicemails'].keeplist:
@@ -792,7 +795,7 @@ class Command(object):
             extentodial = phoneidstruct_dst['number']
 
         rep = {}
-        if extentodial:
+        if extentodial and channel:
             rep = {'amicommand': 'transfer',
                    'amiargs': (channel,
                                 extentodial,
