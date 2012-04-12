@@ -31,11 +31,11 @@ import socket
 import string
 import time
 
+from xivo_cti.tools.extension import normalize_exten
+
 logger = logging.getLogger('xivo_ami')
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
-__dialallowed__ = '[0-9*#+]'
-__specialextensions__ = ['s', 'BUSY']
 
 switch_originates = True
 
@@ -248,9 +248,7 @@ class AMIClass(object):
                   locext, extravars = {}, timeout = 3600):
         # originate a call btw src and dst
         # src will ring first, and dst will ring when src responds
-        ph = re.sub(__dialallowed__, '', phonedst)
-        if len(ph) > 0 and phonedst not in __specialextensions__:
-            return False
+        phonedst = normalize_exten(phonedst)
         try:
             command_details = [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
                                ('Exten', phonedst),
@@ -480,9 +478,7 @@ class AMIClass(object):
 
     # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
-        ph = re.sub(__dialallowed__, '', extension)
-        if len(ph) > 0 and extension not in __specialextensions__:
-            return False
+        extension = normalize_exten(extension)
         try:
             command_details = [('Channel', channel),
                                ('Exten', extension),
@@ -497,9 +493,7 @@ class AMIClass(object):
 
     # \brief Atxfer a channel towards a new extension.
     def atxfer(self, channel, extension, context):
-        ph = re.sub(__dialallowed__, '', extension)
-        if len(ph) > 0 and extension not in __specialextensions__:
-            return False
+        extension = normalize_exten(extension)
         try:
             ret = self.sendcommand('Atxfer', [('Channel', channel),
                                               ('Exten', extension),
