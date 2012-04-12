@@ -743,62 +743,36 @@ class Command(object):
 
     # direct transfers
     def ipbxcommand_transfer(self):
-        src = self.parseid(self._commanddict.get('source'))
-        if not src:
-            return [{'error': 'source'}]
-        dst = self.parseid(self._commanddict.get('destination'))
-        if not dst:
-            return [{'error': 'destination'}]
-
-        if src.get('ipbxid') != dst.get('ipbxid'):
-            return [{'error': 'ipbxids'}]
-        if src.get('ipbxid') not in self._ctiserver.safe:
-            return [{'error': 'ipbxid'}]
-
-        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
-
-        if 'type' in src and 'chan' in src['type']:
-            if src.get('id') in innerdata.channels:
-                channel = src.get('id')
-
-        main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
-        dst_context = main_line['context']
-        phoneidstruct_dst = {}
-        extentodial = None
-
-        if dst['type'] == 'user':
-            phoneidstruct_dst = innerdata.xod_config['phones'].get_main_line(dst['id'])
-        elif dst['type'] == 'phone':
-            if dst.get('id') in innerdata.xod_config.get('phones').keeplist:
-                phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
-        elif dst['type'] == 'exten':
-            extentodial = dst['id']
+        try:
+            dst = self.parseid(self._commanddict['destination'])
             transferers_channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
             channel = self.innerdata.channels[transferers_channel].peerchannel
-        elif dst['type'] == 'voicemail':
-            # *97 vm number
-            if dst['id'] in innerdata.xod_config['voicemails'].keeplist:
-                voicemail = innerdata.xod_config['voicemails'].keeplist[dst['id']]
+            dst_context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
+
+            if dst['type'] == 'user':
+                extentodial = self.innerdata.xod_config['phones'].get_main_line(dst['id'])['number']
+            elif dst['type'] == 'phone' and dst['id'] in self.innerdata.xod_config['phones'].keeplist:
+                extentodial = self.innerdata.xod_config['phones'].keeplist[dst['id']]
+            elif dst['type'] == 'exten':
+                extentodial = dst['id']
+            elif dst['type'] == 'voicemail' and dst['id'] in self.innerdata.xod_config['voicemails'].keeplist:
+                # *97 vm number
+                voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
-                prefix = innerdata.extenfeatures['extenfeatures']['vmboxslt']['exten']
+                prefix = self.innerdata.extenfeatures['extenfeatures']['vmboxslt']['exten']
                 prefix = prefix[:len(prefix) - 1]
                 extentodial = prefix + vm_number
                 dst_context = voicemail['context']
-        elif dst['type'] == 'meetme':
-            if dst['id'] in innerdata.xod_config.get('meetmes').keeplist:
-                meetmestruct = innerdata.xod_config.get('meetmes').keeplist.get(dst.get('id'))
-                extentodial = meetmestruct.get('confno')
+            elif dst['type'] == 'meetme' and dst['id'] in self.innerdata.xod_config['meetmes'].keeplist:
+                extentodial = self.innerdata.xod_config['meetmes'].keeplist[dst['id']]['confno']
+            else:
+                extentodial = None
 
-        if phoneidstruct_dst:
-            extentodial = phoneidstruct_dst['number']
-
-        rep = {}
-        if extentodial and channel:
-            rep = {'amicommand': 'transfer',
-                   'amiargs': (channel,
-                                extentodial,
-                                dst_context)}
-        return [rep]
+            return [{'amicommand': 'transfer',
+                      'amiargs': [channel, extentodial, dst_context]}]
+        except:
+            logger.exception('Failed to transfer call')
+            return [{'error': 'Incomplete transfer information'}]
 
     def ipbxcommand_atxfer(self):
         rep = {}
