@@ -69,7 +69,7 @@ class Safe(object):
         # 'outcalls' : 'urllist_outcalls',
         'contexts': 'urllist_contexts',
         # 'entities' : 'urllist_entities',
-        'parkinglots': 'urllist_parkinglot',
+        # 'parkinglots': 'urllist_parkinglot',
         'phonebooks': 'urllist_phonebook'
         }
 
@@ -272,8 +272,8 @@ class Safe(object):
             except Exception:
                 logger.exception("%s", listname)
 
-        if cnf:
-            self.add_default_parking()
+        #if cnf:
+        #    self.add_default_parking()
 
     def register_cti_handlers(self):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
