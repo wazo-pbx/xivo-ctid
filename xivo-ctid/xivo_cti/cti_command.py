@@ -773,7 +773,6 @@ class Command(object):
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst['type'] == 'exten':
             extentodial = dst['id']
-            user = self.innerdata.xod_config['users'].keeplist[self.userid]
             transferers_channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
             channel = self.innerdata.channels[transferers_channel].peerchannel
         elif dst['type'] == 'voicemail':
