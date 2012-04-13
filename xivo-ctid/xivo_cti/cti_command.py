@@ -144,6 +144,7 @@ class Command(object):
                     else:
                         messagebase.update(ztmp)
                 except Exception:
+                    logger.exception('Exception')
                     messagebase['warning_string'] = 'exception'
             else:
                 messagebase['warning_string'] = 'unimplemented'
@@ -741,7 +742,6 @@ class Command(object):
                'amiargs': (channel, peerchannel, parkinglot, 120000)}
         return [rep, ]
 
-    # direct transfers
     def ipbxcommand_transfer(self):
         try:
             dst = self.parseid(self._commanddict['destination'])
@@ -775,22 +775,16 @@ class Command(object):
             return [{'error': 'Incomplete transfer information'}]
 
     def ipbxcommand_atxfer(self):
-        rep = {}
         try:
-            src = self.parseid(self._commanddict['source'])
-            dst = self.parseid(self._commanddict['destination'])
-            exten = dst['id']
-            if src['id'] in self.innerdata.channels:
-                main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
-                context = main_line['context']
-                rep = {'amicommand': 'atxfer',
-                       'amiargs': (src['id'],
-                                   exten,
-                                   context)}
-        except KeyError:
+            exten = self.parseid(self._commanddict['destination'])['id']
+            context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
+            channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
+        except:
             logger.exception('Atxfer failed %s', self._commanddict)
             return [{'error': 'Incomplete info'}]
-        return [rep, ]
+        else:
+            return [{'amicommand': 'atxfer',
+                     'amiargs': [channel, exten, context]}]
 
     def ipbxcommand_intercept(self):
         self._commanddict['source'] = self._commanddict['tointercept']

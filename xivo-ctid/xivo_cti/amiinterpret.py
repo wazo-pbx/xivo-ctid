@@ -155,10 +155,24 @@ class AMI_1_8(object):
         self.innerdata.update_parking_parked(original, clone)
 
     def ami_hold(self, event):
-        channel = event['Channel']
-        status = event['Status']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels.get(channel).properties['holded'] = (status == 'On')
+        channel_name = event['Channel']
+        status = event['Status'] == 'On'
+        if channel_name in self.innerdata.channels:
+            channel = self.innerdata.channels[channel_name]
+            channel.properties['holded'] = status
+            logger.debug('%s on hold(%s)', channel_name, status)
+            if not channel.peerchannel:
+                '''Usualy means that we are an agent which uses 3 channels'''
+                try:
+                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(channel_name)
+                    agent = self.innerdata.xod_config['agents'].get_agent_by_user(phone['iduserfeatures'])
+                    chan_start = 'Agent/%s' % agent['number']
+                    for chan in self.innerdata.channels:
+                        if chan_start in chan:
+                            self.innerdata.channels[chan].properties['holded'] = status
+                            logger.debug('%s on hold(%s)', chan, status)
+                except:
+                    logger.warning('Could not find %s peer channel to put it on hold', channel_name)
 
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
