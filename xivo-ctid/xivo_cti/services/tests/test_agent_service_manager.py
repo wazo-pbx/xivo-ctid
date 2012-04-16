@@ -23,7 +23,7 @@
 
 import unittest
 
-from xivo_cti.agent_manager import AgentManager
+from xivo_cti.services.agent_service_manager import AgentServiceManager
 from tests.mock import Mock
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
@@ -36,7 +36,7 @@ from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 
-class TestAgentManager(unittest.TestCase):
+class TestAgentServiceManager(unittest.TestCase):
 
     line_number = '1432'
     connected_user_id = 6
@@ -64,7 +64,7 @@ class TestAgentManager(unittest.TestCase):
         self.user_features_dao = UserFeaturesDAO(self.session)
         self.line_features_dao = LineFeaturesDAO(self.session)
 
-        self.agent_manager = AgentManager()
+        self.agent_manager = AgentServiceManager()
         self.agent_manager.agent_features_dao = self.agent_features_dao
         self.agent_manager.user_features_dao = self.user_features_dao
         self.agent_manager.line_features_dao = self.line_features_dao

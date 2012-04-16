@@ -68,7 +68,7 @@ from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
-from xivo_cti.agent_manager import AgentManager
+from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
@@ -161,7 +161,7 @@ class CTIServer(object):
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
-        self._agent_manager = AgentManager()
+        self._agent_manager = AgentServiceManager()
         self._agent_manager.line_features_dao = self._line_features_dao
         self._agent_manager.agent_features_dao = self._agent_features_dao
         self._agent_manager.user_features_dao = self._user_features_dao

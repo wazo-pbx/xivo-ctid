@@ -27,7 +27,7 @@ from xivo_cti.tools.idconverter import IdConverter
 logger = logging.getLogger('Agent Manager')
 
 
-class AgentManager(object):
+class AgentServiceManager(object):
 
     def log_agent(self, user_id, agent_id=None, agent_exten=None):
         if not agent_id or agent_id == 'agent:special:me':
