@@ -29,3 +29,6 @@ class AgentServiceExecutor(object):
 
     def queues_unpause(self, interface):
         self.ami.queuepauseall(interface, 'False')
+
+    def logoff(self, number):
+        self.ami.agentlogoff(number)

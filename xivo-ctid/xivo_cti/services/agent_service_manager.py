@@ -45,6 +45,10 @@ class AgentServiceManager(object):
                                    self.agent_features_dao.agent_context(agent_id),
                                    self.agent_features_dao.agent_ackcall(agent_id) != 'no')
 
+    def logoff(self, agent_id):
+        number = self.agent_features_dao.agent_number(agent_id)
+        self.agent_service_executor.logoff(number)
+
     def find_agent_exten(self, agent_id):
         user_ids = self.user_features_dao.find_by_agent_id(agent_id)
         line_ids = []
@@ -58,7 +62,7 @@ class AgentServiceManager(object):
     def queuepause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_pause(interface)
-    
+
     def queueunpause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_unpause(interface)

@@ -46,3 +46,10 @@ class TestAgentServiceExecutor(unittest.TestCase):
         self.executor.queues_unpause(interface)
 
         self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])
+
+    def test_logoff(self):
+        number = '1234'
+
+        self.executor.logoff(number)
+
+        self.assertEqual(self.ami.method_calls, [call.agentlogoff(number)])

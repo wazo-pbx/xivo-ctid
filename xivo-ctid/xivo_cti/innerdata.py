@@ -178,9 +178,9 @@ class Safe(object):
                                'channels': [],
                                'queues': [],
                                'groups': []},
-                    'agents': {'phonenumber': None,  # static mode
-                               'channel': None,  # dynamic mode
-                               'status': 'undefined',  # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
+                    'agents': {'phonenumber': None, # static mode
+                               'channel': None, # dynamic mode
+                               'status': 'undefined', # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
                                'queues': [],
                                'groups': []},
                     'queues': {'agentmembers': [],
@@ -213,7 +213,8 @@ class Safe(object):
                              'enablednd',
                              'enableunc',
                              'enablebusy',
-                             'enablerna']
+                             'enablerna',
+                             'agentlogoff']
 
     queues_actions_list = ['queueadd',
                            'queueremove',
@@ -1138,11 +1139,11 @@ class Safe(object):
         try:
             availstate = self.xod_status['users'][userid]['availstate']
             actions = self.get_user_permissions('userstatus', userid)[availstate].get('actions', {})
+            agentid = self.user_features_dao.get(userid).agentid
             for action_name, action_param in actions.iteritems():
                 if action_name in self.services_actions_list:
                     self._launch_presence_service(userid, action_name, action_param == 'true')
                 if action_name in self.queues_actions_list:
-                    agentid = self.user_features_dao.get(userid).agentid
                     if action_name == 'queuepause_all':
                         self._ctiserver._agent_service_manager.queuepause_all(agentid)
                     elif action_name == 'queueunpause_all':
@@ -1152,7 +1153,10 @@ class Safe(object):
 
     def _launch_presence_service(self, user_id, service_name, params):
         if service_name in self.services_actions_list:
-            if service_name == 'enablednd':
+            if service_name == 'agentlogoff':
+                agentid = self.user_features_dao.get(user_id).agentid
+                return self._ctiserver._agent_service_manager.logoff(agentid)
+            elif service_name == 'enablednd':
                 return self.user_service_manager.set_dnd(user_id, params)
             raise NotImplementedError(service_name)
         else:
@@ -1195,7 +1199,7 @@ class Safe(object):
     def find_agent_channel(self, channel):
         if not channel.startswith('Agent/'):
             return
-        agent_number = channel.split('/',1)[1]
+        agent_number = channel.split('/', 1)[1]
         chan_start = 'Local/%s' % agent_number
         def chan_filter(channel):
             if (chan_start in channel and
@@ -1557,8 +1561,8 @@ class Channel(object):
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
-        self.properties = {'monitored': False,  # for meetme as well as for regular calls ? agent calls ?
-                           'spy': False,  # spier or spied ?
+        self.properties = {'monitored': False, # for meetme as well as for regular calls ? agent calls ?
+                           'spy': False, # spier or spied ?
                            'holded': False,
                            'parked': False,
                            'meetme_ismuted': False,

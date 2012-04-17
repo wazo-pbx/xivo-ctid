@@ -79,8 +79,6 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self._insert_line_with_number(self.agent_1_exten)
 
-        self.agent_manager.agent_call_back_login = Mock()
-
         self.agent_manager.log_agent(self.connected_user_id, agent.id, self.agent_1_exten)
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
@@ -181,6 +179,15 @@ class TestAgentServiceManager(unittest.TestCase):
         self.session.commit()
 
         return agent
+
+    def test_logoff(self):
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        agent = self._insert_agent()
+
+        self.agent_manager.logoff(agent.id)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.logoff(agent.number)])
 
     def test_queue_pause_all(self):
         self.agent_service_executor = Mock()
