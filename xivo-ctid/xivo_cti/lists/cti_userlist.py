@@ -75,26 +75,10 @@ class UserList(AnyList):
             if a not in self.keeplist:
                 self.keeplist[a] = b
 
-    def finduser(self, userid, company=None):
-        if company:
-            uinfo = None
-##            for userinfo in self.keeplist.itervalues():
-##                if userinfo['loginclient'] == userid and userinfo['context'] == company:
-##                    uinfo = userinfo
-##                    break
-# the company/context/entity vs. multiple servers is to be solved one day XXXX
-            if uinfo == None:
-                for userinfo in self.keeplist.itervalues():
-                    if userinfo and userinfo.get('enableclient') and \
-                           userinfo.get('loginclient') == userid:
-                        uinfo = userinfo
-                        break
-            return uinfo
-        else:
-            if userid in self.keeplist:
-                return self.keeplist.get(userid)
-            else:
-                return None
+    def finduser(self, userid):
+        for userinfo in self.keeplist.itervalues():
+            if userinfo and userinfo.get('enableclient') and userinfo.get('loginclient') == userid:
+                return userinfo
 
     def users(self):
         return self.keeplist

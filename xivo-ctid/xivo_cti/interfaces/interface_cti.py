@@ -78,7 +78,6 @@ class CTI(interfaces.Interfaces):
 
     def _register_login_callbacks(self):
         LoginID.register_callback_params(self.receive_login_id, ['userlogin',
-                                                                 'company',
                                                                  'xivo_version',
                                                                  'cti_connection'])
 
@@ -163,7 +162,7 @@ class CTI(interfaces.Interfaces):
         except KeyError:
             logger.warning('Could not update user status %s', user_id)
 
-    def receive_login_id(self, login, company, version, connection):
+    def receive_login_id(self, login, version, connection):
         if connection != self:
             return []
 
@@ -172,12 +171,12 @@ class CTI(interfaces.Interfaces):
                              'class': 'login_id'}
 
         ipbxid = self._ctiserver.myipbxid
-        safe = self._ctiserver.safe[ipbxid]
-        userid = safe.user_find(login, company)
+        innerdata = self._ctiserver.safe[ipbxid]
+        user_dict = innerdata.xod_config.get('users').finduser(login)
 
-        if userid:
+        if user_dict:
             self.connection_details.update({'ipbxid': ipbxid,
-                                            'userid': userid})
+                                            'userid': str(user_dict.get('id'))})
 
         session_id = ''.join(random.sample(cti_config.ALPHANUMS, 10))
         self.connection_details['prelogin'] = {'sessionid': session_id}

@@ -583,11 +583,6 @@ class Safe(object):
 
         return filter(channel_filter, self.channels)
 
-    def user_find(self, ctilogin, company):
-        uinfo = self.xod_config.get('users').finduser(ctilogin, company)
-        if uinfo:
-            return str(uinfo.get('id'))  # XXX redmine#2169
-
     def user_get_hashed_password(self, userid, sessionid):
         tohash = '%s:%s' % (sessionid,
                             self.user_features_dao.get(userid).passwdclient)
