@@ -24,7 +24,7 @@
 import unittest
 
 from xivo_cti.services.agent_service_manager import AgentServiceManager
-from tests.mock import Mock
+from tests.mock import Mock, call
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
@@ -181,3 +181,12 @@ class TestAgentServiceManager(unittest.TestCase):
         self.session.commit()
 
         return agent
+
+    def test_queue_pause_all(self):
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queuepause_all(rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queues_pause('Agent/1234')])

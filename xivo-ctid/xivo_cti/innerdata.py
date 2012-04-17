@@ -1137,7 +1137,9 @@ class Safe(object):
                 if action_name in self.services_actions_list:
                     self._launch_presence_service(userid, action_name, action_param == 'true')
                 if action_name in self.queues_actions_list:
-                    raise NotImplementedError('No supported queue actions')
+                    if action_name == 'queuepause_all':
+                        agentid = self.user_features_dao.get(userid).agentid
+                        self._ctiserver._agent_service_manager.queuepause_all(agentid)
         except:
             logger.warning('Could not trigger post presence change actions')
 

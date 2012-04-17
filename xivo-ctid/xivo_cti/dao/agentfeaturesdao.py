@@ -31,17 +31,20 @@ class AgentFeaturesDAO(object):
     def __init__(self, session):
         self._session = session
 
-    def agent_number(self, agent_id):
-        return self._get_one(agent_id).number
+    def agent_number(self, agentid):
+        return self._get_one(agentid).number
 
-    def agent_context(self, agent_id):
-        return self._get_one(agent_id).context
+    def agent_context(self, agentid):
+        return self._get_one(agentid).context
 
-    def agent_ackcall(self, agent_id):
-        return self._get_one(agent_id).ackcall
+    def agent_ackcall(self, agentid):
+        return self._get_one(agentid).ackcall
 
-    def _get_one(self, agent_id):
-        res = self._session.query(AgentFeatures).filter(AgentFeatures.id == int(agent_id))
+    def agent_interface(self, id):
+        return 'Agent/%s' % self._get_one(id).number
+
+    def _get_one(self, id):
+        res = self._session.query(AgentFeatures).filter(AgentFeatures.id == int(id))
         if res.count() == 0:
             raise LookupError('No such agent')
         return res[0]

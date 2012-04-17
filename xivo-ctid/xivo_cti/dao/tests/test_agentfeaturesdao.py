@@ -94,3 +94,10 @@ class TestAgentFeaturesDAO(unittest.TestCase):
         self.session.commit()
 
         return agent.id
+
+    def test_agent_interface(self):
+        agent_id = self._insert_agent()
+        
+        interface = self.dao.agent_interface(agent_id)
+        
+        self.assertEqual(interface, 'Agent/%s' % self.agent_number)

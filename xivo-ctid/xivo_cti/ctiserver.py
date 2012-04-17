@@ -69,6 +69,7 @@ from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent_service_executor import AgentServiceExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
@@ -161,10 +162,11 @@ class CTIServer(object):
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
-        self._agent_manager = AgentServiceManager()
-        self._agent_manager.line_features_dao = self._line_features_dao
-        self._agent_manager.agent_features_dao = self._agent_features_dao
-        self._agent_manager.user_features_dao = self._user_features_dao
+        self._agent_service_manager = AgentServiceManager()
+        self._agent_service_manager.line_features_dao = self._line_features_dao
+        self._agent_service_manager.agent_features_dao = self._agent_features_dao
+        self._agent_service_manager.user_features_dao = self._user_features_dao
+        self._agent_service_manager.agent_service_executor = AgentServiceExecutor()
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = InnerdataDAO()
@@ -175,7 +177,7 @@ class CTIServer(object):
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
-        AgentLogin.register_callback_params(self._agent_manager.log_agent,
+        AgentLogin.register_callback_params(self._agent_service_manager.log_agent,
                                             ['user_id', 'agent_id', 'agent_phone_number'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
@@ -386,6 +388,7 @@ class CTIServer(object):
             self.commandclass.user_features_dao = self._user_features_dao
             self.commandclass.queuemember_service_manager = self._queuemember_service_manager
             self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
+            self._agent_service_manager.agent_service_executor.interface_ami = self.myami[self.myipbxid]
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)
@@ -400,7 +403,7 @@ class CTIServer(object):
             if z:
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
-                self._agent_manager.ami = self.myami[self.myipbxid].amicl
+                self._agent_service_manager.ami = self.myami[self.myipbxid].amicl
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()

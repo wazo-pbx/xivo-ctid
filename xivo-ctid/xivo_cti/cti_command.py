@@ -850,11 +850,6 @@ class Command(object):
     def ipbxcommand_queueunpause(self):
         return self.queue_generic('pause', 'false')
 
-    # 'all' can mean :
-    # - all members (phones, agents, ...) of a queue or a group
-    # - all queues or groups a member belongs to
-    # the one that is most useful is the second case
-
     def ipbxcommand_queuepause_all(self):
         self._commanddict['queue'] = 'queue:xivo/all'
         return self.queue_generic('pause', 'true')

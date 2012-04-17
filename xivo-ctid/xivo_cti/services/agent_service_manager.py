@@ -54,3 +54,7 @@ class AgentServiceManager(object):
 
     def agent_call_back_login(self, number, exten, context, ackcall):
         self.ami.agentcallbacklogin(number, exten, context, ackcall)
+
+    def queuepause_all(self, agentid):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queues_pause(interface)
