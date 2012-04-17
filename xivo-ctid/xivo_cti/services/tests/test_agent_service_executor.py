@@ -24,40 +24,25 @@
 import unittest
 from tests.mock import Mock, call
 from xivo_cti.services.agent_service_executor import AgentServiceExecutor
+from xivo_cti.xivo_ami import AMIClass
 
 class TestAgentServiceExecutor(unittest.TestCase):
 
     def setUp(self):
         self.executor = AgentServiceExecutor()
-        self.interface_ami = Mock()
-        self.executor.interface_ami = self.interface_ami
-
-    def test_build_pause_params(self):
-        interface = 'Agent/1234'
-        pausestate = True
-        expected_result = {'mode': 'pause',
-                         'amicommand': 'sendcommand',
-                         'amiargs': ('queuepause',
-                             [('Interface', interface),
-                              ('Paused', 'True')])
-                   }
-
-        result = self.executor._build_pause_params(interface, pausestate)
-
-        self.assertEqual(result, expected_result)
+        self.ami = Mock(AMIClass)
+        self.executor.ami = self.ami
 
     def test_queues_pause(self):
         interface = 'Agent/1234'
-        expected_params = self.executor._build_pause_params(interface, True)
 
         self.executor.queues_pause(interface)
 
-        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('', expected_params)])
+        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'True')])
 
     def test_queues_unpause(self):
         interface = 'Agent/1234'
-        expected_params = self.executor._build_pause_params(interface, False)
 
         self.executor.queues_unpause(interface)
 
-        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('', expected_params)])
+        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])

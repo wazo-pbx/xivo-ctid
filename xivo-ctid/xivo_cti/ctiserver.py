@@ -389,7 +389,6 @@ class CTIServer(object):
             self.commandclass.user_features_dao = self._user_features_dao
             self.commandclass.queuemember_service_manager = self._queuemember_service_manager
             self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
-            self._agent_service_manager.agent_service_executor.interface_ami = self.myami[self.myipbxid]
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)
@@ -405,6 +404,7 @@ class CTIServer(object):
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
                 self._agent_service_manager.ami = self.myami[self.myipbxid].amicl
+                self._agent_service_manager.agent_service_executor.ami = self.myami[self.myipbxid].amicl
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()
