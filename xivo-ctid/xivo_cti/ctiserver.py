@@ -381,6 +381,7 @@ class CTIServer(object):
             self._queuemember_service_notifier.events_cti = safe.events_cti
             self._queuemember_service_notifier.ipbx_id = self.myipbxid
             self.safe[self.myipbxid].register_cti_handlers()
+            self.safe[self.myipbxid].register_ami_handlers()
             self.safe[self.myipbxid].update_directories()
             # interface : AMI
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)

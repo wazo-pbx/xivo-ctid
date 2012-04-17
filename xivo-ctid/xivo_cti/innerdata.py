@@ -46,6 +46,7 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
 from xivo_cti.cti.commands.availstate import Availstate
+from xivo_cti.ami import ami_callback_handler
 
 logger = logging.getLogger('innerdata')
 
@@ -281,6 +282,10 @@ class Safe(object):
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
         Availstate.register_callback_params(self.update_presence, ['user_id', 'availstate'])
+
+    def register_ami_handlers(self):
+        ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        ami_handler.register_callback('AgentConnect', lambda x: logger.debug('event: %s', x) or self.sheetsend('agentlinked', x['Channel']))
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config or listname == 'queuemembers':
@@ -1187,6 +1192,18 @@ class Safe(object):
             term = {'protocol': protocol, 'name': name}
         return term
 
+    def find_agent_channel(self, channel):
+        if not channel.startswith('Agent/'):
+            return
+        agent_number = channel.split('/',1)[1]
+        chan_start = 'Local/%s' % agent_number
+        def chan_filter(channel):
+            if (chan_start in channel and
+                self.channels[channel].properties['talkingto_id'] != None):
+                return True
+        channel = filter(chan_filter, self.channels)[0]
+        return channel
+
     def zphones(self, protocol, name):
         if protocol:
             for phone_id, phone_config in self.xod_config['phones'].keeplist.iteritems():
@@ -1224,7 +1241,6 @@ class Safe(object):
         self.sheetdisplays = bsheets.get('displays')
         self.sheetoptions = bsheets.get('options')
         self.sheetconditions = bsheets.get('conditions')
-
         if where not in self.sheetevents:
             return
 
@@ -1239,6 +1255,8 @@ class Safe(object):
             if not self.sheetdisplays.get(display_id):
                 continue
 
+            channel = (channel if not channel.startswith('Agent/')
+                        else self.find_agent_channel(channel))
             channelprops = self.channels.get(channel)
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
