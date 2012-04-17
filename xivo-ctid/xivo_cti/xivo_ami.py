@@ -49,12 +49,12 @@ class AMIClass(object):
             return self.msg
 
     def __init__(self, ipbxid, ipaddress, ipport, loginname, password, events):
-        self.ipbxid    = ipbxid
+        self.ipbxid = ipbxid
         self.ipaddress = ipaddress
-        self.ipport    = ipport
+        self.ipport = ipport
         self.loginname = loginname
-        self.password  = password
-        self.events    = events
+        self.password = password
+        self.events = events
         self.actionid = None
 
     def connect(self):
@@ -133,119 +133,87 @@ class AMIClass(object):
     def setactionid(self, actionid):
         self.actionid = actionid
 
+    def _exec_command(self, *args):
+        try:
+            return self.sendcommand(*args)
+        except self.AMIError:
+            return False
+        except Exception:
+            return False
+
     def sendqueuestatus(self, queue=None):
         if queue is None:
-            ret = self.sendcommand('QueueStatus', [])
+            return self._exec_command('QueueStatus', [])
         else:
-            ret = self.sendcommand('QueueStatus',
-                                   [('Queue', queue)])
-        return ret
+            return self._exec_command('QueueStatus',
+                                      [('Queue', queue)])
 
     # \brief Requesting an ExtensionState.
     def sendextensionstate(self, exten, context):
-        ret = self.sendcommand('ExtensionState',
-                               [('Exten', exten),
-                                ('Context', context)])
-        return ret
+        return self._exec_command('ExtensionState',
+                                  [('Exten', exten),
+                                   ('Context', context)])
 
     def sendparkedcalls(self):
-        ret = self.sendcommand('ParkedCalls', [])
-        return ret
+        return self._exec_command('ParkedCalls', [])
 
     def sendmeetmelist(self):
-        ret = self.sendcommand('MeetMeList', [])
-        return ret
+        return self._exec_command('MeetMeList', [])
 
     # \brief Logins to the AMI.
     def login(self):
-        try:
-            ret = False
-            if self.events:
-                onoff = 'on'
-            else:
-                onoff = 'off'
-            ret = self.sendcommand('Login',
-                                   [('Username', self.loginname),
-                                    ('Secret', self.password),
-                                    ('Events', onoff)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        if self.events:
+            onoff = 'on'
+        else:
+            onoff = 'off'
+        return self._exec_command('Login',
+                                  [('Username', self.loginname),
+                                   ('Secret', self.password),
+                                   ('Events', onoff)])
 
     def hangup(self, channel, channel_peer=None):
         ret = 0
-        try:
-            self.sendcommand('Hangup',
-                             [('Channel', channel)])
-            ret += 1
-        except self.AMIError:
-            pass
-        except Exception:
-            pass
+        self._exec_command('Hangup',
+                           [('Channel', channel)])
+        ret += 1
 
         if channel_peer:
-            try:
-                self.sendcommand('Hangup',
-                                 [('Channel', channel_peer)])
-                ret += 2
-            except self.AMIError:
-                pass
-            except Exception:
-                pass
+            self._exec_command('Hangup',
+                               [('Channel', channel_peer)])
+            ret += 2
         return ret
 
     def setvar(self, var, val, chan=None):
-        try:
-            if chan is None:
-                ret = self.sendcommand('Setvar', [('Variable', var),
-                                                  ('Value', val)])
-            else:
-                ret = self.sendcommand('Setvar', [('Channel', chan),
-                                                  ('Variable', var),
-                                                  ('Value', val)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        if chan is None:
+            return self._exec_command('Setvar', [('Variable', var),
+                                                 ('Value', val)])
+        else:
+            return self._exec_command('Setvar', [('Channel', chan),
+                                                 ('Variable', var),
+                                                 ('Value', val)])
 
-    def park(self, channel, channel_timeout, parkinglot, timeout = 45000):
-        try:
-            ret = self.sendcommand('Park',
-                                   [('Channel', channel),
-                                    ('Channel2', channel_timeout),
-                                    ('Parkinglot', parkinglot),
-                                    ('Timeout', timeout)
-                                    ])
-            return ret
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+    def park(self, channel, channel_timeout, parkinglot, timeout=45000):
+        return self._exec_command('Park',
+                                  [('Channel', channel),
+                                   ('Channel2', channel_timeout),
+                                   ('Parkinglot', parkinglot),
+                                   ('Timeout', timeout)
+                                  ])
 
     def origapplication(self, application, data, phoneproto, phonesrcname, phonesrcnum, context):
-        try:
-            ret = self.sendcommand('Originate', [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
-                                                 ('Context', context),
-                                                 ('Priority', '1'),
-                                                 ('Application', application),
-                                                 ('Data', data),
-                                                 ('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid),
-                                                 ('Variable', 'XIVO_ORIGAPPLI=%s' % application),
-                                                 ('Async', 'true')])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('Originate', [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
+                                                ('Context', context),
+                                                ('Priority', '1'),
+                                                ('Application', application),
+                                                ('Data', data),
+                                                ('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid),
+                                                ('Variable', 'XIVO_ORIGAPPLI=%s' % application),
+                                                ('Async', 'true')])
 
     # \brief Originates a call from a phone towards another.
     def originate(self, phoneproto, phonesrcname, phonesrcnum, cidnamesrc,
                   phonedst, cidnamedst,
-                  locext, extravars = {}, timeout = 3600):
+                  locext, extravars={}, timeout=3600):
         # originate a call btw src and dst
         # src will ring first, and dst will ring when src responds
         phonedst = normalize_exten(phonedst)
@@ -265,130 +233,75 @@ class AMIClass(object):
             else:
                 command_details.append(('CallerID', '"%s"' % cidnamesrc))
             for var, val in extravars.iteritems():
-                command_details.append(('Variable', '%s=%s'  % (var, val)))
-            command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid ))
-            ret = self.sendcommand('Originate', command_details)
-            return ret
-        except self.AMIError:
-            return False
+                command_details.append(('Variable', '%s=%s' % (var, val)))
+            command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid))
         except Exception:
             return False
+        return self._exec_command('Originate', command_details)
 
     # \brief Requests the Extension Statuses
     def extensionstate(self, extension, context):
-        try:
-            ret = self.sendcommand('ExtensionState', [('Exten', extension),
-                                                      ('Context', context)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('ExtensionState', [('Exten', extension),
+                                                     ('Context', context)])
 
     # \brief Logs in an Agent
     def agentcallbacklogin(self, agentnum, extension, context, ackcall):
-        try:
-            ret = self.sendcommand('AgentCallbackLogin', [('Agent', agentnum),
-                                                          ('Context', context),
-                                                          ('Exten', extension),
-                                                          ('AckCall' , ackcall)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('AgentCallbackLogin', [('Agent', agentnum),
+                                                         ('Context', context),
+                                                         ('Exten', extension),
+                                                         ('AckCall' , ackcall)])
 
     # \brief Logs off an Agent
     def agentlogoff(self, agentnum):
-        try:
-            ret = self.sendcommand('AgentLogoff', [('Agent', agentnum)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('AgentLogoff', [('Agent', agentnum)])
 
     # \brief Mute a meetme user
     def meetmemute(self, meetme, usernum):
-        try:
-            return self.sendcommand('MeetmeMute', (('Meetme', meetme),
-                                                    ('Usernum', usernum)))
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('MeetmeMute', (('Meetme', meetme),
+                                                 ('Usernum', usernum)))
 
     # \brief Unmute a meetme user
     def meetmeunmute(self, meetme, usernum):
-        try:
-            return self.sendcommand('MeetmeUnmute', (('Meetme', meetme),
-                                                      ('Usernum', usernum)))
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('MeetmeUnmute', (('Meetme', meetme),
+                                                   ('Usernum', usernum)))
 
     def meetmemoderation(self, command, meetme, usernum, adminnum):
-        try:
-            return self.sendcommand(command, (('Meetme', meetme),
-                                               ('Usernum', usernum),
-                                               ('Adminnum', adminnum)))
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command(command, (('Meetme', meetme),
+                                            ('Usernum', usernum),
+                                            ('Adminnum', adminnum)))
 
     def meetmepause(self, meetme, status):
-        try:
-            return self.sendcommand('MeetmePause', (('Meetme', meetme),
-                                                     ('Status', status)))
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('MeetmePause', (('Meetme', meetme),
+                                                  ('Status', status)))
 
     def queueadd(self, queuename, interface, paused, skills=''):
-        try:
-            # it looks like not specifying Paused is the same as setting it to false
-            ret = self.sendcommand('QueueAdd', [('Queue', queuename),
-                                                ('Interface', interface),
-                                                ('Penalty', '1'),
-                                                ('Paused', paused),
-                                                ('Skills', skills)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        # it looks like not specifying Paused is the same as setting it to false
+        return self._exec_command('QueueAdd', [('Queue', queuename),
+                                               ('Interface', interface),
+                                               ('Penalty', '1'),
+                                               ('Paused', paused),
+                                               ('Skills', skills)])
 
     # \brief Removes a Queue
     def queueremove(self, queuename, interface):
-        try:
-            ret = self.sendcommand('QueueRemove', [('Queue', queuename),
-                                                   ('Interface', interface)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('QueueRemove', [('Queue', queuename),
+                                                  ('Interface', interface)])
 
     # \brief (Un)Pauses a Queue
     def queuepause(self, queuename, interface, paused):
-        try:
-            ret = self.sendcommand('QueuePause', [('Queue', queuename),
-                                                  ('Interface', interface),
-                                                  ('Paused', paused)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('QueuePause', [('Queue', queuename),
+                                                 ('Interface', interface),
+                                                 ('Paused', paused)])
+
+    def queuepauseall(self, interface, paused):
+        return self._exec_command('QueuePause', [('Interface', interface),
+                                                 ('Paused', paused)])
 
     # \brief Logs a Queue Event
     def queuelog(self, queuename, event,
-                 uniqueid = None,
-                 interface = None,
-                 message = None):
+                 uniqueid=None,
+                 interface=None,
+                 message=None):
         command_details = [('Queue', queuename),
                            ('Event', event)]
         if uniqueid:
@@ -397,113 +310,61 @@ class AMIClass(object):
             command_details.append(('Interface', interface))
         if message:
             command_details.append(('Message', message))
-        try:
-            ret = self.sendcommand('QueueLog', command_details)
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('QueueLog', command_details)
 
     # \brief Requests the Mailbox informations
     def mailbox(self, phone, context):
-        try:
-            ret1 = self.sendcommand('MailboxCount', [('Mailbox', '%s@%s' % (phone, context))])
-            ret2 = self.sendcommand('MailboxStatus', [('Mailbox', '%s@%s' % (phone, context))])
-            ret = ret1 and ret2
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
+        ret1 = self._exec_command('MailboxCount', [('Mailbox', '%s@%s' % (phone, context))])
+        ret2 = self._exec_command('MailboxStatus', [('Mailbox', '%s@%s' % (phone, context))])
+        ret = ret1 and ret2
         return ret
 
     # \brief Starts monitoring a channel
     def monitor(self, channel, filename, mixme='true'):
-        try:
-            ret = self.sendcommand('Monitor',
-                                   [('Channel', channel),
-                                    ('File', filename),
-                                    ('Mix', mixme)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('Monitor',
+                                  [('Channel', channel),
+                                   ('File', filename),
+                                   ('Mix', mixme)])
 
     # \brief Stops monitoring a channel
     def stopmonitor(self, channel):
-        try:
-            ret = self.sendcommand('StopMonitor',
-                                   [('Channel', channel)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('StopMonitor',
+                                  [('Channel', channel)])
 
     # \brief Retrieves the value of Variable in a Channel
     def getvar(self, channel, varname):
-        try:
-            ret = self.sendcommand('Getvar', [('Channel', channel),
-                                              ('Variable', varname)])
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        return self._exec_command('Getvar', [('Channel', channel),
+                                             ('Variable', varname)])
 
     # \brief Sends a sipnotify
     def sipnotify(self, *variables):
-        try:
-            channel = variables[0]
-            arglist = [('Variable', '%s=%s' % (k, v.replace('"', '\\"')))
-                for k, v in variables[len(variables) - 1].iteritems()]
-            arglist.append(('Channel', channel))
-            ret = self.sendcommand('SIPNotify', arglist)
-        except self.AMIError:
-            ret = False
-        except Exception:
-            ret = False
-        return ret
+        channel = variables[0]
+        arglist = [('Variable', '%s=%s' % (k, v.replace('"', '\\"')))
+            for k, v in variables[len(variables) - 1].iteritems()]
+        arglist.append(('Channel', channel))
+        return self._exec_command('SIPNotify', arglist)
 
     # \brief Request a mailbox count
     # context is for tracking only
     def mailboxcount(self, mailbox, context=None):
-        try:
-            return self.sendcommand('MailboxCount', (('MailBox', mailbox),))
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('MailboxCount', (('MailBox', mailbox),))
 
     # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
         extension = normalize_exten(extension)
-        try:
-            command_details = [('Channel', channel),
-                               ('Exten', extension),
-                               ('Context', context),
-                               ('Priority', '1')]
-            ret = self.sendcommand('Redirect', command_details)
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        command_details = [('Channel', channel),
+                           ('Exten', extension),
+                           ('Context', context),
+                           ('Priority', '1')]
+        return self._exec_command('Redirect', command_details)
 
     # \brief Atxfer a channel towards a new extension.
     def atxfer(self, channel, extension, context):
         extension = normalize_exten(extension)
-        try:
-            ret = self.sendcommand('Atxfer', [('Channel', channel),
-                                              ('Exten', extension),
-                                              ('Context', context),
-                                              ('Priority', '1')])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('Atxfer', [('Channel', channel),
+                                             ('Exten', extension),
+                                             ('Context', context),
+                                             ('Priority', '1')])
 
     def txfax(self, faxpath, userid, callerid, number, context):
         # originate a call btw src and dst
@@ -526,22 +387,15 @@ class AMIClass(object):
             return False
         except Exception:
             return False
-    
+
     def alarmclk(self, userid, callerid='Alarm clock'):
         # execute the alarm clock 'procedure' for the given user
-        try:
-            ret = self.sendcommand('Originate',
-                                   [('Channel', 'Local/s@alarmclk-execute'),
-                                    ('Context', 'alarmclk-play-msg'),
-                                    ('Exten', 's'),
-                                    ('Priority', '1'),
-                                    # 15 minutes timeout
-                                    ('Timeout', '900000'),
-                                    ('CallerID', callerid),
-                                    ('Async', 'true'),
-                                    ('Variable', 'XIVO_DSTID=%s' % userid)])
-            return ret
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self._exec_command('Originate',
+                                  [('Channel', 'Local/s@alarmclk-execute'),
+                                   ('Context', 'alarmclk-play-msg'),
+                                   ('Exten', 's'),
+                                   ('Priority', '1'),
+                                   ('Timeout', '900000'), # 15 minutes timeout
+                                   ('CallerID', callerid),
+                                   ('Async', 'true'),
+                                   ('Variable', 'XIVO_DSTID=%s' % userid)])
