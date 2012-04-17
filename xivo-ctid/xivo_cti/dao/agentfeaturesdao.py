@@ -40,11 +40,12 @@ class AgentFeaturesDAO(object):
     def agent_ackcall(self, agentid):
         return self._get_one(agentid).ackcall
 
-    def agent_interface(self, id):
-        return 'Agent/%s' % self._get_one(id).number
+    def agent_interface(self, agentid):
+        return 'Agent/%s' % self._get_one(agentid).number
 
-    def _get_one(self, id):
-        res = self._session.query(AgentFeatures).filter(AgentFeatures.id == int(id))
+    def _get_one(self, agentid):
+        # field id != field agentid used only for joining with staticagent table.
+        res = self._session.query(AgentFeatures).filter(AgentFeatures.id == int(agentid))
         if res.count() == 0:
             raise LookupError('No such agent')
         return res[0]
