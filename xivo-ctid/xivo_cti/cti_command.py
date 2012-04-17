@@ -770,7 +770,7 @@ class Command(object):
 
             return [{'amicommand': 'transfer',
                       'amiargs': [channel, extentodial, dst_context]}]
-        except:
+        except Exception:
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
 

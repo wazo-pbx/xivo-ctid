@@ -171,7 +171,7 @@ class AMI_1_8(object):
                         if chan_start in chan:
                             self.innerdata.channels[chan].properties['holded'] = status
                             logger.debug('%s on hold(%s)', chan, status)
-                except:
+                except Exception:
                     logger.warning('Could not find %s peer channel to put it on hold', channel_name)
 
     def ami_channelupdate(self, event):
