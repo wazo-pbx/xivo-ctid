@@ -24,20 +24,23 @@
 
 class AgentServiceExecutor(object):
 
+    def _build_pause_params(self, interface, pausestate):
+        if pausestate:
+            pausestate_str = 'True'
+        else:
+            pausestate_str = 'False'
+        ret = {'mode': 'pause',
+               'amicommand': 'sendcommand',
+               'amiargs': ('queuepause',
+                  [('Interface', interface),
+                   ('Paused', pausestate_str)])
+               }
+        return ret
+
     def queues_pause(self, interface):
-        params = {'mode': 'pause',
-                          'amicommand': 'sendcommand',
-                          'amiargs': ('queuepause',
-                              [('Interface', interface),
-                               ('Paused', 'True')])
-                    }
+        params = self._build_pause_params(interface, True)
         self.interface_ami.execute_and_track('', params)
 
     def queues_unpause(self, interface):
-        params = {'mode': 'unpause',
-                          'amicommand': 'sendcommand',
-                          'amiargs': ('queuepause',
-                              [('Interface', interface),
-                               ('Paused', 'False')])
-                    }
+        params = self._build_pause_params(interface, False)
         self.interface_ami.execute_and_track('', params)

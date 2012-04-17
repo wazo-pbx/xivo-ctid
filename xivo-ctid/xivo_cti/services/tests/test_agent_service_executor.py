@@ -32,28 +32,32 @@ class TestAgentServiceExecutor(unittest.TestCase):
         self.interface_ami = Mock()
         self.executor.interface_ami = self.interface_ami
 
-    def test_queues_pause(self):
+    def test_build_pause_params(self):
         interface = 'Agent/1234'
-        expected_params = {'mode': 'pause',
+        pausestate = True
+        expected_result = {'mode': 'pause',
                          'amicommand': 'sendcommand',
                          'amiargs': ('queuepause',
                              [('Interface', interface),
                               ('Paused', 'True')])
                    }
-        
+
+        result = self.executor._build_pause_params(interface, pausestate)
+
+        self.assertEqual(result, expected_result)
+
+    def test_queues_pause(self):
+        interface = 'Agent/1234'
+        expected_params = self.executor._build_pause_params(interface, True)
+
         self.executor.queues_pause(interface)
-        
-        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('',expected_params)])
-        
+
+        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('', expected_params)])
+
     def test_queues_unpause(self):
         interface = 'Agent/1234'
-        expected_params = {'mode': 'unpause',
-                         'amicommand': 'sendcommand',
-                         'amiargs': ('queuepause',
-                             [('Interface', interface),
-                              ('Paused', 'False')])
-                   }
-        
+        expected_params = self.executor._build_pause_params(interface, False)
+
         self.executor.queues_unpause(interface)
-        
-        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('',expected_params)])
+
+        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('', expected_params)])
