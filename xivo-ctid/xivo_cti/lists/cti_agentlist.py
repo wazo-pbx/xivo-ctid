@@ -97,4 +97,4 @@ class AgentList(AnyList):
 
     def get_agent_by_user(self, user_id):
         user = self.commandclass.xod_config['users'].keeplist[str(user_id)]
-        return self.keeplist[user['agentid']]
+        return self.keeplist.get(user['agentid'])
