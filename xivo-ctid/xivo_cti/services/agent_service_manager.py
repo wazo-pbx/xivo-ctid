@@ -58,3 +58,7 @@ class AgentServiceManager(object):
     def queuepause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_pause(interface)
+    
+    def queueunpause_all(self, agentid):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queues_unpause(interface)

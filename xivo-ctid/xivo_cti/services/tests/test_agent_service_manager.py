@@ -190,3 +190,12 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.queuepause_all(rowid)
 
         self.assertEqual(self.agent_service_executor.method_calls, [call.queues_pause('Agent/1234')])
+
+    def test_queue_unpause_all(self):
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queueunpause_all(rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queues_unpause('Agent/1234')])

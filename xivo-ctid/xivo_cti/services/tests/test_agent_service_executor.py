@@ -45,3 +45,15 @@ class TestAgentServiceExecutor(unittest.TestCase):
         
         self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('',expected_params)])
         
+    def test_queues_unpause(self):
+        interface = 'Agent/1234'
+        expected_params = {'mode': 'unpause',
+                         'amicommand': 'sendcommand',
+                         'amiargs': ('queuepause',
+                             [('Interface', interface),
+                              ('Paused', 'False')])
+                   }
+        
+        self.executor.queues_unpause(interface)
+        
+        self.assertEqual(self.interface_ami.method_calls, [call.execute_and_track('',expected_params)])

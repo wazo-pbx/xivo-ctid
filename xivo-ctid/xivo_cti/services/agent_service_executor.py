@@ -32,3 +32,12 @@ class AgentServiceExecutor(object):
                                ('Paused', 'True')])
                     }
         self.interface_ami.execute_and_track('', params)
+
+    def queues_unpause(self, interface):
+        params = {'mode': 'unpause',
+                          'amicommand': 'sendcommand',
+                          'amiargs': ('queuepause',
+                              [('Interface', interface),
+                               ('Paused', 'False')])
+                    }
+        self.interface_ami.execute_and_track('', params)
