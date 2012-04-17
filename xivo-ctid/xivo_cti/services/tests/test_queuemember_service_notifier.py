@@ -23,7 +23,7 @@
 
 import unittest
 import Queue
-from mock import Mock, call, ANY
+from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.tools.delta_computer import DictDelta
 

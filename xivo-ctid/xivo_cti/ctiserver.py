@@ -403,7 +403,6 @@ class CTIServer(object):
             if z:
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
-                self._agent_service_manager.ami = self.myami[self.myipbxid].amicl
                 self._agent_service_manager.agent_service_executor.ami = self.myami[self.myipbxid].amicl
 
             try:

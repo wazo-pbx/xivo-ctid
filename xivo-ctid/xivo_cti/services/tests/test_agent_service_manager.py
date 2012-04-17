@@ -109,6 +109,9 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(extens[0], self.line_number)
 
     def test_agent_callback_login(self):
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+
         number, exten, context, ackcall = '1000', '1234', 'test', False
         ami = Mock(AMIClass)
         self.agent_manager.ami = ami
@@ -118,7 +121,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                                  context,
                                                  ackcall)
 
-        ami.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
+        self.agent_service_executor.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
 
     def test_agent_special_me(self):
         self.agent_manager.agent_call_back_login = Mock()

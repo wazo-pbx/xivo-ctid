@@ -32,3 +32,6 @@ class AgentServiceExecutor(object):
 
     def logoff(self, number):
         self.ami.agentlogoff(number)
+
+    def agentcallbacklogin(self, number, exten, context, ackcall):
+        self.ami.agentcallbacklogin(number, exten, context, ackcall)
