@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from xivo_cti.services.queue_service_manager import NotAQueueException
 
 logger = logging.getLogger("InnerdataDAO")
 
@@ -60,3 +61,10 @@ class InnerdataDAO(object):
 
     def get_queuemember(self, queuemember_id):
         return self.innerdata.queuemembers_config[queuemember_id]
+
+    def get_queue_id(self, queue_name):
+        queue_id = self.innerdata.xod_config['queues'].idbyqueuename(queue_name)
+        if queue_id is None:
+            raise NotAQueueException()
+        return queue_id
+

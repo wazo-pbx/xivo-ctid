@@ -22,9 +22,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from mock import Mock, call
+from tests.mock import Mock, call
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DictDelta
+from xivo_cti.services.queue_service_manager import NotAQueueException
 
 
 class TestInnerdataDAO(unittest.TestCase):
@@ -174,3 +175,25 @@ class TestInnerdataDAO(unittest.TestCase):
         result = self.innerdata_dao.get_queuemember('queuemember1_id')
 
         self.assertEqual(result, expected_result)
+
+    def test_get_queue_id(self):
+        expected_queue_id = '1'
+        queue_name = 'services'
+        self.innerdata_dao.get_queue_id = Mock()
+        self.innerdata_dao.get_queue_id.return_value = '1'
+
+        queue_id = self.innerdata_dao.get_queue_id(queue_name)
+
+        self.assertEqual(queue_id, expected_queue_id)
+
+    def test_get_queue_id_not_exist(self):
+        queue_name = 'services'
+        queues_config = Mock()
+        queues_config.idbyqueuename = Mock()
+        self.innerdata_dao.innerdata.xod_config = {'queues': queues_config}
+
+        queues_config.idbyqueuename.side_effect = NotAQueueException()
+
+        self.assertRaises(NotAQueueException,
+                          self.innerdata_dao.get_queue_id,
+                          (queue_name,))

@@ -119,7 +119,7 @@ class QueueLogger(object):
 
         sql = '''UPDATE queue_info '''\
               '''SET call_picker = '%s', hold_time = %s '''\
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' %\
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
               (ev["Member"], ev["Holdtime"], ct, ev["Uniqueid"])
 
         cls._trace_event(ev)

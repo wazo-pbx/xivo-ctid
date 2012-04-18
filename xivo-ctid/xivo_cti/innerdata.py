@@ -47,6 +47,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti.services.queue_service_manager import NotAQueueException
 
 logger = logging.getLogger('innerdata')
 
@@ -849,9 +850,14 @@ class Safe(object):
             self.queuemembers[queue_member_id][k] = v
 
     def queueentryupdate(self, queuename, channel, position, timestart=None):
-        qid = self.xod_config['queues'].idbyqueuename(queuename)
+        try:
+            qid = self._ctiserver._queue_service_manager.get_queue_id(queuename)
+        except NotAQueueException:
+            return
+
         # send a notification event if no new member
         self.handle_cti_stack('set', ('queues', 'updatestatus', qid))
+
         incalls = self.xod_status['queues'][qid]['incalls']
         if timestart:
             if channel not in incalls:

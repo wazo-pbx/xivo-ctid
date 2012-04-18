@@ -33,7 +33,7 @@ class QueueList(AnyList):
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty',
                           'LastCall', 'CallsTaken', 'Xivo-QueueMember-StateTime']
 
-    def __init__(self, newurls = [], misc = None):
+    def __init__(self, newurls=[], misc=None):
         self.anylist_properties = { 'name' : 'queues',
                                     'urloptions' : (1, 5, True) }
         AnyList.__init__(self, newurls)
@@ -110,7 +110,7 @@ class QueueList(AnyList):
         else:
             logger.warning('queuememberupdate : no such queueid %s', queueid)
         return changed
-    
+
     def queuememberremove(self, queueid, location):
         changed = False
         if queueid in self.keeplist:
@@ -120,10 +120,10 @@ class QueueList(AnyList):
         else:
             logger.warning('queuememberremove : no such queueid %s', queueid)
         return changed
-    
+
     def get_queues(self):
         return self.keeplist.keys()
-    
+
     def get_queues_byagent(self, agid):
         queuelist = {}
         for qref, ql in self.keeplist.iteritems():

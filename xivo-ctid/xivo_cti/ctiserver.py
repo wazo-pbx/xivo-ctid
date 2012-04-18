@@ -72,6 +72,7 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_service_executor import AgentServiceExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
@@ -156,6 +157,7 @@ class CTIServer(object):
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
+        self._innerdata_dao = InnerdataDAO()
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_manager.user_features_dao = self._user_features_dao
@@ -167,9 +169,11 @@ class CTIServer(object):
         self._agent_service_manager.agent_features_dao = self._agent_features_dao
         self._agent_service_manager.user_features_dao = self._user_features_dao
         self._agent_service_manager.agent_service_executor = AgentServiceExecutor()
+        self._queue_service_manager = QueueServiceManager()
+        self._queue_service_manager.innerdata_dao = self._innerdata_dao
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
-        self._queuemember_service_manager.innerdata_dao = InnerdataDAO()
+        self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
         self._queuemember_service_manager.delta_computer = DeltaComputer()
         self._queuemember_service_notifier = QueueMemberServiceNotifier()
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
