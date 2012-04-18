@@ -55,4 +55,4 @@ class TestQueueServiceManager(unittest.TestCase):
 
         self.assertRaises(NotAQueueException,
                           self.queue_service_manager.get_queue_id,
-                          (queue_name,))
+                          queue_name)

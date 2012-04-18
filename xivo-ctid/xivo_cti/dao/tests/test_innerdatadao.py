@@ -196,4 +196,4 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.assertRaises(NotAQueueException,
                           self.innerdata_dao.get_queue_id,
-                          (queue_name,))
+                          queue_name)
