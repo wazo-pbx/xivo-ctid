@@ -137,6 +137,7 @@ class AMI_1_8(object):
             self.innerdata.channels[channel1].properties['commstatus'] = 'linked-caller'
             self.innerdata.setpeerchannel(channel1, channel2)
             self.innerdata.update(channel1)
+            self.innerdata.sheetsend('link', channel1)
         if channel2 in self.innerdata.channels:
             self.innerdata.channels[channel2].properties['talkingto_kind'] = 'channel'
             self.innerdata.channels[channel2].properties['talkingto_id'] = channel1
