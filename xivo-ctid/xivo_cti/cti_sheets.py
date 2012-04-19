@@ -26,8 +26,12 @@ import logging
 import struct
 import urllib2
 import zlib
+import re
 
 logger = logging.getLogger('sheet')
+
+FORMAT_STRING_PATTERN = re.compile(r'\{\w+\-\w+\}')
+USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 
 
 class Sheet(object):
@@ -55,41 +59,36 @@ class Sheet(object):
         self.linestosend.append('<internal name="%s"><![CDATA[%s]]></internal>'
                                 % (varname, varvalue))
 
-    def buildresult(self, lineprops):
-        # line if disabled if disabled = 1
-        disabled = 0
-        if len(lineprops) == 5:
-            [title, ftype, defaultval, sformat, disabled] = lineprops
-        else:
-            [title, ftype, defaultval, sformat] = lineprops
+    def resolv_line_content(self, lineprops):
+        disabled = lineprops[4] if len(lineprops) == 5 else 0
+        [title, ftype, defaultval, sformat] = lineprops[:4]
 
         if disabled:
             return {}
 
-        finalstring = sformat
-        for k, v in self.channelprops.extra_data.iteritems():
-            for kk, vv in v.iteritems():
-                variablename = '{%s-%s}' % (k, kk)
-                finalstring = finalstring.replace(variablename, vv)
-        if finalstring.find('{xivo-callerpicture}') >= 0:
-            userid = self.channelprops.extra_data.get('xivo').get('userid')
-            if userid:
-                url = 'http://127.0.0.1/getatt.php?id=%s&obj=user' % userid
-                try:
-                    fobj = urllib2.urlopen(url)
-                    picture_data = fobj.read()
-                    fobj.close()
-                except:
-                    picture_data = ''
-                b64value = base64.b64encode(picture_data)
-                finalstring = b64value
+        try:
+            family, name = split_format_string(sformat)
+            data = self.channelprops.extra_data
+            if family == 'xivo' and name == 'callerpicture':
+                user_id = data['xivo']['userid']
+                finalstring = self._get_user_picture(user_id)
             else:
-                finalstring = ''
+                finalstring = data[family][name]
+        except Exception:
+            logger.warning('Could not extract format string %s', sformat)
+            finalstring = defaultval
 
-        result = { 'name' : title,
-                   'type': ftype,
-                   'contents' : finalstring }
+        result = {'name': title,
+                  'type': ftype,
+                  'contents': finalstring}
+
         return result
+
+    def _get_user_picture(self, user_id):
+        url = USER_PICTURE_URL % userid
+        with urllib2.urlopen(url) as fobj:
+            picture_data = fobj.read()
+            return base64.b64encode(picture_data)
 
     def setfields(self):
         for sheetpart, v in self.displays.iteritems():
@@ -98,7 +97,7 @@ class Sheet(object):
                 if not isinstance(v, dict):
                     continue
                 for order, vv in v.iteritems():
-                    line = self.buildresult(vv)
+                    line = self.resolv_line_content(vv)
                     if line:
                         self.fields[sheetpart][order] = line
             elif sheetpart == 'sheet_qtui':
@@ -191,3 +190,10 @@ class Sheet(object):
             tomatch['destid'] = channelprops.extra_data.get('xivo').get('destid')
 
         return tomatch
+
+
+def split_format_string(format_string):
+    if not FORMAT_STRING_PATTERN.match(format_string):
+        raise ValueError('Invalid format string: %s', format_string)
+
+    return format_string[1:-1].split('-', 1)
