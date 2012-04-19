@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from mock import Mock, call, ANY
+from tests.mock import Mock, call, ANY
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.queuemember import QueueMember
 from xivo_cti.dao.alchemy.base import Base
