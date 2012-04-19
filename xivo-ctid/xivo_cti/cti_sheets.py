@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 
 
 class Sheet(object):
+
     def __init__(self, where, ipbxid, channel):
         self.internaldata = {'where': where,
                              'ipbxid': ipbxid,
@@ -116,10 +117,7 @@ class Sheet(object):
         # linestosend.extend(self.__build_xmlqtui__('sheet_qtui', actionopt, itemdir))
 
     def serialize(self):
-        if True:
-            self.makexml()
-        else:
-            self.makejson()
+        self.makexml()
 
     def makexml(self):
         self.serial = 'xml'
@@ -160,12 +158,6 @@ class Sheet(object):
         else:
             self.payload = base64.b64encode(self.xmlstring)
             self.compressed = False
-
-    def makejson(self):
-        self.serial = 'json'
-        self.compressed = False
-        self.payload = { 'internal' : self.internaldata,
-                         'fields' : self.fields }
 
     def setconditions(self, conditions):
         self.conditions = conditions
