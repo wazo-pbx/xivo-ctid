@@ -32,6 +32,7 @@ logger = logging.getLogger('sheet')
 
 FORMAT_STRING_PATTERN = re.compile(r'\{\w+\-\w+\}')
 USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
+LINE_TEMPLATE = '<internal name="%s"><![CDATA[%s]]></internal>'
 
 
 class Sheet(object):
@@ -49,16 +50,13 @@ class Sheet(object):
         self.linestosend = []
 
     def setoptions(self, options):
-        if options:
-            self.options = options
+        self.options = options if options else self.options
 
     def setdisplays(self, displays):
-        if displays:
-            self.displays = displays
+        self.displays = displays if displays else self.displays
 
     def addinternal(self, varname, varvalue):
-        self.linestosend.append('<internal name="%s"><![CDATA[%s]]></internal>'
-                                % (varname, varvalue))
+        self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
@@ -113,15 +111,12 @@ class Sheet(object):
                                                       'contents' : qtui_data}}
             else:
                 logger.warning('sheetpart %s contents %s', sheetpart, v) 
-        # print self.fields
-        # linestosend.extend(self.__build_xmlqtui__('sheet_qtui', actionopt, itemdir))
 
     def serialize(self):
         self.makexml()
 
     def makexml(self):
         self.serial = 'xml'
-        self.linestosend = []
         self.linestosend = ['<?xml version="1.0" encoding="utf-8"?>',
                             '<profile>',
                             '<user>']
