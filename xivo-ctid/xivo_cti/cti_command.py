@@ -787,17 +787,17 @@ class Command(object):
                      'amiargs': [channel, exten, context]}]
 
     def ipbxcommand_intercept(self):
-         try:
-             main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
-             chan_xid = self._commanddict['tointercept']
-             chan_id = self.parseid(chan_xid)['id']
-             return [{'amicommand': 'transfer',
-                      'amiargs': [chan_id,
-                                  main_line['number'],
-                                  main_line['context']]}]
-         except Exception:
-             logger.warning('Failed to complete interception')
-             return [{'error': 'Incomplete info'}]
+        try:
+            main_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
+            chan_xid = self._commanddict['tointercept']
+            chan_id = self.parseid(chan_xid)['id']
+            return [{'amicommand': 'transfer',
+                     'amiargs': [chan_id,
+                                 main_line['number'],
+                                 main_line['context']]}]
+        except Exception:
+            logger.warning('Failed to complete interception')
+            return [{'error': 'Incomplete info'}]
 
     # hangup and one's own line management
     def ipbxcommand_hangup(self):
