@@ -84,7 +84,7 @@ class Sheet(object):
         return result
 
     def _get_user_picture(self, user_id):
-        url = USER_PICTURE_URL % userid
+        url = USER_PICTURE_URL % user_id
         with urllib2.urlopen(url) as fobj:
             picture_data = fobj.read()
             return base64.b64encode(picture_data)
@@ -107,10 +107,10 @@ class Sheet(object):
                         fobj.close()
                     except Exception:
                         qtui_data = ''
-                    self.fields[sheetpart] = {'10' : {'name' : 'qtui',
-                                                      'contents' : qtui_data}}
+                    self.fields[sheetpart] = {'10': {'name': 'qtui',
+                                                     'contents': qtui_data}}
             else:
-                logger.warning('sheetpart %s contents %s', sheetpart, v) 
+                logger.warning('sheetpart %s contents %s', sheetpart, v)
 
     def serialize(self):
         self.makexml()
