@@ -79,6 +79,8 @@ from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from sqlalchemy.exc import OperationalError
+from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
+from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 
 logger = logging.getLogger('main')
 
@@ -178,6 +180,8 @@ class CTIServer(object):
         self._queuemember_service_notifier = QueueMemberServiceNotifier()
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
+        self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager,
+                                                                             self._queuemember_service_manager)
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -193,6 +197,11 @@ class CTIServer(object):
         DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, ['user_id', 'destination'])
         EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
+
+    def _init_statistics_producers(self):
+        self._queue_statistics_producer = QueueStatisticsProducer()
+        self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
+
 
     def run(self):
         while True:
@@ -414,6 +423,7 @@ class CTIServer(object):
             except Exception:
                 logger.exception('%s : commandclass.updates()', self.myipbxid)
             self._queuemember_service_manager.update_config()
+            self._init_statistics_producers()
 
         logger.info('# STARTING %s # (2/3) Remote CTI connections', self.xdname)
         for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():

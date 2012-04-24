@@ -68,3 +68,6 @@ class InnerdataDAO(object):
             raise NotAQueueException()
         return queue_id
 
+    def get_queue_ids(self):
+        return self.innerdata.xod_config['queues'].get_queues()
+

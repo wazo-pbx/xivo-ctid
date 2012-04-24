@@ -197,3 +197,17 @@ class TestInnerdataDAO(unittest.TestCase):
         self.assertRaises(NotAQueueException,
                           self.innerdata_dao.get_queue_id,
                           queue_name)
+
+    def test_get_queue_ids(self):
+        queue_list = ['45', '77']
+        inner_queue_list = Mock()
+        inner_queue_list.get_queues.return_value = queue_list
+
+        self.innerdata_dao.innerdata.xod_config = {'queues': inner_queue_list}
+
+
+        returned_queue_list = self.innerdata_dao.get_queue_ids()
+
+        self.assertEquals(queue_list, returned_queue_list)
+
+        inner_queue_list.get_queues.assert_called_once_with()

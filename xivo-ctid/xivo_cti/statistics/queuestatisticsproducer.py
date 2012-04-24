@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger("QueueStatisticsProducer")
 
 class QueueStatisticsProducer(object):
 
@@ -10,11 +13,13 @@ class QueueStatisticsProducer(object):
 
     def on_queue_added(self, queueid):
         self.logged_agents[queueid] = set()
+        logger.info('queue id %s added', queueid)
 
     def on_agent_added(self, queueid, agentid):
         if agentid not in self.queues_of_agent:
             self.queues_of_agent[agentid] = set()
         self.queues_of_agent[agentid].add(queueid)
+        logger.info('agent id %s added to queue id %s', agentid, queueid)
 
     def on_agent_loggedon(self, agentid):
         if agentid in self.queues_of_agent:

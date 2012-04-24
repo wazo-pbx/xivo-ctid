@@ -23,6 +23,10 @@
 
 from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
+import logging
+from xivo_cti.dao.innerdatadao import InnerdataDAO
+
+logger = logging.getLogger("QueueMemberServiceManager")
 
 class QueueMemberServiceManager(object):
 
@@ -68,6 +72,10 @@ class QueueMemberServiceManager(object):
         queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause(ami_event)
         delta = DictDelta({}, queuemember_formatted, [])
         self.queuemember_notifier.queuemember_config_updated(delta)
+
+    def get_queuemember_ids(self):
+        logger.info(self.queuemember_dao.get_queuemembers())
+        return []
 
     def whenmember(self, innerdata, command, dopause, listname, k, member):
         memberlist = []
