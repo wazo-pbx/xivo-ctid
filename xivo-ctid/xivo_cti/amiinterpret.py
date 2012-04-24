@@ -90,7 +90,7 @@ class AMI_1_8(object):
                     self.innerdata.fagi_sync('set', channel, 'ami')
 
     def ami_hangup(self, event):
-        channel = event.pop('Channel')
+        channel = event['Channel']
         #  0 - Unknown
         #  3 - No route to destination
         # 16 - Normal Clearing
@@ -102,8 +102,8 @@ class AMI_1_8(object):
         # 27 - Destination out of order
         # 28 - Invalid number format (incomplete number)
         # 34 - Circuit/channel congestion
-        self.innerdata.hangup(channel)
         self.innerdata.sheetsend('hangup', channel)
+        self.innerdata.hangup(channel)
 
     def ami_dial(self, event):
         channel = event['Channel']
@@ -376,14 +376,19 @@ class AMI_1_8(object):
 
     def userevent_group(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
+        chanprops.set_extra_data('xivo', 'desttype', 'group')
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
 
     def userevent_queue(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
+        queue_id = event['XIVO_DSTID']
+        chanprops.set_extra_data('xivo', 'desttype', 'queue')
+        chanprops.set_extra_data('xivo', 'destid', queue_id)
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
 
     def userevent_meetme(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
+        chanprops.set_extra_data('xivo', 'desttype', 'meetme')
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
 
     def userevent_outcall(self, chanprops, event):

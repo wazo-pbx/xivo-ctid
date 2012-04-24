@@ -287,7 +287,8 @@ class Safe(object):
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('AgentConnect', lambda x: logger.debug('event: %s', x) or self.sheetsend('agentlinked', x['Channel']))
+        ami_handler.register_callback('AgentConnect', lambda event: logger.debug(event) and self.sheetsend('agentlinked', event['Channel']))
+        ami_handler.register_callback('AgentComplete', lambda event: self.sheetsend('agentunlinked', event['Channel']))
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config or listname == 'queuemembers':
@@ -1198,16 +1199,22 @@ class Safe(object):
         return term
 
     def find_agent_channel(self, channel):
-        if not channel.startswith('Agent/'):
-            return
-        agent_number = channel.split('/', 1)[1]
-        chan_start = 'Local/%s' % agent_number
-        def chan_filter(channel):
-            if (chan_start in channel and
-                self.channels[channel].properties['talkingto_id'] != None):
-                return True
-        channel = filter(chan_filter, self.channels)[0]
-        return channel
+        try:
+            agent_number = channel.split('/', 1)[1]
+            agent_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+            user = self.xod_config['users'].find_by_agent_id(agent_id)
+            main_line = self.xod_config['phones'].get_main_line(user['id'])
+            chan_start = 'Local/%s@%s' % (main_line['number'], main_line['context'])
+
+            def chan_filter(channel):
+                if (chan_start in channel and
+                    self.channels[channel].properties['talkingto_id'] != None):
+                    return True
+
+            channels = filter(chan_filter, self.channels)
+            return channels[0]
+        except Exception:
+            return channel
 
     def zphones(self, protocol, name):
         if protocol:
@@ -1261,7 +1268,7 @@ class Safe(object):
                 continue
 
             channel = (channel if not channel.startswith('Agent/')
-                        else self.find_agent_channel(channel))
+                       else self.find_agent_channel(channel))
             channelprops = self.channels.get(channel)
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
@@ -1551,7 +1558,7 @@ class Channel(object):
         'xivo': ['time', 'date', 'origin', 'direction', 'context', 'did',
                  'calleridnum', 'calleridname', 'calleridrdnis',
                  'calleridton', 'calledidnum', 'calledidname', 'queuename',
-                 'agentnumber', 'userid', 'directory', 'desttype', 'destid'],
+                 'agentnumber', 'userid', 'directory', 'desttype', 'destid', 'uniqueid'],
                   'dp': [],
                   'db': []}
 
