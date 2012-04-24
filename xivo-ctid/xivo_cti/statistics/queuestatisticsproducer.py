@@ -17,13 +17,15 @@ class QueueStatisticsProducer(object):
         self.queues_of_agent[agentid].add(queueid)
 
     def on_agent_loggedon(self, agentid):
-        for queueid in self.queues_of_agent[agentid]:
-            self.logged_agents[queueid].add(agentid)
-            self._notify_change(queueid)
+        if agentid in self.queues_of_agent:
+            for queueid in self.queues_of_agent[agentid]:
+                self.logged_agents[queueid].add(agentid)
+                self._notify_change(queueid)
 
     def on_agent_loggedoff(self, agentid):
-        for queueid in self.queues_of_agent[agentid]:
-            self._decrement_agent(queueid, agentid)
+        if agentid in self.queues_of_agent:
+            for queueid in self.queues_of_agent[agentid]:
+                self._decrement_agent(queueid, agentid)
 
     def on_agent_removed(self, queueid, agentid):
         if agentid in self.logged_agents[queueid]:

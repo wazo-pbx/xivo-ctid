@@ -164,6 +164,21 @@ class Test(unittest.TestCase):
 
         self.assertTrue(True, 'should not raise any error')
 
+    def test_logon_agent_with_no_queues(self):
+        agentid = 1256
+
+        self.queue_statistics_producer.on_agent_loggedon(agentid)
+
+        self.assertTrue(True, 'should not raise any error')
+
+    def test_logoff_agent_with_no_queues(self):
+        agentid = 1256
+
+        self.queue_statistics_producer.on_agent_loggedoff(agentid)
+
+        self.assertTrue(True, 'should not raise any error')
+
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testAgentLogon']
     unittest.main()
