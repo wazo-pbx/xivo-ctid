@@ -287,7 +287,7 @@ class Safe(object):
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('AgentConnect', lambda event: logger.debug(event) and self.sheetsend('agentlinked', event['Channel']))
+        ami_handler.register_callback('AgentConnect', lambda event: self.sheetsend('agentlinked', event['Channel']))
         ami_handler.register_callback('AgentComplete', lambda event: self.sheetsend('agentunlinked', event['Channel']))
 
     def handle_getlist_list_id(self, listname, user_id):
