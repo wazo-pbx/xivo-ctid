@@ -416,6 +416,8 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calleridton', calleridton)
         for incall_config in self.innerdata.xod_config.get('incalls').keeplist.itervalues():
             if incall_config.get('exten') == didnumber:
+                chanprops.set_extra_data('xivo', 'desttype', incall_config['destination'])
+                chanprops.set_extra_data('xivo', 'destid', incall_config['actionarg1'])
                 for incall_property, incall_value in incall_config.iteritems():
                     if incall_property != 'context' and incall_property.endswith('context') and incall_value:
                         chanprops.set_extra_data('xivo', 'context', incall_value)
