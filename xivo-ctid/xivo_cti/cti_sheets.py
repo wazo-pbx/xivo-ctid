@@ -74,7 +74,7 @@ class Sheet(object):
             else:
                 finalstring = data[family][name]
         except Exception:
-            finalstring = defaultval
+            finalstring = defaultval if defaultval else sformat
 
         result = {'name': title,
                   'type': ftype,
