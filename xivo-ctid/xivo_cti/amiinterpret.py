@@ -66,12 +66,13 @@ class AMI_1_8(object):
         channel = event['Channel']
         channelstate = event['ChannelState']
         context = event['Context']
+        unique_id = event['Uniqueid']
         actionid = 'nc:%s' % ''.join(random.sample(ALPHANUMS, 10))
         params = {'mode': 'newchannel',
                   'amicommand': 'getvar',
                   'amiargs': [channel, 'XIVO_ORIGACTIONID']}
         self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
-        self.innerdata.newchannel(channel, context, channelstate, event)
+        self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
 
     def ami_newcallerid(self, event):
         self.innerdata.update_parking_cid(event['Channel'], event['CallerIDName'], event['CallerIDNum'])

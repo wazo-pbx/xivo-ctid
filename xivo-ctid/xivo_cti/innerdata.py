@@ -695,12 +695,12 @@ class Safe(object):
     def newstate(self, channel, state):
         self.channels[channel].update_state(state)
 
-    def newchannel(self, channel_name, context, state, event=None):
+    def newchannel(self, channel_name, context, state, event=None, unique_id=None):
         if not channel_name:
             return
         if channel_name not in self.channels:
             # might occur when requesting channels at launch time
-            channel = Channel(channel_name, context)
+            channel = Channel(channel_name, context, unique_id)
             if event:
                 channel.update_from_event(event)
             self.channels[channel_name] = channel
@@ -1298,6 +1298,7 @@ class Safe(object):
             channelprops.set_extra_data('xivo', 'where', where)
             channelprops.set_extra_data('xivo', 'channel', channel)
             channelprops.set_extra_data('xivo', 'context', channelprops.context)
+            channelprops.set_extra_data('xivo', 'uniqueid', channelprops.unique_id)
             sheet = cti_sheets.Sheet(where, self.ipbxid, channel)
             sheet.setoptions(self.sheetoptions.get(option_id))
             sheet.setdisplays(self.sheetdisplays.get(display_id))
@@ -1589,10 +1590,11 @@ class Channel(object):
                   'dp': [],
                   'db': []}
 
-    def __init__(self, channel, context):
+    def __init__(self, channel, context, unique_id=None):
         self.channel = channel
         self.peerchannel = None
         self.context = context
+        self.unique_id = unique_id
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
