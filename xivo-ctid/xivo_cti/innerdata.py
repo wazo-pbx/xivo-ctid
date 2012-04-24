@@ -1578,10 +1578,12 @@ class Safe(object):
 
 class Channel(object):
 
-    extra_vars = {
-        'xivo': ['time', 'date', 'origin', 'direction', 'context', 'did',
-                 'calleridnum', 'calleridname', 'calleridton', 'calledidnum', 'calledidname', 'queuename',
-                 'agentnumber', 'userid', 'directory', 'desttype', 'destid', 'uniqueid', 'where'],
+    extra_vars = {'xivo': ['agentnumber', 'calledidname', 'calledidnum',
+                           'calleridname', 'calleridnum', 'calleridrdnis',
+                           'calleridton', 'channel', 'context', 'date',
+                           'destid', 'desttype', 'did', 'direction',
+                           'directory', 'ipbxid', 'origin', 'queuename', 'time',
+                           'uniqueid', 'userid', 'where'],
                   'dp': [],
                   'db': []}
 
