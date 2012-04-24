@@ -530,12 +530,15 @@ class Safe(object):
         domatch = False
 
         # does the user fullfil the destination criteria ?
-        if 'desttype' in tomatch:
-            if tomatch.get('desttype') == 'user':
-                if userid == tomatch.get('destid'):
-                    domatch = True
+        if 'desttype' in tomatch and 'destid' in tomatch:
+            dest_type, dest_id = tomatch['desttype'], tomatch['destid']
+            if dest_type == 'user' and userid == dest_id:
+                domatch = True
+            elif dest_type == 'agent':
+                user = self.xod_config['users'].keeplist[userid]
+                domatch = user['agentid'] == dest_id
             else:
-                print 'desttype', tomatch.get('desttype')
+                logger.warning('Unhandled to match destination type %s', dest_type)
         else:
             # 'all' case
             domatch = True
