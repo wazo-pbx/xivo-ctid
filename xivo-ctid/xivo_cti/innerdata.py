@@ -1296,6 +1296,8 @@ class Safe(object):
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
             channelprops.set_extra_data('xivo', 'where', where)
+            channelprops.set_extra_data('xivo', 'channel', channel)
+            channelprops.set_extra_data('xivo', 'context', channelprops.context)
             sheet = cti_sheets.Sheet(where, self.ipbxid, channel)
             sheet.setoptions(self.sheetoptions.get(option_id))
             sheet.setdisplays(self.sheetdisplays.get(display_id))

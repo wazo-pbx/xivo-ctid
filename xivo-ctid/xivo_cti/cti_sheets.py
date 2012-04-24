@@ -74,7 +74,6 @@ class Sheet(object):
             else:
                 finalstring = data[family][name]
         except Exception:
-            logger.warning('Could not extract format string %s', sformat)
             finalstring = defaultval
 
         result = {'name': title,
