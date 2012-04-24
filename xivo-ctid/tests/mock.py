@@ -580,14 +580,14 @@ class Mock(object):
                 # execution?
                 wraps = getattr(self._mock_wraps, name)
             result = self._get_child_mock(parent=self, name=name, wraps=wraps)
-            self._mock_children[name]  = result
+            self._mock_children[name] = result
 
         elif isinstance(result, _SpecState):
             result = create_autospec(
                 result.spec, result.spec_set, result.inherit, None,
                 result.parent, result.name, result.instance
             )
-            self._mock_children[name]  = result
+            self._mock_children[name] = result
 
         return result
 
@@ -695,13 +695,13 @@ class Mock(object):
         for xargs in self.call_args_list:
             if (args, kwargs) == xargs:
                 return
-            
+
         raise AssertionError(
             'Expected: %s\nCalled with: %s' % ((args, kwargs), self.call_args)
         )
 
     def assert_never_called(self, *args, **kwargs):
-        if self.call_args is not None:
+        if self.call_count != 0:
             raise AssertionError('Expected: %s\nShould Never be called' % ((args, kwargs),))
 
     def assert_called_once_with(self, *args, **kwargs):
