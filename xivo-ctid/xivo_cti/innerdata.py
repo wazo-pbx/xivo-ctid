@@ -287,8 +287,30 @@ class Safe(object):
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('AgentConnect', lambda event: self.sheetsend('agentlinked', event['Channel']))
-        ami_handler.register_callback('AgentComplete', lambda event: self.sheetsend('agentunlinked', event['Channel']))
+        ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
+        ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
+
+    def _set_channel_agent_id(self, event):
+        try:
+            channel_name = event['Channel']
+            if channel_name in self.channels:
+                channel = self.channels[channel_name]
+                agent_number = event['Member'].split('/', 1)[1]
+                agent_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+                channel.set_extra_data('xivo', 'desttype', 'agent')
+                channel.set_extra_data('xivo', 'destid', agent_id)
+        except Exception:
+            logger.warning('Failed to set agent channel variables for event: %s', event)
+
+    def handle_agent_linked(self, event):
+        self._set_channel_agent_id(event)
+        if 'Channel' in event and event['Channel'] in self.channels:
+            self.sheetsend('agentlinked', event['Channel'])
+
+    def handle_agent_unlinked(self, event):
+        self._set_channel_agent_id(event)
+        if 'Channel' in event and event['Channel'] in self.channels:
+            self.sheetsend('agentunlinked', event['Channel'])
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config or listname == 'queuemembers':
@@ -1270,8 +1292,6 @@ class Safe(object):
             if not self.sheetdisplays.get(display_id):
                 continue
 
-            channel = (channel if not channel.startswith('Agent/')
-                       else self.find_agent_channel(channel))
             channelprops = self.channels.get(channel)
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
