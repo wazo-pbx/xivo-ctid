@@ -46,16 +46,18 @@ class QueueMemberServiceNotifier(object):
                       }
             event.update(update)
             ret.append(event)
+            for queuemember in delta.add.values():
+                self.queue_statistics_producer.on_agent_added(queuemember['queue_name'], queuemember['interface'])
         if delta.change:
             for queuemember_id in delta.change:
-                event =  dict(return_template)
+                event = dict(return_template)
                 update = {'function': 'updateconfig',
                           'config': delta.change[queuemember_id],
                           'tid': queuemember_id}
                 event.update(update)
                 ret.append(event)
         if delta.delete:
-            event =  dict(return_template)
+            event = dict(return_template)
             del_list = delta.delete
             del_list.sort()
             update = {'function': 'delconfig',

@@ -129,7 +129,7 @@ class QueueMemberServiceManager(object):
             if interface and interface not in interfaces:
                 interfaces.append(interface)
         return interfaces
-    
+
     def queue_generic(self, innerdata, command, queue, member, dopause=None):
         listname = None
         if queue.get('type') == 'queue':
