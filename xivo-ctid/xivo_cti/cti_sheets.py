@@ -73,6 +73,8 @@ class Sheet(object):
                 finalstring = self._get_user_picture(user_id)
             else:
                 finalstring = data[family][name]
+                if not finalstring:
+                    raise ValueError('Empty variable substitution')
         except Exception:
             logger.warning('Could not replace %s, using default value - %s %s',
                            sformat, self.channelprops.channel, self.channelprops.unique_id)
