@@ -239,7 +239,7 @@ class Command(object):
         if profilespecs:
             for capakind in ['regcommands', 'ipbxcommands',
                              'services', 'preferences',
-                             'userstatus', 'phonestatus', 'channelstatus', 'agentstatus']:
+                             'userstatus', 'phonestatus', 'channelstatus']:
                 if profilespecs.get(capakind):
                     tt = profilespecs.get(capakind)
                     cfg_capakind = self._config.getconfig(capakind)

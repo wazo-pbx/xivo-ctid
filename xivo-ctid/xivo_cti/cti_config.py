@@ -141,7 +141,6 @@ class Config(object):
             'name' : 'CTIServer',
             'ipbxcommands' : None,
             'phonestatus': None,
-            'agentstatus': None,
             'channelstatus': None,
             'xlets': None,
             'services' : None
