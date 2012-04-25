@@ -580,6 +580,15 @@ class AMI_1_8(object):
         if channel in self.innerdata.channels:
             self.innerdata.channels.get(channel).properties['monitored'] = False
 
+    def ami_inherit(self, event):
+        try:
+            parent = event['Parent']
+            child = event['Child']
+            if parent in self.innerdata.channels and child in self.innerdata.channels:
+                self.innerdata.channels[child].extra_data.update(self.innerdata.channels[parent].extra_data)
+        except Exception:
+            logger.exception('Failed to copy parents variable to child channel')
+
     def amiresponse_extensionstatus(self, event):
         if 'Hint' in event:
             self.innerdata.updatehint(event['Hint'], event['Status'])

@@ -74,6 +74,8 @@ class Sheet(object):
             else:
                 finalstring = data[family][name]
         except Exception:
+            logger.warning('Could not replace %s, using default value - %s %s',
+                           sformat, self.channelprops.channel, self.channelprops.unique_id)
             finalstring = defaultval if defaultval else sformat
 
         result = {'name': title,
