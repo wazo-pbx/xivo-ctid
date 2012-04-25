@@ -1,6 +1,6 @@
 # XiVO CTI Server
 
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
+__copyright__ = 'Copyright (C) 2007-2012  Avencall'
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,12 +20,6 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-LDAP class.
-"""
-
-# http://www.ietf.org/rfc/rfc4516.txt # obsoletes 2255
-
 import ldap
 import logging
 from xivo import urisup
@@ -35,10 +29,10 @@ logger = logging.getLogger('ldap')
 
 class xivo_ldap(object):
     def __init__(self, iuri):
-        self.iuri    = iuri
+        self.iuri = iuri
         self.ldapobj = None
-        self.uri     = None
-        self.dbname  = None
+        self.uri = None
+        self.dbname = None
 
         try:
             logger.info('LDAP URI requested: %r', iuri)
@@ -83,16 +77,6 @@ class xivo_ldap(object):
                 else:
                     self.dbname = ldapuri[2]
 
-            # bypassing the result made by urisup, since it gives bad results, i.e. for :
-            # ldap://user:pass@host:333/dbname???(&(mail=*.com)(telephoneNumber=*)(displayName=*%Q*))
-            # the tuple result is :
-            # (('??(', None), ('(mail', '*.com)(telephoneNumber=*)(displayName=*%Q*))'))
-            # while we should be able to extract :
-            # - attributes = ''
-            # - scope = ''
-            # - filter = '(&(mail=*.com)(telephoneNumber=*)(displayName=*%Q*))'
-            # - extensions = ''
-
             dbpos = iuri.rfind(self.dbname)
             # ?attributes?scope?filter?extensions = 'asfe'
             asfe = iuri[dbpos + len(self.dbname):].split('?', 4)
@@ -104,27 +88,19 @@ class xivo_ldap(object):
             self.uri = "%s://%s:%s" % (uri_scheme, ldaphost, ldapport)
             debuglevel = 0
             self.ldapobj = ldap.initialize(self.uri, debuglevel)
-
             logger.info('LDAP URI understood: %r / filter: %r', self.uri, self.base_filter)
 
-            # actual cases where these options are useful and used would be
-            # to be investigated further, since it does not look like the proper
-            # way to add such options to the LDAP URI :
-            # ldapquery = dict(ldapuri[3])
-            # if ldapquery.has_key('protocol_version'):
-            #   self.ldapobj.set_option(ldap.OPT_PROTOCOL_VERSION,
-            #   int(ldapquery.get('protocol_version')))
-            # if ldapquery.has_key('network_timeout'):
-            #   self.ldapobj.set_option(ldap.OPT_NETWORK_TIMEOUT,
-            #   float(ldapquery.get('network_timeout')))
+            self.ldapobj.set_option(ldap.OPT_NETWORK_TIMEOUT, 0.1)
+
+            if not self.ldapobj:
+                logger.warning('LDAP SERVER not responding')
+                self.ldapobj = None
+                return
 
             self.ldapobj.simple_bind_s(ldapuser, ldappass)
             logger.info('LDAP : simple bind done on %r %r', ldapuser, ldappass)
 
-            # XXX how should we handle the starttls option ?
-            # if uri_scheme == 'ldap' and int(ldapquery.get('tls', 0)):
-            # self.ldapobj.start_tls_s()
-            usetls = False # looks like you need to set this to True in some AD2008 configs
+            usetls = False
             if usetls:
                 self.ldapobj.set_option(ldap.OPT_X_TLS, 1)
 

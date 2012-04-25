@@ -176,11 +176,11 @@ class Display(object):
         self._display_elems = display_elems
         self.display_header = [e['title'] for e in display_elems]
         self._map_fun = self._new_map_function()
-    
+
     def format(self, results):
         """Return an iterator over the formated results."""
         return imap(self._map_fun, results)
-    
+
     def _new_map_function(self):
         def aux(result):
             return ';'.join(_apply_subs(display_elem, result) for
@@ -406,7 +406,12 @@ class LDAPDirectoryDataSource(object):
         self._xivo_ldap = None
 
     def lookup(self, string, fields, contexts=None):
-        ldap_filter = ['(%s=*%s*)' % (field, string) for field in fields]
+        if string:
+            ldap_filter = ['(%s=*%s*)' % (field, string) for field in fields]
+            str_ldap_filter = '(|%s)' % ''.join(ldap_filter)
+        else:
+            return []
+
         ldap_attributes = []
         for src_key in self._key_mapping.itervalues():
             if isinstance(src_key, unicode):
@@ -416,8 +421,7 @@ class LDAPDirectoryDataSource(object):
         ldapid = self._try_connect()
         if ldapid.ldapobj is not None:
             try:
-                results = ldapid.getldap('(|%s)' % ''.join(ldap_filter),
-                                         ldap_attributes, string)
+                results = ldapid.getldap(str_ldap_filter, ldap_attributes, string)
             except Exception, e:
                 logger.warning('Error with LDAP request: %s', e)
                 self._xivo_ldap = None
@@ -444,7 +448,7 @@ class LDAPDirectoryDataSource(object):
                         (std_key, src_key) in self._key_mapping.iteritems() if
                         src_key in ldap_result[1])
         return aux
-    
+
     @classmethod
     def new_from_contents(cls, ctid, contents):
         uri = contents['uri']
@@ -481,7 +485,7 @@ class HTTPDirectoryDataSource(object):
         except Exception:
             fobj.close()
             raise
-    
+
     def _build_uri(self, string, fields):
         uri = self._base_uri
         if uri[8:].find('/') == -1:
@@ -489,7 +493,7 @@ class HTTPDirectoryDataSource(object):
         encoded_string = urllib.quote(string.encode('UTF-8'))
         uri += '?' + '&'.join(field + '=' + encoded_string for field in fields)
         return uri
-    
+
     def _get_result_charset(self, fobj):
         charset = 'UTF-8'
         content_type = fobj.info().getheader('Content-Type')
@@ -498,7 +502,7 @@ class HTTPDirectoryDataSource(object):
             if i >= 0:
                 charset = content_type[i:].split(' ', 1)[0].split('=', 1)[1]
         return charset
-    
+
     def _new_map_function(self, headers, charset):
         headers_map = dict((header, idx) for (idx, header) in enumerate(headers))
         mapping = [(std_key, headers_map[src_key]) for (std_key, src_key) in
@@ -509,7 +513,7 @@ class HTTPDirectoryDataSource(object):
             tokens = line.split(self._delimiter)
             return dict((std_key, tokens[idx]) for (std_key, idx) in mapping)
         return aux
-    
+
     @classmethod
     def new_from_contents(cls, ctid, contents):
         base_uri = contents['uri']
@@ -545,7 +549,7 @@ class PhonebookDirectoryDataSource(object):
                         self._key_mapping.iteritems() if
                         src_key in phonebook_entry)
         return aux
-    
+
     @classmethod
     def new_from_contents(cls, ctid, contents):
         phonebook_list = ctid.safe[ctid.myipbxid].xod_config['phonebooks']
@@ -565,19 +569,19 @@ class DirectoryAdapter(object):
         self._match_direct = match_direct
         self._match_reverse = match_reverse
         self._map_fun = self._new_map_function()
-    
+
     def _new_map_function(self):
         def aux(result):
             result['xivo-directory'] = self.name
             return result
         return aux
-    
+
     def lookup_direct(self, string, contexts=None):
         return imap(self._map_fun, self._directory_src.lookup(string, self._match_direct, contexts))
-    
+
     def lookup_reverse(self, string):
         return self._directory_src.lookup(string, self._match_reverse)
-    
+
     @classmethod
     def new_from_contents(cls, directory, contents):
         name = contents['name']
