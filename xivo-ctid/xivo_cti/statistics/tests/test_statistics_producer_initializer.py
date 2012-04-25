@@ -1,8 +1,3 @@
-'''
-Created on 2012-04-24
-
-@author: jylebleu
-'''
 import unittest
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
@@ -28,18 +23,18 @@ class TestStatisticsProducerInitializer(unittest.TestCase):
     def test_init_queue_statistics_producer_queues(self):
         self.queuemember_service_manager.get_queuemember_ids.return_value = []
 
-        self.queue_service_manager.get_queue_ids.return_value = ['1', '2']
+        self.queue_service_manager.get_queue_names.return_value = ['service', 'insurance']
 
         self.statistics_producer_initializer.init_queue_statistics_producer(self.queue_statistics_producer)
 
-        self.queue_service_manager.get_queue_ids.assert_called_once_with()
-        self.queue_statistics_producer.on_queue_added.assert_was_called_with('1')
-        self.queue_statistics_producer.on_queue_added.assert_was_called_with('2')
+        self.queue_service_manager.get_queue_names.assert_called_once_with()
+        self.queue_statistics_producer.on_queue_added.assert_was_called_with('service')
+        self.queue_statistics_producer.on_queue_added.assert_was_called_with('insurance')
 
     def test_init_queue_statistics_producer_members(self):
 
         self.queuemember_service_manager.get_queuemember_ids.return_value = [('1', '50'), ('2', '24')]
-        self.queue_service_manager.get_queue_ids.return_value = []
+        self.queue_service_manager.get_queue_names.return_value = []
 
         self.statistics_producer_initializer.init_queue_statistics_producer(self.queue_statistics_producer)
 

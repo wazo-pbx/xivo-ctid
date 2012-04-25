@@ -198,16 +198,22 @@ class TestInnerdataDAO(unittest.TestCase):
                           self.innerdata_dao.get_queue_id,
                           queue_name)
 
-    def test_get_queue_ids(self):
-        queue_list = ['45', '77']
+    def test_get_queue_names(self):
+        queues_list = {'45': {'waitratio': None, 'name': 'service'},
+                       '77' : {'waitratio': None, 'name': 'computers'}}
         inner_queue_list = Mock()
-        inner_queue_list.get_queues.return_value = queue_list
-
+        inner_queue_list.get_all_queues.return_value = queues_list
         self.innerdata_dao.innerdata.xod_config = {'queues': inner_queue_list}
 
+        queue_names = ['computers', 'service']
 
-        returned_queue_list = self.innerdata_dao.get_queue_ids()
+        returned_queue_names = self.innerdata_dao.get_queue_names()
 
-        self.assertEquals(queue_list, returned_queue_list)
+        self._assert_contains_same_elements(returned_queue_names, queue_names)
 
-        inner_queue_list.get_queues.assert_called_once_with()
+        inner_queue_list.get_all_queues.assert_called_once_with()
+
+    def _assert_contains_same_elements(self, list, expected_list):
+        self.assertEquals(len(list), len(expected_list))
+        for element in list:
+            self.assertIn(element, expected_list)

@@ -124,6 +124,9 @@ class QueueList(AnyList):
     def get_queues(self):
         return self.keeplist.keys()
 
+    def get_all_queues(self):
+        return self.keeplist
+
     def get_queues_byagent(self, agid):
         queuelist = {}
         for qref, ql in self.keeplist.iteritems():

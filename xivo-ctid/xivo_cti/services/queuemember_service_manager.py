@@ -74,7 +74,7 @@ class QueueMemberServiceManager(object):
         self.queuemember_notifier.queuemember_config_updated(delta)
 
     def get_queuemember_ids(self):
-        logger.info(self.queuemember_dao.get_queuemembers())
+        logger.info(self.innerdata_dao.innerdata.xod_config['queues'].get_queues())
         return []
 
     def whenmember(self, innerdata, command, dopause, listname, k, member):

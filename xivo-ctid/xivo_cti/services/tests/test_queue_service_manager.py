@@ -57,10 +57,11 @@ class TestQueueServiceManager(unittest.TestCase):
         self.assertRaises(NotAQueueException,
                           self.queue_service_manager.get_queue_id,
                           queue_name)
-    def test_get_queue_ids(self):
-        expected_result = ['7', '8']
-        self.innerdata_dao.get_queue_ids.return_value = expected_result
 
-        result = self.queue_service_manager.get_queue_ids()
+    def test_get_queue_names(self):
+        expected_result = ['office', 'bedroom']
+        self.innerdata_dao.get_queue_names.return_value = expected_result
+
+        result = self.queue_service_manager.get_queue_names()
 
         self.assertEquals(result, expected_result)
