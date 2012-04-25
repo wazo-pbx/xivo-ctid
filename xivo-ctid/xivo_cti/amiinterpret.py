@@ -112,6 +112,12 @@ class AMI_1_8(object):
         if subevent == 'Begin' and 'Destination' in event:
             destination = event['Destination']
             if channel in self.innerdata.channels:
+                try:
+                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
+                    self.innerdata.channels[channel].set_extra_data('xivo', 'desttype', 'user')
+                    self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
+                except Exception:
+                    logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'
                 self.innerdata.channels[channel].properties['commstatus'] = 'calling'
                 self.innerdata.channels[channel].properties['timestamp'] = time.time()
@@ -368,7 +374,7 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'desttype', 'user')
         chanprops.set_extra_data('xivo', 'destid', usersummary_dst.get('userid'))
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-        chanprops.set_extra_data('xivo', 'origin', 'internal')
+        chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
         chanprops.set_extra_data('xivo', 'direction', 'internal')
         chanprops.set_extra_data('xivo', 'calleridnum', usersummary_src.get('phonenumber'))
         chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
