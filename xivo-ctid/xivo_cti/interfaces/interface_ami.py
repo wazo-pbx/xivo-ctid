@@ -35,6 +35,7 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
 from xivo_cti.ami import ami_event_complete_logger
 from xivo_cti.ami import ami_status_request_logger
+from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 
 logger = logging.getLogger('interface_ami')
 
@@ -66,6 +67,10 @@ class AMI(object):
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
         ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
+        AMIAgentLoginLogoff.register_callbacks()
+        ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
+        ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
+
 
     def connect(self):
         try:

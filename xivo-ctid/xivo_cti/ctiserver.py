@@ -81,6 +81,7 @@ from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNot
 from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
+from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 
 logger = logging.getLogger('main')
 
@@ -182,6 +183,8 @@ class CTIServer(object):
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager,
                                                                              self._queuemember_service_manager)
+        self._queue_statistics_producer = QueueStatisticsProducer()
+        self._queue_statistics_producer.notifier = StatisticsNotifier()
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -199,7 +202,6 @@ class CTIServer(object):
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
 
     def _init_statistics_producers(self):
-        self._queue_statistics_producer = QueueStatisticsProducer()
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
         self._queuemember_service_notifier.queue_statistics_producer = self._queue_statistics_producer
 
