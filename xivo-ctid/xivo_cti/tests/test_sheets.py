@@ -22,6 +22,8 @@ class TestSheets(unittest.TestCase):
 
         self.sheet = cti_sheets.Sheet(None, None, None)
         self.sheet.channelprops = Mock(Channel)
+        self.sheet.channelprops.channel = 'mychannel'
+        self.sheet.channelprops.unique_id = 12345
     
     def test_split_format_string(self):
         format_string = '{xivo-var}'
