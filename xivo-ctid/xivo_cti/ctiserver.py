@@ -84,6 +84,7 @@ from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.services.presence_executor import PresenceExecutor
 from xivo_cti.services.user_executor import UserExecutor
+from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 
 logger = logging.getLogger('main')
 
@@ -186,7 +187,8 @@ class CTIServer(object):
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager,
                                                                              self._queuemember_service_manager)
         self._queue_statistics_producer = QueueStatisticsProducer()
-        self._queue_statistics_producer.notifier = StatisticsNotifier()
+        self._queue_statistics_notifier = StatisticsNotifier()
+        self._queue_statistics_producer.notifier = self._queue_statistics_notifier
         self._user_service_manager.presence_executor = PresenceExecutor()
         self._user_service_manager.user_executor = UserExecutor()
         self._register_cti_callbacks()
@@ -204,6 +206,7 @@ class CTIServer(object):
         DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, ['user_id', 'destination'])
         EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
+        SubscribeToQueuesStats.register_callback_params(self._queue_statistics_notifier.subscribe, ['cti_connection'])
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)

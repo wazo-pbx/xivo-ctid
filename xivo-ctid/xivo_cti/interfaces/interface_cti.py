@@ -129,7 +129,10 @@ class CTI(interfaces.Interfaces):
                 self.connid.sendall(msg)
                 logger.info('transfer connection %d sent', len(msg))
         else:
-            self.connid.sendall(self.serial.encode(msg) + '\n')
+            self.send_message(msg)
+
+    def send_message(self, msg):
+        self.connid.sendall(self.serial.encode(msg) + '\n')
 
     def loginko(self, errorstring):
         logger.warning('user can not connect (%s) : sending %s',
