@@ -30,5 +30,5 @@ class QueueServiceManager(object):
     def get_queue_id(self, queue_name):
         return self.innerdata_dao.get_queue_id(queue_name)
 
-    def get_queue_names(self):
-        return self.innerdata_dao.get_queue_names()
+    def get_queue_ids(self):
+        return self.innerdata_dao.get_queue_ids()

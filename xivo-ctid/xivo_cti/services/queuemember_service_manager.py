@@ -73,10 +73,6 @@ class QueueMemberServiceManager(object):
         delta = DictDelta({}, queuemember_formatted, [])
         self.queuemember_notifier.queuemember_config_updated(delta)
 
-    def get_queuemember_ids(self):
-        logger.info(self.innerdata_dao.innerdata.xod_config['queues'].get_queues())
-        return []
-
     def whenmember(self, innerdata, command, dopause, listname, k, member):
         memberlist = []
         midx = '%s%s:%s-%s' % (listname[0], member.get('type')[0], k, member.get('id'))

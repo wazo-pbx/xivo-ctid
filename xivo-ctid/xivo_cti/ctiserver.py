@@ -184,8 +184,7 @@ class CTIServer(object):
         self._queuemember_service_notifier = QueueMemberServiceNotifier()
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
-        self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager,
-                                                                             self._queuemember_service_manager)
+        self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
         self._queue_statistics_producer = QueueStatisticsProducer()
         self._queue_statistics_notifier = StatisticsNotifier()
         self._queue_statistics_producer.notifier = self._queue_statistics_notifier

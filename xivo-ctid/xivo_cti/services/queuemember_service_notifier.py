@@ -23,6 +23,7 @@
 
 import time
 import logging
+from xivo_cti.services.queue_service_manager import NotAQueueException
 
 class QueueMemberServiceNotifier(object):
 
@@ -47,7 +48,11 @@ class QueueMemberServiceNotifier(object):
             event.update(update)
             ret.append(event)
             for queuemember in delta.add.values():
-                self.queue_statistics_producer.on_agent_added(queuemember['queue_name'], queuemember['interface'])
+                try:
+                    queue_id = self.innerdata_dao.get_queue_id(queuemember['queue_name'])
+                    self.queue_statistics_producer.on_agent_added(queue_id, queuemember['interface'])
+                except NotAQueueException:
+                    pass
         if delta.change:
             for queuemember_id in delta.change:
                 event = dict(return_template)
