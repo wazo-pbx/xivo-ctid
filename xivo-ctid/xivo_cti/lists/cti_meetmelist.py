@@ -89,7 +89,7 @@ class MeetmeList(AnyList):
                 originate.context = meetme['context']
                 originate.priority = '1'
                 originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
-        except KeyError, MissingFieldException:
+        except (KeyError, MissingFieldException):
             return 'warning', {'message': 'Cannot complete command, missing info'}
 
         if originate.send(ami):
