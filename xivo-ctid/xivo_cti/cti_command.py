@@ -264,14 +264,6 @@ class Command(object):
         self._connection.logintimer.cancel()
         return reply
 
-    def regcommand_logout(self):
-        reply = {}
-##                        stopper = icommand.struct.get('stopper')
-        return reply
-
-## "capaxlets": ["customerinfo-dock-fcms", "dial-dock-fcms", "queues-dock-fcms"],
-##  "presencecounter": {"connected": 1},
-
     def __check_user_connection__(self):
         return
 
@@ -290,15 +282,6 @@ class Command(object):
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
-        self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
-
-    def __disconnect_user__(self):
-        cdetails = self._connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
-        userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = None
-        availstate = self._commanddict.get('availstate')
-        # disconnected vs. invisible vs. recordstatus ?
         self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
 
     # end of login/logout related commands
