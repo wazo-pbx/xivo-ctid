@@ -648,7 +648,7 @@ class Command(object):
         function = self._commanddict['function']
         args = self._commanddict['functionargs']
 
-        if function in ('record', ) and len(args) >= 4:
+        if function in ('record',) and len(args) >= 4:
             mxid, usernum, adminnum, status = args[:4]
         elif (function in ('MeetmeMute', 'MeetmeUnmute')
               and len(args) >= 2):
@@ -674,7 +674,7 @@ class Command(object):
                           'amiargs': (chan, filename)}]
             elif status == 'stop':
                 return [{'amicommand': 'stopmonitor',
-                          'amiargs': (chan, )}]
+                          'amiargs': (chan,)}]
         elif function in ('MeetmePause',):
             return [{'amicommand': function.lower(),
                       'amiargs': (meetme_conf['confno'], status)}]
@@ -829,7 +829,7 @@ class Command(object):
         agent, status = self.get_agent_info(self._commanddict)
         if status['status'] != 'AGENT_LOGGEDOFF':
             return [{'amicommand': 'agentlogoff',
-                     'amiargs': (agent['number'], )}]
+                     'amiargs': [agent['number'], True]}]
 
     def queue_generic(self, command, dopause=None):
         member = self.parseid(self._commanddict.get('member'))

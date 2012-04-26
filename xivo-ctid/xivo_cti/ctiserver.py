@@ -82,6 +82,8 @@ from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
+from xivo_cti.services.presence_executor import PresenceExecutor
+from xivo_cti.services.user_executor import UserExecutor
 
 logger = logging.getLogger('main')
 
@@ -185,6 +187,8 @@ class CTIServer(object):
                                                                              self._queuemember_service_manager)
         self._queue_statistics_producer = QueueStatisticsProducer()
         self._queue_statistics_producer.notifier = StatisticsNotifier()
+        self._user_service_manager.presence_executor = PresenceExecutor()
+        self._user_service_manager.user_executor = UserExecutor()
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -396,6 +400,8 @@ class CTIServer(object):
             self._queuemember_service_manager.innerdata_dao.innerdata = safe
             self._queuemember_service_notifier.events_cti = safe.events_cti
             self._queuemember_service_notifier.ipbx_id = self.myipbxid
+            self._user_service_manager.presence_executor._innerdata = safe
+            self._user_service_manager.user_executor._innerdata = safe
             self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].register_ami_handlers()
             self.safe[self.myipbxid].update_directories()

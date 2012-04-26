@@ -86,13 +86,8 @@ class CTI(interfaces.Interfaces):
         self.logintimer.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
-        try:
-            ipbxid = self.connection_details['ipbxid']
-            user_id = self.connection_details['userid']
-            self._manage_logout(ipbxid, user_id, msg)
-        except KeyError:
-            logger.warning('Could not retrieve the user user_id %s',
-                           self.connection_details)
+        user_id = self.connection_details['userid']
+        self._ctiserver._user_service_manager.disconnect(user_id)
 
     def manage_connection(self, msg):
         if self.transferconnection:
@@ -136,9 +131,6 @@ class CTI(interfaces.Interfaces):
         else:
             self.connid.sendall(self.serial.encode(msg) + '\n')
 
-    def _manage_logout(self, ipbxid, user_id, msg):
-        self._disconnect_user(ipbxid, user_id)
-
     def loginko(self, errorstring):
         logger.warning('user can not connect (%s) : sending %s',
                        self.details, errorstring)
@@ -146,21 +138,6 @@ class CTI(interfaces.Interfaces):
         tosend = {'class': 'loginko',
                   'error_string': errorstring}
         return self.serial.encode(tosend)
-
-    def _disconnect_user(self, ipbxid, user_id):
-        """
-        Change the user's status to disconnected
-        """
-        try:
-            innerdata = self._ctiserver.safe[ipbxid]
-            userstatus = innerdata.xod_status['users'][user_id]
-            innerdata.handle_cti_stack('set', ('users', 'updatestatus', user_id))
-            userstatus['availstate'] = 'disconnected'
-            userstatus['connection'] = None
-            userstatus['last-logouttimestamp'] = time.time()
-            innerdata.handle_cti_stack('empty_stack')
-        except KeyError:
-            logger.warning('Could not update user status %s', user_id)
 
     def receive_login_id(self, login, version, connection):
         if connection != self:

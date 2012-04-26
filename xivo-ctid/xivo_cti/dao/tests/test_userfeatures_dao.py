@@ -30,6 +30,7 @@ from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
+import time
 
 
 class Test(unittest.TestCase):
@@ -370,3 +371,22 @@ class Test(unittest.TestCase):
 
     def _check_busy_dest_in_inner_data(self, user_id, destination):
         self.assertEqual(self._userlist.keeplist[user_id]['destbusy'], destination, 'inner data not updated for busy destination')
+
+    def test_disconnect(self):
+        self.dao._innerdata = self._innerdata
+        user_id = 1
+        self._userlist = {}
+        self._userlist[user_id] = {'availstate': 'available',
+                                            'connection': True,
+                                            'last-logouttimestamp': None}
+        self.dao._innerdata.xod_status = {'users': self._userlist}
+        expected_userdata = {'availstate': 'disconnected',
+                             'connection': None,
+                             'last-logouttimestamp': time.time()}
+
+        self.dao.disconnect(user_id)
+
+        result = self.dao._innerdata.xod_status['users'][user_id]
+        self.assertEqual(expected_userdata['availstate'], result['availstate'])
+        self.assertEqual(expected_userdata['connection'], result['connection'])
+        self.assertTrue(expected_userdata['last-logouttimestamp'] > time.time() - 1)

@@ -25,6 +25,7 @@ import logging
 
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy import dbconnection
+import time
 
 logger = logging.getLogger("UserFeaturesDAO")
 
@@ -108,6 +109,12 @@ class UserFeaturesDAO(object):
 
     def agent_id(self, user_id):
         return self.get(user_id).agentid
+
+    def disconnect(self, user_id):
+        userdata = self._innerdata.xod_status['users'][user_id]
+        userdata['availstate'] = 'disconnected'
+        userdata['connection'] = None
+        userdata['last-logouttimestamp'] = time.time()
 
     @classmethod
     def new_from_uri(cls, uri):

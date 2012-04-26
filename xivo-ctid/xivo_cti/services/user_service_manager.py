@@ -82,3 +82,9 @@ class UserServiceManager(object):
         self.user_features_dao.disable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd(user_id)
+
+    def disconnect(self, user_id):
+        self.user_features_dao.disconnect(user_id)
+        self.presence_executor.disconnect(user_id)
+        self.user_executor.notify_cti(user_id)
+

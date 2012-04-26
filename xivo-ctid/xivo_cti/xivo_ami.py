@@ -252,8 +252,9 @@ class AMIClass(object):
                                                          ('AckCall' , ackcall)])
 
     # \brief Logs off an Agent
-    def agentlogoff(self, agentnum):
-        return self._exec_command('AgentLogoff', [('Agent', agentnum)])
+    def agentlogoff(self, agentnum, soft=True):
+        return self._exec_command('AgentLogoff', [('Agent', agentnum),
+                                                  ('Soft', soft)])
 
     # \brief Mute a meetme user
     def meetmemute(self, meetme, usernum):

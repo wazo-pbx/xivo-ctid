@@ -29,6 +29,8 @@ from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_cti.services.presence_executor import PresenceExecutor
+from xivo_cti.services.user_executor import UserExecutor
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -179,3 +181,15 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
+
+    def test_disconnect(self):
+        user_id = 95
+        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.user_service_manager.presence_executor = Mock(PresenceExecutor)
+        self.user_service_manager.user_executor = Mock(UserExecutor)
+
+        self.user_service_manager.disconnect(user_id)
+
+        self.user_service_manager.user_features_dao.disconnect.assert_called_once_with(user_id)
+        self.user_service_manager.presence_executor.disconnect.assert_called_once_with(user_id)
+        self.user_service_manager.user_executor.notify_cti.assert_called_once_with(user_id)
