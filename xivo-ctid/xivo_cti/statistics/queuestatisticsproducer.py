@@ -4,6 +4,8 @@ logger = logging.getLogger("QueueStatisticsProducer")
 
 class QueueStatisticsProducer(object):
 
+    LOGGEDAGENT_STATNAME = "Xivo-LoggedAgents"
+
     def __init__(self):
         self.logged_agents = {}
         self.queues_of_agent = {}
@@ -47,7 +49,6 @@ class QueueStatisticsProducer(object):
         self._notify_change(queueid)
 
     def _notify_change(self, queueid):
-        self.notifier.on_stat_changed({'stats':
-                                        {queueid :
-                                         { 'loggedagents':len(self.logged_agents[queueid])}
-                                         }})
+        self.notifier.on_stat_changed({queueid :
+                                         { self.LOGGEDAGENT_STATNAME:len(self.logged_agents[queueid])}
+                                         })

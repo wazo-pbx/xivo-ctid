@@ -5,8 +5,8 @@ logger = logging.getLogger("StatisticsNotifier")
 
 class StatisticsNotifier(object):
 
-    COMMAND_CLASS = 'subscribetoqueuesstats'
-    CONTENT = 'queuestats'
+    COMMAND_CLASS = 'getqueuesstats'
+    CONTENT = 'stats'
 
     def __init__(self):
         self.statistic = None

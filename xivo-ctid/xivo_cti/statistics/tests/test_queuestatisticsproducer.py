@@ -2,7 +2,7 @@
 import unittest
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 from tests.mock import Mock
-from xivo_cti.statistics.statisticsnotifier import StatisticsNotifier
+from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 
 
 def _aQueueStat():
@@ -23,9 +23,9 @@ class QueueStatBuilder(object):
 
 
     def build(self):
-        return {'stats':{self._queueid:{'loggedagents':self._loggged_agent}}}
+        return {self._queueid:{'Xivo-LoggedAgents':self._loggged_agent}}
 
-class Test(unittest.TestCase):
+class TestQueueStatisticsProducer(unittest.TestCase):
 
 
     def setUp(self):

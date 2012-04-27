@@ -27,8 +27,8 @@ class TestStatisticsNotifier(unittest.TestCase):
 
         self.notifier.subscribe(cti_connection)
 
-        cti_connection.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
 
     def test_on_stat_changed_with_one_subscriber(self):
@@ -39,8 +39,8 @@ class TestStatisticsNotifier(unittest.TestCase):
 
         self.notifier.on_stat_changed(statistic)
 
-        cti_connection.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
 
     def test_on_stat_changed_with_subscribers(self):
@@ -57,14 +57,14 @@ class TestStatisticsNotifier(unittest.TestCase):
 
         self.notifier.on_stat_changed(statistic)
 
-        cti_connection1.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection1.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
-        cti_connection2.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection2.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
-        cti_connection3.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection3.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
 
 
@@ -77,8 +77,8 @@ class TestStatisticsNotifier(unittest.TestCase):
 
         self.notifier.on_stat_changed(statistic)
 
-        cti_connection.send_message.assert_called_once_with({'class':'subscribetoqueuesstats',
-                                                              'queuestats' : statistic
+        cti_connection.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
                                                               })
 
     def test_remove_connection_when_closed(self):
