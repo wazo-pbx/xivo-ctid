@@ -13,6 +13,7 @@ POSITION = 'Position'
 QUEUE = 'Queue'
 UNIQUE_ID = 'Uniqueid'
 COUNT = 'Count'
+WAIT = 'Wait'
 
 
 def parse_join(event):
@@ -26,6 +27,19 @@ def parse_join(event):
                      event[UNIQUE_ID])
     except Exception:
         logger.warning('Failed to parse Join event %s', event)
+
+
+def parse_queue_entry(event):
+    try:
+        manager = QueueEntryManager.get_instance()
+        manager.insert(event[QUEUE],
+                       int(event[POSITION]),
+                       event[NAME],
+                       event[NUMBER],
+                       event[UNIQUE_ID],
+                       int(event[WAIT]))
+    except Exception:
+        logger.warning('Failed to parse QueueEntry event %s', event)
 
 
 def parse_leave(event):
@@ -48,13 +62,19 @@ class QueueEntryManager(object):
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         try:
-            entry = QueueEntry(pos, name, number, time.time())
-            if queue_name not in self._queue_entries:
-                self._queue_entries[queue_name] = {}
-            self._queue_entries[queue_name][unique_id] = entry
+            self.insert(queue_name, pos, name, number, unique_id, 0)
             self._count_check(queue_name, count)
         except Exception:
             # Sync
+            logger.exception('Failed to insert queue entry')
+
+    def insert(self, queue_name, pos, name, number, unique_id, wait):
+        try:
+            entry = QueueEntry(pos, name, number, time.time() - wait)
+            if queue_name not in self._queue_entries:
+                self._queue_entries[queue_name] = {}
+            self._queue_entries[queue_name][unique_id] = entry
+        except Exception:
             logger.exception('Failed to insert queue entry')
 
     def leave(self, queue_name, pos, count, unique_id):
@@ -66,6 +86,9 @@ class QueueEntryManager(object):
         except Exception:
             # Sync
             logger.exception('Failed to remove queue entry')
+
+    def clear_data(self, queue_name):
+        self._queue_entries.pop(queue_name, None)
 
     def _count_check(self, queue_name, expected_count):
         if queue_name in self._queue_entries:

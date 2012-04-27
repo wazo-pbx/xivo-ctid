@@ -18,6 +18,8 @@ JOIN_TIME_1 = time.time()
 JOIN_TIME_2 = JOIN_TIME_1 + 5
 JOIN_TIME_3 = JOIN_TIME_1 + 24
 
+WAIT_TIME_1 = 13
+
 JOIN_MESSAGE_2 = {'Event': 'Join',
                   'Privilege': 'call,all',
                   'Channel': 'SIP/my_trunk-1235',
@@ -54,6 +56,17 @@ JOIN_MESSAGE_1 = {'Event': 'Join',
                   'Count': '1',
                   'Uniqueid': UNIQUE_ID_1}
 
+QUEUE_ENTRY_MESSAGE = {'Event': 'QueueEntry',
+                       'Queue': QUEUE_NAME,
+                       'Position': '1',
+                       'Channel': 'SIP/pcm_dev-00000029',
+                       'Uniqueid': UNIQUE_ID_1,
+                       'CallerIDNum': CALLER_ID_NUMBER_1,
+                       'CallerIDName': CALLER_ID_NAME_1,
+                       'ConnectedLineNum': 'unknown',
+                       'ConnectedLineName': 'unknown',
+                       'Wait': str(WAIT_TIME_1)}
+
 my_time = Mock()
 
 
@@ -89,6 +102,21 @@ class TestQueueEntryManager(unittest.TestCase):
         handler.assert_called_once_with(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
         self.manager.join = join
+
+    def test_parse_queue_entry(self):
+        insert, handler = self.manager.insert, Mock()
+        self.manager.insert = handler
+
+        queue_entry_manager.parse_queue_entry(QUEUE_ENTRY_MESSAGE)
+
+        handler.assert_called_once_with(QUEUE_NAME,
+                                        1,
+                                        CALLER_ID_NAME_1,
+                                        CALLER_ID_NUMBER_1,
+                                        UNIQUE_ID_1,
+                                        WAIT_TIME_1)
+
+        self.manager.insert = insert
 
     def test_new_entry(self):
         self._join_1()
@@ -193,3 +221,23 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertEqual(entries[2].position, 1)
         self.assertEqual(entries[4].position, 2)
+
+    @patch('time.time', my_time)
+    def test_update(self):
+        my_time.return_value = JOIN_TIME_1
+        expected = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1 - WAIT_TIME_1)
+
+        self.manager.insert(QUEUE_NAME, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1,
+                            UNIQUE_ID_1, WAIT_TIME_1)
+
+        entry = self.manager._queue_entries[QUEUE_NAME][UNIQUE_ID_1]
+
+        self.assertEquals(entry, expected)
+
+    def test_clear_data(self):
+        self._join_1()
+        self._join_2()
+
+        self.manager.clear_data(QUEUE_NAME)
+
+        self.assertFalse(QUEUE_NAME in self.manager._queue_entries)
