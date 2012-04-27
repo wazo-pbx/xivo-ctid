@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-import logging
 from xivo_cti.services.queue_service_manager import NotAQueueException
+
 
 class QueueMemberServiceNotifier(object):
 
@@ -66,7 +66,7 @@ class QueueMemberServiceNotifier(object):
             del_list = delta.delete
             del_list.sort()
             update = {'function': 'delconfig',
-                    'list': del_list }
+                      'list': del_list}
             event.update(update)
             ret.append(event)
         return ret
