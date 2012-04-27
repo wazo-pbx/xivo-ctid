@@ -18,19 +18,6 @@ class TestStatisticsNotifier(unittest.TestCase):
     def tearDown(self):
         pass
 
-
-    def test_subscribe(self):
-        cti_connection = Mock()
-
-        statistic = {'stat':'123'}
-        self.notifier.on_stat_changed(statistic)
-
-        self.notifier.subscribe(cti_connection)
-
-        cti_connection.send_message.assert_called_once_with({'class':'getqueuesstats',
-                                                              'stats' : statistic
-                                                              })
-
     def test_on_stat_changed_with_one_subscriber(self):
         cti_connection = Mock()
         statistic = {'stat':'123'}
@@ -93,6 +80,17 @@ class TestStatisticsNotifier(unittest.TestCase):
 
         self.notifier.on_stat_changed(statistic)
         cti_connection.send_message.assert_never_called()
+
+    def test_send_statistic(self):
+        cti_connection = Mock()
+        statistic = {'stat':'123'}
+
+        self.notifier.send_statistic(statistic, cti_connection)
+
+
+        cti_connection.send_message.assert_called_once_with({'class':'getqueuesstats',
+                                                              'stats' : statistic
+                                                              })
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

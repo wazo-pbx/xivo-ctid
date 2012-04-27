@@ -41,7 +41,7 @@ class StatisticsNotifier(object):
         logger.info(statistic)
         self.statistic = statistic
         for cti_connection in self.cti_connections:
-            self._send_statistic(cti_connection)
+            self.send_statistic(statistic, cti_connection)
 
         for closed_connection in self.closed_cti_connections:
             self.cti_connections.remove(closed_connection)
@@ -50,15 +50,11 @@ class StatisticsNotifier(object):
     def subscribe(self, cti_connection):
         logger.info('xivo client subscribing ')
 
-        if self.statistic is not None:
-            cti_connection.send_message({'class': self.COMMAND_CLASS,
-                                          self.CONTENT: self.statistic})
-
         self.cti_connections.add(cti_connection)
 
-    def _send_statistic(self, cti_connection):
+    def send_statistic(self, statistic, cti_connection):
         try:
             cti_connection.send_message({'class': self.COMMAND_CLASS,
-                                          self.CONTENT: self.statistic})
+                                          self.CONTENT: statistic})
         except ClientConnection.CloseException:
             self.closed_cti_connections.add(cti_connection)

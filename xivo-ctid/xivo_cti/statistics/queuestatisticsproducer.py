@@ -9,12 +9,15 @@ class QueueStatisticsProducer(object):
     def __init__(self):
         self.queues_of_agent = {}
         self.logged_agents = set()
+        self.queues = set()
 
     def set_notifier(self, notifier):
         self.notifier = notifier
 
     def on_queue_added(self, queueid):
+        self.queues.add(queueid)
         logger.info('queue id %s added', queueid)
+        self._notify_change(queueid)
 
     def on_agent_added(self, queueid, agentid):
         if agentid not in self.queues_of_agent:
@@ -45,6 +48,7 @@ class QueueStatisticsProducer(object):
             self._notify_change(queueid)
 
     def on_queue_removed(self, queueid):
+        self.queues.remove(queueid)
         for agentid in self.queues_of_agent:
             if queueid in self.queues_of_agent[agentid]:
                 self.queues_of_agent[agentid].remove(queueid)
@@ -60,3 +64,10 @@ class QueueStatisticsProducer(object):
         self.notifier.on_stat_changed({queueid :
                                          { self.LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
                                          })
+
+    def send_all_stats(self, connection_cti):
+        logger.info('collect statistics')
+        for queueid in self.queues:
+            self.notifier.send_statistic({queueid :
+                                         { self.LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
+                                         }, connection_cti)

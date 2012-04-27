@@ -42,7 +42,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         queueid = 32
         agentid = 42
-        self.queue_statistics_producer.on_queue_added(queueid)
+        self._add_queue(queueid)
         self.queue_statistics_producer.on_agent_added(queueid, agentid)
 
 
@@ -58,7 +58,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queueid = 32
         agentid1 = 42
         agentid2 = 27
-        self.queue_statistics_producer.on_queue_added(queueid)
+        self._add_queue(queueid)
         self.queue_statistics_producer.on_agent_added(queueid, agentid1)
         self.queue_statistics_producer.on_agent_added(queueid, agentid2)
 
@@ -79,8 +79,8 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue1_id = 32
         queue2_id = 36
         agentid1 = 42
-        self.queue_statistics_producer.on_queue_added(queue1_id)
-        self.queue_statistics_producer.on_queue_added(queue2_id)
+        self._add_queue(queue1_id)
+        self._add_queue(queue2_id)
         self.queue_statistics_producer.on_agent_added(queue1_id, agentid1)
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
@@ -93,8 +93,8 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue1_id = 32
         queue2_id = 36
         agentid1 = 42
-        self.queue_statistics_producer.on_queue_added(queue1_id)
-        self.queue_statistics_producer.on_queue_added(queue2_id)
+        self._add_queue(queue1_id)
+        self._add_queue(queue2_id)
         self.queue_statistics_producer.on_agent_added(queue1_id, agentid1)
         self.queue_statistics_producer.on_agent_added(queue2_id, agentid1)
 
@@ -107,18 +107,6 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .in_queue(queue2_id)
                                                                             .nb_of_logged_agents(1)
                                                                             .build())
-
-    def _add_agent(self, queueid, agentid):
-        self.queue_statistics_producer.on_queue_added(queueid)
-        self.queue_statistics_producer.on_agent_added(queueid, agentid)
-
-    def _log_agent(self, agentid):
-        self.queue_statistics_producer.on_agent_loggedon(agentid)
-        self.statistics_notifier.reset_mock()
-
-    def _unlog_agent(self, agentid):
-        self.queue_statistics_producer.on_agent_loggedoff(agentid)
-        self.statistics_notifier.reset_mock()
 
     def test_logoff_agent(self):
         queueid = 987
@@ -190,6 +178,16 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                             .in_queue(queue2_id)
                                                                             .nb_of_logged_agents(1)
+                                                                            .build())
+
+    def test_add_queue(self):
+        queue_id = 27
+
+        self.queue_statistics_producer.on_queue_added(queue_id)
+
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queue_id)
+                                                                            .nb_of_logged_agents(0)
                                                                             .build())
 
     def test_remove_queue(self):
@@ -265,7 +263,45 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.statistics_notifier.on_stat_changed.assert_never_called()
 
+    def test_send_all_stats(self):
+        connection_cti = Mock()
+        queueid1 = 1
+        queueid2 = 7
 
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testAgentLogon']
-    unittest.main()
+        self._add_queue(queueid1)
+        self._add_queue(34)
+        self._add_queue(queueid2)
+        self._remove_queue(34)
+
+        self.queue_statistics_producer.send_all_stats(connection_cti)
+
+        self.statistics_notifier.send_statistic.assert_was_called_with(_aQueueStat()
+                                                                            .in_queue(queueid1)
+                                                                            .nb_of_logged_agents(0)
+                                                                            .build(), connection_cti)
+
+        self.statistics_notifier.send_statistic.assert_was_called_with(_aQueueStat()
+                                                                            .in_queue(queueid2)
+                                                                            .nb_of_logged_agents(0)
+                                                                            .build(), connection_cti)
+
+    def _log_agent(self, agentid):
+        self.queue_statistics_producer.on_agent_loggedon(agentid)
+        self.statistics_notifier.reset_mock()
+
+    def _unlog_agent(self, agentid):
+        self.queue_statistics_producer.on_agent_loggedoff(agentid)
+        self.statistics_notifier.reset_mock()
+
+    def _add_queue(self, queueid):
+        self.queue_statistics_producer.on_queue_added(queueid)
+        self.statistics_notifier.reset_mock()
+
+    def _remove_queue(self, queueid):
+        self.queue_statistics_producer.on_queue_removed(queueid)
+        self.statistics_notifier.reset_mock()
+
+    def _add_agent(self, queueid, agentid):
+        self.queue_statistics_producer.on_queue_added(queueid)
+        self.queue_statistics_producer.on_agent_added(queueid, agentid)
+        self.statistics_notifier.reset_mock()
