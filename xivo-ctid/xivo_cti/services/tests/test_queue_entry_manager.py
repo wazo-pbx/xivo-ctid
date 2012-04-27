@@ -53,6 +53,8 @@ JOIN_MESSAGE_1 = {'Event': 'Join',
                   'Count': '1',
                   'Uniqueid': UNIQUE_ID_1}
 
+CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3 = 'Third Guy', '333', '13498754.44'
+
 
 class TestQueueEntryManager(unittest.TestCase):
 
@@ -60,11 +62,17 @@ class TestQueueEntryManager(unittest.TestCase):
     def setUp(self):
         self.manager = QueueEntryManager.get_instance()
 
+    def tearDown(self):
+        self.manager._queue_entries = {}
+
     def _join_1(self):
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)        
 
     def _join_2(self):
         self.manager.join(QUEUE_NAME, 2, 2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
+
+    def _join_3(self):
+        self.manager.join(QUEUE_NAME, 3, 3, CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3)
 
     def test_parse_new_entry(self):
         join, handler = self.manager.join, Mock()
@@ -109,9 +117,8 @@ class TestQueueEntryManager(unittest.TestCase):
     def test_leave_event(self):
         self._join_1()
         self._join_2()
-        print 'before', len(self.manager._queue_entries[QUEUE_NAME]), self.manager._queue_entries[QUEUE_NAME]
+
         self.manager.leave(QUEUE_NAME, 1, 1, UNIQUE_ID_1)
-        print 'after', len(self.manager._queue_entries[QUEUE_NAME]), self.manager._queue_entries[QUEUE_NAME]
 
         count = len(self.manager._queue_entries[QUEUE_NAME])
 
@@ -136,3 +143,46 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager._count_check('un-tracked', 0)
         self.assertRaises(AssertionError,
                           lambda: self.manager._count_check('un-tracked', 1))
+
+    def test_position_change(self):
+        self._join_1()
+        self._join_2()
+        self._join_3()
+
+        entries = self.manager._queue_entries[QUEUE_NAME]
+
+        self.assertEqual(entries[UNIQUE_ID_1].position, 1)
+        self.assertEqual(entries[UNIQUE_ID_2].position, 2)
+        self.assertEqual(entries[UNIQUE_ID_3].position, 3)
+
+        # 2 leaves the queue, new order => 1, 3
+
+        self.manager.leave(QUEUE_NAME, 2, 2, UNIQUE_ID_2)
+
+        self.assertEqual(entries[UNIQUE_ID_1].position, 1)
+        self.assertEqual(entries[UNIQUE_ID_3].position, 2)
+
+    def test_decrement_position(self):
+        self.manager._queue_entries[QUEUE_NAME] = {}
+        entries = self.manager._queue_entries[QUEUE_NAME]
+        entries[1] = QueueEntry(1, 'one', '111')
+        entries[2] = QueueEntry(2, 'two', '222')
+        entries[3] = QueueEntry(3, 'three', '333')
+        entries[4] = QueueEntry(4, 'four', '444')
+
+        # 1 leaves the queue (pos 1)
+        entries.pop(1)
+
+        self.manager._decrement_position(QUEUE_NAME, 1)
+
+        self.assertEqual(entries[2].position, 1)
+        self.assertEqual(entries[3].position, 2)
+        self.assertEqual(entries[4].position, 3)
+
+        # 3 leaves the queue (pos 2)
+        entries.pop(3)
+
+        self.manager._decrement_position(QUEUE_NAME, 2)
+
+        self.assertEqual(entries[2].position, 1)
+        self.assertEqual(entries[4].position, 2)
