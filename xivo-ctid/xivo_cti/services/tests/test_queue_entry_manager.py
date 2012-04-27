@@ -1,5 +1,6 @@
 import unittest
 from mock import Mock
+from mock import patch
 
 import time
 
@@ -8,14 +9,14 @@ from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager
 
 QUEUE_NAME = 'testqueue'
-CALLER_ID_NAME_1 = 'Super Tester'
-CALLER_ID_NAME_2 = 'Second Tester'
-CALLER_ID_NUMBER_1 = '666'
-CALLER_ID_NUMBER_2 = '555'
-UNIQUE_ID_1 = '12346756547.34'
-UNIQUE_ID_2 = '99999999922.43'
+
+CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1 = 'Super Tester', '111', '12345677.99'
+CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2 = 'Second Tester', '222', '123543121.43'
+CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3 = 'Third Guy', '333', '13498754.44'
+
 JOIN_TIME_1 = time.time()
 JOIN_TIME_2 = JOIN_TIME_1 + 5
+JOIN_TIME_3 = JOIN_TIME_1 + 24
 
 JOIN_MESSAGE_2 = {'Event': 'Join',
                   'Privilege': 'call,all',
@@ -29,8 +30,8 @@ JOIN_MESSAGE_2 = {'Event': 'Join',
                   'Count': '2',
                   'Uniqueid': UNIQUE_ID_2}
 
-QUEUE_ENTRY_1 = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1)
-QUEUE_ENTRY_2 = QueueEntry(2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2)
+QUEUE_ENTRY_1 = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1)
+QUEUE_ENTRY_2 = QueueEntry(2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, JOIN_TIME_2)
 
 LEAVE_MESSAGE_1 = {'Event': 'Leave',
                    'Privilege': 'call,all',
@@ -53,11 +54,10 @@ JOIN_MESSAGE_1 = {'Event': 'Join',
                   'Count': '1',
                   'Uniqueid': UNIQUE_ID_1}
 
-CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3 = 'Third Guy', '333', '13498754.44'
+my_time = Mock()
 
 
 class TestQueueEntryManager(unittest.TestCase):
-
 
     def setUp(self):
         self.manager = QueueEntryManager.get_instance()
@@ -65,13 +65,19 @@ class TestQueueEntryManager(unittest.TestCase):
     def tearDown(self):
         self.manager._queue_entries = {}
 
+    @patch('time.time', my_time)
     def _join_1(self):
-        self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)        
+        my_time.return_value = JOIN_TIME_1
+        self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
+    @patch('time.time', my_time)
     def _join_2(self):
+        my_time.return_value = JOIN_TIME_2
         self.manager.join(QUEUE_NAME, 2, 2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
 
+    @patch('time.time', my_time)
     def _join_3(self):
+        my_time.return_value = JOIN_TIME_3
         self.manager.join(QUEUE_NAME, 3, 3, CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3)
 
     def test_parse_new_entry(self):
@@ -93,6 +99,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertEqual(entry, QUEUE_ENTRY_1)
 
+    @patch('time.time', my_time)
     def test_multiple_entries(self):
         self._join_1()
         self._join_2()
@@ -165,10 +172,10 @@ class TestQueueEntryManager(unittest.TestCase):
     def test_decrement_position(self):
         self.manager._queue_entries[QUEUE_NAME] = {}
         entries = self.manager._queue_entries[QUEUE_NAME]
-        entries[1] = QueueEntry(1, 'one', '111')
-        entries[2] = QueueEntry(2, 'two', '222')
-        entries[3] = QueueEntry(3, 'three', '333')
-        entries[4] = QueueEntry(4, 'four', '444')
+        entries[1] = QueueEntry(1, 'one', '111', time.time())
+        entries[2] = QueueEntry(2, 'two', '222', time.time())
+        entries[3] = QueueEntry(3, 'three', '333', time.time())
+        entries[4] = QueueEntry(4, 'four', '444', time.time())
 
         # 1 leaves the queue (pos 1)
         entries.pop(1)

@@ -1,10 +1,11 @@
 from collections import namedtuple
 
+import time
 import logging
 
 logger = logging.getLogger(__name__)
 
-QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number'])
+QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number', 'join_time'])
 
 NAME = 'CallerIDName'
 NUMBER = 'CallerIDNum'
@@ -47,7 +48,7 @@ class QueueEntryManager(object):
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         try:
-            entry = QueueEntry(pos, name, number)
+            entry = QueueEntry(pos, name, number, time.time())
             if queue_name not in self._queue_entries:
                 self._queue_entries[queue_name] = {}
             self._queue_entries[queue_name][unique_id] = entry
@@ -78,7 +79,10 @@ class QueueEntryManager(object):
                 if entry.position > removed_position:
                     pos = entry.position - 1
                     assert(pos > 0)
-                    new_entry = QueueEntry(pos, entry.name, entry.number)
+                    new_entry = QueueEntry(pos,
+                                           entry.name,
+                                           entry.number,
+                                           entry.join_time)
                     self._queue_entries[queue_name][unique_id] = new_entry
         except Exception:
             # Sync
