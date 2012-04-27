@@ -120,8 +120,8 @@ class QueueEntryManager(object):
                                            entry.join_time)
                     self._queue_entries[queue_name][unique_id] = new_entry
         except Exception:
-            # Sync
             logger.exception('Failed to decrement queue positions')
+            self.synchronize(queue_name)
 
     @classmethod
     def get_instance(cls):
