@@ -77,7 +77,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager = QueueEntryManager.get_instance()
 
     def tearDown(self):
-        self.manager._queue_entries = {}
+        QueueEntryManager._instance = None
 
     @patch('time.time', my_time)
     def _join_1(self):

@@ -69,7 +69,7 @@ class QueueEntryManager(object):
             self.insert(queue_name, pos, name, number, unique_id, 0)
             self._count_check(queue_name, count)
         except Exception:
-            # Sync
+            self.synchronize(queue_name)
             logger.exception('Failed to insert queue entry')
 
     def insert(self, queue_name, pos, name, number, unique_id, wait):
@@ -88,11 +88,13 @@ class QueueEntryManager(object):
             self._decrement_position(queue_name, pos)
             self._count_check(queue_name, count)
         except Exception:
-            # Sync
+            self.synchronize(queue_name)
             logger.exception('Failed to remove queue entry')
 
     def synchronize(self, queue_name=None):
-        if self._ami:
+        logger.info('Synchronizing QueueMemberEntry on %s',
+                    (queue_name if queue_name else 'all queues'))
+        if self._ami != None:
             self._ami.sendqueuestatus(queue_name)
         else:
             logger.warning('QueueEntryManager cannot contact any AMI instance')
