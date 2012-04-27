@@ -214,4 +214,4 @@ class TestInnerdataDAO(unittest.TestCase):
     def _assert_contains_same_elements(self, list, expected_list):
         self.assertEquals(len(list), len(expected_list))
         for element in list:
-            self.assertIn(element, expected_list)
+            self.assertTrue(element in expected_list)
