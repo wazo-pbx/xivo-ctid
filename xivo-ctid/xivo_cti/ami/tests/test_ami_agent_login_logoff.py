@@ -36,6 +36,28 @@ class TestAMIAgentLoginLogoff(unittest.TestCase):
         self.queue_statistics_producer.on_agent_loggedoff.assert_called_with('Agent/22011')
 
 
+    def test_receive_event_agent_init_idle(self):
+        event = {'Agent': '22011', 'Status' : 'AGENT_IDLE'}
+
+        self.ami_agent_login_logoff.on_event_agent_init(event)
+
+        self.queue_statistics_producer.on_agent_loggedon.assert_called_with('Agent/22011')
+
+    def test_receive_event_agent_init_talking(self):
+        event = {'Agent': '22011', 'Status' : 'AGENT_ONCALL'}
+
+        self.ami_agent_login_logoff.on_event_agent_init(event)
+
+        self.queue_statistics_producer.on_agent_loggedon.assert_called_with('Agent/22011')
+
+    def test_receive_event_agent_init_other_status(self):
+        event = {'Agent': '22011', 'Status' : 'AGENT_LOGGEDOFF'}
+
+        self.ami_agent_login_logoff.on_event_agent_init(event)
+
+        self.queue_statistics_producer.on_agent_loggedon.assert_never_called()
+
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

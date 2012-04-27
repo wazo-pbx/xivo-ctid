@@ -116,6 +116,10 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.queue_statistics_producer.on_agent_loggedon(agentid)
         self.statistics_notifier.reset_mock()
 
+    def _unlog_agent(self, agentid):
+        self.queue_statistics_producer.on_agent_loggedoff(agentid)
+        self.statistics_notifier.reset_mock()
+
     def test_logoff_agent(self):
         queueid = 987
         agentid = 1256
@@ -230,6 +234,36 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.queue_statistics_producer.on_agent_loggedoff(agentid)
 
         self.assertTrue(True, 'should not raise any error')
+
+    def test_agent_logged_on_added_to_another_queue(self):
+        queueid = 88
+        other_queue = 90
+        agentid = 12
+
+        self.queue_statistics_producer.on_queue_added(other_queue)
+        self._add_agent(queueid, agentid)
+        self._log_agent(agentid)
+
+        self.queue_statistics_producer.on_agent_added(other_queue, agentid)
+
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(other_queue)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
+
+    def test_agent_logged_on_and_off_added_to_another_queue(self):
+        queueid = 88
+        other_queue = 90
+        agentid = 12
+
+        self.queue_statistics_producer.on_queue_added(other_queue)
+        self._add_agent(queueid, agentid)
+        self._log_agent(agentid)
+        self._unlog_agent(agentid)
+
+        self.queue_statistics_producer.on_agent_added(other_queue, agentid)
+
+        self.statistics_notifier.on_stat_changed.assert_never_called()
 
 
 if __name__ == "__main__":

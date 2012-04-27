@@ -28,6 +28,11 @@ logger = logging.getLogger("AMIAgentLogin")
 
 
 class AMIAgentLoginLogoff(object):
+
+    AGENTSTATUS_IDLE = 'AGENT_IDLE'
+    AGENTSTATUS_ONCALL = 'AGENT_ONCALL'
+    AGENTSTATUS_WHEN_LOGGED_IN = [AGENTSTATUS_IDLE, AGENTSTATUS_ONCALL]
+
     _instance = None
 
     def __init__(self):
@@ -44,12 +49,18 @@ class AMIAgentLoginLogoff(object):
         agent_id = self._build_agent_id_from_event(event)
         self.queue_statistics_producer.on_agent_loggedoff(agent_id)
 
+    def on_event_agent_init(self, event):
+        if (event['Status'] in self.AGENTSTATUS_WHEN_LOGGED_IN):
+            agent_id = self._build_agent_id_from_event(event)
+            self.queue_statistics_producer.on_agent_loggedon(agent_id)
+
     @classmethod
     def register_callbacks(cls):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         ami_agent_login = cls.get_instance()
         callback_handler.register_callback('Agentcallbacklogin', ami_agent_login.on_event_agent_login)
         callback_handler.register_callback('Agentcallbacklogoff', ami_agent_login.on_event_agent_logoff)
+        callback_handler.register_callback('Agents', ami_agent_login.on_event_agent_init)
 
     @classmethod
     def get_instance(cls):
