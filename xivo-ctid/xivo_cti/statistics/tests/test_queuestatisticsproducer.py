@@ -5,6 +5,26 @@ from tests.mock import Mock
 from xivo_cti.statistics.statisticsnotifier import StatisticsNotifier
 
 
+def _aQueueStat():
+    return QueueStatBuilder()
+
+class QueueStatBuilder(object):
+    def __init__(self):
+        self._queueid = ''
+        self._loggged_agent = 0
+
+    def in_queue(self, queueid):
+        self._queueid = queueid
+        return self
+
+    def nb_of_logged_agents(self, logged_agent):
+        self._loggged_agent = logged_agent
+        return self
+
+
+    def build(self):
+        return {'stats':{self._queueid:{'loggedagents':self._loggged_agent}}}
+
 class Test(unittest.TestCase):
 
 
@@ -28,7 +48,10 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with({'queue':queueid, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queueid)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
     def test_log_agents(self):
 
@@ -41,10 +64,16 @@ class Test(unittest.TestCase):
 
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
-        self.statistics_notifier.on_stat_changed.assert_called_with({'queue':queueid, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+                                                                            .in_queue(queueid)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
         self.queue_statistics_producer.on_agent_loggedon(agentid2)
-        self.statistics_notifier.on_stat_changed.assert_called_with({'queue':queueid, 'loggedagents':2})
+        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+                                                                            .in_queue(queueid)
+                                                                            .nb_of_logged_agents(2)
+                                                                            .build())
 
     def test_log_agent_with_multiple_queues(self):
         queue1_id = 32
@@ -55,7 +84,10 @@ class Test(unittest.TestCase):
         self.queue_statistics_producer.on_agent_added(queue1_id, agentid1)
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
-        self.statistics_notifier.on_stat_changed.assert_called_with({'queue':queue1_id, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+                                                                            .in_queue(queue1_id)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
     def test_log_agent_on_multiple_queues(self):
         queue1_id = 32
@@ -67,8 +99,14 @@ class Test(unittest.TestCase):
         self.queue_statistics_producer.on_agent_added(queue2_id, agentid1)
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
-        self.statistics_notifier.on_stat_changed.assert_was_called_with({'queue':queue1_id, 'loggedagents':1})
-        self.statistics_notifier.on_stat_changed.assert_was_called_with({'queue':queue2_id, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
+                                                                            .in_queue(queue1_id)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
+        self.statistics_notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
+                                                                            .in_queue(queue2_id)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
     def _add_agent(self, queueid, agentid):
         self.queue_statistics_producer.on_queue_added(queueid)
@@ -87,18 +125,24 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedoff(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_with({'queue':queueid, 'loggedagents':0})
+        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+                                                                            .in_queue(queueid)
+                                                                            .nb_of_logged_agents(0)
+                                                                            .build())
 
     def test_remove_logged_agent_on_one_queue(self):
-        queue1_id = 987
+        queueid = 987
         agentid = 1256
 
-        self._add_agent(queue1_id, agentid)
+        self._add_agent(queueid, agentid)
         self._log_agent(agentid)
 
-        self.queue_statistics_producer.on_agent_removed(queue1_id, agentid)
+        self.queue_statistics_producer.on_agent_removed(queueid, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with({'queue':queue1_id, 'loggedagents':0})
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queueid)
+                                                                            .nb_of_logged_agents(0)
+                                                                            .build())
 
     def test_remove_logged_agent_on_multiple_queues(self):
         queue1_id = 987
@@ -111,7 +155,10 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_removed(queue1_id, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with({'queue':queue1_id, 'loggedagents':0})
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queue1_id)
+                                                                            .nb_of_logged_agents(0)
+                                                                            .build())
 
     def test_remove_unlogged_agent_from_one_queue(self):
         queue1_id = 987
@@ -136,7 +183,10 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with({'queue':queue2_id, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queue2_id)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
     def test_remove_queue(self):
 
@@ -151,7 +201,10 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with({'queue':queue2_id, 'loggedagents':1})
+        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+                                                                            .in_queue(queue2_id)
+                                                                            .nb_of_logged_agents(1)
+                                                                            .build())
 
     def test_remove_queue_with_no_agents(self):
         queue_to_remove = 777

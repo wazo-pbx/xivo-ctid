@@ -47,5 +47,7 @@ class QueueStatisticsProducer(object):
         self._notify_change(queueid)
 
     def _notify_change(self, queueid):
-        self.notifier.on_stat_changed({'queue':queueid,
-                                       'loggedagents':len(self.logged_agents[queueid])})
+        self.notifier.on_stat_changed({'stats':
+                                        {queueid :
+                                         { 'loggedagents':len(self.logged_agents[queueid])}
+                                         }})

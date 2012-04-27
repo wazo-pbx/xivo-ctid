@@ -873,32 +873,32 @@ class CTIServer(object):
 
                     self.loop_over_cti_queues()
 
-                    for ipbxid, safe in self.safe.iteritems():
-                        if ipbxid == self.myipbxid:
-                            if (time.time() - self.lastrequest_time[ipbxid]) > self.updates_period() or self.update_userlist[ipbxid]:
-                                self.lastrequest_time[ipbxid] = time.time()
-                                logger.info('[%s] %s : updates (computed timeout) %s (%s)',
-                                            self.xdname, ipbxid, time.asctime(), self.update_userlist[ipbxid])
-                                try:
-                                    # manage_connection.update_amisocks(ipbxid, self)
-                                    self._config.update()
-                                    safe.regular_update()
-                                except Exception:
-                                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
-                                                     ipbxid)
-                                try:
-                                    if self.update_userlist[ipbxid]:
-                                        while self.update_userlist[ipbxid]:
-                                            tmp_ltr = self.update_userlist[ipbxid].pop()
-                                            if tmp_ltr != 'xivo[cticonfig,update]':
-                                                listtorequest = tmp_ltr[5:-12] + 's'
-                                                safe.update_config_list(listtorequest)
-                                                self.loop_over_cti_queues()
-                                    else:
-                                        safe.update_config_list_all()
-                                        self.loop_over_cti_queues()
-                                except Exception:
-                                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
+#                    for ipbxid, safe in self.safe.iteritems():
+#                        if ipbxid == self.myipbxid:
+#                            if (time.time() - self.lastrequest_time[ipbxid]) > self.updates_period() or self.update_userlist[ipbxid]:
+#                                self.lastrequest_time[ipbxid] = time.time()
+#                                logger.info('[%s] %s : updates (computed timeout) %s (%s)',
+#                                            self.xdname, ipbxid, time.asctime(), self.update_userlist[ipbxid])
+#                                try:
+#                                    # manage_connection.update_amisocks(ipbxid, self)
+#                                    self._config.update()
+#                                    safe.regular_update()
+#                                except Exception:
+#                                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
+#                                                     ipbxid)
+#                                try:
+#                                    if self.update_userlist[ipbxid]:
+#                                        while self.update_userlist[ipbxid]:
+#                                            tmp_ltr = self.update_userlist[ipbxid].pop()
+#                                            if tmp_ltr != 'xivo[cticonfig,update]':
+#                                                listtorequest = tmp_ltr[5:-12] + 's'
+#                                                safe.update_config_list(listtorequest)
+#                                                self.loop_over_cti_queues()
+#                                    else:
+#                                        safe.update_config_list_all()
+#                                        self.loop_over_cti_queues()
+#                                except Exception:
+#                                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
 
             if not sels_i and not sels_o and not sels_e:
                 # when nothing happens on the sockets, we fall here
