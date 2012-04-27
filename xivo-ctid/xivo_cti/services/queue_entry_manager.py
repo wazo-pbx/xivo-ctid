@@ -11,36 +11,65 @@ NUMBER = 'CallerIDNum'
 POSITION = 'Position'
 QUEUE = 'Queue'
 UNIQUE_ID = 'Uniqueid'
+COUNT = 'Count'
+
+
+def parse_join(event):
+    try:
+        manager = QueueEntryManager.get_instance()
+        manager.join(event[QUEUE],
+                     int(event[POSITION]),
+                     int(event[COUNT]),
+                     event[NAME],
+                     event[NUMBER],
+                     event[UNIQUE_ID])
+    except Exception:
+        logger.warning('Failed to parse Join event %s', event)
+
+
+def parse_leave(event):
+    try:
+        manager = QueueEntryManager.get_instance()
+        manager.leave(event[QUEUE],
+                      int(event[POSITION]),
+                      int(event[COUNT]),
+                      event[UNIQUE_ID])
+    except KeyError:
+        logger.warning('Failed to parse Leave event %s', event)
+
 
 class QueueEntryManager(object):
+
+    _instance = None
 
     def __init__(self):
         self._queue_entries = {}
 
-    def handle_join_event(self, event):
+    def join(self, queue_name, pos, count, name, number, unique_id):
         try:
-            entry = QueueEntry(event[POSITION], event[NAME], event[NUMBER])
-            queue_name = event[QUEUE]
-            unique_id = event[UNIQUE_ID]
+            entry = QueueEntry(pos, name, number)
             if queue_name not in self._queue_entries:
                 self._queue_entries[queue_name] = {}
             self._queue_entries[queue_name][unique_id] = entry
-            self._count_check()
+            self._count_check(queue_name, count)
         except Exception:
-            logger.exception('Failed to update queue entries from %s', event)
+            logger.exception('Failed to insert queue entry')
 
-    def handle_leave_event(self, event):
+    def leave(self, queue_name, pos, count, unique_id):
         try:
-            queue_name = event[QUEUE]
-            unique_id = event[UNIQUE_ID]
-            if queue_name in self._queue_entries and unique_id in self._queue_entries[queue_name]:
-                self._queue_entries[queue_name].pop(unique_id)
-            self._count_check()
+            self._queue_entries[queue_name].pop(unique_id)
+            self._count_check(queue_name, count)
         except Exception:
-            logger.exception('Did not remove queue entry')
+            logger.exception('Failed to remove queue entry')
 
     def _count_check(self, queue_name, expected_count):
         if queue_name in self._queue_entries:
             assert(expected_count == len(self._queue_entries[queue_name]))
         else:
             assert(expected_count == 0)
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls()
+        return cls._instance
