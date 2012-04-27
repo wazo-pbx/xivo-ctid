@@ -7,6 +7,7 @@ import time
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager
+from xivo_cti.xivo_ami import AMIClass
 
 QUEUE_NAME = 'testqueue'
 
@@ -241,3 +242,46 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.clear_data(QUEUE_NAME)
 
         self.assertFalse(QUEUE_NAME in self.manager._queue_entries)
+
+    def test_parse_queue_params(self):
+        msg = {'Event': 'QueueParams',
+               'Queue': QUEUE_NAME,
+               'Max': '0',
+               'Strategy': 'ringall',
+               'Calls': '1',
+               'Holdtime': '12',
+               'TalkTime': '0',
+               'Completed': '14',
+               'Abandoned': '5',
+               'ServiceLevel': '0',
+               'ServicelevelPerf': '0.0',
+               'Weight': '0'}
+
+        clear_data, handler = self.manager.clear_data, Mock()
+        self.manager.clear_data = handler
+
+        queue_entry_manager.parse_queue_params(msg)
+
+        handler.assert_called_once_with(QUEUE_NAME)
+
+        self.manager.clear_data = clear_data
+
+    def test_synchronize_queue_all(self):
+        ami_class = Mock()
+        ami_class.sendqueuestatus = Mock()
+        self.manager._ami = ami_class
+
+        self.manager.synchronize()
+
+        self.assertTrue(ami_class.sendqueuestatus.called)
+
+        self.manager._ami = None
+
+    def test_synchronize_queue(self):
+        ami_class = Mock()
+
+        self.manager._ami = ami_class
+
+        self.manager.synchronize(QUEUE_NAME)
+
+        ami_class.sendqueuestatus.assert_called_once_with(QUEUE_NAME)

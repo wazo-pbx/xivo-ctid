@@ -7,13 +7,8 @@ logger = logging.getLogger(__name__)
 
 QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number', 'join_time'])
 
-NAME = 'CallerIDName'
-NUMBER = 'CallerIDNum'
-POSITION = 'Position'
-QUEUE = 'Queue'
-UNIQUE_ID = 'Uniqueid'
-COUNT = 'Count'
-WAIT = 'Wait'
+NAME, NUMBER, POSITION, QUEUE, UNIQUE_ID, COUNT, WAIT = \
+    'CallerIDName', 'CallerIDNum', 'Position', 'Queue', 'Uniqueid', 'Count', 'Wait'
 
 
 def parse_join(event):
@@ -25,7 +20,7 @@ def parse_join(event):
                      event[NAME],
                      event[NUMBER],
                      event[UNIQUE_ID])
-    except Exception:
+    except (KeyError, ValueError):
         logger.warning('Failed to parse Join event %s', event)
 
 
@@ -38,7 +33,7 @@ def parse_queue_entry(event):
                        event[NUMBER],
                        event[UNIQUE_ID],
                        int(event[WAIT]))
-    except Exception:
+    except (KeyError, ValueError):
         logger.warning('Failed to parse QueueEntry event %s', event)
 
 
@@ -49,8 +44,16 @@ def parse_leave(event):
                       int(event[POSITION]),
                       int(event[COUNT]),
                       event[UNIQUE_ID])
-    except KeyError:
+    except (KeyError, ValueError):
         logger.warning('Failed to parse Leave event %s', event)
+
+
+def parse_queue_params(event):
+    try:
+        manager = QueueEntryManager.get_instance()
+        manager.clear_data(event[QUEUE])
+    except KeyError:
+        logger.warning('Failed to parse QueueParams event %s', event)
 
 
 class QueueEntryManager(object):
@@ -59,6 +62,7 @@ class QueueEntryManager(object):
 
     def __init__(self):
         self._queue_entries = {}
+        self._ami = None
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         try:
@@ -86,6 +90,12 @@ class QueueEntryManager(object):
         except Exception:
             # Sync
             logger.exception('Failed to remove queue entry')
+
+    def synchronize(self, queue_name=None):
+        if self._ami:
+            self._ami.sendqueuestatus(queue_name)
+        else:
+            logger.warning('QueueEntryManager cannot contact any AMI instance')
 
     def clear_data(self, queue_name):
         self._queue_entries.pop(queue_name, None)
