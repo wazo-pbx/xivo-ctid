@@ -215,3 +215,19 @@ class TestInnerdataDAO(unittest.TestCase):
         self.assertEquals(len(list), len(expected_list))
         for element in list:
             self.assertTrue(element in expected_list)
+
+    def test_get_presences(self):
+        profile = 'client'
+        expected_result = ['available', 'disconnected']
+        get_config_return = {'profiles': {'client': {'userstatus': 2}},
+                             'userstatus': {2: {'available': {},
+                                                  'disconnected': {}
+                                                 }
+                                           }
+                             }
+        side_effect = lambda get_config_argument:get_config_return[get_config_argument]
+        self.innerdata_dao.innerdata._config.getconfig.side_effect = side_effect
+
+        result = self.innerdata_dao.get_presences(profile)
+
+        self.assertEquals(result, expected_result)

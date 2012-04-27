@@ -82,9 +82,9 @@ from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
-from xivo_cti.services.presence_executor import PresenceExecutor
-from xivo_cti.services.user_executor import UserExecutor
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
+from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
+from xivo_cti.services.presence_service_manager import PresenceServiceManager
 
 logger = logging.getLogger('main')
 
@@ -170,6 +170,9 @@ class CTIServer(object):
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
+        self._presence_service_manager = PresenceServiceManager()
+        self._presence_service_manager.innerdata_dao = self._innerdata_dao
+        self._user_service_manager.presence_service_manager = self._presence_service_manager
         self._agent_service_manager = AgentServiceManager()
         self._agent_service_manager.line_features_dao = self._line_features_dao
         self._agent_service_manager.agent_features_dao = self._agent_features_dao
@@ -188,8 +191,8 @@ class CTIServer(object):
         self._queue_statistics_producer = QueueStatisticsProducer()
         self._queue_statistics_notifier = StatisticsNotifier()
         self._queue_statistics_producer.notifier = self._queue_statistics_notifier
-        self._user_service_manager.presence_executor = PresenceExecutor()
-        self._user_service_manager.user_executor = UserExecutor()
+        self._user_service_manager.presence_service_executor = PresenceServiceExecutor()
+        self._user_service_manager.agent_service_manager = self._agent_service_manager
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -402,8 +405,7 @@ class CTIServer(object):
             self._queuemember_service_manager.innerdata_dao.innerdata = safe
             self._queuemember_service_notifier.events_cti = safe.events_cti
             self._queuemember_service_notifier.ipbx_id = self.myipbxid
-            self._user_service_manager.presence_executor._innerdata = safe
-            self._user_service_manager.user_executor._innerdata = safe
+            self._user_service_manager.presence_service_executor._innerdata = safe
             self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].register_ami_handlers()
             self.safe[self.myipbxid].update_directories()

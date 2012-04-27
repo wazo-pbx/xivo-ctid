@@ -85,6 +85,14 @@ class UserServiceManager(object):
 
     def disconnect(self, user_id):
         self.user_features_dao.disconnect(user_id)
-        self.presence_executor.disconnect(user_id)
-        self.user_executor.notify_cti(user_id)
+        self.set_presence(user_id, 'disconnected')
 
+    def set_presence(self, user_id, presence):
+        user_profile = self.user_features_dao.get_profile(user_id)
+        if self.presence_service_manager.is_valid_presence(user_profile, presence):
+            self.user_features_dao.set_presence(user_id, presence)
+            self.presence_service_executor.execute_actions(user_id, presence)
+            self.user_service_notifier.presence_updated(user_id, presence)
+            if self.user_features_dao.is_agent(user_id):
+                agent_id = self.user_features_dao.agent_id(user_id)
+                self.agent_service_manager.set_presence(agent_id, presence)

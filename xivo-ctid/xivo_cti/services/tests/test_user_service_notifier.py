@@ -194,3 +194,18 @@ class TestUserServiceNotifier(unittest.TestCase):
     def test_prepare_message(self):
         self.notifier._prepare_message('123')
         self.assertEqual(self.notifier.STATUS_MESSAGE['tid'], '')
+
+    def test_presence_updated(self):
+        user_id = 64
+        expected = {"class": "getlist",
+                    "status": {"availstate": 'available'},
+                    "function": "updatestatus",
+                    "listname": "users",
+                    "tid": user_id,
+                    "tipbxid": self.ipbx_id}
+
+        self.notifier.presence_updated(user_id, 'available')
+
+        self.assertTrue(self.notifier.events_cti.qsize() > 0)
+        event = self.notifier.events_cti.get()
+        self.assertEqual(event, expected)

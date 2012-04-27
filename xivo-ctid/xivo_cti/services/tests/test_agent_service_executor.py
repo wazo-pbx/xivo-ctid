@@ -53,3 +53,11 @@ class TestAgentServiceExecutor(unittest.TestCase):
         self.executor.logoff(number)
 
         self.assertEqual(self.ami.method_calls, [call.agentlogoff(number)])
+
+    def test_log_presence(self):
+        presence = 'disconnected'
+        agent_interface = 'Agent/3135'
+
+        self.executor.log_presence(agent_interface, presence)
+
+        self.ami.queuelog.assert_called_once_with('NONE', 'PRESENCE', interface=agent_interface, message=presence)

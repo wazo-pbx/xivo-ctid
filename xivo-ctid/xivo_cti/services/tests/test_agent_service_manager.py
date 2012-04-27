@@ -34,6 +34,7 @@ from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):
@@ -209,3 +210,13 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.queueunpause_all(rowid)
 
         self.assertEqual(self.agent_service_executor.method_calls, [call.queues_unpause('Agent/1234')])
+
+    def test_set_presence(self):
+        presence = 'disconnected'
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.set_presence(rowid, presence)
+
+        self.agent_service_executor.log_presence.assert_called_once_with('Agent/1234', presence)

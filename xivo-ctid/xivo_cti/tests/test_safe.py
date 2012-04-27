@@ -35,6 +35,7 @@ from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.tools.caller_id import build_agi_caller_id
 from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.cti.commands.availstate import Availstate
 
 
 class TestSafe(unittest.TestCase):
@@ -58,6 +59,7 @@ class TestSafe(unittest.TestCase):
 
     def test_register_cti_handlers(self):
         safe = Safe(self._ctiserver, self._ipbx_id)
+        self._ctiserver._user_service_manager = Mock(UserServiceManager)
 
         safe.register_cti_handlers()
 
@@ -65,6 +67,7 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(UpdateConfig, safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, safe.handle_getlist_update_status)
         self.assert_callback_registered(Directory, safe.getcustomers)
+        self.assert_callback_registered(Availstate, safe._ctiserver._user_service_manager.set_presence)
 
     def test_handle_getlist_list_id_not_a_list(self):
         safe = Safe(self._ctiserver, self._ipbx_id)

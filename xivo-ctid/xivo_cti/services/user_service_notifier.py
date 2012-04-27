@@ -69,6 +69,13 @@ class UserServiceNotifier(object):
                                              'destbusy': destination}})
         return filter_status_msg
 
+    def _prepare_presence_updated(self, user_id, presence):
+        filter_status_msg = self._prepare_message(user_id)
+        status_update = {'function': 'updatestatus',
+                         'status': {'availstate': presence}}
+        filter_status_msg.update(status_update)
+        return filter_status_msg
+
     def dnd_enabled(self, user_id):
         self.events_cti.put(self._prepare_dnd_message(True, user_id))
 
@@ -98,3 +105,6 @@ class UserServiceNotifier(object):
 
     def busy_fwd_disabled(self, user_id, destination):
         self.events_cti.put(self._prepare_busy_fwd_message(False, destination, user_id))
+
+    def presence_updated(self, user_id, presence):
+        self.events_cti.put(self._prepare_presence_updated(user_id, presence))

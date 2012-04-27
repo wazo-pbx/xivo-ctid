@@ -344,6 +344,20 @@ class Test(unittest.TestCase):
 
         self.assertEqual(res, agent_id)
 
+    def test_agent_id_no_agent(self):
+        user = UserFeatures()
+
+        user.firstname = 'test_agent'
+
+        self.session.add(user)
+        self.session.commit()
+
+        dao = UserFeaturesDAO(self.session)
+
+        res = dao.agent_id(user.id)
+
+        self.assertEqual(res, None)
+
     def _insert_user_with_busy_fwd(self, destination, enabled):
         user_features = UserFeatures()
         user_features.enablebusy = enabled
@@ -376,17 +390,68 @@ class Test(unittest.TestCase):
         self.dao._innerdata = self._innerdata
         user_id = 1
         self._userlist = {}
-        self._userlist[user_id] = {'availstate': 'available',
-                                            'connection': True,
-                                            'last-logouttimestamp': None}
+        self._userlist[user_id] = {'connection': True,
+                                   'last-logouttimestamp': None}
         self.dao._innerdata.xod_status = {'users': self._userlist}
-        expected_userdata = {'availstate': 'disconnected',
-                             'connection': None,
+        expected_userdata = {'connection': None,
                              'last-logouttimestamp': time.time()}
 
         self.dao.disconnect(user_id)
 
         result = self.dao._innerdata.xod_status['users'][user_id]
-        self.assertEqual(expected_userdata['availstate'], result['availstate'])
         self.assertEqual(expected_userdata['connection'], result['connection'])
         self.assertTrue(expected_userdata['last-logouttimestamp'] > time.time() - 1)
+
+    def test_set_presence(self):
+        self.dao._innerdata = self._innerdata
+        presence = 'disconnected'
+        user_id = 1
+        self._userlist = {}
+        self._userlist[user_id] = {'availstate': 'available'}
+        self.dao._innerdata.xod_status = {'users': self._userlist}
+        expected_userdata = {'availstate': presence}
+
+        self.dao.set_presence(user_id, presence)
+
+        result = self.dao._innerdata.xod_status['users'][user_id]
+        self.assertEqual(expected_userdata['availstate'], result['availstate'])
+
+    def test_is_agent_yes(self):
+        agent_id = 5
+        user = UserFeatures()
+
+        user.firstname = 'test_agent'
+        user.agentid = agent_id
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = self.dao.is_agent(user.id)
+
+        self.assertEqual(result, True)
+
+    def test_is_agent_no(self):
+        user = UserFeatures()
+
+        user.firstname = 'test_agent'
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = self.dao.is_agent(user.id)
+
+        self.assertEqual(result, False)
+
+    def test_get_profile(self):
+        expected_user_profile = 'client'
+        user = UserFeatures()
+        user.firstname = 'test_agent'
+        user.profileclient = 'client'
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = self.dao.get_profile(user.id)
+
+        self.assertEqual(result, expected_user_profile)
+

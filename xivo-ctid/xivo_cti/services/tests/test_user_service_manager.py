@@ -29,9 +29,9 @@ from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
-from xivo_cti.services.presence_executor import PresenceExecutor
-from xivo_cti.services.user_executor import UserExecutor
-
+from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
+from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.presence_service_manager import PresenceServiceManager
 
 class TestUserServiceManager(unittest.TestCase):
 
@@ -185,11 +185,76 @@ class TestUserServiceManager(unittest.TestCase):
     def test_disconnect(self):
         user_id = 95
         self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
-        self.user_service_manager.presence_executor = Mock(PresenceExecutor)
-        self.user_service_manager.user_executor = Mock(UserExecutor)
+        self.user_service_manager.set_presence = Mock()
 
         self.user_service_manager.disconnect(user_id)
 
         self.user_service_manager.user_features_dao.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.presence_executor.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.user_executor.notify_cti.assert_called_once_with(user_id)
+        self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected')
+
+    def test_set_valid_presence_no_agent(self):
+        user_id = 95
+        presence = 'disconnected'
+        expected_presence = 'disconnected'
+        user_profile = 'client'
+        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
+        self.user_service_manager.user_features_dao.is_agent.return_value = False
+        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
+        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = True
+        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
+        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+
+        self.user_service_manager.set_presence(user_id, presence)
+
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.user_features_dao.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.user_features_dao.is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
+
+    def test_set_valid_presence_with_agent(self):
+        user_id = 95
+        expected_agent_id = 10
+        presence = 'disconnected'
+        expected_presence = 'disconnected'
+        user_profile = 'client'
+        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
+        self.user_service_manager.user_features_dao.is_agent.return_value = True
+        self.user_service_manager.user_features_dao.agent_id.return_value = expected_agent_id
+        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
+        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = True
+        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
+        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+
+        self.user_service_manager.set_presence(user_id, presence)
+
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.user_features_dao.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.user_features_dao.is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(expected_agent_id, expected_presence)
+
+    def test_set_not_valid_presence(self):
+        user_id = 95
+        presence = 'disconnected'
+        expected_presence = 'disconnected'
+        user_profile = 'client'
+        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
+        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
+        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = False
+        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
+        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+
+        self.user_service_manager.set_presence(user_id, presence)
+
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.user_features_dao.set_presence.assert_never_called()
+        self.user_service_manager.presence_service_executor.assert_never_called()
+        self.user_service_notifier.presence_updated.assert_never_called()
+        self.user_service_manager.user_features_dao.is_agent.assert_never_called()
+        self.user_service_manager.agent_service_manager.set_presence.assert_never_called()

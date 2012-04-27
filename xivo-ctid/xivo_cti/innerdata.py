@@ -283,7 +283,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
-        Availstate.register_callback_params(self.update_presence, ['user_id', 'availstate'])
+        Availstate.register_callback_params(self._ctiserver._user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -1117,50 +1117,6 @@ class Safe(object):
             rep.append('  * %s :' % k)
         rep.append('--------------')
         return rep
-
-    def user_connection_status(self, userid):
-        pass
-
-    def update_presence(self, userid, newstate):
-        oldstate = self.xod_status.get('users').get(userid).get('availstate')
-        profdetails = self.get_user_permissions('userstatus', userid)
-
-        # allow oldstate to be 'unknown' (as might be the case when connecting ...)
-        if oldstate not in profdetails and oldstate not in ['unknown']:
-            logger.warning('old state %s (for user %s) not defined in config',
-                           oldstate, userid)
-            return
-        # available always exists, and we can't connect someone as disconnected ...
-        if newstate not in profdetails:
-            logger.warning('new state %s (for user %s) not defined in config',
-                           newstate, userid)
-            newstate = 'available'
-
-        # XXX check on allowed states old => new
-        # XXX check on ipbx-related state
-        # XXX check on connected state of userid
-        truestate = newstate
-        if truestate != oldstate:
-            self.xod_status.get('users').get(userid)['availstate'] = truestate
-            agentid = self.user_features_dao.get(userid).agentid
-            agents_keeplist = self.xod_config.get('agents').keeplist
-            if agentid in agents_keeplist:
-                agentnumber = agents_keeplist[agentid].get('number')
-                actionid = ''.join(random.sample(ALPHANUMS, 10))
-                params = {'mode': 'presence',
-                          'amicommand': 'queuelog',
-                          'amiargs': ('NONE', 'PRESENCE', 'NONE',
-                                      'Agent/%s' % agentnumber,
-                                      '%s|agent:%s/%s|user:%s/%s'
-                                      % (truestate,
-                                         self.ipbxid,
-                                         agentid,
-                                         self.ipbxid,
-                                         userid))
-                    }
-                self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
-            self.appendcti('users', 'updatestatus', userid)
-            self.presence_action(userid)
 
     def presence_action(self, userid):
         try:

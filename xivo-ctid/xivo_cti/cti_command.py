@@ -282,7 +282,7 @@ class Command(object):
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
-        self._ctiserver.safe[ipbxid].update_presence(userid, availstate)
+        self._ctiserver._user_service_manager.set_presence(userid, availstate)
 
     # end of login/logout related commands
 

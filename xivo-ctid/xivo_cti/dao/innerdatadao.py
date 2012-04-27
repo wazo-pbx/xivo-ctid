@@ -70,3 +70,8 @@ class InnerdataDAO(object):
 
     def get_queue_ids(self):
         return self.innerdata.xod_config['queues'].get_queues()
+
+    def get_presences(self, profile):
+        profile_id = self.innerdata._config.getconfig('profiles').get(profile).get('userstatus')
+        return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
+

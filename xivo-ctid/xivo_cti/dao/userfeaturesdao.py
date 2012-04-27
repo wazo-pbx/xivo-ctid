@@ -112,9 +112,19 @@ class UserFeaturesDAO(object):
 
     def disconnect(self, user_id):
         userdata = self._innerdata.xod_status['users'][user_id]
-        userdata['availstate'] = 'disconnected'
         userdata['connection'] = None
         userdata['last-logouttimestamp'] = time.time()
+
+    def set_presence(self, user_id, presence):
+        userdata = self._innerdata.xod_status['users'][user_id]
+        userdata['availstate'] = presence
+
+    def is_agent(self, user_id):
+        agent_id = self.agent_id(user_id)
+        return agent_id is not None
+
+    def get_profile(self, user_id):
+        return self.get(user_id).profileclient
 
     @classmethod
     def new_from_uri(cls, uri):

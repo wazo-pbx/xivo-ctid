@@ -66,3 +66,7 @@ class AgentServiceManager(object):
     def queueunpause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_unpause(interface)
+
+    def set_presence(self, agentid, presence):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.log_presence(interface, presence)
