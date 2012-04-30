@@ -78,6 +78,10 @@ def parse_queue_params(event):
     except KeyError:
         logger.warning('Failed to parse QueueParams event %s', event)
 
+def parse_queue_status_complete(event):
+    manager = QueueEntryManager.get_instance()
+    manager.publish()
+
 
 class QueueEntryManager(object):
 
@@ -86,6 +90,8 @@ class QueueEntryManager(object):
     def __init__(self):
         self._queue_entries = {}
         self._ami = None
+        self._notifier = None
+        self._encoder = None
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         try:
@@ -94,6 +100,8 @@ class QueueEntryManager(object):
         except Exception:
             self.synchronize(queue_name)
             logger.exception('Failed to insert queue entry')
+        else:
+            self.publish(queue_name)
 
     def insert(self, queue_name, pos, name, number, unique_id, wait):
         try:
@@ -113,6 +121,8 @@ class QueueEntryManager(object):
         except Exception:
             self.synchronize(queue_name)
             logger.exception('Failed to remove queue entry')
+        else:
+            self.publish(queue_name)
 
     def synchronize(self, queue_name=None):
         logger.info('Synchronizing QueueMemberEntry on %s',
@@ -145,6 +155,15 @@ class QueueEntryManager(object):
         except Exception:
             logger.exception('Failed to decrement queue positions')
             self.synchronize(queue_name)
+
+    def publish(self, queue_name=None):
+        if queue_name and queue_name in self._queue_entries:
+            encoded_status = self._encoder.encode(queue_name,
+                                                  self._queue_entries[queue_name])
+            self._notifier.publish(queue_name, encoded_status)
+        elif queue_name ==  None:
+            for q in self._queue_entries.keys():
+                self.publish(q)
 
     @classmethod
     def get_instance(cls):

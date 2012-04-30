@@ -30,6 +30,10 @@ import time
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager
+from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
+from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
+from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
 QUEUE_NAME = 'testqueue'
 
@@ -97,6 +101,11 @@ class TestQueueEntryManager(unittest.TestCase):
 
     def setUp(self):
         self.manager = QueueEntryManager.get_instance()
+        self.encoder = QueueEntryEncoder.get_instance()
+        self.notifier = QueueEntryNotifier.get_instance()
+        self.manager._notifier = self.notifier
+        self.manager._encoder = self.encoder
+        self.encoder.queue_features_dao = Mock(QueueFeaturesDAO)
 
     def tearDown(self):
         QueueEntryManager._instance = None
@@ -125,6 +134,17 @@ class TestQueueEntryManager(unittest.TestCase):
         handler.assert_called_once_with(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
         self.manager.join = join
+
+    def test_parse_queue_status_complete(self):
+        msg = {'Event': 'QueueStatusComplete'}
+        publish, handler = self.manager.publish, Mock()
+        self.manager.publish = handler
+
+        queue_entry_manager.parse_queue_status_complete(msg)
+
+        handler.assert_called_once_with()
+
+        self.manager.publish = publish
 
     def test_parse_queue_entry(self):
         insert, handler = self.manager.insert, Mock()
@@ -307,3 +327,23 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.synchronize(QUEUE_NAME)
 
         ami_class.sendqueuestatus.assert_called_once_with(QUEUE_NAME)
+
+    def test_publish(self):
+        msg = {'encoded': 'result'}
+        encoder, self.manager._encoder = self.manager._encoder, Mock(QueueEntryEncoder)
+        self.manager._notifier = QueueEntryNotifier()
+        self.manager._encoder.encode.return_value = msg
+        self._subscriber_called = False
+
+        handler = Mock(CTI)
+
+        self._join_1()
+        self._join_2()
+        self._join_3()
+
+        self.manager._notifier.subscribe(handler, QUEUE_NAME)
+
+        self.manager.publish(QUEUE_NAME)
+
+        # Called twice because we get an update when subscribing
+        self.assertEqual(handler.send_message.call_count, 2)

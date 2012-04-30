@@ -26,6 +26,8 @@ from collections import defaultdict
 
 class QueueEntryNotifier(object):
 
+    _instance = None
+
     MSG_TEMPLATE = {'class': 'queueentryupdate',
                     'state': None}
 
@@ -44,3 +46,9 @@ class QueueEntryNotifier(object):
         self._cache[queue_name] = msg
         for connection in self._subscriptions.get(queue_name, []):
             connection.send_message(msg)
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls()
+        return cls._instance

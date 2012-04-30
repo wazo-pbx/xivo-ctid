@@ -23,6 +23,8 @@
 
 class QueueEntryEncoder(object):
 
+    _instance = None
+
     MSG_TEMPLATE = {'class': 'queueentryupdate',
                     'state': None}
 
@@ -65,3 +67,9 @@ class QueueEntryEncoder(object):
         state['entries'] = entry_list
 
         return state
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls()
+        return cls._instance
