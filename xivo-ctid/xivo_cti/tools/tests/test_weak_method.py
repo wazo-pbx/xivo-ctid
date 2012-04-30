@@ -87,3 +87,21 @@ class Test(unittest.TestCase):
         self.assertEqual(ref1, ref2)
 
         self.assertNotEqual(ref1, ref3)
+
+    def test_call_dead_weak_method_bound(self):
+        class TestClass:
+            def func():
+                pass
+        instance = TestClass()
+        ref = WeakMethodBound(instance.func)
+        del instance
+
+        self.assertRaises(TypeError, ref)
+
+    def test_call_dead_function(self):
+        def func():
+            pass
+        ref = WeakMethodFree(func)
+        del func
+
+        self.assertRaises(TypeError, ref)
