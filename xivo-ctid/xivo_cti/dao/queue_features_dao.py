@@ -1,5 +1,5 @@
-#!/usr/bin/python
 # vim: set fileencoding=utf-8 :
+# XiVO CTI Server
 
 # Copyright (C) 2007-2012  Avencall
 #
@@ -21,26 +21,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
+from xivo_cti.dao.alchemy.queuefeatures import QueueFeatures
+from xivo_cti.dao.alchemy import dbconnection
 
 
-class QueueEntryNotifier(object):
+class QueueFeaturesDAO(object):
 
-    MSG_TEMPLATE = {'class': 'queueentryupdate',
-                    'state': None}
+    def __init__(self, session):
+        self._session = session
 
-    def __init__(self):
-        self._subscriptions = defaultdict(set)
-        self._cache = defaultdict(dict)
+    def id_from_name(self, queue_name):
+        res = self._session.query(QueueFeatures).filter(QueueFeatures.name == queue_name)
+        if res.count() == 0:
+            raise LookupError('No such queue')
+        return res[0].id
 
-    def subscribe(self, client_connection, queue_name):
-        self._subscriptions[queue_name].add(client_connection)
-        if queue_name in self._cache:
-            client_connection.send_message(self._cache[queue_name])
-
-    def publish(self, queue_name, new_state):
-        msg = dict(self.MSG_TEMPLATE)
-        msg['state'] = new_state
-        self._cache[queue_name] = msg
-        for connection in self._subscriptions.get(queue_name, []):
-            connection.send_message(msg)
+    @classmethod
+    def new_from_uri(cls, uri):
+        connection = dbconnection.get_connection(uri)
+        return cls(connection.get_session())

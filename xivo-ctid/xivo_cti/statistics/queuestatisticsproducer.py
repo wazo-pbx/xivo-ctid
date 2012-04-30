@@ -23,8 +23,7 @@ class QueueStatisticsProducer(object):
         if agentid not in self.queues_of_agent:
             self.queues_of_agent[agentid] = set()
         self.queues_of_agent[agentid].add(queueid)
-        if agentid in self.logged_agents:
-            self._notify_change(queueid)
+        self._notify_change(queueid)
         logger.info('agent id %s added to queue id %s', agentid, queueid)
 
     def on_agent_loggedon(self, agentid):
@@ -46,6 +45,7 @@ class QueueStatisticsProducer(object):
         self.queues_of_agent[agentid].remove(queueid)
         if agentid in self.logged_agents:
             self._notify_change(queueid)
+        logger.info('agent id %s removed from queue id %s', agentid, queueid)
 
     def on_queue_removed(self, queueid):
         self.queues.remove(queueid)

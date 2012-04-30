@@ -32,14 +32,15 @@ class DeltaComputer(object):
     def compute_delta(new_dict, old_dict):
         added_keys = list(set(new_dict) - set(old_dict))
         added_items = dict([(item_key, new_dict[item_key]) for item_key in added_keys])
-        removed = list(set(old_dict) - set(new_dict))
+        removed_keys = list(set(old_dict) - set(new_dict))
+        removed_items = dict([(item_key, old_dict[item_key]) for item_key in removed_keys])
         changed = dict([(new_key, new_value) for (new_key, new_value) in new_dict.iteritems()
                         if new_key in old_dict
                         and old_dict[new_key] != new_dict[new_key]])
-        return DictDelta(added_items, changed, removed)
+        return DictDelta(added_items, changed, removed_items)
 
     @classmethod
     def compute_delta_no_delete(cls, new_dict, old_dict):
         delta_delete = cls.compute_delta(new_dict, old_dict)
-        delta_no_delete = DictDelta(delta_delete.add, delta_delete.change, [])
+        delta_no_delete = DictDelta(delta_delete.add, delta_delete.change, {})
         return delta_no_delete

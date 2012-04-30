@@ -27,13 +27,15 @@ from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
+from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
 
 class TestQueueMemberServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.queuemember_service_manager = QueueMemberServiceManager()
-        self.queuemember_service_manager.queuemember_notifier = Mock()
+        self.queuemember_service_notifier = Mock(QueueMemberServiceNotifier)
+        self.queuemember_service_manager.queuemember_notifier = self.queuemember_service_notifier
 
         self.old_queuemember_formatter = queuemember_formatter.QueueMemberFormatter
         queuemember_formatter.QueueMemberFormatter = Mock()
@@ -90,31 +92,32 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_service_manager.innerdata_dao = innerdata_dao
         self.queuemember_service_manager.delta_computer = DeltaComputer()
         expected_ami_request = [self.tupleA, self.tupleB, self.tupleC]
-        expected_removed = DictDelta({}, {}, [])
+        expected_removed = DictDelta({}, {}, {})
 
         self.queuemember_service_manager.update_config()
 
-        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertTrue(call.queuemember_config_updated(expected_removed) in notifier_method_calls)
-        self.assertTrue(call.request_queuemembers_to_ami(expected_ami_request) in notifier_method_calls)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_once_with(expected_removed)
+        self.queuemember_service_notifier.request_queuemembers_to_ami.assert_called_once_with(expected_ami_request)
 
     def test_add_dynamic_queuemember(self):
 
         self.queuemember_service_manager.add_dynamic_queuemember(self.ami_event)
 
-        formatter_method_calls = queuemember_formatter.QueueMemberFormatter.method_calls
-        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertEqual(formatter_method_calls, [call.format_queuemember_from_ami_add(self.ami_event)])
-        self.assertEqual(notifier_method_calls, [call.queuemember_config_updated(ANY)])
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.assert_called_with(self.ami_event)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(ANY)
+
 
     def test_remove_dynamic_queuemember(self):
+        queuemembers_to_remove = {'Agent/2345,service': {'queue_name':'service', 'interface':'Agent/2345'},
+                                  'Agent/2309,service': {'queue_name':'service', 'interface':'Agent/2309'}}
+
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.return_value = queuemembers_to_remove
 
         self.queuemember_service_manager.remove_dynamic_queuemember(self.ami_event)
 
-        formatter_method_calls = queuemember_formatter.QueueMemberFormatter.method_calls
-        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertEqual(formatter_method_calls, [call.format_queuemember_from_ami_remove(self.ami_event)])
-        self.assertEqual(notifier_method_calls, [call.queuemember_config_updated(ANY)])
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.assert_called_with(self.ami_event)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(DictDelta({}, {}, queuemembers_to_remove))
+
 
     def test_update_queuemember(self):
         ami_event = self.ami_event
@@ -127,7 +130,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
         notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
         self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
-        self.assertTrue(delta_computer_method_calls == [call.compute_delta_no_delete(ANY,ANY)])
+        self.assertTrue(delta_computer_method_calls == [call.compute_delta_no_delete(ANY, ANY)])
         self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
 
     def test_get_queuemember_to_request_empty(self):
