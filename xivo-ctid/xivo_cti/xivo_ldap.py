@@ -44,7 +44,7 @@ class xivo_ldap(object):
 
             uri_scheme = ldapuri[0]
             if uri_scheme not in ('ldap', 'ldaps'):
-                raise NotImplementedError, 'Unknown URI scheme: %r' % uri_scheme
+                raise NotImplementedError('Unknown URI scheme: %r' % uri_scheme)
 
             # user, pass, host, port
             if ldapuri[1][0] is None:

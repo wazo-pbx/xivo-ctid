@@ -82,7 +82,7 @@ class CTICommand(object):
         for (field, value) in cls.conditions:
             try:
                 if isinstance(field, tuple):
-                    (field1,subfield) = field
+                    (field1, subfield) = field
                     message_field = message[field1][subfield]
                 else:
                     message_field = message[field]

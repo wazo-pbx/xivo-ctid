@@ -9,11 +9,11 @@ class TestEnableUnconditionalForward(unittest.TestCase):
         msg = {"class": "featuresput",
                "commandid": commandid,
                "function": "fwd",
-               "value": {'destunc': '27654','enableunc': True}}
+               "value": {'destunc': '27654', 'enableunc': True}}
 
         enable_unconditional_forward = EnableUnconditionalForward.from_dict(msg)
 
         self.assertTrue(isinstance(enable_unconditional_forward, EnableUnconditionalForward))
-        
-        self.assertEquals(enable_unconditional_forward.destination,'27654')
-        self.assertEquals(enable_unconditional_forward.enable,True)
+
+        self.assertEquals(enable_unconditional_forward.destination, '27654')
+        self.assertEquals(enable_unconditional_forward.enable, True)

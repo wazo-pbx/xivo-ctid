@@ -4,73 +4,73 @@
 event_flags = dict()
 event_others = dict()
 
-event_flags['SYSTEM'] = [ 'Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
-                          'Reload', 'Shutdown', 'ModuleLoadReport',
-                          'FullyBooted', # (1.8)
-                          'PeerStatus', 'DNDState', 'MobileStatus', 'Registry',
-                          'ChannelReload', 'ChannelUpdate', 'LogChannel'
-                          ]
-
-event_flags['CALL'] = [ 'MeetmeJoin',
-                        'MeetmeLeave',
-                        'MeetmeMute',
-                        'MeetmeTalking',
-                        'MeetmeTalkRequest',
-                        'MeetmeEnd',
-                        'Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
-                        'Bridge', 'BridgeExec', 'BridgeAction',
-                        'Transfer', # only in chan_sip
-                        'Hold', # only in chan_sip and chan_iax2
-                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
-                        'ParkedCallStatus', # CLG addendum
-                        'ParkedCall', 'UnParkedCall', 'ParkedCallTimeOut', 'ParkedCallGiveUp',
-                        'MonitorStart', 'MonitorStop', 'ChanSpyStart', 'ChanSpyStop',
-                        'DAHDIChannel',
-                        'Newchannel',
-                        'NewAccountCode', # (1.8)
-                        'NewCallerid', # was 'Newcallerid' in 1.4
-                        'NewPeerAccount',
-                        'Newstate',
-                        'CEL', 'MCID',
-                        'Join', 'Leave',
-                        'ExtensionStatus', 'MusicOnHold',
-                        'FaxSent', 'FaxReceived', 'ReceiveFAXStatus', 'SendFAXStatus', 'ReceiveFAX', 'SendFAX'
-                        ]
-
-event_flags['AGENT'] = [ 'AgentCalled',
-                         'AgentConnect',
-                         'AgentComplete',
-                         'AgentDump',
-                         'AgentRingNoAnswer',
-                         'Agentlogin',
-                         'Agentlogoff',
-                         'QueueCallerAbandon', 'QueueMemberAdded',
-                         'QueueMemberPaused', 'QueueMemberPenalty',
-                         'QueueMemberRemoved', 'QueueMemberStatus'
+event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
+                         'Reload', 'Shutdown', 'ModuleLoadReport',
+                         'FullyBooted',  # (1.8)
+                         'PeerStatus', 'DNDState', 'MobileStatus', 'Registry',
+                         'ChannelReload', 'ChannelUpdate', 'LogChannel'
                          ]
 
-event_flags['USER'] = [ 'JabberEvent', 'JabberStatus', 'UserEvent' ]
+event_flags['CALL'] = ['MeetmeJoin',
+                       'MeetmeLeave',
+                       'MeetmeMute',
+                       'MeetmeTalking',
+                       'MeetmeTalkRequest',
+                       'MeetmeEnd',
+                       'Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
+                       'Bridge', 'BridgeExec', 'BridgeAction',
+                       'Transfer',  # only in chan_sip
+                       'Hold',  # only in chan_sip and chan_iax2
+                       'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
+                       'ParkedCallStatus',  # CLG addendum
+                       'ParkedCall', 'UnParkedCall', 'ParkedCallTimeOut', 'ParkedCallGiveUp',
+                       'MonitorStart', 'MonitorStop', 'ChanSpyStart', 'ChanSpyStop',
+                       'DAHDIChannel',
+                       'Newchannel',
+                       'NewAccountCode',  # (1.8)
+                       'NewCallerid',  # was 'Newcallerid' in 1.4
+                       'NewPeerAccount',
+                       'Newstate',
+                       'CEL', 'MCID',
+                       'Join', 'Leave',
+                       'ExtensionStatus', 'MusicOnHold',
+                       'FaxSent', 'FaxReceived', 'ReceiveFAXStatus', 'SendFAXStatus', 'ReceiveFAX', 'SendFAX'
+                       ]
 
-event_flags['DTMF'] = [ 'DTMF' ]
+event_flags['AGENT'] = ['AgentCalled',
+                        'AgentConnect',
+                        'AgentComplete',
+                        'AgentDump',
+                        'AgentRingNoAnswer',
+                        'Agentlogin',
+                        'Agentlogoff',
+                        'QueueCallerAbandon', 'QueueMemberAdded',
+                        'QueueMemberPaused', 'QueueMemberPenalty',
+                        'QueueMemberRemoved', 'QueueMemberStatus'
+                        ]
 
-event_flags['REPORTING'] = [ 'JitterBufStats', 'RTCPReceived', 'RTCPSent' ]
+event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent' ]
 
-event_flags['CDR'] = [ 'Cdr' ]
+event_flags['DTMF'] = ['DTMF' ]
 
-event_flags['DIALPLAN'] = [ 'Newexten', # in order to handle outgoing calls ?
+event_flags['REPORTING'] = ['JitterBufStats', 'RTCPReceived', 'RTCPSent' ]
+
+event_flags['CDR'] = ['Cdr' ]
+
+event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
                             'VarSet' ]
 
-event_flags['AGI'] = [ 'AGIExec', 'AsyncAGI' ]
+event_flags['AGI'] = ['AGIExec', 'AsyncAGI' ]
 
 # Call Completion events
 # https://wiki.asterisk.org/wiki/download/attachments/9076838/CCSS_architecture.pdf
 
-event_flags['CC'] = [ 'CCAvailable',
+event_flags['CC'] = ['CCAvailable',
                       'CCCallerRecalling', 'CCCallerStartMonitoring', 'CCCallerStopMonitoring',
                       'CCFailure', 'CCMonitorFailed', 'CCOfferTimerStart',
                       'CCRecallComplete', 'CCRequestAcknowledged', 'CCRequested' ]
 
-event_flags['AOC'] = [ 'AOC-D', 'AOC-E', 'AOC-S' ]
+event_flags['AOC'] = ['AOC-D', 'AOC-E', 'AOC-S' ]
 
 event_flags['LOG'] = []
 event_flags['VERBOSE'] = []
@@ -80,21 +80,21 @@ event_flags['ORIGINATE'] = []
 event_flags['HOOKRESPONSE'] = []
 
 event_others['replies'] = [
-    'PeerEntry', 'PeerlistComplete', # after SIPpeers or IAXpeers or ...
-    'ParkedCallsComplete', # after ParkedCalls
-    'MeetmeList', 'MeetmeListComplete', # after MeetMeList
-    'Status' , 'StatusComplete', # after Status
-    'Agents', 'AgentsComplete', # after Agents
-    'QueueParams', 'QueueEntry', 'QueueMember', 'QueueStatusComplete', # after QueueStatus
-    'QueueSummary', 'QueueSummaryComplete', # after QueueSummary
-    'CoreShowChannel', 'CoreShowChannelsComplete', # after CoreShowChannels
-    'RegistryEntry', 'RegistrationsComplete', # in reply to IAXregistry / SIPshowregistry seems to go elsewhere
-    'VoicemailUserEntry', 'VoicemailUserEntryComplete', # in reply to VoicemailUsersList ? XXX when empty
-    'ListDialplan', 'ShowDialPlanComplete', # in reply to ShowDialPlan
-    'DAHDIShowChannels', 'DAHDIShowChannelsComplete', # in reply to DAHDIShowChannels
+    'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
+    'ParkedCallsComplete',  # after ParkedCalls
+    'MeetmeList', 'MeetmeListComplete',  # after MeetMeList
+    'Status' , 'StatusComplete',  # after Status
+    'Agents', 'AgentsComplete',  # after Agents
+    'QueueParams', 'QueueEntry', 'QueueMember', 'QueueStatusComplete',  # after QueueStatus
+    'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary
+    'CoreShowChannel', 'CoreShowChannelsComplete',  # after CoreShowChannels
+    'RegistryEntry', 'RegistrationsComplete',  # in reply to IAXregistry / SIPshowregistry seems to go elsewhere
+    'VoicemailUserEntry', 'VoicemailUserEntryComplete',  # in reply to VoicemailUsersList ? XXX when empty
+    'ListDialplan', 'ShowDialPlanComplete',  # in reply to ShowDialPlan
+    'DAHDIShowChannels', 'DAHDIShowChannelsComplete',  # in reply to DAHDIShowChannels
 
-    'LineEntry', 'LinelistComplete', # in reply to SKINNYlines
-    'DeviceEntry', 'DevicelistComplete', # in reply to SKINNYdevices
+    'LineEntry', 'LinelistComplete',  # in reply to SKINNYlines
+    'DeviceEntry', 'DevicelistComplete',  # in reply to SKINNYdevices
 
     'WaitEventComplete',
     'Placeholder', 'DBGetResponse', 'DBGetComplete',
@@ -147,7 +147,7 @@ manager_commands['fetchstatuses'] = [
     'SIPshowregistry', 'IAXregistry',
     'DAHDIShowChannels',
     'Agents', 'MeetmeList', 'VoicemailUsersList',
-    'QueueStatus', # QueueStatus after CoreShowChannels in order for channels involved to be already known
+    'QueueStatus',  # QueueStatus after CoreShowChannels in order for channels involved to be already known
     'QueueSummary',
     'ParkedCalls', 'Status',
     'ShowDialPlan'
@@ -183,7 +183,7 @@ manager_commands['other'] = [
     # config files
     'CreateConfig', 'GetConfigJSON', 'GetConfig', 'ListCategories', 'UpdateConfig',
 
-    'Queues', # this one is actually a CLI command - avoid using it
+    'Queues',  # this one is actually a CLI command - avoid using it
 
     # monitor actions
     'ChangeMonitor', 'MixMonitorMute', 'Monitor',

@@ -146,7 +146,7 @@ class XivoRecords(object):
 
     def _campain_search(self):
         searchitems = self._command.get('searchitems')
-        requested = ('id', 'uniqueid', 'channel','filename', 'callstart',
+        requested = ('id', 'uniqueid', 'channel', 'filename', 'callstart',
                      'callstop', 'callduration', 'calleridnum', 'queuenames',
                      'agentnumbers', 'agentnames', 'direction', 'skillrules',
                      'recordstatus', 'svientries', 'svivariables',
@@ -195,16 +195,16 @@ class XivoRecords(object):
                     resultitem['id'] = '%06d' % resultitem.get('id')
                     finalresults.append(resultitem)
 
-        tosend = { 'class' : 'records_campaign',
-                   'function' : self._function,
-                   'payload' : finalresults
-                   }
+        tosend = {'class' : 'records_campaign',
+                  'function' : self._function,
+                  'payload' : finalresults
+                  }
         return self.cset.__cjson_encode__(tosend)
 
     def _campain_getprops(self):
-        tosend = { 'class' : 'records_campaign',
-                  'function' : self._function,
-                  'tags' : self.recordcampaignconfig.get('tags')}
+        tosend = {'class': 'records_campaign',
+                  'function': self._function,
+                  'tags': self.recordcampaignconfig.get('tags')}
         return self.cset.__cjson_encode__(tosend)
 
     def _campain_tag(self):
@@ -212,7 +212,7 @@ class XivoRecords(object):
         tag = self._command.get('tag')
         retvalue = 'ko-unknown'
 
-        calldata = { 'id' : idv }
+        calldata = {'id' : idv }
         requested = ('id', 'agentnumbers', 'recordstatus', 'callrecordtag', 'filename')
         resultitem = self.records_db.get_one_record(calldata, requested)
 
@@ -230,8 +230,8 @@ class XivoRecords(object):
 
                 if action == 'keep':
                     if recordstatus in ['rec_notag', 'rec_topurge']:
-                        calldata = {'callrecordtag' : tag}
-                        calldata.update({'recordstatus' : 'rec_tokeep'})
+                        calldata = {'callrecordtag': tag}
+                        calldata.update({'recordstatus': 'rec_tokeep'})
                         self.records_db.update_call(idv, calldata)
                         retvalue = 'ok'
                         logger.info('RECCAMP:manual:%s:%s:%s:%s',
@@ -243,8 +243,8 @@ class XivoRecords(object):
 
                 elif action == 'purge':
                     if recordstatus in ['rec_notag', 'rec_tokeep']:
-                        calldata = {'callrecordtag' : tag}
-                        calldata.update({'recordstatus' : 'rec_topurge'})
+                        calldata = {'callrecordtag': tag}
+                        calldata.update({'recordstatus': 'rec_topurge'})
                         self.records_db.update_call(idv, calldata)
                         retvalue = 'ok'
                         logger.info('RECCAMP:manual:%s:%s:%s:%s',
@@ -256,8 +256,8 @@ class XivoRecords(object):
 
                 elif action == 'removenow':
                     if recordstatus in ['rec_notag', 'rec_topurge', 'rec_tokeep']:
-                        calldata = {'callrecordtag' : tag}
-                        calldata.update({'recordstatus' : 'manual_purged'})
+                        calldata = {'callrecordtag': tag}
+                        calldata.update({'recordstatus': 'manual_purged'})
                         # XXX if the file can not be deleted, update the status anyway ?
                         if self.__remove_files__(resultitem):
                             self.records_db.update_call(idv, calldata)
@@ -283,11 +283,11 @@ class XivoRecords(object):
             logger.warning('unallowed tag request from %s on id %s : tag=%s',
                            self._userinfo.get('user'), idv, tag)
 
-        tosend = { 'class' : 'records_campaign',
-                   'function' : self._function,
-                   'id' : idv,
-                   'returncode' : retvalue
-                   }
+        tosend = {'class' : 'records_campaign',
+                  'function' : self._function,
+                  'id' : idv,
+                  'returncode' : retvalue
+                  }
         return self.cset.__cjson_encode__(tosend)
 
     def _campain_comment(self):
@@ -295,12 +295,12 @@ class XivoRecords(object):
         comment = self._command.get('comment')
         retvalue = 'ko:unknown'
 
-        calldata = { 'id' : idv }
+        calldata = {'id' : idv }
         requested = ('agentnumbers',)
         agentnumbers = self.records_db.get_one_record(calldata, requested).get('agentnumbers')
         allowed = self._check_rights(self._astid, self._userinfo, self._hlevel_r, agentnumbers, 'comment')
         if allowed:
-            calldata = {'callrecordcomment' : comment}
+            calldata = {'callrecordcomment': comment}
             self.records_db.update_call(idv, calldata)
             retvalue = 'ok'
             logger.info('RECCAMP:manual:%s:-:%s:%s', self._function, self._userinfo.get('user'), idv)
@@ -309,18 +309,18 @@ class XivoRecords(object):
             logger.warning('unallowed comment request from %s on id %s : comment=%s',
                            self._userinfo.get('user'), idv, comment)
 
-        tosend = { 'class' : 'records_campaign',
-                   'function' : self._function,
-                   'id' : idv,
-                   'returncode' : retvalue
-                   }
+        tosend = {'class' : 'records_campaign',
+                  'function' : self._function,
+                  'id' : idv,
+                  'returncode' : retvalue
+                  }
         return self.cset.__cjson_encode__(tosend)
 
     def _campain_read(self):
         idv = self._command.get('id')
         retvalue = 'ko:unknown'
 
-        calldata = { 'id' : idv }
+        calldata = {'id' : idv }
         requested = ('agentnumbers',)
         agentnumbers = self.records_db.get_one_record(calldata, requested).get('agentnumbers')
         allowed = self._check_rights(self._astid, self._userinfo, self._hlevel_r, agentnumbers, 'read')
@@ -331,11 +331,11 @@ class XivoRecords(object):
         else:
             retvalue = 'ko:unallowed'
 
-        tosend = { 'class' : 'records_campaign',
-                   'function' : self._function,
-                   'id' : idv,
-                   'returncode' : retvalue
-                   }
+        tosend = {'class' : 'records_campaign',
+                  'function' : self._function,
+                  'id' : idv,
+                  'returncode' : retvalue
+                  }
         return self.cset.__cjson_encode__(tosend)
 
 
@@ -349,13 +349,13 @@ class XivoRecords(object):
             cronpurge['punct'] = cfgpurges.get('punct')
 
             outfile = open(tmpfilename, 'w')
-            print >>outfile, '# this file has been generated by the CTI server on %s' % time.asctime()
+            print >> outfile, '# this file has been generated by the CTI server on %s' % time.asctime()
             for k, v in cronpurge.iteritems():
                 try:
                     (cron_hour, cron_min) = v.get('when').split(':')
                     action = 'echo cron-actions %s | nc -q 1 localhost 5005' % k
                     when = '%s %s * * *' % (cron_min, cron_hour)
-                    print >>outfile, '%s root %s' % (when, action)
+                    print >> outfile, '%s root %s' % (when, action)
                 except:
                     logger.exception('problem when reading item %s %s', k, v)
             outfile.close()
@@ -416,7 +416,7 @@ class XivoRecords(object):
                 os.unlink('%s/%s-in.wav' % (record_path, prefix))
                 ret = True
 
-                calldata = { 'recordstatus' : 'auto_purged' }
+                calldata = {'recordstatus' : 'auto_purged' }
                 self.records_db.update_call(idv, calldata)
             else:
                 logger.warning('did not find %s', infile)
@@ -460,7 +460,7 @@ class XivoRecords(object):
         requested = ('id', 'uniqueid', 'channel',
                      'callstop', 'callstart',
                      'filename', 'callstatus', 'recordstatus')
-        res = self.records_db.get_before_date(requested, { 'campaignkind' : dbrequest }, ddate)
+        res = self.records_db.get_before_date(requested, {'campaignkind': dbrequest }, ddate)
         logger.info('found %d results matching the request (%s, "%s")', len(res), ascdate, dbrequest)
 
         for resultitem in res:
@@ -524,9 +524,9 @@ class XivoRecords(object):
 
     def __skillrule_to_dict__(self, skillrule):
         bracketstart = skillrule.find('(')
-        skillrule_dict = { 'rule' : skillrule[:bracketstart],
-                           'vars' : {} }
-        varlist = skillrule[bracketstart + 1 : -1].split(',')
+        skillrule_dict = {'rule': skillrule[:bracketstart],
+                          'vars': {} }
+        varlist = skillrule[bracketstart + 1: -1].split(',')
         for v in varlist:
             (var, val) = v.split('=', 1)
             skillrule_dict['vars'][var] = val
@@ -576,17 +576,17 @@ class XivoRecords(object):
                     if t_defineddate > t_defineddate_already:
                         logger.info('replacing %s by %s',
                                     defineddate_already, defineddate)
-                        electedcampaign = { 'defineddate' : defineddate,
-                                            'details' : v
-                                            }
+                        electedcampaign = {'defineddate': defineddate,
+                                           'details': v
+                                           }
                     else:
                         logger.info('keeping %s, rejecting %s',
                                     defineddate_already, defineddate)
                 else:
                     logger.info('selecting %s', defineddate)
-                    electedcampaign = { 'defineddate' : defineddate,
-                                        'details' : v
-                                        }
+                    electedcampaign = {'defineddate': defineddate,
+                                       'details': v
+                                       }
 
         if electedcampaign:
             logger.info('channel %s uniqueid %s', channel, uniqueid)

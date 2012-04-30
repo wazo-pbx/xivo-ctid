@@ -29,7 +29,7 @@ BUFSIZE_LARGE = 262144
 
 class ClientConnection(object):
     class CloseException(Exception):
-        def __init__(self, errno= -1):
+        def __init__(self, errno=-1):
             self.args = (errno,)
 
     def __init__(self, socket, address=None, sep='\n'):

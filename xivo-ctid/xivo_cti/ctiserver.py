@@ -722,7 +722,7 @@ class CTIServer(object):
                             logger.exception('(remotecti)')
 
                     # } the UDP messages (ANNOUNCE) are catched here
-                    elif sel_i in self.fdlist_udp_cti: # {
+                    elif sel_i in self.fdlist_udp_cti:
                         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
                         if kind == 'ANNOUNCE':
                             [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
@@ -795,8 +795,8 @@ class CTIServer(object):
                             logger.warning('connc is not defined ...')
 
                     # } incoming TCP connections (CTI, WEBI, AGI, INFO)
-                    elif sel_i in self.fdlist_established: # {
-                        try: # {
+                    elif sel_i in self.fdlist_established:
+                        try:
                             kind = self.fdlist_established[sel_i]
                             requester = '%s:%d' % sel_i.getpeername()[:2]
                             closemenow = False

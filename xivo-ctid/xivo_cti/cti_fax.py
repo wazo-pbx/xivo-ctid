@@ -75,9 +75,9 @@ class asyncActionsThread(threading.Thread):
     def notify_step(self, stepname):
         innerdata = self.params.get('innerdata')
         fileid = self.params.get('fileid')
-        innerdata.cb_timer({'action' : 'fax',
-                            'properties' : {'step' : stepname,
-                                            'fileid' : fileid}},)
+        innerdata.cb_timer({'action': 'fax',
+                            'properties': {'step': stepname,
+                                           'fileid': fileid}},)
 
     def run(self):
         self.decodefile()
@@ -121,19 +121,19 @@ class Fax(object):
 
     def launchasyncs(self):
         sthread = asyncActionsThread('fax-%s' % self.fileid,
-                                     { 'innerdata' : self.innerdata,
-                                       'fileid' : self.fileid,
-                                       'rawfile' : self.rawfile
-                                       } )
+                                     {'innerdata' : self.innerdata,
+                                      'fileid' : self.fileid,
+                                      'rawfile' : self.rawfile
+                                      } )
         sthread.start()
 
     def step(self, stepname):
         removeme = False
         try:
-            self.requester.reply( { 'class' : 'faxsend',
-                                    'fileid' : self.fileid,
-                                    'step' : stepname
-                                    } )
+            self.requester.reply({'class' : 'faxsend',
+                                  'fileid' : self.fileid,
+                                  'step' : stepname
+                                  } )
         except Exception:
             # when requester is not connected any more ...
             pass

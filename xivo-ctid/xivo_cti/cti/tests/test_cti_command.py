@@ -81,11 +81,11 @@ class Test(unittest.TestCase):
         self.assertFalse(CTICommand.match_message({}))
 
         CTICommand.conditions = [('class', 'test_command'), (('value', 'subvalue'), 'to_match')]
-        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value':{'subvalue': 'to_match'}}))
+        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': {'subvalue': 'to_match'}}))
 
     def test_match_message_with_dict_invalid_key(self):
         CTICommand.conditions = [('class', 'test_command'), (('value', 'moult'), 'to_match')]
-        self.assertFalse(CTICommand.match_message({'class': 'test_command', 'value':{'subvalue': 'to_match'}}))
+        self.assertFalse(CTICommand.match_message({'class': 'test_command', 'value': {'subvalue': 'to_match'}}))
 
 
 

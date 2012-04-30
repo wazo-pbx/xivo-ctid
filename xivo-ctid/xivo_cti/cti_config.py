@@ -125,7 +125,7 @@ class Config(object):
             if cdruri:
                 v['cdr_db_uri'] = cdruri.replace('@localhost/', '@%s/' % self.ipwebs)
 
-    def getconfig(self, key = None):
+    def getconfig(self, key=None):
         if key:
             ret = self.xc_json.get(key, {})
         else:
@@ -133,11 +133,11 @@ class Config(object):
         return ret
 
     def set_rcti_special_profile(self):
-        self.xc_json['userstatus']['ctiserver'] = { 'onlystate' : { 'allowed' : ['onlystate'] } }
+        self.xc_json['userstatus']['ctiserver'] = {'onlystate' : {'allowed' : ['onlystate'] } }
         self.xc_json['profiles']['ctiserver'] = {
-            'regcommands' : 'itm_regcommands', # XXX
+            'regcommands' : 'itm_regcommands',
             'userstatus': 'ctiserver',
-            'preferences': None, # XXX
+            'preferences': None,
             'name' : 'CTIServer',
             'ipbxcommands' : None,
             'phonestatus': None,

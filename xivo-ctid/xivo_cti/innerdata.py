@@ -179,9 +179,9 @@ class Safe(object):
                                'channels': [],
                                'queues': [],
                                'groups': []},
-                    'agents': {'phonenumber': None, # static mode
-                               'channel': None, # dynamic mode
-                               'status': 'undefined', # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
+                    'agents': {'phonenumber': None,  # static mode
+                               'channel': None,      # dynamic mode
+                               'status': 'undefined',  # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
                                'queues': [],
                                'groups': []},
                     'queues': {'agentmembers': [],
@@ -1554,8 +1554,8 @@ class Channel(object):
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
-        self.properties = {'monitored': False, # for meetme as well as for regular calls ? agent calls ?
-                           'spy': False, # spier or spied ?
+        self.properties = {'monitored': False,  # for meetme as well as for regular calls ? agent calls ?
+                           'spy': False,  # spier or spied ?
                            'holded': False,
                            'parked': False,
                            'meetme_ismuted': False,

@@ -249,7 +249,7 @@ class AMIClass(object):
         return self._exec_command('AgentCallbackLogin', [('Agent', agentnum),
                                                          ('Context', context),
                                                          ('Exten', extension),
-                                                         ('AckCall' , ackcall)])
+                                                         ('AckCall', ackcall)])
 
     # \brief Logs off an Agent
     def agentlogoff(self, agentnum, soft=True):
@@ -396,7 +396,7 @@ class AMIClass(object):
                                    ('Context', 'alarmclk-play-msg'),
                                    ('Exten', 's'),
                                    ('Priority', '1'),
-                                   ('Timeout', '900000'), # 15 minutes timeout
+                                   ('Timeout', '900000'),  # 15 minutes timeout
                                    ('CallerID', callerid),
                                    ('Async', 'true'),
                                    ('Variable', 'XIVO_DSTID=%s' % userid)])

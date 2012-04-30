@@ -22,7 +22,7 @@ class Test(unittest.TestCase):
         class Handler(object):
             def handle_test(self, color, shape, description):
                 self.color = color
-                self.shape= shape
+                self.shape = shape
                 self.description = description
         reply_ok = {"status": "OK"}
         handler = Handler()
