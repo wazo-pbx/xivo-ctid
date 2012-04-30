@@ -41,7 +41,6 @@ class QueueMemberServiceNotifier(object):
         if delta.add:
             event = dict(return_template)
             add_list = delta.add.keys()
-            add_list.sort()
             update = {'function': 'addconfig',
                       'list': add_list,
                       }
@@ -63,12 +62,17 @@ class QueueMemberServiceNotifier(object):
                 ret.append(event)
         if delta.delete:
             event = dict(return_template)
-            del_list = delta.delete
-            del_list.sort()
+            del_list = delta.delete.keys()
             update = {'function': 'delconfig',
                       'list': del_list}
             event.update(update)
             ret.append(event)
+            for queuemember in delta.delete.values():
+                try:
+                    queue_id = self.innerdata_dao.get_queue_id(queuemember['queue_name'])
+                    self.queue_statistics_producer.on_agent_removed(queue_id, queuemember['interface'])
+                except NotAQueueException:
+                    pass
         return ret
 
     def request_queuemembers_to_ami(self, queuemembers_list):

@@ -46,7 +46,7 @@ class QueueMemberServiceManager(object):
 
     def remove_dynamic_queuemember(self, ami_event):
         queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove(ami_event)
-        delta = DictDelta({}, {}, queuemember_formatted.keys())
+        delta = DictDelta({}, {}, queuemember_formatted)
         self.queuemember_notifier.queuemember_config_updated(delta)
 
     def update_one_queuemember(self, ami_event):
