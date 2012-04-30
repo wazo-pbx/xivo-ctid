@@ -41,6 +41,12 @@ class MeetmeFeaturesDAO(object):
             return ''
         return res[0]
 
+    def find_by_confno(self, meetme_confno):
+        res = self._session.query(MeetmeFeatures).filter(MeetmeFeatures.confno == meetme_confno)
+        if res.count() == 0:
+            return ''
+        return res[0]
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

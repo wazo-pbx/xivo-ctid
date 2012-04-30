@@ -77,7 +77,7 @@ class TestmeetmesionsDAO(unittest.TestCase):
     def test_get_no_result(self):
         self.assertRaises(LookupError, lambda: self.dao.get(1))
 
-    def test_meetme_by_name(self):
+    def test_find_by_name(self):
         self._insert_meetme(1, 'red', '9000')
         self._insert_meetme(2, 'blue', '9001')
 
@@ -86,3 +86,13 @@ class TestmeetmesionsDAO(unittest.TestCase):
 
         self.assertEqual(meetme_red.name, 'red')
         self.assertEqual(meetme_blue.name, 'blue')
+
+    def test_find_by_confno(self):
+        self._insert_meetme(1, 'red', '9000')
+        self._insert_meetme(2, 'blue', '9001')
+
+        meetme_red = self.dao.find_by_confno('9000')
+        meetme_blue = self.dao.find_by_confno('9001')
+
+        self.assertEqual(meetme_red.confno, '9000')
+        self.assertEqual(meetme_blue.confno, '9001')
