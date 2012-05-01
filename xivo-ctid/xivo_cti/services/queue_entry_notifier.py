@@ -28,9 +28,6 @@ class QueueEntryNotifier(object):
 
     _instance = None
 
-    MSG_TEMPLATE = {'class': 'queueentryupdate',
-                    'state': None}
-
     def __init__(self):
         self._subscriptions = defaultdict(set)
         self._cache = defaultdict(dict)
@@ -42,11 +39,9 @@ class QueueEntryNotifier(object):
             client_connection.send_message(self._cache[queue_name])
 
     def publish(self, queue_name, new_state):
-        msg = dict(self.MSG_TEMPLATE)
-        msg['state'] = new_state
-        self._cache[queue_name] = msg
+        self._cache[queue_name] = new_state
         for connection in self._subscriptions.get(queue_name, []):
-            connection.send_message(msg)
+            connection.send_message(new_state)
 
     @classmethod
     def get_instance(cls):

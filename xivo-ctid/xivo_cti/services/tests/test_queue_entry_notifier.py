@@ -62,18 +62,14 @@ class TestQueueEntryNotifier(unittest.TestCase):
         connection_1 = Mock(CTI)
         self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
         self.notifier.subscribe(connection_1, QUEUE_ID_1)
-        expected = {'class': 'queueentryupdate',
-                    'state': new_state}
 
         self.notifier.publish(QUEUE_NAME_1, new_state)
 
-        connection_1.send_message.assert_called_once_with(expected)
+        connection_1.send_message.assert_called_once_with(new_state)
 
     def test_subscribe_after_message(self):
         connection_1 = Mock(CTI)
         new_state = 'queue_1_entries'
-        expected = {'class': 'queueentryupdate',
-                    'state': new_state}
 
         self.notifier.publish(QUEUE_NAME_1, new_state)
 
@@ -82,4 +78,4 @@ class TestQueueEntryNotifier(unittest.TestCase):
         self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
         self.notifier.subscribe(connection_1, QUEUE_ID_1)
 
-        connection_1.send_message.assert_called_once_with(expected)
+        connection_1.send_message.assert_called_once_with(new_state)
