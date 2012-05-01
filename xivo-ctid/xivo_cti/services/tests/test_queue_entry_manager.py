@@ -332,6 +332,8 @@ class TestQueueEntryManager(unittest.TestCase):
         msg = {'encoded': 'result'}
         encoder, self.manager._encoder = self.manager._encoder, Mock(QueueEntryEncoder)
         self.manager._notifier = QueueEntryNotifier()
+        self.manager._notifier.queue_features_dao = Mock(QueueFeaturesDAO)
+        self.manager._notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME
         self.manager._encoder.encode.return_value = msg
         self._subscriber_called = False
 
@@ -341,7 +343,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self._join_2()
         self._join_3()
 
-        self.manager._notifier.subscribe(handler, QUEUE_NAME)
+        self.manager._notifier.subscribe(handler, 10)
 
         self.manager.publish(QUEUE_NAME)
 
