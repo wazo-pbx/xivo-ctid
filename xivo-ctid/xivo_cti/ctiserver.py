@@ -903,7 +903,6 @@ class CTIServer(object):
 
                     for ipbxid, safe in self.safe.iteritems():
                         if ipbxid == self.myipbxid:
-                            #if (time.time() - self.lastrequest_time[ipbxid]) > self.updates_period() or self.update_userlist[ipbxid]:
                             if self.update_userlist[ipbxid]:
                                 self.lastrequest_time[ipbxid] = time.time()
                                 logger.info('[%s] %s : updates (computed timeout) %s (%s)',
