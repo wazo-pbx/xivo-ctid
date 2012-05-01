@@ -27,22 +27,26 @@ from mock import Mock
 
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
-QUEUE_NAME_1 = 'testqueue'
-QUEUE_NAME_2 = 'anothertestqueue'
+QUEUE_NAME_1, QUEUE_ID_1 = 'testqueue', 1
+QUEUE_NAME_2, QUEUE_ID_2 = 'anothertestqueue', 2
 
 
 class TestQueueEntryNotifier(unittest.TestCase):
 
     def setUp(self):
         self.notifier = QueueEntryNotifier()
+        self.notifier.queue_features_dao = Mock(QueueFeaturesDAO)
 
     def test_subscribe(self):
         connection_1 = Mock(CTI)
         connection_2 = Mock(CTI)
 
-        self.notifier.subscribe(connection_1, QUEUE_NAME_1)
-        self.notifier.subscribe(connection_2, QUEUE_NAME_2)
+        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        self.notifier.subscribe(connection_1, QUEUE_ID_1)
+        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_2
+        self.notifier.subscribe(connection_2, QUEUE_ID_2)
 
         subscriptions = self.notifier._subscriptions[QUEUE_NAME_1]
 
@@ -56,7 +60,8 @@ class TestQueueEntryNotifier(unittest.TestCase):
     def test_publish(self):
         new_state = 'queue_1_entries'
         connection_1 = Mock(CTI)
-        self.notifier.subscribe(connection_1, QUEUE_NAME_1)
+        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        self.notifier.subscribe(connection_1, QUEUE_ID_1)
         expected = {'class': 'queueentryupdate',
                     'state': new_state}
 
@@ -74,6 +79,7 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
         self.assertEquals(connection_1.send_message.call_count, 0)
 
-        self.notifier.subscribe(connection_1, QUEUE_NAME_1)
+        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        self.notifier.subscribe(connection_1, QUEUE_ID_1)
 
         connection_1.send_message.assert_called_once_with(expected)

@@ -35,7 +35,8 @@ class QueueEntryNotifier(object):
         self._subscriptions = defaultdict(set)
         self._cache = defaultdict(dict)
 
-    def subscribe(self, client_connection, queue_name):
+    def subscribe(self, client_connection, queue_id):
+        queue_name = self.queue_features_dao.queue_name(queue_id)
         self._subscriptions[queue_name].add(client_connection)
         if queue_name in self._cache:
             client_connection.send_message(self._cache[queue_name])

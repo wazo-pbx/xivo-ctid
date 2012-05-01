@@ -63,3 +63,15 @@ class TestQueueFeaturesDAO(unittest.TestCase):
         result = self.dao.id_from_name(queue.name)
 
         self.assertEqual(result, queue.id)
+
+    def test_queue_name(self):
+        queue = QueueFeatures()
+        queue.name = 'my_queue'
+        queue.displayname = 'My Queue'
+
+        self.session.add(queue)
+        self.session.commit()
+
+        result = self.dao.queue_name(queue.id)
+
+        self.assertEquals(result, 'my_queue')
