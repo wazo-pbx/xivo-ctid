@@ -47,7 +47,7 @@ class QueueEntryNotifier(object):
             except ClientConnection.CloseException:
                 to_remove.append(connection)
         for connection in to_remove:
-            self._subscriptions.pop(connection)
+            self._subscriptions[queue_name].remove(connection)
 
     @classmethod
     def get_instance(cls):

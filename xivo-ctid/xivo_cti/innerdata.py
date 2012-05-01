@@ -1255,6 +1255,7 @@ class Safe(object):
             channelprops.set_extra_data('xivo', 'channel', channel)
             channelprops.set_extra_data('xivo', 'context', channelprops.context)
             channelprops.set_extra_data('xivo', 'uniqueid', channelprops.unique_id)
+            channelprops.set_extra_data('xivo', 'ipbxid', self.ipbxid)
             sheet = cti_sheets.Sheet(where, self.ipbxid, channel)
             sheet.setoptions(self.sheetoptions.get(option_id))
             sheet.setdisplays(self.sheetdisplays.get(display_id))
