@@ -135,7 +135,7 @@ class QueueEntryManager(object):
             self.publish(queue_name)
 
     def synchronize(self, queue_name=None):
-        logger.info('Synchronizing QueueMemberEntry on %s',
+        logger.info('Synchronizing QueueEntries on %s',
                     (queue_name if queue_name else 'all queues'))
         if self._ami != None:
             self._ami.sendqueuestatus(queue_name)

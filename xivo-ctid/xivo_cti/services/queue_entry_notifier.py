@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
-
+from xivo_cti.client_connection import ClientConnection
 
 class QueueEntryNotifier(object):
 
@@ -40,8 +40,14 @@ class QueueEntryNotifier(object):
 
     def publish(self, queue_name, new_state):
         self._cache[queue_name] = new_state
+        to_remove = []
         for connection in self._subscriptions.get(queue_name, []):
-            connection.send_message(new_state)
+            try:
+                connection.send_message(new_state)
+            except ClientConnection.CloseException:
+                to_remove.append(connection)
+        for connection in to_remove:
+            self._subscriptions.pop(connection)
 
     @classmethod
     def get_instance(cls):
