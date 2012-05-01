@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,6 +87,13 @@ from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 from xivo_cti.cti.commands.collectqueuesstats import CollectQueuesStats
 
+from xivo_cti.services.queue_entry_manager import QueueEntryManager
+from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
+from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
+from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
+from xivo_cti.services import queue_entry_manager
+
+
 logger = logging.getLogger('main')
 
 
@@ -164,6 +171,7 @@ class CTIServer(object):
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
+        self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
         self._innerdata_dao = InnerdataDAO()
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
@@ -181,6 +189,17 @@ class CTIServer(object):
         self._agent_service_manager.agent_service_executor = AgentServiceExecutor()
         self._queue_service_manager = QueueServiceManager()
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
+
+        self._queue_entry_manager = QueueEntryManager.get_instance()
+        self._queue_entry_notifier = QueueEntryNotifier.get_instance()
+        self._queue_entry_encoder = QueueEntryEncoder.get_instance()
+
+        self._queue_entry_manager._notifier = self._queue_entry_notifier
+        self._queue_entry_manager._encoder = self._queue_entry_encoder
+        self._queue_entry_encoder.queue_features_dao = self._queue_features_dao
+
+        queue_entry_manager.register_events()
+
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
@@ -417,6 +436,7 @@ class CTIServer(object):
             self.commandclass.user_features_dao = self._user_features_dao
             self.commandclass.queuemember_service_manager = self._queuemember_service_manager
             self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
+            self._queue_entry_manager._ami = self.myami[self.myipbxid]
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)

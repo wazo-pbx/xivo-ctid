@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 
 import time
 import logging
@@ -32,6 +33,15 @@ QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number', 'join_time'
 
 NAME, NUMBER, POSITION, QUEUE, UNIQUE_ID, COUNT, WAIT = \
     'CallerIDName', 'CallerIDNum', 'Position', 'Queue', 'Uniqueid', 'Count', 'Wait'
+
+
+def register_events():
+    callback_handler = AMICallbackHandler.get_instance()
+    callback_handler.register_callback('Join', parse_join)
+    callback_handler.register_callback('Leave', parse_leave)
+    callback_handler.register_callback('QueueEntry', parse_queue_entry)
+    callback_handler.register_callback('QueueParams', parse_queue_params)
+    callback_handler.register_callback('QueueStatusComplete', parse_queue_status_complete)
 
 
 def parse_join(event):
@@ -160,6 +170,7 @@ class QueueEntryManager(object):
         if queue_name and queue_name in self._queue_entries:
             encoded_status = self._encoder.encode(queue_name,
                                                   self._queue_entries[queue_name])
+            logger.info('Publishing entries for %s: %s', queue_name, encoded_status)
             self._notifier.publish(queue_name, encoded_status)
         elif queue_name ==  None:
             for q in self._queue_entries.keys():
