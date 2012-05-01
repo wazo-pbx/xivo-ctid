@@ -64,6 +64,7 @@ from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoA
 from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableNoAnswerForward
 from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
+from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
@@ -197,6 +198,7 @@ class CTIServer(object):
         self._queue_entry_manager._notifier = self._queue_entry_notifier
         self._queue_entry_manager._encoder = self._queue_entry_encoder
         self._queue_entry_encoder.queue_features_dao = self._queue_features_dao
+        self._queue_entry_notifier.queue_features_dao = self._queue_features_dao
 
         queue_entry_manager.register_events()
 
@@ -230,6 +232,8 @@ class CTIServer(object):
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_notifier.subscribe, ['cti_connection'])
         CollectQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
+        SubscribeQueueEntryUpdate.register_callback_params(
+            self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
