@@ -702,7 +702,7 @@ class Mock(object):
 
     def assert_never_called(self, *args, **kwargs):
         if self.call_count != 0:
-            raise AssertionError('Expected: %s\nShould Never be called' % ((args, kwargs),))
+            raise AssertionError('Should Never be called but called %s time(s)' % self.call_count)
 
     def assert_called_once_with(self, *args, **kwargs):
         """

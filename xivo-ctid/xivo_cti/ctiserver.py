@@ -191,12 +191,15 @@ class CTIServer(object):
         self._queue_service_manager = QueueServiceManager()
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
+        self._statistics_notifier = StatisticsNotifier()
         self._queue_entry_manager = QueueEntryManager.get_instance()
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 
         self._queue_entry_manager._notifier = self._queue_entry_notifier
         self._queue_entry_manager._encoder = self._queue_entry_encoder
+        self._queue_entry_manager._queue_features_dao = self._queue_features_dao
+        self._queue_entry_manager._statistics_notifier = self._statistics_notifier
         self._queue_entry_encoder.queue_features_dao = self._queue_features_dao
         self._queue_entry_notifier.queue_features_dao = self._queue_features_dao
 
@@ -211,8 +214,7 @@ class CTIServer(object):
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
         self._queue_statistics_producer = QueueStatisticsProducer()
-        self._queue_statistics_notifier = StatisticsNotifier()
-        self._queue_statistics_producer.notifier = self._queue_statistics_notifier
+        self._queue_statistics_producer.notifier = self._statistics_notifier
         self._user_service_manager.presence_service_executor = PresenceServiceExecutor()
         self._user_service_manager.agent_service_manager = self._agent_service_manager
         self._register_cti_callbacks()
@@ -230,7 +232,7 @@ class CTIServer(object):
         DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, ['user_id', 'destination'])
         EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
-        SubscribeToQueuesStats.register_callback_params(self._queue_statistics_notifier.subscribe, ['cti_connection'])
+        SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         CollectQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])

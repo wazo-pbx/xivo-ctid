@@ -93,6 +93,13 @@ def parse_queue_status_complete(event):
     manager.publish()
 
 
+def longest_wait_time_calculator(queue_infos):
+    call_entry_time = time.time()
+    for call in queue_infos:
+        if queue_infos[call].join_time < call_entry_time:
+            call_entry_time = queue_infos[call].join_time
+    return time.time() - call_entry_time
+
 class QueueEntryManager(object):
 
     _instance = None
@@ -112,8 +119,11 @@ class QueueEntryManager(object):
             logger.exception('Failed to insert queue entry')
         else:
             self.publish(queue_name)
+            if len(self._queue_entries[queue_name]) == 1:
+                self.publish_longest_wait_time(queue_name)
 
     def insert(self, queue_name, pos, name, number, unique_id, wait):
+        logger.info("queue %s pos %s name %s number %s wait %s" % (queue_name, pos, name, number, wait))
         try:
             entry = QueueEntry(pos, name, number, time.time() - wait)
             if queue_name not in self._queue_entries:
@@ -133,6 +143,8 @@ class QueueEntryManager(object):
             logger.exception('Failed to remove queue entry')
         else:
             self.publish(queue_name)
+            if len(self._queue_entries[queue_name]) >= 1:
+                self.publish_longest_wait_time(queue_name)
 
     def synchronize(self, queue_name=None):
         logger.info('Synchronizing QueueEntries on %s',
@@ -172,9 +184,15 @@ class QueueEntryManager(object):
                                                   self._queue_entries[queue_name])
             logger.info('Publishing entries for %s: %s', queue_name, encoded_status)
             self._notifier.publish(queue_name, encoded_status)
-        elif queue_name ==  None:
+        elif queue_name == None:
             for q in self._queue_entries.keys():
                 self.publish(q)
+
+    def publish_longest_wait_time(self, queue_name):
+        queue_id = self._queue_features_dao.id_from_name(queue_name)
+        longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
+        logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
+        self._statistics_notifier.on_stat_changed({'%s' % queue_id: {u'Xivo-LongestWaitTime': str(longest_wait_time)}})
 
     @classmethod
     def get_instance(cls):

@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from mock import Mock
+from tests.mock import Mock
 from mock import patch
 
 import time
@@ -34,6 +34,7 @@ from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
+from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 
 QUEUE_NAME = 'testqueue'
 
@@ -41,7 +42,8 @@ CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1 = 'Super Tester', '111', '1234
 CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2 = 'Second Tester', '222', '123543121.43'
 CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3 = 'Third Guy', '333', '13498754.44'
 
-JOIN_TIME_1 = time.time()
+TIME_NOW = time.time()
+JOIN_TIME_1 = TIME_NOW
 JOIN_TIME_2 = JOIN_TIME_1 + 5
 JOIN_TIME_3 = JOIN_TIME_1 + 24
 
@@ -95,6 +97,7 @@ QUEUE_ENTRY_MESSAGE = {'Event': 'QueueEntry',
                        'Wait': str(WAIT_TIME_1)}
 
 my_time = Mock()
+the_longest_wait_time_calculator = Mock()
 
 
 class TestQueueEntryManager(unittest.TestCase):
@@ -106,6 +109,9 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager._notifier = self.notifier
         self.manager._encoder = self.encoder
         self.encoder.queue_features_dao = Mock(QueueFeaturesDAO)
+
+        self.manager._statistics_notifier = Mock(StatisticsNotifier)
+        self.manager._queue_features_dao = Mock(QueueFeaturesDAO)
 
     def tearDown(self):
         QueueEntryManager._instance = None
@@ -349,3 +355,87 @@ class TestQueueEntryManager(unittest.TestCase):
 
         # Called twice because we get an update when subscribing
         self.assertEqual(handler.send_message.call_count, 2)
+
+    @patch('time.time', my_time)
+    def test_publish_longest_wait_time_no_call_in_queue(self):
+
+        my_time.return_value = 98797987
+
+        queue_id = 77
+
+        self.manager._queue_features_dao.id_from_name.return_value = queue_id
+
+        self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+
+        self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': '0'}})
+
+
+    @patch('time.time', my_time)
+    def test_publish_longest_wait_time_on_join_with_calls_in_queue(self):
+
+        self._join_1()
+
+        self.manager._statistics_notifier.reset_mock()
+
+        self._join_2()
+
+        self.manager._statistics_notifier.on_stat_changed.assert_never_called()
+
+
+    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
+    def test_publish_longest_wait_time_on_leave_with_calls_in_queue(self):
+
+        queue_id = 77
+        self.manager._queue_features_dao.id_from_name.return_value = queue_id
+
+        self._join_1()
+        self._join_2()
+
+        self.manager._statistics_notifier.reset_mock()
+
+        the_longest_wait_time_calculator.return_value = 789
+
+        self.manager.leave(QUEUE_NAME, 1, 1, UNIQUE_ID_1)
+
+
+        self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
+        the_longest_wait_time_calculator.assert_called_with(self.manager._queue_entries[QUEUE_NAME])
+
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': '789'}})
+
+    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
+    def test_publish_longest_wait_time_on_leave_with_one_call_in_queue(self):
+        self._join_1()
+
+        self.manager._statistics_notifier.reset_mock()
+
+        self.manager.leave(QUEUE_NAME, 1, 0, UNIQUE_ID_1)
+
+        self.manager._statistics_notifier.on_stat_changed.assert_never_called()
+
+
+    @patch('time.time', my_time)
+    def test_calculate_longest_wait_time_one_call(self):
+        my_time.return_value = long(TIME_NOW) - 300
+
+        self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+
+        my_time.return_value = long(TIME_NOW)
+        longest_wait_time = queue_entry_manager.longest_wait_time_calculator(self.manager._queue_entries[QUEUE_NAME])
+
+        self.assertEquals(longest_wait_time, 300)
+
+    @patch('time.time', my_time)
+    def test_calculate_longest_wait_time_multiple_calls(self):
+        TIME_NOW = long(873218632)
+        my_time.return_value = long(TIME_NOW) - 150
+        self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+
+        my_time.return_value = long(TIME_NOW) - 400
+        self.manager.join(QUEUE_NAME, 2, 2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
+
+        my_time.return_value = long(TIME_NOW)
+        longest_wait_time = queue_entry_manager.longest_wait_time_calculator(self.manager._queue_entries[QUEUE_NAME])
+
+        self.assertEquals(longest_wait_time, 400)
