@@ -57,3 +57,11 @@ class TestIdConverter(unittest.TestCase):
         result = IdConverter.xid_to_id(identifier)
 
         self.assertEqual(result, expected_result)
+
+    def test_xid_to_id_None(self):
+        identifier = None
+        expected_result = None
+
+        result = IdConverter.xid_to_id(identifier)
+
+        self.assertEqual(result, expected_result)

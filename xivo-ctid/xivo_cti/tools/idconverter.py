@@ -25,6 +25,7 @@
 class IdConverter(object):
     @staticmethod
     def xid_to_id(identifier):
-        identifier = str(identifier)
-        id_split_list = identifier.split('/')
-        return id_split_list[-1]
+        if identifier:
+            identifier = str(identifier)
+            id_split_list = identifier.split('/')
+            return id_split_list[-1]
