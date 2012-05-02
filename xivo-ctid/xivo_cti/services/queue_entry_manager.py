@@ -189,10 +189,17 @@ class QueueEntryManager(object):
                 self.publish(q)
 
     def publish_longest_wait_time(self, queue_name):
+        self._statistics_notifier.on_stat_changed(self._encode_stats(queue_name))
+
+    def publish_all_longest_wait_time(self, cti_connection):
+        for queue_name in self._queue_entries:
+            self._statistics_notifier.send_statistic(self._encode_stats(queue_name), cti_connection)
+
+    def _encode_stats(self, queue_name):
         queue_id = self._queue_features_dao.id_from_name(queue_name)
         longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
         logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
-        self._statistics_notifier.on_stat_changed({'%s' % queue_id: {u'Xivo-LongestWaitTime': long(longest_wait_time)}})
+        return {'%s' % queue_id: {u'Xivo-LongestWaitTime': long(longest_wait_time)}}
 
     @classmethod
     def get_instance(cls):

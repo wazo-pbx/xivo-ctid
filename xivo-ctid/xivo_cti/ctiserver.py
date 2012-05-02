@@ -233,7 +233,8 @@ class CTIServer(object):
         EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
-        CollectQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
+        SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
+        SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_longest_wait_time, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
 
