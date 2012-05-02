@@ -33,13 +33,20 @@ class AgentServiceManager(object):
         if not agent_id or agent_id == 'agent:special:me':
             agent_id = self.user_features_dao.agent_id(user_id)
         agent_id = IdConverter.xid_to_id(agent_id)
-        if not agent_id and not self.line_features_dao.is_phone_exten(agent_exten):
-            logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
+
+        if not agent_id:
+            logger.info('%s not an agent (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
         if not agent_exten:
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if len(extens) else None
+            
+        if not self.line_features_dao.is_phone_exten(agent_exten):
+            logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
+            return 'error', {'error_string': 'invalid_exten',
+                             'class': 'ipbxcommand'}
+
         self.agent_call_back_login(self.agent_features_dao.agent_number(agent_id),
                                    agent_exten,
                                    self.agent_features_dao.agent_context(agent_id),
