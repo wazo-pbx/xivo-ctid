@@ -218,7 +218,11 @@ class AMIClass(object):
         # src will ring first, and dst will ring when src responds
         phonedst = normalize_exten(phonedst)
         try:
-            command_details = [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
+            if phoneproto == 'custom':
+                channel = phonesrcname.replace('\\', '')
+            else:
+                channel = '%s/%s' % (phoneproto, phonesrcname)
+            command_details = [('Channel', channel),
                                ('Exten', phonedst),
                                ('Context', locext),
                                ('Priority', '1'),
