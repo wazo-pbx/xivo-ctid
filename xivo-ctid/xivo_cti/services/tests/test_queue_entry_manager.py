@@ -368,7 +368,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
         self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': '0'}})
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': 0}})
 
 
     @patch('time.time', my_time)
@@ -388,13 +388,13 @@ class TestQueueEntryManager(unittest.TestCase):
 
         queue_id = 77
         self.manager._queue_features_dao.id_from_name.return_value = queue_id
+        the_longest_wait_time_calculator.return_value = 789
 
         self._join_1()
         self._join_2()
 
         self.manager._statistics_notifier.reset_mock()
 
-        the_longest_wait_time_calculator.return_value = 789
 
         self.manager.leave(QUEUE_NAME, 1, 1, UNIQUE_ID_1)
 
@@ -402,9 +402,8 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
         the_longest_wait_time_calculator.assert_called_with(self.manager._queue_entries[QUEUE_NAME])
 
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': '789'}})
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': 789}})
 
-    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
     def test_publish_longest_wait_time_on_leave_with_one_call_in_queue(self):
         self._join_1()
 
