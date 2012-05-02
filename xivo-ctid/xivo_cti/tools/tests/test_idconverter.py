@@ -28,7 +28,7 @@ from xivo_cti.tools.idconverter import IdConverter
 class TestIdConverter(unittest.TestCase):
     def test_xid_to_id_input_empty(self):
         identifier = ''
-        expected_result = ''
+        expected_result = None
 
         result = IdConverter.xid_to_id(identifier)
 
