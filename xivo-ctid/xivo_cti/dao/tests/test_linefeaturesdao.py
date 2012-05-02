@@ -75,6 +75,7 @@ class TestLineFeaturesDAO(unittest.TestCase):
 
     def test_is_phone_exten(self):
         self.assertFalse(self.dao.is_phone_exten('12345'))
+        self.assertFalse(self.dao.is_phone_exten(None))
 
         self._insert_line()
 
