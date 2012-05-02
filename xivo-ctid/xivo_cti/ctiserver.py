@@ -86,7 +86,6 @@ from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
-from xivo_cti.cti.commands.collectqueuesstats import CollectQueuesStats
 
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
