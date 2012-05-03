@@ -31,6 +31,8 @@ class QueueStatisticsProducer(object):
         if agentid in self.queues_of_agent:
             for queueid in self.queues_of_agent[agentid]:
                 self._notify_change(queueid)
+        else:
+            self.queues_of_agent[agentid] = set()
 
     def on_agent_loggedoff(self, agentid):
         try:
