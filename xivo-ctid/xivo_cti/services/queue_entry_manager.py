@@ -192,8 +192,18 @@ class QueueEntryManager(object):
         self._statistics_notifier.on_stat_changed(self._encode_stats(queue_name))
 
     def publish_all_longest_wait_time(self, cti_connection):
+        queues_to_remove = set()
         for queue_name in self._queue_entries:
-            self._statistics_notifier.send_statistic(self._encode_stats(queue_name), cti_connection)
+            try:
+                self._statistics_notifier.send_statistic(self._encode_stats(queue_name), cti_connection)
+            except LookupError:
+                queues_to_remove.add(queue_name)
+                logger.info("queue : %s does not exists ", queue_name)
+        self._remove_queues(queues_to_remove)
+
+    def _remove_queues(self, queues_to_remove):
+        for queue_name in queues_to_remove:
+            self._queue_entries.pop(queue_name)
 
     def _encode_stats(self, queue_name):
         queue_id = self._queue_features_dao.id_from_name(queue_name)

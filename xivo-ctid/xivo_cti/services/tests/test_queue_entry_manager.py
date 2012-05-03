@@ -454,3 +454,19 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 56:{'Xivo-LongestWaitTime': 765}}, cti_connection)
         self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 34:{'Xivo-LongestWaitTime': 765}}, cti_connection)
+
+
+    def test_publish_all_longest_wait_time_removed_queue(self):
+
+        cti_connection = {}
+        the_longest_wait_time_calculator.return_value = 765
+        queue_id = 56
+
+        self.manager.join('service', 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+
+        self.manager._queue_features_dao.id_from_name.side_effect = LookupError('No such queue')
+
+        self.manager.publish_all_longest_wait_time(cti_connection)
+
+        self.manager._statistics_notifier.send_statistic.assert_never_called()
+        self.assertTrue('service' not in self.manager._queue_entries)
