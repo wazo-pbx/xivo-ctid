@@ -1177,24 +1177,6 @@ class Safe(object):
             term = {'protocol': protocol, 'name': name}
         return term
 
-    def find_agent_channel(self, channel):
-        try:
-            agent_number = channel.split('/', 1)[1]
-            agent_id = self.xod_config['agents'].idbyagentnumber(agent_number)
-            user = self.xod_config['users'].find_by_agent_id(agent_id)
-            main_line = self.xod_config['phones'].get_main_line(user['id'])
-            chan_start = 'Local/%s@%s' % (main_line['number'], main_line['context'])
-
-            def chan_filter(channel):
-                if (chan_start in channel and
-                    self.channels[channel].properties['talkingto_id'] != None):
-                    return True
-
-            channels = filter(chan_filter, self.channels)
-            return channels[0]
-        except Exception:
-            return channel
-
     def zphones(self, protocol, name):
         if protocol:
             for phone_id, phone_config in self.xod_config['phones'].keeplist.iteritems():

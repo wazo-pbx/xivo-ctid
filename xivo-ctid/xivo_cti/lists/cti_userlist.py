@@ -104,9 +104,3 @@ class UserList(AnyList):
                     if context in contexts:
                         ret[user_id] = user
             return ret
-
-    def find_by_agent_id(self, agent_id):
-        try:
-            return [user for user in self.keeplist.itervalues() if user['agentid'] == agent_id][0]
-        except Exception:
-            logger.warning('Could not find a user with agent id %s', agent_id)
