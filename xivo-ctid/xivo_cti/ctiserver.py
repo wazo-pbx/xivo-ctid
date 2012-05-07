@@ -73,6 +73,7 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_service_executor import AgentServiceExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.dao.queuememberdao import QueueMemberDAO
@@ -172,6 +173,7 @@ class CTIServer(object):
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
         self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
+        self._meetme_features_dao = MeetmeFeaturesDAO.new_from_uri('queue_stats')
         self._innerdata_dao = InnerdataDAO()
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao

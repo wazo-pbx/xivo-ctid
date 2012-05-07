@@ -26,13 +26,12 @@ import copy
 import hashlib
 import logging
 import os
-import random
 import string
 import threading
 import time
 import Queue
-from xivo_cti import lists
 import cti_urllist
+from xivo_cti import lists
 from xivo_cti.lists import *
 from xivo_cti import call_history
 from xivo_cti import cti_directories
@@ -179,9 +178,9 @@ class Safe(object):
                                'channels': [],
                                'queues': [],
                                'groups': []},
-                    'agents': {'phonenumber': None,  # static mode
-                               'channel': None,      # dynamic mode
-                               'status': 'undefined',  # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
+                    'agents': {'phonenumber': None, # static mode
+                               'channel': None, # dynamic mode
+                               'status': 'undefined', # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
                                'queues': [],
                                'groups': []},
                     'queues': {'agentmembers': [],
@@ -355,10 +354,6 @@ class Safe(object):
         extenfeatures.getlist(0, 0, False)
         self.extenfeatures = extenfeatures.jsonreply
 
-    def update_config_list_all(self):
-        for listname in self.urlvars:
-            self.update_config_list(listname)
-
     def add_default_parking(self):
         """
         Add the default parking from extenfeatures to
@@ -470,6 +465,10 @@ class Safe(object):
                                      'tid': tid,
                                      'status': self.xod_status[listname][tid]})
 
+    def update_config_list_all(self):
+        for listname in self.urlvars:
+            self.update_config_list(listname)
+
     def update_config_list(self, listname):
         try:
             try:
@@ -477,7 +476,6 @@ class Safe(object):
             except Exception:
                 logger.exception('unable to update %s', listname)
                 deltas = {}
-
             do_fill_lines = False
 
             for k in deltas.get('add', {}):
@@ -1555,8 +1553,8 @@ class Channel(object):
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
-        self.properties = {'monitored': False,  # for meetme as well as for regular calls ? agent calls ?
-                           'spy': False,  # spier or spied ?
+        self.properties = {'monitored': False, # for meetme as well as for regular calls ? agent calls ?
+                           'spy': False, # spier or spied ?
                            'holded': False,
                            'parked': False,
                            'meetme_ismuted': False,
