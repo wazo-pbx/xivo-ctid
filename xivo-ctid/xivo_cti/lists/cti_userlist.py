@@ -73,12 +73,6 @@ class UserList(AnyList):
                         user['timezone'] = fixed_timezone
                         self.alarm_clk_changes[id] = (user['alarmclock'], fixed_timezone)
 
-    def update_noinput(self):
-        newuserlist = self.commandclass.getuserslist()
-        for a, b in newuserlist.iteritems():
-            if a not in self.keeplist:
-                self.keeplist[a] = b
-
     def finduser(self, userid):
         for userinfo in self.keeplist.itervalues():
             if userinfo and userinfo.get('enableclient') and userinfo.get('loginclient') == userid:
@@ -93,17 +87,6 @@ class UserList(AnyList):
             if 'login' in userinfo:
                 lst[username] = userinfo
         return lst
-
-    def adduser(self, inparams):
-        username = inparams['user']
-        if not username in self.keeplist:
-            self.keeplist[username] = {}
-            for f in self.commandclass.userfields:
-                self.keeplist[username][f] = inparams[f]
-
-    def deluser(self, username):
-        if username in self.keeplist:
-            self.keeplist.pop(username)
 
     def get_contexts(self, userid):
         phones = self.commandclass.xod_config['phones'].keeplist
