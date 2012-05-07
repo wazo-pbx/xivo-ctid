@@ -408,12 +408,12 @@ class Command(object):
         socketref = self._commanddict.get('socketref')
         fileid = self._commanddict.get('fileid')
         if fileid:
-            self.rinnerdata.faxes[fileid].setsocketref(socketref)
-            self.rinnerdata.faxes[fileid].setfileparameters(self._commanddict.get('file_size'))
+            self.innerdata.faxes[fileid].setsocketref(socketref)
+            self.innerdata.faxes[fileid].setfileparameters(self._commanddict.get('file_size'))
             if function == 'get_announce':
-                self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 's2c')
+                self._ctiserver.set_transfer_socket(self.innerdata.faxes[fileid], 's2c')
             elif function == 'put_announce':
-                self._ctiserver.set_transfer_socket(self.rinnerdata.faxes[fileid], 'c2s')
+                self._ctiserver.set_transfer_socket(self.innerdata.faxes[fileid], 'c2s')
         else:
             logger.warning('empty fileid given %s', self._commanddict)
         return reply
@@ -421,14 +421,14 @@ class Command(object):
     def regcommand_faxsend(self):
         fileid = ''.join(random.sample(ALPHANUMS, 10))
         reply = {'fileid': fileid}
-        self.rinnerdata.faxes[fileid] = cti_fax.Fax(self.rinnerdata, fileid)
-        # ruserid gives an entity, which doesn't give a context right away ...
-        context = 'default'
-        self.rinnerdata.faxes[fileid].setfaxparameters(self.ruserid,
-                                                       context,
-                                                       self._commanddict.get('destination'),
-                                                       self._commanddict.get('hide'))
-        self.rinnerdata.faxes[fileid].setrequester(self._connection)
+        self.innerdata.faxes[fileid] = cti_fax.Fax(self.innerdata, fileid)
+        contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
+        if len(contexts):
+            self.innerdata.faxes[fileid].setfaxparameters(self.ruserid,
+                                                          contexts[0],
+                                                          self._commanddict.get('destination'),
+                                                          self._commanddict.get('hide'))
+            self.innerdata.faxes[fileid].setrequester(self._connection)
         return reply
 
     def regcommand_getipbxlist(self):

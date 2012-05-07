@@ -86,8 +86,9 @@ class CTI(interfaces.Interfaces):
         self.logintimer.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
-        user_id = self.connection_details['userid']
-        self._ctiserver._user_service_manager.disconnect(user_id)
+        elif 'userid' in self.connection_details:
+            user_id = self.connection_details['userid']
+            self._ctiserver._user_service_manager.disconnect(user_id)
 
     def manage_connection(self, msg):
         if self.transferconnection:
