@@ -22,18 +22,6 @@
                 "16" : {"longname" : "En attente", "color" : "#F7FF05"}
                 }
   },
-  "channelstatus" : {
-            "xivoh" : {
-                "ringing" : {"longname" : "Appelé", "color" : "red"},
-                "calling" : {"longname" : "Appelant", "color" : "blue"},
-                "linked-caller" : {"longname" : "En ligne (appelant)", "color" : "green"},
-                "linked-called" : {"longname" : "En ligne (appelé)", "color" : "yellow"}
-                }
-  },
-  "agentstatus" : {
-            "xivoh" : []
-  },
-
   "functions" : {
             "bearz" : ["customerinfo", "presence", "switchboard"]
   },
