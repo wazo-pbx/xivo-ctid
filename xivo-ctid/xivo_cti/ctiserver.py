@@ -465,9 +465,6 @@ class CTIServer(object):
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)
 
-            self.safe[self.myipbxid].set_ctilog(ctilog)
-            self.safe[self.myipbxid].read_internatprefixes(prefixfile)
-
             self.update_userlist[self.myipbxid] = []
             self.lastrequest_time[self.myipbxid] = time.time()
 

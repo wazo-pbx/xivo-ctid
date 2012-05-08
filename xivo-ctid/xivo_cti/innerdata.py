@@ -1449,24 +1449,6 @@ class Safe(object):
     def version(self):
         return '1.2-skaro-githash-gitdate'
 
-    def set_configs(self, cfgs):
-        # fetch faxcallerid, db settings (cdr and features)
-        # TODO ??
-        pass
-
-    def set_ctilog(self, ctilog):
-        # ctilog db
-        # TODO ??
-        pass
-
-    def set_contextlist(self, ctx):
-        # TODO ??
-        pass
-
-    def read_internatprefixes(self, ipf):
-        # TODO ??
-        pass
-
     # directory lookups entry points - START
 
     def getcustomers(self, user_id, pattern, commandid):
