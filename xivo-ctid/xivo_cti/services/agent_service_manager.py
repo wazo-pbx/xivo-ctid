@@ -60,7 +60,7 @@ class AgentServiceManager(object):
         user_ids = self.user_features_dao.find_by_agent_id(agent_id)
         line_ids = []
         for user_id in user_ids:
-            line_ids.extend(self.line_features_dao.find_by_user(user_id))
+            line_ids.extend(self.line_features_dao.find_line_id_by_user_id(user_id))
         return [self.line_features_dao.number(line_id) for line_id in line_ids]
 
     def agent_call_back_login(self, number, exten, context, ackcall):

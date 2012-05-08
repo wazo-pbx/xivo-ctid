@@ -30,9 +30,14 @@ class LineFeaturesDAO(object):
     def __init__(self, session):
         self._session = session
 
-    def find_by_user(self, user_id):
+    def find_line_id_by_user_id(self, user_id):
         res = self._session.query(LineFeatures).filter(LineFeatures.iduserfeatures == int(user_id))
         return [line.id for line in res]
+
+    def find_context_by_user_id(self, user_id):
+        res = self._session.query(LineFeatures).filter(LineFeatures.iduserfeatures == int(user_id))
+        context_list = [line.context for line in res]
+        return context_list[0] if len(context_list) > 0 else None
 
     def number(self, line_id):
         res = self._session.query(LineFeatures).filter(LineFeatures.id == line_id)

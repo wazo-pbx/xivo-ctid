@@ -181,6 +181,7 @@ class CTIServer(object):
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
+        self._user_service_manager.line_features_dao = self._line_features_dao
         self._presence_service_manager = PresenceServiceManager()
         self._presence_service_manager.innerdata_dao = self._innerdata_dao
         self._user_service_manager.presence_service_manager = self._presence_service_manager

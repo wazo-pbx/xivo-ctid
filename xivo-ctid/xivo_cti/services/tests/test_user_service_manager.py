@@ -32,12 +32,32 @@ from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.dao.alchemy import dbconnection
+from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+from xivo_cti.dao.alchemy.base import Base
 
 class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
+        db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
+        dbconnection.register_db_connection_pool(db_connection_pool)
+
+        uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
+        dbconnection.add_connection_as(uri, 'asterisk')
+        connection = dbconnection.get_connection('asterisk')
+
+        self.session = connection.get_session()
+
+        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
+        Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
+        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
+        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
+
         self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
+        self.line_features_dao = Mock(LineFeaturesDAO)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
         self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
@@ -45,6 +65,10 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.user_service_manager.user_service_notifier = self.user_service_notifier
         self.user_service_manager.funckey_manager = self.funckey_manager
+        self.user_service_manager.line_features_dao = self.line_features_dao
+
+    def tearDown(self):
+        dbconnection.unregister_db_connection_pool()
 
     def test_enable_dnd(self):
         user_id = 123
@@ -258,3 +282,40 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.presence_updated.assert_never_called()
         self.user_service_manager.user_features_dao.is_agent.assert_never_called()
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
+
+
+    def _insert_user(self):
+        user = UserFeatures()
+        user.firstname = 'test'
+        self.session.add(user)
+        self.session.commit()
+
+        return user.id
+
+    def _insert_line_with_user(self, user_id, number, context='test_context'):
+        line = LineFeatures()
+        line.iduserfeatures = user_id
+        line.protocolid = 1
+        line.provisioningid = 0
+        line.name = 'ix8pa'
+        line.context = context
+        line.number = number
+        self.session.add(line)
+
+        self.session.commit()
+
+        return line
+
+    def test_get_context(self):
+        user1_id = self._insert_user()
+        line1 = self._insert_line_with_user(user1_id, '100', 'context1')
+        user2_id = self._insert_user()
+        line2 = self._insert_line_with_user(user2_id, '101', 'context2')
+
+        self.line_features_dao.find_context_by_user_id.side_effect = lambda x: 'context1' if x == user1_id else 'context2'
+
+        context1 = self.user_service_manager.get_context(user1_id)
+        context2 = self.user_service_manager.get_context(user2_id)
+
+        self.assertEqual(context1, line1.context)
+        self.assertEqual(context2, line2.context)

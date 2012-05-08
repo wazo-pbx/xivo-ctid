@@ -55,14 +55,14 @@ class TestLineFeaturesDAO(unittest.TestCase):
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
 
-    def test_find_by_user(self):
+    def test_find_line_id_by_user_id(self):
         user = UserFeatures()
         user.id = self.user_id
         user.firstname = 'test_line'
 
         line = self._insert_line()
 
-        lines = self.dao.find_by_user(self.user_id)
+        lines = self.dao.find_line_id_by_user_id(self.user_id)
 
         self.assertEqual(lines[0], line.id)
 
@@ -81,11 +81,11 @@ class TestLineFeaturesDAO(unittest.TestCase):
 
         self.assertTrue(self.dao.is_phone_exten(self.line_number))
 
-    def _insert_line(self):
+    def _insert_line(self, context='test_context'):
         line = LineFeatures()
         line.protocolid = 0
         line.name = 'tre321'
-        line.context = 'test_context'
+        line.context = context
         line.provisioningid = 0
         line.number = self.line_number
         line.iduserfeatures = self.user_id
@@ -94,3 +94,14 @@ class TestLineFeaturesDAO(unittest.TestCase):
         self.session.commit()
 
         return line
+
+    def test_find_context_by_user_id(self):
+        user = UserFeatures()
+        user.id = self.user_id
+        user.firstname = 'test_line'
+
+        self._insert_line('falafel')
+
+        context = self.dao.find_context_by_user_id(self.user_id)
+
+        self.assertEqual('falafel', context)

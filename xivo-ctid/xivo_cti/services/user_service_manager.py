@@ -96,3 +96,6 @@ class UserServiceManager(object):
             if self.user_features_dao.is_agent(user_id):
                 agent_id = self.user_features_dao.agent_id(user_id)
                 self.agent_service_manager.set_presence(agent_id, presence)
+
+    def get_context(self, user_id):
+        return self.line_features_dao.find_context_by_user_id(user_id)
