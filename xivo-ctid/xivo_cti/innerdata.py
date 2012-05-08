@@ -206,23 +206,6 @@ class Safe(object):
                              'pickupgroup',
                              'callgroup',
                              'callerid']
-    # 'queueskills',
-    # links towards other properties
-    services_actions_list = ['enablevoicemail',
-                             'callrecord',
-                             'incallfilter',
-                             'enablednd',
-                             'enableunc',
-                             'enablebusy',
-                             'enablerna',
-                             'agentlogoff']
-
-    queues_actions_list = ['queueadd',
-                           'queueremove',
-                           'queuepause',
-                           'queueunpause',
-                           'queuepause_all',
-                           'queueunpause_all']
 
     permission_kinds = ['regcommands', 'userstatus']
 
@@ -640,9 +623,6 @@ class Safe(object):
         profileclient = self.user_get_ctiprofile(userid)
         zz = self._config.getconfig('profiles').get(profileclient)
         return zz.get('userstatus')
-
-    def user_get_all(self):
-        return self.xod_config['users'].keeplist.keys()
 
     def get_config(self, listname, item_id, limit=None, user_contexts=None):
         reply = {}
@@ -1134,33 +1114,6 @@ class Safe(object):
             rep.append('  * %s :' % k)
         rep.append('--------------')
         return rep
-
-    def presence_action(self, userid):
-        try:
-            availstate = self.xod_status['users'][userid]['availstate']
-            actions = self.get_user_permissions('userstatus', userid)[availstate].get('actions', {})
-            agentid = self.user_features_dao.get(userid).agentid
-            for action_name, action_param in actions.iteritems():
-                if action_name in self.services_actions_list:
-                    self._launch_presence_service(userid, action_name, action_param == 'true')
-                if action_name in self.queues_actions_list:
-                    if action_name == 'queuepause_all':
-                        self._ctiserver._agent_service_manager.queuepause_all(agentid)
-                    elif action_name == 'queueunpause_all':
-                        self._ctiserver._agent_service_manager.queueunpause_all(agentid)
-        except:
-            logger.warning('Could not trigger post presence change actions')
-
-    def _launch_presence_service(self, user_id, service_name, params):
-        if service_name in self.services_actions_list:
-            if service_name == 'agentlogoff':
-                agentid = self.user_features_dao.get(user_id).agentid
-                return self._ctiserver._agent_service_manager.logoff(agentid)
-            elif service_name == 'enablednd':
-                return self.user_service_manager.set_dnd(user_id, params)
-            raise NotImplementedError(service_name)
-        else:
-            raise ValueError('Unknown service %s' % service_name)
 
     def get_user_permissions(self, kind, userid):
         ret = {}
