@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-# Copyright (C) 2007-2011  Avencall'
+# Copyright (C) 2007-2012  Avencall'
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.queue_service_manager import NotAQueueException
+from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('innerdata')
 
@@ -469,59 +470,78 @@ class Safe(object):
         for listname in self.urlvars:
             self.update_config_list(listname)
 
+    def _initialize_item_status(self, listname, index):
+        self.xod_status[listname][index] = {}
+        if listname in self.props_status and len(self.props_status[listname]) > 0:
+            self.xod_status[listname][index] = copy.copy(self.props_status[listname])
+
+    def _update_config_list_add(self, listname, deltas):
+        changed = 'add' in deltas and len(deltas['add']) > 0
+        for k in deltas.get('add', []):
+            self._initialize_item_status(listname, k)
+
+            message = {'class': 'getlist',
+                       'listname': listname,
+                       'function': 'addconfig',
+                       'tipbxid': self.ipbxid,
+                       'list': [k]}
+
+            if not Config.get_instance().part_context():
+                self.events_cti.put(message)
+            else:
+                if listname == 'users':
+                    item_context = self.user_service_manager.get_context(k)
+                else:
+                    item_context = self.xod_config[listname].keeplist[k].get('context')
+                connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
+                for connection in connection_list:
+                    connection.reply(message)
+
+        return changed
+
+    def _update_config_list_del(self, listname, deltas):
+        changed = 'del' in deltas and len(deltas['del']) > 0
+        if changed:
+            self.events_cti.put({'class': 'getlist',
+                                 'listname': listname,
+                                 'function': 'delconfig',
+                                 'tipbxid': self.ipbxid,
+                                 'list': deltas['del']})
+        return changed
+
+    def _update_config_list_change(self, listname, deltas):
+        do_fill_lines = False
+        for tid, v in deltas.get('change', {}).iteritems():
+            if v:
+                props = self.xod_config[listname].keeplist[tid]
+                newc = {}
+                for p in v:
+                    if p in self.props_config.get(listname):
+                        newc[p] = props[p]
+
+                if newc:
+                    self.events_cti.put({'class': 'getlist',
+                                         'listname': listname,
+                                         'function': 'updateconfig',
+                                         'tipbxid': self.ipbxid,
+                                         'tid':tid,
+                                         'config': newc})
+                    do_fill_lines = True
+
+        return do_fill_lines
+
     def update_config_list(self, listname):
         try:
             try:
                 deltas = self.xod_config[listname].update()
             except Exception:
                 logger.exception('unable to update %s', listname)
-                deltas = {}
-            do_fill_lines = False
-
-            for k in deltas.get('add', {}):
-                self.xod_status[listname][k] = {}
-                for prop, defaultvalue in self.props_status.get(listname, {}).iteritems():
-                    self.xod_status[listname][k][prop] = copy.copy(defaultvalue)
-                # tells clients about new object XXX
-                self.events_cti.put({'class': 'getlist',
-                                     'listname': listname,
-                                     'function': 'addconfig',
-                                     'tipbxid': self.ipbxid,
-                                     'list': [k]})
-                do_fill_lines = True
-
-            if deltas.get('del'):
-                finaldels = deltas.get('del', [])
-                # tells clients about deleted objects
-                if finaldels:
-                    self.events_cti.put({'class': 'getlist',
-                                         'listname': listname,
-                                         'function': 'delconfig',
-                                         'tipbxid': self.ipbxid,
-                                         'list': finaldels})
-                    do_fill_lines = True
-
-            for tid, v in deltas.get('change', {}).iteritems():
-                if not v:
-                    continue
-                props = self.xod_config[listname].keeplist[tid]
-                newc = {}
-                for p in v:
-                    if p in self.props_config.get(listname):
-                        newc[p] = props[p]
-                # tells clients about changed object (if really so ...)
-                if newc:
-                    self.events_cti.put({'class': 'getlist',
-                                         'listname': listname,
-                                         'function': 'updateconfig',
-                                         'tipbxid': self.ipbxid,
-                                         'tid': tid,
-                                         'config': newc})
-                    do_fill_lines = True
-
-            if do_fill_lines and listname in ['phones', 'users']:
-                self.fill_lines_into_users()
-
+            else:
+                added = self._update_config_list_add(listname, deltas)
+                deleted = self._update_config_list_del(listname, deltas)
+                changed = self._update_config_list_change(listname, deltas)
+                if listname in ['phones', 'users'] and (added or changed or deleted):
+                    self.fill_lines_into_users()
         except Exception:
             logger.exception('update_config_list %s', listname)
 
@@ -573,10 +593,9 @@ class Safe(object):
 
         if domatch and 'contexts' in tomatch:
             domatch = False
-            for ctx in self.user_getcontexts(userid):
-                if ctx in tomatch.get('contexts'):
-                    domatch = True
-                    break
+            context = self.user_service_manager.get_context(userid)
+            if context in tomatch['contexts']:
+                domatch = True
 
         return domatch
 
