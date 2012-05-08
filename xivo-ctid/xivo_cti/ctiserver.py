@@ -164,9 +164,21 @@ class CTIServer(object):
         self._set_signal_handlers()
         self._init_db_connection_pool()
         self._init_queue_stats()
+
         self._user_service_manager = UserServiceManager()
+        self._user_service_notifier = UserServiceNotifier()
         self._funckey_manager = FunckeyManager()
-        self._user_service_manager.funckey_manager = self._funckey_manager
+        self._agent_service_manager = AgentServiceManager()
+        self._agent_service_executor = AgentServiceExecutor()
+        self._presence_service_manager = PresenceServiceManager()
+        self._presence_service_executor = PresenceServiceExecutor()
+        self._statistics_notifier = StatisticsNotifier()
+        self._queue_service_manager = QueueServiceManager()
+        self._queue_statistics_producer = QueueStatisticsProducer()
+        self._queuemember_service_manager = QueueMemberServiceManager()
+        self._queuemember_service_notifier = QueueMemberServiceNotifier()
+
+        self._innerdata_dao = InnerdataDAO()
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
@@ -174,26 +186,31 @@ class CTIServer(object):
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
         self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
         self._meetme_features_dao = MeetmeFeaturesDAO.new_from_uri('queue_stats')
-        self._innerdata_dao = InnerdataDAO()
+
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
+
+        self._presence_service_executor.user_features_dao = self._user_features_dao
+        self._presence_service_executor.user_service_manager = self._user_service_manager
+        self._presence_service_executor.agent_service_manager = self._agent_service_manager
+
+        self._presence_service_manager.innerdata_dao = self._innerdata_dao
+
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
-        self._user_service_notifier = UserServiceNotifier()
         self._user_service_manager.user_service_notifier = self._user_service_notifier
         self._user_service_manager.line_features_dao = self._line_features_dao
-        self._presence_service_manager = PresenceServiceManager()
-        self._presence_service_manager.innerdata_dao = self._innerdata_dao
         self._user_service_manager.presence_service_manager = self._presence_service_manager
-        self._agent_service_manager = AgentServiceManager()
+        self._user_service_manager.presence_service_executor = self._presence_service_executor
+        self._user_service_manager.agent_service_manager = self._agent_service_manager
+        self._user_service_manager.funckey_manager = self._funckey_manager
+
         self._agent_service_manager.line_features_dao = self._line_features_dao
         self._agent_service_manager.agent_features_dao = self._agent_features_dao
         self._agent_service_manager.user_features_dao = self._user_features_dao
-        self._agent_service_manager.agent_service_executor = AgentServiceExecutor()
-        self._queue_service_manager = QueueServiceManager()
+        self._agent_service_manager.agent_service_executor = self._agent_service_executor
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
-        self._statistics_notifier = StatisticsNotifier()
         self._queue_entry_manager = QueueEntryManager.get_instance()
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
@@ -207,18 +224,16 @@ class CTIServer(object):
 
         queue_entry_manager.register_events()
 
-        self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
         self._queuemember_service_manager.delta_computer = DeltaComputer()
-        self._queuemember_service_notifier = QueueMemberServiceNotifier()
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
+
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
-        self._queue_statistics_producer = QueueStatisticsProducer()
+
         self._queue_statistics_producer.notifier = self._statistics_notifier
-        self._user_service_manager.presence_service_executor = PresenceServiceExecutor()
-        self._user_service_manager.agent_service_manager = self._agent_service_manager
+
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
