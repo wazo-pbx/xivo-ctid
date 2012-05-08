@@ -45,6 +45,7 @@ class TestSafe(unittest.TestCase):
     def setUp(self):
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
+        self._ctiserver._user_service_manager = Mock(UserServiceManager())
         config = Config.get_instance()
         config.xc_json = {'ipbxes': {self._ipbx_id: {'cdr_db_uri': 'sqlite://'}}}
 
@@ -59,7 +60,6 @@ class TestSafe(unittest.TestCase):
 
     def test_register_cti_handlers(self):
         safe = Safe(self._ctiserver, self._ipbx_id)
-        self._ctiserver._user_service_manager = Mock(UserServiceManager)
 
         safe.register_cti_handlers()
 
@@ -133,8 +133,6 @@ class TestSafe(unittest.TestCase):
         trunks = {1: {'name': 'my-test-trunk',
                       'protocol': 'sip',
                       'context': 'from-extern'}}
-        safe.user_getcontexts = Mock()
-        safe.user_getcontexts.return_value = ['test_context']
         safe.xod_config['trunks'].keeplist = trunks
         safe._get_cid_directory_lookup = Mock()
         channel_id = 'SIP/my-test-trunk-123456'
@@ -168,8 +166,6 @@ class TestSafe(unittest.TestCase):
         safe._get_cid_directory_lookup = Mock()
         safe._get_cid_directory_lookup.return_value = ('"%s" <%s>' % (name, number),
                                                        name, number)
-        safe.user_getcontexts = Mock()
-        safe.user_getcontexts.return_value = ['test']
 
         expected = build_agi_caller_id(full, name, number)
 

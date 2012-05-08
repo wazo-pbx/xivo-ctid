@@ -582,14 +582,6 @@ class Safe(object):
 
         return domatch
 
-    def user_getcontexts(self, userid):
-        user = self.user_features_dao.get(userid)
-        contexts = list()
-        for context_id, context_config in self.xod_config.get('contexts').keeplist.iteritems():
-            if context_config.get('context').get('entityid') == str(user.entityid):
-                contexts.append(context_id)
-        return contexts
-
     def find_users_channels_with_peer(self, user_id):
         '''Find a user's channels that that are talking to another channel'''
         potential_channel_start = []
@@ -1405,8 +1397,9 @@ class Safe(object):
             if self._is_phone_channel(chan_proto, chan_name):
                 return build_agi_caller_id(*self._get_cid_for_phone(channel))
             elif self._is_trunk_channel(chan_proto, chan_name):
+                user_context = self._ctiserver._user_service_manager.get_context(dest_user_id)
                 return build_agi_caller_id(*self._get_cid_directory_lookup(
-                    cid_number, chan_name, cid_number, self.user_getcontexts(dest_user_id)))
+                    cid_number, chan_name, cid_number, [user_context]))
             elif chan_proto == 'Local':
                 return build_agi_caller_id(*self._get_cid_directory_lookup(
                     cid_number, chan_name, cid_number, [chan_name.split('@')[1]]))
@@ -1539,11 +1532,6 @@ class Channel(object):
         # 6 Up
         self.state = state
 
-    def update_term(self):
-        # define what (agent, queue, ...)
-        # define index
-        pass
-
     # extra dialplan data that may be reachable from sheets
 
     def set_extra_data(self, family, varname, varvalue):
@@ -1560,16 +1548,6 @@ class Channel(object):
     def update_from_event(self, event):
         if 'CallerIDName' in event and self.properties['thisdisplay'] == None:
             self.properties['thisdisplay'] = event['CallerIDName']
-
-    def get_extra_data(self, family, varname):
-        if family == 'xivo':
-            if varname in self.extra_vars.get(family):
-                varvalue = self.extra_data.get(family).get(varname, '')
-        else:
-            if family not in self.extra_data:
-                self.extra_data[family] = {}
-            varvalue = self.extra_data.get(family).get(varname, '')
-        return varvalue
 
 
 def split_channel(channel):
