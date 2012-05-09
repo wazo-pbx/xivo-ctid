@@ -1446,13 +1446,13 @@ class Safe(object):
 
     def getcustomers(self, user_id, pattern, commandid):
         try:
-            contexts = self.xod_config['users'].get_contexts(user_id)
-            context_obj = self.contexts_mgr.contexts[contexts[0]]
+            context = self.user_service_manager.get_context(user_id)
+            context_obj = self.contexts_mgr.contexts[context]
         except KeyError:
-            logger.error('getcustomers: undefined context: %s', contexts)
+            logger.info('Directory lookup failed in context: %s', context)
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
         else:
-            headers, resultlist = context_obj.lookup_direct(pattern, contexts=contexts)
+            headers, resultlist = context_obj.lookup_direct(pattern, contexts=[context])
             resultlist = list(set(resultlist))
             return 'message', {'class': 'directory',
                                'headers': headers,
