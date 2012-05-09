@@ -190,7 +190,7 @@ class Command(object):
             logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
 
-        reply = {'capalist': [self._ctiserver.safe[ipbxid].user_get_ctiprofile(userid)]}
+        reply = {'capalist': [self._ctiserver._user_features_dao.get_profile(userid)]}
         return reply
 
     def regcommand_login_capas(self):

@@ -608,11 +608,8 @@ class Safe(object):
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
-    def user_get_ctiprofile(self, userid):
-        return self.user_features_dao.get(userid).profileclient
-
     def user_get_userstatuskind(self, userid):
-        profileclient = self.user_get_ctiprofile(userid)
+        profileclient = self.user_features_dao.get_profile(userid)
         zz = self._config.getconfig('profiles').get(profileclient)
         return zz.get('userstatus')
 
@@ -1115,7 +1112,7 @@ class Safe(object):
         ret = {}
         if kind not in self.permission_kinds:
             return ret
-        profileclient = self.user_get_ctiprofile(userid)
+        profileclient = self.user_features_dao.get_profile(userid)
         if profileclient:
             profilespecs = self._config.getconfig('profiles').get(profileclient)
             if profilespecs:
