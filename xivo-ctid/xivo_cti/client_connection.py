@@ -29,7 +29,7 @@ BUFSIZE_LARGE = 262144
 
 class ClientConnection(object):
     class CloseException(Exception):
-        def __init__(self, errno=-1):
+        def __init__(self, errno= -1):
             self.args = (errno,)
 
     def __init__(self, socket, address=None, sep='\n'):
@@ -54,6 +54,10 @@ class ClientConnection(object):
         if not self.isClosed:
             self.isClosed = True
             self.socket.close()
+
+    def append_queue(self, data):
+        if(len(data) > 0):
+            self.sendqueue.append(data)
 
     # send data
     def send(self, data):

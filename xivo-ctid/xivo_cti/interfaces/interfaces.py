@@ -21,8 +21,15 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+class DisconnectCause(object):
+    by_client = 'by_client'
+    by_server_stop = 'by_server_stop'
+    by_server_reload = 'by_server_reload'
+    broken_pipe = 'broken_pipe'
+
 
 class Interfaces(object):
+    DisconnectCause = DisconnectCause
     def __init__(self, ctiserver):
         self._ctiserver = ctiserver
         self.logintimer = None
@@ -33,6 +40,6 @@ class Interfaces(object):
         self.connid = connid
         self.requester = connid.getpeername()[:2]
 
-    def disconnected(self, msg):
+    def disconnected(self, cause):
         self.connid = None
         self.requester = None

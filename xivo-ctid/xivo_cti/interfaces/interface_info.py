@@ -79,9 +79,9 @@ class INFO(interfaces.Interfaces):
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
 
-    def disconnected(self, msg):
-        self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), msg))
-        interfaces.Interfaces.disconnected(self, msg)
+    def disconnected(self, cause):
+        self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), cause))
+        interfaces.Interfaces.disconnected(self, cause)
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid

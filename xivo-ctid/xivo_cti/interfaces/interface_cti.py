@@ -81,14 +81,20 @@ class CTI(interfaces.Interfaces):
                                                                  'xivo_version',
                                                                  'cti_connection'])
 
-    def disconnected(self, msg):
-        logger.info('disconnected %s', msg)
+    def disconnected(self, cause):
+        logger.info('disconnected %s', cause)
         self.logintimer.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         elif 'userid' in self.connection_details:
             user_id = self.connection_details['userid']
-            self._ctiserver._user_service_manager.disconnect(user_id)
+            if cause == self.DisconnectCause.by_client \
+            or cause == self.DisconnectCause.by_server_stop \
+            or cause == self.DisconnectCause.by_server_reload \
+            or cause == self.DisconnectCause.broken_pipe:
+                self._ctiserver._user_service_manager.disconnect_no_action(user_id)
+            else:
+                raise TypeError('invalid DisconnectCause %s' % cause)
 
     def manage_connection(self, msg):
         if self.transferconnection:
@@ -123,6 +129,13 @@ class CTI(interfaces.Interfaces):
         logger.info('%s set_as_transfer %s', faxobj.fileid, direction)
         self.transferconnection = {'direction': direction,
                                    'faxobj': faxobj}
+
+    def append_msg(self, msg):
+        if self.transferconnection:
+            if self.transferconnection.get('direction') == 's2c':
+                self.connid.append_queue(msg)
+        else:
+            self.connid.append_queue(self.serial.encode(msg) + '\n')
 
     def reply(self, msg):
         if self.transferconnection:

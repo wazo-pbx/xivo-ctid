@@ -48,6 +48,7 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_fagi
+from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
@@ -90,6 +91,7 @@ from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
+from xivo_cti.cti.commands.logout import Logout
 
 
 logger = logging.getLogger('main')
@@ -235,6 +237,7 @@ class CTIServer(object):
         SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_longest_wait_time, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
+        Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
@@ -529,16 +532,6 @@ class CTIServer(object):
             while not self.askedtoquit:
                 self.select_step()
 
-    def loop_over_cti_queue(self, innerdata):
-        cti_queue = innerdata.events_cti
-        queuesize = cti_queue.qsize()
-        while cti_queue.qsize() > 0:
-            it = cti_queue.get()
-            for k in self.fdlist_established.itervalues():
-                if not isinstance(k, str) and k.kind in ['CTI', 'CTIS']:
-                    k.reply(it)
-        return queuesize
-
     def get_connected(self, tomatch):
         clist = list()
         for k in self.fdlist_established.itervalues():
@@ -555,7 +548,15 @@ class CTIServer(object):
 
     def loop_over_cti_queues(self):
         for ipbxid, innerdata in self.safe.iteritems():
-            queuesize = self.loop_over_cti_queue(innerdata)
+            self.loop_over_cti_queue(innerdata)
+
+    def loop_over_cti_queue(self, innerdata):
+        cti_queue = innerdata.events_cti
+        while cti_queue.qsize() > 0:
+            it = cti_queue.get()
+            for k in self.fdlist_established.itervalues():
+                if not isinstance(k, str) and k.kind in ['CTI', 'CTIS']:
+                    k.append_msg(it)
 
     def set_transfer_socket(self, faxobj, direction):
         for iconn, kind in self.fdlist_established.iteritems():
@@ -604,7 +605,7 @@ class CTIServer(object):
             self.fdlist_full.extend(self.fdlist_remote_cti.keys())
             writefds = []
             for iconn, kind in self.fdlist_established.iteritems():
-                if kind in ['CTI', 'CTIS'] and iconn.need_sending():
+                if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
                     writefds.append(iconn)
             [sels_i, sels_o, sels_e] = select.select(self.fdlist_full, writefds, [],
                                                      self.updates_period())
@@ -623,9 +624,9 @@ class CTIServer(object):
             for s in self.fdlist_full:
                 if s in self.fdlist_established:
                     if self.askedtoquit:
-                        self.fdlist_established[s].disconnected('stop')
+                        self.fdlist_established[s].disconnected(DisconnectCause.by_server_stop)
                     else:
-                        self.fdlist_established[s].disconnected('reload')
+                        self.fdlist_established[s].disconnected(DisconnectCause.by_server_reload)
                 if not isinstance(s, int):
                     # the only one 'int' is the (read) pipe : no need to close/reopen it
                     s.close()
@@ -649,16 +650,18 @@ class CTIServer(object):
                 return
 
         try:
+
             # connexions ready for sending(writing)
-            for sel_o in sels_o:
-                try:
-                    sel_o.process_sending()
-                except ClientConnection.CloseException, cexc:
-                    if sel_o in self.fdlist_established:
-                        kind = self.fdlist_established[sel_o]
-                        kind.disconnected('end_sending')
-                        sel_o.close()
-                        del self.fdlist_established[sel_o]
+            if sels_o:
+                for sel_o in sels_o:
+                    try:
+                        sel_o.process_sending()
+                    except ClientConnection.CloseException, cexc:
+                        if sel_o in self.fdlist_established:
+                            kind = self.fdlist_established[sel_o]
+                            kind.disconnected(DisconnectCause.broken_pipe)
+                            sel_o.close()
+                            del self.fdlist_established[sel_o]
 
             if sels_i:
                 for sel_i in sels_i:
@@ -788,7 +791,7 @@ class CTIServer(object):
                                             #1    at least once)
                                             closemenow = self.manage_tcp_connections(sel_i, line, kind)
                                 except ClientConnection.CloseException, cexc:
-                                    kind.disconnected('end_receiving')
+                                    kind.disconnected(DisconnectCause.broken_pipe)
                                     # don't close since it has been done
                                     del self.fdlist_established[sel_i]
                             else:
@@ -808,7 +811,7 @@ class CTIServer(object):
                                     closemenow = True
 
                             if closemenow:
-                                kind.disconnected('by_client')
+                                kind.disconnected(DisconnectCause.by_client)
                                 sel_i.close()
                                 del self.fdlist_established[sel_i]
                         except OperationalError:
@@ -819,7 +822,7 @@ class CTIServer(object):
                             logger.exception('[%s] %s', kind, sel_i)
                             try:
                                 logger.warning('unexpected socket breakup')
-                                kind.disconnected('exception')
+                                kind.disconnected(DisconnectCause.broken_pipe)
                                 sel_i.close()
                                 del self.fdlist_established[sel_i]
                             except Exception:

@@ -82,8 +82,8 @@ class WEBI(interfaces.Interfaces):
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
 
-    def disconnected(self, msg):
-        interfaces.Interfaces.disconnected(self, msg)
+    def disconnected(self, cause):
+        interfaces.Interfaces.disconnected(self, cause)
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
