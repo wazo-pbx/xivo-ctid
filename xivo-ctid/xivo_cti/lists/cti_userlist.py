@@ -33,45 +33,10 @@ class UserList(AnyList):
         self.anylist_properties = {'name': 'users',
                                    'urloptions': (0, 11, True)}
         AnyList.__init__(self, newurls)
-        # a dictionary where keys are user id (string) and values are
-        # (<alarm clock>, <timezone) tuple
-        self.alarm_clk_changes = {}
 
     def update(self):
         delta = AnyList.update(self)
-        self._update_alarm_clock_changes(delta)
         return delta
-
-    def _update_alarm_clock_changes(self, delta):
-        delta_add = delta.get('add')
-        if delta_add:
-            for id in delta_add:
-                # ignore 'remote user'
-                if not id.startswith('cs:'):
-                    user = self.keeplist[id]
-                    # cjson workaround
-                    fixed_timezone = user['timezone'].replace('\\/', '/')
-                    user['timezone'] = fixed_timezone
-                    self.alarm_clk_changes[id] = (user['alarmclock'], fixed_timezone)
-
-        delta_del = delta.get('del')
-        if delta_del:
-            for id in delta_del:
-                # ignore 'remote user'
-                if not id.startswith('cs:'):
-                    self.alarm_clk_changes[id] = ('', '')
-
-        delta_change = delta.get('change')
-        if delta_change:
-            for id, changed_keys in delta_change.iteritems():
-                # ignore 'remote user'
-                if not id.startswith('cs:'):
-                    if 'alarmclock' in changed_keys or 'timezone' in changed_keys:
-                        user = self.keeplist[id]
-                        # cjson workaround
-                        fixed_timezone = user['timezone'].replace('\\/', '/')
-                        user['timezone'] = fixed_timezone
-                        self.alarm_clk_changes[id] = (user['alarmclock'], fixed_timezone)
 
     def finduser(self, userid):
         for userinfo in self.keeplist.itervalues():

@@ -31,7 +31,6 @@ logger = logging.getLogger('cti_config')
 
 
 DAEMONNAME = 'xivo-ctid'
-ALARM_DIRECTORY = '/var/lib/%s/alarms' % DAEMONNAME
 BUFSIZE_LARGE = 262144
 DEBUG_MODE = False
 LOGFILENAME = '/var/log/%s.log' % DAEMONNAME

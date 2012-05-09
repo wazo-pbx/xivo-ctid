@@ -392,15 +392,3 @@ class AMIClass(object):
             return False
         except Exception:
             return False
-
-    def alarmclk(self, userid, callerid='Alarm clock'):
-        # execute the alarm clock 'procedure' for the given user
-        return self._exec_command('Originate',
-                                  [('Channel', 'Local/s@alarmclk-execute'),
-                                   ('Context', 'alarmclk-play-msg'),
-                                   ('Exten', 's'),
-                                   ('Priority', '1'),
-                                   ('Timeout', '900000'),  # 15 minutes timeout
-                                   ('CallerID', callerid),
-                                   ('Async', 'true'),
-                                   ('Variable', 'XIVO_DSTID=%s' % userid)])

@@ -22,7 +22,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cjson
-import datetime
 import logging
 import os
 import Queue
@@ -40,8 +39,6 @@ from xivo import daemonize
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
-from xivo_cti.alarm import alarm
-from xivo_cti.alarm import scheduler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
@@ -111,7 +108,6 @@ class CTIServer(object):
         self.safe = {}
         self.timeout_queue = None
         self.pipe_queued_threads = None
-        self.scheduler = None
         self._config = None
         self._user_service_manager = None
 
@@ -140,27 +136,12 @@ class CTIServer(object):
             daemonize.daemonize()
         daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
 
-    def _setup_zones_and_alarms(self, persister, alarm):
-        try:
-            system_zone = alarm.get_system_zone()
-        except Exception as e:
-            logger.warning('Error while getting system zone: %s', e)
-            system_zone = None
-        self.alarm_mgr = alarm.AlarmClockManager(
-            self.scheduler, persister, self._alarm_callback, system_zone)
-        self.global_zone = None
-
     def setup(self):
         self._set_logger()
         self._daemonize()
         self._config = cti_config.Config.get_instance()
         self._config.update()
         self.timeout_queue = Queue.Queue()
-        self.scheduler = scheduler.Scheduler()
-        persister = alarm.JSONPersister(cti_config.ALARM_DIRECTORY)
-        persister = alarm.MaxDeltaPersisterDecorator(datetime.timedelta(hours=2),
-                                                     persister)
-        self._setup_zones_and_alarms(persister, alarm)
         self._set_signal_handlers()
         self._init_db_connection_pool()
         self._init_queue_stats()
@@ -268,16 +249,10 @@ class CTIServer(object):
                 logger.exception('main loop has crashed ... retrying in 5 seconds ...')
                 time.sleep(5)
 
-    def _alarm_callback(self, data):
-        # WARNING: we are in the scheduler thread
-        userid = data['userid']
-        os.write(self.pipe_queued_threads[1], 'alarmclk:%s\n' % userid)
-
     ## \brief Handler for catching signals (in the main thread)
     def sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
-        self.scheduler.shutdown()
         for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
             print '--- living thread <%s>' % (t.getName())
             t._Thread__stop()
@@ -554,16 +529,8 @@ class CTIServer(object):
             except:
                 sys.exit()
         else:
-            # we call _schedule_alarms before starting the scheduler so that
-            # alarms that have changed will be rescheduled before having a
-            # chance to be fired
-            self._schedule_alarms()
-            self.scheduler.start()
-            try:
-                while not self.askedtoquit:
-                    self.select_step()
-            finally:
-                self.scheduler.shutdown()
+            while not self.askedtoquit:
+                self.select_step()
 
     def loop_over_cti_queue(self, innerdata):
         cti_queue = innerdata.events_cti
@@ -615,30 +582,7 @@ class CTIServer(object):
                     if k.connection_details.get('userid')[3:] == ipbxid:
                         k.reply(what)
 
-    def _schedule_alarms(self):
-        # Schedule new alarms/reschedule updated alarm
-        global_zone = self._config.getconfig('ipbxes').get(self.myipbxid, {}).get('timezone')
-        userlist = self.safe[self.myipbxid].xod_config['users']
-        if global_zone != self.global_zone:
-            logger.info('Global zone changed to %s', global_zone)
-            for userid, user in userlist.keeplist.iteritems():
-                # ignore 'remote users'
-                if not userid.startswith('cs:'):
-                    alarmclock = user['alarmclock']
-                    if alarmclock and not user['timezone']:
-                        self.alarm_mgr.test_update_alarm_clock(int(userid), alarmclock, global_zone)
-            self.global_zone = global_zone
-        if userlist.alarm_clk_changes:
-            for userid, (alarmclock, zone) in userlist.alarm_clk_changes.iteritems():
-                logger.info('Alarm clock changed for user %s', userid)
-                if not zone:
-                    zone = global_zone
-                self.alarm_mgr.test_update_alarm_clock(int(userid), alarmclock, zone)
-            userlist.alarm_clk_changes.clear()
-
     def select_step(self):
-        self._schedule_alarms()
-
         try:
             fdtodel = []
             for cn in self.fdlist_established.keys():
@@ -678,10 +622,6 @@ class CTIServer(object):
                            self.fdlist_ami.keys())
             logger.warning('(select) current open TCP connections : (RCTI) %s',
                            self.fdlist_remote_cti.keys())
-
-            # we must close the scheduler early since scheduled jobs depends
-            # on the AMI connection
-            self.scheduler.shutdown()
 
             for s in self.fdlist_full:
                 if s in self.fdlist_established:
@@ -906,11 +846,6 @@ class CTIServer(object):
                                             nactions = self.safe[where].checkqueue()
                                         elif kind == 'ami':
                                             nactions = self.myami[where].checkqueue()
-                                    elif kind == 'alarmclk':
-                                        userid = where
-                                        params = {'amicommand': 'alarmclk',
-                                                  'amiargs': (userid,)}
-                                        self.myami[self.myipbxid].execute_and_track(None, params)
                                     else:
                                         logger.warning('unknown kind for %s', pb)
                         except Exception:

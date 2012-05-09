@@ -12,7 +12,6 @@ setup(
     url='http://wiki.xivo.fr/',
     packages=['xivo_cti',
               'xivo_cti.model',
-              'xivo_cti.alarm',
               'xivo_cti.ami',
               'xivo_cti.ami.actions',
               'xivo_cti.lists',
