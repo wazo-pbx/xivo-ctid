@@ -69,12 +69,7 @@ class CTI(interfaces.Interfaces):
         self._register_login_callbacks()
 
     def connected(self, connid):
-        """
-        Send a banner at login time
-        """
         interfaces.Interfaces.connected(self, connid)
-        self.connid.sendall('XiVO CTI Server Version xx (on %s)\n'
-                            % (' '.join(os.uname()[:3])))
 
     def _register_login_callbacks(self):
         LoginID.register_callback_params(self.receive_login_id, ['userlogin',
@@ -140,13 +135,13 @@ class CTI(interfaces.Interfaces):
     def reply(self, msg):
         if self.transferconnection:
             if self.transferconnection.get('direction') == 's2c':
-                self.connid.sendall(msg)
+                self.connid.append_queue(msg)
                 logger.info('transfer connection %d sent', len(msg))
         else:
             self.send_message(msg)
 
     def send_message(self, msg):
-        self.connid.sendall(self.serial.encode(msg) + '\n')
+        self.connid.append_queue(self.serial.encode(msg) + '\n')
 
     def loginko(self, errorstring):
         logger.warning('user can not connect (%s) : sending %s',

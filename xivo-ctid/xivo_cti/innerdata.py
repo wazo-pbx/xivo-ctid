@@ -478,7 +478,7 @@ class Safe(object):
                     item_context = self.xod_config[listname].keeplist[k].get('context')
                 connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
                 for connection in connection_list:
-                    connection.reply(message)
+                    connection.append_msg(message)
 
         return changed
 

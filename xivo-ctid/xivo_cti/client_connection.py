@@ -59,16 +59,6 @@ class ClientConnection(object):
         if(len(data) > 0):
             self.sendqueue.append(data)
 
-    # send data
-    def send(self, data):
-        if(len(data) > 0):
-            self.sendqueue.append(data)
-            self.process_sending()
-
-    # synonym for send
-    def sendall(self, data):
-        self.send(data)
-
     # to be called when the socket is ready for writing
     def process_sending(self):
         while len(self.sendqueue) > 0:
