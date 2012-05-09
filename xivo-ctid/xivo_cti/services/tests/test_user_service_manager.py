@@ -59,13 +59,20 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_features_dao = Mock(UserFeaturesDAO)
         self.line_features_dao = Mock(LineFeaturesDAO)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
+        self.agent_service_manager = Mock(AgentServiceManager)
+        self.presence_service_manager = Mock(PresenceServiceManager)
+        self.presence_service_executor = Mock(PresenceServiceExecutor)
         self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
+        self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.user_service_notifier = self.user_service_notifier
         self.user_service_manager.funckey_manager = self.funckey_manager
         self.user_service_manager.line_features_dao = self.line_features_dao
+        self.user_service_manager.presence_service_manager = self.presence_service_manager
+        self.user_service_manager.agent_service_manager = self.agent_service_manager
+        self.user_service_manager.presence_service_executor = self.presence_service_executor
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
@@ -208,7 +215,6 @@ class TestUserServiceManager(unittest.TestCase):
 
     def test_disconnect(self):
         user_id = 95
-        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
         self.user_service_manager.set_presence = Mock()
 
         self.user_service_manager.disconnect(user_id)
@@ -216,18 +222,23 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.user_features_dao.disconnect.assert_called_once_with(user_id)
         self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected')
 
+    def test_disconnect_no_action(self):
+        user_id = 95
+        self.user_service_manager.set_presence = Mock()
+
+        self.user_service_manager.disconnect_no_action(user_id)
+
+        self.user_service_manager.user_features_dao.disconnect.assert_called_once_with(user_id)
+        self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected', action=False)
+
     def test_set_valid_presence_no_agent(self):
         user_id = 95
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 'client'
-        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
         self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
         self.user_service_manager.user_features_dao.is_agent.return_value = False
-        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
-        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = True
-        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
-        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+        self.presence_service_manager.is_valid_presence.return_value = True
 
         self.user_service_manager.set_presence(user_id, presence)
 
@@ -238,20 +249,34 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.user_features_dao.is_agent.assert_called_once_with(user_id)
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
 
+    def test_set_valid_presence_no_agent_no_action(self):
+        user_id = 95
+        presence = 'disconnected'
+        expected_presence = 'disconnected'
+        user_profile = 'client'
+        self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
+        self.user_service_manager.user_features_dao.is_agent.return_value = False
+        self.presence_service_manager.is_valid_presence.return_value = True
+
+        self.user_service_manager.set_presence(user_id, presence, action=False)
+
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.user_features_dao.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.presence_service_executor.execute_actions.assert_never_called()
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.user_features_dao.is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
+
     def test_set_valid_presence_with_agent(self):
         user_id = 95
         expected_agent_id = 10
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 'client'
-        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
         self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
         self.user_service_manager.user_features_dao.is_agent.return_value = True
         self.user_service_manager.user_features_dao.agent_id.return_value = expected_agent_id
-        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
-        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = True
-        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
-        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+        self.presence_service_manager.is_valid_presence.return_value = True
 
         self.user_service_manager.set_presence(user_id, presence)
 
@@ -267,12 +292,8 @@ class TestUserServiceManager(unittest.TestCase):
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 'client'
-        self.user_service_manager.user_features_dao = Mock(UserFeaturesDAO)
         self.user_service_manager.user_features_dao.get_profile.return_value = user_profile
-        self.user_service_manager.presence_service_manager = Mock(PresenceServiceManager)
-        self.user_service_manager.presence_service_manager.is_valid_presence.return_value = False
-        self.user_service_manager.presence_service_executor = Mock(PresenceServiceExecutor)
-        self.user_service_manager.agent_service_manager = Mock(AgentServiceManager)
+        self.presence_service_manager.is_valid_presence.return_value = False
 
         self.user_service_manager.set_presence(user_id, presence)
 
