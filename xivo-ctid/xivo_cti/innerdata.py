@@ -819,19 +819,23 @@ class Safe(object):
         elif queue_member_id in self.queuemembers:
             self._remove_queue_member(queue_member_id)
 
-    def queuememberupdate(self, queuename, location, props=None):
-        if self.xod_config['queues'].hasqueue(queuename):
+    def queuememberupdate(self, name, location, props=None):
+        if self.xod_config['queues'].hasqueue(name):
             list_name = 'queues'
-        else:
+        elif self.xod_config['groups'].hasqueue(name):
             list_name = 'groups'
-        queue_id = self.xod_config[list_name].idbyqueuename(queuename)
+        else:
+            raise ValueError('%s is not a group or queue' % name)
+
+        item_id = self.xod_config[list_name].idbyqueuename(name)
 
         # send a notification event if no new member
-        self.handle_cti_stack('set', (list_name, 'updatestatus', queue_id))
+        self.handle_cti_stack('set', (list_name, 'updatestatus', item_id))
         if location.lower().startswith('agent/'):
-            queue_member_id = self._update_agent_member(location, props, queue_id, list_name)
+            queue_member_id = self._update_agent_member(location, props, item_id, list_name)
         else:
-            queue_member_id = self._update_phone_member(location, props, queue_id, list_name)
+            queue_member_id = self._update_phone_member(location, props, item_id, list_name)
+
         self._update_queue_member(props, queue_member_id)
 
         # send cti events in reverse order in order for the queuemember details to be received first

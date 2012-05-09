@@ -46,7 +46,8 @@ class PresenceServiceExecutor(object):
     def _launch_presence_service(self, user_id, action_name, params):
         if action_name == 'agentlogoff':
             agentid = self.user_features_dao.get(user_id).agentid
-            return self.agent_service_manager.logoff(agentid)
+            if agentid:
+                return self.agent_service_manager.logoff(agentid)
         elif action_name == 'enablednd':
             return self.user_service_manager.set_dnd(user_id, params)
         raise NotImplementedError(action_name)
