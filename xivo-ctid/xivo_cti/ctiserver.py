@@ -240,7 +240,6 @@ class CTIServer(object):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
         self._queuemember_service_notifier.queue_statistics_producer = self._queue_statistics_producer
 
-
     def run(self):
         while True:
             try:
@@ -384,9 +383,7 @@ class CTIServer(object):
         xivoconf_general = self._config.getconfig('main')
 
         # loads the general configuration
-        ctilog = xivoconf_general.get('ctilog_db_uri')
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
-        prefixfile = xivoconf_general.get('prefixfile')
         self._config.set_parting_options(xivoconf_general.get('parting_astid_context'))
 
         socket.setdefaulttimeout(socktimeout)
