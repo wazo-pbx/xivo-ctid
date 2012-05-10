@@ -24,12 +24,10 @@
 from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
 import logging
-from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 logger = logging.getLogger("QueueMemberServiceManager")
 
 class QueueMemberServiceManager(object):
-
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
         old_queuemembers = self.innerdata_dao.get_queuemembers_static()

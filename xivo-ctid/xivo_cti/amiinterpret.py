@@ -113,9 +113,10 @@ class AMI_1_8(object):
             destination = event['Destination']
             if channel in self.innerdata.channels:
                 try:
-                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
                     self.innerdata.channels[channel].set_extra_data('xivo', 'desttype', 'user')
-                    self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
+                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
+                    if phone:
+                        self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
                 except Exception:
                     logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'

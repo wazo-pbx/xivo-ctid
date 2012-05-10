@@ -308,6 +308,9 @@ class PhoneList(AnyList):
     def find_phone_by_channel(self, channel):
         protocol, name = channel.split('-', 1)[0].split('/', 1)
 
+        if protocol == 'Local':
+            return None
+
         def match_phone(phone):
             return phone['protocol'].lower() == protocol.lower() and phone['name'] == name
 
