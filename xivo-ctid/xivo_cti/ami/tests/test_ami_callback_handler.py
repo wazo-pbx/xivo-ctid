@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # xivo-ctid
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -96,6 +96,29 @@ class Test(unittest.TestCase):
         self.assertEqual(len(callbacks_2), 2)
         self.assertEqual(empty_callback, [])
 
+    def test_unregister_callback(self):
+        event_name = 'ATestEvent'
 
-if __name__ == "__main__":
-    unittest.main()
+        def a_function(event):
+            pass
+
+        self.handler.register_callback(event_name, a_function)
+        self.handler.unregister_callback(event_name, a_function)
+
+        self.assertEqual(self.handler._callbacks, {})
+
+    def test_unregister_callback_multiple_registration(self):
+        event_name = 'ATestEvent'
+
+        def f1(event):
+            pass
+
+        def f2(event):
+            pass
+
+        self.handler.register_callback(event_name, f1)
+        self.handler.register_callback(event_name, f2)
+
+        self.handler.unregister_callback(event_name, f1)
+
+        self.assertEqual(self.handler._callbacks, {event_name.lower(): set([f2])})

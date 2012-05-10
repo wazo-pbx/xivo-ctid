@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # xivo-ctid
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,6 +34,13 @@ class AMICallbackHandler(object):
         if not key in self._callbacks:
             self._callbacks[key] = set()
         self._callbacks[key].add(function)
+
+    def unregister_callback(self, event_name, function):
+        callback_key = event_name.lower()
+        if callback_key in self._callbacks:
+            self._callbacks[callback_key].remove(function)
+            if len(self._callbacks[callback_key]) == 0:
+                self._callbacks.pop(callback_key)
 
     def get_callbacks(self, event_name):
         return list(self._callbacks.get(event_name.lower(), []))
