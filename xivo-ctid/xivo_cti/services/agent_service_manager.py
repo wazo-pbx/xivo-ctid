@@ -54,7 +54,8 @@ class AgentServiceManager(object):
 
     def logoff(self, agent_id):
         number = self.agent_features_dao.agent_number(agent_id)
-        self.agent_service_executor.logoff(number)
+        if number is not None:
+            self.agent_service_executor.logoff(number)
 
     def find_agent_exten(self, agent_id):
         user_ids = self.user_features_dao.find_by_agent_id(agent_id)
@@ -68,28 +69,35 @@ class AgentServiceManager(object):
 
     def queueadd(self, queuename, agentid, paused=False, skills=''):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queue_add(queuename, interface, paused, skills)
+        if interface is not None:
+            self.agent_service_executor.queue_add(queuename, interface, paused, skills)
 
     def queueremove(self, queuename, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queue_remove(queuename, interface)
+        if interface is not None:
+            self.agent_service_executor.queue_remove(queuename, interface)
 
     def queuepause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queues_pause(interface)
+        if interface is not None:
+            self.agent_service_executor.queues_pause(interface)
 
     def queueunpause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queues_unpause(interface)
+        if interface is not None:
+            self.agent_service_executor.queues_unpause(interface)
 
     def queuepause(self, queuename, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queue_pause(queuename, interface)
+        if interface is not None:
+            self.agent_service_executor.queue_pause(queuename, interface)
 
     def queueunpause(self, queuename, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.queue_unpause(queuename, interface)
+        if interface is not None:
+            self.agent_service_executor.queue_unpause(queuename, interface)
 
     def set_presence(self, agentid, presence):
         interface = self.agent_features_dao.agent_interface(agentid)
-        self.agent_service_executor.log_presence(interface, presence)
+        if interface is not None:
+            self.agent_service_executor.log_presence(interface, presence)

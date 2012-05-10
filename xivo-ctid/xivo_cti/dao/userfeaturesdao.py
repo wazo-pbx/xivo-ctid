@@ -108,7 +108,10 @@ class UserFeaturesDAO(object):
         return [user.id for user in res]
 
     def agent_id(self, user_id):
-        return self.get(user_id).agentid
+        try:
+            return self.get(user_id).agentid
+        except LookupError:
+            return None
 
     def disconnect(self, user_id):
         userdata = self._innerdata.xod_status['users'][user_id]
