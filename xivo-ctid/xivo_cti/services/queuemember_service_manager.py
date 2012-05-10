@@ -71,97 +71,30 @@ class QueueMemberServiceManager(object):
         delta = DictDelta({}, queuemember_formatted, [])
         self.queuemember_notifier.queuemember_config_updated(delta)
 
-    def whenmember(self, innerdata, command, dopause, listname, k, member):
-        memberlist = []
-        midx = '%s%s:%s-%s' % (listname[0], member.get('type')[0], k, member.get('id'))
-        membership = innerdata.queuemembers.get(midx).get('membership')
-        paused = innerdata.queuemembers.get(midx).get('paused')
-        doit = False
-        if command == 'remove' and membership != 'static':
-            doit = True
-        if command == 'pause':
-            if dopause == 'true' and paused == '0':
-                doit = True
-            if dopause == 'false' and paused == '1':
-                doit = True
-        if doit:
-            memberlist.append(member)
-        return memberlist
+    def dispach_command(self, command, member, queue, dopause=None):
+        item, item2 = member.split(':', 1)
+        server, agent_id = item2.split('/', 1)
+        item, item2 = queue.split(':', 1)
+        server, queue_id = item2.split('/', 1)
 
-    def defmemberlist(self, innerdata, command, dopause, listname, k, member):
-        memberlist = []
-        if member.get('type') in ['phone', 'agent']:
-            membersname = member.get('type') + 'members'
-            lname = member.get('type') + 's'
-            any_members = innerdata.xod_status.get(listname).get(k).get(membersname)
-            if member.get('id') in innerdata.xod_config.get(lname).keeplist:
-                if command == 'add':
-                    if member.get('id') not in any_members:
-                        memberlist = [member]
+        if queue_id == 'all':
+            queue_name = 'all'
+        else:
+            queue_name = self.queue_features_dao.queue_name(queue_id)
+
+        if command in ['queuepause', 'queueunpause'] and dopause is not None:
+            if queue_name == 'all':
+                if command == 'queuepause':
+                    self.agent_service_manager.queuepause_all(agent_id)
                 else:
-                    if member.get('id') in any_members:
-                        memberlist = self.whenmember(innerdata, command, dopause, listname, k, member)
-            elif member.get('id') == 'all':
-                if command != 'add':
-                    for any_id in any_members:
-                        member = {'type': member.get('type'),
-                                  'id': any_id}
-                        memberlist = self.whenmember(innerdata, command, dopause, listname, k, member)
-        return memberlist
+                    self.agent_service_manager.queueunpause_all(agent_id)
+            else:
+                if dopause:
+                    self.agent_service_manager.queuepause(queue_name, agent_id)
+                else:
+                    self.agent_service_manager.queueunpause(queue_name, agent_id)
+        elif command == 'queueadd':
+            self.agent_service_manager.queueadd(queue_name, agent_id)
+        elif command == 'queueremove':
+            self.agent_service_manager.queueremove(queue_name, agent_id)
 
-    def makeinterfaces(self, innerdata, memberlist):
-        interfaces = []
-        for member in memberlist:
-            interface = None
-            if member.get('type') == 'phone':
-                memberstruct = innerdata.xod_config.get('phones').keeplist.get(member.get('id'))
-                interface = '%s/%s' % (memberstruct.get('protocol'), memberstruct.get('name'))
-            elif member.get('type') == 'agent':
-                memberstruct = innerdata.xod_config.get('agents').keeplist.get(member.get('id'))
-                interface = 'Agent/%s' % memberstruct.get('number')
-
-            if interface and interface not in interfaces:
-                interfaces.append(interface)
-        return interfaces
-
-    def queue_generic(self, innerdata, command, queue, member, dopause=None):
-        listname = None
-        if queue.get('type') == 'queue':
-            listname = 'queues'
-        elif queue.get('type') == 'group':
-            listname = 'groups'
-
-        queuenames = []
-        interfaces = []
-
-        if listname:
-            if queue.get('id') in innerdata.xod_config.get(listname).keeplist:
-                lst = self.defmemberlist(innerdata, command, dopause, listname, queue.get('id'), member)
-                if lst:
-                    interfaces = self.makeinterfaces(innerdata, lst)
-                    queuestruct = innerdata.xod_config.get(listname).keeplist.get(queue.get('id'))
-                    queuename = queuestruct.get('name')
-                    if queuename not in queuenames:
-                        queuenames.append(queuename)
-            elif queue.get('id') == 'all':
-                for k, queuestruct in innerdata.xod_config.get(listname).keeplist.iteritems():
-                    lst = self.defmemberlist(innerdata, command, dopause, listname, k, member)
-                    if lst:
-                        interfaces = self.makeinterfaces(innerdata, lst)
-                        queuename = queuestruct.get('name')
-                        if queuename not in queuenames:
-                            queuenames.append(queuename)
-        reps = []
-        amicommand = 'queue%s' % command
-        for queuename in queuenames:
-            for interface in interfaces:
-                if command == 'remove':
-                    amiargs = (queuename, interface)
-                elif command == 'add':
-                    amiargs = (queuename, interface, dopause)
-                elif command == 'pause':
-                    amiargs = (queuename, interface, dopause)
-                rep = {'amicommand': amicommand,
-                       'amiargs': amiargs}
-                reps.append(rep)
-        return reps

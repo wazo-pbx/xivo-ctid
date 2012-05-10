@@ -814,42 +814,6 @@ class Command(object):
             return [{'amicommand': 'agentlogoff',
                      'amiargs': [agent['number'], True]}]
 
-    def queue_generic(self, command, dopause=None):
-        member = self.parseid(self._commanddict.get('member'))
-        if not member:
-            return [{'error': 'member'}]
-        queue = self.parseid(self._commanddict.get('queue'))
-        if not queue:
-            return [{'error': 'queue'}]
-
-        innerdata = self._ctiserver.safe.get(queue.get('ipbxid'))
-        qsm = self._ctiserver._queuemember_service_manager
-        return qsm.queue_generic(innerdata, command, queue, member, dopause)
-
-    def ipbxcommand_queueadd(self):
-        return self.queue_generic('add', self._commanddict.get('paused'))
-
-    def ipbxcommand_queueremove(self):
-        return self.queue_generic('remove')
-
-    def ipbxcommand_queuepause(self):
-        return self.queue_generic('pause', 'true')
-
-    def ipbxcommand_queueunpause(self):
-        return self.queue_generic('pause', 'false')
-
-    def ipbxcommand_queuepause_all(self):
-        self._commanddict['queue'] = 'queue:xivo/all'
-        return self.queue_generic('pause', 'true')
-
-    def ipbxcommand_queueunpause_all(self):
-        self._commanddict['queue'] = 'queue:xivo/all'
-        return self.queue_generic('pause', 'false')
-
-    def ipbxcommand_queueremove_all(self):
-        self._commanddict['queue'] = 'queue:xivo/all'
-        return self.queue_generic('remove')
-
     def ipbxcommand_record(self):
         subcommand = self._commanddict.pop('subcommand')
         channel = self._commanddict.pop('channel')

@@ -41,7 +41,7 @@ class AgentServiceManager(object):
         if not agent_exten:
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if len(extens) else None
-            
+
         if not self.line_features_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
@@ -66,6 +66,14 @@ class AgentServiceManager(object):
     def agent_call_back_login(self, number, exten, context, ackcall):
         self.agent_service_executor.agentcallbacklogin(number, exten, context, ackcall)
 
+    def queueadd(self, queuename, agentid, paused=False, skills=''):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queue_add(queuename, interface, paused, skills)
+
+    def queueremove(self, queuename, agentid):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queue_remove(queuename, interface)
+
     def queuepause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_pause(interface)
@@ -73,6 +81,14 @@ class AgentServiceManager(object):
     def queueunpause_all(self, agentid):
         interface = self.agent_features_dao.agent_interface(agentid)
         self.agent_service_executor.queues_unpause(interface)
+
+    def queuepause(self, queuename, agentid):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queue_pause(queuename, interface)
+
+    def queueunpause(self, queuename, agentid):
+        interface = self.agent_features_dao.agent_interface(agentid)
+        self.agent_service_executor.queue_unpause(queuename, interface)
 
     def set_presence(self, agentid, presence):
         interface = self.agent_features_dao.agent_interface(agentid)

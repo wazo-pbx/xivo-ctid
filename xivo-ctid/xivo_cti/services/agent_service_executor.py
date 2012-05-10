@@ -24,6 +24,18 @@
 
 class AgentServiceExecutor(object):
 
+    def queue_add(self, queuename, interface, paused=False, skills=''):
+        self.ami.queueadd(queuename, interface, paused, skills)
+
+    def queue_remove(self, queuename, interface):
+        self.ami.queueremove(queuename, interface)
+
+    def queue_pause(self, queuename, interface):
+        self.ami.queuepause(queuename, interface, 'True')
+
+    def queue_unpause(self, queuename, interface):
+        self.ami.queuepause(queuename, interface, 'False')
+
     def queues_pause(self, interface):
         self.ami.queuepauseall(interface, 'True')
 

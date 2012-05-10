@@ -34,7 +34,6 @@ from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
-from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):
@@ -193,6 +192,26 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.assertEqual(self.agent_service_executor.method_calls, [call.logoff(agent.number)])
 
+    def test_queue_add(self):
+        queue_name = 'accueil'
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queueadd(queue_name, rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_add(queue_name, 'Agent/1234', False, '')])
+
+    def test_queue_remove(self):
+        queue_name = 'accueil'
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queueremove(queue_name, rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_remove(queue_name, 'Agent/1234')])
+
     def test_queue_pause_all(self):
         self.agent_service_executor = Mock()
         self.agent_manager.agent_service_executor = self.agent_service_executor
@@ -210,6 +229,26 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.queueunpause_all(rowid)
 
         self.assertEqual(self.agent_service_executor.method_calls, [call.queues_unpause('Agent/1234')])
+
+    def test_queue_pause(self):
+        queue_name = 'accueil'
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queuepause(queue_name, rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_pause(queue_name, 'Agent/1234')])
+
+    def test_queue_unpause(self):
+        queue_name = 'accueil'
+        self.agent_service_executor = Mock()
+        self.agent_manager.agent_service_executor = self.agent_service_executor
+        rowid = self._insert_agent().id
+
+        self.agent_manager.queueunpause(queue_name, rowid)
+
+        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_unpause(queue_name, 'Agent/1234')])
 
     def test_set_presence(self):
         presence = 'disconnected'

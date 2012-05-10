@@ -33,6 +33,24 @@ class TestAgentServiceExecutor(unittest.TestCase):
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 
+    def test_queue_add(self):
+        queue_name = 'accueil'
+        interface = 'Agent/1234'
+        paused = False
+        skills = ''
+
+        self.executor.queue_add(queue_name, interface, paused, skills)
+
+        self.assertEqual(self.ami.method_calls, [call.queueadd(queue_name, interface, paused, skills)])
+
+    def test_queue_remove(self):
+        queue_name = 'accueil'
+        interface = 'Agent/1234'
+
+        self.executor.queue_remove(queue_name, interface)
+
+        self.assertEqual(self.ami.method_calls, [call.queueremove(queue_name, interface)])
+
     def test_queues_pause(self):
         interface = 'Agent/1234'
 
@@ -46,6 +64,22 @@ class TestAgentServiceExecutor(unittest.TestCase):
         self.executor.queues_unpause(interface)
 
         self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])
+
+    def test_queue_pause(self):
+        queue_name = 'accueil'
+        interface = 'Agent/1234'
+
+        self.executor.queue_pause(queue_name, interface)
+
+        self.assertEqual(self.ami.method_calls, [call.queuepause(queue_name, interface, 'True')])
+
+    def test_queue_unpause(self):
+        queue_name = 'accueil'
+        interface = 'Agent/1234'
+
+        self.executor.queue_unpause(queue_name, interface)
+
+        self.assertEqual(self.ami.method_calls, [call.queuepause(queue_name, interface, 'False')])
 
     def test_logoff(self):
         number = '1234'

@@ -92,6 +92,10 @@ from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.cti.commands.logout import Logout
+from xivo_cti.cti.commands.queue_unpause import QueueUnPause
+from xivo_cti.cti.commands.queue_pause import QueuePause
+from xivo_cti.cti.commands.queue_add import QueueAdd
+from xivo_cti.cti.commands.queue_remove import QueueRemove
 
 
 logger = logging.getLogger('main')
@@ -209,9 +213,11 @@ class CTIServer(object):
 
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
+        self._queuemember_service_manager.queue_features_dao = self._queue_features_dao
+        self._queuemember_service_manager.agent_service_manager = self._agent_service_manager
         self._queuemember_service_manager.delta_computer = DeltaComputer()
-        self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
+        self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
@@ -220,8 +226,6 @@ class CTIServer(object):
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
-        AgentLogin.register_callback_params(self._agent_service_manager.log_agent,
-                                            ['user_id', 'agent_id', 'agent_phone_number'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
@@ -232,12 +236,26 @@ class CTIServer(object):
         DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, ['user_id', 'destination'])
         EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
         DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
+
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_longest_wait_time, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
+
+        AgentLogin.register_callback_params(self._agent_service_manager.log_agent,
+                                            ['user_id', 'agent_id', 'agent_phone_number'])
+
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
+
+        QueueUnPause.register_callback_params(
+            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
+        QueuePause.register_callback_params(
+            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
+        QueueAdd.register_callback_params(
+            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+        QueueRemove.register_callback_params(
+            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)

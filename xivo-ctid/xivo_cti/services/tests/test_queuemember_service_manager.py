@@ -78,7 +78,6 @@ class TestQueueMemberServiceManager(unittest.TestCase):
     def tearDown(self):
         queuemember_formatter.QueueMemberFormatter = self.old_queuemember_formatter
 
-
     def test_update_config_add(self):
         queuemember_dao = Mock()
         queuemember_dao.get_queuemembers = Mock()
@@ -106,7 +105,6 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.assert_called_with(self.ami_event)
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(ANY)
 
-
     def test_remove_dynamic_queuemember(self):
         queuemembers_to_remove = {'Agent/2345,service': {'queue_name':'service', 'interface':'Agent/2345'},
                                   'Agent/2309,service': {'queue_name':'service', 'interface':'Agent/2309'}}
@@ -117,7 +115,6 @@ class TestQueueMemberServiceManager(unittest.TestCase):
 
         queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.assert_called_with(self.ami_event)
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(DictDelta({}, {}, queuemembers_to_remove))
-
 
     def test_update_queuemember(self):
         ami_event = self.ami_event
