@@ -120,8 +120,11 @@ class UserFeaturesDAO(object):
         userdata['availstate'] = presence
 
     def is_agent(self, user_id):
-        agent_id = self.agent_id(user_id)
-        return agent_id is not None
+        try:
+            agent_id = self.agent_id(user_id)
+            return agent_id is not None
+        except LookupError:
+            return False
 
     def get_profile(self, user_id):
         return self.get(user_id).profileclient

@@ -36,19 +36,21 @@ class PresenceServiceExecutor(object):
                 self._launch_presence_queue(user_id, action_name)
 
     def _launch_presence_queue(self, user_id, action_name):
-        agentid = self.user_features_dao.get(user_id).agentid
+        agentid = self.user_features_dao.is_agent(user_id)
         if agentid:
             if action_name == 'queuepause_all':
-                return self.agent_service_manager.queuepause_all(agentid)
+                self.agent_service_manager.queuepause_all(agentid)
             elif action_name == 'queueunpause_all':
-                return self.agent_service_manager.queueunpause_all(agentid)
-            raise NotImplementedError(action_name)
+                self.agent_service_manager.queueunpause_all(agentid)
+            else:
+                raise NotImplementedError(action_name)
 
     def _launch_presence_service(self, user_id, action_name, params):
         if action_name == 'agentlogoff':
-            agentid = self.user_features_dao.get(user_id).agentid
+            agentid = self.user_features_dao.is_agent(user_id)
             if agentid:
-                return self.agent_service_manager.logoff(agentid)
+                self.agent_service_manager.logoff(agentid)
         elif action_name == 'enablednd':
-            return self.user_service_manager.set_dnd(user_id, params)
-        raise NotImplementedError(action_name)
+            self.user_service_manager.set_dnd(user_id, params)
+        else:
+            raise NotImplementedError(action_name)

@@ -41,7 +41,10 @@ class AgentFeaturesDAO(object):
         return self._get_one(agentid).ackcall
 
     def agent_interface(self, agentid):
-        return 'Agent/%s' % self._get_one(agentid).number
+        try:
+            return 'Agent/%s' % self._get_one(agentid).number
+        except LookupError:
+            return None
 
     def _get_one(self, agentid):
         # field id != field agentid used only for joining with staticagent table.
