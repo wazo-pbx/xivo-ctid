@@ -62,10 +62,12 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer._register.assert_called_once_with('CoreShowChannelsComplete')
         self.ami_initializer._send.assert_called_once_with('CoreShowChannels')
+        self.assertEquals(self.ami_initializer._sent_commands, [])
 
     def test_send(self):
         self.ami_initializer._send('test_command')
 
+        self.assertEquals(self.ami_initializer._sent_commands, ['test_command'])
         self.ami_class.sendcommand.assert_called_once_with('test_command', [])
 
     def test_go_core_show_channels_complete(self):
@@ -143,7 +145,7 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('ShowStatusComplete')
+        self.ami_initializer._register.assert_called_once_with('StatusComplete')
         self.ami_initializer._unregister.assert_called_once_with('ParkedCallsComplete')
         self.ami_initializer._send.assert_called_once_with('Status')
 
@@ -183,12 +185,12 @@ class TestAMIInitializer(unittest.TestCase):
         self.ami_initializer._unregister.assert_called_once_with('AgentsComplete')
         self.ami_initializer._send.assert_has_calls([call('VoicemailUsersList'),
                                                      call('MeetmeList'),
-                                                     call(['UserEvent', ['UserEvent', 'InitComplete']])])
+                                                     call(['UserEvent', [('UserEvent', 'InitComplete')]])])
 
     def test_send_userevent(self):
-        self.ami_initializer._send(['UserEvent', ['UserEvent', 'My test']])
+        self.ami_initializer._send(['UserEvent', [('UserEvent', 'My test')]])
 
-        self.ami_class.sendcommand.assert_called_once_with('UserEvent', ['UserEvent', 'My test'])
+        self.ami_class.sendcommand.assert_called_once_with('UserEvent', [('UserEvent', 'My test')])
 
     def test_send_go_init_complete(self):
         self.setup_mock()

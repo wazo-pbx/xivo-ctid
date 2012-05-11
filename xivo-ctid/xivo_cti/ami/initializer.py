@@ -25,6 +25,10 @@
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from collections import namedtuple
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 InitializingEntry = namedtuple('InitializingEntry', ['trigger', 'register', 'unregister', 'command'])
 
 
@@ -59,7 +63,7 @@ class AMIInitializer(object):
                                               ['QueueStatusComplete'],
                                               ['ParkedCalls'])
     PARKED_CALLS_COMPLETE = InitializingEntry('ParkedCallsComplete',
-                                              ['ShowStatusComplete'],
+                                              ['StatusComplete'],
                                               ['ParkedCallsComplete'],
                                               ['Status'])
     SHOW_STATUS_COMPLETE = InitializingEntry('StatusComplete',
@@ -75,7 +79,7 @@ class AMIInitializer(object):
                                         ['AgentsComplete'],
                                         ['VoicemailUsersList',
                                          'MeetmeList',
-                                         ['UserEvent', ['UserEvent', 'InitComplete']]])
+                                         ['UserEvent', [('UserEvent', 'InitComplete')]]])
     INIT_COMPLETE = InitializingEntry('UserEvent', [], ['UserEvent'], [])
 
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
@@ -91,6 +95,9 @@ class AMIInitializer(object):
                      INIT_COMPLETE.trigger: INIT_COMPLETE,
                      AGENTS_COMPLETE.trigger: AGENTS_COMPLETE}
 
+    def __init__(self):
+        self._sent_commands = []
+
     def register(self):
         self._register('FullyBooted')
 
@@ -98,17 +105,23 @@ class AMIInitializer(object):
         received = event.get('Event')
         if received == self.INIT_COMPLETE.trigger and event['UserEvent'] != 'InitComplete':
             return None
+        if received == 'FullyBooted':
+            self._sent_commands = []
         if received and received in self.INIT_SEQUENCE:
+            logger.info('Initialization step %s done.', received)
             init = self.INIT_SEQUENCE[received]
             map(self._register, init.register)
             map(self._unregister, init.unregister)
             map(self._send, init.command)
 
     def _send(self, command):
-        if type(command) == list:
-            self._ami_class.sendcommand(*command)
-        else:
-            self._ami_class.sendcommand(command, [])
+        if command in self._sent_commands:
+            return
+        self._sent_commands.append(command)
+        if type(command) != list:
+            command = [command, []]
+        logger.info('Initialization sending %s...', command[0])
+        self._ami_class.sendcommand(*command)
 
     def _register(self, event):
         self._ami_callback_handler.register_callback(event, self.go)

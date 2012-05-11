@@ -55,10 +55,6 @@ class AMI_1_8(object):
                     .get('incoming_tcp').get('FAGI')[1])
         self.fagiportstring = ':%s/' % fagiport
 
-    def ami_fullybooted(self, event):
-        if self.ipbxid == self._ctiserver.myipbxid:
-            self._ctiserver.myami[self.ipbxid].initrequest(0)
-
     def ami_newstate(self, event):
         self.innerdata.newstate(event['Channel'], event['ChannelState'])
 

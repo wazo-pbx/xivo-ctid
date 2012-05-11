@@ -141,18 +141,6 @@ manager_commands['meta'] = [
     'ListCommands', 'ShowDialPlan'
     ]
 
-manager_commands['fetchstatuses'] = [
-    'CoreShowChannels',
-    'SIPpeers', 'IAXpeers',
-    'SIPshowregistry', 'IAXregistry',
-    'DAHDIShowChannels',
-    'Agents', 'MeetmeList', 'VoicemailUsersList',
-    'QueueStatus',  # QueueStatus after CoreShowChannels in order for channels involved to be already known
-    'QueueSummary',
-    'ParkedCalls', 'Status',
-    'ShowDialPlan'
-]
-
 manager_commands['other'] = [
     'AbsoluteTimeout',
     'AgentLogoff', 'AGI', 'AOCMessage',

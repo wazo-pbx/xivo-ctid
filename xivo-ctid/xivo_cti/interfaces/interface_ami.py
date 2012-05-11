@@ -35,6 +35,8 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
 from xivo_cti.ami import ami_event_complete_logger
 from xivo_cti.ami import ami_status_request_logger
+from xivo_cti.ami.initializer import AMIInitializer
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 
 logger = logging.getLogger('interface_ami')
@@ -78,6 +80,10 @@ class AMI(object):
                                            self.ipaddress, self.ipport,
                                            self.ami_login, self.ami_pass,
                                            True)
+            self._ami_initializer = AMIInitializer()
+            self._ami_initializer._ami_class = self.amicl
+            self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
+            self._ami_initializer.register()
             self.amicl.connect()
             self.amicl.login()
             return self.amicl.sock
@@ -94,20 +100,6 @@ class AMI(object):
                 return self.amicl.sock.getpeername()
             except Exception:
                 return None
-
-    def initrequest(self, phaseid):
-        # 'CoreSettings', 'CoreStatus', 'ListCommands',
-        for initrequest in ami_def.manager_commands.get('fetchstatuses'):
-            actionid = 'init_%s:%s-%d' % (initrequest.lower(),
-                                          phaseid,
-                                          int(time.time()))
-            params = {
-                'mode': 'init',
-                'amicommand': 'sendcommand',
-                'amiargs': (initrequest.lower(), [])
-                }
-            self.execute_and_track(actionid, params)
-        self.amicl.setactionid('init_close_%s' % phaseid)
 
     def cb_timer(self, *args):
         try:
