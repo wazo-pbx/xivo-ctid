@@ -1,6 +1,7 @@
-
 import unittest
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
+from xivo_cti.statistics import queuestatisticsproducer
+from xivo_cti.statistics.queuestatisticsproducer import QueueCounters
 from tests.mock import Mock
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 
@@ -29,13 +30,13 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
 
     def setUp(self):
-        self.queue_statistics_producer = QueueStatisticsProducer()
+        self.queue_statistics_producer = QueueStatisticsProducer.get_instance()
         self.statistics_notifier = Mock(StatisticsNotifier)
         self.queue_statistics_producer.set_notifier(self.statistics_notifier)
 
 
     def tearDown(self):
-        pass
+        QueueStatisticsProducer._instance = None
 
 
     def test_log_one_agent(self):
@@ -299,6 +300,32 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .in_queue(queue_id)
                                                                             .nb_of_logged_agents(0)
                                                                             .build(), connection_cti)
+
+    def test_parse_queue_summary(self):
+        on_queue_summary = self.queue_statistics_producer.on_queue_summary
+        self.queue_statistics_producer.on_queue_summary = Mock()
+        queue_name = 'services'
+        queuesummary_event = {'Event': 'QueueSummary',
+                              'Queue': queue_name,
+                              'Available': '5'}
+        expected_counters = QueueCounters(available='5')
+
+        queuestatisticsproducer.parse_queue_summary(queuesummary_event)
+
+        self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_name, expected_counters)
+
+        self.queue_statistics_producer.on_queue_summary = on_queue_summary
+
+
+    def test_on_queue_summary(self):
+        queue_name = 'services'
+        event_content = QueueCounters(available='3')
+
+        self.queue_statistics_producer.on_queue_summary(queue_name, event_content)
+
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with({
+                queue_name: {'Xivo-AvailableAgents': event_content.available}
+                })
 
 
     def _log_agent(self, agentid):

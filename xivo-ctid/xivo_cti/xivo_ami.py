@@ -317,6 +317,9 @@ class AMIClass(object):
             command_details.append(('Message', message))
         return self._exec_command('QueueLog', command_details)
 
+    def queuesummary(self, queuename):
+        return self._exec_command('QueueSummary', [('Queue', queuename)])
+
     # \brief Requests the Mailbox informations
     def mailbox(self, phone, context):
         ret1 = self._exec_command('MailboxCount', [('Mailbox', '%s@%s' % (phone, context))])

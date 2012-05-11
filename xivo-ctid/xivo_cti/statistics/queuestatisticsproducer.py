@@ -1,10 +1,28 @@
 import logging
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
+from collections import namedtuple
 
 logger = logging.getLogger("QueueStatisticsProducer")
+QueueCounters = namedtuple('QueueCounters', ['available'])
+
+def register_events():
+    callback_handler = AMICallbackHandler.get_instance()
+    callback_handler.register_callback('QueueSummary', parse_queue_summary)
+
+def parse_queue_summary(queuesummary_event):
+    queue_name = queuesummary_event['Queue']
+    counters = QueueCounters(available=queuesummary_event['Available'])
+
+    queue_statistics_producer = QueueStatisticsProducer.get_instance()
+    queue_statistics_producer.on_queue_summary(queue_name, counters)
+
+
 
 class QueueStatisticsProducer(object):
 
     LOGGEDAGENT_STATNAME = "Xivo-LoggedAgents"
+
+    _instance = None
 
     def __init__(self):
         self.queues_of_agent = {}
@@ -55,6 +73,10 @@ class QueueStatisticsProducer(object):
             if queueid in self.queues_of_agent[agentid]:
                 self.queues_of_agent[agentid].remove(queueid)
 
+    def on_queue_summary(self, queue_name, counters):
+        message = {queue_name: {'Xivo-AvailableAgents': counters.available}}
+        self.notifier.on_stat_changed(message)
+
     def _compute_nb_of_logged_agents(self, queueid):
         nb_of_agent_logged = 0
         for agentid in self.logged_agents:
@@ -73,3 +95,9 @@ class QueueStatisticsProducer(object):
             self.notifier.send_statistic({queueid :
                                          { self.LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
                                          }, connection_cti)
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls()
+        return cls._instance

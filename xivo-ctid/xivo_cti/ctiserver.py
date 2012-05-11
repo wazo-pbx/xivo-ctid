@@ -82,15 +82,19 @@ from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
+from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
+
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
+from xivo_cti.statistics import queuestatisticmanager
+from xivo_cti.statistics import queuestatisticsproducer
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.queue_pause import QueuePause
@@ -161,7 +165,7 @@ class CTIServer(object):
         self._presence_service_executor = PresenceServiceExecutor()
         self._statistics_notifier = StatisticsNotifier()
         self._queue_service_manager = QueueServiceManager()
-        self._queue_statistics_producer = QueueStatisticsProducer()
+        self._queue_statistics_producer = QueueStatisticsProducer.get_instance()
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_notifier = QueueMemberServiceNotifier()
 
@@ -199,6 +203,7 @@ class CTIServer(object):
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
+        self._queue_statistic_manager = QueueStatisticManager.get_instance()
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 
@@ -208,8 +213,6 @@ class CTIServer(object):
         self._queue_entry_manager._statistics_notifier = self._statistics_notifier
         self._queue_entry_encoder.queue_features_dao = self._queue_features_dao
         self._queue_entry_notifier.queue_features_dao = self._queue_features_dao
-
-        queue_entry_manager.register_events()
 
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
@@ -222,6 +225,10 @@ class CTIServer(object):
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
         self._queue_statistics_producer.notifier = self._statistics_notifier
+
+        queue_entry_manager.register_events()
+        queuestatisticmanager.register_events()
+        queuestatisticsproducer.register_events()
 
         self._register_cti_callbacks()
 
@@ -466,6 +473,7 @@ class CTIServer(object):
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
                 self._agent_service_manager.agent_service_executor.ami = self.myami[self.myipbxid].amicl
+                self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()
