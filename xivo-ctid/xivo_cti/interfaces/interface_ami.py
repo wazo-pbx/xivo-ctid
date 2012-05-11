@@ -73,7 +73,6 @@ class AMI(object):
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
 
-
     def connect(self):
         try:
             self.amicl = xivo_ami.AMIClass(self.ipbxid,

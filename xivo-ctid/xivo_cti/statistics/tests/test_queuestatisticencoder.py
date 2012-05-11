@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import unittest
 
 from xivo_cti.model.queuestatistic import QueueStatistic
@@ -32,9 +32,9 @@ class Test(unittest.TestCase):
                                           'Xivo-Join': 5,
                                           'Xivo-Link': 7,
                                           'Xivo-Lost': 11,
-                                          'Xivo-Rate' : 33,
+                                          'Xivo-Rate': 33,
                                           'Xivo-Qos': 66,
-                                          'Xivo-Holdtime-max' : 345,
+                                          'Xivo-Holdtime-max': 345,
                                           }}}
 
         queuestatisticencoder = QueueStatisticEncoder()

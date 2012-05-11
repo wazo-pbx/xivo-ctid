@@ -87,8 +87,6 @@ class Test(unittest.TestCase):
         CTICommand.conditions = [('class', 'test_command'), (('value', 'moult'), 'to_match')]
         self.assertFalse(CTICommand.match_message({'class': 'test_command', 'value': {'subvalue': 'to_match'}}))
 
-
-
     def test_register_callback(self):
         command = CTICommand().from_dict({'class': 'callback_test'})
 

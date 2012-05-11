@@ -29,6 +29,7 @@ logger = logging.getLogger('extension')
 
 VALID_EXTENSION_PATTERN = re.compile('[^a-z0-9#*]', re.I)
 
+
 def normalize_exten(exten):
     extentodial = re.sub(VALID_EXTENSION_PATTERN, '', exten)
     if not extentodial:

@@ -1,4 +1,5 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
+
 
 class PresenceServiceManager(object):
     def is_valid_presence(self, profile, presence):

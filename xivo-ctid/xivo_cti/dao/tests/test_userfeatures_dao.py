@@ -454,4 +454,3 @@ class Test(unittest.TestCase):
         result = self.dao.get_profile(user.id)
 
         self.assertEqual(result, expected_user_profile)
-

@@ -106,8 +106,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(ANY)
 
     def test_remove_dynamic_queuemember(self):
-        queuemembers_to_remove = {'Agent/2345,service': {'queue_name':'service', 'interface':'Agent/2345'},
-                                  'Agent/2309,service': {'queue_name':'service', 'interface':'Agent/2309'}}
+        queuemembers_to_remove = {'Agent/2345,service': {'queue_name': 'service', 'interface': 'Agent/2345'},
+                                  'Agent/2309,service': {'queue_name': 'service', 'interface': 'Agent/2309'}}
 
         queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.return_value = queuemembers_to_remove
 

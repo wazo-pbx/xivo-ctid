@@ -729,7 +729,7 @@ class CTIServer(object):
                             k = threading.Timer(1, self.cb_timer,
                                                 ({'action': 'ipbxup',
                                                   'properties': {'data': data,
-                                                                 'sockparams': sockparams }},))
+                                                                 'sockparams': sockparams}},))
                             k.setName('Thread-ipbxup-%s' % data.strip())
                             k.start()
                         else:

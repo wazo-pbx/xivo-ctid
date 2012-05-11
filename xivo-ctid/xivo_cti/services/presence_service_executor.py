@@ -1,8 +1,9 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import logging
 
 logger = logging.getLogger('PresenceServiceExecutor')
+
 
 class PresenceServiceExecutor(object):
     services_actions_list = ['enablevoicemail',

@@ -25,6 +25,7 @@
 class NotAQueueException(Exception):
     pass
 
+
 class QueueServiceManager(object):
 
     def get_queue_id(self, queue_name):

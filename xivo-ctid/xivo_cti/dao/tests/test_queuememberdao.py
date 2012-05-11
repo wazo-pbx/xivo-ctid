@@ -29,6 +29,7 @@ from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.helpers.queuemember_formatter import QueueMemberFormatter
 
+
 class TestQueueMemberDAO(unittest.TestCase):
 
     def test_get_queuemembers(self):

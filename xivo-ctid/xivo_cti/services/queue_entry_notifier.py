@@ -24,6 +24,7 @@
 from collections import defaultdict
 from xivo_cti.client_connection import ClientConnection
 
+
 class QueueEntryNotifier(object):
 
     _instance = None
