@@ -68,7 +68,7 @@ class QueueMemberServiceManager(object):
 
     def toggle_pause(self, ami_event):
         queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause(ami_event)
-        delta = DictDelta({}, queuemember_formatted, [])
+        delta = DictDelta({}, queuemember_formatted, {})
         self.queuemember_notifier.queuemember_config_updated(delta)
 
     def dispach_command(self, command, member, queue, dopause=None):

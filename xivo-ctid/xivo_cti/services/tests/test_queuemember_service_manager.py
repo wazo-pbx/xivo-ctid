@@ -131,7 +131,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
 
     def test_get_queuemember_to_request_empty(self):
-        delta = DictDelta({}, {}, [])
+        delta = DictDelta({}, {}, {})
         expected_result = []
 
         result = self.queuemember_service_manager._get_queuemembers_to_request(delta)
@@ -143,7 +143,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
                            self.keyB: self.B},
                            {self.keyC: {
                     'penalty': '0'}},
-                          [self.keyD])
+                          {self.keyD: self.D})
         expected_result = [self.tupleA,
                            self.tupleB,
                            self.tupleC]
@@ -157,8 +157,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_get_queuemember_to_remove_empty(self):
-        delta = DictDelta({}, {}, [])
-        expected_result = DictDelta({}, {}, [])
+        delta = DictDelta({}, {}, {})
+        expected_result = DictDelta({}, {}, {})
 
         result = self.queuemember_service_manager._get_queuemembers_to_remove(delta)
 
@@ -168,19 +168,27 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         delta = DictDelta({self.keyA: self.A},
                            {self.keyB: {
                     'penalty': '0'}},
-                          [self.keyC, self.keyD])
-        expected_result = DictDelta({}, {}, [self.keyC, self.keyD])
+                          {self.keyC: self.C,
+                           self.keyD: self.D})
+        expected_result = DictDelta({}, {}, {self.keyC: self.C,
+                                             self.keyD: self.D})
 
         result = self.queuemember_service_manager._get_queuemembers_to_remove(delta)
 
         self.assertEqual(result, expected_result)
 
     def test_toggle_pause(self):
+        queuemember_formatted = {'agent1,queue1': {'queue_name': 'queue1',
+                                                   'interface': 'agent1',
+                                                   'paused': 'yes'}}
+
         self.queuemember_service_manager.queuemember_notifier = Mock()
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause.return_value = queuemember_formatted
 
         self.queuemember_service_manager.toggle_pause(self.ami_event)
 
-        formatter_method_calls = queuemember_formatter.QueueMemberFormatter.method_calls
-        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertEqual(formatter_method_calls, [call.format_queuemember_from_ami_pause(ANY)])
-        self.assertEqual(notifier_method_calls, [call.queuemember_config_updated(ANY)])
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause.assert_called_once_with(self.ami_event)
+        self.queuemember_service_manager.queuemember_notifier.queuemember_config_updated.assert_called_once_with(
+            DictDelta(add={},
+                      change=queuemember_formatted,
+                      delete={}))
