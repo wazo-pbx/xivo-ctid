@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class AgentServiceExecutor(object):
+class AgentExecutor(object):
 
     def queue_add(self, queuename, interface, paused=False, skills=''):
         self.ami.queueadd(queuename, interface, paused, skills)

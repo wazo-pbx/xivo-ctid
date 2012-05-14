@@ -109,8 +109,8 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(extens[0], self.line_number)
 
     def test_agent_callback_login(self):
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
 
         number, exten, context, ackcall = '1000', '1234', 'test', False
         ami = Mock(AMIClass)
@@ -121,7 +121,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                                  context,
                                                  ackcall)
 
-        self.agent_service_executor.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
+        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
 
     def test_agent_special_me(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -184,78 +184,78 @@ class TestAgentServiceManager(unittest.TestCase):
         return agent
 
     def test_logoff(self):
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         agent = self._insert_agent()
 
         self.agent_manager.logoff(agent.id)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.logoff(agent.number)])
+        self.assertEqual(self.agent_executor.method_calls, [call.logoff(agent.number)])
 
     def test_queue_add(self):
         queue_name = 'accueil'
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queueadd(queue_name, rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_add(queue_name, 'Agent/1234', False, '')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queue_add(queue_name, 'Agent/1234', False, '')])
 
     def test_queue_remove(self):
         queue_name = 'accueil'
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queueremove(queue_name, rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_remove(queue_name, 'Agent/1234')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queue_remove(queue_name, 'Agent/1234')])
 
     def test_queue_pause_all(self):
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queuepause_all(rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queues_pause('Agent/1234')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queues_pause('Agent/1234')])
 
     def test_queue_unpause_all(self):
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queueunpause_all(rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queues_unpause('Agent/1234')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queues_unpause('Agent/1234')])
 
     def test_queue_pause(self):
         queue_name = 'accueil'
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queuepause(queue_name, rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_pause(queue_name, 'Agent/1234')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queue_pause(queue_name, 'Agent/1234')])
 
     def test_queue_unpause(self):
         queue_name = 'accueil'
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.queueunpause(queue_name, rowid)
 
-        self.assertEqual(self.agent_service_executor.method_calls, [call.queue_unpause(queue_name, 'Agent/1234')])
+        self.assertEqual(self.agent_executor.method_calls, [call.queue_unpause(queue_name, 'Agent/1234')])
 
     def test_set_presence(self):
         presence = 'disconnected'
-        self.agent_service_executor = Mock()
-        self.agent_manager.agent_service_executor = self.agent_service_executor
+        self.agent_executor = Mock()
+        self.agent_manager.agent_executor = self.agent_executor
         rowid = self._insert_agent().id
 
         self.agent_manager.set_presence(rowid, presence)
 
-        self.agent_service_executor.log_presence.assert_called_once_with('Agent/1234', presence)
+        self.agent_executor.log_presence.assert_called_once_with('Agent/1234', presence)

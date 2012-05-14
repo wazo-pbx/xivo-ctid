@@ -68,7 +68,7 @@ from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
-from xivo_cti.services.agent_service_executor import AgentServiceExecutor
+from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
@@ -160,7 +160,7 @@ class CTIServer(object):
         self._user_service_notifier = UserServiceNotifier()
         self._funckey_manager = FunckeyManager()
         self._agent_service_manager = AgentServiceManager()
-        self._agent_service_executor = AgentServiceExecutor()
+        self._agent_executor = AgentExecutor()
         self._presence_service_manager = PresenceServiceManager()
         self._presence_service_executor = PresenceServiceExecutor()
         self._statistics_notifier = StatisticsNotifier()
@@ -199,7 +199,7 @@ class CTIServer(object):
         self._agent_service_manager.line_features_dao = self._line_features_dao
         self._agent_service_manager.agent_features_dao = self._agent_features_dao
         self._agent_service_manager.user_features_dao = self._user_features_dao
-        self._agent_service_manager.agent_service_executor = self._agent_service_executor
+        self._agent_service_manager.agent_executor = self._agent_executor
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
@@ -473,7 +473,7 @@ class CTIServer(object):
             if z:
                 self.fdlist_ami[z] = self.myami[self.myipbxid]
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
-                self._agent_service_manager.agent_service_executor.ami = self.myami[self.myipbxid].amicl
+                self._agent_service_manager.agent_executor.ami = self.myami[self.myipbxid].amicl
                 self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
 
             try:

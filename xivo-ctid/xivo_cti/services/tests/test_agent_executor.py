@@ -23,14 +23,14 @@
 
 import unittest
 from tests.mock import Mock, call
-from xivo_cti.services.agent_service_executor import AgentServiceExecutor
+from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
 
 
-class TestAgentServiceExecutor(unittest.TestCase):
+class TestAgentExecutor(unittest.TestCase):
 
     def setUp(self):
-        self.executor = AgentServiceExecutor()
+        self.executor = AgentExecutor()
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 
