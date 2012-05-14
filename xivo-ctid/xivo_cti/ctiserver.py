@@ -80,7 +80,7 @@ from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
-from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
+from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
@@ -94,7 +94,7 @@ from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.statistics import queuestatisticmanager
-from xivo_cti.statistics import queuestatisticsproducer
+from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.queue_pause import QueuePause
@@ -228,7 +228,7 @@ class CTIServer(object):
 
         queue_entry_manager.register_events()
         queuestatisticmanager.register_events()
-        queuestatisticsproducer.register_events()
+        queue_statistics_producer.register_events()
 
         self._register_cti_callbacks()
 

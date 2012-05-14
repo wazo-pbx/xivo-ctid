@@ -1,7 +1,7 @@
 import unittest
-from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
-from xivo_cti.statistics import queuestatisticsproducer
-from xivo_cti.statistics.queuestatisticsproducer import QueueCounters
+from xivo_cti.statistics import queue_statistics_producer
+from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
+from xivo_cti.statistics.queue_statistics_producer import QueueCounters
 from tests.mock import Mock
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
@@ -314,7 +314,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         QueueServiceManager._instance = queue_service_manager
         queue_service_manager.get_queue_id.return_value = queue_id
 
-        queuestatisticsproducer.parse_queue_summary(queuesummary_event)
+        queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 

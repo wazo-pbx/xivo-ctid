@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import Queue
 from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.tools.delta_computer import DictDelta
-from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
+from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
 class TestQueueMemberServiceNotifier(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 from xivo_cti.services.queue_service_manager import QueueServiceManager
-from xivo_cti.statistics.queuestatisticsproducer import QueueStatisticsProducer
+from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from tests.mock import Mock
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 
