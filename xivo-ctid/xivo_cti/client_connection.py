@@ -22,6 +22,7 @@
 
 import socket
 import errno
+import ssl
 from collections import deque
 
 BUFSIZE_LARGE = 262144
@@ -93,6 +94,9 @@ class ClientConnection(object):
                 # remote host closed the connection
                 self.close()
                 raise self.CloseException()
+        except ssl.SSLError as e:
+            if e.args[0] != ssl.SSL_ERROR_WANT_READ:
+                raise
         except socket.error, (_errno, string):
             if _errno in [errno.EPIPE, errno.ECONNRESET, errno.ENOTCONN, errno.ETIMEDOUT, errno.EHOSTUNREACH]:
                 self.close()
@@ -101,7 +105,7 @@ class ClientConnection(object):
                 # already closed !
                 raise self.CloseException(_errno)
             elif _errno != errno.EAGAIN:  # really an error
-                raise socket.error(_errno, string)
+                raise
 
     # return a line if available or None
     # use the separator to split "lines"
