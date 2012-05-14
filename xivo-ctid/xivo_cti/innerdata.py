@@ -1236,7 +1236,9 @@ class Safe(object):
         ncount = 0
         while self.timeout_queue.qsize() > 0:
             ncount += 1
-            (toload,) = self.timeout_queue.get()
+            received = self.timeout_queue.get()
+            logger.debug('checkqueue received %s', received)
+            (toload,) = received
             action = toload.get('action')
             if action == 'fagi_noami':
                 fagistruct = toload.get('properties')
