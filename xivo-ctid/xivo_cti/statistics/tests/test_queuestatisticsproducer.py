@@ -4,6 +4,7 @@ from xivo_cti.statistics import queuestatisticsproducer
 from xivo_cti.statistics.queuestatisticsproducer import QueueCounters
 from tests.mock import Mock
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
+from xivo_cti.services.queue_service_manager import QueueServiceManager
 
 
 def _aQueueStat():
@@ -302,19 +303,20 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .build(), connection_cti)
 
     def test_parse_queue_summary(self):
-        on_queue_summary = self.queue_statistics_producer.on_queue_summary
         self.queue_statistics_producer.on_queue_summary = Mock()
         queue_name = 'services'
+        queue_id = 12
         queuesummary_event = {'Event': 'QueueSummary',
                               'Queue': queue_name,
                               'Available': '5'}
         expected_counters = QueueCounters(available='5')
+        queue_service_manager = Mock(QueueServiceManager)
+        QueueServiceManager._instance = queue_service_manager
+        queue_service_manager.get_queue_id.return_value = queue_id
 
         queuestatisticsproducer.parse_queue_summary(queuesummary_event)
 
-        self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_name, expected_counters)
-
-        self.queue_statistics_producer.on_queue_summary = on_queue_summary
+        self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 
 
     def test_on_queue_summary(self):

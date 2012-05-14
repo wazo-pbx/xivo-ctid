@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import unittest
 from tests.mock import Mock
@@ -22,7 +22,6 @@ class TestPresenceServiceManager(unittest.TestCase):
         self.innerdata_dao.get_presences.return_value = ['available', 'disconnected']
 
         result = self.presence_manager.is_valid_presence(profile, presence)
-        print result
 
         self.presence_manager.innerdata_dao.get_presences.assert_called_once_with(profile)
         self.assertTrue(result)

@@ -6,6 +6,7 @@ from xivo_cti.statistics import queuestatisticmanager
 from tests.mock import Mock
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.tools.delta_computer import DictDelta
 
 class Test(unittest.TestCase):
 
@@ -15,7 +16,7 @@ class Test(unittest.TestCase):
         self.queue_statistic_manager._queue_statistic_dao = self.queue_statistic_dao
 
     def tearDown(self):
-        pass
+        QueueStatisticManager._instance = None
 
     def test_getStatistics(self):
         window = 3600
@@ -78,7 +79,6 @@ class Test(unittest.TestCase):
         self.assertEqual(queue_statistics.qos, 27)
 
     def test_parse_queue_member_status(self):
-        get_queue_summary = self.queue_statistic_manager.get_queue_summary
         self.queue_statistic_manager.get_queue_summary = Mock()
         queue_name = 'services'
         queuememberstatus_event = {'Event': 'QueueMemberStatus',
@@ -89,7 +89,21 @@ class Test(unittest.TestCase):
 
         self.queue_statistic_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-        self.queue_statistic_manager.get_queue_summary = get_queue_summary
+
+    def test_parse_queue_member_update(self):
+        self.queue_statistic_manager.get_queue_summary = Mock()
+
+
+        input_delta = DictDelta({'Agent/2345,service':
+                                    {'queue_name':'service', 'interface':'Agent/2345'},
+                                 'Agent/2309,beans':
+                                    {'queue_name':'beans', 'interface':'Agent/2309'}
+                                 }, {}, {})
+
+        queuestatisticmanager.parse_queue_member_update(input_delta)
+
+        self.queue_statistic_manager.get_queue_summary.assert_was_called_with('service')
+        self.queue_statistic_manager.get_queue_summary.assert_was_called_with('beans')
 
     def test_get_queue_summary(self):
         queue_name = 'services'
@@ -100,3 +114,11 @@ class Test(unittest.TestCase):
         self.queue_statistic_manager.get_queue_summary(queue_name)
 
         self.ami_wrapper.queuesummary.assert_called_once_with(queue_name)
+
+    def test_get_all_queue_summary(self):
+        self.ami_wrapper = Mock(AMIClass)
+        self.queue_statistic_manager.ami_wrapper = self.ami_wrapper
+
+        self.queue_statistic_manager.get_all_queue_summary()
+
+        self.ami_wrapper.queuesummary.assert_called_once_with()

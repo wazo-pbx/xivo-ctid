@@ -164,10 +164,10 @@ class CTIServer(object):
         self._presence_service_manager = PresenceServiceManager()
         self._presence_service_executor = PresenceServiceExecutor()
         self._statistics_notifier = StatisticsNotifier()
-        self._queue_service_manager = QueueServiceManager()
+        self._queue_service_manager = QueueServiceManager.get_instance()
         self._queue_statistics_producer = QueueStatisticsProducer.get_instance()
         self._queuemember_service_manager = QueueMemberServiceManager()
-        self._queuemember_service_notifier = QueueMemberServiceNotifier()
+        self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()
 
         self._innerdata_dao = InnerdataDAO()
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
@@ -246,6 +246,7 @@ class CTIServer(object):
 
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
+        SubscribeToQueuesStats.register_callback_params(self._queue_statistic_manager.get_all_queue_summary)
         SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_longest_wait_time, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])

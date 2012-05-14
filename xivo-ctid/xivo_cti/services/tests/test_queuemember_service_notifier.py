@@ -39,7 +39,8 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.notifier.events_cti = Queue.Queue()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)
         self.notifier.queue_statistics_producer = self.queue_statistics_producer
-
+        self.callback = Mock()
+        self.notifier._callbacks.append(self.callback)
 
     def test_queuemember_config_updated_add(self):
         input_delta = DictDelta({'Agent/2345,service':
@@ -61,6 +62,9 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.queue_statistics_producer.on_agent_added.assert_was_called_with('34', 'Agent/2309')
 
         self.notifier.innerdata_dao.get_queue_id.assert_called_with('service')
+
+        self.callback.assert_called_once_with(input_delta)
+
 
     def test_queuemember_config_updated_add_in_group(self):
         input_delta = DictDelta({'SIP/2345,group':
@@ -84,6 +88,8 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
         self.notifier.innerdata_dao.get_queue_id.assert_called_with('group')
 
+        self.callback.assert_called_once_with(input_delta)
+
 
     def test_queuemember_deleted(self):
         input_delta = DictDelta({}, {}, {'Agent/2345,service':
@@ -101,8 +107,10 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_removed.assert_was_called_with('34', 'Agent/2345')
         self.queue_statistics_producer.on_agent_removed.assert_was_called_with('34', 'Agent/2309')
-#
+
         self.notifier.innerdata_dao.get_queue_id.assert_called_with('service')
+
+        self.callback.assert_called_once_with(input_delta)
 
     def test_queuemember_config_updated_change(self):
         input_delta = DictDelta({}, {'key1': 'value1', 'key2': 'value2'}, {})
@@ -128,6 +136,7 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
         self.assertEqual(cti_events.sort(), expected_cti_events.sort())
 
+        self.callback.assert_called_once_with(input_delta)
 
     def test_request_queuemembers_to_ami_empty(self):
         queuemembers_list = []
@@ -157,6 +166,13 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
         ami_method_calls = self.notifier.interface_ami.method_calls
         self.assertEqual(ami_method_calls, expected_ami_method_calls)
+
+    def test_subscribe(self):
+        function = Mock()
+
+        self.notifier.subscribe(function)
+
+        self.assertTrue(function in self.notifier._callbacks)
 
     def _assert_cti_event_is_addconfig_queuemembers_for(self, cti_event, queuemembers_to_add):
         self._assert_cti_event_headers(cti_event, 'addconfig')

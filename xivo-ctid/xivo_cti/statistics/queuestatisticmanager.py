@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
+from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
+logger = logging.getLogger("QueueStatisticManager")
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
@@ -11,6 +14,9 @@ def register_events():
     callback_handler.register_callback('QueueMemberRemoved', parse_queue_member_status)
     callback_handler.register_callback('QueueMemberPaused', parse_queue_member_status)
 
+    queue_member_callback_handler = QueueMemberServiceNotifier.get_instance()
+    queue_member_callback_handler.subscribe(parse_queue_member_update)
+
 
 def parse_queue_member_status(event):
     try:
@@ -18,6 +24,15 @@ def parse_queue_member_status(event):
         manager.get_queue_summary(event['Queue'])
     except (KeyError, ValueError):
         logger.warning('Failed to parse QueueSummary event %s', event)
+
+
+def parse_queue_member_update(delta):
+    manager = QueueStatisticManager.get_instance()
+    logger.info(delta)
+    for queue_members in (delta.add, delta.change, delta.delete):
+        for queue_member in queue_members.values():
+            manager.get_queue_summary(queue_member['queue_name'])
+
 
 class QueueStatisticManager(object):
 
@@ -46,6 +61,9 @@ class QueueStatisticManager(object):
 
     def get_queue_summary(self, queue_name):
         self.ami_wrapper.queuesummary(queue_name)
+
+    def get_all_queue_summary(self):
+        self.ami_wrapper.queuesummary()
 
     @classmethod
     def get_instance(cls):

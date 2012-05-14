@@ -27,10 +27,20 @@ from xivo_cti.services.queue_service_manager import NotAQueueException
 
 class QueueMemberServiceNotifier(object):
 
+    _instance = None
+
+    def __init__(self):
+        self._callbacks = list()
+
+    def subscribe(self, function):
+        self._callbacks.append(function)
+
     def queuemember_config_updated(self, delta):
         self.innerdata_dao.apply_queuemember_delta(delta)
         for event in self._prepare_queuemember_config_updated(delta):
             self.events_cti.put(event)
+        for callback in self._callbacks:
+            callback(delta)
 
     def _prepare_queuemember_config_updated(self, delta):
         return_template = {'class': 'getlist',
@@ -86,3 +96,9 @@ class QueueMemberServiceNotifier(object):
                                   [('Member', member),
                                    ('Queue', queue)])}
             self.interface_ami.execute_and_track(actionid, params)
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance == None:
+            cls._instance = cls()
+        return cls._instance
