@@ -5,6 +5,7 @@ from xivo_cti.statistics.queue_statistics_producer import QueueCounters
 from tests.mock import Mock
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
+from xivo_cti.services.queue_service_manager import NotAQueueException
 
 
 def _aQueueStat():
@@ -250,7 +251,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .nb_of_logged_agents(0)
                                                                             .build())
     def test_agent_logged_on_added_to_another_queue(self):
-        queueid = 88
+        queueid = 88queue_id, expected_counters
         other_queue = 90
         agentid = 12
 
@@ -265,7 +266,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .nb_of_logged_agents(1)
                                                                             .build())
 
-    def test_send_all_stats(self):
+    def test_send_all_stats(self):queue_id, expected_counters
         connection_cti = Mock()
         queueid1 = 1
         queueid2 = 7
@@ -317,6 +318,22 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
+
+    def test_parse_queue_summary_not_a_queue(self):
+        self.queue_statistics_producer.on_queue_summary = Mock()
+        queue_service_manager = Mock(QueueServiceManager)
+
+        queue_name = 'services'
+        queuesummary_event = {'Event': 'QueueSummary',
+                              'Queue': queue_name,
+                              'Available': '5'}
+
+        QueueServiceManager._instance = queue_service_manager
+        queue_service_manager.get_queue_id.side_effect = NotAQueueException
+
+        queue_statistics_producer.parse_queue_summary(queuesummary_event)
+        
+        self.queue_statistics_producer.on_queue_summary.assert_never_called()
 
 
     def test_on_queue_summary(self):
