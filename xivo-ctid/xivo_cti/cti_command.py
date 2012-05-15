@@ -28,7 +28,7 @@ import threading
 import time
 from xivo_cti import cti_fax
 from xivo_cti import cti_config
-from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
+from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 
 logger = logging.getLogger('cti_command')
@@ -93,7 +93,7 @@ class Command(object):
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistic_manager = QueueStatisticManager()
+        self._queue_statistic_manager = QueueStatisticsManager()
         self._queue_statistic_encoder = QueueStatisticEncoder()
 
     def parse(self):

@@ -1,10 +1,10 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import unittest
 
 from tests.mock import Mock
 from xivo_cti.cti_command import Command
-from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
+from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_queuelist import QueueList
@@ -39,7 +39,7 @@ class Test(unittest.TestCase):
         message = {"class": "getqueuesstats",
                    "commandid": 1234,
                    "on": {"3": {"window": "3600", "xqos": "60"}}}
-        queueStatistics = Mock(QueueStatisticManager)
+        queueStatistics = Mock(QueueStatisticsManager)
         encoder = Mock(QueueStatisticEncoder)
         cti_command = Command(self.conn, message)
         cti_command.innerdata = safe

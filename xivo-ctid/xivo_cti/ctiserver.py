@@ -82,7 +82,7 @@ from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
-from xivo_cti.statistics.queuestatisticmanager import QueueStatisticManager
+from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
@@ -93,7 +93,7 @@ from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
-from xivo_cti.statistics import queuestatisticmanager
+from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_unpause import QueueUnPause
@@ -203,7 +203,7 @@ class CTIServer(object):
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
-        self._queue_statistic_manager = QueueStatisticManager.get_instance()
+        self._queue_statistic_manager = QueueStatisticsManager.get_instance()
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 
@@ -227,7 +227,7 @@ class CTIServer(object):
         self._queue_statistics_producer.notifier = self._statistics_notifier
 
         queue_entry_manager.register_events()
-        queuestatisticmanager.register_events()
+        queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
 
         self._register_cti_callbacks()
