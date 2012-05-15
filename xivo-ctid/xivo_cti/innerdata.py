@@ -456,7 +456,7 @@ class Safe(object):
     def _initialize_item_status(self, listname, index):
         self.xod_status[listname][index] = {}
         if listname in self.props_status and len(self.props_status[listname]) > 0:
-            self.xod_status[listname][index] = copy.copy(self.props_status[listname])
+            self.xod_status[listname][index] = copy.deepcopy(self.props_status[listname])
 
     def _update_config_list_add(self, listname, deltas):
         changed = 'add' in deltas and len(deltas['add']) > 0

@@ -82,7 +82,6 @@ class TestAgentFeaturesDAO(unittest.TestCase):
 
     def _insert_agent(self):
         agent = AgentFeatures()
-        agent.agentid = 44
         agent.numgroup = 6
         agent.number = self.agent_number
         agent.passwd = ''
@@ -97,7 +96,7 @@ class TestAgentFeaturesDAO(unittest.TestCase):
 
     def test_agent_interface(self):
         agent_id = self._insert_agent()
-        
+
         interface = self.dao.agent_interface(agent_id)
-        
+
         self.assertEqual(interface, 'Agent/%s' % self.agent_number)
