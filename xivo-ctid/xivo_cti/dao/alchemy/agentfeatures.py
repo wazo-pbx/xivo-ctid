@@ -31,7 +31,6 @@ class AgentFeatures(Base):
     __tablename__ = 'agentfeatures'
 
     id = Column(Integer, primary_key=True)
-    agentid = Column(Integer, nullable=False)
     numgroup = Column(Integer, nullable=False)
     firstname = Column(String(128), nullable=False, server_default='')
     lastname = Column(String(128), nullable=False, server_default='')
