@@ -251,7 +251,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .nb_of_logged_agents(0)
                                                                             .build())
     def test_agent_logged_on_added_to_another_queue(self):
-        queueid = 88queue_id, expected_counters
+        queueid = 88
         other_queue = 90
         agentid = 12
 
@@ -266,7 +266,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                             .nb_of_logged_agents(1)
                                                                             .build())
 
-    def test_send_all_stats(self):queue_id, expected_counters
+    def test_send_all_stats(self):
         connection_cti = Mock()
         queueid1 = 1
         queueid2 = 7
@@ -335,6 +335,15 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         
         self.queue_statistics_producer.on_queue_summary.assert_never_called()
 
+    def test_parse_agent_called(self):
+        self.queue_statistics_producer.on_agent_called = Mock()
+        agent_id = 'Agent/1234'
+        agentcalled_event = {'Event': 'AgentCalled',
+                             'AgentCalled': agent_id}
+
+        queue_statistics_producer.parse_agent_called(agentcalled_event)
+
+        self.queue_statistics_producer.on_agent_called.assert_called_once_with(agent_id)
 
     def test_on_queue_summary(self):
         queue_name = 'services'

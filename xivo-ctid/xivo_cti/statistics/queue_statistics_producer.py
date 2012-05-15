@@ -10,6 +10,8 @@ QueueCounters = namedtuple('QueueCounters', ['available'])
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
     callback_handler.register_callback('QueueSummary', parse_queue_summary)
+    callback_handler.register_callback('AgentCalled', parse_agent_called)
+    callback_handler.register_callback('AgentComplete', parse_agent_complete)
 
 
 def parse_queue_summary(queuesummary_event):
@@ -23,6 +25,16 @@ def parse_queue_summary(queuesummary_event):
         queue_statistics_producer.on_queue_summary(queue_id, counters)
     except NotAQueueException:
         pass
+
+def parse_agent_called(agentcalled_event):
+    queue_statistics_producer = QueueStatisticsProducer.get_instance()
+
+    agent_id = agentcalled_event['AgentCalled']
+    queue_statistics_producer.on_agent_called(agent_id)
+
+
+def parse_agent_complete(agentcomplete_event):
+    pass
 
 class QueueStatisticsProducer(object):
 
@@ -82,6 +94,9 @@ class QueueStatisticsProducer(object):
     def on_queue_summary(self, queue_id, counters):
         message = {queue_id: {'Xivo-AvailableAgents': counters.available}}
         self.notifier.on_stat_changed(message)
+
+    def on_agent_called(self, agent_id):
+        logger.info('agent id %s called', agent_id)
 
     def _compute_nb_of_logged_agents(self, queueid):
         nb_of_agent_logged = 0
