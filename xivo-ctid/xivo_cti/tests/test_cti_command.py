@@ -5,7 +5,7 @@ import unittest
 from tests.mock import Mock
 from xivo_cti.cti_command import Command
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
-from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
+from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_queuelist import QueueList
 from xivo_cti.ctiserver import CTIServer
@@ -40,11 +40,11 @@ class Test(unittest.TestCase):
                    "commandid": 1234,
                    "on": {"3": {"window": "3600", "xqos": "60"}}}
         queueStatistics = Mock(QueueStatisticsManager)
-        encoder = Mock(QueueStatisticEncoder)
+        encoder = Mock(QueueStatisticsEncoder)
         cti_command = Command(self.conn, message)
         cti_command.innerdata = safe
-        cti_command._queue_statistic_manager = queueStatistics
-        cti_command._queue_statistic_encoder = encoder
+        cti_command._queue_statistics_manager = queueStatistics
+        cti_command._queue_statistics_encoder = encoder
 
         queueStatistics.get_statistics.return_value = queueStatistics
         statisticsToEncode = {'3': queueStatistics}

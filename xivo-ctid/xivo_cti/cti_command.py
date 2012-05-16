@@ -29,7 +29,7 @@ import time
 from xivo_cti import cti_fax
 from xivo_cti import cti_config
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
-from xivo_cti.statistics.queuestatisticencoder import QueueStatisticEncoder
+from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 
 logger = logging.getLogger('cti_command')
 
@@ -93,8 +93,8 @@ class Command(object):
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistic_manager = QueueStatisticsManager()
-        self._queue_statistic_encoder = QueueStatisticEncoder()
+        self._queue_statistics_manager = QueueStatisticsManager()
+        self._queue_statistics_encoder = QueueStatisticsEncoder()
 
     def parse(self):
         self.command = self._commanddict.get('class')
@@ -397,10 +397,10 @@ class Command(object):
         statistic_results = {}
         for queue_id, params in self._commanddict['on'].iteritems():
             queue_name = self.innerdata.xod_config['queues'].keeplist[queue_id]['name']
-            statistic_results[queue_id] = self._queue_statistic_manager.get_statistics(queue_name,
+            statistic_results[queue_id] = self._queue_statistics_manager.get_statistics(queue_name,
                                                                                         int(params['xqos']),
                                                                                         int(params['window']))
-        return self._queue_statistic_encoder.encode(statistic_results)
+        return self._queue_statistics_encoder.encode(statistic_results)
 
     def regcommand_filetransfer(self):
         reply = {}
