@@ -99,11 +99,16 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_service_notifier.request_queuemembers_to_ami.assert_called_once_with(expected_ami_request)
 
     def test_add_dynamic_queuemember(self):
+        queuemember_formatted = {'location1,queue1': {'queue_name': 'queue1',
+                                                      'interface': 'location1'}
+                                 }
+        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.return_value = queuemember_formatted
+        expected_delta = DictDelta(queuemember_formatted, {}, {})
 
         self.queuemember_service_manager.add_dynamic_queuemember(self.ami_event)
 
         queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.assert_called_with(self.ami_event)
-        self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(ANY)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(expected_delta)
 
     def test_remove_dynamic_queuemember(self):
         queuemembers_to_remove = {'Agent/2345,service': {'queue_name': 'service', 'interface': 'Agent/2345'},
