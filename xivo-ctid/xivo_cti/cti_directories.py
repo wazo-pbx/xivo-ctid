@@ -354,7 +354,7 @@ class InternalDirectoryDataSource(object):
         request_beg = 'SELECT ${columns} FROM userfeatures ' \
                 'LEFT JOIN linefeatures ON userfeatures.id = linefeatures.iduserfeatures ' \
                 'WHERE '
-        request_end = ' OR '.join('%s LIKE %%s' % column for column in test_columns)
+        request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
         if Config.get_instance().part_context():
             if contexts:
                 request_contexts = ' OR '.join("linefeatures.context = '%s'" % context for context in contexts)
