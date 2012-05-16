@@ -27,7 +27,7 @@ import logging
 
 logger = logging.getLogger('extension')
 
-VALID_EXTENSION_PATTERN = re.compile('[^a-z0-9#*]', re.I)
+VALID_EXTENSION_PATTERN = re.compile('[^a-z0-9#*+]', re.I)
 
 
 def normalize_exten(exten):
