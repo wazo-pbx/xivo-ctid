@@ -99,6 +99,8 @@ class AMIInitializer(object):
         self._sent_commands = []
 
     def register(self):
+        logger.debug('registering')
+        self._sent_commands = []
         self._register('FullyBooted')
 
     def go(self, event):

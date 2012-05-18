@@ -58,6 +58,7 @@ class AMIClass(object):
         self.actionid = None
 
     def connect(self):
+        self.actionid = None
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockret = self.sock.connect_ex((self.ipaddress, self.ipport))
         if sockret:

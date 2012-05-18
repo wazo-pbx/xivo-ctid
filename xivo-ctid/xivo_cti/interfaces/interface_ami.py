@@ -72,16 +72,17 @@ class AMI(object):
         AMIAgentLoginLogoff.register_callbacks()
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
+        self._ami_initializer = AMIInitializer()
+        self.amicl = xivo_ami.AMIClass(self.ipbxid,
+                                       self.ipaddress, self.ipport,
+                                       self.ami_login, self.ami_pass,
+                                       True)
+        self._ami_initializer._ami_class = self.amicl
+        self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
 
     def connect(self):
+        logger.info('connecting ami .....')
         try:
-            self.amicl = xivo_ami.AMIClass(self.ipbxid,
-                                           self.ipaddress, self.ipport,
-                                           self.ami_login, self.ami_pass,
-                                           True)
-            self._ami_initializer = AMIInitializer()
-            self._ami_initializer._ami_class = self.amicl
-            self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
             self._ami_initializer.register()
             self.amicl.connect()
             self.amicl.login()
@@ -90,8 +91,8 @@ class AMI(object):
             logger.exception('unable to connect/login')
 
     def disconnect(self):
+        logger.info('ami disconnected')
         self.amicl.sock.close()
-        self.amicl = None
 
     def connected(self):
         if self.amicl and self.amicl.sock:

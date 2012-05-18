@@ -52,7 +52,6 @@ class QueueStatisticsProducer(object):
 
     def on_queue_added(self, queueid):
         self.queues.add(queueid)
-        logger.info('queue id %s added', queueid)
         self._notify_change(queueid)
 
     def on_agent_added(self, queueid, agentid):
@@ -60,7 +59,6 @@ class QueueStatisticsProducer(object):
             self.queues_of_agent[agentid] = set()
         self.queues_of_agent[agentid].add(queueid)
         self._notify_change(queueid)
-        logger.info('agent id %s added to queue id %s', agentid, queueid)
 
     def on_agent_loggedon(self, agentid):
         self.logged_agents.add(agentid)

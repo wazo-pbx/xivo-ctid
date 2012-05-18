@@ -37,7 +37,6 @@ class StatisticsNotifier(object):
         self.closed_cti_connections = set()
 
     def on_stat_changed(self, statistic):
-        logger.info(statistic)
         for cti_connection in self.cti_connections:
             self.send_statistic(statistic, cti_connection)
         self._remove_closed_connections()
