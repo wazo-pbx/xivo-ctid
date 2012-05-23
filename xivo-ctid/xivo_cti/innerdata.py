@@ -696,6 +696,8 @@ class Safe(object):
 
     def meetmeupdate(self, confno, channel=None, opts={}):
         mid = self.xod_config['meetmes'].idbyroomnumber(confno)
+        if mid is None:  # Happens when using paging
+            return None
         status = self.xod_status['meetmes'][mid]
         self.handle_cti_stack('set', ('meetmes', 'updatestatus', mid))
         if channel:
