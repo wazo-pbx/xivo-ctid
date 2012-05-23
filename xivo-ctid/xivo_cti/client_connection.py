@@ -57,7 +57,9 @@ class ClientConnection(object):
             self.socket.close()
 
     def append_queue(self, data):
-        if(len(data) > 0):
+        if self.isClosed:
+            raise self.CloseException()
+        if len(data) > 0:
             self.sendqueue.append(data)
 
     # to be called when the socket is ready for writing
