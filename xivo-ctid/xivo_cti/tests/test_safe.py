@@ -24,7 +24,7 @@
 import unittest
 
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.innerdata import Safe
+from xivo_cti.innerdata import Safe, Channel
 from xivo_cti.cti_config import Config
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
@@ -179,3 +179,18 @@ class TestSafe(unittest.TestCase):
             if WeakCallable(fn) == callback[0]:
                 found = True
         self.assertTrue(found, 'Could not find callback to function %s' % fn)
+
+    def test_trunk_hangup(self):
+        safe = Safe(self._ctiserver, self._ipbx_id)
+
+        channel_name = 'SIP/mon_trunk-12345'
+
+        channel = Mock(Channel)
+        channel.relations = ['trunk:1']
+        safe.channels[channel_name] = channel
+        safe.xod_status['trunks']['1'] = {'channels': [channel_name]}
+
+        safe.hangup(channel_name)
+
+        self.assertTrue(channel_name not in safe.channels)
+        self.assertTrue(channel_name not in safe.xod_status['trunks']['1']['channels'])

@@ -965,14 +965,7 @@ class Safe(object):
 
     def hangup(self, channel):
         if channel in self.channels:
-            relations = self.channels[channel].relations
-            for r in relations:
-                if r.startswith('phone:'):
-                    phoneid = r[6:]
-                    chanlist = self.xod_status['phones'][phoneid]['channels']
-                    if channel in chanlist:
-                        chanlist.remove(channel)
-                        self.appendcti('phones', 'updatestatus', phoneid)
+            self._remove_channel_relations(channel)
             del self.channels[channel]
             self.events_cti.put({'class': 'getlist',
                                  'listname': 'channels',
@@ -981,6 +974,17 @@ class Safe(object):
                                  'list': [channel]})
         else:
             logger.warning('channel %s not there ...', channel)
+
+    def _remove_channel_relations(self, channel):
+        relations = self.channels[channel].relations
+        for r in relations:
+            termination_type, termination_id = r.split(':', 1)
+            list_name = termination_type + 's'
+            chanlist = self.xod_status[list_name][termination_id]['channels']
+            if channel in chanlist:
+                chanlist.remove(channel)
+                if list_name == 'phones':
+                    self.appendcti('phones', 'updatestatus', termination_id)
 
     def updatehint(self, hint, status):
         termination = self.ast_channel_to_termination(hint)
