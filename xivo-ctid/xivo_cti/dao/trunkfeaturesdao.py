@@ -22,7 +22,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.alchemy.usersip import UserSIP
+from xivo_cti.dao.alchemy.useriax import UserIAX
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
+from xivo_cti.dao.alchemy import dbconnection
 
 
 class TrunkFeaturesDAO(object):
@@ -31,17 +33,25 @@ class TrunkFeaturesDAO(object):
         self._session = session
 
     def find_by_proto_name(self, protocol, name):
+        if not protocol:
+            raise ValueError('Protocol None is not allowed')
+
+        protocol = protocol.lower()
+        if protocol == 'sip':
+            table = UserSIP
+        elif protocol == 'iax':
+            table = UserIAX
+
         try:
-            user_sip_id = (self._session.query(UserSIP.id)
-                           .filter(UserSIP.name == name))[0].id
+            protocol_id = (self._session.query(table.id)
+                           .filter(table.name == name))[0].id
             trunk_id = (self._session.query(TrunkFeatures.id)
-                        .filter(TrunkFeatures.protocolid == user_sip_id)
+                        .filter(TrunkFeatures.protocolid == protocol_id)
                         .filter(TrunkFeatures.protocol == protocol.lower()))[0].id
         except IndexError:
             raise LookupError('No such trunk')
         else:
             return trunk_id
-
 
     @classmethod
     def new_from_uri(cls, uri):

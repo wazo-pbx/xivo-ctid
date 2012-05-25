@@ -25,6 +25,7 @@ import unittest
 
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
 from xivo_cti.dao.alchemy.usersip import UserSIP
+from xivo_cti.dao.alchemy.useriax import UserIAX
 from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.base import Base
@@ -44,6 +45,9 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
 
         Base.metadata.drop_all(connection.get_engine(), [UserSIP.__table__])
         Base.metadata.create_all(connection.get_engine(), [UserSIP.__table__])
+
+        Base.metadata.drop_all(connection.get_engine(), [UserIAX.__table__])
+        Base.metadata.create_all(connection.get_engine(), [UserIAX.__table__])
 
         self.session = connection.get_session()
 
@@ -76,3 +80,27 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
         result = self.dao.find_by_proto_name('sip', trunk_name)
 
         self.assertEqual(result, trunk.id)
+
+    def test_find_by_proto_name_iax(self):
+        trunk_name = 'my_trunk'
+
+        trunk = TrunkFeatures()
+        trunk.protocolid = 5454
+        trunk.protocol = 'iax'
+
+        useriax = UserIAX()
+        useriax.id = trunk.protocolid
+        useriax.name = trunk_name
+        useriax.type = 'peer'
+
+        self.session.add(trunk)
+        self.session.add(useriax)
+
+        self.session.commit()
+
+        result = self.dao.find_by_proto_name('iax', trunk_name)
+
+        self.assertEqual(result, trunk.id)
+
+    def test_null_input(self):
+        self.assertRaises(ValueError, self.dao.find_by_proto_name, None, 'my_trunk')
