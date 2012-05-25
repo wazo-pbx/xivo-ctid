@@ -194,12 +194,6 @@ class Safe(object):
                     'contexts': {},
                     'parkinglots': {}}
 
-    user_props_send_extra = ['mailbox',
-                             'subscribemwi',
-                             'pickupgroup',
-                             'callgroup',
-                             'callerid']
-
     permission_kinds = ['regcommands', 'userstatus']
 
     def __init__(self, ctiserver, ipbxid, cnf=None):

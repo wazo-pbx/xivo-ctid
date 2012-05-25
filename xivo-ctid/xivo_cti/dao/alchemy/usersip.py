@@ -118,6 +118,4 @@ class UserSIP(Base):
     maxforwards = Column(Integer)
     disallowed_methods = Column(String(1024))
     textsupport = Column(Integer)
-    callgroup = Column(String(64), default='')
-    pickupgroup = Column(String(64), default='')
     commented = Column(Integer, nullable=False, default=0)
