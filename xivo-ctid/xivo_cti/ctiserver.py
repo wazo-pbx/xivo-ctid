@@ -529,12 +529,12 @@ class CTIServer(object):
 
     def get_connected(self, tomatch):
         clist = list()
-        for k in self.fdlist_established.itervalues():
-            if not isinstance(k, str) and k.kind in ['CTI', 'CTIS']:
-                ipbxid = k.connection_details.get('ipbxid')
-                userid = k.connection_details.get('userid')
+        for interface_obj in self.fdlist_established.itervalues():
+            if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
+                ipbxid = interface_obj.connection_details.get('ipbxid')
+                userid = interface_obj.connection_details.get('userid')
                 if self.safe.get(ipbxid).user_match(userid, tomatch):
-                    clist.append(k)
+                    clist.append(interface_obj)
         return clist
 
     def sendsheettolist(self, tsl, payload):
@@ -548,10 +548,10 @@ class CTIServer(object):
     def loop_over_cti_queue(self, innerdata):
         cti_queue = innerdata.events_cti
         while cti_queue.qsize() > 0:
-            it = cti_queue.get()
-            for k in self.fdlist_established.itervalues():
-                if not isinstance(k, str) and k.kind in ['CTI', 'CTIS']:
-                    k.append_msg(it)
+            msg = cti_queue.get()
+            for interface_obj in self.fdlist_established.itervalues():
+                if  not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
+                    interface_obj.append_msg(msg)
 
     def set_transfer_socket(self, faxobj, direction):
         for iconn, kind in self.fdlist_established.iteritems():
@@ -566,16 +566,17 @@ class CTIServer(object):
 
     def send_to_cti_client(self, who, what):
         (ipbxid, userid) = who.split('/')
-        for k in self.fdlist_established.itervalues():
-            if not isinstance(k, str) and k.kind in ['CTI', 'CTIS']:
+        for interface_obj in self.fdlist_established.itervalues():
+            if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
                 if ipbxid == self.myipbxid:
-                    if k.connection_details.get('userid') == userid:
-                        k.reply(what)
+                    if interface_obj.connection_details.get('userid') == userid:
+                        interface_obj.reply(what)
                 else:
-                    if k.connection_details.get('userid')[3:] == ipbxid:
-                        k.reply(what)
+                    if interface_obj.connection_details.get('userid')[3:] == ipbxid:
+                        interface_obj.reply(what)
 
-    def select_step(self):
+
+    def _init_socket(self):
         try:
             fdtodel = []
             for cn in self.fdlist_established.keys():
@@ -600,8 +601,8 @@ class CTIServer(object):
             for iconn, kind in self.fdlist_established.iteritems():
                 if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
                     writefds.append(iconn)
-            [sels_i, sels_o, sels_e] = select.select(self.fdlist_full, writefds, [],
-                                                     self.updates_period())
+            [sels_i, sels_o, sels_e] = select.select(self.fdlist_full, writefds, [])
+            return (sels_i, sels_o, sels_e)
 
         except Exception:
             logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
@@ -638,11 +639,193 @@ class CTIServer(object):
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (reload) the thread <%s> remains' % t.getName()
                     # t._Thread__stop() # does not work in reload case (vs. stop case)
-                return
+                return []
+
+    def _socket_ami_read(self, sel_i):
+        try:
+            amiint = self.fdlist_ami.get(sel_i)
+            ipbxid = amiint.ipbxid
+            buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
+            if len(buf) == 0:
+                logger.warning('AMI %s : CLOSING (%s)', ipbxid, time.asctime())
+                del self.fdlist_ami[sel_i]
+                sel_i.close()
+                amiint.disconnect()
+            else:
+                try:
+                    amiint.handle_event(buf)
+                except Exception:
+                    logger.exception('(handle_event) %s', ipbxid)
+        except Exception:
+            logger.exception('(amilist)')
+
+    def _socket_udp_cti_read(self, sel_i):
+        [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
+        if kind == 'ANNOUNCE':
+            [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
+            # scheduling AMI reconnection
+            k = threading.Timer(1, self.cb_timer,
+                                ({'action': 'ipbxup',
+                                  'properties': {'data': data,
+                                                 'sockparams': sockparams}},))
+            k.setName('Thread-ipbxup-%s' % data.strip())
+            k.start()
+        else:
+            logger.warning('unknown kind %s received', kind)
+
+    def _socket_detect_new_tcp_connection(self, sel_i):
+        [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
+        [socketobject, address] = sel_i.accept()
+
+        ctiseparator = '\n'
+        if kind == 'CTI':
+            socketobject = ClientConnection(socketobject, address, ctiseparator)
+            interface = interface_cti.CTI(self)
+        elif kind == 'CTIS':
+            try:
+                connstream = ssl.wrap_socket(socketobject,
+                                             server_side=True,
+                                             certfile=self._config.getconfig('certfile'),
+                                             keyfile=self._config.getconfig('keyfile'),
+                                             ssl_version=cti_config.SSLPROTO)
+                socketobject = ClientConnection(connstream, address, ctiseparator)
+                interface = interface_cti.CTIS(self)
+            except ssl.SSLError:
+                logger.exception('%s:%s:%d cert=%s key=%s)',
+                                 kind, address[0], address[1],
+                                 self._config.getconfig('certfile'),
+                                 self._config.getconfig('keyfile'))
+                socketobject.close()
+                socketobject = None
+
+        if socketobject:
+            if kind in ['CTI', 'CTIS']:
+                interface.user_service_manager = self._user_service_manager
+                logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
+                interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
+                                                ({'action': 'ctilogin',
+                                                  'properties': socketobject},))
+                interface.logintimer.start()
+            elif kind == 'INFO':
+                interface = interface_info.INFO(self)
+            elif kind == 'WEBI':
+                interface = interface_webi.WEBI(self)
+                interface.queuemember_service_manager = self._queuemember_service_manager
+            elif kind == 'FAGI':
+                interface = interface_fagi.FAGI(self)
+
+            interface.connected(socketobject)
+
+            if kind in ['WEBI', 'FAGI', 'INFO']:
+                ipbxid = self.myipbxid
+                if ipbxid:
+                    interface.set_ipbxid(ipbxid)
+                else:
+                    logger.warning('(%s interface) did not find a matching ipbxid for %s',
+                                   kind, address[0])
+
+            self.fdlist_established[socketobject] = interface
+        else:
+            logger.warning('socketobject is not defined ...')
+
+    def _socket_established_read(self, sel_i):
+        try:
+            interface_obj = self.fdlist_established[sel_i]
+            requester = '%s:%d' % sel_i.getpeername()[:2]
+            closemenow = False
+            if isinstance(sel_i, ClientConnection):
+                try:
+                    lines = sel_i.readlines()
+                    for line in lines:
+                        if line:
+                            closemenow = self.manage_tcp_connections(sel_i, line, interface_obj)
+                except ClientConnection.CloseException, cexc:
+                    interface_obj.disconnected(DisconnectCause.broken_pipe)
+                    del self.fdlist_established[sel_i]
+            else:
+                try:
+                    msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
+                    lmsg = len(msg)
+                except Exception:
+                    logger.exception('connection to %s (%s)', requester, interface_obj)
+                    lmsg = 0
+
+                if lmsg > 0:
+                    try:
+                        closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
+                    except Exception:
+                        logger.exception('handling %s (%s)', requester, interface_obj)
+                else:
+                    closemenow = True
+
+            if closemenow:
+                interface_obj.disconnected(DisconnectCause.by_client)
+                sel_i.close()
+                del self.fdlist_established[sel_i]
+        except OperationalError:
+            logger.warning('Postgresql has been stopped, stopping...')
+            sys.exit(1)
+        except Exception:
+            logger.exception('[%s] %s', interface_obj, sel_i)
+            try:
+                logger.warning('unexpected socket breakup')
+                interface_obj.disconnected(DisconnectCause.broken_pipe)
+                sel_i.close()
+                del self.fdlist_established[sel_i]
+            except Exception:
+                logger.exception('[%s] (2nd exception)', interface_obj)
+
+    def _socket_pipe_queue_read(self, sel_i):
+        try:
+            pipebuf = os.read(sel_i, 1024)
+            if len(pipebuf) == 0:
+                logger.warning('pipe_queued_threads has been closed')
+            else:
+                for pb in pipebuf.split('\n'):
+                    if not pb:
+                        continue
+                    [kind, where] = pb.split(':')
+                    if kind in ['main', 'innerdata', 'ami']:
+                        if kind == 'main':
+                            nactions = self.checkqueue()
+                        elif kind == 'innerdata':
+                            nactions = self.safe[where].checkqueue()
+                        elif kind == 'ami':
+                            nactions = self.myami[where].checkqueue()
+                    else:
+                        logger.warning('unknown kind for %s', pb)
+        except Exception:
+            logger.exception('[pipe_queued_threads]')
+
+    def _update_safe_list(self, ipbxid, safe):
+        if ipbxid == self.myipbxid:
+            if self.update_userlist[ipbxid]:
+                self.lastrequest_time[ipbxid] = time.time()
+                try:
+                    # manage_connection.update_amisocks(ipbxid, self)
+                    self._config.update()
+                    safe.regular_update()
+                except Exception:
+                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
+                                     ipbxid)
+                try:
+                    if self.update_userlist[ipbxid]:
+                        while self.update_userlist[ipbxid]:
+                            tmp_ltr = self.update_userlist[ipbxid].pop()
+                            if tmp_ltr != 'xivo[cticonfig,update]':
+                                listtorequest = tmp_ltr[5:-12] + 's'
+                                safe.update_config_list(listtorequest)
+                                self.loop_over_cti_queues()
+                    else:
+                        safe.update_config_list_all()
+                        self.loop_over_cti_queues()
+                except Exception:
+                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
+
+    def select_step(self):
+        sels_i, sels_o, sels_e = self._init_socket()
 
         try:
-
-            # connexions ready for sending(writing)
             if sels_o:
                 for sel_o in sels_o:
                     try:
@@ -653,220 +836,32 @@ class CTIServer(object):
                             kind.disconnected(DisconnectCause.broken_pipe)
                             sel_o.close()
                             del self.fdlist_established[sel_o]
+        except Exception:
+            logger.exception('Socket writer')
 
+        try:
             if sels_i:
                 for sel_i in sels_i:
                     # these AMI connections are used in order to manage AMI commands and events
                     if sel_i in self.fdlist_ami.keys():
-                        try:
-                            amiint = self.fdlist_ami.get(sel_i)
-                            ipbxid = amiint.ipbxid
-                            buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
-                            if len(buf) == 0:
-                                logger.warning('AMI %s : CLOSING (%s)', ipbxid, time.asctime())
-                                del self.fdlist_ami[sel_i]
-                                sel_i.close()
-                                amiint.disconnect()
-                            else:
-                                try:
-                                    amiint.handle_event(buf)
-                                except Exception:
-                                    logger.exception('(handle_event) %s', ipbxid)
-                        except Exception:
-                            logger.exception('(amilist)')
+                        self._socket_ami_read(sel_i)
+                    # the UDP messages (ANNOUNCE) are catched here
                     elif sel_i in self.fdlist_udp_cti:
-                        [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
-                        if kind == 'ANNOUNCE':
-                            [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
-                            # scheduling AMI reconnection
-                            k = threading.Timer(1, self.cb_timer,
-                                                ({'action': 'ipbxup',
-                                                  'properties': {'data': data,
-                                                                 'sockparams': sockparams}},))
-                            k.setName('Thread-ipbxup-%s' % data.strip())
-                            k.start()
-                        else:
-                            logger.warning('unknown kind %s received', kind)
-
-                    # } the new TCP connections (CTI, WEBI, FAGI, INFO) are catched here
+                        self._socket_udp_cti_read(sel_i)
+                    # the new TCP connections (CTI, WEBI, FAGI, INFO) are catched here
                     elif sel_i in self.fdlist_listen_cti:
-                        [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
-                        [connc, sockparams] = sel_i.accept()
-                        ctiseparator = '\n'
-                        if kind == 'CTI':
-                            connc = ClientConnection(connc, sockparams, ctiseparator)
-                        elif kind == 'CTIS':
-                            try:
-                                connstream = ssl.wrap_socket(connc,
-                                                             server_side=True,
-                                                             certfile=self._config.getconfig('certfile'),
-                                                             keyfile=self._config.getconfig('keyfile'),
-                                                             ssl_version=cti_config.SSLPROTO)
-                                connc = ClientConnection(connstream, sockparams, ctiseparator)
-                            except ssl.SSLError:
-                                logger.exception('%s:%s:%d cert=%s key=%s)',
-                                                 kind, sockparams[0], sockparams[1],
-                                                 self._config.getconfig('certfile'),
-                                                 self._config.getconfig('keyfile'))
-                                connc.close()
-                                connc = None
-                        # appending the opened socket to the ones watched
-                        # connc.setblocking(0)
-                        # connc.settimeout(2)
-                        if connc:
-                            if kind == 'INFO':
-                                nc = interface_info.INFO(self)
-                            elif kind == 'WEBI':
-                                nc = interface_webi.WEBI(self)
-                                nc.queuemember_service_manager = self._queuemember_service_manager
-                            elif kind in ['CTI', 'CTIS']:
-                                nc = getattr(interface_cti, kind)(self)
-                                nc.user_service_manager = self._user_service_manager
-                            elif kind == 'FAGI':
-                                nc = interface_fagi.FAGI(self)
-
-                            nc.connected(connc)
-                            if kind in ['WEBI', 'FAGI', 'INFO']:
-                                ipbxid = self.find_matching_ipbxid(sockparams[0])
-                                ipbxid = self.myipbxid
-                                if ipbxid:
-                                    nc.set_ipbxid(ipbxid)
-                                else:
-                                    logger.warning('(%s interface) did not find a matching ipbxid for %s',
-                                                   kind, sockparams[0])
-
-                            if kind in ['CTI', 'CTIS']:
-                                logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
-                                # logintimeout = 3600
-                                nc.logintimer = threading.Timer(logintimeout, self.cb_timer,
-                                                                ({'action': 'ctilogin',
-                                                                  'properties': connc},))
-                                nc.logintimer.start()
-                            self.fdlist_established[connc] = nc
-                        else:
-                            logger.warning('connc is not defined ...')
-
-                    # } incoming TCP connections (CTI, WEBI, AGI, INFO)
+                        self._socket_detect_new_tcp_connection(sel_i)
+                    # incoming TCP connections (CTI, WEBI, AGI, INFO)
                     elif sel_i in self.fdlist_established:
-                        try:
-                            kind = self.fdlist_established[sel_i]
-                            requester = '%s:%d' % sel_i.getpeername()[:2]
-                            closemenow = False
-                            if isinstance(sel_i, ClientConnection):
-                                try:
-                                    lines = sel_i.readlines()
-                                    for line in lines:
-                                        if line:
-                                            # XXX closemenow always take the latest value of the handled line, which
-                                            #     might not be what we want (we want it to be True if it's been true
-                                            #1    at least once)
-                                            closemenow = self.manage_tcp_connections(sel_i, line, kind)
-                                except ClientConnection.CloseException, cexc:
-                                    kind.disconnected(DisconnectCause.broken_pipe)
-                                    # don't close since it has been done
-                                    del self.fdlist_established[sel_i]
-                            else:
-                                try:
-                                    msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
-                                    lmsg = len(msg)
-                                except Exception:
-                                    logger.exception('connection to %s (%s)', requester, kind)
-                                    lmsg = 0
-
-                                if lmsg > 0:
-                                    try:
-                                        closemenow = self.manage_tcp_connections(sel_i, msg, kind)
-                                    except Exception:
-                                        logger.exception('handling %s (%s)', requester, kind)
-                                else:
-                                    closemenow = True
-
-                            if closemenow:
-                                kind.disconnected(DisconnectCause.by_client)
-                                sel_i.close()
-                                del self.fdlist_established[sel_i]
-                        except OperationalError:
-                            logger.warning('Postgresql has been stopped, stopping...')
-                            sys.exit(1)
-                        except Exception:
-                            # socket.error : exc.args[0]
-                            logger.exception('[%s] %s', kind, sel_i)
-                            try:
-                                logger.warning('unexpected socket breakup')
-                                kind.disconnected(DisconnectCause.broken_pipe)
-                                sel_i.close()
-                                del self.fdlist_established[sel_i]
-                            except Exception:
-                                logger.exception('[%s] (2nd exception)', kind)
-
+                        self._socket_established_read(sel_i)
                     # local pipe fd
                     elif self.pipe_queued_threads[0] == sel_i:
-                        try:
-                            pipebuf = os.read(sel_i, 1024)
-                            if len(pipebuf) == 0:
-                                logger.warning('pipe_queued_threads has been closed')
-                            else:
-                                for pb in pipebuf.split('\n'):
-                                    if not pb:
-                                        continue
-                                    [kind, where] = pb.split(':')
-                                    if kind in ['main', 'innerdata', 'ami']:
-                                        if kind == 'main':
-                                            nactions = self.checkqueue()
-                                        elif kind == 'innerdata':
-                                            nactions = self.safe[where].checkqueue()
-                                        elif kind == 'ami':
-                                            nactions = self.myami[where].checkqueue()
-                                    else:
-                                        logger.warning('unknown kind for %s', pb)
-                        except Exception:
-                            logger.exception('[pipe_queued_threads]')
+                        self._socket_pipe_queue_read(sel_i)
 
                     self.loop_over_cti_queues()
 
                     for ipbxid, safe in self.safe.iteritems():
-                        if ipbxid == self.myipbxid:
-                            if self.update_userlist[ipbxid]:
-                                self.lastrequest_time[ipbxid] = time.time()
-                                logger.info('[%s] %s : updates (computed timeout) %s (%s)',
-                                            self.xdname, ipbxid, time.asctime(), self.update_userlist[ipbxid])
-                                try:
-                                    # manage_connection.update_amisocks(ipbxid, self)
-                                    self._config.update()
-                                    safe.regular_update()
-                                except Exception:
-                                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
-                                                     ipbxid)
-                                try:
-                                    if self.update_userlist[ipbxid]:
-                                        while self.update_userlist[ipbxid]:
-                                            tmp_ltr = self.update_userlist[ipbxid].pop()
-                                            if tmp_ltr != 'xivo[cticonfig,update]':
-                                                listtorequest = tmp_ltr[5:-12] + 's'
-                                                safe.update_config_list(listtorequest)
-                                                self.loop_over_cti_queues()
-                                    else:
-                                        safe.update_config_list_all()
-                                        self.loop_over_cti_queues()
-                                except Exception:
-                                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
-
-            if not sels_i and not sels_o and not sels_e:
-                # when nothing happens on the sockets, we fall here
-                for ipbxid, safe in self.safe.iteritems():
-                    if ipbxid == self.myipbxid:
-                        try:
-                            safe.update_config_list_all()
-                        except Exception:
-                            logger.exception('%s : commandclass.updates() (select timeout)', ipbxid)
-
-                        self.lastrequest_time[ipbxid] = time.time()
-
-                        try:
-                            # manage_connection.update_amisocks(ipbxid, self)
-                            self._config.update()
-                            safe.regular_update()
-                        except Exception:
-                            logger.exception('%s : failed while updating lists and sockets (select timeout)', ipbxid)
+                        self._update_safe_list(ipbxid, safe)
         except Exception:
-            logger.exception('select step')
+            logger.exception('Socket Reader')
+
