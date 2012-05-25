@@ -96,6 +96,14 @@ class TestSafe(unittest.TestCase):
         self.assertEqual(proto, 'SIP')
         self.assertEqual(name, 'test-ha-1')
 
+    def test_split_channel_dahdi(self):
+        dahdi_trunk_channel = 'DAHDI/i1/0612345678-577'
+
+        proto, name = innerdata.split_channel(dahdi_trunk_channel)
+
+        self.assertEqual(proto, 'custom')
+        self.assertEqual(name, 'DAHDI/i1')
+
     def test_resolve_incoming_caller_id_already_set(self):
         ret = self.safe._resolve_incoming_caller_id('SIP/test-123', 'Tester', '6666', None)
 

@@ -1557,5 +1557,9 @@ class Channel(object):
 
 def split_channel(channel):
     protocol, end = channel.split('/', 1)
-    name = '-'.join(end.split('-')[0:end.count('-')])
+    if protocol.lower() in ['iax', 'sip']:
+        name = '-'.join(end.split('-')[0:end.count('-')])
+    else:
+        protocol = 'custom'
+        name = '/'.join(channel.split('/')[0:channel.count('/')])
     return protocol, name
