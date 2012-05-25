@@ -123,16 +123,17 @@ class AMI(object):
                     del self.waiting_actionid[actionid]
         return ncount
 
-    def delayed_action(self, usefulmsg, replyto):
+    def delayed_action(self, usefulmsg, replyto=None):
         actionid = self.make_actionid()
         self.amicl.sendcommand('Command', [('Command', usefulmsg),
                                            ('ActionID', actionid)])
-        self.waiting_actionid[actionid] = replyto
-        replyto.replytimer = threading.Timer(2, self.cb_timer,
-                                             ({'action': 'commandrequest',
-                                               'properties': actionid},))
-        replyto.replytimer.setName('Thread-ami-%s' % actionid)
-        replyto.replytimer.start()
+        if replyto is not None:
+            self.waiting_actionid[actionid] = replyto
+            replyto.replytimer = threading.Timer(2, self.cb_timer,
+                                                 ({'action': 'commandrequest',
+                                                   'properties': actionid},))
+            replyto.replytimer.setName('Thread-ami-%s' % actionid)
+            replyto.replytimer.start()
 
     def handle_event(self, input_data):
         """

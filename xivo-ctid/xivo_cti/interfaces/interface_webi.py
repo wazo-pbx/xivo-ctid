@@ -25,7 +25,6 @@ WEBI Interface
 from xivo_cti.interfaces import interfaces
 
 import logging
-import re
 
 logger = logging.getLogger('interface_webi')
 
@@ -54,12 +53,10 @@ AMI_REQUESTS = [
 
 UPDATE_REQUESTS = [
     'xivo[cticonfig,update]',
-
     'xivo[userlist,update]',
     'xivo[devicelist,update]',
     'xivo[linelist,update]',
     'xivo[phonelist,update]',
-
     'xivo[trunklist,update]',
     'xivo[agentlist,update]',
     'xivo[queuelist,update]',
@@ -70,11 +67,11 @@ UPDATE_REQUESTS = [
     'xivo[phonebooklist,update]'
     ]
 
+class BadWebiCommandException(Exception):
+    pass
 
 class WEBI(interfaces.Interfaces):
-
     kind = 'WEBI'
-    sep = '\\n'  # this instead of \n is done in order to match wrong WEBI implementation
 
     def __init__(self, ctiserver):
         interfaces.Interfaces.__init__(self, ctiserver)
@@ -88,35 +85,58 @@ class WEBI(interfaces.Interfaces):
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
 
-    def manage_connection(self, msg):
-        multimsg = msg.replace('\r', '').split(self.sep)
+    def _parse_webi_command(self, raw_msg):
+        if len(raw_msg) == 0 or not ':' in raw_msg:
+            logger.warning('WEBI did an unexpected request %s', raw_msg)
+            raise BadWebiCommandException()
+
+        raw_msg = raw_msg.strip()
+        type = raw_msg.split(':')[0]
+        msg = raw_msg.split(':')[1]
+
+        if type not in ['sync', 'async']:
+            logger.warning('WEBI did an unexpected type %s', type)
+            raise BadWebiCommandException()
+        elif len(msg) == 0:
+            logger.warning('WEBI send empty msg')
+            raise BadWebiCommandException()
+
+        if type == 'sync':
+            logger.info('Synchronous WEBI command received: %s', msg)
+        else:
+            logger.info('Asynchronous WEBI command received: %s', msg)
+
+        return (type, msg)
+
+    def _send_ami_request(self, type, msg):
+        if type == 'async':
+            self._ctiserver.myami.get(self.ipbxid).delayed_action(msg)
+            return False
+        else:
+            self._ctiserver.myami.get(self.ipbxid).delayed_action(msg, self)
+            return True
+
+    def manage_connection(self, raw_msg):
         clireply = []
         closemenow = True
 
-        for iusefulmsg in multimsg:
-            usefulmsg = iusefulmsg.strip()
-            if len(usefulmsg) == 0:
-                break
-            try:
-                if usefulmsg == 'xivo[daemon,reload]':
-                    self._ctiserver.askedtoquit = True
-                elif usefulmsg == 'xivo[queuemember,update]':
-                    self.queuemember_service_manager.update_config()
-                elif usefulmsg in UPDATE_REQUESTS:
-                    self._ctiserver.update_userlist[self.ipbxid].append(usefulmsg)
-                elif usefulmsg in AMI_REQUESTS:
-                    self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
-                    closemenow = False
-                else:
-                    recomp = re.compile('sip show peer .* load')
-                    if re.match(recomp, usefulmsg):
-                        self._ctiserver.myami.get(self.ipbxid).delayed_action(usefulmsg, self)
-                        closemenow = False
-                    else:
-                        logger.warning('WEBI did an unexpected request %s', usefulmsg)
-            except Exception:
-                logger.exception('WEBI connection [%s] : KO when defining for %s',
-                                 usefulmsg, self.requester)
+        try:
+            type, msg = self._parse_webi_command(raw_msg)
+        except BadWebiCommandException:
+            return []
+
+        if msg == 'xivo[daemon,reload]':
+            self._ctiserver.askedtoquit = True
+        elif msg == 'xivo[queuemember,update]':
+            self.queuemember_service_manager.update_config()
+        elif msg in UPDATE_REQUESTS:
+            self._ctiserver.update_userlist[self.ipbxid].append(msg)
+        elif msg in AMI_REQUESTS:
+            closemenow = self._send_ami_request(type, msg)
+        elif msg.startswith('sip show peer '):
+            closemenow = self._send_ami_request(type, msg)
+        else:
+            logger.warning('WEBI did an unexpected request %s', msg)
 
         freply = [{'message': clireply,
                    'closemenow': closemenow}]
