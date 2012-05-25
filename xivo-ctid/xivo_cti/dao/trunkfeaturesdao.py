@@ -23,6 +23,7 @@
 
 from xivo_cti.dao.alchemy.usersip import UserSIP
 from xivo_cti.dao.alchemy.useriax import UserIAX
+from xivo_cti.dao.alchemy.usercustom import UserCustom
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
 from xivo_cti.dao.alchemy import dbconnection
 
@@ -37,14 +38,11 @@ class TrunkFeaturesDAO(object):
             raise ValueError('Protocol None is not allowed')
 
         protocol = protocol.lower()
-        if protocol == 'sip':
-            table = UserSIP
-        elif protocol == 'iax':
-            table = UserIAX
+        table, field = self._trunk_table_lookup_field(protocol)
 
         try:
             protocol_id = (self._session.query(table.id)
-                           .filter(table.name == name))[0].id
+                           .filter(field == name))[0].id
             trunk_id = (self._session.query(TrunkFeatures.id)
                         .filter(TrunkFeatures.protocolid == protocol_id)
                         .filter(TrunkFeatures.protocol == protocol.lower()))[0].id
@@ -52,6 +50,18 @@ class TrunkFeaturesDAO(object):
             raise LookupError('No such trunk')
         else:
             return trunk_id
+
+    def _trunk_table_lookup_field(self, protocol):
+        if protocol == 'sip':
+            table = UserSIP
+            field = UserSIP.name
+        elif protocol == 'iax':
+            table = UserIAX
+            field = UserIAX.name
+        elif protocol == 'custom':
+            table = UserCustom
+            field = UserCustom.interface
+        return table, field
 
     def get_ids(self):
         return [item.id for item in self._session.query(TrunkFeatures.id)]

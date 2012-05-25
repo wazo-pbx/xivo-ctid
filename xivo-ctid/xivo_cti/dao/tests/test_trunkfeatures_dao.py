@@ -26,6 +26,7 @@ import unittest
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
 from xivo_cti.dao.alchemy.usersip import UserSIP
 from xivo_cti.dao.alchemy.useriax import UserIAX
+from xivo_cti.dao.alchemy.usercustom import UserCustom
 from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.base import Base
@@ -48,6 +49,9 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
 
         Base.metadata.drop_all(connection.get_engine(), [UserIAX.__table__])
         Base.metadata.create_all(connection.get_engine(), [UserIAX.__table__])
+
+        Base.metadata.drop_all(connection.get_engine(), [UserCustom.__table__])
+        Base.metadata.create_all(connection.get_engine(), [UserCustom.__table__])
 
         self.session = connection.get_session()
 
@@ -72,9 +76,7 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
         usersip.name = trunk_name
         usersip.type = 'peer'
 
-        self.session.add(trunk)
-        self.session.add(usersip)
-
+        map(self.session.add, [trunk, usersip])
         self.session.commit()
 
         result = self.dao.find_by_proto_name('sip', trunk_name)
@@ -93,12 +95,29 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
         useriax.name = trunk_name
         useriax.type = 'peer'
 
-        self.session.add(trunk)
-        self.session.add(useriax)
-
+        map(self.session.add, [trunk, useriax])
         self.session.commit()
 
         result = self.dao.find_by_proto_name('iax', trunk_name)
+
+        self.assertEqual(result, trunk.id)
+
+    def test_find_by_proto_name_dahdi(self):
+        dahdi_interface = 'dahdi/g1'
+
+        trunk = TrunkFeatures()
+        trunk.protocolid = 7878
+        trunk.protocol = 'custom'
+
+        usercustom = UserCustom()
+        usercustom.name = 'dahdi_test'
+        usercustom.id = trunk.protocolid
+        usercustom.interface = dahdi_interface
+
+        map(self.session.add, [trunk, usercustom])
+        self.session.commit()
+
+        result = self.dao.find_by_proto_name('custom', dahdi_interface)
 
         self.assertEqual(result, trunk.id)
 
