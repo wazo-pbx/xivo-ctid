@@ -131,22 +131,6 @@ class Config(object):
             ret = self.xc_json
         return ret
 
-    def set_rcti_special_profile(self):
-        self.xc_json['userstatus']['ctiserver'] = {'onlystate' : {'allowed' : ['onlystate'] } }
-        self.xc_json['profiles']['ctiserver'] = {
-            'regcommands' : 'itm_regcommands',
-            'userstatus': 'ctiserver',
-            'preferences': None,
-            'name' : 'CTIServer',
-            'ipbxcommands' : None,
-            'phonestatus': None,
-            'xlets': None,
-            'services' : None
-            }
-
-    def set_rcti_override_ipbxes(self, overconf):
-        self.overconf = overconf
-
     def set_parting_options(self, parting_options=None):
         self._parting_options = parting_options if parting_options else []
         logger.debug('New parting options: %s', self._parting_options)

@@ -43,7 +43,6 @@ from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
-from xivo_cti.interfaces import interface_rcti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
@@ -347,12 +346,6 @@ class CTIServer(object):
                     else:
                         logger.warning('did not found a matching ipbxid for the address %s',
                                        got_ip_address)
-            elif action == 'xivoremote':
-                for _, v in self.mycti.iteritems():
-                    if not v.connected():
-                        z = v.connect()
-                        if z:
-                            self.fdlist_remote_cti[z] = v
             elif action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
@@ -387,7 +380,7 @@ class CTIServer(object):
         QueueLogger.init(queue_stats_uri)
         dbconnection.add_connection_as(queue_stats_uri, 'queue_stats')
 
-    def main_loop(self):    # {
+    def main_loop(self):
         self.askedtoquit = False
 
         self.time_start = time.localtime()
@@ -395,7 +388,6 @@ class CTIServer(object):
                     self.xivoversion, os.getpid(), self.revision, self.nreload)
         self.nreload += 1
 
-        # global default definitions
         self.update_userlist = {}
         self.lastrequest_time = {}
 
@@ -405,9 +397,7 @@ class CTIServer(object):
             payload = urldata.read()
             urldata.close()
             overconf = cjson.decode(payload)
-            self._config.set_rcti_override_ipbxes(overconf)
         self._config.update()
-        self._config.set_rcti_special_profile()
 
         xivoconf_general = self._config.getconfig('main')
 
@@ -425,7 +415,6 @@ class CTIServer(object):
         self.fdlist_listen_cti = {}
         self.fdlist_udp_cti = {}
         self.fdlist_ami = {}
-        self.fdlist_remote_cti = {}
 
         logger.info("the monitored ipbx's is/are : %s", self._config.getconfig('ipbxes').keys())
 
@@ -436,12 +425,10 @@ class CTIServer(object):
         else:
             self.myipbxid = None
 
-        logger.info('# STARTING %s # (1/3) Local AMI socket connection', self.xdname)
+        logger.info('# STARTING %s # (1/2) Local AMI socket connection', self.xdname)
         if self.myipbxid:
             ipbxconfig = self._config.getconfig('ipbxes').get(self.myipbxid)
-            # interface : safe deposit
-            safe = innerdata.Safe(self, self.myipbxid,
-                                                      ipbxconfig.get('urllists'))
+            safe = innerdata.Safe(self, self.myipbxid, ipbxconfig.get('urllists'))
             self.safe[self.myipbxid] = safe
             safe.user_service_manager = self._user_service_manager
             safe.user_features_dao = self._user_features_dao
@@ -455,7 +442,6 @@ class CTIServer(object):
             self.safe[self.myipbxid].register_cti_handlers()
             self.safe[self.myipbxid].register_ami_handlers()
             self.safe[self.myipbxid].update_directories()
-            # interface : AMI
             self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
             self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
             self.commandclass.user_features_dao = self._user_features_dao
@@ -483,25 +469,7 @@ class CTIServer(object):
             self._queuemember_service_manager.update_config()
             self._init_statistics_producers()
 
-        logger.info('# STARTING %s # (2/3) Remote CTI connections', self.xdname)
-        for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
-            if ipbxid != self.myipbxid:
-                logger.info('other ipbx to connect to : %s', ipbxid)
-                try:
-                    self.safe[ipbxid] = innerdata.Safe(self, ipbxid)
-                    self.mycti[ipbxid] = interface_rcti.RCTI(self, ipbxid,
-                                                             ipbxconfig.get('cti_connection'))
-                except:
-                    logger.exception('remote CTI connection to %s', ipbxid)
-
-                self.update_userlist[ipbxid] = []
-                self.lastrequest_time[ipbxid] = time.time()
-
-                z = self.mycti[ipbxid].connect()
-                if z:
-                    self.fdlist_remote_cti[z] = self.mycti[ipbxid]
-
-        logger.info('# STARTING %s # (3/3) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
+        logger.info('# STARTING %s # (2/2) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
         # opens the listening socket for incoming (CTI, WEBI, FAGI, INFO) connections
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
             allow_kind = True
@@ -624,12 +592,10 @@ class CTIServer(object):
 
             self.fdlist_full = list()
             self.fdlist_full.append(self.pipe_queued_threads[0])
-            # put AMI fd's before FAGI ones in order to be properly synced
             self.fdlist_full.extend(self.fdlist_ami.keys())
             self.fdlist_full.extend(self.fdlist_listen_cti.keys())
             self.fdlist_full.extend(self.fdlist_udp_cti.keys())
             self.fdlist_full.extend(self.fdlist_established.keys())
-            self.fdlist_full.extend(self.fdlist_remote_cti.keys())
             writefds = []
             for iconn, kind in self.fdlist_established.iteritems():
                 if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
@@ -645,8 +611,6 @@ class CTIServer(object):
                            self.fdlist_established)
             logger.warning('(select) current open TCP connections : (AMI) %s',
                            self.fdlist_ami.keys())
-            logger.warning('(select) current open TCP connections : (RCTI) %s',
-                           self.fdlist_remote_cti.keys())
 
             for s in self.fdlist_full:
                 if s in self.fdlist_established:
@@ -710,26 +674,6 @@ class CTIServer(object):
                                     logger.exception('(handle_event) %s', ipbxid)
                         except Exception:
                             logger.exception('(amilist)')
-
-                    elif sel_i in self.fdlist_remote_cti.keys():
-                        try:
-                            cticonn = self.fdlist_remote_cti.get(sel_i)
-                            ipbxid = cticonn.ipbxid
-                            buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
-                            if len(buf) == 0:
-                                logger.warning('RCTI %s : CLOSING', ipbxid)
-                                del self.fdlist_remote_cti[sel_i]
-                                sel_i.close()
-                                cticonn.disconnect()
-                            else:
-                                try:
-                                    cticonn.handle_event(buf)
-                                except Exception:
-                                    logger.exception('(handle_event) %s', ipbxid)
-                        except Exception:
-                            logger.exception('(remotecti)')
-
-                    # } the UDP messages (ANNOUNCE) are catched here
                     elif sel_i in self.fdlist_udp_cti:
                         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
                         if kind == 'ANNOUNCE':
