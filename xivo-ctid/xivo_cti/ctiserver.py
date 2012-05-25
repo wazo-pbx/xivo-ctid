@@ -70,6 +70,7 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
@@ -176,6 +177,7 @@ class CTIServer(object):
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
         self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
         self._meetme_features_dao = MeetmeFeaturesDAO.new_from_uri('queue_stats')
+        self._trunk_features_dao = TrunkFeaturesDAO.new_from_uri('queue_stats')
 
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
@@ -432,6 +434,8 @@ class CTIServer(object):
             self.safe[self.myipbxid] = safe
             safe.user_service_manager = self._user_service_manager
             safe.user_features_dao = self._user_features_dao
+            safe.trunk_features_dao = self._trunk_features_dao
+            safe.init_status()
             self._user_features_dao._innerdata = safe
             self._user_service_notifier.events_cti = safe.events_cti
             self._user_service_notifier.ipbx_id = self.myipbxid

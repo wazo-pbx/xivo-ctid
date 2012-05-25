@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -60,8 +60,6 @@ class Safe(object):
         'users': 'urllist_users',
         'phones': 'urllist_lines',
         # 'devices' : 'urllist_devices',
-        'trunks': 'urllist_trunks',
-
         'agents': 'urllist_agents',
         'queues': 'urllist_queues',
         'groups': 'urllist_groups',
@@ -133,11 +131,6 @@ class Safe(object):
                     'groups': ['context',
                                'name',
                                'number'],
-                    'trunks': ['context',
-                               'protocol',
-                               'name',
-                               'host',
-                               'type'],
                     'voicemails': ['context',
                                    'fullname',
                                    'mailbox',
@@ -257,9 +250,6 @@ class Safe(object):
                 self.xod_status[listname] = {}
             except Exception:
                 logger.exception("%s", listname)
-
-        #if cnf:
-        #    self.add_default_parking()
 
     def register_cti_handlers(self):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
@@ -527,6 +517,15 @@ class Safe(object):
                     self.fill_lines_into_users()
         except Exception:
             logger.exception('update_config_list %s', listname)
+
+    def init_status(self):
+        '''
+        Initialize xod_status for lists that are not retrieved using web services
+        '''
+        self.xod_status['trunks'] = {}
+        trunk_ids = self.trunk_features_dao.get_ids()
+        for trunk_id in trunk_ids:
+            self.xod_status['trunks'][trunk_id] = copy.deepcopy(self.props_status['trunks'])
 
     def get_x_list(self, xlist):
         lxlist = {}
@@ -980,6 +979,8 @@ class Safe(object):
         for r in relations:
             termination_type, termination_id = r.split(':', 1)
             list_name = termination_type + 's'
+            if list_name == 'trunks':
+                termination_id = int(termination_id)
             chanlist = self.xod_status[list_name][termination_id]['channels']
             if channel in chanlist:
                 chanlist.remove(channel)
@@ -1036,10 +1037,6 @@ class Safe(object):
             t = self.ztrunks(termination.get('protocol'), termination.get('name'))
             if t:
                 self.channels[channel].addrelation('trunk:%s' % t)
-                oldchans = self.xod_status['trunks'][t].get('channels')
-                if channel not in oldchans:
-                    oldchans.append(channel)
-                self.xod_status['trunks'][t]['channels'] = oldchans
         except Exception:
             logger.exception('find termination according to channel %s', channel)
 
@@ -1153,10 +1150,10 @@ class Safe(object):
                     return phone_id
 
     def ztrunks(self, protocol, name):
-        if protocol:
-            for trunk_id, trunk_config in self.xod_config['trunks'].keeplist.iteritems():
-                if trunk_config.get('protocol') == protocol.lower() and trunk_config.get('name') == name:
-                    return trunk_id
+        try:
+            return self.trunk_features_dao.find_by_proto_name(protocol, name)
+        except (LookupError, ValueError):
+            return None
 
     def fill_user_ctilog(self, uri, userid, what, options='', callduration=None):
         request = "INSERT INTO ctilog (${columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -1416,7 +1413,12 @@ class Safe(object):
         return self._is_listmember_channel(proto, name, 'phones')
 
     def _is_trunk_channel(self, proto, name):
-        return self._is_listmember_channel(proto, name, 'trunks')
+        try:
+            trunk_id = self.trunk_features_dao.find_by_proto_name(proto, name)
+        except (ValueError, LookupError):
+            return False
+        else:
+            return trunk_id != None
 
     def _is_listmember_channel(self, proto, name, listname):
         for item in self.xod_config[listname].keeplist.itervalues():

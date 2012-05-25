@@ -53,6 +53,9 @@ class TrunkFeaturesDAO(object):
         else:
             return trunk_id
 
+    def get_ids(self):
+        return [item.id for item in self._session.query(TrunkFeatures.id)]
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

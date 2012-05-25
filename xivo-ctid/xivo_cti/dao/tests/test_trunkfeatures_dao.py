@@ -104,3 +104,28 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
 
     def test_null_input(self):
         self.assertRaises(ValueError, self.dao.find_by_proto_name, None, 'my_trunk')
+
+    def test_get_ids(self):
+        trunk1 = TrunkFeatures()
+        trunk1.protocolid = '1234'
+        trunk1.protocol = 'sip'
+
+        trunk2 = TrunkFeatures()
+        trunk2.protocolid = '4321'
+        trunk2.protocol = 'iax'
+
+        trunk3 = TrunkFeatures()
+        trunk3.protocolid = '5678'
+        trunk3.protocol = 'sip'
+
+        map(self.session.add, [trunk1, trunk2, trunk3])
+        self.session.commit()
+
+        expected = sorted([trunk1.id, trunk2.id, trunk3.id])
+        result = sorted(self.dao.get_ids())
+
+        self.assertEqual(expected, result)
+
+    def test_get_ids_empty(self):
+        result = self.dao.get_ids()
+        self.assertEqual([], result)
