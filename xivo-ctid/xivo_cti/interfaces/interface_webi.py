@@ -111,10 +111,10 @@ class WEBI(interfaces.Interfaces):
     def _send_ami_request(self, type, msg):
         if type == 'async':
             self._ctiserver.myami.get(self.ipbxid).delayed_action(msg)
-            return False
+            return True
         else:
             self._ctiserver.myami.get(self.ipbxid).delayed_action(msg, self)
-            return True
+            return False
 
     def manage_connection(self, raw_msg):
         clireply = []

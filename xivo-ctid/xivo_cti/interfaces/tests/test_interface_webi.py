@@ -75,7 +75,7 @@ class Test(unittest.TestCase):
         result = self._interface_webi._send_ami_request(type, msg)
 
         self._ctiserver.myami.get(self._interface_webi.ipbxid).delayed_action.assert_called_once_with(msg, self._interface_webi)
-        self.assertEqual(True, result)
+        self.assertEqual(False, result)
 
     def test_send_ami_request_async(self):
         msg = 'dialplan reload'
@@ -86,7 +86,7 @@ class Test(unittest.TestCase):
         result = self._interface_webi._send_ami_request(type, msg)
 
         self._ctiserver.myami.get(self._interface_webi.ipbxid).delayed_action.assert_called_once_with(msg)
-        self.assertEqual(False, result)
+        self.assertEqual(True, result)
 
     def test_manage_connection_reload_daemon(self):
         raw_msg = 'async:xivo[daemon,reload]'
@@ -145,12 +145,12 @@ class Test(unittest.TestCase):
     def test_manage_connection_sip_show_peer(self):
         raw_msg = 'async:sip show peer francis'
         expected_result = [{'message': [],
-                            'closemenow': True}]
+                            'closemenow': False}]
         self._interface_webi.ipbxid = '1234'
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('sync', 'sip show peer francis')
         self._interface_webi._send_ami_request = Mock()
-        self._interface_webi._send_ami_request.return_value = True
+        self._interface_webi._send_ami_request.return_value = False
 
         result = self._interface_webi.manage_connection(raw_msg)
 
