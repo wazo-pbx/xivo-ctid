@@ -1400,7 +1400,7 @@ class Safe(object):
         logger.info('Resolving caller ID: channel=%s incoming caller ID=%s %s, destination: user %s',
                     channel, cid_name, cid_number, dest_user_id)
         chan_proto, chan_name = split_channel(channel)
-        if cid_name == cid_number:
+        if cid_name == cid_number or cid_name == 'unknown':
             if self._is_phone_channel(chan_proto, chan_name):
                 return build_agi_caller_id(*self._get_cid_for_phone(channel))
             elif self._is_trunk_channel(chan_proto, chan_name):
