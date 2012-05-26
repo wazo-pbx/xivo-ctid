@@ -24,6 +24,9 @@
 
 class AgentExecutor(object):
 
+    def __init__(self):
+        pass
+
     def queue_add(self, queuename, interface, paused=False, skills=''):
         self.ami.queueadd(queuename, interface, paused, skills)
 

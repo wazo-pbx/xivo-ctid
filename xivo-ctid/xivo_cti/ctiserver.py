@@ -64,7 +64,6 @@ from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
-from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
@@ -112,7 +111,8 @@ class CTIServer(object):
                  user_service_manager,
                  user_service_notifier,
                  funckey_manager,
-                 agent_service_manager):
+                 agent_service_manager,
+                 agent_executor):
         self.nreload = 0
         self.myami = {}
         self.mycti = {}
@@ -124,6 +124,7 @@ class CTIServer(object):
         self._user_service_notifier = user_service_notifier
         self._funckey_manager = funckey_manager
         self._agent_service_manager = agent_service_manager
+        self._agent_executor = agent_executor
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self.sighandler)
@@ -160,7 +161,6 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_queue_stats()
 
-        self._agent_executor = AgentExecutor()
         self._presence_service_manager = PresenceServiceManager()
         self._presence_service_executor = PresenceServiceExecutor()
         self._statistics_notifier = StatisticsNotifier()
