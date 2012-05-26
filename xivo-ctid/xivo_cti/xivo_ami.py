@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # xivo-ctid
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,7 +26,6 @@ Asterisk AMI utilities.
 """
 
 import logging
-import re
 import socket
 import string
 import time
@@ -217,8 +216,8 @@ class AMIClass(object):
                   locext, extravars={}, timeout=3600):
         # originate a call btw src and dst
         # src will ring first, and dst will ring when src responds
-        phonedst = normalize_exten(phonedst)
         try:
+            phonedst = normalize_exten(phonedst)
             if phoneproto == 'custom':
                 channel = phonesrcname.replace('\\', '')
             else:
@@ -240,7 +239,8 @@ class AMIClass(object):
             for var, val in extravars.iteritems():
                 command_details.append(('Variable', '%s=%s' % (var, val)))
             command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid))
-        except Exception:
+        except Exception, e:
+            logger.warning('Originate failed: %s', e.message)
             return False
         return self._exec_command('Originate', command_details)
 
@@ -319,7 +319,7 @@ class AMIClass(object):
         return self._exec_command('QueueLog', command_details)
 
     def queuesummary(self, queuename=None):
-        if(queuename is None):
+        if (queuename is None):
             return self._exec_command('QueueSummary', [])
         else:
             return self._exec_command('QueueSummary', [('Queue', queuename)])
@@ -363,20 +363,30 @@ class AMIClass(object):
 
     # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
-        extension = normalize_exten(extension)
-        command_details = [('Channel', channel),
-                           ('Exten', extension),
-                           ('Context', context),
-                           ('Priority', '1')]
+        try:
+            extension = normalize_exten(extension)
+        except ValueError, e:
+            logger.warning('Transfer failed: %s', e.message)
+            return False
+        else:
+            command_details = [('Channel', channel),
+                               ('Exten', extension),
+                               ('Context', context),
+                               ('Priority', '1')]
         return self._exec_command('Redirect', command_details)
 
     # \brief Atxfer a channel towards a new extension.
     def atxfer(self, channel, extension, context):
-        extension = normalize_exten(extension)
-        return self._exec_command('Atxfer', [('Channel', channel),
-                                             ('Exten', extension),
-                                             ('Context', context),
-                                             ('Priority', '1')])
+        try:
+            extension = normalize_exten(extension)
+        except ValueError, e:
+            logger.warning('Attended transfer failed: %s', e.message)
+            return False
+        else:
+            return self._exec_command('Atxfer', [('Channel', channel),
+                                                 ('Exten', extension),
+                                                 ('Context', context),
+                                                 ('Priority', '1')])
 
     def txfax(self, faxpath, userid, callerid, number, context):
         # originate a call btw src and dst
