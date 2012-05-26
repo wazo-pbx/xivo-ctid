@@ -4,6 +4,8 @@ It fills given constructors or factory methods
 based on their named arguments.
 
 See the demo usage at the end of file.
+
+Source : http://code.activestate.com/recipes/576609/
 """
 
 import logging

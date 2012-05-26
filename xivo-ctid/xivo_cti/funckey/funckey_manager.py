@@ -30,6 +30,9 @@ class FunckeyManager(object):
     INUSE = 'INUSE'
     NOT_INUSE = 'NOT_INUSE'
 
+    def __init__(self):
+        pass
+
     def _device(self, user_id, name, destination=''):
         return (self.DEVICE_PATTERN %
                   xivo_helpers.fkey_extension(self.extensionsdao.exten_by_name('phoneprogfunckey'),
