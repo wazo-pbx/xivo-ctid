@@ -35,6 +35,9 @@ class UserServiceNotifier(object):
                    "tid": '',
                    "tipbxid": ''}
 
+    def __init__(self):
+        pass
+
     def _prepare_message(self, user_id):
         msg = deepcopy(self.STATUS_MESSAGE)
         msg.update({'tid': user_id,

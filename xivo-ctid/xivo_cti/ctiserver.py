@@ -49,8 +49,6 @@ from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_fagi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
-from xivo_cti.services.user_service_notifier import UserServiceNotifier
-from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
@@ -111,7 +109,9 @@ class CTIServer(object):
     revision = 'githash'
     xdname = 'XiVO CTI Server'
 
-    def __init__(self):
+    def __init__(self,
+                 user_service_manager,
+                 user_service_notifier):
         self.nreload = 0
         self.myami = {}
         self.mycti = {}
@@ -119,7 +119,8 @@ class CTIServer(object):
         self.timeout_queue = None
         self.pipe_queued_threads = None
         self._config = None
-        self._user_service_manager = None
+        self._user_service_manager = user_service_manager
+        self._user_service_notifier = user_service_notifier
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self.sighandler)
@@ -156,8 +157,6 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_queue_stats()
 
-        self._user_service_manager = UserServiceManager()
-        self._user_service_notifier = UserServiceNotifier()
         self._funckey_manager = FunckeyManager()
         self._agent_service_manager = AgentServiceManager()
         self._agent_executor = AgentExecutor()
@@ -190,7 +189,6 @@ class CTIServer(object):
 
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
-        self._user_service_manager.user_service_notifier = self._user_service_notifier
         self._user_service_manager.line_features_dao = self._line_features_dao
         self._user_service_manager.presence_service_manager = self._presence_service_manager
         self._user_service_manager.presence_service_executor = self._presence_service_executor
