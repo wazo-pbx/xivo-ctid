@@ -49,13 +49,13 @@ class QueueStatisticsManager(object):
         received_and_done = self._queue_statistic_dao.get_received_and_done(queue_name, window)
 
         if received_and_done:
-            queue_statistic.efficiency = int(float(queue_statistic.answered_call_count) / received_and_done * 100)
+            queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100), 0))
         else:
             queue_statistic.efficiency = None
 
         if queue_statistic.answered_call_count:
             answered_in_qos = self._queue_statistic_dao.get_answered_call_in_qos_count(queue_name, window, xqos)
-            queue_statistic.qos = int(float(answered_in_qos) / queue_statistic.answered_call_count * 100)
+            queue_statistic.qos = int(round((float(answered_in_qos) / queue_statistic.answered_call_count * 100), 0))
         return queue_statistic
 
     def get_queue_summary(self, queue_name):

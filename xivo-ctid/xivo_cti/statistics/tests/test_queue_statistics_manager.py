@@ -8,7 +8,8 @@ from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.tools.delta_computer import DictDelta
 
-class Test(unittest.TestCase):
+
+class TestQueueStatisticsManager(unittest.TestCase):
 
     def setUp(self):
         self.queue_statistic_dao = Mock(QueueStatisticDAO)
@@ -30,7 +31,6 @@ class Test(unittest.TestCase):
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
-
         self.assertEqual(queue_statistics.received_call_count, 7)
         self.assertEqual(queue_statistics.answered_call_count, 12)
         self.assertEqual(queue_statistics.abandonned_call_count, 11)
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
         self.queue_statistic_dao.get_abandonned_call_count.assert_called_with('3', window)
         self.queue_statistic_dao.get_max_hold_time.assert_called_with('3', window)
 
-    def test_calculate_efficiency(self):
+    def test_calculate_efficiency_round_down(self):
         window = 3600
         xqos = 25
         self.queue_statistic_dao.get_received_call_count.return_value = 18
@@ -48,11 +48,21 @@ class Test(unittest.TestCase):
         self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
         self.queue_statistic_dao.get_received_and_done.return_value = 11
 
-
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
         self.assertEqual(queue_statistics.efficiency, 27)
 
+    def test_calculate_efficiency_round_up(self):
+        window = 3600
+        xqos = 25
+        self.queue_statistic_dao.get_received_call_count.return_value = 18
+        self.queue_statistic_dao.get_answered_call_count.return_value = 12
+        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
+        self.queue_statistic_dao.get_received_and_done.return_value = 14
+
+        queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
+
+        self.assertEqual(queue_statistics.efficiency, 86)
 
     def test_efficiency_no_call_received_and_done(self):
         window = 3600
@@ -66,7 +76,7 @@ class Test(unittest.TestCase):
 
         self.assertEqual(queue_statistics.efficiency, None)
 
-    def test_qos(self):
+    def test_qos_round_down(self):
         window = 3600
         xqos = 25
         self.queue_statistic_dao.get_answered_call_count.return_value = 11
@@ -77,6 +87,18 @@ class Test(unittest.TestCase):
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
         self.assertEqual(queue_statistics.qos, 27)
+
+    def test_qos_round_up(self):
+        window = 3600
+        xqos = 25
+        self.queue_statistic_dao.get_answered_call_count.return_value = 14
+        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 12
+        self.queue_statistic_dao.get_received_call_count.return_value = 50
+        self.queue_statistic_dao.get_received_and_done.return_value = 14
+
+        queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
+
+        self.assertEqual(queue_statistics.qos, 86)
 
     def test_parse_queue_member_status(self):
         self.queue_statistics_manager.get_queue_summary = Mock()
@@ -89,15 +111,13 @@ class Test(unittest.TestCase):
 
         self.queue_statistics_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-
     def test_parse_queue_member_update(self):
         self.queue_statistics_manager.get_queue_summary = Mock()
 
-
-        input_delta = DictDelta({'Agent/2345,service':
-                                    {'queue_name':'service', 'interface':'Agent/2345'},
-                                 'Agent/2309,beans':
-                                    {'queue_name':'beans', 'interface':'Agent/2309'}
+        input_delta = DictDelta({'Agent/2345,service': {'queue_name': 'service',
+                                                        'interface': 'Agent/2345'},
+                                 'Agent/2309,beans': {'queue_name': 'beans',
+                                                      'interface': 'Agent/2309'}
                                  }, {}, {})
 
         queue_statistics_manager.parse_queue_member_update(input_delta)
