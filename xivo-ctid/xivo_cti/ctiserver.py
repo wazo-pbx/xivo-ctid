@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -71,7 +71,6 @@ from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
-from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.dao.queuememberdao import QueueMemberDAO
@@ -176,7 +175,6 @@ class CTIServer(object):
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
         self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
-        self._meetme_features_dao = MeetmeFeaturesDAO.new_from_uri('queue_stats')
         self._trunk_features_dao = TrunkFeaturesDAO.new_from_uri('queue_stats')
 
         self._funckey_manager.extensionsdao = self._extensions_dao

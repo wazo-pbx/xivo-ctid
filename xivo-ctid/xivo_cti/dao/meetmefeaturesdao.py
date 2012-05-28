@@ -24,30 +24,30 @@
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
 from xivo_cti.dao.alchemy import dbconnection
 
+_DB_NAME = 'asterisk'
 
-class MeetmeFeaturesDAO(object):
-    def __init__(self, session):
-        self._session = session
 
-    def get(self, meetme_id):
-        res = self._session.query(MeetmeFeatures).filter(MeetmeFeatures.id == int(meetme_id))
-        if res.count() == 0:
-            raise LookupError
-        return res[0]
+def _session():
+    connection = dbconnection.get_connection(_DB_NAME)
+    return connection.get_session()
 
-    def find_by_name(self, meetme_name):
-        res = self._session.query(MeetmeFeatures).filter(MeetmeFeatures.name == meetme_name)
-        if res.count() == 0:
-            return ''
-        return res[0]
 
-    def find_by_confno(self, meetme_confno):
-        res = self._session.query(MeetmeFeatures).filter(MeetmeFeatures.confno == meetme_confno)
-        if res.count() == 0:
-            return ''
-        return res[0]
+def get(meetme_id):
+    res = _session().query(MeetmeFeatures).filter(MeetmeFeatures.id == int(meetme_id))
+    if res.count() == 0:
+        raise LookupError
+    return res[0]
 
-    @classmethod
-    def new_from_uri(cls, uri):
-        connection = dbconnection.get_connection(uri)
-        return cls(connection.get_session())
+
+def find_by_name(meetme_name):
+    res = _session().query(MeetmeFeatures).filter(MeetmeFeatures.name == meetme_name)
+    if res.count() == 0:
+        return ''
+    return res[0]
+
+
+def find_by_confno(meetme_confno):
+    res = _session().query(MeetmeFeatures).filter(MeetmeFeatures.confno == meetme_confno)
+    if res.count() == 0:
+        return ''
+    return res[0]

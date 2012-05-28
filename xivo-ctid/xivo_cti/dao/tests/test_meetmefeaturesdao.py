@@ -23,7 +23,7 @@
 
 import unittest
 
-from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
+from xivo_cti.dao import meetmefeaturesdao
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
@@ -46,8 +46,6 @@ class TestmeetmesionsDAO(unittest.TestCase):
 
         self.session.commit()
 
-        self.dao = MeetmeFeaturesDAO(self.session)
-
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
 
@@ -63,26 +61,26 @@ class TestmeetmesionsDAO(unittest.TestCase):
     def test_get_one_result(self):
         user_id = self._insert_meetme(1, 'red', '9000')
 
-        user = self.dao.get(user_id)
+        user = meetmefeaturesdao.get(user_id)
 
         self.assertEqual(user.id, user_id)
 
     def test_get_string_id(self):
         user_id = self._insert_meetme(1, 'red', '9000')
 
-        user = self.dao.get(str(user_id))
+        user = meetmefeaturesdao.get(str(user_id))
 
         self.assertEqual(user.id, user_id)
 
     def test_get_no_result(self):
-        self.assertRaises(LookupError, lambda: self.dao.get(1))
+        self.assertRaises(LookupError, lambda: meetmefeaturesdao.get(1))
 
     def test_find_by_name(self):
         self._insert_meetme(1, 'red', '9000')
         self._insert_meetme(2, 'blue', '9001')
 
-        meetme_red = self.dao.find_by_name('red')
-        meetme_blue = self.dao.find_by_name('blue')
+        meetme_red = meetmefeaturesdao.find_by_name('red')
+        meetme_blue = meetmefeaturesdao.find_by_name('blue')
 
         self.assertEqual(meetme_red.name, 'red')
         self.assertEqual(meetme_blue.name, 'blue')
@@ -91,8 +89,8 @@ class TestmeetmesionsDAO(unittest.TestCase):
         self._insert_meetme(1, 'red', '9000')
         self._insert_meetme(2, 'blue', '9001')
 
-        meetme_red = self.dao.find_by_confno('9000')
-        meetme_blue = self.dao.find_by_confno('9001')
+        meetme_red = meetmefeaturesdao.find_by_confno('9000')
+        meetme_blue = meetmefeaturesdao.find_by_confno('9001')
 
         self.assertEqual(meetme_red.confno, '9000')
         self.assertEqual(meetme_blue.confno, '9001')

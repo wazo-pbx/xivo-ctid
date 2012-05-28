@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,8 +23,6 @@
 
 import unittest
 
-from tests.mock import Mock
-from xivo_cti.dao.meetmefeaturesdao import MeetmeFeaturesDAO
 from xivo_cti.services.meetme_service_manager import MeetmeServiceManager
 
 
@@ -32,7 +30,6 @@ class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.meetme_service_manager = MeetmeServiceManager()
-        self.meetme_features_dao = Mock(MeetmeFeaturesDAO)
 
     def tearDown(self):
         pass
