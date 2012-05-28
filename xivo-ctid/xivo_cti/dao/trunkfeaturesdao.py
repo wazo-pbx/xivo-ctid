@@ -27,6 +27,8 @@ from xivo_cti.dao.alchemy.usercustom import UserCustom
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
 from xivo_cti.dao.alchemy import dbconnection
 
+TRUNK_TYPES = ['sip', 'iax', 'custom']
+
 
 class TrunkFeaturesDAO(object):
 
@@ -34,8 +36,8 @@ class TrunkFeaturesDAO(object):
         self._session = session
 
     def find_by_proto_name(self, protocol, name):
-        if not protocol:
-            raise ValueError('Protocol None is not allowed')
+        if not protocol or protocol not in TRUNK_TYPES:
+            raise ValueError('Protocol %s is not allowed', protocol)
 
         protocol = protocol.lower()
         table, field = self._trunk_table_lookup_field(protocol)

@@ -148,3 +148,6 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
     def test_get_ids_empty(self):
         result = self.dao.get_ids()
         self.assertEqual([], result)
+
+    def test_find_by_proto_name_agent(self):
+        self.assertRaises(ValueError, self.dao.find_by_proto_name, 'Agent', 1)
