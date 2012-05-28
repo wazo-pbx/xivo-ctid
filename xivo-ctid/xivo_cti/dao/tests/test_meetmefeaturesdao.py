@@ -23,13 +23,14 @@
 
 import unittest
 
-from xivo_cti.dao import meetmefeaturesdao
+from xivo_cti.dao import meetme_features_dao
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
+from xivo_cti.dao.alchemy.staticmeetme import StaticMeetme
 
 
-class TestmeetmesionsDAO(unittest.TestCase):
+class TestMeetmeFeaturesDAO(unittest.TestCase):
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -42,6 +43,9 @@ class TestmeetmesionsDAO(unittest.TestCase):
         Base.metadata.drop_all(connection.get_engine(), [MeetmeFeatures.__table__])
         Base.metadata.create_all(connection.get_engine(), [MeetmeFeatures.__table__])
 
+        Base.metadata.drop_all(connection.get_engine(), [StaticMeetme.__table__])
+        Base.metadata.create_all(connection.get_engine(), [StaticMeetme.__table__])
+
         self.session = connection.get_session()
 
         self.session.commit()
@@ -49,48 +53,87 @@ class TestmeetmesionsDAO(unittest.TestCase):
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
 
-    def _insert_meetme(self, meetmeid, name, confno):
+    def _insert_meetme(self, meetmeid, name, confno, pin=None):
+        var_val = confno if pin == None else ','.join([confno, pin])
+        static_meetme = StaticMeetme()
+        static_meetme.category = 'rooms'
+        static_meetme.var_name = 'conf'
+        static_meetme.var_val = var_val
+        static_meetme.filename = 'meetme.conf'
+        self.session.add(static_meetme)
+        self.session.commit()
+
         meetme = MeetmeFeatures()
         meetme.meetmeid = meetmeid
         meetme.name = name
         meetme.confno = confno
+        meetme.meetmeid = static_meetme.id
+
         self.session.add(meetme)
         self.session.commit()
-        return meetme.id
+
+        return meetme
 
     def test_get_one_result(self):
-        user_id = self._insert_meetme(1, 'red', '9000')
+        meetme = self._insert_meetme(1, 'red', '9000')
 
-        user = meetmefeaturesdao.get(user_id)
+        result = meetme_features_dao.get(meetme.id)
 
-        self.assertEqual(user.id, user_id)
+        self.assertEqual(result.id, meetme.id)
 
     def test_get_string_id(self):
-        user_id = self._insert_meetme(1, 'red', '9000')
+        meetme = self._insert_meetme(1, 'red', '9000')
 
-        user = meetmefeaturesdao.get(str(user_id))
+        result = meetme_features_dao.get(str(meetme.id))
 
-        self.assertEqual(user.id, user_id)
+        self.assertEqual(result.id, meetme.id)
 
     def test_get_no_result(self):
-        self.assertRaises(LookupError, lambda: meetmefeaturesdao.get(1))
+        self.assertRaises(LookupError, lambda: meetme_features_dao.get(1))
 
     def test_find_by_name(self):
         self._insert_meetme(1, 'red', '9000')
         self._insert_meetme(2, 'blue', '9001')
 
-        meetme_red = meetmefeaturesdao.find_by_name('red')
-        meetme_blue = meetmefeaturesdao.find_by_name('blue')
+        meetme_red = meetme_features_dao.find_by_name('red')
+        meetme_blue = meetme_features_dao.find_by_name('blue')
 
         self.assertEqual(meetme_red.name, 'red')
         self.assertEqual(meetme_blue.name, 'blue')
 
     def test_find_by_confno(self):
-        self._insert_meetme(1, 'red', '9000')
-        self._insert_meetme(2, 'blue', '9001')
+        red = self._insert_meetme(1, 'red', '9000')
+        blue = self._insert_meetme(2, 'blue', '9001')
 
-        meetme_red = meetmefeaturesdao.find_by_confno('9000')
-        meetme_blue = meetmefeaturesdao.find_by_confno('9001')
+        red_id = meetme_features_dao.find_by_confno('9000')
+        blue_id = meetme_features_dao.find_by_confno('9001')
 
-        self.assertEqual(meetme_red.confno, '9000')
-        self.assertEqual(meetme_blue.confno, '9001')
+        self.assertEqual(red_id, 1)
+        self.assertEqual(blue_id, 2)
+
+    def test_find_by_confno_no_conf(self):
+        self.assertRaises(LookupError, meetme_features_dao.find_by_confno, '1234')
+
+    def test_get_name(self):
+        red = self._insert_meetme(1, 'red', '9000')
+
+        result = meetme_features_dao.get_name(red.id)
+
+        self.assertEqual(result, 'red')
+
+    def test_has_pin_true(self):
+        red = self._insert_meetme(1, 'red', '9000', '1234')
+
+        result = meetme_features_dao.has_pin(red.id)
+
+        self.assertTrue(result)
+
+    def test_has_pin_false(self):
+        red = self._insert_meetme(1, 'red', '9000')
+
+        result = meetme_features_dao.has_pin(red.id)
+
+        self.assertFalse(result)
+
+    def test_has_pin_no_confroom(self):
+        self.assertRaise(LookupError, meetme_features_dao.has_pin, red.id)

@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
+from xivo_cti.dao.alchemy.staticmeetme import StaticMeetme
 from xivo_cti.dao.alchemy import dbconnection
 
 _DB_NAME = 'asterisk'
@@ -49,5 +50,14 @@ def find_by_name(meetme_name):
 def find_by_confno(meetme_confno):
     res = _session().query(MeetmeFeatures).filter(MeetmeFeatures.confno == meetme_confno)
     if res.count() == 0:
-        return ''
-    return res[0]
+        raise LookupError('No such conference room: %s', meetme_confno)
+    return res[0].id
+
+def get_name(meetme_id):
+    return get(meetme_id).name
+
+def has_pin(meetme_id):
+    meetme = get(meetme_id)
+    var_val = _session().query(StaticMeetme.var_val).filter(StaticMeetme.id == meetme.meetmeid)
+    number, pin = var_val[0].var_val.split(',', 1)
+    return len(pin) > 0
