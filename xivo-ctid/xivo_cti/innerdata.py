@@ -1409,6 +1409,8 @@ class Safe(object):
         return self._is_listmember_channel(proto, name, 'phones')
 
     def _is_trunk_channel(self, proto, name):
+        if proto == 'custom':
+            return True
         try:
             trunk_id = self.trunk_features_dao.find_by_proto_name(proto, name)
         except (ValueError, LookupError):
@@ -1557,7 +1559,7 @@ class Channel(object):
 
 def split_channel(channel):
     protocol, end = channel.split('/', 1)
-    if protocol.lower() in ['iax', 'sip']:
+    if protocol.lower() in ['iax', 'sip', 'sccp']:
         name = '-'.join(end.split('-')[0:end.count('-')])
     else:
         protocol = 'custom'

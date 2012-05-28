@@ -200,3 +200,7 @@ class TestSafe(unittest.TestCase):
             self.assertTrue(trunk_id in safe.xod_status['trunks'])
             self.assertEqual(safe.xod_status['trunks'][trunk_id], safe.props_status['trunks'])
             self.assertFalse(safe.xod_status['trunks'][trunk_id] is safe.props_status['trunks'])
+
+    def test_is_trunk_channel(self):
+        self.safe.trunk_features_dao.find_by_proto_name.side_effect = LookupError()
+        self.assertTrue(self.safe._is_trunk_channel('custom', None))
