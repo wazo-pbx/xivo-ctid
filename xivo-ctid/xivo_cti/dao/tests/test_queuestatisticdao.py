@@ -4,8 +4,9 @@ import time
 import unittest
 from xivo_cti.dao.alchemy.queueinfo import QueueInfo
 from xivo_cti.dao.alchemy.base import Base
-from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.dao.alchemy import dbconnection
+from xivo_cti.model.queuestatistic import NO_VALUE
+from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 
 
 class Test(unittest.TestCase):
@@ -234,14 +235,77 @@ class Test(unittest.TestCase):
         queueinfo.hold_time = 3400
         queueinfo.call_picker = 'ff'
         self.session.add(queueinfo)
-        
+
+    def test_get_max_hold_time_no_call(self):
+        window = 3600 # one hour
+        nb_in_window = 3
+        queue_name = 'service'
+
+        max_hold_time = self._queue_statistic_dao.get_max_hold_time(queue_name, window)
+
+        self.assertEqual(max_hold_time, NO_VALUE)
+
     def test_get_max_hold_time(self):
         window = 3600 # one hour
         nb_in_window = 3
         queue_name = 'service'
         self._insert_calls_answered_with_max_hold_time(window, nb_in_window, queue_name)
         self._insert_call_answered_for_other_queue()
-        
+
         max_hold_time = self._queue_statistic_dao.get_max_hold_time(queue_name, window)
-        
-        self.assertEqual(max_hold_time,7)
+
+        self.assertEqual(max_hold_time, 7)
+
+    def test_get_mean_hold_time_no_call(self):
+        window = 3600 # one hour
+        nb_in_window = 3
+        queue_name = 'service'
+        mean_hold_time = self._queue_statistic_dao.get_mean_hold_time(queue_name, window)
+        self.assertEqual(mean_hold_time, NO_VALUE)
+
+    def test_get_mean_hold_time(self):
+        window = 3600 # one hour
+        nb_in_window = 3
+        queue_name = 'service'
+
+        queueinfo = QueueInfo()
+        queueinfo.call_time_t = time.time()
+        queueinfo.queue_name = queue_name
+        queueinfo.hold_time = 11
+        queueinfo.call_picker = 'ff'
+        self.session.add(queueinfo)
+        queueinfo = QueueInfo()
+        queueinfo.call_time_t = time.time()
+        queueinfo.queue_name = queue_name
+        queueinfo.hold_time = 20
+        queueinfo.call_picker = 'ff'
+        self.session.add(queueinfo)
+        self.session.commit()
+
+        mean_hold_time = self._queue_statistic_dao.get_mean_hold_time(queue_name, window)
+        self.assertEqual(mean_hold_time, 16)
+
+    def test_get_mean_hold_time_partial_out_of_window(self):
+        window = 3600 # one hour
+        out_of_window_delta = window + 30
+        in_window = time.time()
+        out_of_window = time.time() - out_of_window_delta
+
+        queue_name = 'service'
+
+        queueinfo = QueueInfo()
+        queueinfo.call_time_t = in_window
+        queueinfo.queue_name = queue_name
+        queueinfo.hold_time = 999
+        queueinfo.call_picker = 'ff'
+        self.session.add(queueinfo)
+        queueinfo = QueueInfo()
+        queueinfo.call_time_t = out_of_window
+        queueinfo.queue_name = queue_name
+        queueinfo.hold_time = 2
+        queueinfo.call_picker = 'ff'
+        self.session.add(queueinfo)
+        self.session.commit()
+
+        mean_hold_time = self._queue_statistic_dao.get_mean_hold_time(queue_name, window)
+        self.assertEqual(mean_hold_time, 999)

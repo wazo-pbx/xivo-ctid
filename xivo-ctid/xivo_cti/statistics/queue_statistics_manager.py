@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
-from xivo_cti.model.queuestatistic import QueueStatistic
+from xivo_cti.model.queuestatistic import QueueStatistic, NO_VALUE
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
@@ -46,14 +46,14 @@ class QueueStatisticsManager(object):
         queue_statistic.answered_call_count = self._queue_statistic_dao.get_answered_call_count(queue_name, window)
         queue_statistic.abandonned_call_count = self._queue_statistic_dao.get_abandonned_call_count(queue_name, window)
         queue_statistic.max_hold_time = self._queue_statistic_dao.get_max_hold_time(queue_name, window)
+        queue_statistic.mean_hold_time = self._queue_statistic_dao.get_mean_hold_time(queue_name, window)
+
         received_and_done = self._queue_statistic_dao.get_received_and_done(queue_name, window)
 
-        if received_and_done:
-            queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100), 0))
-        else:
-            queue_statistic.efficiency = None
-
         if queue_statistic.answered_call_count:
+            if received_and_done:
+                queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100), 0))
+
             answered_in_qos = self._queue_statistic_dao.get_answered_call_in_qos_count(queue_name, window, xqos)
             queue_statistic.qos = int(round((float(answered_in_qos) / queue_statistic.answered_call_count * 100), 0))
         return queue_statistic

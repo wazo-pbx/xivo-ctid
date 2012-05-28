@@ -7,6 +7,7 @@ from tests.mock import Mock
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.tools.delta_computer import DictDelta
+from xivo_cti.model.queuestatistic import NO_VALUE
 
 
 class TestQueueStatisticsManager(unittest.TestCase):
@@ -28,6 +29,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
         self.queue_statistic_dao.get_received_and_done.return_value = 11
         self.queue_statistic_dao.get_max_hold_time.return_value = 120
+        self.queue_statistic_dao.get_mean_hold_time.return_value = 15
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -35,10 +37,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.assertEqual(queue_statistics.answered_call_count, 12)
         self.assertEqual(queue_statistics.abandonned_call_count, 11)
         self.assertEqual(queue_statistics.max_hold_time, 120)
+        self.assertEqual(queue_statistics.mean_hold_time, 15)
         self.queue_statistic_dao.get_received_call_count.assert_called_with('3', window)
         self.queue_statistic_dao.get_answered_call_count.assert_called_with('3', window)
         self.queue_statistic_dao.get_abandonned_call_count.assert_called_with('3', window)
         self.queue_statistic_dao.get_max_hold_time.assert_called_with('3', window)
+        self.queue_statistic_dao.get_mean_hold_time.assert_called_with('3', window)
 
     def test_calculate_efficiency_round_down(self):
         window = 3600
@@ -74,7 +78,17 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
-        self.assertEqual(queue_statistics.efficiency, None)
+        self.assertEqual(queue_statistics.efficiency, NO_VALUE)
+
+    def test_qos_no_answered_calls_in_period(self):
+        window = 3600
+        xqos = 25
+        self.queue_statistic_dao.get_answered_call_count.return_value = 0
+
+        queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
+
+        self.assertEqual(queue_statistics.qos, NO_VALUE)
+        self.assertEqual(queue_statistics.efficiency, NO_VALUE)
 
     def test_qos_round_down(self):
         window = 3600
