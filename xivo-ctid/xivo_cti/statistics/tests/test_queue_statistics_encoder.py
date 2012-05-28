@@ -32,7 +32,7 @@ from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 class TestQueueStatisticsEncoder(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.maxDiff = 1000
 
     def tearDown(self):
         pass
@@ -53,13 +53,13 @@ class TestQueueStatisticsEncoder(unittest.TestCase):
         queuestatistic.max_hold_time = 345
         queuestatistic.mean_hold_time = 33
 
-        expected = {'stats': {'3': {'Xivo-Join': 5,
-                                    'Xivo-Link': 7,
-                                    'Xivo-Lost': 11,
-                                    'Xivo-Rate': 33,
-                                    'Xivo-Qos': 66,
-                                    'Xivo-Holdtime-avg': 33,
-                                    'Xivo-Holdtime-max': 345}}}
+        expected = {'stats': {'3': {'Xivo-Join': '5',
+                                    'Xivo-Link': '7',
+                                    'Xivo-Lost': '11',
+                                    'Xivo-Rate': '33',
+                                    'Xivo-Qos': '66',
+                                    'Xivo-Holdtime-avg': '33',
+                                    'Xivo-Holdtime-max': '345'}}}
 
         queuestatisticsencoder = QueueStatisticsEncoder()
 

@@ -41,19 +41,6 @@ from xivo_cti.dao.alchemy.base import Base
 class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
-        db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
-        dbconnection.register_db_connection_pool(db_connection_pool)
-
-        uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
-        dbconnection.add_connection_as(uri, 'asterisk')
-        connection = dbconnection.get_connection('asterisk')
-
-        self.session = connection.get_session()
-
-        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
 
         self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
@@ -62,11 +49,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
+
         self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
-        self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.user_service_notifier = self.user_service_notifier
         self.user_service_manager.funckey_manager = self.funckey_manager
         self.user_service_manager.line_features_dao = self.line_features_dao
@@ -328,15 +315,9 @@ class TestUserServiceManager(unittest.TestCase):
         return line
 
     def test_get_context(self):
-        user1_id = self._insert_user()
-        line1 = self._insert_line_with_user(user1_id, '100', 'context1')
-        user2_id = self._insert_user()
-        line2 = self._insert_line_with_user(user2_id, '101', 'context2')
+        user1_id = 34
 
-        self.line_features_dao.find_context_by_user_id.side_effect = lambda x: 'context1' if x == user1_id else 'context2'
+        self.user_service_manager.get_context(user1_id)
 
-        context1 = self.user_service_manager.get_context(user1_id)
-        context2 = self.user_service_manager.get_context(user2_id)
+        self.user_service_manager.line_features_dao.find_context_by_user_id.assert_called_once_with(user1_id)
 
-        self.assertEqual(context1, line1.context)
-        self.assertEqual(context2, line2.context)
