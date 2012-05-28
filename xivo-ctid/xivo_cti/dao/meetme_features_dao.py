@@ -59,5 +59,9 @@ def get_name(meetme_id):
 def has_pin(meetme_id):
     meetme = get(meetme_id)
     var_val = _session().query(StaticMeetme.var_val).filter(StaticMeetme.id == meetme.meetmeid)
-    number, pin = var_val[0].var_val.split(',', 1)
-    return len(pin) > 0
+    try:
+        number, pin = var_val[0].var_val.split(',', 1)
+    except ValueError:
+        return False
+    else:
+        return len(pin) > 0

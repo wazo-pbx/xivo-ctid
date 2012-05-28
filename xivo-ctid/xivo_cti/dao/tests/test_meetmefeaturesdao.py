@@ -136,4 +136,4 @@ class TestMeetmeFeaturesDAO(unittest.TestCase):
         self.assertFalse(result)
 
     def test_has_pin_no_confroom(self):
-        self.assertRaise(LookupError, meetme_features_dao.has_pin, red.id)
+        self.assertRaises(LookupError, meetme_features_dao.has_pin, 1)
