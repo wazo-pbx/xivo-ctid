@@ -1396,27 +1396,17 @@ class Safe(object):
         if cid_name == cid_number or cid_name == 'unknown':
             if self._is_phone_channel(chan_proto, chan_name):
                 return build_agi_caller_id(*self._get_cid_for_phone(channel))
-            elif self._is_trunk_channel(chan_proto, chan_name):
-                user_context = self._ctiserver._user_service_manager.get_context(dest_user_id)
-                return build_agi_caller_id(*self._get_cid_directory_lookup(
-                    cid_number, chan_name, cid_number, [user_context]))
             elif chan_proto == 'Local':
                 return build_agi_caller_id(*self._get_cid_directory_lookup(
                     cid_number, chan_name, cid_number, [chan_name.split('@')[1]]))
+            else:
+                user_context = self._ctiserver._user_service_manager.get_context(dest_user_id)
+                return build_agi_caller_id(*self._get_cid_directory_lookup(
+                    cid_number, chan_name, cid_number, [user_context]))
         return build_agi_caller_id(None, None, None)
 
     def _is_phone_channel(self, proto, name):
         return self._is_listmember_channel(proto, name, 'phones')
-
-    def _is_trunk_channel(self, proto, name):
-        if proto == 'custom':
-            return True
-        try:
-            trunk_id = self.trunk_features_dao.find_by_proto_name(proto, name)
-        except (ValueError, LookupError):
-            return False
-        else:
-            return trunk_id != None
 
     def _is_listmember_channel(self, proto, name, listname):
         for item in self.xod_config[listname].keeplist.itervalues():
