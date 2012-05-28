@@ -44,7 +44,7 @@ class TrunkFeaturesDAO(object):
 
         try:
             protocol_id = (self._session.query(table.id)
-                           .filter(field == name))[0].id
+                           .filter(field.ilike(name)))[0].id
             trunk_id = (self._session.query(TrunkFeatures.id)
                         .filter(TrunkFeatures.protocolid == protocol_id)
                         .filter(TrunkFeatures.protocol == protocol.lower()))[0].id

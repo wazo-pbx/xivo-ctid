@@ -121,6 +121,25 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
 
         self.assertEqual(result, trunk.id)
 
+    def test_find_by_proto_name_dahdi_upper(self):
+        dahdi_interface = 'dahdi/g1'
+
+        trunk = TrunkFeatures()
+        trunk.protocolid = 7878
+        trunk.protocol = 'custom'
+
+        usercustom = UserCustom()
+        usercustom.name = 'dahdi_test'
+        usercustom.id = trunk.protocolid
+        usercustom.interface = dahdi_interface
+
+        map(self.session.add, [trunk, usercustom])
+        self.session.commit()
+
+        result = self.dao.find_by_proto_name('custom', 'DAHDI/g1')
+
+        self.assertEqual(result, trunk.id)
+
     def test_null_input(self):
         self.assertRaises(ValueError, self.dao.find_by_proto_name, None, 'my_trunk')
 
