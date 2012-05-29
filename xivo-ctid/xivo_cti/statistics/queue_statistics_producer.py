@@ -5,18 +5,19 @@ from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
 logger = logging.getLogger("QueueStatisticsProducer")
-QueueCounters = namedtuple('QueueCounters', ['available'])
+QueueCounters = namedtuple('QueueCounters', ['available', 'EWT'])
+
+LOGGEDAGENT_STATNAME = "Xivo-LoggedAgents"
+AVAILABLEAGENT_STATNAME = "Xivo-AvailableAgents"
+EWT_STATNAME = "Xivo-EWT"
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
     callback_handler.register_callback('QueueSummary', parse_queue_summary)
-    callback_handler.register_callback('AgentCalled', parse_agent_called)
-    callback_handler.register_callback('AgentComplete', parse_agent_complete)
-
 
 def parse_queue_summary(queuesummary_event):
     queue_name = queuesummary_event['Queue']
-    counters = QueueCounters(available=queuesummary_event['Available'])
+    counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'])
 
     queue_statistics_producer = QueueStatisticsProducer.get_instance()
     queue_service_manager = QueueServiceManager.get_instance()
@@ -26,19 +27,8 @@ def parse_queue_summary(queuesummary_event):
     except NotAQueueException:
         pass
 
-def parse_agent_called(agentcalled_event):
-    queue_statistics_producer = QueueStatisticsProducer.get_instance()
-
-    agent_id = agentcalled_event['AgentCalled']
-    queue_statistics_producer.on_agent_called(agent_id)
-
-
-def parse_agent_complete(agentcomplete_event):
-    pass
 
 class QueueStatisticsProducer(object):
-
-    LOGGEDAGENT_STATNAME = "Xivo-LoggedAgents"
 
     _instance = None
 
@@ -81,7 +71,7 @@ class QueueStatisticsProducer(object):
         self.queues_of_agent[agentid].remove(queueid)
         if agentid in self.logged_agents:
             self._notify_change(queueid)
-        logger.info('agent id %s removed from queue id %s', agentid, queueid)
+        logger.debug('agent id %s removed from queue id %s', agentid, queueid)
 
     def on_queue_removed(self, queueid):
         self.queues.remove(queueid)
@@ -90,11 +80,8 @@ class QueueStatisticsProducer(object):
                 self.queues_of_agent[agentid].remove(queueid)
 
     def on_queue_summary(self, queue_id, counters):
-        message = {queue_id: {'Xivo-AvailableAgents': counters.available}}
+        message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT}}
         self.notifier.on_stat_changed(message)
-
-    def on_agent_called(self, agent_id):
-        logger.info('agent id %s called', agent_id)
 
     def _compute_nb_of_logged_agents(self, queueid):
         nb_of_agent_logged = 0
@@ -105,14 +92,14 @@ class QueueStatisticsProducer(object):
 
     def _notify_change(self, queueid):
         self.notifier.on_stat_changed({queueid :
-                                         { self.LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
+                                         { LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
                                          })
 
     def send_all_stats(self, connection_cti):
         logger.info('collect statistics')
         for queueid in self.queues:
             self.notifier.send_statistic({queueid :
-                                         { self.LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
+                                         { LOGGEDAGENT_STATNAME:self._compute_nb_of_logged_agents(queueid)}
                                          }, connection_cti)
 
     @classmethod

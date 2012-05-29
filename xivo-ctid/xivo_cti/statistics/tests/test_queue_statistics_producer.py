@@ -309,8 +309,9 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue_id = 12
         queuesummary_event = {'Event': 'QueueSummary',
                               'Queue': queue_name,
-                              'Available': '5'}
-        expected_counters = QueueCounters(available='5')
+                              'Available': '5',
+                              'HoldTime':'7'}
+        expected_counters = QueueCounters(available='5', EWT='7')
         queue_service_manager = Mock(QueueServiceManager)
         QueueServiceManager._instance = queue_service_manager
         queue_service_manager.get_queue_id.return_value = queue_id
@@ -326,33 +327,24 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue_name = 'services'
         queuesummary_event = {'Event': 'QueueSummary',
                               'Queue': queue_name,
-                              'Available': '5'}
+                              'Available': '5',
+                              'HoldTime':'7'}
 
         QueueServiceManager._instance = queue_service_manager
         queue_service_manager.get_queue_id.side_effect = NotAQueueException
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
-        
+
         self.queue_statistics_producer.on_queue_summary.assert_never_called()
-
-    def test_parse_agent_called(self):
-        self.queue_statistics_producer.on_agent_called = Mock()
-        agent_id = 'Agent/1234'
-        agentcalled_event = {'Event': 'AgentCalled',
-                             'AgentCalled': agent_id}
-
-        queue_statistics_producer.parse_agent_called(agentcalled_event)
-
-        self.queue_statistics_producer.on_agent_called.assert_called_once_with(agent_id)
 
     def test_on_queue_summary(self):
         queue_name = 'services'
-        event_content = QueueCounters(available='3')
+        event_content = QueueCounters(available='3', EWT='55')
 
         self.queue_statistics_producer.on_queue_summary(queue_name, event_content)
 
         self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with({
-                queue_name: {'Xivo-AvailableAgents': event_content.available}
+                queue_name: {'Xivo-AvailableAgents': event_content.available, 'Xivo-EWT': event_content.EWT}
                 })
 
 
