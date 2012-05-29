@@ -148,3 +148,16 @@ class TestMeetmeFeaturesDAO(test_dao.DAOTestCase):
 
         for config in expected:
             self.assertTrue(config in result)
+
+    def test_get_config(self):
+        self.assertRaises(LookupError, meetme_features_dao.get_config, 2)
+
+        red = self._insert_meetme(1, 'red', '9000')
+        blue = self._insert_meetme(2, 'blue', '9001', '1234')
+        green = self._insert_meetme(3, 'green', '9002', '5555')
+
+        result = meetme_features_dao.get_config(2)
+
+        expected = ('blue', '9001', True)
+
+        self.assertEqual(result, expected)
