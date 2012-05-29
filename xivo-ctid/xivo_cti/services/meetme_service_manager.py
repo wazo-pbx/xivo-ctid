@@ -48,6 +48,16 @@ def parse_leave(event):
     manager.leave(event[CONF_ROOM_NUMBER], int(event[USERNUM]))
 
 
+def parse_meetmelist(event):
+    manager.refresh(
+        event[CHANNEL],
+        event['Conference'],
+        event[ADMIN] != NO,
+        int(event['UserNumber']),
+        event['CallerIDName'],
+        event['CallerIDNum'])
+
+
 class MeetmeServiceManager(object):
 
     def __init__(self):
@@ -59,7 +69,7 @@ class MeetmeServiceManager(object):
             self._add_room(*config)
 
     def join(self, channel, conf_number, admin, join_seq_number, cid_name, cid_num):
-        member_status = _build_member_status(join_seq_number, admin, cid_name, cid_num, channel)
+        member_status = _build_joining_member_status(join_seq_number, admin, cid_name, cid_num, channel)
         self._set_room_config(conf_number)
         if not self._has_member(conf_number):
             self._cache[conf_number]['start_time'] = time.time()
@@ -69,6 +79,13 @@ class MeetmeServiceManager(object):
         self._cache[conf_number]['members'].pop(join_seq_number)
         if not self._has_member(conf_number):
             self._cache[conf_number]['start_time'] = 0
+
+    def refresh(self, channel, conf_number, admin, join_seq, cid_name, cid_num):
+        member_status = _build_member_status(join_seq, admin, cid_name, cid_num, channel)
+        self._set_room_config(conf_number)
+        if 'start_time' not in self._cache[conf_number] or self._cache[conf_number]['start_time'] == 0:
+            self._cache[conf_number]['start_time'] = -1
+        self._cache[conf_number]['members'][join_seq] = member_status
 
     def _set_room_config(self, room_number):
         if room_number not in self._cache:
@@ -89,9 +106,15 @@ class MeetmeServiceManager(object):
         return len(self._cache[room_number]['members']) > 0
 
 
+def _build_joining_member_status(join_seq, is_admin, name, number, channel):
+    status = _build_member_status(join_seq, is_admin, name, number, channel)
+    status['join_time'] = time.time()
+    return status
+
+
 def _build_member_status(join_seq_number, is_admin, name, number, channel):
     return {'join_order': join_seq_number,
-            'join_time': time.time(),
+            'join_time': -1,
             'admin': _yes_no(is_admin),
             'number': number,
             'name': name,
