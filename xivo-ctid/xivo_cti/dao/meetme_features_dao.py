@@ -83,3 +83,6 @@ def get_config(meetme_id):
            .filter(MeetmeFeatures.meetmeid == StaticMeetme.id)
            .filter(MeetmeFeatures.id == meetme_id))[0]
     return (res.name, res.confno, _has_pin_from_var_val(res.var_val))
+
+def muted_on_join(meetme_id):
+    return get(meetme_id).user_initiallymuted == 1

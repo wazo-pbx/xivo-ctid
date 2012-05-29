@@ -161,3 +161,16 @@ class TestMeetmeFeaturesDAO(test_dao.DAOTestCase):
         expected = ('blue', '9001', True)
 
         self.assertEqual(result, expected)
+
+    def test_muted_on_join(self):
+        red = self._insert_meetme(1, 'red', '9000')
+
+        self.assertFalse(meetme_features_dao.muted_on_join(1))
+
+        red.user_initiallymuted = 1
+
+        self.session.commit()
+
+        self.assertTrue(meetme_features_dao.muted_on_join(1))
+
+        self.assertRaises(LookupError, meetme_features_dao.muted_on_join, 5)
