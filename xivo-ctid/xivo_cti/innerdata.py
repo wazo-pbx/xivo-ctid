@@ -34,7 +34,7 @@ import cti_urllist
 from xivo_cti import lists
 from xivo_cti.lists import *
 from xivo_cti import call_history
-from xivo_cti import cti_directories
+from xivo_cti.directory import directory
 from xivo_cti import cti_sheets
 from xivo_cti import db_connection_manager
 from xivo_cti.dao.alchemy import dbconnection
@@ -212,9 +212,9 @@ class Safe(object):
         self.queuemembers_config = {}
         self.faxes = {}
 
-        self.displays_mgr = cti_directories.DisplaysMgr()
-        self.contexts_mgr = cti_directories.ContextsMgr()
-        self.directories_mgr = cti_directories.DirectoriesMgr()
+        self.displays_mgr = directory.DisplaysMgr()
+        self.contexts_mgr = directory.ContextsMgr()
+        self.directories_mgr = directory.DirectoriesMgr()
 
         cdr_uri = self._config.getconfig('ipbxes')[ipbxid]['cdr_db_uri']
         dbconnection.add_connection(cdr_uri)
