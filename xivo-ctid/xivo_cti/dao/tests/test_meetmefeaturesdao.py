@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -134,3 +134,17 @@ class TestMeetmeFeaturesDAO(test_dao.DAOTestCase):
 
     def test_has_pin_no_confroom(self):
         self.assertRaises(LookupError, meetme_features_dao.has_pin, 1)
+
+    def test_get_configs(self):
+        red = self._insert_meetme(1, 'red', '9000')
+        blue = self._insert_meetme(2, 'blue', '9001', '1234')
+        green = self._insert_meetme(3, 'green', '9002', '5555')
+
+        result = meetme_features_dao.get_configs()
+
+        expected = [('red', '9000', False),
+                    ('blue', '9001', True),
+                    ('green', '9002', True)]
+
+        for config in expected:
+            self.assertTrue(config in result)
