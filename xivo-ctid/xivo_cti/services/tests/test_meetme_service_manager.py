@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+import copy
 from mock import Mock
 from mock import patch
 from xivo_cti.services import meetme_service_manager
@@ -253,7 +254,7 @@ class TestUserServiceManager(unittest.TestCase):
         manager = meetme_service_manager.MeetmeServiceManager()
         manager._cache = {'800': {'members': {}}}
 
-        self.assertFalse(manager._has_member('800'))
+        self.assertFalse(manager._has_members('800'))
 
         manager._cache = {'800': {'number': '800',
                                   'name': 'conf',
@@ -266,7 +267,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                   'name': '4181235555',
                                                   'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.assertTrue(manager._has_member('800'))
+        self.assertTrue(manager._has_members('800'))
 
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
@@ -394,3 +395,35 @@ class TestUserServiceManager(unittest.TestCase):
                                               'channel': channel}}}}
 
         self.assertEqual(manager._cache, expected)
+
+    def test_refresh_already_there(self):
+        manager = meetme_service_manager.MeetmeServiceManager()
+        name, number = 'Tester One', '6666'
+        channel = 'SIP/khsdfjkld-1234'
+
+        manager._cache['800'] = {'number': '800',
+                                 'name': 'test',
+                                 'pin_required': 'No',
+                                 'start_time': 1238934.12342,
+                                 'members': {1: {'join_order': 1,
+                                                 'join_time': 1238934.12342,
+                                                 'admin': 'No',
+                                                 'number': number,
+                                                 'name': name,
+                                                 'channel': channel}}}
+
+        expected = copy.deepcopy(manager._cache)
+
+        manager.refresh(channel, '800', False, 1, name, number)
+
+        self.assertEqual(manager._cache, expected)
+
+    def test_has_member(self):
+        manager = meetme_service_manager.MeetmeServiceManager()
+
+        self.assertFalse(manager._has_member('800', 1, 'Tester One', '1234'))
+
+        manager._cache = {'800': {'members': {1: {'name': 'Tester One',
+                                                  'number': '1234'}}}}
+
+        self.assertTrue(manager._has_member('800', 1, 'Tester One', '1234'))

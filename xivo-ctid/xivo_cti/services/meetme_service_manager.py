@@ -71,13 +71,13 @@ class MeetmeServiceManager(object):
     def join(self, channel, conf_number, admin, join_seq_number, cid_name, cid_num):
         member_status = _build_joining_member_status(join_seq_number, admin, cid_name, cid_num, channel)
         self._set_room_config(conf_number)
-        if not self._has_member(conf_number):
+        if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = time.time()
         self._cache[conf_number]['members'][join_seq_number] = member_status
 
     def leave(self, conf_number, join_seq_number):
         self._cache[conf_number]['members'].pop(join_seq_number)
-        if not self._has_member(conf_number):
+        if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
 
     def refresh(self, channel, conf_number, admin, join_seq, cid_name, cid_num):
@@ -85,7 +85,8 @@ class MeetmeServiceManager(object):
         self._set_room_config(conf_number)
         if 'start_time' not in self._cache[conf_number] or self._cache[conf_number]['start_time'] == 0:
             self._cache[conf_number]['start_time'] = -1
-        self._cache[conf_number]['members'][join_seq] = member_status
+        if not self._has_member(conf_number, join_seq, cid_name, cid_num):
+            self._cache[conf_number]['members'][join_seq] = member_status
 
     def _set_room_config(self, room_number):
         if room_number not in self._cache:
@@ -102,8 +103,16 @@ class MeetmeServiceManager(object):
                                'start_time': 0,
                                'members': {}}
 
-    def _has_member(self, room_number):
+    def _has_members(self, room_number):
         return len(self._cache[room_number]['members']) > 0
+
+    def _has_member(self, room_number, seq_number, name, number):
+        try:
+            member = self._cache[room_number]['members'][seq_number]
+        except KeyError:
+            return False
+        else:
+            return member['name'] == name and member['number'] == number
 
 
 def _build_joining_member_status(join_seq, is_admin, name, number, channel):
