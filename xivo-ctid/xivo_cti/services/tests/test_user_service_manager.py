@@ -36,7 +36,7 @@ from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy.base import Base
+
 
 class TestUserServiceManager(unittest.TestCase):
 

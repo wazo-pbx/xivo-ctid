@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import time
-import unittest
+from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy.queueinfo import QueueInfo
-from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.model.queuestatistic import NO_VALUE
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 
 
-class Test(unittest.TestCase):
+class TestQueueStatisticDAO(test_dao.DAOTestCase):
+
+    required_tables = [QueueInfo.__table__]
+
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
@@ -18,8 +20,7 @@ class Test(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'queue_stats')
         connection = dbconnection.get_connection('queue_stats')
 
-        Base.metadata.drop_all(connection.get_engine(), [QueueInfo.__table__])
-        Base.metadata.create_all(connection.get_engine(), [QueueInfo.__table__])
+        self.cleanTables('queue_stats')
 
         self.session = connection.get_session()
 
@@ -49,7 +50,7 @@ class Test(unittest.TestCase):
         self.session.commit()
 
     def test_get_received_call(self):
-        window = 3600 # one hour
+        window = 3600  # one hour
         count_in_window = 5
         queue_name = 'service'
         self._insert_received_calls(window, count_in_window, queue_name)
@@ -106,7 +107,7 @@ class Test(unittest.TestCase):
         self.session.commit()
 
     def test_get_answered_call(self):
-        window = 3600 # one hour
+        window = 3600  # one hour
         unanswered_in_window = 5
         answered_in_window = 7
         queue_name = 'service'
@@ -118,7 +119,7 @@ class Test(unittest.TestCase):
         self.assertEqual(answered_in_window, number_of_answered_calls)
 
     def test_get_abandonned_call(self):
-        window = 3600 # one hour
+        window = 3600  # one hour
         unanswered_in_window = 5
         answered_in_window = 7
         abandonned_calls = 9

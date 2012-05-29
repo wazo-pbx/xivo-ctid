@@ -21,15 +21,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-
+from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy.extension import Extension
 
 
-class TestExtensionsDAO(unittest.TestCase):
+class TestExtensionsDAO(test_dao.DAOTestCase):
+
+    required_tables = [Extension.__table__]
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -39,8 +39,7 @@ class TestExtensionsDAO(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [Extension.__table__])
-        Base.metadata.create_all(connection.get_engine(), [Extension.__table__])
+        self.cleanTables()
 
         self.session = connection.get_session()
 

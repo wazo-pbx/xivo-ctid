@@ -21,17 +21,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-
+from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
 from xivo_cti.dao.alchemy.usersip import UserSIP
 from xivo_cti.dao.alchemy.useriax import UserIAX
 from xivo_cti.dao.alchemy.usercustom import UserCustom
 from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.base import Base
 
-class TrunkFeaturesDAOTestCase(unittest.TestCase):
+
+class TrunkFeaturesDAOTestCase(test_dao.DAOTestCase):
+
+    required_tables = [TrunkFeatures.__table__,
+                       UserSIP.__table__,
+                       UserIAX.__table__,
+                       UserCustom.__table__]
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -41,17 +45,7 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [TrunkFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [TrunkFeatures.__table__])
-
-        Base.metadata.drop_all(connection.get_engine(), [UserSIP.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserSIP.__table__])
-
-        Base.metadata.drop_all(connection.get_engine(), [UserIAX.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserIAX.__table__])
-
-        Base.metadata.drop_all(connection.get_engine(), [UserCustom.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserCustom.__table__])
+        self.cleanTables()
 
         self.session = connection.get_session()
 
@@ -62,7 +56,6 @@ class TrunkFeaturesDAOTestCase(unittest.TestCase):
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
-
 
     def test_find_by_proto_name_sip(self):
         trunk_name = 'my_trunk'

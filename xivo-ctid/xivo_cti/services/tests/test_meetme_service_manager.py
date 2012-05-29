@@ -25,7 +25,6 @@ import unittest
 from mock import Mock
 from mock import patch
 from xivo_cti.services import meetme_service_manager
-from xivo_cti.dao import meetme_features_dao
 
 find_by_confno = Mock()
 get_name = Mock()

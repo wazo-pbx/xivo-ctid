@@ -21,19 +21,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-
+from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
-from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 
-class TestAgentFeaturesDAO(unittest.TestCase):
+class TestAgentFeaturesDAO(test_dao.DAOTestCase):
 
     agent_number = '1234'
     agent_context = 'test'
     agent_ackcall = 'yes'
+
+    required_tables = [AgentFeatures.__table__]
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -41,11 +41,10 @@ class TestAgentFeaturesDAO(unittest.TestCase):
 
         uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
         dbconnection.add_connection_as(uri, 'asterisk')
+
+        self.cleanTables()
+
         connection = dbconnection.get_connection('asterisk')
-
-        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
-
         self.session = connection.get_session()
 
         self.session.commit()

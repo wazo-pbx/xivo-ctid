@@ -1,11 +1,12 @@
-import unittest
+from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 
 
-class TestPhoneFunckey(unittest.TestCase):
+class TestPhoneFunckey(test_dao.DAOTestCase):
+
+    required_tables = [PhoneFunckey.__table__]
 
     def setUp(self):
         self._user_id = 19
@@ -18,8 +19,7 @@ class TestPhoneFunckey(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [PhoneFunckey.__table__])
-        Base.metadata.create_all(connection.get_engine(), [PhoneFunckey.__table__])
+        self.cleanTables()
 
         self.session = connection.get_session()
 
