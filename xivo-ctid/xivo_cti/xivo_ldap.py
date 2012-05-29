@@ -98,7 +98,7 @@ class xivo_ldap(object):
                 return
 
             self.ldapobj.simple_bind_s(ldapuser, ldappass)
-            logger.info('LDAP : simple bind done on %r %r', ldapuser, ldappass)
+            logger.info('LDAP : simple bind done on %r', ldapuser)
 
             usetls = False
             if usetls:
