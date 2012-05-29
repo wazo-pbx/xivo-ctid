@@ -1393,6 +1393,7 @@ class Safe(object):
         logger.info('Resolving caller ID: channel=%s incoming caller ID=%s %s, destination: user %s',
                     channel, cid_name, cid_number, dest_user_id)
         chan_proto, chan_name = split_channel(channel)
+
         if cid_name == cid_number or cid_name == 'unknown':
             if self._is_phone_channel(chan_proto, chan_name):
                 return build_agi_caller_id(*self._get_cid_for_phone(channel))
@@ -1549,7 +1550,7 @@ class Channel(object):
 
 def split_channel(channel):
     protocol, end = channel.split('/', 1)
-    if protocol.lower() in ['iax', 'sip', 'sccp']:
+    if protocol.lower() in ['iax', 'sip', 'sccp', 'local']:
         name = '-'.join(end.split('-')[0:end.count('-')])
     else:
         protocol = 'custom'

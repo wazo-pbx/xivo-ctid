@@ -96,6 +96,14 @@ class TestSafe(unittest.TestCase):
         self.assertEqual(proto, 'SIP')
         self.assertEqual(name, 'test-ha-1')
 
+    def test_split_channel_local(self):
+        sip_trunk_channel = 'Local/1105@default-3d0f;2'
+
+        proto, name = innerdata.split_channel(sip_trunk_channel)
+
+        self.assertEqual(proto, 'Local')
+        self.assertEqual(name, '1105@default')
+
     def test_split_channel_dahdi(self):
         dahdi_trunk_channel = 'DAHDI/i1/0612345678-577'
 
