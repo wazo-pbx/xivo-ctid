@@ -31,7 +31,7 @@ logger = logging.getLogger('ldap directory')
 
 class LDAPDirectoryDataSource(DirectoryDataSource):
 
-    source_encoding = 'utf-8'
+    ldap_encoding = 'utf-8'
 
     def __init__(self, uri, key_mapping):
         self._uri = uri
@@ -39,31 +39,63 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
         self._map_fun = self._new_map_fun()
         self._xivo_ldap = None
 
-    def lookup(self, string, fields, contexts=None):
-        if string:
-            ldap_filter = ['(%s=*%s*)' % (field, string) for field in fields]
-            str_ldap_filter = '(|%s)' % ''.join(ldap_filter)
-        else:
-            return []
+    def lookup(self, search_pattern, fields, contexts=None):
+        search_pattern_normalized = self._normalize_pattern(search_pattern)
+        search_pattern_encoded = self._encode_search_pattern(search_pattern_normalized)
+        ldap_search_filter = self._compute_ldap_search_filter(search_pattern_encoded,
+                                                              fields)
+        ldap_attributes_to_query = self._compute_ldap_attributes_to_query()
 
+        ldap_results = self._query_ldap(search_pattern_encoded,
+                                        ldap_search_filter,
+                                        ldap_attributes_to_query)
+
+        ldap_results_decoded = self._decode_results(ldap_results)
+        return self._format_results(ldap_results_decoded)
+
+    def _normalize_pattern(self, search_pattern):
+        if search_pattern is None:
+            return ''
+        else:
+            return search_pattern
+
+    def _encode_search_pattern(self, search_pattern):
+        return search_pattern.encode(self.ldap_encoding)
+
+    def _compute_ldap_search_filter(self, search_pattern, fields):
+        ldap_filter = ['(%s=*%s*)' % (field, search_pattern) for field in fields]
+        str_ldap_filter = '(|%s)' % ''.join(ldap_filter)
+        return str_ldap_filter
+
+    def _compute_ldap_attributes_to_query(self):
         ldap_attributes = []
         for src_key in self._key_mapping.itervalues():
             if isinstance(src_key, unicode):
-                ldap_attributes.append(src_key.encode('UTF-8'))
+                ldap_attributes.append(src_key.encode(self.ldap_encoding))
             else:
                 ldap_attributes.append(src_key)
+        return ldap_attributes
+
+    def _query_ldap(self,
+                    search_pattern,
+                    ldap_search_filter,
+                    ldap_attributes_to_query):
         ldapid = self._try_connect()
+        results = []
         if ldapid.ldapobj is not None:
-            try:
-                results = ldapid.getldap(str_ldap_filter, ldap_attributes, string)
-            except Exception, e:
-                logger.warning('Error with LDAP request: %s', e)
-                self._xivo_ldap = None
-            else:
-                results_decoded = self._decode_results(results)
-                if results_decoded is not None:
-                    return imap(self._map_fun, results_decoded)
-        return []
+            results = ldapid.getldap(ldap_search_filter,
+                                     ldap_attributes_to_query,
+                                     search_pattern)
+        return results
+
+    def _decode_results(self, ldap_results):
+        decoded_results = []
+        for entry in ldap_results:
+            decoded_results.append(self._decode_entry(entry))
+        return decoded_results
+
+    def _format_results(self, ldap_results):
+        return imap(self._map_fun, ldap_results)
 
     def _try_connect(self):
         # Try to connect/reconnect to the LDAP if necessary
@@ -77,22 +109,16 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
                 self._xivo_ldap = None
         return ldapid
 
-    def _decode_results(self, ldap_results):
-        decoded_results = []
-        for entry in ldap_results:
-            decoded_results.append(self._decode_entry(entry))
-        return decoded_results
-
     def _decode_entry(self, entry):
         domain_name, attributes = entry
-        decoded_domain_name = domain_name.decode(self.source_encoding)
+        decoded_domain_name = domain_name.decode(self.ldap_encoding)
         decoded_attributes = self._decode_attributes(attributes)
         return (decoded_domain_name, decoded_attributes)
 
     def _decode_attributes(self, attributes):
         decoded_attributes = {}
         for attribute, values in attributes.iteritems():
-            decoded_attribute = attribute.decode(self.source_encoding)
+            decoded_attribute = attribute.decode(self.ldap_encoding)
             decoded_values = self._decode_values(values)
             decoded_attributes[decoded_attribute] = decoded_values
         return decoded_attributes
@@ -100,7 +126,7 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
     def _decode_values(self, values):
         decoded_values = []
         for value in values:
-            decoded_values.append(value.decode(self.source_encoding))
+            decoded_values.append(value.decode(self.ldap_encoding))
         return decoded_values
 
     def _new_map_fun(self):
