@@ -70,9 +70,6 @@ class AMI_1_8(object):
         self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
         self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
 
-    def ami_newcallerid(self, event):
-        self.innerdata.update_parking_cid(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
-
     def ami_newexten(self, event):
         application = event['Application']
         appdata = event['AppData']
@@ -157,7 +154,6 @@ class AMI_1_8(object):
         original = event['Original']
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
-        self.innerdata.update_parking_parked(original, clone)
 
     def ami_hold(self, event):
         channel_name = event['Channel']
@@ -332,7 +328,6 @@ class AMI_1_8(object):
             'cid_num': event.pop('CallerIDNum'),
             'parktime': time.time(),
             }
-        self.innerdata.update_parking(parkinglot, exten, parkingevent)
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].setparking(exten, parkinglot)
 
@@ -340,16 +335,11 @@ class AMI_1_8(object):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
-        self.innerdata.unpark(channel)
 
     def ami_parkedcalltimeout(self, event):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
-        self.innerdata.unpark(channel)
-
-    def ami_parkedcallgiveup(self, event):
-        self.innerdata.unpark(event['Channel'])
 
     def ami_peerstatus(self, event):
         self.innerdata.updateregistration(event['Peer'], event.get('Address', ''))
