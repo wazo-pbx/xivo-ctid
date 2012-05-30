@@ -22,6 +22,7 @@ __copyright__ = 'Copyright (C) 2007-2012  Avencall'
 
 import ldap
 import logging
+from urllib import unquote
 from xivo import urisup
 
 logger = logging.getLogger('ldap')
@@ -84,6 +85,7 @@ class xivo_ldap(object):
                 asfe.append('')
             (self.base_attributes, self.base_scope,
              self.base_filter, self.base_extensions) = asfe[1:]
+            self.base_filter = unquote(self.base_filter)
 
             self.uri = "%s://%s:%s" % (uri_scheme, ldaphost, ldapport)
             debuglevel = 0
