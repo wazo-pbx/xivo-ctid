@@ -22,7 +22,7 @@
 import copy
 
 
-def encode(config):
+def encode_update(config):
     tmp = copy.deepcopy(config)
 
     for conf_number, conf_config in config.iteritems():
@@ -31,7 +31,14 @@ def encode(config):
             tmp[conf_number]['members'][user_number].pop('channel')
     tmp = _swap_bool_to_yes_no(tmp)
 
-    return tmp
+    return {'class': 'meetme_update',
+            'config': tmp}
+
+
+def encode_user(conf_number, usernum):
+    return {'class': 'meetme_user',
+            'meetme': conf_number,
+            'usernum': usernum}
 
 
 def _swap_bool_to_yes_no(d):

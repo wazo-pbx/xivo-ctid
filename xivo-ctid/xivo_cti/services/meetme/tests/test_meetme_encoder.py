@@ -26,7 +26,7 @@ from xivo_cti.services.meetme import encoder
 
 class TestMeetmeEncoder(unittest.TestCase):
 
-    def test_encode(self):
+    def test_encode_update(self):
         config = {'800': {'number': '800',
                           'name': 'my_test_conf',
                           'pin_required': True,
@@ -44,25 +44,35 @@ class TestMeetmeEncoder(unittest.TestCase):
                                           'channel': 'DAHDI/i1/4181235555-5',
                                           'muted': False}}}}
 
-        result = encoder.encode(config)
+        result = encoder.encode_update(config)
 
-        expected = {'800': {'number': '800',
-                            'name': 'my_test_conf',
-                            'pin_required': 'Yes',
-                            'start_time': 1234.1234,
-                            'member_count': 2,
-                            'members': {1: {'join_order': 1,
-                                            'join_time': 1234.1234,
-                                            'number': '1002',
-                                            'name': 'Tester 1',
-                                            'muted': 'Yes'},
-                                        2: {'join_order': 2,
-                                            'join_time': 1239.1234,
-                                            'number': '4181235555',
-                                            'name': '4181235555',
-                                            'muted': 'No'}}}}
+        expected = {'class': 'meetme_update',
+                    'config': {'800': {'number': '800',
+                                       'name': 'my_test_conf',
+                                       'pin_required': 'Yes',
+                                       'start_time': 1234.1234,
+                                       'member_count': 2,
+                                       'members': {1: {'join_order': 1,
+                                                       'join_time': 1234.1234,
+                                                       'number': '1002',
+                                                       'name': 'Tester 1',
+                                                       'muted': 'Yes'},
+                                                   2: {'join_order': 2,
+                                                       'join_time': 1239.1234,
+                                                       'number': '4181235555',
+                                                       'name': '4181235555',
+                                                       'muted': 'No'}}}}}
 
         self.assertEqual(result, expected)
+
+    def test_encode_user(self):
+        result = encoder.encode_user('800', 2)
+
+        expected = {'class': 'meetme_user',
+                    'meetme': '800',
+                    'usernum': 2}
+
+        self.assertEqual(expected, result)
 
     def test_swap_bool_to_yes_no(self):
         YES, NO = 'Yes', 'No'
