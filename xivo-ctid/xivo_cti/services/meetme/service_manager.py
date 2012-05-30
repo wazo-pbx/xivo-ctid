@@ -23,11 +23,12 @@
 
 from xivo_cti.dao import meetme_features_dao
 import time
+import logging
 
+logger = logging.getLogger(__name__)
 
 CHANNEL = 'Channel'
 CONF_ROOM_NUMBER = 'Meetme'
-ADMIN = 'Admin'
 USERNUM = 'Usernum'
 CIDNAME = 'CallerIDname'
 CIDNUMBER = 'CallerIDnum'
@@ -38,7 +39,6 @@ def parse_join(event):
     manager.join(
         event[CHANNEL],
         event[CONF_ROOM_NUMBER],
-        event[ADMIN] != NO,
         int(event[USERNUM]),
         event[CIDNAME],
         event[CIDNUMBER])
@@ -52,11 +52,18 @@ def parse_meetmelist(event):
     manager.refresh(
         event[CHANNEL],
         event['Conference'],
-        event[ADMIN] != NO,
         int(event['UserNumber']),
         event['CallerIDName'],
         event['CallerIDNum'],
         event['Muted'] == YES)
+
+
+def parse_meetmemute(event):
+    muting = event['Status'] == 'on'
+    if muting:
+        manager.mute(event['Meetme'], int(event['Usernum']))
+    else:
+        manager.unmute(event['Meetme'], int(event['Usernum']))
 
 
 class MeetmeServiceManager(object):
@@ -69,9 +76,8 @@ class MeetmeServiceManager(object):
         for config in configs:
             self._add_room(*config)
 
-    def join(self, channel, conf_number, admin, join_seq_number, cid_name, cid_num):
+    def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
         member_status = _build_joining_member_status(join_seq_number,
-                                                     admin,
                                                      cid_name,
                                                      cid_num,
                                                      channel,
@@ -86,8 +92,20 @@ class MeetmeServiceManager(object):
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
 
-    def refresh(self, channel, conf_number, admin, join_seq, cid_name, cid_num, is_muted):
-        member_status = _build_member_status(join_seq, admin, cid_name, cid_num, channel, is_muted)
+    def mute(self, conf_number, join_seq_number):
+        try:
+            self._cache[conf_number]['members'][join_seq_number]['muted'] = True
+        except KeyError:
+            logger.warning('Received a meetme mute event on an untracked conference or user')
+
+    def unmute(self, conf_number, join_seq_number):
+        try:
+            self._cache[conf_number]['members'][join_seq_number]['muted'] = False
+        except KeyError:
+            logger.warning('Received a meetme unmute event on an untracked conference or user')
+
+    def refresh(self, channel, conf_number, join_seq, cid_name, cid_num, is_muted):
+        member_status = _build_member_status(join_seq, cid_name, cid_num, channel, is_muted)
         self._set_room_config(conf_number)
         if 'start_time' not in self._cache[conf_number] or self._cache[conf_number]['start_time'] == 0:
             self._cache[conf_number]['start_time'] = -1
@@ -121,16 +139,15 @@ class MeetmeServiceManager(object):
             return member['name'] == name and member['number'] == number
 
 
-def _build_joining_member_status(join_seq, is_admin, name, number, channel, is_muted):
-    status = _build_member_status(join_seq, is_admin, name, number, channel, is_muted)
+def _build_joining_member_status(join_seq, name, number, channel, is_muted):
+    status = _build_member_status(join_seq, name, number, channel, is_muted)
     status['join_time'] = time.time()
     return status
 
 
-def _build_member_status(join_seq_number, is_admin, name, number, channel, is_muted):
+def _build_member_status(join_seq_number, name, number, channel, is_muted):
     return {'join_order': join_seq_number,
             'join_time': -1,
-            'admin': is_admin,
             'number': number,
             'name': name,
             'channel': channel,

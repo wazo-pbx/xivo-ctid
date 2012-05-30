@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.services.meetme_service_notifier import MeetmeServiceNotifier
+from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 
 import Queue
 
