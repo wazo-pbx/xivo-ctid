@@ -36,6 +36,16 @@ def encode_update(config):
             'config': tmp}
 
 
+def encode_update_for_contexts(config, contexts):
+    tmp = copy.deepcopy(config)
+
+    for conf_number, conf_config in config.iteritems():
+        if config[conf_number]['context'] not in contexts:
+            tmp.pop(conf_number)
+
+    return encode_update(tmp)
+
+
 def encode_user(conf_number, usernum):
     return {'class': 'meetme_user',
             'meetme': conf_number,

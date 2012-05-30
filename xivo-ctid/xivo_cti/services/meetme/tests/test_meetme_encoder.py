@@ -66,6 +66,46 @@ class TestMeetmeEncoder(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_encode_update_for_contexts(self):
+        config = {'800': {'number': '800',
+                          'name': 'my_test_conf',
+                          'pin_required': True,
+                          'start_time': 1234.1234,
+                          'context': 'my_secret_context',
+                          'members': {1: {'join_order': 1,
+                                          'join_time': 1234.1234,
+                                          'number': '1002',
+                                          'name': 'Tester 1',
+                                          'channel': 'SIP/jsdhfjd-124',
+                                          'muted': True},
+                                      2: {'join_order': 2,
+                                          'join_time': 1239.1234,
+                                          'number': '4181235555',
+                                          'name': '4181235555',
+                                          'channel': 'DAHDI/i1/4181235555-5',
+                                          'muted': False}}},
+                  '801': {'number': '801',
+                          'name': 'conf 801',
+                          'pin_required': False,
+                          'start_time': 0,
+                          'context': 'default',
+                          'members': {}}}
+
+        result = encoder.encode_update_for_contexts(config, ['no_conf'])
+
+        self.assertEqual(result, {'class': 'meetme_update',
+                                  'config': {}})
+
+        result = encoder.encode_update_for_contexts(config, ['default'])
+
+        self.assertEqual(result, {'class': 'meetme_update',
+                                  'config': {'801': {'number': '801',
+                                                     'name': 'conf 801',
+                                                     'pin_required': 'No',
+                                                     'start_time': 0,
+                                                     'member_count': 0,
+                                                     'members': {}}}})
+
     def test_encode_user(self):
         result = encoder.encode_user('800', 2)
 
