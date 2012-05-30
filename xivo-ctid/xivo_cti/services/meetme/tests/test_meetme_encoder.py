@@ -31,6 +31,7 @@ class TestMeetmeEncoder(unittest.TestCase):
                           'name': 'my_test_conf',
                           'pin_required': True,
                           'start_time': 1234.1234,
+                          'context': 'my_secret_context',
                           'members': {1: {'join_order': 1,
                                           'join_time': 1234.1234,
                                           'number': '1002',

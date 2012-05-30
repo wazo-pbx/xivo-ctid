@@ -78,15 +78,15 @@ def _has_pin_from_var_val(var_val):
 
 
 def get_configs():
-    res = (_session().query(MeetmeFeatures.name, MeetmeFeatures.confno, StaticMeetme.var_val)
+    res = (_session().query(MeetmeFeatures.name, MeetmeFeatures.confno, StaticMeetme.var_val, MeetmeFeatures.context)
            .filter(MeetmeFeatures.meetmeid == StaticMeetme.id))
-    return [(r.name, r.confno, _has_pin_from_var_val(r.var_val)) for r in res]
+    return [(r.name, r.confno, _has_pin_from_var_val(r.var_val), r.context) for r in res]
 
 def get_config(meetme_id):
-    res = (_session().query(MeetmeFeatures.name, MeetmeFeatures.confno, StaticMeetme.var_val)
+    res = (_session().query(MeetmeFeatures.name, MeetmeFeatures.confno, StaticMeetme.var_val, MeetmeFeatures.context)
            .filter(MeetmeFeatures.meetmeid == StaticMeetme.id)
            .filter(MeetmeFeatures.id == meetme_id))[0]
-    return (res.name, res.confno, _has_pin_from_var_val(res.var_val))
+    return (res.name, res.confno, _has_pin_from_var_val(res.var_val), res.context)
 
 def muted_on_join_by_number(number):
     return _get_by_number(number).user_initiallymuted == 1

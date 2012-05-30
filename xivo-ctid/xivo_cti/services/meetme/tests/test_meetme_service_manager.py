@@ -78,7 +78,7 @@ class TestUserServiceManager(unittest.TestCase):
         channel = 'SIP/mon_trunk-1234'
 
         find_by_confno.return_value = 5
-        get_config.return_value = (conf_room_name, conf_room_number, True)
+        get_config.return_value = (conf_room_name, conf_room_number, True, 'default')
         my_time.return_value = start
         muted_on_join_by_number.return_value = True
 
@@ -90,6 +90,7 @@ class TestUserServiceManager(unittest.TestCase):
                                        'name': conf_room_name,
                                        'pin_required': True,
                                        'start_time': start,
+                                       'context': 'default',
                                        'members': {1: {'join_order': 1,
                                                        'join_time': start,
                                                        'number': '1002',
@@ -111,7 +112,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         my_time.return_value = start_time
         find_by_confno.return_value = 4
-        get_config.return_value = (conf_room_name, conf_room_number, True)
+        get_config.return_value = (conf_room_name, conf_room_number, True, 'test')
         muted_on_join_by_number.return_value = True
 
         manager = service_manager.MeetmeServiceManager()
@@ -178,7 +179,7 @@ class TestUserServiceManager(unittest.TestCase):
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     def test_set_room_config(self):
         find_by_confno.return_value = 2
-        get_config.return_value = (conf_room_name, conf_room_number, True)
+        get_config.return_value = (conf_room_name, conf_room_number, True, 'my_context')
 
         manager = service_manager.MeetmeServiceManager()
         manager._set_room_config(conf_room_number)
@@ -189,6 +190,7 @@ class TestUserServiceManager(unittest.TestCase):
                                        'number': conf_room_number,
                                        'pin_required': True,
                                        'start_time': 0,
+                                       'context': 'my_context',
                                        'members': {}}}
 
         self.assertEqual(result, expected)
@@ -285,7 +287,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         my_time.return_value = join_time
         find_by_confno.return_value = 2
-        get_config.return_value = (conf_room_name, conf_room_number, True)
+        get_config.return_value = (conf_room_name, conf_room_number, True, 'default')
         muted_on_join_by_number.return_value = False
 
         manager = service_manager.MeetmeServiceManager()
@@ -312,9 +314,9 @@ class TestUserServiceManager(unittest.TestCase):
 
     @patch('xivo_cti.dao.meetme_features_dao.get_configs', get_configs)
     def test_initial_state(self):
-        get_configs.return_value = [('Conference1', '9000', True),
-                                    ('Conference2', '9001', False),
-                                    ('Conference3', '9002', False)]
+        get_configs.return_value = [('Conference1', '9000', True, 'default'),
+                                    ('Conference2', '9001', False, 'test'),
+                                    ('Conference3', '9002', False, 'test')]
 
         manager = service_manager.MeetmeServiceManager()
         manager._initialize_configs()
@@ -323,16 +325,19 @@ class TestUserServiceManager(unittest.TestCase):
                              'name': 'Conference1',
                              'pin_required': True,
                              'start_time': 0,
+                             'context': 'default',
                              'members': {}},
                     '9001': {'number': '9001',
                              'name': 'Conference2',
                              'pin_required': False,
                              'start_time': 0,
+                             'context': 'test',
                              'members': {}},
                     '9002': {'number': '9002',
                              'name': 'Conference3',
                              'pin_required': False,
                              'start_time': 0,
+                             'context': 'test',
                              'members': {}}}
 
         self.assertEqual(manager._cache, expected)
@@ -340,12 +345,13 @@ class TestUserServiceManager(unittest.TestCase):
     def test_add_room(self):
         manager = service_manager.MeetmeServiceManager()
 
-        manager._add_room('Conference1', '9000', True)
+        manager._add_room('Conference1', '9000', True, 'ctx')
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
                              'pin_required': True,
                              'start_time': 0,
+                             'context': 'ctx',
                              'members': {}}}
 
         self.assertEqual(manager._cache, expected)
@@ -383,7 +389,7 @@ class TestUserServiceManager(unittest.TestCase):
         number = '5555555555'
 
         find_by_confno.return_value = 1
-        get_config.return_value = (conf_name, conf_no, False)
+        get_config.return_value = (conf_name, conf_no, False, 'dev')
 
         manager = service_manager.MeetmeServiceManager()
 
@@ -393,6 +399,7 @@ class TestUserServiceManager(unittest.TestCase):
                               'name': conf_name,
                               'pin_required': False,
                               'start_time': -1,
+                              'context': 'dev',
                               'members': {1: {'join_order': 1,
                                               'join_time': -1,
                                               'number': number,

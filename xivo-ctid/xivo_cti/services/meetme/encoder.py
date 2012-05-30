@@ -27,6 +27,7 @@ def encode_update(config):
 
     for conf_number, conf_config in config.iteritems():
         tmp[conf_number]['member_count'] = len(config[conf_number]['members'])
+        tmp[conf_number].pop('context')
         for user_number, user_config in tmp[conf_number]['members'].iteritems():
             tmp[conf_number]['members'][user_number].pop('channel')
     tmp = _swap_bool_to_yes_no(tmp)

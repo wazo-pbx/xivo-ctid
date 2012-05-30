@@ -118,13 +118,14 @@ class MeetmeServiceManager(object):
             config = meetme_features_dao.get_config(meetme_id)
             self._add_room(*config)
 
-    def _add_room(self, name, number, has_pin):
+    def _add_room(self, name, number, has_pin, context):
         if number not in self._cache:
             self._cache[number] = {}
         self._cache[number] = {'number': number,
                                'name': name,
                                'pin_required': has_pin,
                                'start_time': 0,
+                               'context': context,
                                'members': {}}
 
     def _has_members(self, room_number):
