@@ -40,6 +40,10 @@ def get(meetme_id):
     return res[0]
 
 
+def _get_by_number(number):
+    return _session().query(MeetmeFeatures).filter(MeetmeFeatures.confno == number)[0]
+
+
 def find_by_name(meetme_name):
     res = _session().query(MeetmeFeatures).filter(MeetmeFeatures.name == meetme_name)
     if res.count() == 0:
@@ -84,5 +88,5 @@ def get_config(meetme_id):
            .filter(MeetmeFeatures.id == meetme_id))[0]
     return (res.name, res.confno, _has_pin_from_var_val(res.var_val))
 
-def muted_on_join(meetme_id):
-    return get(meetme_id).user_initiallymuted == 1
+def muted_on_join_by_number(number):
+    return _get_by_number(number).user_initiallymuted == 1

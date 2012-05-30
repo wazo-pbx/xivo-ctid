@@ -55,7 +55,8 @@ def parse_meetmelist(event):
         event[ADMIN] != NO,
         int(event['UserNumber']),
         event['CallerIDName'],
-        event['CallerIDNum'])
+        event['CallerIDNum'],
+        event['Muted'] == YES)
 
 
 class MeetmeServiceManager(object):
@@ -69,7 +70,12 @@ class MeetmeServiceManager(object):
             self._add_room(*config)
 
     def join(self, channel, conf_number, admin, join_seq_number, cid_name, cid_num):
-        member_status = _build_joining_member_status(join_seq_number, admin, cid_name, cid_num, channel)
+        member_status = _build_joining_member_status(join_seq_number,
+                                                     admin,
+                                                     cid_name,
+                                                     cid_num,
+                                                     channel,
+                                                     meetme_features_dao.muted_on_join_by_number(conf_number))
         self._set_room_config(conf_number)
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = time.time()
@@ -80,8 +86,8 @@ class MeetmeServiceManager(object):
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
 
-    def refresh(self, channel, conf_number, admin, join_seq, cid_name, cid_num):
-        member_status = _build_member_status(join_seq, admin, cid_name, cid_num, channel)
+    def refresh(self, channel, conf_number, admin, join_seq, cid_name, cid_num, is_muted):
+        member_status = _build_member_status(join_seq, admin, cid_name, cid_num, channel, is_muted)
         self._set_room_config(conf_number)
         if 'start_time' not in self._cache[conf_number] or self._cache[conf_number]['start_time'] == 0:
             self._cache[conf_number]['start_time'] = -1
@@ -99,7 +105,7 @@ class MeetmeServiceManager(object):
             self._cache[number] = {}
         self._cache[number] = {'number': number,
                                'name': name,
-                               'pin_required': _yes_no(has_pin),
+                               'pin_required': has_pin,
                                'start_time': 0,
                                'members': {}}
 
@@ -115,23 +121,20 @@ class MeetmeServiceManager(object):
             return member['name'] == name and member['number'] == number
 
 
-def _build_joining_member_status(join_seq, is_admin, name, number, channel):
-    status = _build_member_status(join_seq, is_admin, name, number, channel)
+def _build_joining_member_status(join_seq, is_admin, name, number, channel, is_muted):
+    status = _build_member_status(join_seq, is_admin, name, number, channel, is_muted)
     status['join_time'] = time.time()
     return status
 
 
-def _build_member_status(join_seq_number, is_admin, name, number, channel):
+def _build_member_status(join_seq_number, is_admin, name, number, channel, is_muted):
     return {'join_order': join_seq_number,
             'join_time': -1,
-            'admin': _yes_no(is_admin),
+            'admin': is_admin,
             'number': number,
             'name': name,
-            'channel': channel}
-
-
-def _yes_no(is_true):
-    return YES if is_true else NO
+            'channel': channel,
+            'muted': is_muted}
 
 
 manager = MeetmeServiceManager()

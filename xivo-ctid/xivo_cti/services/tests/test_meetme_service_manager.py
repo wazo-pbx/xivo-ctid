@@ -33,6 +33,7 @@ has_pin = Mock()
 my_time = Mock()
 get_configs = Mock()
 get_config = Mock()
+muted_on_join_by_number = Mock()
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -68,6 +69,7 @@ class TestUserServiceManager(unittest.TestCase):
 
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     @patch('time.time', my_time)
     def test_join(self):
         conf_room_number = '800'
@@ -78,6 +80,7 @@ class TestUserServiceManager(unittest.TestCase):
         find_by_confno.return_value = 5
         get_config.return_value = (conf_room_name, conf_room_number, True)
         my_time.return_value = start
+        muted_on_join_by_number.return_value = True
 
         manager = meetme_service_manager.MeetmeServiceManager()
 
@@ -85,20 +88,22 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': start,
                                        'members': {1: {'join_order': 1,
                                                        'join_time': start,
-                                                       'admin': 'No',
+                                                       'admin': False,
                                                        'number': '1002',
                                                        'name': 'Tester 1',
-                                                       'channel': channel}}}}
+                                                       'channel': channel,
+                                                       'muted': True}}}}
 
         self.assertEqual(manager._cache, expected)
 
     @patch('time.time', my_time)
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     def test_join_second(self):
         start_time = 12345678.123
         join_time = 12345699.123
@@ -110,18 +115,20 @@ class TestUserServiceManager(unittest.TestCase):
         my_time.return_value = start_time
         find_by_confno.return_value = 4
         get_config.return_value = (conf_room_name, conf_room_number, True)
+        muted_on_join_by_number.return_value = True
 
         manager = meetme_service_manager.MeetmeServiceManager()
         manager._cache = {conf_room_number: {'number': conf_room_number,
                                               'name': conf_room_name,
-                                              'pin_required': 'Yes',
+                                              'pin_required': True,
                                               'start_time': start_time,
                                               'members': {1: {'join_order': 1,
                                                               'join_time': start_time,
-                                                              'admin': 'No',
+                                                              'admin': False,
                                                               'number': '1002',
                                                               'name': 'Tester 1',
-                                                              'channel': '123'}}}}
+                                                              'channel': '123',
+                                                              'muted': False}}}}
 
         my_time.return_value = join_time
         manager.join(channel, conf_room_number, True, 2, phone_number, phone_number)
@@ -129,33 +136,49 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': start_time,
                                        'members': {1: {'join_order': 1,
                                                        'join_time': start_time,
-                                                       'admin': 'No',
+                                                       'admin': False,
                                                        'number': '1002',
                                                        'name': 'Tester 1',
-                                                       'channel': '123'},
+                                                       'channel': '123',
+                                                       'muted': False},
                                                    2: {'join_order': 2,
                                                        'join_time': join_time,
-                                                       'admin': 'Yes',
+                                                       'admin': True,
                                                        'number': phone_number,
                                                        'name': phone_number,
-                                                       'channel': channel}}}}
+                                                       'channel': channel,
+                                                       'muted': True}}}}
+        self.assertEqual(result, expected)
+
+    def test_build_member_status(self):
+        channel = 'SIP/kjsdfh-12356'
+        result = meetme_service_manager._build_member_status(1, True, 'Tester One', '666', channel, True)
+        expected = {'join_order': 1,
+                    'join_time': -1,
+                    'admin': True,
+                    'number': '666',
+                    'name': 'Tester One',
+                    'channel': channel,
+                    'muted': True}
+
         self.assertEqual(result, expected)
 
     @patch('time.time', my_time)
     def test_build_joining_member_status(self):
         channel = 'SIP/kjsdfh-12356'
         my_time.return_value = 1234.1234
-        result = meetme_service_manager._build_joining_member_status(1, True, 'Tester One', '666', channel)
+        result = meetme_service_manager._build_joining_member_status(1, True, 'Tester One', '666', channel, False)
         expected = {'join_order': 1,
                     'join_time': 1234.1234,
-                    'admin': 'Yes',
+                    'admin': True,
                     'number': '666',
                     'name': 'Tester One',
-                    'channel': channel}
+                    'channel': channel,
+                    'muted': False}
 
         self.assertEqual(result, expected)
 
@@ -175,7 +198,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'name': conf_room_name,
                                        'number': conf_room_number,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': 0,
                                        'members': {}}}
 
@@ -210,17 +233,17 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager._cache = {conf_room_number: {'number': conf_room_number,
                                             'name': conf_room_name,
-                                            'pin_required': 'Yes',
+                                            'pin_required': True,
                                             'start_time': start_time,
                                             'members': {1: {'join_order': 1,
                                                             'join_time': start_time,
-                                                            'admin': 'No',
+                                                            'admin': False,
                                                             'number': '1002',
                                                             'name': 'Tester 1',
                                                             'channel': 'SIP/jsdhfjd-124'},
                                                         2: {'join_order': 2,
                                                             'join_time': start_time + 10,
-                                                            'admin': 'Yes',
+                                                            'admin': True,
                                                             'number': '4181235555',
                                                             'name': '4181235555',
                                                             'channel': 'DAHDI/i1/4181235555-5'}}}}
@@ -229,11 +252,11 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': start_time,
                                        'members': {2: {'join_order': 2,
                                                        'join_time': start_time + 10,
-                                                       'admin': 'Yes',
+                                                       'admin': True,
                                                        'number': '4181235555',
                                                        'name': '4181235555',
                                                        'channel': 'DAHDI/i1/4181235555-5'}}}}
@@ -244,13 +267,13 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': 0,
                                        'members': {}}}
 
         self.assertEqual(manager._cache, expected)
 
-    def test_has_member(self):
+    def test_has_members(self):
         manager = meetme_service_manager.MeetmeServiceManager()
         manager._cache = {'800': {'members': {}}}
 
@@ -258,11 +281,11 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager._cache = {'800': {'number': '800',
                                   'name': 'conf',
-                                  'pin_required': 'Yes',
+                                  'pin_required': True,
                                   'start_time': 12345.21,
                                   'members': {2: {'join_order': 2,
                                                   'join_time': 1235.123,
-                                                  'admin': 'Yes',
+                                                  'admin': True,
                                                   'number': '4181235555',
                                                   'name': '4181235555',
                                                   'channel': 'DAHDI/i1/4181235555-5'}}}}
@@ -271,6 +294,7 @@ class TestUserServiceManager(unittest.TestCase):
 
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     @patch('time.time', my_time)
     def test_join_when_empty(self):
         conf_room_number = '800'
@@ -281,11 +305,12 @@ class TestUserServiceManager(unittest.TestCase):
         my_time.return_value = join_time
         find_by_confno.return_value = 2
         get_config.return_value = (conf_room_name, conf_room_number, True)
+        muted_on_join_by_number.return_value = False
 
         manager = meetme_service_manager.MeetmeServiceManager()
         manager._cache = {conf_room_number: {'number': conf_room_number,
                                              'name': conf_room_name,
-                                             'pin_required': 'Yes',
+                                             'pin_required': True,
                                              'start_time': 0,
                                              'members': {}}}
 
@@ -293,14 +318,15 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': join_time,
                                        'members': {1: {'join_order': 1,
                                                        'join_time': join_time,
-                                                       'admin': 'No',
+                                                       'admin': False,
                                                        'number': '1002',
                                                        'name': 'Tester 1',
-                                                       'channel': channel}}}}
+                                                       'channel': channel,
+                                                       'muted': False}}}}
 
         self.assertEqual(manager._cache, expected)
 
@@ -315,17 +341,17 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
-                             'pin_required': 'Yes',
+                             'pin_required': True,
                              'start_time': 0,
                              'members': {}},
                     '9001': {'number': '9001',
                              'name': 'Conference2',
-                             'pin_required': 'No',
+                             'pin_required': False,
                              'start_time': 0,
                              'members': {}},
                     '9002': {'number': '9002',
                              'name': 'Conference3',
-                             'pin_required': 'No',
+                             'pin_required': False,
                              'start_time': 0,
                              'members': {}}}
 
@@ -338,7 +364,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
-                             'pin_required': 'Yes',
+                             'pin_required': True,
                              'start_time': 0,
                              'members': {}}}
 
@@ -365,7 +391,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         meetme_service_manager.parse_meetmelist(event)
 
-        manager.refresh.assert_called_once_with(channel, '800', False, 1, 'My Name', '666')
+        manager.refresh.assert_called_once_with(channel, '800', False, 1, 'My Name', '666', False)
 
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
@@ -381,18 +407,19 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager = meetme_service_manager.MeetmeServiceManager()
 
-        manager.refresh(channel, conf_no, False, 1, name, number)
+        manager.refresh(channel, conf_no, False, 1, name, number, is_muted=True)
 
         expected = {conf_no: {'number': conf_no,
                               'name': conf_name,
-                              'pin_required': 'No',
+                              'pin_required': False,
                               'start_time': -1,
                               'members': {1: {'join_order': 1,
                                               'join_time': -1,
-                                              'admin': 'No',
+                                              'admin': False,
                                               'number': number,
                                               'name': name,
-                                              'channel': channel}}}}
+                                              'channel': channel,
+                                              'muted': True}}}}
 
         self.assertEqual(manager._cache, expected)
 
@@ -403,18 +430,19 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager._cache['800'] = {'number': '800',
                                  'name': 'test',
-                                 'pin_required': 'No',
+                                 'pin_required': False,
                                  'start_time': 1238934.12342,
                                  'members': {1: {'join_order': 1,
                                                  'join_time': 1238934.12342,
-                                                 'admin': 'No',
+                                                 'admin': False,
                                                  'number': number,
                                                  'name': name,
-                                                 'channel': channel}}}
+                                                 'channel': channel,
+                                                 'muted': False}}}
 
         expected = copy.deepcopy(manager._cache)
 
-        manager.refresh(channel, '800', False, 1, name, number)
+        manager.refresh(channel, '800', False, 1, name, number, False)
 
         self.assertEqual(manager._cache, expected)
 

@@ -162,15 +162,22 @@ class TestMeetmeFeaturesDAO(test_dao.DAOTestCase):
 
         self.assertEqual(result, expected)
 
-    def test_muted_on_join(self):
+    def test_muted_on_join_by_number(self):
         red = self._insert_meetme(1, 'red', '9000')
 
-        self.assertFalse(meetme_features_dao.muted_on_join(1))
+        self.assertFalse(meetme_features_dao.muted_on_join_by_number('9000'))
 
         red.user_initiallymuted = 1
 
         self.session.commit()
 
-        self.assertTrue(meetme_features_dao.muted_on_join(1))
+        self.assertTrue(meetme_features_dao.muted_on_join_by_number('9000'))
 
-        self.assertRaises(LookupError, meetme_features_dao.muted_on_join, 5)
+        self.assertRaises(LookupError, meetme_features_dao.muted_on_join_by_number, '9009')
+
+    def test_get_by_number(self):
+        self.assertRaises(LookupError, meetme_features_dao._get_by_number, '9000')
+
+        red = self._insert_meetme(1, 'red', '9000')
+
+        self.assertEqual(meetme_features_dao._get_by_number('9000'), red)
