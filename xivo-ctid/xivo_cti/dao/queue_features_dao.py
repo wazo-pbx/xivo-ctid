@@ -42,6 +42,14 @@ class QueueFeaturesDAO(object):
             raise LookupError('No such queue')
         return res[0].name
 
+    def is_a_queue(self, name):
+        try:
+            self.id_from_name(name)
+        except LookupError:
+            return False
+        else:
+            return True
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)

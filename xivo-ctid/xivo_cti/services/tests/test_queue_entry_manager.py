@@ -470,3 +470,19 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager._statistics_notifier.send_statistic.assert_never_called()
         self.assertTrue('service' not in self.manager._queue_entries)
+
+    def test_join_group(self):
+        self.manager.insert = Mock()
+        self.manager._queue_features_dao.is_a_queue.return_value = False
+
+        self.manager.join('not_a_queue', 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+
+        self.assertFalse(self.manager.insert.called)
+
+    def test_leave_group(self):
+        self.manager.synchronize = Mock()
+        self.manager._queue_features_dao.is_a_queue.return_value = False
+
+        self.manager.leave('not_a_queue', 1, 1, UNIQUE_ID_1)
+
+        self.assertFalse(self.manager.synchronize.called)

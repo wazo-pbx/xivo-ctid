@@ -111,6 +111,8 @@ class QueueEntryManager(object):
         self._encoder = None
 
     def join(self, queue_name, pos, count, name, number, unique_id):
+        if not self._queue_features_dao.is_a_queue(queue_name):
+            return
         try:
             self.insert(queue_name, pos, name, number, unique_id, 0)
             self._count_check(queue_name, count)
@@ -133,6 +135,8 @@ class QueueEntryManager(object):
             logger.exception('Failed to insert queue entry')
 
     def leave(self, queue_name, pos, count, unique_id):
+        if not self._queue_features_dao.is_a_queue(queue_name):
+            return
         try:
             assert(self._queue_entries[queue_name][unique_id].position == pos)
             self._queue_entries[queue_name].pop(unique_id)

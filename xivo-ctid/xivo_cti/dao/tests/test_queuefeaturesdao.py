@@ -74,3 +74,15 @@ class TestQueueFeaturesDAO(test_dao.DAOTestCase):
         result = self.dao.queue_name(queue.id)
 
         self.assertEquals(result, 'my_queue')
+
+    def test_is_a_queue(self):
+        self.assertFalse(self.dao.is_a_queue('not_a_queue'))
+
+        queue = QueueFeatures()
+        queue.name = 'a_queue'
+        queue.displayname = 'My queue'
+
+        self.session.add(queue)
+        self.session.commit()
+
+        self.assertTrue(self.dao.is_a_queue('a_queue'))
