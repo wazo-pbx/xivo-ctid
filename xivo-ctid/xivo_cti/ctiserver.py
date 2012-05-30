@@ -449,7 +449,7 @@ class CTIServer(object):
             self.commandclass.user_features_dao = self._user_features_dao
             self.commandclass.queuemember_service_manager = self._queuemember_service_manager
             self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
-            self._queue_entry_manager._ami = self.myami[self.myipbxid]
+            self._queue_entry_manager._ami = self.myami[self.myipbxid].amicl
 
             logger.info('# STARTING %s / git:%s / %d',
                         self.xdname, self.safe[self.myipbxid].version(), self.nreload)

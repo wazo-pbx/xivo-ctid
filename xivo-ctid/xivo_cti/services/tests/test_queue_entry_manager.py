@@ -35,6 +35,7 @@ from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
+from xivo_cti.xivo_ami import AMIClass
 
 QUEUE_NAME = 'testqueue'
 
@@ -315,8 +316,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.clear_data = clear_data
 
     def test_synchronize_queue_all(self):
-        ami_class = Mock()
-        ami_class.sendqueuestatus = Mock()
+        ami_class = Mock(AMIClass)
         self.manager._ami = ami_class
 
         self.manager.synchronize()
