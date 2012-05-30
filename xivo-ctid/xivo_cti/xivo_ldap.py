@@ -142,12 +142,15 @@ class xivo_ldap(object):
             logger.exception('getldap: ldap.LDAPError (%r, %r, %r) retrying to connect',
                              self.ldapobj, self.uri, exc1)
             self.__init__(self.iuri)
+            result = []
             try:
-                result = self.ldapobj.search_s(self.dbname,
-                                               ldap.SCOPE_SUBTREE,
-                                               actual_filter,
-                                               search_attributes)
-                return result
+                if self.ldapobj is not None:
+                    result = self.ldapobj.search_s(self.dbname,
+                                                   ldap.SCOPE_SUBTREE,
+                                                   actual_filter,
+                                                   search_attributes)
             except ldap.LDAPError, exc2:
                 logger.exception('getldap: ldap.LDAPError (%r, %r, %r) could not reconnect',
                                  self.ldapobj, self.uri, exc2)
+            finally:
+                return result
