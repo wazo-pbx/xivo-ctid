@@ -46,6 +46,15 @@ class AgentFeaturesDAO(object):
         except LookupError:
             return None
 
+    def agent_id(self, agent_number):
+        if agent_number == None:
+            raise ValueError('Agent number is None')
+        res = self._session.query(AgentFeatures).filter(AgentFeatures.number == agent_number)
+        if res.count() == 0:
+            raise LookupError('No such agent')
+        agent_id = res[0].id
+        return str(agent_id)
+
     def _get_one(self, agentid):
         # field id != field agentid used only for joining with staticagent table.
         if agentid == None:

@@ -72,6 +72,8 @@ class AMI(object):
         AMIAgentLoginLogoff.register_callbacks()
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
+        ami_agent_login_logoff.agent_features_dao = self._ctiserver._agent_features_dao
+        ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
         self._ami_initializer = AMIInitializer()
         self.amicl = xivo_ami.AMIClass(self.ipbxid,
                                        self.ipaddress, self.ipport,

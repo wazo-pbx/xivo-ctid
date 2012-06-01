@@ -50,9 +50,19 @@ class AMIAgentLoginLogoff(object):
         self.queue_statistics_producer.on_agent_loggedoff(agent_id)
 
     def on_event_agent_init(self, event):
+        self._initialize_queue_statistics_producer(event)
+        self._initialize_agents_status(event)
+
+    def _initialize_queue_statistics_producer(self, event):
         if (event['Status'] in self.AGENTSTATUS_WHEN_LOGGED_IN):
             agent_id = self._build_agent_id_from_event(event)
             self.queue_statistics_producer.on_agent_loggedon(agent_id)
+
+    def _initialize_agents_status(self, event):
+        agent_name = event['Agent']
+        agent_id = self.agent_features_dao.agent_id(agent_name)
+        agent_status = event['Status']
+        self.innerdata_dao.set_agent_status(agent_id, agent_status)
 
     @classmethod
     def register_callbacks(cls):

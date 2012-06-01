@@ -25,6 +25,8 @@ import unittest
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 from tests.mock import Mock
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
+from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 
 class TestAMIAgentLoginLogoff(unittest.TestCase):
@@ -53,24 +55,48 @@ class TestAMIAgentLoginLogoff(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedoff.assert_called_with('Agent/22011')
 
+    def test_on_event_agent_init_received(self):
+        event = {'Agent': '22011', 'Status' : 'AGENT_IDLE'}
+        init_queue_stats_producer = Mock()
+        init_agents_status = Mock()
+        self.ami_agent_login_logoff._initialize_queue_statistics_producer = init_queue_stats_producer
+        self.ami_agent_login_logoff._initialize_agents_status = init_agents_status
 
-    def test_receive_event_agent_init_idle(self):
+        self.ami_agent_login_logoff.on_event_agent_init(event)
+
+        init_queue_stats_producer.assert_called_once_with(event)
+        init_agents_status.assert_called_once_with(event)
+
+    def test_initialize_statistics_producer_with_agent_idle(self):
         event = {'Agent': '22011', 'Status' : 'AGENT_IDLE'}
 
-        self.ami_agent_login_logoff.on_event_agent_init(event)
+        self.ami_agent_login_logoff._initialize_queue_statistics_producer(event)
 
         self.queue_statistics_producer.on_agent_loggedon.assert_called_with('Agent/22011')
 
-    def test_receive_event_agent_init_talking(self):
+    def test_initialize_statistics_producer_with_agent_talking(self):
         event = {'Agent': '22011', 'Status' : 'AGENT_ONCALL'}
 
-        self.ami_agent_login_logoff.on_event_agent_init(event)
+        self.ami_agent_login_logoff._initialize_queue_statistics_producer(event)
 
         self.queue_statistics_producer.on_agent_loggedon.assert_called_with('Agent/22011')
 
-    def test_receive_event_agent_init_other_status(self):
+    def test_initialize_statistics_producer_with_agent_other_status(self):
         event = {'Agent': '22011', 'Status' : 'AGENT_LOGGEDOFF'}
 
-        self.ami_agent_login_logoff.on_event_agent_init(event)
+        self.ami_agent_login_logoff._initialize_queue_statistics_producer(event)
 
         self.queue_statistics_producer.on_agent_loggedon.assert_never_called()
+
+    def test_initialize_agents_status(self):
+        event = {'Agent': '22011', 'Status' : 'AGENT_LOGGEDOFF'}
+        agent_dao = Mock(AgentFeaturesDAO)
+        agent_dao.agent_id.return_value = 1234
+        self.ami_agent_login_logoff.agent_features_dao = agent_dao
+        innerdata_dao = Mock(InnerdataDAO)
+        self.ami_agent_login_logoff.innerdata_dao = innerdata_dao
+
+        self.ami_agent_login_logoff._initialize_agents_status(event)
+
+        agent_dao.agent_id.assert_called_once_with('22011')
+        innerdata_dao.set_agent_status.assert_called_once_with(1234, 'AGENT_LOGGEDOFF')

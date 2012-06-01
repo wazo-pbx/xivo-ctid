@@ -79,6 +79,23 @@ class TestAgentFeaturesDAO(test_dao.DAOTestCase):
     def test_agent_number_unknown(self):
         self.assertRaises(LookupError, lambda: self.dao.agent_number(-1))
 
+    def test_agent_interface(self):
+        agent_id = self._insert_agent()
+
+        interface = self.dao.agent_interface(agent_id)
+
+        self.assertEqual(interface, 'Agent/%s' % self.agent_number)
+
+    def test_agent_id(self):
+        expected_agent_id = self._insert_agent()
+
+        agent_id = self.dao.agent_id(self.agent_number)
+
+        self.assertEqual(str(expected_agent_id), agent_id)
+
+    def test_agent_id_inexistant(self):
+        self.assertRaises(LookupError, self.dao.agent_id, '2345')
+
     def _insert_agent(self):
         agent = AgentFeatures()
         agent.numgroup = 6
@@ -92,10 +109,3 @@ class TestAgentFeaturesDAO(test_dao.DAOTestCase):
         self.session.commit()
 
         return agent.id
-
-    def test_agent_interface(self):
-        agent_id = self._insert_agent()
-
-        interface = self.dao.agent_interface(agent_id)
-
-        self.assertEqual(interface, 'Agent/%s' % self.agent_number)

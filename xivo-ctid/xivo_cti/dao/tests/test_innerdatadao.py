@@ -32,7 +32,8 @@ class TestInnerdataDAO(unittest.TestCase):
 
     def setUp(self):
         self.innerdata_dao = InnerdataDAO()
-        self.innerdata_dao.innerdata = Mock()
+        self.innerdata = Mock()
+        self.innerdata_dao.innerdata = self.innerdata
         self.queuemember1 = {'queuemember1_id': {'queue_name': 'queue1',
                                                  'interface': 'agent1',
                                                  'membership': 'static'}}
@@ -211,11 +212,6 @@ class TestInnerdataDAO(unittest.TestCase):
 
         inner_queue_list.get_queues.assert_called_once_with()
 
-    def _assert_contains_same_elements(self, list, expected_list):
-        self.assertEquals(len(list), len(expected_list))
-        for element in list:
-            self.assertTrue(element in expected_list)
-
     def test_get_presences(self):
         profile = 'client'
         expected_result = ['available', 'disconnected']
@@ -231,3 +227,18 @@ class TestInnerdataDAO(unittest.TestCase):
         result = self.innerdata_dao.get_presences(profile)
 
         self.assertEquals(result, expected_result)
+
+    def test_set_agent_status(self):
+        expected_agent_status = 'AGENT_IDLE'
+        agent_id = '6573'
+        agent = {'status': 'AGENT_ONCALL'}
+        self.innerdata.xod_status = {'agents': {agent_id: agent}}
+
+        self.innerdata_dao.set_agent_status(agent_id, expected_agent_status)
+
+        self.assertEqual(expected_agent_status, agent['status'])
+
+    def _assert_contains_same_elements(self, list, expected_list):
+        self.assertEquals(len(list), len(expected_list))
+        for element in list:
+            self.assertTrue(element in expected_list)

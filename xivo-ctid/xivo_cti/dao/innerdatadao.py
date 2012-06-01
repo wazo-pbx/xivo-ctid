@@ -75,3 +75,5 @@ class InnerdataDAO(object):
         profile_id = self.innerdata._config.getconfig('profiles').get(profile).get('userstatus')
         return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
 
+    def set_agent_status(self, agent_id, agent_status):
+        self.innerdata.xod_status['agents'][agent_id]['status'] = agent_status
