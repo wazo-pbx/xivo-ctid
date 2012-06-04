@@ -24,6 +24,8 @@
 import logging
 
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao.alchemy import dbconnection
 import time
 
@@ -131,6 +133,27 @@ class UserFeaturesDAO(object):
 
     def get_profile(self, user_id):
         return self.get(user_id).profileclient
+
+    def _get_included_contexts(self, context):
+        return [line.include for line in (self._session.query(ContextInclude.include)
+                                           .filter(ContextInclude.context == context))]
+
+    def _get_nested_contexts(self, contexts):
+        checked = []
+        to_check = set(contexts) - set(checked)
+        while to_check:
+            context = to_check.pop()
+            contexts.extend(self._get_included_contexts(context))
+            checked.append(context)
+            to_check = set(contexts) - set(checked)
+
+        return list(set(contexts))
+
+    def get_reachable_contexts(self, user_id):
+        line_contexts = [line.context for line in (self._session.query(LineFeatures)
+                                                    .filter(LineFeatures.iduserfeatures == user_id))]
+
+        return self._get_nested_contexts(line_contexts)
 
     @classmethod
     def new_from_uri(cls, uri):

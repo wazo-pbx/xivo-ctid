@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,6 +24,8 @@
 from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
@@ -33,7 +35,7 @@ import time
 
 class TestUserFeaturesDAO(test_dao.DAOTestCase):
 
-    required_tables = [UserFeatures.__table__]
+    required_tables = [UserFeatures.__table__, LineFeatures.__table__, ContextInclude.__table__]
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -74,7 +76,7 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         self.assertEqual(user.id, user_id)
 
     def test_get_no_result(self):
-        self.assertRaises(LookupError, lambda: self.dao.get(1))
+        self.assertRaises(LookupError, self.dao.get, 1)
 
     def test_set_dnd(self):
         user_id = self._insert_user_dnd_not_set()
@@ -453,3 +455,84 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         result = self.dao.get_profile(user.id)
 
         self.assertEqual(result, expected_user_profile)
+
+    def _add_user_with_line(self, name, context):
+        user = UserFeatures()
+        user.firstname = name
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.iduserfeatures = user.id
+        line.context = context
+        line.protocolid = 1
+        line.name = 'jk1j3'
+        line.provisioningid = '12345'
+
+        self.session.add(line)
+        self.session.commit()
+
+        return user
+
+    def test_get_reachable_contexts(self):
+        context = 'my_context'
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        self.assertEqual(result, [context])
+
+    def test_get_reachable_context_no_line(self):
+        user = UserFeatures()
+        user.name = 'Tester'
+
+        self.session.add(user)
+        self.session.commit()
+
+        self.assertEqual(self.dao.get_reachable_contexts(user.id), [])
+
+    def test_get_reachable_context_included_ctx(self):
+        context = 'my_context'
+        included_context = 'second_ctx'
+
+        ctx_include = ContextInclude()
+        ctx_include.context = context
+        ctx_include.include = included_context
+
+        self.session.add(ctx_include)
+        self.session.commit()
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        self.assertEqual(result, [context, included_context])
+
+    def test_get_reachable_context_loop(self):
+        context = 'my_context'
+        included_context = 'second_ctx'
+        looping_context = 'third_ctx'
+
+        ctx = ContextInclude()
+        ctx.context = context
+        ctx.include = included_context
+
+        ctx_include = ContextInclude()
+        ctx_include.context = included_context
+        ctx_include.include = looping_context
+
+        ctx_loop = ContextInclude()
+        ctx_loop.context = looping_context
+        ctx_loop.include = context
+
+        map(self.session.add, [ctx, ctx_include, ctx_loop])
+        self.session.commit()
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        for context in [context, included_context, looping_context]:
+            self.assertTrue(context in result)
