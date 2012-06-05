@@ -192,14 +192,6 @@ class AMIClass(object):
                                                  ('Variable', var),
                                                  ('Value', val)])
 
-    def park(self, channel, channel_timeout, parkinglot, timeout=45000):
-        return self._exec_command('Park',
-                                  [('Channel', channel),
-                                   ('Channel2', channel_timeout),
-                                   ('Parkinglot', parkinglot),
-                                   ('Timeout', timeout)
-                                  ])
-
     def origapplication(self, application, data, phoneproto, phonesrcname, phonesrcnum, context):
         return self._exec_command('Originate', [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
                                                 ('Context', context),

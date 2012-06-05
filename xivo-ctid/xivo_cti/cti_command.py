@@ -690,41 +690,6 @@ class Command(object):
                       'amiargs': (self._commanddict['mailbox'],
                                     self._commanddict['context'])}]
 
-    # transfers
-    def ipbxcommand_parking(self):
-        src = self.parseid(self._commanddict.get('source'))
-        if not src:
-            return [{'error': 'source'}]
-        dst = self.parseid(self._commanddict.get('destination'))
-        if not dst:
-            return {'error': 'destination'}
-
-        if src.get('ipbxid') != dst.get('ipbxid'):
-            return {'error': 'ipbxids'}
-        if src.get('ipbxid') not in self._ctiserver.safe:
-            return {'error': 'ipbxid'}
-
-        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
-
-        if src.get('type') == 'chan':
-            if src.get('id') in innerdata.channels:
-                channel = src.get('id')
-                peerchannel = innerdata.channels.get(channel).peerchannel
-        else:
-            pass
-
-        if dst.get('type') == 'parking':
-            try:
-                parkinglot = innerdata.xod_config['parkinglots'].keeplist[dst['id']]['name']
-                if parkinglot is not 'default':
-                    parkinglot = 'parkinglot_' + parkinglot
-            except Exception:
-                parkinglot = 'default'
-
-        rep = {'amicommand': 'park',
-               'amiargs': (channel, peerchannel, parkinglot, 120000)}
-        return [rep, ]
-
     def ipbxcommand_transfer(self):
         try:
             dst = self.parseid(self._commanddict['destination'])

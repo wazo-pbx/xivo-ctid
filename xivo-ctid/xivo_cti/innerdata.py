@@ -69,7 +69,6 @@ class Safe(object):
         # 'outcalls' : 'urllist_outcalls',
         'contexts': 'urllist_contexts',
         # 'entities' : 'urllist_entities',
-        # 'parkinglots': 'urllist_parkinglot',
         'phonebooks': 'urllist_phonebook'
         }
 
@@ -150,12 +149,6 @@ class Safe(object):
                                  'contexttype',
                                  'deletable',
                                  'contextinclude'],
-                    'parkinglots': ['context',
-                                    'name',
-                                    'extension',
-                                    'positions',
-                                    'description',
-                                    'duration'],
                     'phonebooks': [],
                     'queuemembers': ['queue_name',
                                      'interface',
@@ -191,8 +184,7 @@ class Safe(object):
                                    'new': 0},
                     'incalls': {},
                     'outcalls': {},
-                    'contexts': {},
-                    'parkinglots': {}}
+                    'contexts': {}}
 
     permission_kinds = ['regcommands', 'userstatus']
 
