@@ -32,7 +32,7 @@ class Subscribe(CTICommand):
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
 
     _callbacks = []
-    _callbacks_with_param = []
+    _callbacks_with_params = []
 
     def __init__(self):
         super(Subscribe, self).__init__()
