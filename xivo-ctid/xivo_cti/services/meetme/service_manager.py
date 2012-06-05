@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao import meetme_features_dao
+from xivo_cti.services.meetme import service_notifier
 import time
 import logging
 
@@ -75,6 +76,7 @@ class MeetmeServiceManager(object):
         configs = meetme_features_dao.get_configs()
         for config in configs:
             self._add_room(*config)
+        self._publish_change()
 
     def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
         member_status = _build_joining_member_status(join_seq_number,
@@ -86,21 +88,25 @@ class MeetmeServiceManager(object):
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = time.time()
         self._cache[conf_number]['members'][join_seq_number] = member_status
+        self._publish_change()
 
     def leave(self, conf_number, join_seq_number):
         self._cache[conf_number]['members'].pop(join_seq_number)
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
+        self._publish_change()
 
     def mute(self, conf_number, join_seq_number):
         try:
             self._cache[conf_number]['members'][join_seq_number]['muted'] = True
+            self._publish_change()
         except KeyError:
             logger.warning('Received a meetme mute event on an untracked conference or user')
 
     def unmute(self, conf_number, join_seq_number):
         try:
             self._cache[conf_number]['members'][join_seq_number]['muted'] = False
+            self._publish_change()
         except KeyError:
             logger.warning('Received a meetme unmute event on an untracked conference or user')
 
@@ -111,6 +117,7 @@ class MeetmeServiceManager(object):
             self._cache[conf_number]['start_time'] = -1
         if not self._has_member(conf_number, join_seq, cid_name, cid_num):
             self._cache[conf_number]['members'][join_seq] = member_status
+        self._publish_change()
 
     def _set_room_config(self, room_number):
         if room_number not in self._cache:
@@ -138,6 +145,9 @@ class MeetmeServiceManager(object):
             return False
         else:
             return member['name'] == name and member['number'] == number
+
+    def _publish_change(self):
+        service_notifier.notifier.publish_meetme_update(self._cache)
 
 
 def _build_joining_member_status(join_seq, name, number, channel, is_muted):

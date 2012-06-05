@@ -26,6 +26,7 @@ import copy
 from mock import Mock
 from mock import patch
 from xivo_cti.services.meetme import service_manager
+from xivo_cti.services.meetme import service_notifier
 
 find_by_confno = Mock()
 get_name = Mock()
@@ -40,6 +41,10 @@ conf_room_name = 'test_conf'
 
 
 class TestUserServiceManager(unittest.TestCase):
+
+    def setUp(self):
+        self.publish = Mock()
+        self.manager = service_manager.MeetmeServiceManager()
 
     def test_parse_join(self):
         channel = 'SIP/i7vbu0-00000001'
@@ -82,9 +87,9 @@ class TestUserServiceManager(unittest.TestCase):
         my_time.return_value = start
         muted_on_join_by_number.return_value = True
 
-        manager = service_manager.MeetmeServiceManager()
+        self.manager._publish_change = self.publish
 
-        manager.join(channel, conf_room_number, 1, 'Tester 1', '1002')
+        self.manager.join(channel, conf_room_number, 1, 'Tester 1', '1002')
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -98,7 +103,8 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'channel': channel,
                                                        'muted': True}}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     @patch('time.time', my_time)
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
@@ -115,21 +121,21 @@ class TestUserServiceManager(unittest.TestCase):
         get_config.return_value = (conf_room_name, conf_room_number, True, 'test')
         muted_on_join_by_number.return_value = True
 
-        manager = service_manager.MeetmeServiceManager()
-        manager._cache = {conf_room_number: {'number': conf_room_number,
-                                              'name': conf_room_name,
-                                              'pin_required': True,
-                                              'start_time': start_time,
-                                              'members': {1: {'join_order': 1,
-                                                              'join_time': start_time,
-                                                              'number': '1002',
-                                                              'name': 'Tester 1',
-                                                              'channel': '123',
-                                                              'muted': False}}}}
+        self.manager._publish_change = self.publish
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': start_time,
+                                                  'members': {1: {'join_order': 1,
+                                                                 'join_time': start_time,
+                                                                 'number': '1002',
+                                                                 'name': 'Tester 1',
+                                                                 'channel': '123',
+                                                                 'muted': False}}}}
 
         my_time.return_value = join_time
-        manager.join(channel, conf_room_number, 2, phone_number, phone_number)
-        result = manager._cache
+        self.manager.join(channel, conf_room_number, 2, phone_number, phone_number)
+        result = self.manager._cache
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -148,6 +154,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'channel': channel,
                                                        'muted': True}}}}
         self.assertEqual(result, expected)
+        self.publish.assert_called_once_with()
 
     def test_build_member_status(self):
         channel = 'SIP/kjsdfh-12356'
@@ -181,10 +188,9 @@ class TestUserServiceManager(unittest.TestCase):
         find_by_confno.return_value = 2
         get_config.return_value = (conf_room_name, conf_room_number, True, 'my_context')
 
-        manager = service_manager.MeetmeServiceManager()
-        manager._set_room_config(conf_room_number)
+        self.manager._set_room_config(conf_room_number)
 
-        result = manager._cache
+        result = self.manager._cache
 
         expected = {conf_room_number: {'name': conf_room_name,
                                        'number': conf_room_number,
@@ -218,24 +224,27 @@ class TestUserServiceManager(unittest.TestCase):
     def test_leave(self):
         start_time = 1234556.123
 
-        manager = service_manager.MeetmeServiceManager()
+        self.manager._publish_change = self.publish
 
-        manager._cache = {conf_room_number: {'number': conf_room_number,
-                                            'name': conf_room_name,
-                                            'pin_required': True,
-                                            'start_time': start_time,
-                                            'members': {1: {'join_order': 1,
-                                                            'join_time': start_time,
-                                                            'number': '1002',
-                                                            'name': 'Tester 1',
-                                                            'channel': 'SIP/jsdhfjd-124'},
-                                                        2: {'join_order': 2,
-                                                            'join_time': start_time + 10,
-                                                            'number': '4181235555',
-                                                            'name': '4181235555',
-                                                            'channel': 'DAHDI/i1/4181235555-5'}}}}
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': start_time,
+                                                  'members': {1: {'join_order': 1,
+                                                                  'join_time': start_time,
+                                                                  'number': '1002',
+                                                                  'name': 'Tester 1',
+                                                                  'channel': 'SIP/jsdhfjd-124'},
+                                                              2: {'join_order': 2,
+                                                                  'join_time': start_time + 10,
+                                                                  'number': '4181235555',
+                                                                  'name': '4181235555',
+                                                                  'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        manager.leave('800', 1)
+        self.manager.leave('800', 1)
+
+        self.publish.assert_called_once_with()
+        self.publish.reset_mock()
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -247,9 +256,9 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'name': '4181235555',
                                                        'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
 
-        manager.leave('800', 2)
+        self.manager.leave('800', 2)
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -257,25 +266,25 @@ class TestUserServiceManager(unittest.TestCase):
                                        'start_time': 0,
                                        'members': {}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     def test_has_members(self):
-        manager = service_manager.MeetmeServiceManager()
-        manager._cache = {'800': {'members': {}}}
+        self.manager._cache = {'800': {'members': {}}}
 
-        self.assertFalse(manager._has_members('800'))
+        self.assertFalse(self.manager._has_members('800'))
 
-        manager._cache = {'800': {'number': '800',
-                                  'name': 'conf',
-                                  'pin_required': True,
-                                  'start_time': 12345.21,
-                                  'members': {2: {'join_order': 2,
-                                                  'join_time': 1235.123,
-                                                  'number': '4181235555',
-                                                  'name': '4181235555',
-                                                  'channel': 'DAHDI/i1/4181235555-5'}}}}
+        self.manager._cache = {'800': {'number': '800',
+                                       'name': 'conf',
+                                       'pin_required': True,
+                                       'start_time': 12345.21,
+                                       'members': {2: {'join_order': 2,
+                                                      'join_time': 1235.123,
+                                                      'number': '4181235555',
+                                                      'name': '4181235555',
+                                                      'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.assertTrue(manager._has_members('800'))
+        self.assertTrue(self.manager._has_members('800'))
 
     @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
     @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
@@ -290,14 +299,13 @@ class TestUserServiceManager(unittest.TestCase):
         get_config.return_value = (conf_room_name, conf_room_number, True, 'default')
         muted_on_join_by_number.return_value = False
 
-        manager = service_manager.MeetmeServiceManager()
-        manager._cache = {conf_room_number: {'number': conf_room_number,
-                                             'name': conf_room_name,
-                                             'pin_required': True,
-                                             'start_time': 0,
-                                             'members': {}}}
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': 0,
+                                                  'members': {}}}
 
-        manager.join(channel, conf_room_number, 1, 'Tester 1', '1002')
+        self.manager.join(channel, conf_room_number, 1, 'Tester 1', '1002')
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -310,7 +318,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'channel': channel,
                                                        'muted': False}}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
 
     @patch('xivo_cti.dao.meetme_features_dao.get_configs', get_configs)
     def test_initial_state(self):
@@ -318,8 +326,8 @@ class TestUserServiceManager(unittest.TestCase):
                                     ('Conference2', '9001', False, 'test'),
                                     ('Conference3', '9002', False, 'test')]
 
-        manager = service_manager.MeetmeServiceManager()
-        manager._initialize_configs()
+        self.manager._publish_change = self.publish
+        self.manager._initialize_configs()
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
@@ -340,12 +348,11 @@ class TestUserServiceManager(unittest.TestCase):
                              'context': 'test',
                              'members': {}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     def test_add_room(self):
-        manager = service_manager.MeetmeServiceManager()
-
-        manager._add_room('Conference1', '9000', True, 'ctx')
+        self.manager._add_room('Conference1', '9000', True, 'ctx')
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
@@ -354,7 +361,7 @@ class TestUserServiceManager(unittest.TestCase):
                              'context': 'ctx',
                              'members': {}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
 
     def test_parse_meetmelist(self):
         channel = 'SIP/pcm_dev-00000003'
@@ -391,9 +398,9 @@ class TestUserServiceManager(unittest.TestCase):
         find_by_confno.return_value = 1
         get_config.return_value = (conf_name, conf_no, False, 'dev')
 
-        manager = service_manager.MeetmeServiceManager()
+        self.manager._publish_change = self.publish
 
-        manager.refresh(channel, conf_no, 1, name, number, is_muted=True)
+        self.manager.refresh(channel, conf_no, 1, name, number, is_muted=True)
 
         expected = {conf_no: {'number': conf_no,
                               'name': conf_name,
@@ -407,103 +414,103 @@ class TestUserServiceManager(unittest.TestCase):
                                               'channel': channel,
                                               'muted': True}}}}
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     def test_refresh_already_there(self):
-        manager = service_manager.MeetmeServiceManager()
         name, number = 'Tester One', '6666'
         channel = 'SIP/khsdfjkld-1234'
 
-        manager._cache['800'] = {'number': '800',
-                                 'name': 'test',
-                                 'pin_required': False,
-                                 'start_time': 1238934.12342,
-                                 'members': {1: {'join_order': 1,
-                                                 'join_time': 1238934.12342,
-                                                 'number': number,
-                                                 'name': name,
-                                                 'channel': channel,
-                                                 'muted': False}}}
+        self.manager._cache['800'] = {'number': '800',
+                                      'name': 'test',
+                                      'pin_required': False,
+                                      'start_time': 1238934.12342,
+                                      'members': {1: {'join_order': 1,
+                                                      'join_time': 1238934.12342,
+                                                      'number': number,
+                                                      'name': name,
+                                                      'channel': channel,
+                                                      'muted': False}}}
 
-        expected = copy.deepcopy(manager._cache)
+        expected = copy.deepcopy(self.manager._cache)
 
-        manager.refresh(channel, '800', 1, name, number, False)
+        self.manager.refresh(channel, '800', 1, name, number, False)
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
 
     def test_has_member(self):
-        manager = service_manager.MeetmeServiceManager()
+        self.assertFalse(self.manager._has_member('800', 1, 'Tester One', '1234'))
 
-        self.assertFalse(manager._has_member('800', 1, 'Tester One', '1234'))
+        self.manager._cache = {'800': {'members': {1: {'name': 'Tester One',
+                                                       'number': '1234'}}}}
 
-        manager._cache = {'800': {'members': {1: {'name': 'Tester One',
-                                                  'number': '1234'}}}}
-
-        self.assertTrue(manager._has_member('800', 1, 'Tester One', '1234'))
+        self.assertTrue(self.manager._has_member('800', 1, 'Tester One', '1234'))
 
     def test_muting(self):
-        manager = service_manager.MeetmeServiceManager()
+        self.manager._publish_change = self.publish
 
         try:
-            manager.mute(conf_room_number, 1)
+            self.manager.mute(conf_room_number, 1)
         except Exception:
             self.assertTrue(False)
 
-        manager._cache = {conf_room_number: {'number': conf_room_number,
-                                             'name': conf_room_name,
-                                             'pin_required': True,
-                                             'start_time': 1234.1234,
-                                             'members': {1: {'join_order': 1,
-                                                             'join_time': 1234.1234,
-                                                             'number': '1002',
-                                                             'name': 'Tester 1',
-                                                             'channel': 'SIP/jsdhfjd-124',
-                                                             'muted': False},
-                                                         2: {'join_order': 2,
-                                                             'join_time': 1239.1234,
-                                                             'number': '4181235555',
-                                                             'name': '4181235555',
-                                                             'channel': 'DAHDI/i1/4181235555-5',
-                                                             'muted': False}}}}
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': 1234.1234,
+                                                  'members': {1: {'join_order': 1,
+                                                                  'join_time': 1234.1234,
+                                                                  'number': '1002',
+                                                                  'name': 'Tester 1',
+                                                                  'channel': 'SIP/jsdhfjd-124',
+                                                                  'muted': False},
+                                                              2: {'join_order': 2,
+                                                                  'join_time': 1239.1234,
+                                                                  'number': '4181235555',
+                                                                  'name': '4181235555',
+                                                                  'channel': 'DAHDI/i1/4181235555-5',
+                                                                  'muted': False}}}}
 
-        expected = copy.deepcopy(manager._cache)
+        expected = copy.deepcopy(self.manager._cache)
         expected[conf_room_number]['members'][2]['muted'] = True
 
-        manager.mute(conf_room_number, 2)
+        self.manager.mute(conf_room_number, 2)
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     def test_unmuting(self):
-        manager = service_manager.MeetmeServiceManager()
+        self.manager._publish_change = self.publish
 
         try:
-            manager.unmute(conf_room_number, 1)
+            self.manager.unmute(conf_room_number, 1)
         except Exception:
             self.assertTrue(False)
 
-        manager._cache = {conf_room_number: {'number': conf_room_number,
-                                             'name': conf_room_name,
-                                             'pin_required': True,
-                                             'start_time': 1234.1234,
-                                             'members': {1: {'join_order': 1,
-                                                             'join_time': 1234.1234,
-                                                             'number': '1002',
-                                                             'name': 'Tester 1',
-                                                             'channel': 'SIP/jsdhfjd-124',
-                                                             'muted': False},
-                                                         2: {'join_order': 2,
-                                                             'join_time': 1239.1234,
-                                                             'number': '4181235555',
-                                                             'name': '4181235555',
-                                                             'channel': 'DAHDI/i1/4181235555-5',
-                                                             'muted': True}}}}
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': 1234.1234,
+                                                  'members': {1: {'join_order': 1,
+                                                                  'join_time': 1234.1234,
+                                                                  'number': '1002',
+                                                                  'name': 'Tester 1',
+                                                                  'channel': 'SIP/jsdhfjd-124',
+                                                                  'muted': False},
+                                                              2: {'join_order': 2,
+                                                                  'join_time': 1239.1234,
+                                                                  'number': '4181235555',
+                                                                  'name': '4181235555',
+                                                                  'channel': 'DAHDI/i1/4181235555-5',
+                                                                  'muted': True}}}}
 
-        expected = copy.deepcopy(manager._cache)
+        expected = copy.deepcopy(self.manager._cache)
         expected[conf_room_number]['members'][2]['muted'] = False
 
-        manager.unmute(conf_room_number, 2)
+        self.manager.unmute(conf_room_number, 2)
 
-        self.assertEqual(manager._cache, expected)
+        self.assertEqual(self.manager._cache, expected)
+        self.publish.assert_called_once_with()
 
     def test_parse_mute(self):
         event = {'Event': 'MeetmeMute',
@@ -536,3 +543,13 @@ class TestUserServiceManager(unittest.TestCase):
         service_manager.parse_meetmemute(event)
 
         manager.unmute.assert_called_once_with('800', 1)
+
+    def test_publish_change(self):
+        service_notifier.notifier = Mock(service_notifier.MeetmeServiceNotifier)
+
+        manager = service_manager.MeetmeServiceManager()
+        manager._cache = {'test': 'status'}
+
+        manager._publish_change()
+
+        service_notifier.notifier.publish_meetme_update.assert_called_once_with(manager._cache)

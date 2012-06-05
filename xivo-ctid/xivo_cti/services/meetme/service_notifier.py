@@ -90,3 +90,6 @@ class MeetmeServiceNotifier(object):
             else:
                 msg = encoder.encode_update(self._current_state)
             self._send_to_client(client_connection, msg)
+
+
+notifier = MeetmeServiceNotifier()
