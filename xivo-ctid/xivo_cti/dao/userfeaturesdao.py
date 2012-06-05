@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -154,6 +154,15 @@ class UserFeaturesDAO(object):
                                                     .filter(LineFeatures.iduserfeatures == user_id))]
 
         return self._get_nested_contexts(line_contexts)
+
+    def get_line_identity(self, user_id):
+        try:
+            line = (self._session.query(LineFeatures.protocol, LineFeatures.name)
+                    .filter(LineFeatures.iduserfeatures == user_id))[0]
+        except IndexError:
+            raise LookupError('Could not find a line for user %s', user_id)
+        else:
+            return '%s/%s' % (line.protocol, line.name)
 
     @classmethod
     def new_from_uri(cls, uri):

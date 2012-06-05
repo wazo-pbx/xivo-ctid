@@ -536,3 +536,28 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
 
         for context in [context, included_context, looping_context]:
             self.assertTrue(context in result)
+
+    def test_get_line_identity(self):
+        self.assertRaises(LookupError, self.dao.get_line_identity, 1234)
+
+        user = UserFeatures()
+        user.name = 'Tester'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.protocolid = 1
+        line.name = 'a1b2c3'
+        line.protocol = 'sip'
+        line.iduserfeatures = user.id
+        line.context = 'ctx'
+        line.provisioningid = 1234
+
+        self.session.add(line)
+        self.session.commit()
+
+        expected = 'sip/a1b2c3'
+        result = self.dao.get_line_identity(user.id)
+
+        self.assertEqual(result, expected)
