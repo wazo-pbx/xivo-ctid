@@ -89,7 +89,6 @@ class MeetmeServiceManager(object):
         self._cache = {}
         for config in configs:
             self._add_room(*config)
-        self._publish_change()
         for room, config in self._cache.iteritems():
             if room in old_cache:
                 self._cache[room]['members'] = old_cache[room]['members']
