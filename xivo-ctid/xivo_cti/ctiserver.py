@@ -62,6 +62,7 @@ from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableN
 from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
+from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
@@ -99,7 +100,7 @@ from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_remove import QueueRemove
-
+from xivo_cti.services.meetme import service_notifier as meetme_service_notifier
 
 logger = logging.getLogger('main')
 
@@ -153,7 +154,7 @@ class CTIServer(object):
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
         self._init_db_connection_pool()
-        self._init_queue_stats()
+        self._init_db_uri()
 
         self._user_service_manager = UserServiceManager()
         self._user_service_notifier = UserServiceNotifier()
@@ -229,6 +230,11 @@ class CTIServer(object):
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
 
+        meetme_service_notifier.notifier.user_features_dao = self._user_features_dao
+        from xivo_cti.services.meetme import service_manager
+        service_manager.manager.initialize()
+        service_manager.register_ami_events()
+
         self._register_cti_callbacks()
 
     def _register_cti_callbacks(self):
@@ -263,6 +269,8 @@ class CTIServer(object):
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
         QueueRemove.register_callback_params(
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+
+        SubscribeMeetmeUpdate.register_callback_params(meetme_service_notifier.notifier.subscribe, ['cti_connection'])
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
@@ -375,10 +383,11 @@ class CTIServer(object):
     def _new_db_connection_pool(self):
         return dbconnection.DBConnectionPool(dbconnection.DBConnection)
 
-    def _init_queue_stats(self):
+    def _init_db_uri(self):
         queue_stats_uri = self._config.getconfig('main')['asterisk_queuestat_db']
         QueueLogger.init(queue_stats_uri)
         dbconnection.add_connection_as(queue_stats_uri, 'queue_stats')
+        dbconnection.add_connection_as(queue_stats_uri, 'asterisk')
 
     def main_loop(self):
         self.askedtoquit = False
@@ -577,7 +586,6 @@ class CTIServer(object):
                     if interface_obj.connection_details.get('userid')[3:] == ipbxid:
                         interface_obj.reply(what)
 
-
     def _init_socket(self):
         try:
             fdtodel = []
@@ -741,7 +749,7 @@ class CTIServer(object):
                     for line in lines:
                         if line:
                             closemenow = self.manage_tcp_connections(sel_i, line, interface_obj)
-                except ClientConnection.CloseException, cexc:
+                except ClientConnection.CloseException:
                     interface_obj.disconnected(DisconnectCause.broken_pipe)
                     del self.fdlist_established[sel_i]
             else:
@@ -832,7 +840,7 @@ class CTIServer(object):
                 for sel_o in sels_o:
                     try:
                         sel_o.process_sending()
-                    except ClientConnection.CloseException, cexc:
+                    except ClientConnection.CloseException:
                         if sel_o in self.fdlist_established:
                             kind = self.fdlist_established[sel_o]
                             kind.disconnected(DisconnectCause.broken_pipe)
@@ -866,4 +874,3 @@ class CTIServer(object):
                         self._update_safe_list(ipbxid, safe)
         except Exception:
             logger.exception('Socket Reader')
-

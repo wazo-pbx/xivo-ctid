@@ -327,7 +327,7 @@ class TestUserServiceManager(unittest.TestCase):
                                     ('Conference3', '9002', False, 'test')]
 
         self.manager._publish_change = self.publish
-        self.manager._initialize_configs()
+        self.manager.initialize()
 
         expected = {'9000': {'number': '9000',
                              'name': 'Conference1',
@@ -360,6 +360,48 @@ class TestUserServiceManager(unittest.TestCase):
                              'start_time': 0,
                              'context': 'ctx',
                              'members': {}}}
+
+        self.assertEqual(self.manager._cache, expected)
+
+    @patch('xivo_cti.dao.meetme_features_dao.get_configs', get_configs)
+    def test_initialize_configs_with_members(self):
+        get_configs.return_value = [('Conference2', '9001', False, 'test'),
+                                    ('Conference3', '9002', False, 'test')]
+
+        members_9001 = {1: {'join_order': 1,
+                            'join_time': 1234.1235,
+                            'number': '1002',
+                            'name': 'Tester 1',
+                            'channel': 'sip/123',
+                            'muted': False}}
+
+        self.manager._cache = {'9000': {'number': '9000',
+                                        'name': 'Conference1',
+                                        'pin_required': True,
+                                        'start_time': 0,
+                                        'context': 'default',
+                                        'members': {}},
+                               '9001': {'number': '9001',
+                                        'name': 'Conference2',
+                                        'pin_required': False,
+                                        'start_time': 0,
+                                        'context': 'test',
+                                        'members': members_9001}}
+
+        self.manager.initialize()
+
+        expected = {'9002': {'number': '9002',
+                             'name': 'Conference3',
+                             'pin_required': False,
+                             'start_time': 0,
+                             'context': 'test',
+                             'members': {}},
+                    '9001': {'number': '9001',
+                             'name': 'Conference2',
+                             'pin_required': False,
+                             'start_time': 0,
+                             'context': 'test',
+                             'members': members_9001}}
 
         self.assertEqual(self.manager._cache, expected)
 

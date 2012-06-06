@@ -24,6 +24,7 @@
 from xivo_cti.dao import meetme_features_dao
 from xivo_cti.services.meetme import service_notifier
 from xivo_cti.ami import ami_callback_handler
+from copy import deepcopy
 import time
 import logging
 
@@ -81,10 +82,17 @@ class MeetmeServiceManager(object):
     def __init__(self):
         self._cache = {}
 
-    def _initialize_configs(self):
+    def initialize(self):
+        logger.debug('Initializing')
+        old_cache = deepcopy(self._cache)
         configs = meetme_features_dao.get_configs()
+        self._cache = {}
         for config in configs:
             self._add_room(*config)
+        self._publish_change()
+        for room, config in self._cache.iteritems():
+            if room in old_cache:
+                self._cache[room]['members'] = old_cache[room]['members']
         self._publish_change()
 
     def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
@@ -180,4 +188,3 @@ def _build_member_status(join_seq_number, name, number, channel, is_muted):
 
 
 manager = MeetmeServiceManager()
-manager._initialize_configs()
