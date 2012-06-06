@@ -27,6 +27,7 @@ setup(
               'xivo_cti.directory',
               'xivo_cti.directory.data_sources',
               'xivo_cti.services',
+              'xivo_cti.services.meetme',
               'xivo_cti.funckey',
               'xivo_cti.tools'],
     scripts=['bin/xivo-ctid'],
