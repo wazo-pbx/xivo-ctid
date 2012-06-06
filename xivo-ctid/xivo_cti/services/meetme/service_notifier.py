@@ -71,7 +71,9 @@ class MeetmeServiceNotifier(object):
             self._push_to_client(client_connection)
 
     def publish_meetme_update(self, meetme_status):
-        self._current_state = meetme_status
+        if self._current_state == meetme_status:
+            return
+        self._current_state = deepcopy(meetme_status)
         for client_connection in self._subscriptions:
             self._push_to_client(client_connection)
 

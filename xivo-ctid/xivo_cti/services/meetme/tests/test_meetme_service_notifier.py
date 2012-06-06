@@ -137,6 +137,37 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         client_connection_1.send_message.assert_called_once_with(expected_msg)
         client_connection_2.send_message.assert_called_once_with(expected_msg)
 
+    def test_publish_no_change(self):
+        client_connection_1 = Mock(CTI)
+        client_connection_2 = Mock(CTI)
+
+        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
+                                                              'contexts': ['default'],
+                                                              'channel_start': 'sip/abcd',
+                                                              'membership': []},
+                                        client_connection_2: {'client_connection': client_connection_2,
+                                                              'contexts': ['default'],
+                                                              'channel_start': 'sip/bcde',
+                                                              'membership': []}}
+        msg = {'800': {'number': '800',
+                       'name': 'test_conf',
+                       'pin_required': True,
+                       'start_time': 12345.123,
+                       'context': 'default',
+                       'members': {1: {'join_order': 1,
+                                       'join_time': 12345.123,
+                                       'number': '1002',
+                                       'name': 'Tester 1',
+                                       'channel': 'sip/bcde',
+                                       'muted': True}}}}
+
+        self.notifier._current_state = msg
+
+        self.notifier.publish_meetme_update(msg)
+
+        self.assertFalse(client_connection_1.send_message.called)
+        self.assertFalse(client_connection_2.send_message.called)
+
     def test_publish_meetme_update_context_separation(self):
         self.config.part_context.return_value = True
 

@@ -23,6 +23,7 @@
 
 from xivo_cti.dao import meetme_features_dao
 from xivo_cti.services.meetme import service_notifier
+from xivo_cti.ami import ami_callback_handler
 import time
 import logging
 
@@ -34,6 +35,14 @@ USERNUM = 'Usernum'
 CIDNAME = 'CallerIDname'
 CIDNUMBER = 'CallerIDnum'
 YES, NO = 'Yes', 'No'
+
+
+def register_ami_events():
+    ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+    ami_handler.register_callback('MeetmeJoin', parse_join)
+    ami_handler.register_callback('MeetmeLeave', parse_leave)
+    ami_handler.register_callback('MeetmeMute', parse_meetmemute)
+    ami_handler.register_callback('MeetmeList', parse_meetmelist)
 
 
 def parse_join(event):
@@ -79,6 +88,7 @@ class MeetmeServiceManager(object):
         self._publish_change()
 
     def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
+        logger.debug('Join %s %s %s %s %s', channel, conf_number, join_seq_number, cid_name, cid_num)
         member_status = _build_joining_member_status(join_seq_number,
                                                      cid_name,
                                                      cid_num,
@@ -91,12 +101,14 @@ class MeetmeServiceManager(object):
         self._publish_change()
 
     def leave(self, conf_number, join_seq_number):
+        logger.debug('Leave %s %s', conf_number, join_seq_number)
         self._cache[conf_number]['members'].pop(join_seq_number)
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
         self._publish_change()
 
     def mute(self, conf_number, join_seq_number):
+        logger.debug('Mute %s %s', conf_number, join_seq_number)
         try:
             self._cache[conf_number]['members'][join_seq_number]['muted'] = True
             self._publish_change()
@@ -104,6 +116,7 @@ class MeetmeServiceManager(object):
             logger.warning('Received a meetme mute event on an untracked conference or user')
 
     def unmute(self, conf_number, join_seq_number):
+        logger.debug('UnMute %s %s', conf_number, join_seq_number)
         try:
             self._cache[conf_number]['members'][join_seq_number]['muted'] = False
             self._publish_change()
@@ -111,6 +124,7 @@ class MeetmeServiceManager(object):
             logger.warning('Received a meetme unmute event on an untracked conference or user')
 
     def refresh(self, channel, conf_number, join_seq, cid_name, cid_num, is_muted):
+        logger.debug('Refresh %s %s %s %s %s', channel, conf_number, join_seq, cid_name, cid_num)
         member_status = _build_member_status(join_seq, cid_name, cid_num, channel, is_muted)
         self._set_room_config(conf_number)
         if 'start_time' not in self._cache[conf_number] or self._cache[conf_number]['start_time'] == 0:
@@ -166,3 +180,4 @@ def _build_member_status(join_seq_number, name, number, channel, is_muted):
 
 
 manager = MeetmeServiceManager()
+manager._initialize_configs()
