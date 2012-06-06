@@ -68,20 +68,23 @@ class MeetmeServiceNotifier(object):
                                                       'contexts': reachable_contexts,
                                                       'channel_start': channel_pattern,
                                                       'membership': []}
-            self._push_to_client(client_connection)
+            try:
+                self._push_to_client(client_connection)
+            except ClientConnection.CloseException:
+                self._subscriptions.pop(client_connection, None)
 
     def publish_meetme_update(self, meetme_status):
         if self._current_state == meetme_status:
             return
         self._current_state = deepcopy(meetme_status)
-        for client_connection in self._subscriptions:
-            self._push_to_client(client_connection)
-
-    def _send_to_client(self, client_connection, msg):
+        to_remove = []
         try:
-            client_connection.send_message(msg)
+            for client_connection in self._subscriptions:
+                self._push_to_client(client_connection)
         except ClientConnection.CloseException:
-            self._subscriptions.pop(client_connection, None)
+            to_remove.append(client_connection)
+        for connection in to_remove:
+            self._subscriptions.pop(connection, None)
 
     def _push_to_client(self, client_connection):
         if self._current_state:
@@ -91,7 +94,7 @@ class MeetmeServiceNotifier(object):
                 msg = encoder.encode_update_for_contexts(self._current_state, reachable_contexts)
             else:
                 msg = encoder.encode_update(self._current_state)
-            self._send_to_client(client_connection, msg)
+            client_connection.send_message(msg)
 
 
 notifier = MeetmeServiceNotifier()

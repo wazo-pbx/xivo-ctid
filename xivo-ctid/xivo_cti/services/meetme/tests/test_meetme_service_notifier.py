@@ -202,21 +202,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.assertTrue(call(client_connection_1) in _push_to_client.call_args_list)
         self.assertTrue(call(client_connection_2) in _push_to_client.call_args_list)
 
-    def test_send_to_client(self):
-        connection = Mock(CTI)
-        msg = {'test': 'message'}
-
-        self.notifier._subscriptions = {connection: {'client_connection': connection}}
-        self.notifier._send_to_client(connection, msg)
-
-        connection.send_message.assert_called_once_with(msg)
-
-        connection.send_message.side_effect = ClientConnection.CloseException('Socket closed')
-
-        self.notifier._send_to_client(connection, msg)
-
-        self.assertTrue(connection not in self.notifier._subscriptions)
-
     def test_push_to_client_no_context_separation(self):
         client_connection = Mock(CTI)
 
