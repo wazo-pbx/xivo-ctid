@@ -46,7 +46,6 @@ from data_sources.http import HTTPDirectoryDataSource
 from data_sources.internal import InternalDirectoryDataSource
 from data_sources.ldap import LDAPDirectoryDataSource
 from data_sources.phonebook import PhonebookDirectoryDataSource
-from data_sources.sql import SQLDirectoryDataSource
 
 logger = logging.getLogger('directories')
 
@@ -281,9 +280,6 @@ class DirectoriesMgr(object):
         'ldap': LDAPDirectoryDataSource,
         'ldaps': LDAPDirectoryDataSource,
         'phonebook': PhonebookDirectoryDataSource,
-        'sqlite': SQLDirectoryDataSource,
-        'mysql': SQLDirectoryDataSource,
-        'postgresql': SQLDirectoryDataSource,
     }
 
     def __init__(self):
