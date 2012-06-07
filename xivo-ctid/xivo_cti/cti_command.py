@@ -628,46 +628,8 @@ class Command(object):
         return [rep]
 
     def ipbxcommand_meetme(self):
-        function = self._commanddict['function']
-        args = self._commanddict['functionargs']
-
-        if function in ('record',) and len(args) >= 4:
-            mxid, usernum, adminnum, status = args[:4]
-        elif (function in ('MeetmeMute', 'MeetmeUnmute')
-              and len(args) >= 2):
-            mxid, usernum = args[:2]
-        elif (len(args) >= 3 and function in
-              ('MeetmeAccept', 'MeetmeKick', 'MeetmeTalk')):
-            mxid, usernum, adminnum = args[:3]
-        mid = mxid.split("/", 1)[1]
-
-        meetme_conf = self.innerdata.xod_config['meetmes'].keeplist[mid]
-        meetme_status = self.innerdata.xod_status['meetmes'][mid]
-
-        if 'record' in function and status in ('start', 'stop'):
-            chan = ''
-            for key, value in meetme_status.iteritems():
-                if value['usernum'] == usernum:
-                    chan = key
-            if status == 'start' and chan:
-                datestring = time.strftime('%Y%m%d-%H%M%S', time.localtime())
-                filename = ('cti-meetme-%s-%s' %
-                            (meetme_conf['name'], datestring))
-                return [{'amicommand': 'monitor',
-                          'amiargs': (chan, filename)}]
-            elif status == 'stop':
-                return [{'amicommand': 'stopmonitor',
-                          'amiargs': (chan,)}]
-        elif function in ('MeetmePause',):
-            return [{'amicommand': function.lower(),
-                      'amiargs': (meetme_conf['confno'], status)}]
-        elif function in ('MeetmeKick', 'MeetmeAccept', 'MeetmeTalk'):
-            return [{'amicommand': 'meetmemoderation',
-                      'amiargs': (function, meetme_conf['confno'],
-                                    usernum, adminnum)}]
-        elif function in ['MeetmeMute', 'MeetmeUnmute']:
-            return [{'amicommand': function.lower(),
-                     'amiargs': (meetme_conf['confno'], usernum)}]
+        return [{'amicommand': self._commanddict['function'].lower(),
+                 'amiargs': self._commanddict['functionargs']}]
 
     def ipbxcommand_sipnotify(self):
         if 'variables' in self._commanddict:

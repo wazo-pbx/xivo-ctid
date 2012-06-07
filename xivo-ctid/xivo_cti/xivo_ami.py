@@ -253,12 +253,10 @@ class AMIClass(object):
         return self._exec_command('AgentLogoff', [('Agent', agentnum),
                                                   ('Soft', soft)])
 
-    # \brief Mute a meetme user
     def meetmemute(self, meetme, usernum):
         return self._exec_command('MeetmeMute', (('Meetme', meetme),
                                                  ('Usernum', usernum)))
 
-    # \brief Unmute a meetme user
     def meetmeunmute(self, meetme, usernum):
         return self._exec_command('MeetmeUnmute', (('Meetme', meetme),
                                                    ('Usernum', usernum)))
