@@ -30,7 +30,7 @@ def encode_update(config):
         tmp[conf_number].pop('context')
         tmp[conf_number]['members'] = {}
         for user_number, user_config in config[conf_number]['members'].iteritems():
-            tmp[conf_number]['members'][str(user_number)] = user_config
+            tmp[conf_number]['members'][str(user_number)] = copy.deepcopy(user_config)
             tmp[conf_number]['members'][str(user_number)].pop('channel', None)
     tmp = _swap_bool_to_yes_no(tmp)
 
@@ -64,3 +64,12 @@ def _swap_bool_to_yes_no(d):
         else:
             _swap_bool_to_yes_no(value)
     return d
+
+
+def encode_room_number_pairs(pairs):
+    list = [{'room_number': room_number,
+             'user_number': user_number}
+             for room_number, user_number in pairs]
+
+    return {'class': 'meetme_user',
+            'list': sorted(list)}

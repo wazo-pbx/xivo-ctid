@@ -70,6 +70,7 @@ class MeetmeServiceNotifier(object):
                                                       'membership': []}
             try:
                 self._push_to_client(client_connection)
+                self._send_meetme_membership()
             except ClientConnection.CloseException:
                 self._subscriptions.pop(client_connection, None)
 
@@ -77,6 +78,29 @@ class MeetmeServiceNotifier(object):
         if self._current_state == meetme_status:
             return
         self._current_state = deepcopy(meetme_status)
+        self._send_room_configs()
+        self._send_meetme_membership()
+
+    def _send_meetme_membership(self):
+        for connection, config in self._subscriptions.iteritems():
+            chan_start = config['channel_start']
+            pairs = self._get_room_number_for_chan_start(chan_start)
+            membership = encoder.encode_room_number_pairs(pairs)
+            if self._subscriptions[connection]['membership'] != membership:
+                self._subscriptions[connection]['membership'] = deepcopy(membership)
+                connection.send_message(membership)
+
+    def _get_room_number_for_chan_start(self, chan_start):
+        pairs = []
+
+        for room, config in self._current_state.iteritems():
+            for number, member in config['members'].iteritems():
+                if chan_start.lower() in member['channel'].lower():
+                    pairs.append((room, number))
+
+        return pairs
+
+    def _send_room_configs(self):
         to_remove = []
         for client_connection in self._subscriptions:
             try:

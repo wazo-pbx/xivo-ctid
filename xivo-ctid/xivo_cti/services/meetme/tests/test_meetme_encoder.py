@@ -142,3 +142,15 @@ class TestMeetmeEncoder(unittest.TestCase):
         result = encoder._swap_bool_to_yes_no(start)
 
         self.assertEqual(result, expected)
+
+    def test_encode_room_number_pairs(self):
+        pairs = [('800', 1), ('802', 1)]
+        expected = {'class': 'meetme_user',
+                    'list': sorted([{'room_number': '800',
+                                     'user_number': 1},
+                                    {'room_number': '802',
+                                     'user_number': 1}])}
+
+        result = encoder.encode_room_number_pairs(pairs)
+
+        self.assertEqual(result, expected)

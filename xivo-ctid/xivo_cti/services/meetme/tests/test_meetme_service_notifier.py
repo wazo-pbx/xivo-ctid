@@ -26,7 +26,6 @@ from mock import Mock, call
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 import Queue
 from xivo_cti.cti_config import Config
@@ -80,6 +79,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         client_connection.user_id.return_value = user_id
 
         self.notifier.user_features_dao = user_features_dao
+        self.notifier._send_meetme_membership = Mock()
         self.notifier._current_state = {'800': {'number': '800',
                                                  'name': 'test_conf',
                                                  'pin_required': True,
@@ -105,6 +105,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         self.assertEqual(self.notifier._subscriptions[client_connection], expected_subscription)
         client_connection.send_message.assert_called_once_with(expected_msg)
+        self.notifier._send_meetme_membership.assert_called_once_with()
 
     def test_publish_meetme_update(self):
         client_connection_1 = Mock(CTI)
@@ -131,6 +132,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
                                        'muted': True}}}}
 
         expected_msg = encoder.encode_update(msg)
+        self.notifier._send_meetme_membership = Mock()
 
         self.notifier.publish_meetme_update(msg)
 
@@ -236,3 +238,105 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.notifier._push_to_client(client_connection)
 
         client_connection.send_message.assert_called_once_with(expected)
+
+    def test_send_membership_info(self):
+        client_connection_1 = Mock(CTI)
+        client_connection_2 = Mock(CTI)
+        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
+                                                              'contexts': ['test'],
+                                                              'channel_start': 'sip/abcd',
+                                                              'membership': []},
+                                        client_connection_2: {'client_connection': client_connection_2,
+                                                              'contexts': ['default'],
+                                                              'channel_start': 'sip/bcde',
+                                                              'membership': []}}
+
+        msg = {'800': {'number': '800',
+                       'name': 'test_conf',
+                       'pin_required': True,
+                       'start_time': 12345.123,
+                       'context': 'default',
+                       'members': {1: {'join_order': 1,
+                                       'join_time': 12345.123,
+                                       'number': '1002',
+                                       'name': 'Tester 1',
+                                       'channel': 'sip/bcde-0987',
+                                       'muted': True}}},
+               '801': {'number': '801',
+                       'name': 'conf2',
+                       'pin_required': True,
+                       'start_time': 12345.666,
+                       'context': 'default',
+                       'members': {1: {'join_order': 1,
+                                       'join_time': 654534.324,
+                                       'number': '1002',
+                                       'name': 'Tester 1',
+                                       'channel': 'sip/bcde-4567',
+                                       'muted': True},
+                                   2: {'join_order': 2,
+                                       'join_time': 12345.123,
+                                       'number': '1001',
+                                       'name': 'Another tester',
+                                       'channel': 'sip/abcd-1234',
+                                       'muted': True}}}}
+
+        self.notifier._current_state = msg
+        self.notifier._send_meetme_membership()
+        self.notifier._send_meetme_membership()  # Makes sure we don't send the same info twice
+
+        client_1_membership = {'class': 'meetme_user',
+                               'list': sorted([{'room_number': '801',
+                                                'user_number': 2}])}
+        client_2_membership = {'class': 'meetme_user',
+                               'list': sorted([{'room_number': '800',
+                                                'user_number': 1},
+                                               {'room_number': '801',
+                                                'user_number': 1}])}
+
+        client_connection_1.send_message.assert_called_once_with(client_1_membership)
+        client_connection_2.send_message.assert_called_once_with(client_2_membership)
+
+    def test_get_room_number_for_chan_start(self):
+        msg = {'800': {'number': '800',
+                       'name': 'test_conf',
+                       'pin_required': True,
+                       'start_time': 12345.123,
+                       'context': 'default',
+                       'members': {1: {'join_order': 1,
+                                       'join_time': 12345.123,
+                                       'number': '1002',
+                                       'name': 'Tester 1',
+                                       'channel': 'sip/bcde-0987',
+                                       'muted': True}}},
+               '801': {'number': '801',
+                       'name': 'conf2',
+                       'pin_required': True,
+                       'start_time': 12345.666,
+                       'context': 'default',
+                       'members': {1: {'join_order': 1,
+                                       'join_time': 654534.324,
+                                       'number': '1002',
+                                       'name': 'Tester 1',
+                                       'channel': 'sip/bcde-4567',
+                                       'muted': True},
+                                   2: {'join_order': 2,
+                                       'join_time': 12345.123,
+                                       'number': '1001',
+                                       'name': 'Another tester',
+                                       'channel': 'sip/abcd-1234',
+                                       'muted': True}}}}
+
+        self.notifier._current_state = msg
+
+        chan_start_1 = 'sip/abcd'
+        chan_start_2 = 'sip/bcde'
+        chan_start_3 = 'sip/xxx'
+
+        result_1 = self.notifier._get_room_number_for_chan_start(chan_start_1)
+        result_2 = self.notifier._get_room_number_for_chan_start(chan_start_2)
+        result_3 = self.notifier._get_room_number_for_chan_start(chan_start_3)
+
+        self.assertEqual(result_1, [('801', 2)])
+        for pair in [('800', 1), ('801', 1)]:
+            self.assertTrue(pair in result_2)
+        self.assertEqual(result_3, [])
