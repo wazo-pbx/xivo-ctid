@@ -78,11 +78,11 @@ class MeetmeServiceNotifier(object):
             return
         self._current_state = deepcopy(meetme_status)
         to_remove = []
-        try:
-            for client_connection in self._subscriptions:
+        for client_connection in self._subscriptions:
+            try:
                 self._push_to_client(client_connection)
-        except ClientConnection.CloseException:
-            to_remove.append(client_connection)
+            except ClientConnection.CloseException:
+                to_remove.append(client_connection)
         for connection in to_remove:
             self._subscriptions.pop(connection, None)
 
