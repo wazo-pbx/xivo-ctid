@@ -41,7 +41,7 @@ import re
 from itertools import chain, imap
 from operator import itemgetter
 
-from data_sources.csv import CSVFileDirectoryDataSource
+from data_sources.csv_file_directory_data_source import CSVFileDirectoryDataSource
 from data_sources.http import HTTPDirectoryDataSource
 from data_sources.internal import InternalDirectoryDataSource
 from data_sources.ldap import LDAPDirectoryDataSource
