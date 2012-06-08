@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao import meetme_features_dao
+from xivo_cti.dao import linefeaturesdao
 from xivo_cti.services.meetme import service_notifier
 from xivo_cti.ami import ami_callback_handler
 from copy import deepcopy
@@ -83,7 +84,6 @@ class MeetmeServiceManager(object):
         self._cache = {}
 
     def initialize(self):
-        logger.debug('Initializing')
         old_cache = deepcopy(self._cache)
         configs = meetme_features_dao.get_configs()
         self._cache = {}
@@ -96,6 +96,11 @@ class MeetmeServiceManager(object):
 
     def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
         logger.debug('Join %s %s %s %s %s', channel, conf_number, join_seq_number, cid_name, cid_num)
+        if cid_num == conf_number:
+            try:
+                cid_all, cid_name, cid_num = linefeaturesdao.get_cid_for_channel(channel)
+            except (ValueError, LookupError):
+                logger.info('Joining from an originate, cannot get Caller ID from this channel')
         member_status = _build_joining_member_status(join_seq_number,
                                                      cid_name,
                                                      cid_num,

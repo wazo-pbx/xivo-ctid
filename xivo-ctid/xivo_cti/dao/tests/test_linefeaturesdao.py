@@ -22,10 +22,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.tests import test_dao
+from mock import Mock
+from mock import patch
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.sccpline import SCCPLine
+from xivo_cti.dao.alchemy.usersip import UserSIP
+from xivo_cti.dao import linefeaturesdao
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+
+get_sip_cid = Mock()
+get_sccp_cid = Mock()
 
 
 class TestLineFeaturesDAO(test_dao.DAOTestCase):
@@ -33,7 +41,7 @@ class TestLineFeaturesDAO(test_dao.DAOTestCase):
     user_id = 5
     line_number = '1666'
 
-    required_tables = [LineFeatures.__table__]
+    required_tables = [LineFeatures.__table__, SCCPLine.__table__, UserSIP.__table__]
 
     def setUp(self):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
@@ -105,3 +113,70 @@ class TestLineFeaturesDAO(test_dao.DAOTestCase):
         context = self.dao.find_context_by_user_id(self.user_id)
 
         self.assertEqual('falafel', context)
+
+    def test_get_cid_from_channel(self):
+        pass
+
+    def test_get_cid_from_sccp_channel(self):
+        channel = 'sccp/1234@SEP0023EBC64F92-1'
+
+        self.assertRaises(LookupError, linefeaturesdao._get_cid_for_sccp_channel, channel)
+
+        line = SCCPLine()
+        line.name = '1234'
+        line.context = 'test'
+        line.cid_name = 'Tester One'
+        line.cid_num = '1234'
+
+        self.session.add(line)
+        self.session.commit()
+
+        result = linefeaturesdao._get_cid_for_sccp_channel(channel)
+        expected = ('"Tester One" <1234>', 'Tester One', '1234')
+
+        self.assertEqual(result, expected)
+
+        self.assertRaises(ValueError, linefeaturesdao._get_cid_for_sccp_channel, 'SIP/abc-123')
+
+    def test_get_cid_for_sip_channel(self):
+        channel = 'SIP/abcd-12445'
+
+        self.assertRaises(LookupError, linefeaturesdao._get_cid_for_sip_channel, channel)
+
+        line = UserSIP()
+        line.name = 'abcd'
+        line.type = 'friend'
+        line.callerid = '"Tester One" <1234>'
+
+        self.session.add(line)
+        self.session.commit()
+
+        result = linefeaturesdao._get_cid_for_sip_channel(channel)
+        expected = (line.callerid, 'Tester One', '1234')
+
+        self.assertEqual(result, expected)
+
+        self.assertRaises(ValueError, linefeaturesdao._get_cid_for_sip_channel, 'sccp/1300@SEP29287324-1')
+
+    @patch('xivo_cti.dao.linefeaturesdao._get_cid_for_sccp_channel', get_sccp_cid)
+    @patch('xivo_cti.dao.linefeaturesdao._get_cid_for_sip_channel', get_sip_cid)
+    def test_get_cid_for_channel(self):
+        channel = 'DAHDI/i1/12543656-1235'
+
+        self.assertRaises(ValueError, linefeaturesdao.get_cid_for_channel, channel)
+
+        cid = ('"Tester One" <555>', 'Tester One', '555')
+        channel = 'SIP/abcde-1234'
+
+        get_sip_cid.return_value = cid
+        result = linefeaturesdao.get_cid_for_channel(channel)
+
+        self.assertEqual(result, cid)
+
+        cid = ('"Tester One" <1111>', 'Tester Two', '1111')
+        channel = 'sccp/1300@SEP2897423897-12'
+
+        get_sccp_cid.return_value = cid
+        result = linefeaturesdao.get_cid_for_channel(channel)
+
+        self.assertEqual(result, cid)

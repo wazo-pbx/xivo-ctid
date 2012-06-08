@@ -22,7 +22,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.sccpline import SCCPLine
+from xivo_cti.dao.alchemy.usersip import UserSIP
 from xivo_cti.dao.alchemy import dbconnection
+from xivo_cti.tools import caller_id
+from sqlalchemy import and_
+
+_DB_NAME = 'asterisk'
+
+
+def _session():
+    connection = dbconnection.get_connection(_DB_NAME)
+    return connection.get_session()
 
 
 class LineFeaturesDAO(object):
@@ -53,3 +64,39 @@ class LineFeaturesDAO(object):
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
         return cls(connection.get_session())
+
+
+def get_cid_for_channel(channel):
+    protocol = channel.split('/', 1)[0].lower()
+    if protocol == 'sip':
+        return _get_cid_for_sip_channel(channel)
+    elif protocol == 'sccp':
+        return _get_cid_for_sccp_channel(channel)
+    else:
+        raise ValueError('Cannot get the Caller ID for this channel')
+
+
+def _get_cid_for_sccp_channel(channel):
+    try:
+        interesting_part = channel.split('@', 1)[0]
+        protocol, line_name = interesting_part.split('/', 1)
+        assert(protocol == 'sccp')
+    except (IndexError, AssertionError):
+        raise ValueError('Not an SCCP channel')
+
+    line = _session().query(SCCPLine.cid_name, SCCPLine.cid_num).filter(SCCPLine.name == line_name)[0]
+
+    cid_name, cid_num = line.cid_name, line.cid_num
+
+    return caller_id.build_caller_id('', cid_name, cid_num)
+
+
+def _get_cid_for_sip_channel(channel):
+    protocol, name = channel.split('-', 1)[0].split('/', 1)
+    if protocol.lower() != 'sip':
+        raise ValueError('Not a SIP channel')
+
+    cid_all = (_session().query(UserSIP.callerid)
+               .filter(and_(UserSIP.name == name, UserSIP.protocol == protocol.lower()))[0].callerid)
+
+    return caller_id.build_caller_id(cid_all, None, None)

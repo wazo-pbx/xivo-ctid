@@ -35,7 +35,7 @@ my_time = Mock()
 get_configs = Mock()
 get_config = Mock()
 muted_on_join_by_number = Mock()
-
+get_cid_for_channel = Mock()
 conf_room_number = '800'
 conf_room_name = 'test_conf'
 
@@ -595,3 +595,37 @@ class TestUserServiceManager(unittest.TestCase):
         manager._publish_change()
 
         service_notifier.notifier.publish_meetme_update.assert_called_once_with(manager._cache)
+
+    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
+    @patch('time.time', my_time)
+    @patch('xivo_cti.dao.linefeaturesdao.get_cid_for_channel', get_cid_for_channel)
+    def test_join_originate(self):
+        channel = 'SIP/kljfh-1234'
+        join_time = 12345.654
+
+        my_time.return_value = join_time
+        find_by_confno.return_value = 2
+        get_config.return_value = (conf_room_name, conf_room_number, True, 'default')
+        muted_on_join_by_number.return_value = False
+        get_cid_for_channel.return_value = ('"Tester 1" <1002>', 'Tester 1', '1002')
+
+        self.manager._cache = {conf_room_number: {'number': conf_room_number,
+                                                  'name': conf_room_name,
+                                                  'pin_required': True,
+                                                  'start_time': 0,
+                                                  'members': {}}}
+
+        self.manager.join(channel, conf_room_number, 1, conf_room_number, conf_room_number)
+
+        expected = {conf_room_number: {'number': conf_room_number,
+                                       'name': conf_room_name,
+                                       'pin_required': True,
+                                       'start_time': join_time,
+                                       'members': {1: {'join_order': 1,
+                                                       'join_time': join_time,
+                                                       'number': '1002',
+                                                       'name': 'Tester 1',
+                                                       'channel': channel,
+                                                       'muted': False}}}}
+
+        self.assertEqual(self.manager._cache, expected)
