@@ -1247,7 +1247,6 @@ class Safe(object):
         for context in valid_contexts:
             context_obj = self.contexts_mgr.contexts[context]
             lookup_result = context_obj.lookup_reverse(None, pattern)
-            logger.debug('Context: %s Result: %s', context, lookup_result)
             resultlist.extend(lookup_result)
 
         if len(resultlist) > 0:
