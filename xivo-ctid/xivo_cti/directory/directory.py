@@ -100,13 +100,14 @@ class Context(object):
         for directory in directories:
             try:
                 directory_result = directory.lookup_reverse(number)
+                for res in directory_result:
+                    if 'db-reverse' in res and number in res.itervalues():
+                        directory_results.append(res['db-reverse'])
             except Exception:
                 logger.error('Error while looking up in directory %s for %s',
                              directory.name, number, exc_info=True)
-            else:
-                directory_results.append(directory_result)
-        combined_results = list(chain.from_iterable(directory_results))
-        return combined_results
+
+        return list(set(directory_results))
 
     @classmethod
     def new_from_contents(cls, avail_displays, avail_directories, contents):

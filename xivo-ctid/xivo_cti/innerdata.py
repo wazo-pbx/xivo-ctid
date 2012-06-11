@@ -1241,20 +1241,17 @@ class Safe(object):
         return cid_all, cid_name, cid_number
 
     def _get_cid_directory_lookup(self, original_cid, name, pattern, contexts):
-        field_separator = ';'
         valid_contexts = [context for context in contexts if context in self.contexts_mgr.contexts]
         resultlist = []
         for context in valid_contexts:
             context_obj = self.contexts_mgr.contexts[context]
-            _, lookup_result = context_obj.lookup_direct(pattern, contexts=contexts)
+            lookup_result = context_obj.lookup_reverse(None, pattern)
             resultlist.extend(lookup_result)
-        resultlist = list(set(resultlist))
-        for res in resultlist:
-            for field in res.split(';'):
-                if field == pattern:
-                    name = res.split(field_separator, 1)[0]
-                    return  build_caller_id(original_cid, name, pattern)
-        return None, None, None
+
+        if len(resultlist) > 0:
+            return  build_caller_id(original_cid, resultlist[0], pattern)
+        else:
+            return None, None, None
 
     def fagi_handle_real(self, agievent):
         varstoset = {}
