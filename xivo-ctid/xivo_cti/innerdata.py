@@ -1241,11 +1241,13 @@ class Safe(object):
         return cid_all, cid_name, cid_number
 
     def _get_cid_directory_lookup(self, original_cid, name, pattern, contexts):
-        valid_contexts = [context for context in contexts if context in self.contexts_mgr.contexts]
+        valid_contexts = ['*'] if '*' in self.contexts_mgr.contexts else []
+        valid_contexts.extend([context for context in contexts if context in self.contexts_mgr.contexts])
         resultlist = []
         for context in valid_contexts:
             context_obj = self.contexts_mgr.contexts[context]
             lookup_result = context_obj.lookup_reverse(None, pattern)
+            logger.debug('Context: %s Result: %s', context, lookup_result)
             resultlist.extend(lookup_result)
 
         if len(resultlist) > 0:
