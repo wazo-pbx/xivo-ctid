@@ -23,9 +23,12 @@
 
 from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
+from xivo_cti.dao import queue_features_dao
+from xivo_cti.dao import userfeaturesdao
 import logging
 
 logger = logging.getLogger("QueueMemberServiceManager")
+
 
 class QueueMemberServiceManager(object):
     def update_config(self):
@@ -98,3 +101,24 @@ class QueueMemberServiceManager(object):
         elif command == 'queueremove':
             self.agent_service_manager.queueremove(queue_name, agent_id)
 
+    def is_queue_member(self, user_id, queue_id):
+        queue_name = queue_features_dao.get_queue_name(queue_id)
+        line_proto_name = userfeaturesdao.get_line_identity(user_id)
+
+        lowered_keys = map(lambda x: x.lower(),
+                           self.innerdata_dao.get_queuemembers_config().keys())
+        try:
+            key = ('Agent/%s' % userfeaturesdao.get_agent_number(user_id)).lower()
+            if key in lowered_keys:
+                return True
+        except LookupError:
+            pass  # User has no agent
+
+        try:
+            key = ('%s,%s' % (line_proto_name, queue_name)).lower()
+            if key in lowered_keys:
+                return True
+        except LookupError:
+            pass  # User has no line
+
+        return False

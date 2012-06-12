@@ -25,8 +25,10 @@ import logging
 
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
 from xivo_cti.dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao.alchemy import dbconnection
+from sqlalchemy import and_
 import time
 
 logger = logging.getLogger("UserFeaturesDAO")
@@ -162,15 +164,6 @@ class UserFeaturesDAO(object):
 
         return self._get_nested_contexts(line_contexts)
 
-    def get_line_identity(self, user_id):
-        try:
-            line = (self._session.query(LineFeatures.protocol, LineFeatures.name)
-                    .filter(LineFeatures.iduserfeatures == user_id))[0]
-        except IndexError:
-            raise LookupError('Could not find a line for user %s', user_id)
-        else:
-            return '%s/%s' % (line.protocol, line.name)
-
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
@@ -179,3 +172,19 @@ class UserFeaturesDAO(object):
 
 def find_by_line_id(line_id):
     return _session().query(LineFeatures.iduserfeatures).filter(LineFeatures.id == line_id)[0].iduserfeatures
+
+
+def get_line_identity(user_id):
+    try:
+        line = (_session().query(LineFeatures.protocol, LineFeatures.name)
+                         .filter(LineFeatures.iduserfeatures == user_id))[0]
+    except IndexError:
+        raise LookupError('Could not find a line for user %s', user_id)
+    else:
+        return '%s/%s' % (line.protocol, line.name)
+
+
+def get_agent_number(user_id):
+    return (_session().query(AgentFeatures.number, UserFeatures.agentid)
+            .filter(and_(UserFeatures.id == user_id,
+                           AgentFeatures.id == UserFeatures.agentid))[0].number)

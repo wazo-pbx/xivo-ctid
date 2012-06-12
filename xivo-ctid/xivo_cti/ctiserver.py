@@ -442,6 +442,7 @@ class CTIServer(object):
             safe.user_service_manager = self._user_service_manager
             safe.user_features_dao = self._user_features_dao
             safe.trunk_features_dao = self._trunk_features_dao
+            safe.queuemember_service_manager = self._queuemember_service_manager
             safe.init_status()
             self._user_features_dao._innerdata = safe
             self._user_service_notifier.events_cti = safe.events_cti

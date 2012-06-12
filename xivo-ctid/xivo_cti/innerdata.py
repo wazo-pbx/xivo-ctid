@@ -479,6 +479,8 @@ class Safe(object):
             elif dest_type == 'agent':
                 user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == dest_id
+            elif dest_type == 'queue' and dest_id:
+                domatch = self.queuemember_service_manager.is_queue_member(userid, dest_id)
             else:
                 logger.warning('Unhandled to match destination type %s', dest_type)
         else:

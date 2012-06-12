@@ -24,6 +24,13 @@
 from xivo_cti.dao.alchemy.queuefeatures import QueueFeatures
 from xivo_cti.dao.alchemy import dbconnection
 
+_DB_NAME = 'asterisk'
+
+
+def _session():
+    connection = dbconnection.get_connection(_DB_NAME)
+    return connection.get_session()
+
 
 class QueueFeaturesDAO(object):
 
@@ -54,3 +61,7 @@ class QueueFeaturesDAO(object):
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
         return cls(connection.get_session())
+
+
+def get_queue_name(queue_id):
+    return _session().query(QueueFeatures.name).filter(QueueFeatures.id == queue_id)[0].name

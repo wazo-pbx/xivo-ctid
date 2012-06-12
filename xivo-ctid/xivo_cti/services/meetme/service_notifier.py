@@ -26,6 +26,7 @@ from copy import deepcopy
 from xivo_cti.services.meetme import encoder
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti_config import Config
+from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger('meetme_service_notifier')
 
@@ -60,7 +61,7 @@ class MeetmeServiceNotifier(object):
         try:
             user_id = client_connection.user_id()
             reachable_contexts = self.user_features_dao.get_reachable_contexts(user_id)
-            channel_pattern = self.user_features_dao.get_line_identity(user_id)
+            channel_pattern = userfeaturesdao.get_line_identity(user_id)
         except LookupError:
             logger.warning('Meetme subscription failed')
         else:

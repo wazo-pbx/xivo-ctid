@@ -25,6 +25,7 @@ from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
+from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
 from xivo_cti.dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.dao import userfeaturesdao
@@ -539,7 +540,7 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
             self.assertTrue(context in result)
 
     def test_get_line_identity(self):
-        self.assertRaises(LookupError, self.dao.get_line_identity, 1234)
+        self.assertRaises(LookupError, userfeaturesdao.get_line_identity, 1234)
 
         user = UserFeatures()
         user.name = 'Tester'
@@ -559,7 +560,7 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         self.session.commit()
 
         expected = 'sip/a1b2c3'
-        result = self.dao.get_line_identity(user.id)
+        result = userfeaturesdao.get_line_identity(user.id)
 
         self.assertEqual(result, expected)
 
@@ -583,3 +584,26 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         user_id = userfeaturesdao.find_by_line_id(line.id)
 
         self.assertEqual(user_id, user.id)
+
+    def test_get_agent_number(self):
+        self.assertRaises(LookupError, userfeaturesdao.get_agent_number, 1)
+
+        agent = AgentFeatures()
+        agent.number = '1234'
+        agent.numgroup = 0
+        agent.passwd = ''
+        agent.context = 'ctx'
+        agent.language = 'fr'
+
+        self.session.add(agent)
+        self.session.commit()
+
+        user = UserFeatures()
+        user.agentid = agent.id
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_agent_number(user.id)
+
+        self.assertEqual(result, agent.number)

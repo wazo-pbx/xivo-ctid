@@ -25,6 +25,7 @@ from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.queuefeatures import QueueFeatures
+from xivo_cti.dao import queue_features_dao
 
 
 class TestQueueFeaturesDAO(test_dao.DAOTestCase):
@@ -86,3 +87,17 @@ class TestQueueFeaturesDAO(test_dao.DAOTestCase):
         self.session.commit()
 
         self.assertTrue(self.dao.is_a_queue('a_queue'))
+
+    def test_get_queue_name(self):
+        self.assertRaises(LookupError, queue_features_dao.get_queue_name, 1)
+
+        queue = QueueFeatures()
+        queue.name = 'my_queue'
+        queue.displayname = 'My Queue'
+
+        self.session.add(queue)
+        self.session.commit()
+
+        result = queue_features_dao.get_queue_name(queue.id)
+
+        self.assertEqual(result, queue.name)

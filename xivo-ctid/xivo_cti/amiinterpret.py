@@ -368,6 +368,11 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calledidnum', usersummary_dst.get('phonenumber'))
         chanprops.set_extra_data('xivo', 'calledidname', usersummary_dst.get('fullname'))
 
+    def userevent_queue(self, chanprops, event):
+        chanprops.set_extra_data('xivo', 'desttype', 'queue')
+        chanprops.set_extra_data('xivo', 'destid', event['XIVO_DSTID'])
+        self.innerdata.sheetsend('dial', chanprops.channel)
+
     def userevent_outcall(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
