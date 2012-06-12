@@ -121,8 +121,7 @@ class QueueEntryManager(object):
             logger.exception('Failed to insert queue entry')
         else:
             self.publish(queue_name)
-            if len(self._queue_entries[queue_name]) == 1:
-                self.publish_longest_wait_time(queue_name)
+            self.publish_realtime_stats(queue_name)
 
     def insert(self, queue_name, pos, name, number, unique_id, wait):
         logger.info("queue %s pos %s name %s number %s wait %s" % (queue_name, pos, name, number, wait))
@@ -147,8 +146,7 @@ class QueueEntryManager(object):
             logger.exception('Failed to remove queue entry')
         else:
             self.publish(queue_name)
-            if len(self._queue_entries[queue_name]) >= 1:
-                self.publish_longest_wait_time(queue_name)
+            self.publish_realtime_stats(queue_name)
 
     def synchronize(self, queue_name=None):
         logger.info('Synchronizing QueueEntries on %s',
@@ -192,10 +190,10 @@ class QueueEntryManager(object):
             for q in self._queue_entries.keys():
                 self.publish(q)
 
-    def publish_longest_wait_time(self, queue_name):
+    def publish_realtime_stats(self, queue_name):
         self._statistics_notifier.on_stat_changed(self._encode_stats(queue_name))
 
-    def publish_all_longest_wait_time(self, cti_connection):
+    def publish_all_realtime_stats(self, cti_connection):
         queues_to_remove = set()
         for queue_name in self._queue_entries:
             try:
@@ -211,9 +209,12 @@ class QueueEntryManager(object):
 
     def _encode_stats(self, queue_name):
         queue_id = self._queue_features_dao.id_from_name(queue_name)
-        longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
-        logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
-        return {'%s' % queue_id: {u'Xivo-LongestWaitTime': long(longest_wait_time)}}
+        realtime_stat = {'%s' % queue_id: {u'Xivo-WaitingCalls': len(self._queue_entries[queue_name])}}
+        if len(self._queue_entries[queue_name]) >= 1:
+            longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
+            logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
+            realtime_stat["%s" % queue_id][u'Xivo-LongestWaitTime'] = long(longest_wait_time)
+        return realtime_stat
 
     @classmethod
     def get_instance(cls):

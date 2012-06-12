@@ -368,23 +368,11 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
         self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': 0}})
-
-
-    @patch('time.time', my_time)
-    def test_publish_longest_wait_time_on_join_with_calls_in_queue(self):
-
-        self._join_1()
-
-        self.manager._statistics_notifier.reset_mock()
-
-        self._join_2()
-
-        self.manager._statistics_notifier.on_stat_changed.assert_never_called()
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 0}})
 
 
     @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
-    def test_publish_longest_wait_time_on_leave_with_calls_in_queue(self):
+    def test_publish_real_time_stats_on_leave_with_calls_in_queue(self):
 
         queue_id = 77
         self.manager._queue_features_dao.id_from_name.return_value = queue_id
@@ -402,16 +390,19 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager._queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
         the_longest_wait_time_calculator.assert_called_with(self.manager._queue_entries[QUEUE_NAME])
 
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-LongestWaitTime': 789}})
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 789L}})
 
-    def test_publish_longest_wait_time_on_leave_with_one_call_in_queue(self):
+    def test_publish_real_time_stats_on_leave_with_one_call_in_queue(self):
+        queue_id = 77
+        self.manager._queue_features_dao.id_from_name.return_value = queue_id
+
         self._join_1()
 
         self.manager._statistics_notifier.reset_mock()
 
         self.manager.leave(QUEUE_NAME, 1, 0, UNIQUE_ID_1)
 
-        self.manager._statistics_notifier.on_stat_changed.assert_never_called()
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':0}})
 
 
     @patch('time.time', my_time)
@@ -440,7 +431,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEquals(longest_wait_time, 400)
 
     @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
-    def test_publish_all_longest_wait_time(self):
+    def test_publish_all_realtime_stats(self):
         cti_connection = {}
         the_longest_wait_time_calculator.return_value = 765
         queue_ids = {'service': 56, 'boats': 34}
@@ -450,13 +441,13 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager._queue_features_dao.id_from_name.side_effect = lambda queue_name : queue_ids[queue_name]
 
-        self.manager.publish_all_longest_wait_time(cti_connection)
+        self.manager.publish_all_realtime_stats(cti_connection)
 
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 56:{'Xivo-LongestWaitTime': 765}}, cti_connection)
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 34:{'Xivo-LongestWaitTime': 765}}, cti_connection)
+        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 56:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 765}}, cti_connection)
+        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 34:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 765}}, cti_connection)
 
 
-    def test_publish_all_longest_wait_time_removed_queue(self):
+    def test_publish_all_realtime_stats_removed_queue(self):
 
         cti_connection = {}
         the_longest_wait_time_calculator.return_value = 765
@@ -466,7 +457,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager._queue_features_dao.id_from_name.side_effect = LookupError('No such queue')
 
-        self.manager.publish_all_longest_wait_time(cti_connection)
+        self.manager.publish_all_realtime_stats(cti_connection)
 
         self.manager._statistics_notifier.send_statistic.assert_never_called()
         self.assertTrue('service' not in self.manager._queue_entries)
