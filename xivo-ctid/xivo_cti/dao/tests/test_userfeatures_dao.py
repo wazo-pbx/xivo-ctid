@@ -27,6 +27,7 @@ from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
+from xivo_cti.dao import userfeaturesdao
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
@@ -561,3 +562,24 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         result = self.dao.get_line_identity(user.id)
 
         self.assertEqual(result, expected)
+
+    def test_find_by_line_id(self):
+        user = UserFeatures()
+        user.firstname = 'test'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.protocolid = 1
+        line.name = 'abc'
+        line.context = 'test_ctx'
+        line.provisioningid = 2
+        line.iduserfeatures = user.id
+
+        self.session.add(line)
+        self.session.commit()
+
+        user_id = userfeaturesdao.find_by_line_id(line.id)
+
+        self.assertEqual(user_id, user.id)

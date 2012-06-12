@@ -31,6 +31,13 @@ import time
 
 logger = logging.getLogger("UserFeaturesDAO")
 
+_DB_NAME = 'asterisk'
+
+
+def _session():
+    connection = dbconnection.get_connection(_DB_NAME)
+    return connection.get_session()
+
 
 class UserFeaturesDAO(object):
 
@@ -168,3 +175,7 @@ class UserFeaturesDAO(object):
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
         return cls(connection.get_session())
+
+
+def find_by_line_id(line_id):
+    return _session().query(LineFeatures.iduserfeatures).filter(LineFeatures.id == line_id)[0].iduserfeatures

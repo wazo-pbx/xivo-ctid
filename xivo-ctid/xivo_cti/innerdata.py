@@ -48,6 +48,7 @@ from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.cti_config import Config
+from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger('innerdata')
 
@@ -249,25 +250,38 @@ class Safe(object):
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
 
-    def _set_channel_agent_id(self, event):
+    def _channel_extra_vars_agent_linked_unlinked(self, event):
         try:
             channel_name = event['Channel']
             if channel_name in self.channels:
                 channel = self.channels[channel_name]
-                agent_number = event['Member'].split('/', 1)[1]
-                agent_id = self.xod_config['agents'].idbyagentnumber(agent_number)
-                channel.set_extra_data('xivo', 'desttype', 'agent')
-                channel.set_extra_data('xivo', 'destid', agent_id)
+                proto, agent_number = event['Member'].split('/', 1)
+                if proto == 'Agent':
+                    data_type = 'agent'
+                    data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+                else:
+                    data_type = 'user'
+                    phone_id = self.zphones(proto, agent_number)
+                    data_id = str(userfeaturesdao.find_by_line_id(phone_id))
+                channel.set_extra_data('xivo', 'desttype', data_type)
+                channel.set_extra_data('xivo', 'destid', data_id)
         except Exception:
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_linked(self, event):
-        self._set_channel_agent_id(event)
-        if 'Channel' in event and event['Channel'] in self.channels:
-            self.sheetsend('agentlinked', event['Channel'])
+        # Will be called when joining a group/queue with an agent or user member
+        self._channel_extra_vars_agent_linked_unlinked(event)
+        try:
+            channel = event['Channel']
+            proto, agent_number = channel.split('/', 1)
+            if proto == 'Agent' and channel in self.channels:
+                self.sheetsend('agentlinked', event['Channel'])
+        except KeyError:
+            logger.warning('Could not split channel %s', channel)
 
     def handle_agent_unlinked(self, event):
-        self._set_channel_agent_id(event)
+        # Will be called when leaving a group/queue with an agent or user member
+        self._channel_extra_vars_agent_linked_unlinked(event)
         if 'Channel' in event and event['Channel'] in self.channels:
             self.sheetsend('agentunlinked', event['Channel'])
 

@@ -138,7 +138,6 @@ class AMI_1_8(object):
             self.innerdata.channels[channel1].properties['commstatus'] = 'linked-caller'
             self.innerdata.setpeerchannel(channel1, channel2)
             self.innerdata.update(channel1)
-            self.innerdata.sheetsend('link', channel1)
         if channel2 in self.innerdata.channels:
             self.innerdata.channels[channel2].properties['talkingto_kind'] = 'channel'
             self.innerdata.channels[channel2].properties['talkingto_id'] = channel1
@@ -146,6 +145,7 @@ class AMI_1_8(object):
             self.innerdata.channels[channel2].properties['commstatus'] = 'linked-called'
             self.innerdata.setpeerchannel(channel2, channel1)
             self.innerdata.update(channel2)
+            self.innerdata.sheetsend('link', channel1)
 
     def ami_unlink(self, event):
         self.innerdata.sheetsend('unlink', event['Channel1'])
@@ -367,23 +367,6 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
         chanprops.set_extra_data('xivo', 'calledidnum', usersummary_dst.get('phonenumber'))
         chanprops.set_extra_data('xivo', 'calledidname', usersummary_dst.get('fullname'))
-
-    def userevent_group(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'desttype', 'group')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-
-    def userevent_queue(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        queue_id = event['XIVO_DSTID']
-        chanprops.set_extra_data('xivo', 'desttype', 'queue')
-        chanprops.set_extra_data('xivo', 'destid', queue_id)
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-
-    def userevent_meetme(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'desttype', 'meetme')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
 
     def userevent_outcall(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
