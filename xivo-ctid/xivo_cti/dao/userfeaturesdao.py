@@ -188,3 +188,11 @@ def get_agent_number(user_id):
     return (_session().query(AgentFeatures.number, UserFeatures.agentid)
             .filter(and_(UserFeatures.id == user_id,
                            AgentFeatures.id == UserFeatures.agentid))[0].number)
+
+
+def get_dest_unc(user_id):
+    return _session().query(UserFeatures.destunc).filter(UserFeatures.id == int(user_id))[0].destunc
+
+
+def get_fwd_unc(user_id):
+    return (_session().query(UserFeatures.enableunc).filter(UserFeatures.id == int(user_id))[0].enableunc == 1)

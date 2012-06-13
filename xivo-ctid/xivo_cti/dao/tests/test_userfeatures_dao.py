@@ -607,3 +607,39 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         result = userfeaturesdao.get_agent_number(user.id)
 
         self.assertEqual(result, agent.number)
+
+    def test_get_dest_unc(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_unc(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destunc = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_unc(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_unc(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_unc(user.id)
+
+        self.assertFalse(result)
+
+        user.enableunc = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_unc(user.id)
+
+        self.assertTrue(result)

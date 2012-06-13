@@ -39,6 +39,7 @@ from xivo import daemonize
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
+from xivo_cti import message_hook
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
@@ -48,6 +49,7 @@ from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_fagi
 from xivo_cti.interfaces.interfaces import DisconnectCause
+from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
@@ -63,7 +65,7 @@ from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyFor
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
-from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.funckey import funckey_manager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
@@ -159,7 +161,7 @@ class CTIServer(object):
 
         self._user_service_manager = UserServiceManager()
         self._user_service_notifier = UserServiceNotifier()
-        self._funckey_manager = FunckeyManager()
+        self._funckey_manager = funckey_manager.FunckeyManager()
         self._agent_service_manager = AgentServiceManager()
         self._agent_executor = AgentExecutor()
         self._presence_service_manager = PresenceServiceManager()
@@ -237,6 +239,7 @@ class CTIServer(object):
         service_manager.register_ami_events()
 
         self._register_cti_callbacks()
+        self._register_message_hooks()
 
     def _register_cti_callbacks(self):
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
@@ -272,6 +275,11 @@ class CTIServer(object):
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
 
         SubscribeMeetmeUpdate.register_callback_params(meetme_service_notifier.notifier.subscribe, ['cti_connection'])
+
+    def _register_message_hooks(self):
+        message_hook.add_hook([('function', 'updateconfig'),
+                               ('listname', 'users')],
+                              lambda x: funckey_manager.parse_update_user_config(self._funckey_manager, x))
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
@@ -556,6 +564,7 @@ class CTIServer(object):
 
     def send_cti_event(self, event):
         self._cti_events.put(event)
+        message_hook.run_hooks(event)
 
     def _empty_cti_events_queue(self):
         while self._cti_events.qsize() > 0:

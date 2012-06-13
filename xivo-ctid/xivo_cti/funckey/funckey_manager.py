@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo import xivo_helpers
+from xivo_cti.dao import userfeaturesdao
 
 
 class FunckeyManager(object):
@@ -72,3 +73,12 @@ class FunckeyManager(object):
         for destination in self.phone_funckey_dao.get_dest_busy(user_id):
             if destination:
                 self.busy_fwd_in_use(user_id, destination, False)
+
+
+def parse_update_user_config(manager, event):
+    if 'config' in event and 'enableunc' in event['config'] or 'destunc' in event['config']:
+        user_id = int(event['tid'])
+        manager.disable_all_unconditional_fwd(user_id)
+        manager.unconditional_fwd_in_use(user_id,
+                    userfeaturesdao.get_dest_unc(user_id),
+                    userfeaturesdao.get_fwd_unc(user_id))
