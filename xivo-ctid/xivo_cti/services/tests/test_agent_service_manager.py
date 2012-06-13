@@ -58,6 +58,8 @@ class TestAgentServiceManager(unittest.TestCase):
         Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
         Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
 
+        connection.get_engine().dispose()
+
         self.agent_1_exten = '1000'
 
         self.agent_features_dao = AgentFeaturesDAO(self.session)
