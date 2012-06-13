@@ -197,7 +197,6 @@ class Safe(object):
         self.xod_status = {}
         self.user_features_dao = None
 
-        self.events_cti = Queue.Queue()
         self.timeout_queue = Queue.Queue()
 
         self.channels = {}
@@ -352,12 +351,12 @@ class Safe(object):
             tid = contents.get('tid')
             if self.xod_status[listname].get(tid) != contents.get('status'):
                 self.xod_status[listname][tid] = contents.get('status')
-                self.events_cti.put({'class': 'getlist',
-                                     'listname': listname,
-                                     'function': 'updatestatus',
-                                     'tipbxid': self.ipbxid,
-                                     'tid': tid,
-                                     'status': self.xod_status[listname][tid]})
+                self._ctiserver.send_cti_event({'class': 'getlist',
+                                                'listname': listname,
+                                                'function': 'updatestatus',
+                                                'tipbxid': self.ipbxid,
+                                                'tid': tid,
+                                                'status': self.xod_status[listname][tid]})
 
     def update_config_list_all(self):
         for listname in self.urlvars:
@@ -380,7 +379,7 @@ class Safe(object):
                        'list': [k]}
 
             if not Config.get_instance().part_context():
-                self.events_cti.put(message)
+                self._ctiserver.send_cti_event(message)
             else:
                 if listname == 'users':
                     item_context = self.user_service_manager.get_context(k)
@@ -395,11 +394,11 @@ class Safe(object):
     def _update_config_list_del(self, listname, deltas):
         changed = 'del' in deltas and len(deltas['del']) > 0
         if changed:
-            self.events_cti.put({'class': 'getlist',
-                                 'listname': listname,
-                                 'function': 'delconfig',
-                                 'tipbxid': self.ipbxid,
-                                 'list': deltas['del']})
+            self._ctiserver.send_cti_event({'class': 'getlist',
+                                            'listname': listname,
+                                            'function': 'delconfig',
+                                            'tipbxid': self.ipbxid,
+                                            'list': deltas['del']})
         return changed
 
     def _update_config_list_change(self, listname, deltas):
@@ -413,12 +412,14 @@ class Safe(object):
                         newc[p] = props[p]
 
                 if newc:
-                    self.events_cti.put({'class': 'getlist',
-                                         'listname': listname,
-                                         'function': 'updateconfig',
-                                         'tipbxid': self.ipbxid,
-                                         'tid':tid,
-                                         'config': newc})
+                    message = {'class': 'getlist',
+                               'listname': listname,
+                               'function': 'updateconfig',
+                               'tipbxid': self.ipbxid,
+                               'tid': tid,
+                               'config': newc}
+
+                    self._ctiserver.send_cti_event(message)
                     do_fill_lines = True
 
         return do_fill_lines
@@ -778,11 +779,11 @@ class Safe(object):
 
     def _remove_queue_member(self, queue_member_id):
         del self.queuemembers[queue_member_id]
-        self.events_cti.put({'class': 'getlist',
-                             'listname': 'queuemembers',
-                             'function': 'delconfig',
-                             'tipbxid': self.ipbxid,
-                             'list': [queue_member_id]})
+        self._ctiserver.send_cti_event({'class': 'getlist',
+                                        'listname': 'queuemembers',
+                                        'function': 'delconfig',
+                                        'tipbxid': self.ipbxid,
+                                        'list': [queue_member_id]})
 
     def _update_queue_member_status(self, queue_member_id, status):
         if queue_member_id not in self.queuemembers:
@@ -855,7 +856,7 @@ class Safe(object):
                    'tipbxid': self.ipbxid,
                    'tid': item_id,
                    'status': status}
-            self.events_cti.put(evt)
+            self._ctiserver.send_cti_event(evt)
 
     def handle_cti_stack(self, action, event=None):
         """
@@ -892,11 +893,11 @@ class Safe(object):
         if channel in self.channels:
             self._remove_channel_relations(channel)
             del self.channels[channel]
-            self.events_cti.put({'class': 'getlist',
-                                 'listname': 'channels',
-                                 'function': 'delconfig',
-                                 'tipbxid': self.ipbxid,
-                                 'list': [channel]})
+            self._ctiserver.send_cti_event({'class': 'getlist',
+                                            'listname': 'channels',
+                                            'function': 'delconfig',
+                                            'tipbxid': self.ipbxid,
+                                            'list': [channel]})
         else:
             logger.warning('channel %s not there ...', channel)
 
@@ -920,12 +921,12 @@ class Safe(object):
             oldstatus = self.xod_status['phones'][p]['hintstatus']
             self.xod_status['phones'][p]['hintstatus'] = status
             if status != oldstatus:
-                self.events_cti.put({'class': 'getlist',
-                                     'listname': 'phones',
-                                     'function': 'updatestatus',
-                                     'tipbxid': self.ipbxid,
-                                     'tid': p,
-                                     'status': {'hintstatus': status}})
+                self._ctiserver.send_cti_event({'class': 'getlist',
+                                                'listname': 'phones',
+                                                'function': 'updatestatus',
+                                                'tipbxid': self.ipbxid,
+                                                'tid': p,
+                                                'status': {'hintstatus': status}})
 
     def updateregistration(self, peer, reg=''):
         termination = self.ast_channel_to_termination(peer)
@@ -934,12 +935,12 @@ class Safe(object):
             oldreg = self.xod_status['phones'][p]['reg']
             self.xod_status['phones'][p]['reg'] = reg
             if reg != oldreg:
-                self.events_cti.put({'class': 'getlist',
-                                     'listname': 'phones',
-                                     'function': 'updatestatus',
-                                     'tipbxid': self.ipbxid,
-                                     'tid': p,
-                                     'status': {'reg': reg}})
+                self._ctiserver.send_cti_event({'class': 'getlist',
+                                                'listname': 'phones',
+                                                'function': 'updatestatus',
+                                                'tipbxid': self.ipbxid,
+                                                'tid': p,
+                                                'status': {'reg': reg}})
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []

@@ -38,7 +38,7 @@ class QueueMemberServiceNotifier(object):
     def queuemember_config_updated(self, delta):
         self.innerdata_dao.apply_queuemember_delta(delta)
         for event in self._prepare_queuemember_config_updated(delta):
-            self.events_cti.put(event)
+            self.send_cti_event(event)
         for callback in self._callbacks:
             callback(delta)
 

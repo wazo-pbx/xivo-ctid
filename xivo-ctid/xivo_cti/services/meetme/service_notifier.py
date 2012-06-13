@@ -55,7 +55,7 @@ class MeetmeServiceNotifier(object):
         return filter_status_msg
 
     def add(self, meetme_id):
-        self.events_cti.put(self._prepare_event_add(meetme_id))
+        self.send_cti_event(self._prepare_event_add(meetme_id))
 
     def subscribe(self, client_connection):
         try:

@@ -27,7 +27,6 @@ from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
-import Queue
 from xivo_cti.cti_config import Config
 
 get_line_identity = Mock()
@@ -38,7 +37,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def setUp(self):
         self.ipbx_id = 'xivo_test'
         self.notifier = MeetmeServiceNotifier()
-        self.notifier.events_cti = Queue.Queue()
+        self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
         self.config = Mock(Config)
         self.config.part_context.return_value = False
@@ -64,9 +63,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         self.notifier.add(meetme_id)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
     def test_subscribe_update(self):

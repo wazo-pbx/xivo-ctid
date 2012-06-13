@@ -456,7 +456,7 @@ class AMI_1_8(object):
                      'tipbxid': self.ipbxid,
                      'tid': userid,
                      'config': user}
-            self.innerdata.events_cti.put(event)
+            self._ctiserver.send_cti_event(event)
         return reply
 
     def userevent_dialplan2cti(self, chanprops, event):

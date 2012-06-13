@@ -120,6 +120,7 @@ class CTIServer(object):
         self.pipe_queued_threads = None
         self._config = None
         self._user_service_manager = None
+        self._cti_events = Queue.Queue()
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self.sighandler)
@@ -445,10 +446,10 @@ class CTIServer(object):
             safe.queuemember_service_manager = self._queuemember_service_manager
             safe.init_status()
             self._user_features_dao._innerdata = safe
-            self._user_service_notifier.events_cti = safe.events_cti
+            self._user_service_notifier.send_cti_event = self.send_cti_event
             self._user_service_notifier.ipbx_id = self.myipbxid
             self._queuemember_service_manager.innerdata_dao.innerdata = safe
-            self._queuemember_service_notifier.events_cti = safe.events_cti
+            self._queuemember_service_notifier.send_cti_event = self.send_cti_event
             self._queuemember_service_notifier.ipbx_id = self.myipbxid
             self._user_service_manager.presence_service_executor._innerdata = safe
             self.safe[self.myipbxid].register_cti_handlers()
@@ -553,14 +554,12 @@ class CTIServer(object):
         for k in tsl:
             k.reply(payload)
 
-    def loop_over_cti_queues(self):
-        for ipbxid, innerdata in self.safe.iteritems():
-            self.loop_over_cti_queue(innerdata)
+    def send_cti_event(self, event):
+        self._cti_events.put(event)
 
-    def loop_over_cti_queue(self, innerdata):
-        cti_queue = innerdata.events_cti
-        while cti_queue.qsize() > 0:
-            msg = cti_queue.get()
+    def _empty_cti_events_queue(self):
+        while self._cti_events.qsize() > 0:
+            msg = self._cti_events.get()
             for interface_obj in self.fdlist_established.itervalues():
                 if  not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
                     interface_obj.append_msg(msg)
@@ -826,10 +825,10 @@ class CTIServer(object):
                             if tmp_ltr != 'xivo[cticonfig,update]':
                                 listtorequest = tmp_ltr[5:-12] + 's'
                                 safe.update_config_list(listtorequest)
-                                self.loop_over_cti_queues()
+                                self._empty_cti_events_queue()
                     else:
                         safe.update_config_list_all()
-                        self.loop_over_cti_queues()
+                        self._empty_cti_events_queue()
                 except Exception:
                     logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
 
@@ -869,7 +868,7 @@ class CTIServer(object):
                     elif self.pipe_queued_threads[0] == sel_i:
                         self._socket_pipe_queue_read(sel_i)
 
-                    self.loop_over_cti_queues()
+                    self._empty_cti_events_queue()
 
                     for ipbxid, safe in self.safe.iteritems():
                         self._update_safe_list(ipbxid, safe)
