@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,6 +25,7 @@ from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.dao import queue_features_dao
 from xivo_cti.dao import userfeaturesdao
+from xivo_cti.dao import group_dao
 import logging
 
 logger = logging.getLogger("QueueMemberServiceManager")
@@ -102,23 +103,42 @@ class QueueMemberServiceManager(object):
             self.agent_service_manager.queueremove(queue_name, agent_id)
 
     def is_queue_member(self, user_id, queue_id):
-        queue_name = queue_features_dao.get_queue_name(queue_id)
-        line_proto_name = userfeaturesdao.get_line_identity(user_id)
+        try:
+            queue_name = queue_features_dao.get_queue_name(queue_id)
+        except LookupError:
+            return False
 
         lowered_keys = map(lambda x: x.lower(),
                            self.innerdata_dao.get_queuemembers_config().keys())
-        try:
-            key = ('Agent/%s' % userfeaturesdao.get_agent_number(user_id)).lower()
-            if key in lowered_keys:
-                return True
-        except LookupError:
-            pass  # User has no agent
 
         try:
-            key = ('%s,%s' % (line_proto_name, queue_name)).lower()
+            chan = ('Agent/%s' % (userfeaturesdao.get_agent_number(user_id))).lower()
+        except LookupError:
+            pass  # User has no agent or it's a group
+        else:
+            key = '%s,%s' % (chan, queue_name)
             if key in lowered_keys:
                 return True
+
+        try:
+            line_proto_name = userfeaturesdao.get_line_identity(user_id)
         except LookupError:
-            pass  # User has no line
+            pass  # This user has no line
+        else:
+            key = '%s,%s' % (line_proto_name.lower(), queue_name)
+            if key in lowered_keys:
+                return True
 
         return False
+
+    def is_group_member(self, user_id, group_id):
+        try:
+            group_name = group_dao.get_name(group_id)
+            line_proto_name = userfeaturesdao.get_line_identity(user_id)
+        except KeyError:
+            return False
+        else:
+            lowered_keys = map(lambda x: x.lower(),
+                               self.innerdata_dao.get_queuemembers_config().keys())
+
+            return '%s,%s' % (line_proto_name.lower(), group_name) in lowered_keys

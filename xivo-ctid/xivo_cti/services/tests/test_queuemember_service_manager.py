@@ -32,6 +32,7 @@ from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 get_line_identity = Mock()
 get_queue_name = Mock()
+get_group_name = Mock()
 get_agent_number = Mock()
 
 
@@ -233,12 +234,12 @@ class TestQueueMemberServiceManager(unittest.TestCase):
     def test_is_queue_member_agent(self):
         user_id = 1
         queue_id = 2
-        queue_members = {u'Agent/3001': {'interface': u'Agent/3001',
-                                          'membership': u'static',
-                                          'paused': u'0',
-                                          'penalty': u'0',
-                                          'queue_name': u'file',
-                                          'status': u'1'}}
+        queue_members = {u'Agent/3001,file': {'interface': u'Agent/3001',
+                                              'membership': u'static',
+                                              'paused': u'0',
+                                              'penalty': u'0',
+                                              'queue_name': u'file',
+                                              'status': u'1'}}
 
         innerdata_dao = Mock(InnerdataDAO)
         innerdata_dao.get_queuemembers_config.return_value = queue_members
@@ -250,5 +251,29 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         get_agent_number.return_value = '3001'
 
         result = self.queuemember_service_manager.is_queue_member(user_id, queue_id)
+
+        self.assertTrue(result)
+
+    @patch('xivo_cti.dao.group_dao.get_name', get_group_name)
+    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
+    def test_is_group_member_user_member(self):
+        user_id = 1
+        group_id = 2
+        queue_members = {u'SIP/i7vbu0,file': {'interface': u'SIP/i7vbu0',
+                                              'membership': u'static',
+                                              'paused': u'0',
+                                              'penalty': u'0',
+                                              'queue_name': u'file',
+                                              'status': u'1'}}
+
+        innerdata_dao = Mock(InnerdataDAO)
+        innerdata_dao.get_queuemembers_config.return_value = queue_members
+
+        self.queuemember_service_manager.innerdata_dao = innerdata_dao
+
+        get_line_identity.return_value = 'sip/i7vbu0'
+        get_group_name.return_value = 'file'
+
+        result = self.queuemember_service_manager.is_group_member(user_id, group_id)
 
         self.assertTrue(result)
