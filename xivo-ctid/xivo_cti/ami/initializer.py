@@ -22,7 +22,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from collections import namedtuple
 
 import logging
@@ -39,13 +38,9 @@ class AMIInitializer(object):
                                      [],
                                      ['CoreShowChannels'])
     CORE_SHOW_CHANNEL_COMPLETE = InitializingEntry('CoreShowChannelsComplete',
-                                                   ['PeerlistComplete'],
+                                                   ['RegistrationsComplete'],
                                                    ['CoreShowChannelsComplete'],
-                                                   ['SIPpeers', 'IAXpeers'])
-    PEER_LIST_COMPLETE = InitializingEntry('PeerlistComplete',
-                                           ['RegistrationsComplete'],
-                                           ['PeerlistComplete'],
-                                           ['SIPshowregistry', 'IAXregistry'])
+                                                   ['SIPshowregistry', 'IAXregistry'])
     REGISTRATION_COMPLETE = InitializingEntry('RegistrationsComplete',
                                               ['DAHDIShowChannelsComplete'],
                                               ['RegistrationComplete'],
@@ -84,7 +79,6 @@ class AMIInitializer(object):
 
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
                      CORE_SHOW_CHANNEL_COMPLETE.trigger: CORE_SHOW_CHANNEL_COMPLETE,
-                     PEER_LIST_COMPLETE.trigger: PEER_LIST_COMPLETE,
                      REGISTRATION_COMPLETE.trigger: REGISTRATION_COMPLETE,
                      DAHDI_SHOW_CHANNELS_COMPLETE.trigger: DAHDI_SHOW_CHANNELS_COMPLETE,
                      QUEUE_SUMMARY_COMPLETE.trigger: QUEUE_SUMMARY_COMPLETE,

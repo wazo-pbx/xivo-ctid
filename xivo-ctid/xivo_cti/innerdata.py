@@ -1163,7 +1163,6 @@ class Safe(object):
         while self.timeout_queue.qsize() > 0:
             ncount += 1
             received = self.timeout_queue.get()
-            logger.debug('checkqueue received %s', received)
             (toload,) = received
             action = toload.get('action')
             if action == 'fagi_noami':
@@ -1225,8 +1224,9 @@ class Safe(object):
             logger.exception('problem when closing channel %s', channel)
 
     def fagi_setup(self, fagistruct):
-        tm = threading.Timer(0.2, self.cb_timer, ({'action': 'fagi_noami',
-                                                   'properties': fagistruct}))
+        params = ({'action': 'fagi_noami',
+                   'properties': fagistruct},)
+        tm = threading.Timer(0.2, self.cb_timer, params)
         self.fagichannels[fagistruct.channel] = {'timer': tm,
                                                  'fagistruct': fagistruct}
         tm.setName('Thread-fagi-%s' % fagistruct.channel)

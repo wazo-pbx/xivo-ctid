@@ -78,21 +78,8 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('PeerlistComplete')
-        self.ami_initializer._unregister.assert_called_once_with('CoreShowChannelsComplete')
-        self.ami_initializer._send.assert_has_calls([call('SIPpeers'), call('IAXpeers')])
-
-    def test_go_peerlist_complete(self):
-        self.setup_mock()
-        msg = {'Event': 'PeerlistComplete',
-               'EventList': 'Complete',
-               'ListItems': '0'}
-
-
-        self.ami_initializer.go(msg)
-
         self.ami_initializer._register.assert_called_once_with('RegistrationsComplete')
-        self.ami_initializer._unregister.assert_called_once_with('PeerlistComplete')
+        self.ami_initializer._unregister.assert_called_once_with('CoreShowChannelsComplete')
         self.ami_initializer._send.assert_has_calls([call('SIPshowregistry'), call('IAXregistry')])
 
     def test_go_registrations_complete(self):
