@@ -63,6 +63,7 @@ class AMIClass(object):
         if sockret:
             logger.warning('unable to connect to %s:%d - reason %d',
                            self.ipaddress, self.ipport, sockret)
+            raise AMIError('failed to connect')
         else:
             self.sock.settimeout(30)
             self.fd = self.sock.fileno()
@@ -107,25 +108,6 @@ class AMIClass(object):
             logger.exception('(sendcommand other (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
-        if ret == False:
-            if loopnum == 0:
-                logger.warning('second attempt for AMI command (%s %s %s)',
-                               action, self.actionid, self.fd)
-                # tries to reconnect
-                try:
-                    self.sock.close()
-
-                    self.connect()
-                    self.login()
-                    if self:
-                        # "retrying AMI command=<%s> args=<%s>" % (action, str(args)))
-                        self.sendcommand(action, args, 1)
-                except Exception:
-                    logger.exception('reconnection (%s %s %s)',
-                                     action, self.actionid, self.fd)
-            else:
-                logger.warning('2 attempts have failed for AMI command (%s %s %s)',
-                               action, self.actionid, self.fd)
         if self.actionid:
             self.actionid = None
         return ret

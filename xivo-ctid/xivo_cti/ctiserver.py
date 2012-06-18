@@ -348,10 +348,7 @@ class CTIServer(object):
                     ipbxid = self.find_matching_ipbxid(got_ip_address)
                     if ipbxid:
                         if not self.myami[ipbxid].connected():
-                            logger.info('attempt to reconnect to the AMI for %s', ipbxid)
-                            z = self.myami[ipbxid].connect()
-                            if z:
-                                self.fdlist_ami[z] = self.myami[ipbxid]
+                            self._on_ami_down()
                     else:
                         logger.warning('did not found a matching ipbxid for the address %s',
                                        got_ip_address)
@@ -471,6 +468,8 @@ class CTIServer(object):
                 self._funckey_manager.ami = self.myami[self.myipbxid].amicl
                 self._agent_service_manager.agent_executor.ami = self.myami[self.myipbxid].amicl
                 self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
+            else:
+                self._on_ami_down()
 
             try:
                 self.safe[self.myipbxid].update_config_list_all()
@@ -536,6 +535,10 @@ class CTIServer(object):
         else:
             while not self.askedtoquit:
                 self.select_step()
+
+    def _on_ami_down(self):
+        logger.info('shutting down xivo-ctid')
+        sys.exit(2)
 
     def get_connected(self, tomatch):
         clist = list()
@@ -655,9 +658,7 @@ class CTIServer(object):
             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
             if len(buf) == 0:
                 logger.warning('AMI %s : CLOSING (%s)', ipbxid, time.asctime())
-                del self.fdlist_ami[sel_i]
-                sel_i.close()
-                amiint.disconnect()
+                self._on_ami_down()
             else:
                 try:
                     amiint.handle_event(buf)

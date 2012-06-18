@@ -90,7 +90,7 @@ class AMI(object):
             self.amicl.login()
             return self.amicl.sock
         except Exception:
-            logger.exception('unable to connect/login')
+            logger.warning('unable to connect/login')
 
     def disconnect(self):
         logger.info('ami disconnected')
