@@ -43,7 +43,7 @@ from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
-from xivo_cti.tools.caller_id import build_caller_id, build_agi_caller_id
+from xivo_cti.tools.caller_id import build_caller_id
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.queue_service_manager import NotAQueueException
@@ -213,9 +213,6 @@ class Safe(object):
         self.call_history_mgr = call_history.CallHistoryMgr.new_from_uri(cdr_uri)
 
         self.ctistack = []
-
-        self.fagisync = {}
-        self.fagichannels = {}
 
         self.extenfeatures = {}
 
@@ -619,7 +616,7 @@ class Safe(object):
 
     def meetmeupdate(self, confno, channel=None, opts={}):
         mid = self.xod_config['meetmes'].idbyroomnumber(confno)
-        if mid is None:  # Happens when using paging
+        if mid is None:
             return None
         status = self.xod_status['meetmes'][mid]
         self.handle_cti_stack('set', ('meetmes', 'updatestatus', mid))
@@ -1165,11 +1162,7 @@ class Safe(object):
             received = self.timeout_queue.get()
             (toload,) = received
             action = toload.get('action')
-            if action == 'fagi_noami':
-                fagistruct = toload.get('properties')
-                # XXX maybe we could handle the AGI data nevertheless ?
-                self.fagi_close(fagistruct, {'XIVO_CTI_AGI': 'FAIL'})
-            elif action == 'fax':
+            if action == 'fax':
                 properties = toload.get('properties')
                 step = properties.get('step')
                 fileid = properties.get('fileid')
@@ -1189,151 +1182,6 @@ class Safe(object):
             os.write(self._ctiserver.pipe_queued_threads[1], 'innerdata:%s\n' % self.ipbxid)
         except Exception:
             logger.exception('cb_timer %s', args)
-
-    # Timers/Synchro stuff - end
-
-    # FAGI stuff - begin
-    # all this should handle the following cases (see also interface_fagi file) :
-    # - AMI is connected and newexten 'AGI' (on ~ 5003) comes before the AGI (on ~ 5002) (often)
-    # - AMI is connected and newexten 'AGI' (on ~ 5003) comes after the AGI (on ~ 5002) (sometimes)
-    # - AMI is NOT connected and an AGI comes (on ~ 5002)
-
-    def fagi_sync(self, action, channel, where=None):
-        if action == 'set':
-            if channel not in self.fagisync:
-                self.fagisync[channel] = []
-            self.fagisync[channel].append(where)
-        elif action == 'get':
-            if channel not in self.fagisync:
-                self.fagisync[channel] = []
-            return (where in self.fagisync[channel])
-        elif action == 'clear':
-            if channel in self.fagisync:
-                del self.fagisync[channel]
-
-    def fagi_close(self, fagistruct, varstoset):
-        channel = fagistruct.channel
-        try:
-            cid = fagistruct.connid
-            for k, v in varstoset.iteritems():
-                cid.sendall('SET VARIABLE %s "%s"\n' % (k, v.encode('utf8')))
-            cid.close()
-            del self._ctiserver.fdlist_established[cid]
-            del self.fagichannels[channel]
-        except Exception:
-            logger.exception('problem when closing channel %s', channel)
-
-    def fagi_setup(self, fagistruct):
-        params = ({'action': 'fagi_noami',
-                   'properties': fagistruct},)
-        tm = threading.Timer(0.2, self.cb_timer, params)
-        self.fagichannels[fagistruct.channel] = {'timer': tm,
-                                                 'fagistruct': fagistruct}
-        tm.setName('Thread-fagi-%s' % fagistruct.channel)
-        tm.start()
-
-    def fagi_handle(self, channel, where):
-        if channel not in self.fagichannels:
-            return
-
-        # handle fagi event
-        fagistruct = self.fagichannels[channel]['fagistruct']
-        timer = self.fagichannels[channel]['timer']
-        timer.cancel()
-        agievent = fagistruct.agidetails
-
-        try:
-            varstoset = self.fagi_handle_real(agievent)
-        except:
-            logger.exception('for channel %s', channel)
-            varstoset = {}
-
-        # the AGI handling has been done, exiting ...
-        self.fagi_close(fagistruct, varstoset)
-
-    def _get_cid_for_phone(self, channel):
-        phone = self.xod_config['phones'].find_phone_by_channel(channel)
-        user = self.user_features_dao.get(phone['iduserfeatures'])
-        cid_all, cid_name, cid_number = build_caller_id(phone['callerid'], user.fullname, phone['number'])
-        return cid_all, cid_name, cid_number
-
-    def _get_cid_directory_lookup(self, original_cid, name, pattern, contexts):
-        valid_contexts = ['*'] if '*' in self.contexts_mgr.contexts else []
-        valid_contexts.extend([context for context in contexts if context in self.contexts_mgr.contexts])
-        resultlist = []
-        for context in valid_contexts:
-            context_obj = self.contexts_mgr.contexts[context]
-            lookup_result = context_obj.lookup_reverse(None, pattern)
-            resultlist.extend(lookup_result)
-
-        if len(resultlist) > 0:
-            return  build_caller_id(original_cid, resultlist[0], pattern)
-        else:
-            return None, None, None
-
-    def fagi_handle_real(self, agievent):
-        varstoset = {}
-        try:
-            function = agievent['agi_network_script']
-            agiargs = {}
-            for k, v in agievent.iteritems():
-                if k.startswith('agi_arg_'):
-                    agiargs[k[8:]] = v
-        except KeyError:
-            logger.exception('handle_fagi %s', agievent)
-            return varstoset
-
-        if function == 'presence':
-            # see https://projects.xivo.fr/issues/1995
-            try:
-                if agiargs:
-                    presences = self._config.getconfig('userstatus')
-
-                    prescountdict = dict.fromkeys(presences, {})
-                    for k, v in presences.iteritems():
-                        for kk in v.keys():
-                            prescountdict[k][kk] = 0
-
-                    for k, v in self.xod_status.get('users').iteritems():
-                        if v.get('connection'):
-                            availstate = v.get('availstate')
-                            availkind = self.user_get_userstatuskind(k)
-                            if availkind in prescountdict and availstate in prescountdict.get(availkind):
-                                prescountdict[availkind][availstate] += 1
-
-                    varstoset['XIVO_PRESENCE'] = cjson.encode(prescountdict)
-            except Exception:
-                logger.exception('handle_fagi %s : %s', function, agiargs)
-        elif function == 'callerid_extend':
-            if 'agi_callington' in agievent:
-                varstoset['XIVO_SRCTON'] = agievent.get('agi_callington')
-        elif function == 'callerid_forphones':
-            try:
-                varstoset.update(self._resolve_incoming_caller_id(agievent['agi_channel'],
-                                                                  agievent['agi_calleridname'],
-                                                                  agievent['agi_callerid'],
-                                                                  agievent.get('agi_arg_1', None)))
-            except Exception:
-                logger.info('Could not set the caller ID for channel %s', agievent.get('agi_channel'))
-
-        return varstoset
-
-    def _resolve_incoming_caller_id(self, channel, cid_name, cid_number, dest_user_id):
-        logger.info('Resolving caller ID: channel=%s incoming caller ID=%s %s, destination: user %s',
-                    channel, cid_name, cid_number, dest_user_id)
-        chan_proto, chan_name = split_channel(channel)
-
-        if cid_name == cid_number or cid_name == 'unknown':
-            if self._is_phone_channel(chan_proto, chan_name):
-                return build_agi_caller_id(*self._get_cid_for_phone(channel))
-            elif chan_proto == 'Local':
-                return build_agi_caller_id(*self._get_cid_directory_lookup(
-                    cid_number, chan_name, cid_number, [chan_name.split('@')[1]]))
-            else:
-                user_context = self._ctiserver._user_service_manager.get_context(dest_user_id)
-                return build_agi_caller_id(*self._get_cid_directory_lookup(
-                    cid_number, chan_name, cid_number, [user_context]))
-        return build_agi_caller_id(None, None, None)
 
     def _is_phone_channel(self, proto, name):
         return self._is_listmember_channel(proto, name, 'phones')

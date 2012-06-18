@@ -51,9 +51,6 @@ class AMI_1_8(object):
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
         self.innerdata = self._ctiserver.safe
-        fagiport = (cti_config.Config.get_instance().getconfig('main')
-                    .get('incoming_tcp').get('FAGI')[1])
-        self.fagiportstring = ':%s/' % fagiport
 
     def ami_newstate(self, event):
         self.innerdata.newstate(event['Channel'], event['ChannelState'])
@@ -69,19 +66,6 @@ class AMI_1_8(object):
                   'amiargs': [channel, 'XIVO_ORIGACTIONID']}
         self._ctiserver.myami.execute_and_track(actionid, params)
         self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
-
-    def ami_newexten(self, event):
-        application = event['Application']
-        appdata = event['AppData']
-        channel = event['Channel']
-        if application == 'AGI':
-            if self.fagiportstring in appdata:  # match against ~ ':5002/' in appdata
-                # warning : this might cause problems if AMI not connected
-                if self.innerdata.fagi_sync('get', channel, 'agi'):
-                    self.innerdata.fagi_sync('clear', channel)
-                    self.innerdata.fagi_handle(channel, 'AMI')
-                else:
-                    self.innerdata.fagi_sync('set', channel, 'ami')
 
     def ami_hangup(self, event):
         channel = event['Channel']
@@ -479,9 +463,6 @@ class AMI_1_8(object):
                 if hasattr(self, methodname):
                     chanprops = self.innerdata.channels[channel]
                     getattr(self, methodname)(chanprops, event)
-
-    def handle_fagi(self, fastagi):
-        return
 
     def ami_messagewaiting(self, event):
         try:

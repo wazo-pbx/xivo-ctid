@@ -126,19 +126,3 @@ class QueueList(AnyList):
 
     def get_all_queues(self):
         return self.keeplist
-
-    def get_queues_byagent(self, agid):
-        queuelist = {}
-        for qref, ql in self.keeplist.iteritems():
-            lst = {}
-            if agid in ql['agents_in_queue']:
-                agprop = ql['agents_in_queue'][agid]
-                for v in self.queuelocationprops:
-                    if v in agprop:
-                        lst[v] = agprop[v]
-                    else:
-                        logger.warning('get_queues_byagent : no property %s for agent %s in queue %s',
-                                       v, agid, qref)
-            lst['context'] = ql['context']
-            queuelist[qref] = lst
-        return queuelist

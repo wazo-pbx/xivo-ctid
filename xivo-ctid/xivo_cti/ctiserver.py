@@ -47,7 +47,6 @@ from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
-from xivo_cti.interfaces import interface_fagi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
@@ -578,7 +577,7 @@ class CTIServer(object):
             logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
             logger.warning('(select) self.askedtoquit=%s fdlist_full=%s',
                            self.askedtoquit, self.fdlist_full)
-            logger.warning('(select) current open TCP connections : (CTI, WEBI, FAGI, INFO) %s',
+            logger.warning('(select) current open TCP connections : (CTI, WEBI, INFO) %s',
                            self.fdlist_established)
             logger.warning('(select) current open TCP connections : (AMI) %s', self.ami_sock)
 
@@ -675,12 +674,10 @@ class CTIServer(object):
             elif kind == 'WEBI':
                 interface = interface_webi.WEBI(self)
                 interface.queuemember_service_manager = self._queuemember_service_manager
-            elif kind == 'FAGI':
-                interface = interface_fagi.FAGI(self)
 
             interface.connected(socketobject)
 
-            if kind in ['WEBI', 'FAGI', 'INFO']:
+            if kind in ['WEBI', 'INFO']:
                 interface.set_ipbxid(self.myipbxid)
 
             self.fdlist_established[socketobject] = interface
@@ -800,10 +797,10 @@ class CTIServer(object):
                     # the UDP messages (ANNOUNCE) are catched here
                     elif sel_i in self.fdlist_udp_cti:
                         self._socket_udp_cti_read(sel_i)
-                    # the new TCP connections (CTI, WEBI, FAGI, INFO) are catched here
+                    # the new TCP connections (CTI, WEBI, INFO) are catched here
                     elif sel_i in self.fdlist_listen_cti:
                         self._socket_detect_new_tcp_connection(sel_i)
-                    # incoming TCP connections (CTI, WEBI, AGI, INFO)
+                    # incoming TCP connections (CTI, WEBI, INFO)
                     elif sel_i in self.fdlist_established:
                         self._socket_established_read(sel_i)
                     # local pipe fd
