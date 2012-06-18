@@ -373,9 +373,6 @@ class CTIServer(object):
         except Exception:
             logger.exception('cb_timer %s', args)
 
-    def updates_period(self):
-        return int(self._config.getconfig('main').get('updates_period', '3600'))
-
     def _init_db_connection_pool(self):
         # XXX we should probably close the db_connection_pool when main loop exit
         dbconnection.unregister_db_connection_pool()
@@ -413,7 +410,7 @@ class CTIServer(object):
 
         # loads the general configuration
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
-        self._config.set_parting_options(xivoconf_general.get('parting_astid_context'))
+        self._config.set_parting_options(xivoconf_general.get('context_separation'))
 
         socket.setdefaulttimeout(socktimeout)
 
