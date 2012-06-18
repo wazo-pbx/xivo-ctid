@@ -484,8 +484,6 @@ class Safe(object):
                 domatch = self.queuemember_service_manager.is_queue_member(userid, dest_id)
             elif dest_type == 'group' and dest_id:
                 domatch = self.queuemember_service_manager.is_group_member(userid, dest_id)
-            else:
-                logger.warning('Unhandled to match destination type %s', dest_type)
         else:
             # 'all' case
             domatch = True
