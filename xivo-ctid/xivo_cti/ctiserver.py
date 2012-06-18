@@ -410,7 +410,7 @@ class CTIServer(object):
 
         # loads the general configuration
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
-        self._config.set_parting_options(xivoconf_general.get('context_separation'))
+        self._config.set_context_separation(xivoconf_general.get('context_separation'))
 
         socket.setdefaulttimeout(socktimeout)
 

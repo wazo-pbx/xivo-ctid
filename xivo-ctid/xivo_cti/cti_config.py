@@ -46,9 +46,6 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
 class Config(object):
-
-    PART_OPTION_CONTEXT = 'context'
-
     instance = None
 
     def __init__(self, * urilist):
@@ -56,7 +53,7 @@ class Config(object):
         self.ipwebs = None
         self.xc_json = {}
         self.overconf = None
-        self._parting_options = []
+        self._context_separation = None
 
     def update(self):
         # the aim of the urilist would be to handle the URI's one after the other
@@ -131,12 +128,15 @@ class Config(object):
             ret = self.xc_json
         return ret
 
-    def set_parting_options(self, parting_options=None):
-        self._parting_options = parting_options if parting_options else []
-        logger.debug('New parting options: %s', self._parting_options)
+    def set_context_separation(self, context_separation=None):
+        if context_separation:
+            self._context_separation = context_separation
+        else:
+            self._context_separation = False
+        logger.debug('Context separation: %s', self._context_separation)
 
     def part_context(self):
-        return self.PART_OPTION_CONTEXT in self._parting_options
+        return self._context_separation == True
 
     @classmethod
     def get_instance(cls):
