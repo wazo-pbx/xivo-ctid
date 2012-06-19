@@ -341,8 +341,7 @@ class CTIServer(object):
                 data = toload.get('properties').get('data')
                 if data.startswith('asterisk'):
                     if not self.myami.connected():
-                        logger.info('attempt to reconnect to the AMI')
-                        self.ami_sock = self.myami.connect()
+                        self._on_ami_down()
             elif action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
@@ -430,6 +429,8 @@ class CTIServer(object):
         self.commandclass.queuemember_service_manager = self._queuemember_service_manager
 
         self.ami_sock = self.myami.connect()
+        if not self.ami_sock:
+            self._on_ami_down()
 
         self._queuemember_service_notifier.interface_ami = self.myami
         self._queue_entry_manager._ami = self.myami.amiclass
