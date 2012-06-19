@@ -548,9 +548,6 @@ class Command(object):
             if src.get('id') in innerdata.xod_config.get('phones').keeplist:
                 phoneidstruct_src = innerdata.xod_config.get('phones').keeplist.get(src.get('id'))
         elif src.get('type') == 'exten':
-            # in android cases
-            # there was a warning back to revision 6095 - maybe to avoid making arbitrary calls on behalf
-            # of the local telephony system ?
             orig_context = 'mamaop'  # XXX how should we define or guess the proper context here ?
             orig_protocol = 'local'
             orig_name = '%s@%s' % (src.get('id'), orig_context)  # this is the number actually dialed, in local channel mode

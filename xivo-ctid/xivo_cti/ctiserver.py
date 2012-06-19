@@ -110,11 +110,9 @@ logger = logging.getLogger('main')
 class CTIServer(object):
 
     xivoversion = '1.2'
-    revision = 'githash'
-    xdname = 'XiVO CTI Server'
+    servername = 'XiVO CTI Server'
 
     def __init__(self):
-        self.nreload = 0
         self.mycti = {}
         self.myami = None
         self.safe = None
@@ -378,9 +376,8 @@ class CTIServer(object):
         self.askedtoquit = False
 
         self.time_start = time.localtime()
-        logger.info('# STARTING %s %s (pid %d) / git:%s # (0/3) Starting (%d)',
-                    self.xdname, self.xivoversion, os.getpid(), self.revision, self.nreload)
-        self.nreload += 1
+        logger.info('STARTING %s %s (pid %d))',
+                    self.servername, self.xivoversion, os.getpid())
 
         self.lastrequest_time = time.time()
         self.update_userlist = []
@@ -596,8 +593,8 @@ class CTIServer(object):
 
             if self.askedtoquit:
                 time_uptime = int(time.time() - time.mktime(self.time_start))
-                logger.info('# STOPPING XiVO CTI Server %s (pid %d) / git:%s # uptime %d s (since %s)',
-                            self.xivoversion, os.getpid(), self.revision,
+                logger.info('STOPPING %s %s (pid %d) / uptime %d s (since %s)',
+                            self.servername, self.xivoversion, os.getpid(),
                             time_uptime, time.asctime(self.time_start))
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (stop) killing thread <%s>' % t.getName()
@@ -616,13 +613,13 @@ class CTIServer(object):
         try:
             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
             if len(buf) == 0:
-                logger.warning('AMI %s : CLOSING (%s)', time.asctime())
+                logger.warning('AMI: CLOSING (%s)', time.asctime())
                 self._on_ami_down()
             else:
                 try:
                     self.myami.handle_event(buf)
                 except Exception:
-                    logger.exception('(handle_event) %s')
+                    logger.exception('(handle_event)')
         except Exception:
             logger.exception('(amilist)')
 
