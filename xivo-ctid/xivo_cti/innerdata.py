@@ -1177,7 +1177,7 @@ class Safe(object):
                 if removeme:
                     params = self.faxes[fileid].getparams()
                     actionid = fileid
-                    self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                    self._ctiserver.myami.execute_and_track(actionid, params)
                     del self.faxes[fileid]
 
             # other cases to handle : login, agentlogoff (would that still be true ?)

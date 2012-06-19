@@ -477,7 +477,7 @@ class Command(object):
                           'amicommand': z.get('amicommand'),
                           'amiargs': z.get('amiargs')}
                 actionid = '%s-%03d' % (baseactionid, idz)
-                ipbxreply = self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                ipbxreply = self._ctiserver.myami.execute_and_track(actionid, params)
             else:
                 ipbxreply = z.get('error')
             idz += 1

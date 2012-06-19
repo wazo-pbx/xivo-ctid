@@ -70,22 +70,22 @@ class Test(unittest.TestCase):
         msg = 'sip show peer francis'
         type = 'sync'
         self._interface_webi.ipbxid = '1234'
-        self._ctiserver.myami = {'1234': Mock(AMI)}
+        self._ctiserver.myami = Mock(AMI)
 
         result = self._interface_webi._send_ami_request(type, msg)
 
-        self._ctiserver.myami.get(self._interface_webi.ipbxid).delayed_action.assert_called_once_with(msg, self._interface_webi)
+        self._ctiserver.myami.delayed_action.assert_called_once_with(msg, self._interface_webi)
         self.assertEqual(False, result)
 
     def test_send_ami_request_async(self):
         msg = 'dialplan reload'
         type = 'async'
         self._interface_webi.ipbxid = '1234'
-        self._ctiserver.myami = {'1234': Mock(AMI)}
+        self._ctiserver.myami = Mock(AMI)
 
         result = self._interface_webi._send_ami_request(type, msg)
 
-        self._ctiserver.myami.get(self._interface_webi.ipbxid).delayed_action.assert_called_once_with(msg)
+        self._ctiserver.myami.delayed_action.assert_called_once_with(msg)
         self.assertEqual(True, result)
 
     def test_manage_connection_reload_daemon(self):

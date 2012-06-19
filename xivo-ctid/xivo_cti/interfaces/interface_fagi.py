@@ -41,7 +41,7 @@ class FAGI(interfaces.Interfaces):
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
 
     def manage_connection(self, msg):
         self.stack.extend(msg.split(self.sep))

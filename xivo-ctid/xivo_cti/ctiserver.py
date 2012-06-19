@@ -333,7 +333,6 @@ class CTIServer(object):
 
     def checkqueue(self):
         ncount = 0
-        ipbxid = self.myipbxid
         while self.timeout_queue.qsize() > 0:
             ncount += 1
             (toload,) = self.timeout_queue.get()
@@ -341,11 +340,11 @@ class CTIServer(object):
             if action == 'ipbxup':
                 data = toload.get('properties').get('data')
                 if data.startswith('asterisk'):
-                    if not self.myami[ipbxid].connected():
-                        logger.info('attempt to reconnect to the AMI for %s', ipbxid)
-                        z = self.myami[ipbxid].connect()
+                    if not self.myami.connected():
+                        logger.info('attempt to reconnect to the AMI')
+                        z = self.myami.connect()
                         if z:
-                            self.fdlist_ami[z] = self.myami[ipbxid]
+                            self.fdlist_ami[z] = self.myami
             elif action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
@@ -426,24 +425,24 @@ class CTIServer(object):
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
-        self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
+        self.myami = interface_ami.AMI(self, self.myipbxid)
         self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
         self.commandclass.user_features_dao = self._user_features_dao
         self.commandclass.queuemember_service_manager = self._queuemember_service_manager
-        self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
-        self._queue_entry_manager._ami = self.myami[self.myipbxid].amicl
+        self._queuemember_service_notifier.interface_ami = self.myami
+        self._queue_entry_manager._ami = self.myami.amicl
 
         logger.info('# STARTING %s / git:%s / %d',
                     self.xdname, self.safe.version(), self.nreload)
 
         self.lastrequest_time = time.time()
 
-        z = self.myami[self.myipbxid].connect()
+        z = self.myami.connect()
         if z:
-            self.fdlist_ami[z] = self.myami[self.myipbxid]
-            self._funckey_manager.ami = self.myami[self.myipbxid].amicl
-            self._agent_service_manager.agent_executor.ami = self.myami[self.myipbxid].amicl
-            self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
+            self.fdlist_ami[z] = self.myami
+            self._funckey_manager.ami = self.myami.amicl
+            self._agent_service_manager.agent_executor.ami = self.myami.amicl
+            self._queue_statistic_manager.ami_wrapper = self.myami.amicl
 
         try:
             self.safe.update_config_list_all()
@@ -763,7 +762,7 @@ class CTIServer(object):
                         elif kind == 'innerdata':
                             nactions = self.safe.checkqueue()
                         elif kind == 'ami':
-                            nactions = self.myami[where].checkqueue()
+                            nactions = self.myami.checkqueue()
                     else:
                         logger.warning('unknown kind for %s', pb)
         except Exception:
