@@ -115,8 +115,8 @@ class CTIServer(object):
 
     def __init__(self):
         self.nreload = 0
-        self.myami = {}
         self.mycti = {}
+        self.myami = None
         self.safe = None
         self.timeout_queue = None
         self.pipe_queued_threads = None
@@ -342,9 +342,7 @@ class CTIServer(object):
                 if data.startswith('asterisk'):
                     if not self.myami.connected():
                         logger.info('attempt to reconnect to the AMI')
-                        z = self.myami.connect()
-                        if z:
-                            self.fdlist_ami[z] = self.myami
+                        self.ami_sock = self.myami.connect()
             elif action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
@@ -381,10 +379,11 @@ class CTIServer(object):
         self.askedtoquit = False
 
         self.time_start = time.localtime()
-        logger.info('# STARTING XiVO CTI Server %s (pid %d) / git:%s # (0/3) Starting (%d)',
-                    self.xivoversion, os.getpid(), self.revision, self.nreload)
+        logger.info('# STARTING %s %s (pid %d) / git:%s # (0/3) Starting (%d)',
+                    self.xdname, self.xivoversion, os.getpid(), self.revision, self.nreload)
         self.nreload += 1
 
+        self.lastrequest_time = time.time()
         self.update_userlist = []
 
         xivoconf_general = self._config.getconfig('main')
@@ -401,20 +400,18 @@ class CTIServer(object):
         self.fdlist_established = {}
         self.fdlist_listen_cti = {}
         self.fdlist_udp_cti = {}
-        self.fdlist_ami = {}
+        self.ami_sock = None
 
         self.myipbxid = 'xivo'
 
-        logger.info('# STARTING %s # (1/2) Local AMI socket connection', self.xdname)
-
         ipbxconfig = self._config.getconfig('ipbx')
         safe = innerdata.Safe(self, self.myipbxid, ipbxconfig.get('urllists'))
-        self.safe = safe
         safe.user_service_manager = self._user_service_manager
         safe.user_features_dao = self._user_features_dao
         safe.trunk_features_dao = self._trunk_features_dao
         safe.queuemember_service_manager = self._queuemember_service_manager
         safe.init_status()
+        self.safe = safe
         self._user_features_dao._innerdata = safe
         self._user_service_notifier.send_cti_event = self.send_cti_event
         self._user_service_notifier.ipbx_id = self.myipbxid
@@ -425,24 +422,20 @@ class CTIServer(object):
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
+
+        logger.info('(1/2) Local AMI socket connection')
         self.myami = interface_ami.AMI(self, self.myipbxid)
         self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
         self.commandclass.user_features_dao = self._user_features_dao
         self.commandclass.queuemember_service_manager = self._queuemember_service_manager
+
+        self.ami_sock = self.myami.connect()
+
         self._queuemember_service_notifier.interface_ami = self.myami
-        self._queue_entry_manager._ami = self.myami.amicl
-
-        logger.info('# STARTING %s / git:%s / %d',
-                    self.xdname, self.safe.version(), self.nreload)
-
-        self.lastrequest_time = time.time()
-
-        z = self.myami.connect()
-        if z:
-            self.fdlist_ami[z] = self.myami
-            self._funckey_manager.ami = self.myami.amicl
-            self._agent_service_manager.agent_executor.ami = self.myami.amicl
-            self._queue_statistic_manager.ami_wrapper = self.myami.amicl
+        self._queue_entry_manager._ami = self.myami.amiclass
+        self._funckey_manager.ami = self.myami.amiclass
+        self._agent_service_manager.agent_executor.ami = self.myami.amiclass
+        self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
         try:
             self.safe.update_config_list_all()
@@ -451,8 +444,7 @@ class CTIServer(object):
         self._queuemember_service_manager.update_config()
         self._init_statistics_producers()
 
-        logger.info('# STARTING %s # (2/2) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
-        # opens the listening socket for incoming (CTI, WEBI, FAGI, INFO) connections
+        logger.info('(2/2) listening sockets (CTI, WEBI, FAGI, INFO)')
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
@@ -571,10 +563,11 @@ class CTIServer(object):
 
             self.fdlist_full = list()
             self.fdlist_full.append(self.pipe_queued_threads[0])
-            self.fdlist_full.extend(self.fdlist_ami.keys())
+            self.fdlist_full.append(self.ami_sock)
             self.fdlist_full.extend(self.fdlist_listen_cti.keys())
             self.fdlist_full.extend(self.fdlist_udp_cti.keys())
             self.fdlist_full.extend(self.fdlist_established.keys())
+
             writefds = []
             for iconn, kind in self.fdlist_established.iteritems():
                 if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
@@ -588,8 +581,7 @@ class CTIServer(object):
                            self.askedtoquit, self.fdlist_full)
             logger.warning('(select) current open TCP connections : (CTI, WEBI, FAGI, INFO) %s',
                            self.fdlist_established)
-            logger.warning('(select) current open TCP connections : (AMI) %s',
-                           self.fdlist_ami.keys())
+            logger.warning('(select) current open TCP connections : (AMI) %s', self.ami_sock)
 
             for s in self.fdlist_full:
                 if s in self.fdlist_established:
@@ -621,17 +613,15 @@ class CTIServer(object):
 
     def _socket_ami_read(self, sel_i):
         try:
-            amiint = self.fdlist_ami.get(sel_i)
-            ipbxid = amiint.ipbxid
             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
             if len(buf) == 0:
-                logger.warning('AMI %s : CLOSING (%s)', ipbxid, time.asctime())
+                logger.warning('AMI %s : CLOSING (%s)', time.asctime())
                 self._on_ami_down()
             else:
                 try:
-                    amiint.handle_event(buf)
+                    self.myami.handle_event(buf)
                 except Exception:
-                    logger.exception('(handle_event) %s', ipbxid)
+                    logger.exception('(handle_event) %s')
         except Exception:
             logger.exception('(amilist)')
 
@@ -758,11 +748,11 @@ class CTIServer(object):
                     [kind, where] = pb.split(':')
                     if kind in ['main', 'innerdata', 'ami']:
                         if kind == 'main':
-                            nactions = self.checkqueue()
+                            self.checkqueue()
                         elif kind == 'innerdata':
-                            nactions = self.safe.checkqueue()
+                            self.safe.checkqueue()
                         elif kind == 'ami':
-                            nactions = self.myami.checkqueue()
+                            self.myami.checkqueue()
                     else:
                         logger.warning('unknown kind for %s', pb)
         except Exception:
@@ -805,8 +795,8 @@ class CTIServer(object):
         try:
             if sels_i:
                 for sel_i in sels_i:
-                    # these AMI connections are used in order to manage AMI commands and events
-                    if sel_i in self.fdlist_ami.keys():
+                    # these AMI connection are used in order to manage AMI commands and events
+                    if sel_i == self.ami_sock:
                         self._socket_ami_read(sel_i)
                     # the UDP messages (ANNOUNCE) are catched here
                     elif sel_i in self.fdlist_udp_cti:

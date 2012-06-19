@@ -68,7 +68,7 @@ class MeetmeList(AnyList):
                 return meetme_id
 
     def invite(self, invitee, connection):
-        ami = self._ctiserver.myami.amicl
+        ami = self._ctiserver.myami.amiclass
 
         try:
             (_, invitee_id) = invitee.split('/', 1)

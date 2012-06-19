@@ -64,7 +64,6 @@ class AMI(object):
         self.ami_login = ipbxconfig.get('username', 'xivouser')
         self.ami_pass = ipbxconfig.get('password', 'xivouser')
         self.timeout_queue = Queue.Queue()
-        self.amicl = None
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
         ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
@@ -74,31 +73,31 @@ class AMI(object):
         ami_agent_login_logoff.agent_features_dao = self._ctiserver._agent_features_dao
         ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
         self._ami_initializer = AMIInitializer()
-        self.amicl = xivo_ami.AMIClass(self.ipbxid,
+        self.amiclass = xivo_ami.AMIClass(self.ipbxid,
                                        self.ipaddress, self.ipport,
                                        self.ami_login, self.ami_pass,
                                        True)
-        self._ami_initializer._ami_class = self.amicl
+        self._ami_initializer._ami_class = self.amiclass
         self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
 
     def connect(self):
         logger.info('connecting ami .....')
         try:
             self._ami_initializer.register()
-            self.amicl.connect()
-            self.amicl.login()
-            return self.amicl.sock
+            self.amiclass.connect()
+            self.amiclass.login()
+            return self.amiclass.sock
         except Exception:
             logger.warning('unable to connect/login')
 
     def disconnect(self):
         logger.info('ami disconnected')
-        self.amicl.sock.close()
+        self.amiclass.sock.close()
 
     def connected(self):
-        if self.amicl and self.amicl.sock:
+        if self.amiclass and self.amiclass.sock:
             try:
-                return self.amicl.sock.getpeername()
+                return self.amiclass.sock.getpeername()
             except Exception:
                 return None
 
@@ -126,7 +125,7 @@ class AMI(object):
 
     def delayed_action(self, usefulmsg, replyto=None):
         actionid = self.make_actionid()
-        self.amicl.sendcommand('Command', [('Command', usefulmsg),
+        self.amiclass.sendcommand('Command', [('Command', usefulmsg),
                                            ('ActionID', actionid)])
         if replyto is not None:
             self.waiting_actionid[actionid] = replyto
@@ -291,7 +290,7 @@ class AMI(object):
                         actionid, mode, event, properties)
 
     def execute_and_track(self, actionid, params):
-        conn_ami = self.amicl
+        conn_ami = self.amiclass
         mode = params.get('mode')
         if conn_ami and 'amicommand' in params:
             amicommand = params['amicommand']

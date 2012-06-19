@@ -63,7 +63,7 @@ class AMIClass(object):
         if sockret:
             logger.warning('unable to connect to %s:%d - reason %d',
                            self.ipaddress, self.ipport, sockret)
-            raise AMIError('failed to connect')
+            raise self.AMIError('failed to connect')
         else:
             self.sock.settimeout(30)
             self.fd = self.sock.fileno()

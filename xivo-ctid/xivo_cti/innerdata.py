@@ -1366,9 +1366,6 @@ class Safe(object):
                                  self.directories_mgr.directories,
                                  contexts_contents)
 
-    def version(self):
-        return '1.2-skaro-githash-gitdate'
-
     # directory lookups entry points - START
 
     def getcustomers(self, user_id, pattern, commandid):
