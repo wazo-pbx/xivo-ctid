@@ -117,7 +117,7 @@ class CTIServer(object):
         self.nreload = 0
         self.myami = {}
         self.mycti = {}
-        self.safe = {}
+        self.safe = None
         self.timeout_queue = None
         self.pipe_queued_threads = None
         self._config = None
@@ -331,35 +331,21 @@ class CTIServer(object):
             logger.warning('unknown connection kind %s', kind)
         return closemenow
 
-    def find_matching_ipbxid(self, ipaddress):
-        found_ipbxid = None
-        for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
-            if 'ipbx_connection' in ipbxconfig:
-                connparams = ipbxconfig.get('ipbx_connection')
-                cfg_ip_address = connparams.get('ipaddress')
-                if ipaddress == socket.gethostbyname(cfg_ip_address):
-                    found_ipbxid = ipbxid
-                    break
-        return found_ipbxid
-
     def checkqueue(self):
         ncount = 0
+        ipbxid = self.myipbxid
         while self.timeout_queue.qsize() > 0:
             ncount += 1
             (toload,) = self.timeout_queue.get()
             action = toload.get('action')
             if action == 'ipbxup':
-                sockparams = toload.get('properties').get('sockparams')
                 data = toload.get('properties').get('data')
                 if data.startswith('asterisk'):
-                    got_ip_address = sockparams[0]
-                    ipbxid = self.find_matching_ipbxid(got_ip_address)
-                    if ipbxid:
-                        if not self.myami[ipbxid].connected():
-                            self._on_ami_down()
-                    else:
-                        logger.warning('did not found a matching ipbxid for the address %s',
-                                       got_ip_address)
+                    if not self.myami[ipbxid].connected():
+                        logger.info('attempt to reconnect to the AMI for %s', ipbxid)
+                        z = self.myami[ipbxid].connect()
+                        if z:
+                            self.fdlist_ami[z] = self.myami[ipbxid]
             elif action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
@@ -400,19 +386,9 @@ class CTIServer(object):
                     self.xivoversion, os.getpid(), self.revision, self.nreload)
         self.nreload += 1
 
-        self.update_userlist = {}
-        self.lastrequest_time = {}
-
-        self._config.set_ipwebs(cti_config.XIVOIP)
-        if cti_config.XIVO_CONF_OVER:
-            urldata = urllib.urlopen(cti_config.XIVO_CONF_OVER)
-            payload = urldata.read()
-            urldata.close()
-            overconf = cjson.decode(payload)
-        self._config.update()
+        self.update_userlist = []
 
         xivoconf_general = self._config.getconfig('main')
-
         # loads the general configuration
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         self._config.set_context_separation(xivoconf_general.get('context_separation'))
@@ -428,63 +404,53 @@ class CTIServer(object):
         self.fdlist_udp_cti = {}
         self.fdlist_ami = {}
 
-        logger.info("the monitored ipbx's is/are : %s", self._config.getconfig('ipbxes').keys())
-
-        for ipbxid, ipbxconfig in self._config.getconfig('ipbxes').iteritems():
-            if 'ipbx_connection' in ipbxconfig:
-                self.myipbxid = ipbxid
-                break
-        else:
-            self.myipbxid = None
+        self.myipbxid = 'xivo'
 
         logger.info('# STARTING %s # (1/2) Local AMI socket connection', self.xdname)
-        if self.myipbxid:
-            ipbxconfig = self._config.getconfig('ipbxes').get(self.myipbxid)
-            safe = innerdata.Safe(self, self.myipbxid, ipbxconfig.get('urllists'))
-            self.safe[self.myipbxid] = safe
-            safe.user_service_manager = self._user_service_manager
-            safe.user_features_dao = self._user_features_dao
-            safe.trunk_features_dao = self._trunk_features_dao
-            safe.queuemember_service_manager = self._queuemember_service_manager
-            safe.init_status()
-            self._user_features_dao._innerdata = safe
-            self._user_service_notifier.send_cti_event = self.send_cti_event
-            self._user_service_notifier.ipbx_id = self.myipbxid
-            self._queuemember_service_manager.innerdata_dao.innerdata = safe
-            self._queuemember_service_notifier.send_cti_event = self.send_cti_event
-            self._queuemember_service_notifier.ipbx_id = self.myipbxid
-            self._user_service_manager.presence_service_executor._innerdata = safe
-            self.safe[self.myipbxid].register_cti_handlers()
-            self.safe[self.myipbxid].register_ami_handlers()
-            self.safe[self.myipbxid].update_directories()
-            self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
-            self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
-            self.commandclass.user_features_dao = self._user_features_dao
-            self.commandclass.queuemember_service_manager = self._queuemember_service_manager
-            self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
-            self._queue_entry_manager._ami = self.myami[self.myipbxid].amicl
 
-            logger.info('# STARTING %s / git:%s / %d',
-                        self.xdname, self.safe[self.myipbxid].version(), self.nreload)
+        ipbxconfig = self._config.getconfig('ipbx')
+        safe = innerdata.Safe(self, self.myipbxid, ipbxconfig.get('urllists'))
+        self.safe = safe
+        safe.user_service_manager = self._user_service_manager
+        safe.user_features_dao = self._user_features_dao
+        safe.trunk_features_dao = self._trunk_features_dao
+        safe.queuemember_service_manager = self._queuemember_service_manager
+        safe.init_status()
+        self._user_features_dao._innerdata = safe
+        self._user_service_notifier.send_cti_event = self.send_cti_event
+        self._user_service_notifier.ipbx_id = self.myipbxid
+        self._queuemember_service_manager.innerdata_dao.innerdata = safe
+        self._queuemember_service_notifier.send_cti_event = self.send_cti_event
+        self._queuemember_service_notifier.ipbx_id = self.myipbxid
+        self._user_service_manager.presence_service_executor._innerdata = safe
+        self.safe.register_cti_handlers()
+        self.safe.register_ami_handlers()
+        self.safe.update_directories()
+        self.myami[self.myipbxid] = interface_ami.AMI(self, self.myipbxid)
+        self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
+        self.commandclass.user_features_dao = self._user_features_dao
+        self.commandclass.queuemember_service_manager = self._queuemember_service_manager
+        self._queuemember_service_notifier.interface_ami = self.myami[self.myipbxid]
+        self._queue_entry_manager._ami = self.myami[self.myipbxid].amicl
 
-            self.update_userlist[self.myipbxid] = []
-            self.lastrequest_time[self.myipbxid] = time.time()
+        logger.info('# STARTING %s / git:%s / %d',
+                    self.xdname, self.safe.version(), self.nreload)
 
-            z = self.myami[self.myipbxid].connect()
-            if z:
-                self.fdlist_ami[z] = self.myami[self.myipbxid]
-                self._funckey_manager.ami = self.myami[self.myipbxid].amicl
-                self._agent_service_manager.agent_executor.ami = self.myami[self.myipbxid].amicl
-                self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
-            else:
-                self._on_ami_down()
+        self.lastrequest_time = time.time()
 
-            try:
-                self.safe[self.myipbxid].update_config_list_all()
-            except Exception:
-                logger.exception('%s : commandclass.updates()', self.myipbxid)
-            self._queuemember_service_manager.update_config()
-            self._init_statistics_producers()
+        z = self.myami[self.myipbxid].connect()
+        if z:
+            self.fdlist_ami[z] = self.myami[self.myipbxid]
+            self._funckey_manager.ami = self.myami[self.myipbxid].amicl
+            self._agent_service_manager.agent_executor.ami = self.myami[self.myipbxid].amicl
+            self._queue_statistic_manager.ami_wrapper = self.myami[self.myipbxid].amicl
+
+        try:
+            self.safe.update_config_list_all()
+        except Exception:
+            logger.exception('commandclass.updates()')
+        self._queuemember_service_manager.update_config()
+        self._init_statistics_producers()
 
         logger.info('# STARTING %s # (2/2) listening sockets (CTI, WEBI, FAGI, INFO)', self.xdname)
         # opens the listening socket for incoming (CTI, WEBI, FAGI, INFO) connections
@@ -537,7 +503,6 @@ class CTIServer(object):
             logger.info('waiting %d seconds in case a config would be available ...', nsecs)
             try:
                 time.sleep(nsecs)
-                # select.select([], [], [], nsecs)
             except:
                 sys.exit()
         else:
@@ -552,9 +517,8 @@ class CTIServer(object):
         clist = list()
         for interface_obj in self.fdlist_established.itervalues():
             if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
-                ipbxid = interface_obj.connection_details.get('ipbxid')
                 userid = interface_obj.connection_details.get('userid')
-                if self.safe.get(ipbxid).user_match(userid, tomatch):
+                if self.safe.user_match(userid, tomatch):
                     clist.append(interface_obj)
         return clist
 
@@ -570,7 +534,7 @@ class CTIServer(object):
         while self._cti_events.qsize() > 0:
             msg = self._cti_events.get()
             for interface_obj in self.fdlist_established.itervalues():
-                if  not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
+                if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
                     interface_obj.append_msg(msg)
 
     def set_transfer_socket(self, faxobj, direction):
@@ -588,12 +552,8 @@ class CTIServer(object):
         (ipbxid, userid) = who.split('/')
         for interface_obj in self.fdlist_established.itervalues():
             if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
-                if ipbxid == self.myipbxid:
-                    if interface_obj.connection_details.get('userid') == userid:
-                        interface_obj.reply(what)
-                else:
-                    if interface_obj.connection_details.get('userid')[3:] == ipbxid:
-                        interface_obj.reply(what)
+                if interface_obj.connection_details.get('userid') == userid:
+                    interface_obj.reply(what)
 
     def _init_socket(self):
         try:
@@ -734,12 +694,7 @@ class CTIServer(object):
             interface.connected(socketobject)
 
             if kind in ['WEBI', 'FAGI', 'INFO']:
-                ipbxid = self.myipbxid
-                if ipbxid:
-                    interface.set_ipbxid(ipbxid)
-                else:
-                    logger.warning('(%s interface) did not find a matching ipbxid for %s',
-                                   kind, address[0])
+                interface.set_ipbxid(self.myipbxid)
 
             self.fdlist_established[socketobject] = interface
         else:
@@ -806,7 +761,7 @@ class CTIServer(object):
                         if kind == 'main':
                             nactions = self.checkqueue()
                         elif kind == 'innerdata':
-                            nactions = self.safe[where].checkqueue()
+                            nactions = self.safe.checkqueue()
                         elif kind == 'ami':
                             nactions = self.myami[where].checkqueue()
                     else:
@@ -814,30 +769,22 @@ class CTIServer(object):
         except Exception:
             logger.exception('[pipe_queued_threads]')
 
-    def _update_safe_list(self, ipbxid, safe):
-        if ipbxid == self.myipbxid:
-            if self.update_userlist[ipbxid]:
-                self.lastrequest_time[ipbxid] = time.time()
-                try:
-                    # manage_connection.update_amisocks(ipbxid, self)
-                    self._config.update()
-                    safe.regular_update()
-                except Exception:
-                    logger.exception('%s : failed while updating lists and sockets (computed timeout)',
-                                     ipbxid)
-                try:
-                    if self.update_userlist[ipbxid]:
-                        while self.update_userlist[ipbxid]:
-                            tmp_ltr = self.update_userlist[ipbxid].pop()
-                            if tmp_ltr != 'xivo[cticonfig,update]':
-                                listtorequest = tmp_ltr[5:-12] + 's'
-                                safe.update_config_list(listtorequest)
-                                self._empty_cti_events_queue()
-                    else:
-                        safe.update_config_list_all()
+    def _update_safe_list(self):
+        if self.update_userlist:
+            self.lastrequest_time = time.time()
+            try:
+                self.safe.regular_update()
+            except Exception:
+                logger.exception('failed while updating lists and sockets (computed timeout)')
+            try:
+                while self.update_userlist:
+                    tmp_ltr = self.update_userlist.pop()
+                    if tmp_ltr != 'xivo[cticonfig,update]':
+                        listtorequest = tmp_ltr[5:-12] + 's'
+                        self.safe.update_config_list(listtorequest)
                         self._empty_cti_events_queue()
-                except Exception:
-                    logger.exception('%s : commandclass.updates() (computed timeout)', ipbxid)
+            except Exception:
+                logger.exception('commandclass.updates() (computed timeout)')
 
     def select_step(self):
         sels_i, sels_o, sels_e = self._init_socket()
@@ -876,8 +823,6 @@ class CTIServer(object):
                         self._socket_pipe_queue_read(sel_i)
 
                     self._empty_cti_events_queue()
-
-                    for ipbxid, safe in self.safe.iteritems():
-                        self._update_safe_list(ipbxid, safe)
+                    self._update_safe_list()
         except Exception:
             logger.exception('Socket Reader')

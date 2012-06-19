@@ -35,7 +35,7 @@ get_line_identity = Mock()
 class TestMeetmeServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.ipbx_id = 'xivo_test'
+        self.ipbx_id = 'xivo'
         self.notifier = MeetmeServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
@@ -51,7 +51,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def test_prepare_message(self):
         result = self.notifier._prepare_message()
 
-        self.assertEqual(result['tipbxid'], 'xivo_test')
+        self.assertEqual(result['tipbxid'], 'xivo')
 
     def test_add(self):
         meetme_id = 64

@@ -32,7 +32,7 @@ from xivo_cti.services.queue_service_manager import NotAQueueException
 class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.ipbx_id = 'xivo_test'
+        self.ipbx_id = 'xivo'
         self.notifier = QueueMemberServiceNotifier()
         self.notifier.ipbx_id = self.ipbx_id
         self.notifier.innerdata_dao = Mock()

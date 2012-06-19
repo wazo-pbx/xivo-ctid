@@ -52,14 +52,13 @@ class AMI(object):
     def __init__(self, ctiserver, ipbxid):
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
         config = cti_config.Config.get_instance()
-        ipbxconfig = (config.getconfig('ipbxes').get(self.ipbxid)
-                      .get('ipbx_connection'))
+        ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
         self.ami_login = ipbxconfig.get('username', 'xivouser')

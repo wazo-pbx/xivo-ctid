@@ -84,7 +84,6 @@ class InternalDirectoryDataSource(DirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        db_uri = (Config.get_instance()
-                  .getconfig('ipbxes')[ctid.myipbxid]['userfeatures_db_uri'])
+        db_uri = (Config.get_instance().getconfig('ipbx')['userfeatures_db_uri'])
         key_mapping = cls._get_key_mapping(contents)
         return cls(db_uri, key_mapping)

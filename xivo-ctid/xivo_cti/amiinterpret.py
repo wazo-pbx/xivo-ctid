@@ -50,7 +50,7 @@ class AMI_1_8(object):
     def __init__(self, ctiserver, ipbxid):
         self._ctiserver = ctiserver
         self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
         fagiport = (cti_config.Config.get_instance().getconfig('main')
                     .get('incoming_tcp').get('FAGI')[1])
         self.fagiportstring = ':%s/' % fagiport

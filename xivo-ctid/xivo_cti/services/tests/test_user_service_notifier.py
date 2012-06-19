@@ -30,7 +30,7 @@ import Queue
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.ipbx_id = 'xivo_test'
+        self.ipbx_id = 'xivo'
         self.notifier = UserServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
@@ -40,7 +40,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_dnd_enabled(self):
         user_id = 34
-        ipbx_id = 'xivo_test'
+        ipbx_id = 'xivo'
         notifier = UserServiceNotifier()
         notifier.send_cti_event = Mock()
         notifier.ipbx_id = ipbx_id
@@ -57,7 +57,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_dnd_disabled(self):
         user_id = 34
-        ipbx_id = 'xivo_test'
+        ipbx_id = 'xivo'
         notifier = UserServiceNotifier()
         notifier.send_cti_event = Mock()
         notifier.ipbx_id = ipbx_id

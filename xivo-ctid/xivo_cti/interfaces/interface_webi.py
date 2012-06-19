@@ -134,7 +134,7 @@ class WEBI(interfaces.Interfaces):
         elif msg == 'xivo[queuemember,update]':
             self.queuemember_service_manager.update_config()
         elif msg in UPDATE_REQUESTS:
-            self._ctiserver.update_userlist[self.ipbxid].append(msg)
+            self._ctiserver.update_userlist.append(msg)
             if msg == 'xivo[meetmelist,update]':
                 meetme_manager.initialize()
         elif msg in AMI_REQUESTS:

@@ -9,7 +9,7 @@ class TestAvailstate(unittest.TestCase):
         self.outtolunch = {'availstate': 'outtolunch',
                            'class': 'availstate',
                            'commandid': self.commandid,
-                           'ipbxid': 'tre',
+                           'ipbxid': 'xivo',
                            'userid': '1'}
 
     def tearDown(self):

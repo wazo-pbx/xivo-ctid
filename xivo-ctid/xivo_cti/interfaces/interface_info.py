@@ -85,7 +85,7 @@ class INFO(interfaces.Interfaces):
 
     def set_ipbxid(self, ipbxid):
         self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
 
     def manage_connection(self, msg):
         """
@@ -108,9 +108,6 @@ class INFO(interfaces.Interfaces):
                                      'show_meetme', 'show_voicemail']
                 if usefulmsg == 'help':
                     clireply.extend(infohelptext)
-
-                elif usefulmsg == 'show_xivos':
-                    clireply.append('%s' % ','.join(self._ctiserver.safe.keys()))
 
                 elif usefulmsg == 'show_infos':
                     time_uptime = int(time.time() - time.mktime(self._ctiserver.time_start))
@@ -153,12 +150,6 @@ class INFO(interfaces.Interfaces):
                                         % (','.join(self.dumpami_enable),
                                            ','.join(self.dumpami_disable)))
 
-                elif usefulmsg.startswith('devcheckevents'):
-                    for k in sorted(xivo_ami.evfunction_to_method_name.keys()):
-                        v = xivo_ami.evfunction_to_method_name.get(k)
-                        if not hasattr(self._ctiserver.commandclass, v):
-                            clireply.append('devcheckevents : unavailable %s' % k)
-
                 elif usefulmsg.startswith('loglevel '):
                     command_args = usefulmsg.split()
                     if len(command_args) > 2:
@@ -187,29 +178,24 @@ class INFO(interfaces.Interfaces):
 
                 elif usefulmsg.startswith('showlist'):
                     args = usefulmsg.split()
-                    for ipbxid, z in self._ctiserver.safe.iteritems():
-                        clireply.append('ipbxid : %s' % ipbxid)
-                        for k, v in z.xod_config.iteritems():
-                            if len(args) > 1 and not args[1] in k:
+                    safe = self._ctiserver.safe
+                    clireply.append('ipbxid : xivo')
+                    for k, v in safe.xod_config.iteritems():
+                        if len(args) > 1 and not args[1] in k:
+                            continue
+                        clireply.append('    %s' % k)
+                        for kk, vv in v.keeplist.iteritems():
+                            if len(args) > 2 and not kk in args[2]:
                                 continue
-                            clireply.append('    %s' % k)
-                            for kk, vv in v.keeplist.iteritems():
-                                if len(args) > 2 and not kk in args[2]:
-                                    continue
-                                listname, id = k, kk
-                                clireply.append('        %s %s' %
-                                                (listname, id))
-                                clireply.append('        config: \n%s' % vv)
-                                try:
-                                    clireply.append('        status:\n%s' %
-                                                    z.xod_status[listname][id])
-                                except KeyError:
-                                    clireply.append('        status: None')
-##                    for user, info in self.ctid.safe.get(ipbxid).xod_config..users().iteritems():
-##                        try:
-##                            clireply.append('%s %s' % (user.encode('latin1'), info))
-##                        except Exception:
-##                            logger.exception('INFO %s', usefulmsg)
+                            listname, id = k, kk
+                            clireply.append('        %s %s' %
+                                            (listname, id))
+                            clireply.append('        config: \n%s' % vv)
+                            try:
+                                clireply.append('        status:\n%s' %
+                                                safe.xod_status[listname][id])
+                            except KeyError:
+                                clireply.append('        status: None')
 
                 elif usefulmsg in show_command_list:
                     itemname = usefulmsg[5:]

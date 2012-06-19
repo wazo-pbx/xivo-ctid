@@ -173,12 +173,11 @@ class CTI(interfaces.Interfaces):
             return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM),
                              'class': 'login_id'}
 
-        ipbxid = self._ctiserver.myipbxid
-        innerdata = self._ctiserver.safe[ipbxid]
+        innerdata = self._ctiserver.safe
         user_dict = innerdata.xod_config.get('users').finduser(login)
 
         if user_dict:
-            self.connection_details.update({'ipbxid': ipbxid,
+            self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
                                             'userid': str(user_dict.get('id'))})
 
         session_id = ''.join(random.sample(cti_config.ALPHANUMS, 10))

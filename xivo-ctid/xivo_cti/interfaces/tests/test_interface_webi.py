@@ -118,13 +118,13 @@ class Test(unittest.TestCase):
         expected_result = [{'message': [],
                             'closemenow': True}]
         self._interface_webi.ipbxid = '1234'
-        self._interface_webi._ctiserver.update_userlist = {'1234': Mock()}
+        self._interface_webi._ctiserver.update_userlist = Mock()
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('async', 'xivo[userlist,update]')
 
         result = self._interface_webi.manage_connection(raw_msg)
 
-        self._interface_webi._ctiserver.update_userlist[self._interface_webi.ipbxid].append.assert_called_once_with('xivo[userlist,update]')
+        self._interface_webi._ctiserver.update_userlist.append.assert_called_once_with('xivo[userlist,update]')
         self.assertEqual(expected_result, result)
 
     def test_manage_connection_async_ami_request(self):

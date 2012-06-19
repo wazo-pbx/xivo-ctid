@@ -40,7 +40,6 @@ SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
 XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
-XIVO_CONF_OVER = None
 XIVOVERSION_NUM = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -50,9 +49,8 @@ class Config(object):
 
     def __init__(self, * urilist):
         self.urilist = urilist
-        self.ipwebs = None
+        self.ipwebs = XIVOIP
         self.xc_json = {}
-        self.overconf = None
         self._context_separation = None
 
     def update(self):
@@ -60,17 +58,12 @@ class Config(object):
         # when there is a reachability issue (like it can happen in first steps ...)
         self.update_uri(self.urilist[0])
 
-    def set_ipwebs(self, ipwebs):
-        self.ipwebs = ipwebs
-
     def update_uri(self, uri):
         if uri.find('json') < 0:
             return
         if uri.find(':') < 0:
             return
 
-        # web-interface/tpl/www/bloc/cti/general.php
-        # web-interface/action/www/cti/web_services/configuration.php
         got_webi_answer = False
         while not got_webi_answer:
             try:
@@ -94,32 +87,6 @@ class Config(object):
                         del xlet_attr[2]
                     if xlet_attr[1] == 'grid':
                         del xlet_attr[2]
-
-        self.translate()
-
-        if self.overconf:
-            self.xc_json['ipbxes'] = self.overconf
-
-    def translate(self):
-        """
-        Translate the config fetched from the remote IP ipwebs
-        in order to have the urllist and IPBX connection items pointing also to this IP.
-        The remote access(es) should be allowed there, of course.
-        """
-        if self.ipwebs is None or self.ipwebs == 'localhost':
-            return
-        for k, v in self.xc_json.get('ipbxes', {}).iteritems():
-            for kk, vv in v.get('urllists', {}).iteritems():
-                nl = []
-                for item in vv:
-                    z = item.replace('://localhost/', '://%s/' % self.ipwebs).replace('/private/', '/restricted/')
-                    nl.append(z)
-                v['urllists'][kk] = nl
-            if 'ipbx_connection' in v:
-                v.get('ipbx_connection')['ipaddress'] = self.ipwebs
-            cdruri = v.get('cdr_db_uri')
-            if cdruri:
-                v['cdr_db_uri'] = cdruri.replace('@localhost/', '@%s/' % self.ipwebs)
 
     def getconfig(self, key=None):
         if key:

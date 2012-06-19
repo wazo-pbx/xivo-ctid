@@ -22,7 +22,7 @@ class Test(unittest.TestCase):
         self.conn = Mock()
         self.conn.requester = ('test_requester', 1)
         self.conn._ctiserver = self._ctiserver
-        self._ctiserver.safe = {self._ipbxid: self._innerdata}
+        self._ctiserver.safe = self._innerdata
 
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}

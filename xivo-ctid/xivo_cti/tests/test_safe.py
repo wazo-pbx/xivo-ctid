@@ -41,14 +41,14 @@ from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 class TestSafe(unittest.TestCase):
 
-    _ipbx_id = 'xivo_test'
+    _ipbx_id = 'xivo'
 
     def setUp(self):
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager())
         config = Config.get_instance()
-        config.xc_json = {'ipbxes': {self._ipbx_id: {'cdr_db_uri': 'sqlite://'}}}
+        config.xc_json = {'ipbx': {'cdr_db_uri': 'sqlite://'}}
         self.safe = Safe(self._ctiserver, self._ipbx_id)
         self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
         self.safe.trunk_features_dao.get_ids.return_value = []
@@ -59,7 +59,6 @@ class TestSafe(unittest.TestCase):
 
     def test_safe(self):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)
-        self.assertEqual(self.safe.ipbxid, self._ipbx_id)
 
     def test_register_cti_handlers(self):
         self.safe.register_cti_handlers()

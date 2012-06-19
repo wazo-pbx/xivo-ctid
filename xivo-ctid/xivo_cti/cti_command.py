@@ -102,16 +102,16 @@ class Command(object):
 
         self.ipbxid = self._connection.connection_details.get('ipbxid')
         self.userid = self._connection.connection_details.get('userid')
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
 
         # identifiers for the requester
         self.ripbxid = self._commanddict.get('ipbxid', self.ipbxid)
         self.ruserid = self._commanddict.get('userid', self.userid)
-        self.rinnerdata = self._ctiserver.safe.get(self.ripbxid)
+        self.rinnerdata = self._ctiserver.safe
 
         # identifiers for the requested
         self.tipbxid = self._commanddict.get('tipbxid', self.ipbxid)
-        self.tinnerdata = self._ctiserver.safe.get(self.tipbxid)
+        self.tinnerdata = self._ctiserver.safe
 
         messagebase = {'class': self.command}
         if self.commandid:
@@ -182,7 +182,7 @@ class Command(object):
         sessionid = cdetails.get('prelogin').get('sessionid')
 
         if ipbxid and userid:
-            ref_hashed_password = self._ctiserver.safe[ipbxid].user_get_hashed_password(userid, sessionid)
+            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(userid, sessionid)
             if ref_hashed_password != this_hashed_password:
                 logger.warning('%s - wrong hashed password', head)
                 return 'login_password'
@@ -273,7 +273,7 @@ class Command(object):
         userid = cdetails.get('userid')
         if capaid not in self._config.getconfig('profiles').keys():
             return 'unknownprofile'
-        if capaid != self._ctiserver.safe[ipbxid].xod_config['users'].keeplist[userid]['profileclient']:
+        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['profileclient']:
             return 'wrongprofile'
         # XXX : too much users ?
 
@@ -281,7 +281,7 @@ class Command(object):
         cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
+        self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver._user_service_manager.set_presence(userid, availstate)
 
     # end of login/logout related commands
@@ -298,7 +298,7 @@ class Command(object):
     def regcommand_actionfiche(self):
         reply = {}
         infos = self._commanddict.get('infos')
-        uri = self._config.getconfig('ipbxes').get(self.ripbxid).get('cdr_db_uri')
+        uri = self._config.getconfig('ipbx').get('cdr_db_uri')
         self.rinnerdata.fill_user_ctilog(uri,
                                          self.ruserid,
                                          'cticommand:actionfiche',
@@ -432,7 +432,7 @@ class Command(object):
         return reply
 
     def regcommand_getipbxlist(self):
-        return {'ipbxlist': self._config.getconfig('ipbxes').keys()}
+        return {'ipbxlist': ['xivo']}
 
     def regcommand_ipbxcommand(self):
         reply = {}
@@ -528,12 +528,7 @@ class Command(object):
         if not dst:
             return [{'error': 'destination'}]
 
-        if src.get('ipbxid') != dst.get('ipbxid'):
-            return [{'error': 'ipbxids'}]
-        if src.get('ipbxid') not in self._ctiserver.safe:
-            return [{'error': 'ipbxid'}]
-
-        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
+        innerdata = self._ctiserver.safe
 
         orig_protocol = None
         orig_name = None
@@ -723,7 +718,7 @@ class Command(object):
             ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
         else:
             ipbx_id, agent_id = self.ipbxid, command_dict['agentids']
-        innerdata = self._ctiserver.safe[ipbx_id]
+        innerdata = self._ctiserver.safe
         if agent_id in innerdata.xod_config['agents'].keeplist:
             agent = innerdata.xod_config['agents'].keeplist[agent_id]
             status = innerdata.xod_status['agents'][agent_id]

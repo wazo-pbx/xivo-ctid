@@ -55,6 +55,6 @@ class PhonebookDirectoryDataSource(DirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        phonebook_list = ctid.safe[ctid.myipbxid].xod_config['phonebooks']
+        phonebook_list = ctid.safe.xod_config['phonebooks']
         key_mapping = cls._get_key_mapping(contents)
         return cls(phonebook_list, key_mapping)
