@@ -40,8 +40,10 @@ class TestAgentServiceManager(unittest.TestCase):
 
     line_number = '1432'
     connected_user_id = 6
+    tables = [LineFeatures, UserFeatures, AgentFeatures]
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
 
@@ -49,16 +51,19 @@ class TestAgentServiceManager(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        self.session = connection.get_session()
+        cls.session = connection.get_session()
 
-        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
+        Base.metadata.drop_all(connection.get_engine(), [table.__table__ for table in cls.tables])
+        Base.metadata.create_all(connection.get_engine(), [table.__table__ for table in cls.tables])
 
         connection.get_engine().dispose()
+
+    @classmethod
+    def tearDownClass(cls):
+        dbconnection.unregister_db_connection_pool()
+
+    def setUp(self):
+        self._empty_tables()
 
         self.agent_1_exten = '1000'
 
@@ -71,8 +76,10 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.user_features_dao = self.user_features_dao
         self.agent_manager.line_features_dao = self.line_features_dao
 
-    def tearDown(self):
-        dbconnection.unregister_db_connection_pool()
+    def _empty_tables(self):
+        for table in self.tables:
+            entries = self.session.query(table)
+            map(self.session.delete, entries)
 
     def test_log_agent(self):
         self.agent_manager.agent_call_back_login = Mock()
