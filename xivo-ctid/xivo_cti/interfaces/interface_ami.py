@@ -237,7 +237,6 @@ class AMI(object):
         Handles the AMI events related to a given function (i.e. containing the Event field).
         It roughly only dispatches them to the relevant commandset's methods.
         """
-        used = False
         functions = []
         if 'Event' in event:
             functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event['Event']))
@@ -246,17 +245,13 @@ class AMI(object):
                 methodname = ami_def.evfunction_to_method_name.get(evfunction)
                 if hasattr(self._ctiserver.commandclass, methodname):
                     functions.append(getattr(self._ctiserver.commandclass, methodname))
-                    used = True
             for function in set(functions):
                 try:
                     function(event)
-                    used = True
                 except KeyError:
                     logger.exception('Missing fields to handle this event: %s', event)
         except Exception:
             logger.exception('%s : event %s', evfunction, event)
-        if not used:
-            logger.warning('Received unused AMI event %s', event.get('Event'))
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
