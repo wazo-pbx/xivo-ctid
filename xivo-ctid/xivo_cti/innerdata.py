@@ -21,6 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import cjson
+import threading
 import copy
 import hashlib
 import logging
@@ -29,6 +31,7 @@ import string
 import time
 import Queue
 import cti_urllist
+from xivo_cti import lists
 from xivo_cti.lists import *
 from xivo_cti import call_history
 from xivo_cti.directory import directory
@@ -299,11 +302,6 @@ class Safe(object):
     def handle_getlist_update_config(self, user_id, list_name, item_id):
         user_contexts = self.xod_config['users'].get_contexts(user_id)
         item = self.get_config(list_name, item_id, user_contexts=user_contexts)
-
-        print '------------- list_name: %s / item_id: %s -------------' % (list_name, item_id)
-        print item
-        print '------------------------------------------------'
-
         return 'message', {'function': 'updateconfig',
                            'listname': list_name,
                            'tipbxid': self.ipbxid,
