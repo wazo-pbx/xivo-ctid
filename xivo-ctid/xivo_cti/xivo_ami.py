@@ -202,6 +202,8 @@ class AMIClass(object):
                                ('Priority', '1'),
                                ('Timeout', str(timeout * 1000)),
                                ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
+                               ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
+                               ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
                                ('Async', 'true')]
             if switch_originates:
                 if (phonedst.startswith('#')):
