@@ -23,11 +23,11 @@
 
 import logging
 from itertools import imap
-from xivo_cti import xivo_ldap
 from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
-
+from xivo_dird.ldap import XivoLDAP
 
 logger = logging.getLogger('ldap directory')
+
 
 class LDAPDirectoryDataSource(DirectoryDataSource):
 
@@ -100,7 +100,7 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
     def _try_connect(self):
         # Try to connect/reconnect to the LDAP if necessary
         if self._xivo_ldap is None:
-            ldapid = xivo_ldap.xivo_ldap(self._uri)
+            ldapid = XivoLDAP(self._uri)
             if ldapid.ldapobj is not None:
                 self._xivo_ldap = ldapid
         else:
