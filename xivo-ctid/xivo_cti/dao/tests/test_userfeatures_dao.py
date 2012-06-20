@@ -643,3 +643,75 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         result = userfeaturesdao.get_fwd_unc(user.id)
 
         self.assertTrue(result)
+
+    def test_get_dest_busy(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_busy(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destbusy = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_busy(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_busy(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_busy(user.id)
+
+        self.assertFalse(result)
+
+        user.enablebusy = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_busy(user.id)
+
+        self.assertTrue(result)
+
+    def test_get_dest_rna(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_rna(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destrna = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_rna(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_rna(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_rna(user.id)
+
+        self.assertFalse(result)
+
+        user.enablerna = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_rna(user.id)
+
+        self.assertTrue(result)

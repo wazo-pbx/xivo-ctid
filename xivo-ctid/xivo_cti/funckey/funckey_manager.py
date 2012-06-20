@@ -76,9 +76,33 @@ class FunckeyManager(object):
 
 
 def parse_update_user_config(manager, event):
-    if 'config' in event and 'enableunc' in event['config'] or 'destunc' in event['config']:
+    if 'config' in event and 'tid' in event:
+        config = event['config']
         user_id = int(event['tid'])
-        manager.disable_all_unconditional_fwd(user_id)
-        manager.unconditional_fwd_in_use(user_id,
-                    userfeaturesdao.get_dest_unc(user_id),
-                    userfeaturesdao.get_fwd_unc(user_id))
+        if 'enableunc' in config or 'destunc' in config:
+            _set_fwd_unc_blf(manager, user_id)
+        if 'enablerna' in config or 'destrna' in config:
+            _set_fwd_rna_blf(manager, user_id)
+        if 'enablebusy' in config or 'destbusy' in config:
+            _set_fwd_busy_blf(manager, user_id)
+
+
+def _set_fwd_busy_blf(manager, user_id):
+    manager.disable_all_busy_fwd(user_id)
+    manager.busy_fwd_in_use(user_id,
+                            userfeaturesdao.get_dest_busy(user_id),
+                            userfeaturesdao.get_fwd_busy(user_id))
+
+
+def _set_fwd_rna_blf(manager, user_id):
+    manager.disable_all_rna_fwd(user_id)
+    manager.rna_fwd_in_use(user_id,
+                           userfeaturesdao.get_dest_rna(user_id),
+                           userfeaturesdao.get_fwd_rna(user_id))
+
+
+def _set_fwd_unc_blf(manager, user_id):
+    manager.disable_all_unconditional_fwd(user_id)
+    manager.unconditional_fwd_in_use(user_id,
+                                     userfeaturesdao.get_dest_unc(user_id),
+                                     userfeaturesdao.get_fwd_unc(user_id))

@@ -196,3 +196,19 @@ def get_dest_unc(user_id):
 
 def get_fwd_unc(user_id):
     return (_session().query(UserFeatures.enableunc).filter(UserFeatures.id == int(user_id))[0].enableunc == 1)
+
+
+def get_dest_busy(user_id):
+    return _session().query(UserFeatures.destbusy).filter(UserFeatures.id == int(user_id))[0].destbusy
+
+
+def get_fwd_busy(user_id):
+    return (_session().query(UserFeatures.enablebusy).filter(UserFeatures.id == int(user_id))[0].enablebusy == 1)
+
+
+def get_dest_rna(user_id):
+    return _session().query(UserFeatures.destrna).filter(UserFeatures.id == int(user_id))[0].destrna
+
+
+def get_fwd_rna(user_id):
+    return (_session().query(UserFeatures.enablerna).filter(UserFeatures.id == int(user_id))[0].enablerna == 1)
