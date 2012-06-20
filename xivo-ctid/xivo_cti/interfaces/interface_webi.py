@@ -137,7 +137,8 @@ class WEBI(interfaces.Interfaces):
         try:
             type, msg = self._parse_webi_command(raw_msg)
         except BadWebiCommandException:
-            return []
+            return [{'message': clireply,
+                     'closemenow': closemenow}]
 
         if msg == 'xivo[daemon,reload]':
             self._ctiserver.askedtoquit = True
@@ -154,9 +155,8 @@ class WEBI(interfaces.Interfaces):
         else:
             logger.warning('WEBI did an unexpected request %s', msg)
 
-        freply = [{'message': clireply,
-                   'closemenow': closemenow}]
-        return freply
+        return [{'message': clireply,
+                 'closemenow': closemenow}]
 
     def reply(self, replylines):
         try:
