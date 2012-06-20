@@ -499,6 +499,7 @@ class CTIServer(object):
                 self.select_step()
 
     def _on_ami_down(self):
+        logger.warning('AMI: CLOSING (%s)', time.asctime())
         logger.info('shutting down xivo-ctid')
         sys.exit(2)
 
@@ -613,7 +614,6 @@ class CTIServer(object):
         try:
             buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
             if len(buf) == 0:
-                logger.warning('AMI: CLOSING (%s)', time.asctime())
                 self._on_ami_down()
             else:
                 try:
