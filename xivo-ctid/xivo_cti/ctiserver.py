@@ -760,6 +760,7 @@ class CTIServer(object):
         if self.update_userlist:
             self.lastrequest_time = time.time()
             try:
+                self._config.update()
                 self.safe.regular_update()
             except Exception:
                 logger.exception('failed while updating lists and sockets (computed timeout)')

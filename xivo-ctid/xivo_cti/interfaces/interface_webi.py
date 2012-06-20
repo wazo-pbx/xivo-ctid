@@ -23,6 +23,8 @@ __copyright__ = 'Copyright (C) 2007-2012  Avencall'
 """
 WEBI Interface
 """
+
+from xivo_cti import cti_config
 from xivo_cti.interfaces import interfaces
 from xivo_cti.services.meetme.service_manager import manager as meetme_manager
 
@@ -79,6 +81,7 @@ class WEBI(interfaces.Interfaces):
 
     def __init__(self, ctiserver):
         interfaces.Interfaces.__init__(self, ctiserver)
+        self._config = cti_config.Config.get_instance()
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
@@ -123,6 +126,13 @@ class WEBI(interfaces.Interfaces):
     def manage_connection(self, raw_msg):
         clireply = []
         closemenow = True
+
+        live_reload_conf = self._config.getconfig('main')['live_reload_conf']
+
+        if not live_reload_conf:
+            logger.info('WEBI command received (%s) but live reload configuration has disabled', raw_msg)
+            return [{'message': clireply,
+                     'closemenow': closemenow}]
 
         try:
             type, msg = self._parse_webi_command(raw_msg)
