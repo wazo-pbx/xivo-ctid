@@ -715,3 +715,27 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         result = userfeaturesdao.get_fwd_rna(user.id)
 
         self.assertTrue(result)
+
+    def test_get_name_number(self):
+        user = UserFeatures()
+        user.firstname = 'Toto'
+        user.lastname = 'Plop'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.number = '1234'
+        line.name = '12kjdhf'
+        line.context = 'context'
+        line.provisioningid = 1234
+        line.iduserfeatures = user.id
+        line.protocolid = 1
+
+        self.session.add(line)
+        self.session.commit()
+
+        name, number = userfeaturesdao.get_name_number(user.id)
+
+        self.assertEqual(name, '%s %s' % (user.firstname, user.lastname))
+        self.assertEqual(number, '1234')
