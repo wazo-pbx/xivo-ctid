@@ -332,7 +332,7 @@ class AMI_1_8(object):
         xivo_userid = event.get('XIVO_USERID')
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
         xivo_srcnum = event.get('XIVO_SRCNUM')
-        destination_user_id = int(event['XIVO_DESTID'])
+        destination_user_id = int(event['XIVO_DSTID'])
         destination_name, destination_number = userfeaturesdao.get_name_number(destination_user_id)
         if userprops is not None:
             usersummary_src = {'fullname': userprops.get('fullname'),
