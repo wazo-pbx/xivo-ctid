@@ -342,7 +342,7 @@ class AMI_1_8(object):
                                'phonenumber': xivo_srcnum}
 
         chanprops.set_extra_data('xivo', 'desttype', 'user')
-        chanprops.set_extra_data('xivo', 'destid', event['XIVO_DESTID'])
+        chanprops.set_extra_data('xivo', 'destid', destination_user_id)
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
         chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
         chanprops.set_extra_data('xivo', 'direction', 'internal')
