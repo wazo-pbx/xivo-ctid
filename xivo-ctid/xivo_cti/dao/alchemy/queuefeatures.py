@@ -49,7 +49,5 @@ class QueueFeatures(Base):
     timeout = Column(Integer, nullable=False, default=0)
     preprocess_subroutine = Column(String(39))
     announce_holdtime = Column(Integer, nullable=False, default=0)
-    ctipresence = Column(String(1024), nullable=False, default='')
-    nonctipresence = Column(String(1024), nullable=False, default='')
     waittime = Column(Integer)
     waitratio = Column(DOUBLE_PRECISION)
