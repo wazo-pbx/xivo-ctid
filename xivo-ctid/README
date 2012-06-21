@@ -1,6 +1,6 @@
 Dependencies :
 
-apt-get install python-tz python-cjson python-ldap
+apt-get install python-tz python-cjson
 
 
 To run dao tests
