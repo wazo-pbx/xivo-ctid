@@ -101,3 +101,19 @@ class TestQueueFeaturesDAO(test_dao.DAOTestCase):
         result = queue_features_dao.get_queue_name(queue.id)
 
         self.assertEqual(result, queue.name)
+
+    def test_get_name_number(self):
+        self.assertRaises(LookupError, queue_features_dao.get_queue_name, 1)
+
+        queue = QueueFeatures()
+        queue.name = 'my_queue'
+        queue.displayname = 'My Queue'
+        queue.number = '3000'
+
+        self.session.add(queue)
+        self.session.commit()
+
+        name, number = queue_features_dao.get_display_name_number(queue.id)
+
+        self.assertEqual(name, 'My Queue')
+        self.assertEqual(number, '3000')

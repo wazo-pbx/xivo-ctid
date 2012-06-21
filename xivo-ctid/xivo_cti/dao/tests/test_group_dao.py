@@ -19,17 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.tests.test_dao import DAOTestCase
+import unittest
+
 from xivo_cti.dao.alchemy.groupfeatures import GroupFeatures
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao import group_dao
+from xivo_cti.dao.alchemy.base import Base
 
 
-class TestGroupDAO(DAOTestCase):
+class TestGroupDAO(unittest.TestCase):
 
-    required_tables = [GroupFeatures.__table__]
+    tables = [GroupFeatures]
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
 
@@ -37,14 +40,34 @@ class TestGroupDAO(DAOTestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        self.cleanTables()
+        cls.session = connection.get_session()
 
-        self.session = connection.get_session()
+    @classmethod
+    def tearDownClass(cls):
+        dbconnection.unregister_db_connection_pool()
 
-        self.session.commit()
-        self.session = connection.get_session()
+    def _empty_tables(self):
+        for table in self.tables:
+            entries = self.session.query(table)
+            map(self.session.delete, entries)
+
+    def setUp(self):
+        self._empty_tables()
 
     def test_get_name(self):
+        session = dbconnection.get_connection('asterisk').get_session()
+        group = GroupFeatures()
+        group.name = 'test_name'
+        group.number = '1234'
+        group.context = 'my_ctx'
+        session.add(group)
+        session.commit()
+
+        result = group_dao.get_name(group.id)
+
+        self.assertEqual(result, group.name)
+
+    def test_get_name_number(self):
         group = GroupFeatures()
         group.name = 'test_name'
         group.number = '1234'
@@ -53,6 +76,7 @@ class TestGroupDAO(DAOTestCase):
         self.session.add(group)
         self.session.commit()
 
-        result = group_dao.get_name(group.id)
+        name, number = group_dao.get_name_number(group.id)
 
-        self.assertEqual(result, group.name)
+        self.assertEqual(name, 'test_name')
+        self.assertEqual(number, '1234')

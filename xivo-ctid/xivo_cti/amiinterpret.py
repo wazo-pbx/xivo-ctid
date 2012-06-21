@@ -27,6 +27,8 @@ import string
 import time
 
 from xivo_cti.dao import userfeaturesdao
+from xivo_cti.dao import group_dao
+from xivo_cti.dao import queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -352,13 +354,25 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calledidname', destination_name)
 
     def userevent_queue(self, chanprops, event):
+        queue_id = int(event['XIVO_DSTID'])
+        queue_name, queue_number = queue_features_dao.get_display_name_number(queue_id)
+
         chanprops.set_extra_data('xivo', 'desttype', 'queue')
-        chanprops.set_extra_data('xivo', 'destid', event['XIVO_DSTID'])
+        chanprops.set_extra_data('xivo', 'destid', queue_id)
+        chanprops.set_extra_data('xivo', 'calledidname', queue_name)
+        chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
+
         self.innerdata.sheetsend('dial', chanprops.channel)
 
     def userevent_group(self, chanprops, event):
+        group_id = int(event['XIVO_DSTID'])
+        group_name, group_number = group_dao.get_name_number(group_id)
+
         chanprops.set_extra_data('xivo', 'desttype', 'group')
-        chanprops.set_extra_data('xivo', 'destid', event['XIVO_DSTID'])
+        chanprops.set_extra_data('xivo', 'destid', group_id)
+        chanprops.set_extra_data('xivo', 'calledidname', group_name)
+        chanprops.set_extra_data('xivo', 'calledidnum', group_number)
+
         self.innerdata.sheetsend('dial', chanprops.channel)
 
     def userevent_outcall(self, chanprops, event):

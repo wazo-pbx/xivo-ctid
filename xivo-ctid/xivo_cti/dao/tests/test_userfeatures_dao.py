@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.tests import test_dao
+import unittest
 from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
@@ -35,11 +35,12 @@ from xivo_cti.lists.cti_userlist import UserList
 import time
 
 
-class TestUserFeaturesDAO(test_dao.DAOTestCase):
+class TestUserFeaturesDAO(unittest.TestCase):
 
-    required_tables = [UserFeatures.__table__, LineFeatures.__table__, ContextInclude.__table__]
+    tables = [UserFeatures, LineFeatures, ContextInclude]
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
 
@@ -47,21 +48,24 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        self.cleanTables()
+        cls.session = connection.get_session()
 
-        self.session = connection.get_session()
+    @classmethod
+    def tearDownClass(cls):
+        dbconnection.unregister_db_connection_pool()
 
-        self.session.commit()
+    def _empty_tables(self):
+        for table in self.tables:
+            entries = self.session.query(table)
+            map(self.session.delete, entries)
 
+    def setUp(self):
+        self._empty_tables()
         self._innerdata = Mock(Safe)
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
-
         self.dao = UserFeaturesDAO(self.session)
-
-    def tearDown(self):
-        dbconnection.unregister_db_connection_pool()
 
     def test_get_one_result(self):
         user_id = self._insert_user('first')

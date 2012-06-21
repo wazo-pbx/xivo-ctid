@@ -63,5 +63,14 @@ class QueueFeaturesDAO(object):
         return cls(connection.get_session())
 
 
+def _get(queue_id):
+    return _session().query(QueueFeatures).filter(QueueFeatures.id == queue_id)[0]
+
+
 def get_queue_name(queue_id):
-    return _session().query(QueueFeatures.name).filter(QueueFeatures.id == queue_id)[0].name
+    return _get(queue_id).name
+
+
+def get_display_name_number(queue_id):
+    queue = _get(queue_id)
+    return queue.displayname, queue.number

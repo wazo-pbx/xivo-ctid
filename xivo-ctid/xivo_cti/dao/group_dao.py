@@ -30,5 +30,14 @@ def _session():
     return connection.get_session()
 
 
+def _get(group_id):
+    return _session().query(GroupFeatures).filter(GroupFeatures.id == group_id)[0]
+
+
 def get_name(group_id):
-    return _session().query(GroupFeatures.name).filter(GroupFeatures.id == group_id)[0].name
+    return _get(group_id).name
+
+
+def get_name_number(group_id):
+    group = _get(group_id)
+    return group.name, group.number
