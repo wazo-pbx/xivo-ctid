@@ -21,7 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import cjson
 import logging
 import os
 import Queue
@@ -32,7 +31,6 @@ import ssl
 import sys
 import time
 import threading
-import urllib
 
 from xivo import daemonize
 
@@ -48,7 +46,6 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces.interfaces import DisconnectCause
-from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
