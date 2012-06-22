@@ -130,7 +130,7 @@ class WEBI(interfaces.Interfaces):
         live_reload_conf = self._config.getconfig('main')['live_reload_conf']
 
         if not live_reload_conf:
-            logger.info('WEBI command received (%s) but live reload configuration has disabled', raw_msg)
+            logger.info('WEBI command received (%s) but live reload configuration has been disabled', raw_msg)
             return [{'message': clireply,
                      'closemenow': closemenow}]
 
