@@ -119,9 +119,24 @@ class CTIServer(object):
         self._cti_events = Queue.Queue()
 
     def _set_signal_handlers(self):
-        signal.signal(signal.SIGINT, self.sighandler)
-        signal.signal(signal.SIGTERM, self.sighandler)
-        signal.signal(signal.SIGHUP, self.sighandler_reload)
+        signal.signal(signal.SIGINT, self._sighandler)
+        signal.signal(signal.SIGTERM, self._sighandler)
+        signal.signal(signal.SIGHUP, self._sighandler_reload)
+
+    ## \brief Handler for catching signals (in the main thread)
+    def _sighandler(self, signum, frame):
+        logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
+                       signum, frame.f_lineno, self.askedtoquit)
+        for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
+            print '--- living thread <%s>' % (t.getName())
+            t._Thread__stop()
+        self.askedtoquit = True
+
+    ## \brief Handler for catching signals (in the main thread)
+    def _sighandler_reload(self, signum, frame):
+        logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
+                       signum, frame.f_lineno, self.askedtoquit)
+        self.askedtoquit = False
 
     def _set_logger(self):
         logging.basicConfig(level=logging.INFO)
@@ -286,21 +301,6 @@ class CTIServer(object):
             except Exception:
                 logger.exception('main loop has crashed ... retrying in 5 seconds ...')
                 time.sleep(5)
-
-    ## \brief Handler for catching signals (in the main thread)
-    def sighandler(self, signum, frame):
-        logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
-                       signum, frame.f_lineno, self.askedtoquit)
-        for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
-            print '--- living thread <%s>' % (t.getName())
-            t._Thread__stop()
-        self.askedtoquit = True
-
-    ## \brief Handler for catching signals (in the main thread)
-    def sighandler_reload(self, signum, frame):
-        logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
-                       signum, frame.f_lineno, self.askedtoquit)
-        self.askedtoquit = False
 
     def manage_tcp_connections(self, sel_i, msg, kind):
         """
@@ -578,15 +578,7 @@ class CTIServer(object):
                            self.fdlist_established)
             logger.warning('(select) current open TCP connections : (AMI) %s', self.ami_sock)
 
-            for s in self.fdlist_full:
-                if s in self.fdlist_established:
-                    if self.askedtoquit:
-                        self.fdlist_established[s].disconnected(DisconnectCause.by_server_stop)
-                    else:
-                        self.fdlist_established[s].disconnected(DisconnectCause.by_server_reload)
-                if not isinstance(s, int):
-                    # the only one 'int' is the (read) pipe : no need to close/reopen it
-                    s.close()
+            self._socket_close_all()
 
             if self.askedtoquit:
                 time_uptime = int(time.time() - time.mktime(self.time_start))
@@ -599,12 +591,20 @@ class CTIServer(object):
                 daemonize.unlock_pidfile(cti_config.PIDFILE)
                 sys.exit(5)
             else:
-                # self.commandclass.reset('reload')
                 self.askedtoquit = True
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (reload) the thread <%s> remains' % t.getName()
-                    # t._Thread__stop() # does not work in reload case (vs. stop case)
-                return []
+                return (None, None, None)
+
+    def _socket_close_all(self):
+        for s in self.fdlist_full:
+            if s in self.fdlist_established:
+                if self.askedtoquit:
+                    self.fdlist_established[s].disconnected(DisconnectCause.by_server_stop)
+                else:
+                    self.fdlist_established[s].disconnected(DisconnectCause.by_server_reload)
+            if not isinstance(s, int):
+                s.close()
 
     def _socket_ami_read(self, sel_i):
         try:
