@@ -75,6 +75,7 @@ class INFO(interfaces.Interfaces):
         interfaces.Interfaces.__init__(self, ctiserver)
         self.dumpami_enable = []
         self.dumpami_disable = []
+        self.innerdata = self._ctiserver.safe
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
@@ -82,10 +83,6 @@ class INFO(interfaces.Interfaces):
     def disconnected(self, cause):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), cause))
         interfaces.Interfaces.disconnected(self, cause)
-
-    def set_ipbxid(self, ipbxid):
-        self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe
 
     def manage_connection(self, msg):
         """
@@ -177,7 +174,7 @@ class INFO(interfaces.Interfaces):
                 elif usefulmsg.startswith('showlist'):
                     args = usefulmsg.split()
                     safe = self._ctiserver.safe
-                    clireply.append('ipbxid : xivo')
+                    clireply.append('ipbxid : %s' % self._ctiserver.myipbxid)
                     for k, v in safe.xod_config.iteritems():
                         if len(args) > 1 and not args[1] in k:
                             continue

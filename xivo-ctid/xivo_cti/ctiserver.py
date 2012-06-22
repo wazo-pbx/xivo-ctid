@@ -416,8 +416,8 @@ class CTIServer(object):
         self.safe.update_directories()
 
         logger.info('(1/3) Local AMI socket connection')
-        self.myami = interface_ami.AMI(self, self.myipbxid)
-        self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
+        self.myami = interface_ami.AMI(self)
+        self.commandclass = amiinterpret.AMI_1_8(self)
         self.commandclass.user_features_dao = self._user_features_dao
         self.commandclass.queuemember_service_manager = self._queuemember_service_manager
 
@@ -674,9 +674,6 @@ class CTIServer(object):
                 interface.queuemember_service_manager = self._queuemember_service_manager
 
             interface.connected(socketobject)
-
-            if kind in ['WEBI', 'INFO']:
-                interface.set_ipbxid(self.myipbxid)
 
             self.fdlist_established[socketobject] = interface
         else:

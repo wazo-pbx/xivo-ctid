@@ -89,9 +89,6 @@ class WEBI(interfaces.Interfaces):
     def disconnected(self, cause):
         interfaces.Interfaces.disconnected(self, cause)
 
-    def set_ipbxid(self, ipbxid):
-        self.ipbxid = ipbxid
-
     def _parse_webi_command(self, raw_msg):
         if len(raw_msg) == 0 or not ':' in raw_msg:
             logger.warning('WEBI did an unexpected request %s', raw_msg)
@@ -169,7 +166,7 @@ class WEBI(interfaces.Interfaces):
     def makereply_close(self, actionid, status, reply=[]):
         if self.connid:
             try:
-                self.connid.sendall('%s:ID <%s>\n' % (XIVO_CLI_WEBI_HEADER, self.ipbxid))
+                self.connid.sendall('%s\n' % (XIVO_CLI_WEBI_HEADER))
                 for r in reply:
                     self.connid.sendall('%s\n' % r)
                 self.connid.sendall('%s:%s\n' % (XIVO_CLI_WEBI_HEADER, status))

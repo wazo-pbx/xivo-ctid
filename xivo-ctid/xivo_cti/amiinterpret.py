@@ -49,9 +49,8 @@ class AMI_1_8(object):
                   'Meetme',
                   'Did',)
 
-    def __init__(self, ctiserver, ipbxid):
+    def __init__(self, ctiserver):
         self._ctiserver = ctiserver
-        self.ipbxid = ipbxid
         self.innerdata = self._ctiserver.safe
 
     def ami_newstate(self, event):
@@ -450,7 +449,7 @@ class AMI_1_8(object):
             event = {'class': 'getlist',
                      'listname': 'users',
                      'function': 'updateconfig',
-                     'tipbxid': self.ipbxid,
+                     'tipbxid': self._ctiserver.myipbxid,
                      'tid': userid,
                      'config': user}
             self._ctiserver.send_cti_event(event)

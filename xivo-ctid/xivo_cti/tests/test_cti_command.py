@@ -17,7 +17,6 @@ class Test(unittest.TestCase):
 
     def setUp(self):
         self._ctiserver = Mock(CTIServer)
-        self._ipbxid = 'my_ipbx_id'
         self._innerdata = Mock(Safe)
         self.conn = Mock()
         self.conn.requester = ('test_requester', 1)

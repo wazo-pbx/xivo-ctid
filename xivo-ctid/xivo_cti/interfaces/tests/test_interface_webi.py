@@ -73,7 +73,6 @@ class Test(unittest.TestCase):
     def test_send_ami_request_sync(self):
         msg = 'sip show peer francis'
         type = 'sync'
-        self._interface_webi.ipbxid = '1234'
         self._ctiserver.myami = Mock(AMI)
 
         result = self._interface_webi._send_ami_request(type, msg)
@@ -84,7 +83,6 @@ class Test(unittest.TestCase):
     def test_send_ami_request_async(self):
         msg = 'dialplan reload'
         type = 'async'
-        self._interface_webi.ipbxid = '1234'
         self._ctiserver.myami = Mock(AMI)
 
         result = self._interface_webi._send_ami_request(type, msg)
@@ -121,7 +119,6 @@ class Test(unittest.TestCase):
         raw_msg = 'async:xivo[userlist,update]'
         expected_result = [{'message': [],
                             'closemenow': True}]
-        self._interface_webi.ipbxid = '1234'
         self._interface_webi._ctiserver.update_userlist = Mock()
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('async', 'xivo[userlist,update]')
@@ -135,7 +132,6 @@ class Test(unittest.TestCase):
         raw_msg = 'async:sip reload'
         expected_result = [{'message': [],
                             'closemenow': False}]
-        self._interface_webi.ipbxid = '1234'
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('async', 'sip reload')
         self._interface_webi._send_ami_request = Mock()
@@ -150,7 +146,6 @@ class Test(unittest.TestCase):
         raw_msg = 'async:sip show peer francis'
         expected_result = [{'message': [],
                             'closemenow': False}]
-        self._interface_webi.ipbxid = '1234'
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('sync', 'sip show peer francis')
         self._interface_webi._send_ami_request = Mock()
@@ -165,7 +160,6 @@ class Test(unittest.TestCase):
         raw_msg = 'async:command that does_not exist'
         expected_result = [{'message': [],
                             'closemenow': True}]
-        self._interface_webi.ipbxid = '1234'
         self._interface_webi._parse_webi_command = Mock()
         self._interface_webi._parse_webi_command.return_value = ('async', 'command that does_not exist')
         self._interface_webi._send_ami_request = Mock()

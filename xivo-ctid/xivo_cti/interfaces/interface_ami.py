@@ -49,9 +49,8 @@ class AMI(object):
     FIELD_SEPARATOR = ': '
     ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-    def __init__(self, ctiserver, ipbxid):
+    def __init__(self, ctiserver):
         self._ctiserver = ctiserver
-        self.ipbxid = ipbxid
         self.innerdata = self._ctiserver.safe
         self._input_buffer = ''
         self.waiting_actionid = {}
@@ -73,7 +72,7 @@ class AMI(object):
         ami_agent_login_logoff.agent_features_dao = self._ctiserver._agent_features_dao
         ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
         self._ami_initializer = AMIInitializer()
-        self.amiclass = xivo_ami.AMIClass(self.ipbxid,
+        self.amiclass = xivo_ami.AMIClass(self._ctiserver.myipbxid,
                                        self.ipaddress, self.ipport,
                                        self.ami_login, self.ami_pass,
                                        True)
@@ -105,7 +104,7 @@ class AMI(object):
         try:
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
-                      self.ipbxid)
+                      self._ctiserver.myipbxid)
         except Exception:
             logger.exception('cb_timer %s', args)
 
@@ -174,7 +173,7 @@ class AMI(object):
                             if doallow:
                                 ik.sendall('%.3f %s %s %s\n' %
                                            (time.time(),
-                                            self.ipbxid,
+                                            self._ctiserver.myipbxid,
                                             event_name,
                                             event))
                 self.handle_ami_function(event_name, event)
