@@ -415,7 +415,7 @@ class CTIServer(object):
         self.safe.register_ami_handlers()
         self.safe.update_directories()
 
-        logger.info('(1/2) Local AMI socket connection')
+        logger.info('(1/3) Local AMI socket connection')
         self.myami = interface_ami.AMI(self, self.myipbxid)
         self.commandclass = amiinterpret.AMI_1_8(self, self.myipbxid)
         self.commandclass.user_features_dao = self._user_features_dao
@@ -431,6 +431,7 @@ class CTIServer(object):
         self._agent_service_manager.agent_executor.ami = self.myami.amiclass
         self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
+        logger.info('(2/3) Getting configuration')
         try:
             self.safe.update_config_list_all()
         except Exception:
@@ -438,7 +439,7 @@ class CTIServer(object):
         self._queuemember_service_manager.update_config()
         self._init_statistics_producers()
 
-        logger.info('(2/2) listening sockets (CTI, WEBI, FAGI, INFO)')
+        logger.info('(3/3) Listening sockets (CTI, WEBI, FAGI, INFO)')
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
