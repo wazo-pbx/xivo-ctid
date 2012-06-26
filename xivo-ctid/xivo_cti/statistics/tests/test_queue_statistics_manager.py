@@ -8,6 +8,7 @@ from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.model.queuestatistic import NO_VALUE
+from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
 
 class TestQueueStatisticsManager(unittest.TestCase):
@@ -144,6 +145,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.ami_wrapper = Mock(AMIClass)
         self.queue_statistics_manager.ami_wrapper = self.ami_wrapper
+        self.queue_statistics_manager._queue_features_dao = Mock(QueueFeaturesDAO)
 
         self.queue_statistics_manager.get_queue_summary(queue_name)
 
