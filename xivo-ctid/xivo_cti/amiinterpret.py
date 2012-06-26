@@ -40,7 +40,6 @@ class AMI_1_8(object):
     userevents = ('Feature',
                   'OutCall',
                   'Custom',
-                  'LocalCall',
                   'dialplan2cti',
                   'LookupDirectory',
                   'User',
@@ -61,11 +60,6 @@ class AMI_1_8(object):
         channelstate = event['ChannelState']
         context = event['Context']
         unique_id = event['Uniqueid']
-        actionid = 'nc:%s' % ''.join(random.sample(ALPHANUMS, 10))
-        params = {'mode': 'newchannel',
-                  'amicommand': 'getvar',
-                  'amiargs': [channel, 'XIVO_ORIGACTIONID']}
-        self._ctiserver.myami.execute_and_track(actionid, params)
         self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
 
     def ami_hangup(self, event):

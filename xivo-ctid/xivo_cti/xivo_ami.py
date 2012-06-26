@@ -180,7 +180,6 @@ class AMIClass(object):
                                                 ('Priority', '1'),
                                                 ('Application', application),
                                                 ('Data', data),
-                                                ('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid),
                                                 ('Variable', 'XIVO_ORIGAPPLI=%s' % application),
                                                 ('Async', 'true')])
 
@@ -214,7 +213,6 @@ class AMIClass(object):
                 command_details.append(('CallerID', '"%s"' % cidnamesrc))
             for var, val in extravars.iteritems():
                 command_details.append(('Variable', '%s=%s' % (var, val)))
-            command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid))
         except Exception, e:
             logger.warning('Originate failed: %s', e.message)
             return False
