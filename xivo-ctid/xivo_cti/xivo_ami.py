@@ -1,5 +1,6 @@
 # vim: set fileencoding=utf-8 :
 # xivo-ctid
+import errno
 
 # Copyright (C) 2007-2012  Avencall
 #
@@ -103,9 +104,23 @@ class AMIClass(object):
             logger.exception('(sendcommand timeout (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
+        except socket.error, e:
+            t1 = time.time()
+            logger.exception('(sendcommand socket error (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
+            ret = False
+        except IOError, e:
+            t1 = time.time()
+            if e.errno == errno.EPIPE:
+                logger.exception('(sendcommand I/O Error EPIPE (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
+            else:
+                logger.exception('(sendcommand I/O Error Other (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
+            ret = False
         except Exception:
             t1 = time.time()
-            logger.exception('(sendcommand other (%s %s %s) timespent=%f)',
+            logger.exception('(sendcommand exception (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
         if self.actionid:
