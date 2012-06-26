@@ -891,8 +891,6 @@ class Safe(object):
                                             'function': 'delconfig',
                                             'tipbxid': self.ipbxid,
                                             'list': [channel]})
-        else:
-            logger.warning('channel %s not there ...', channel)
 
     def _remove_channel_relations(self, channel):
         relations = self.channels[channel].relations
