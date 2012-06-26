@@ -216,6 +216,7 @@ class CTIServer(object):
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
         self._queue_statistic_manager = QueueStatisticsManager.get_instance()
+        self._queue_statistic_manager._queue_features_dao = self._queue_features_dao
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 
