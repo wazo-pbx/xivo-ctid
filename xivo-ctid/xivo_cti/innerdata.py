@@ -595,7 +595,8 @@ class Safe(object):
         self.handle_cti_stack('empty_stack')
 
     def newstate(self, channel, state):
-        self.channels[channel].update_state(state)
+        if channel in self.channels:
+            self.channels[channel].update_state(state)
 
     def newchannel(self, channel_name, context, state, event=None, unique_id=None):
         if not channel_name:
