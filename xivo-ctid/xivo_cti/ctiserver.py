@@ -436,7 +436,6 @@ class CTIServer(object):
             self.safe.update_config_list_all()
         except Exception:
             logger.exception('commandclass.updates()')
-        self._queuemember_service_manager.update_config()
         self._init_statistics_producers()
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, FAGI, INFO)')
