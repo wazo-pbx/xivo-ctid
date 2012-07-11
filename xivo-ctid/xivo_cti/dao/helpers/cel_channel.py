@@ -79,3 +79,6 @@ class CELChannel(object):
 
     def is_originate(self):
         return self._chan_start_event.exten == u's'
+
+    def is_caller(self):
+        return self._chan_start_event.uniqueid == self._chan_start_event.linkedid

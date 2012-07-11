@@ -233,3 +233,25 @@ class TestCELChannel(unittest.TestCase):
         cel_channel = CELChannel(cel_events)
 
         self.assertFalse(cel_channel.is_originate())
+
+    def test_is_caller_true(self):
+        cel_events = [
+            _new_cel(eventtype='CHAN_START', uniqueid=u'1', linkedid=u'1'),
+            _new_cel(eventtype='HANGUP'),
+            _new_cel(eventtype='CHAN_END')
+        ]
+
+        cel_channel = CELChannel(cel_events)
+
+        self.assertTrue(cel_channel.is_caller())
+
+    def test_is_caller_false(self):
+        cel_events = [
+            _new_cel(eventtype='CHAN_START', uniqueid=u'2', linkedid=u'1'),
+            _new_cel(eventtype='HANGUP'),
+            _new_cel(eventtype='CHAN_END')
+        ]
+
+        cel_channel = CELChannel(cel_events)
+
+        self.assertFalse(cel_channel.is_caller())
