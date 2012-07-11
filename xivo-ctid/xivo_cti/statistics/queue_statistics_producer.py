@@ -5,11 +5,12 @@ from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
 logger = logging.getLogger("QueueStatisticsProducer")
-QueueCounters = namedtuple('QueueCounters', ['available', 'EWT'])
+QueueCounters = namedtuple('QueueCounters', ['available', 'EWT', 'Talking'])
 
 LOGGEDAGENT_STATNAME = "Xivo-LoggedAgents"
 AVAILABLEAGENT_STATNAME = "Xivo-AvailableAgents"
 EWT_STATNAME = "Xivo-EWT"
+TALKINGAGENT_STATNAME = "Xivo-TalkingAgents"
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
@@ -17,7 +18,7 @@ def register_events():
 
 def parse_queue_summary(queuesummary_event):
     queue_name = queuesummary_event['Queue']
-    counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'])
+    counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'], Talking=queuesummary_event['Talking'])
 
     queue_statistics_producer = QueueStatisticsProducer.get_instance()
     queue_service_manager = QueueServiceManager.get_instance()
@@ -80,7 +81,7 @@ class QueueStatisticsProducer(object):
                 self.queues_of_agent[agentid].remove(queueid)
 
     def on_queue_summary(self, queue_id, counters):
-        message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT}}
+        message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT, TALKINGAGENT_STATNAME: counters.Talking}}
         self.notifier.on_stat_changed(message)
 
     def _compute_nb_of_logged_agents(self, queueid):
