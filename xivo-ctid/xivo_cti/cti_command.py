@@ -324,46 +324,42 @@ class Command(object):
     def _get_history_for_phone(self, phone):
         mode = int(self._commanddict['mode'])
         limit = int(self._commanddict['size'])
-        endpoint = self._get_endpoint_from_phone(phone)
         if mode == 0:
-            return self._get_outgoing_history_for_endpoint(endpoint, limit)
+            return self._get_outgoing_history_for_phone(phone, limit)
         elif mode == 1:
-            return self._get_answered_history_for_endpoint(endpoint, limit)
+            return self._get_answered_history_for_phone(phone, limit)
         elif mode == 2:
-            return self._get_missed_history_for_endpoint(endpoint, limit)
+            return self._get_missed_history_for_phone(phone, limit)
         else:
             return None
 
-    def _get_outgoing_history_for_endpoint(self, endpoint, limit):
+    def _get_outgoing_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for sent_call in call_history_mgr.outgoing_calls_for_endpoint(endpoint, limit):
+        for sent_call in call_history_mgr.outgoing_calls_for_phone(phone, limit):
             result.append({'calldate': sent_call.date.isoformat(),
                            'duration': sent_call.duration,
                            # XXX this is not fullname, this is just an extension number like in 1.1
                            'fullname': sent_call.extension})
         return result
 
-    def _get_answered_history_for_endpoint(self, endpoint, limit):
+    def _get_answered_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.answered_calls_for_endpoint(endpoint, limit):
+        for received_call in call_history_mgr.answered_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})
         return result
 
-    def _get_missed_history_for_endpoint(self, endpoint, limit):
+    def _get_missed_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.missed_calls_for_endpoint(endpoint, limit):
+        for received_call in call_history_mgr.missed_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})
         return result
-
-    def _get_endpoint_from_phone(self, phone):
-        return "%s/%s" % (phone['protocol'].upper(), phone['name'])
 
     def _format_history_reply(self, history):
         if history is None:
