@@ -55,80 +55,34 @@ class CELDAO(object):
         else:
             return CELChannel(cel_events)
 
-    def cels_by_linked_id(self, linked_id):
-        cel_events = (self._session.query(CEL)
-                      .filter(CEL.linkedid == linked_id)
-                      .all())
-        if not cel_events:
-            raise CELException('no such CEL event with linkedid %s' % linked_id)
-        else:
-            return cel_events
-
-    def _channel_pattern_from_endpoint(self, endpoint):
-        return "%s-%%" % endpoint
-
-    def answered_channels_for_endpoint(self, endpoint, limit):
-        channel_pattern = self._channel_pattern_from_endpoint(endpoint)
-        query = (self._session.query(CEL.uniqueid)
-                 .filter(CEL.channame.like(channel_pattern))
-                 .filter(CEL.eventtype == 'CHAN_START')
-                 .filter(CEL.uniqueid != CEL.linkedid)
-                 .order_by(CEL.eventtime.desc()))
-        channels = []
-        for unique_id, in query:
+    def channels_for_phone(self, phone):
+        channel_pattern = self._channel_pattern_from_phone(phone)
+        unique_ids = (self._session.query(CEL.uniqueid)
+                      .filter(CEL.channame.like(channel_pattern))
+                      .filter(CEL.eventtype == 'CHAN_START')
+                      .order_by(CEL.eventtime.desc()))
+        ret = []
+        for unique_id, in unique_ids:
             try:
                 channel = self.channel_by_unique_id(unique_id)
             except CELException, e:
                 # this can happen in the case the channel is alive
                 logger.info('could not create CEL channel %s: %s', unique_id, e)
             else:
-                if channel.is_answered():
-                    channels.append(channel)
-                    if len(channels) >= limit:
-                        break
-        return channels
+                ret.append(channel)
+        return ret
 
-    def missed_channels_for_endpoint(self, endpoint, limit):
-        channel_pattern = self._channel_pattern_from_endpoint(endpoint)
-        query = (self._session.query(CEL.uniqueid)
-                 .filter(CEL.channame.like(channel_pattern))
-                 .filter(CEL.eventtype == 'CHAN_START')
-                 .filter(CEL.uniqueid != CEL.linkedid)
-                 .order_by(CEL.eventtime.desc()))
-        channels = []
-        for unique_id, in query:
-            try:
-                channel = self.channel_by_unique_id(unique_id)
-            except CELException, e:
-                # this can happen in the case the channel is alive
-                logger.info('could not create CEL channel %s: %s', unique_id, e)
-            else:
-                if not channel.is_answered():
-                    channels.append(channel)
-                    if len(channels) >= limit:
-                        break
-        return channels
+    def _channel_pattern_from_phone(self, phone):
+        if phone['protocol'] == 'sip':
+            return self._channel_pattern_from_phone_sip(phone)
+        elif phone['protocol'] == 'sccp':
+            return self._channel_pattern_from_phone_sccp(phone)
 
-    def outgoing_channels_for_endpoint(self, endpoint, limit):
-        channel_pattern = self._channel_pattern_from_endpoint(endpoint)
-        query = (self._session.query(CEL.uniqueid)
-                 .filter(CEL.channame.like(channel_pattern))
-                 .filter(CEL.eventtype == 'CHAN_START')
-                 .filter(CEL.uniqueid == CEL.linkedid)
-                 .order_by(CEL.eventtime.desc())
-                 .limit(limit))
-        channels = []
-        for unique_id, in query:
-            try:
-                channel = self.channel_by_unique_id(unique_id)
-            except CELException, e:
-                # this can happen in the case the channel is alive
-                logger.info('could not create CEL channel %s: %s', unique_id, e)
-            else:
-                channels.append(channel)
-                if len(channels) >= limit:
-                    break
-        return channels
+    def _channel_pattern_from_phone_sip(self, phone):
+        return "SIP/%s-%%" % phone['name']
+
+    def _channel_pattern_from_phone_sccp(self, phone):
+        return "sccp/%s@%%" % phone['name']
 
     @classmethod
     def new_from_uri(cls, uri):
