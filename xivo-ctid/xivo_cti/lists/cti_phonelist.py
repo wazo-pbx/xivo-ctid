@@ -23,6 +23,7 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 import logging
 import time
+from collections import defaultdict
 from xivo_cti.cti_anylist import AnyList
 
 logger = logging.getLogger('phonelist')
@@ -33,6 +34,20 @@ class PhoneList(AnyList):
         self.anylist_properties = {'name': 'phones',
                                    'urloptions': (1, 12, False)}
         AnyList.__init__(self, newurls)
+        self._contexts_by_user_id = {}
+
+    def update(self):
+        delta = AnyList.update(self)
+        self._update_contexts_by_user_id()
+        return delta
+
+    def _update_contexts_by_user_id(self):
+        contexts_by_user_id = defaultdict(list)
+        for phone in self.keeplist.itervalues():
+            user_id = phone['iduserfeatures']
+            context = phone['context']
+            contexts_by_user_id[user_id].append(context)
+        self._contexts_by_user_id = dict(contexts_by_user_id)
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -322,3 +337,6 @@ class PhoneList(AnyList):
         users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]
         sorted_phones = sorted(users_phones, key=lambda phone: phone['rules_order'])
         return sorted_phones[0] if sorted_phones else None
+
+    def get_contexts_for_user(self, user_id):
+        return self._contexts_by_user_id[user_id]
