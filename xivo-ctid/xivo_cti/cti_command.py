@@ -135,13 +135,13 @@ class Command(object):
 
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname) and 'warning_string' not in messagebase:
-                ztmp = getattr(self, methodname)()
-                if ztmp is None or len(ztmp) == 0:
+                method_result = getattr(self, methodname)()
+                if method_result is None or len(method_result) == 0:
                     messagebase['warning_string'] = 'return_is_none'
-                elif isinstance(ztmp, str):
-                    messagebase['error_string'] = ztmp
+                elif isinstance(method_result, str):
+                    messagebase['error_string'] = method_result
                 else:
-                    messagebase.update(ztmp)
+                    messagebase.update(method_result)
             else:
                 messagebase['warning_string'] = 'unimplemented'
         else:
