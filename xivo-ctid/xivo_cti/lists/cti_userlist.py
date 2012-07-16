@@ -54,8 +54,12 @@ class UserList(AnyList):
         return lst
 
     def get_contexts(self, userid):
-        phones = self.commandclass.xod_config['phones'].keeplist
-        return [phone['context'] for phone in phones.itervalues() if userid and int(userid) == int(phone['iduserfeatures'])]
+        if userid:
+            userid = int(userid)
+            phones = self.commandclass.xod_config['phones'].keeplist
+            return [phone['context'] for phone in phones.itervalues() if userid == phone['iduserfeatures']]
+        else:
+            return []
 
     def filter_context(self, contexts):
         if not Config.get_instance().part_context():
