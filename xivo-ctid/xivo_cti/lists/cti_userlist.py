@@ -64,11 +64,20 @@ class UserList(AnyList):
         if not Config.get_instance().part_context():
             return self.keeplist
         else:
-            contexts = contexts if contexts else []
-            ret = {}
-            for user_id, user in self.keeplist.iteritems():
-                user_context = self.get_contexts(user_id)
-                for context in user_context:
-                    if context in contexts:
-                        ret[user_id] = user
-            return ret
+            if contexts:
+                user_ids = self._get_user_ids_in_contexts(contexts)
+                users = {}
+                keeplist = self.keeplist
+                for user_id in user_ids:
+                    user_id = str(user_id)
+                    users[user_id] = keeplist[user_id]
+                return users
+            else:
+                return {}
+
+    def _get_user_ids_in_contexts(self, contexts):
+        phonelist = self.commandclass.xod_config['phones']
+        user_ids = set()
+        for context in contexts:
+            user_ids.update(phonelist.get_user_ids_for_context(context))
+        return user_ids

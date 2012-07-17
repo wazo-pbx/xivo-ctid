@@ -35,19 +35,29 @@ class PhoneList(AnyList):
                                    'urloptions': (1, 12, False)}
         AnyList.__init__(self, newurls)
         self._contexts_by_user_id = {}
+        self._user_ids_by_context = {}
 
     def update(self):
         delta = AnyList.update(self)
-        self._update_contexts_by_user_id()
+        self._update_lookup_dictionaries()
         return delta
 
-    def _update_contexts_by_user_id(self):
-        contexts_by_user_id = defaultdict(list)
+    def _update_lookup_dictionaries(self):
+        contexts_by_user_id = defaultdict(set)
+        user_ids_by_context = defaultdict(set)
+
         for phone in self.keeplist.itervalues():
             user_id = phone['iduserfeatures']
             context = phone['context']
-            contexts_by_user_id[user_id].append(context)
-        self._contexts_by_user_id = dict(contexts_by_user_id)
+            contexts_by_user_id[user_id].add(context)
+            user_ids_by_context[context].add(user_id)
+
+        self._contexts_by_user_id = dict((user_id, list(contexts)) for
+                                         user_id, contexts in
+                                         contexts_by_user_id.iteritems())
+        self._user_ids_by_context = dict((context, list(user_ids)) for
+                                          context, user_ids in
+                                          user_ids_by_context.iteritems())
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -339,4 +349,7 @@ class PhoneList(AnyList):
         return sorted_phones[0] if sorted_phones else None
 
     def get_contexts_for_user(self, user_id):
-        return self._contexts_by_user_id[user_id]
+        return self._contexts_by_user_id.get(user_id, [])
+
+    def get_user_ids_for_context(self, context):
+        return self._user_ids_by_context.get(context, [])
