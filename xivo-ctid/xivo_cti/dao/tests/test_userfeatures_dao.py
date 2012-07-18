@@ -33,11 +33,13 @@ from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
 import time
+from sqlalchemy.schema import MetaData
+from xivo_cti.dao.alchemy.base import Base
 
 
 class TestUserFeaturesDAO(unittest.TestCase):
 
-    tables = [UserFeatures, LineFeatures, ContextInclude]
+    tables = [UserFeatures, LineFeatures, ContextInclude, AgentFeatures]
 
     @classmethod
     def setUpClass(cls):
@@ -46,21 +48,35 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
         uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
         dbconnection.add_connection_as(uri, 'asterisk')
-        connection = dbconnection.get_connection('asterisk')
+        cls.connection = dbconnection.get_connection('asterisk')
 
-        cls.session = connection.get_session()
+        cls.cleanTables()
+
+        cls.session = cls.connection.get_session()
 
     @classmethod
     def tearDownClass(cls):
         dbconnection.unregister_db_connection_pool()
 
-    def _empty_tables(self):
+    @classmethod
+    def cleanTables(cls):
+        if len(cls.tables):
+            engine = cls.connection.get_engine()
+
+            meta = MetaData(engine)
+            meta.reflect()
+            meta.drop_all()
+
+            table_list = [table.__table__ for table in cls.tables]
+            Base.metadata.create_all(engine, table_list)
+            engine.dispose()
+
+    def empty_tables(self):
         for table in self.tables:
-            entries = self.session.query(table)
-            map(self.session.delete, entries)
+            self.session.execute("TRUNCATE %s CASCADE;" % table.__tablename__)
 
     def setUp(self):
-        self._empty_tables()
+        self.empty_tables()
         self._innerdata = Mock(Safe)
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
