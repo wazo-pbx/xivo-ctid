@@ -24,21 +24,22 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 import logging
 import time
 from collections import defaultdict
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
+from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('phonelist')
 
 
-class PhoneList(AnyList):
+class PhoneList(ContextAwareAnyList):
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'phones',
                                    'urloptions': (1, 12, False)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
         self._contexts_by_user_id = {}
         self._user_ids_by_context = {}
 
     def update(self):
-        delta = AnyList.update(self)
+        delta = ContextAwareAnyList.update(self)
         self._update_lookup_dictionaries()
         return delta
 
@@ -47,7 +48,7 @@ class PhoneList(AnyList):
         user_ids_by_context = defaultdict(set)
 
         for phone in self.keeplist.itervalues():
-            user_id = phone['iduserfeatures']
+            user_id = str(phone['iduserfeatures'])
             context = phone['context']
             contexts_by_user_id[user_id].add(context)
             user_ids_by_context[context].add(user_id)
@@ -349,7 +350,31 @@ class PhoneList(AnyList):
         return sorted_phones[0] if sorted_phones else None
 
     def get_contexts_for_user(self, user_id):
+        user_id = str(user_id)
         return self._contexts_by_user_id.get(user_id, [])
 
-    def get_user_ids_for_context(self, context):
-        return self._user_ids_by_context.get(context, [])
+    def list_user_ids_in_contexts(self, contexts):
+        if not Config.get_instance().part_context():
+            userlist = self.commandclass.xod_config['users']
+            return userlist.keeplist.keys()
+        elif not contexts:
+            return []
+        elif len(contexts) == 1:
+            return self._user_ids_by_context.get(contexts[0], [])
+        else:
+            user_ids = set()
+            for context in contexts:
+                user_ids.update(self._user_ids_by_context.get(context, []))
+            return list(user_ids)
+
+    def is_user_id_in_contexts(self, user_id, contexts):
+        if not Config.get_instance().part_context():
+            return True
+        elif not contexts:
+            return False
+        else:
+            user_id = str(user_id)
+            user_contexts = self._contexts_by_user_id.get(user_id, [])
+            for user_context in user_contexts:
+                if user_context in contexts:
+                    return True

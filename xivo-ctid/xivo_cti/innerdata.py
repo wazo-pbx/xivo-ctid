@@ -282,7 +282,7 @@ class Safe(object):
         if listname in self.xod_config or listname == 'queuemembers':
             if listname in self.xod_config:
                 user_contexts = self.xod_config['users'].get_contexts(user_id)
-                item_ids = [item_id for item_id in self.xod_config[listname].filter_context(user_contexts) if item_id.isdigit()]
+                item_ids = self.xod_config[listname].list_ids_in_contexts(user_contexts)
             elif listname == 'queuemembers':
                 item_ids = self.queuemembers_config.keys()
             return 'message', {'function': 'listid',
@@ -376,10 +376,10 @@ class Safe(object):
                 self._ctiserver.send_cti_event(message)
             else:
                 if listname == 'users':
-                    item_context = self.user_service_manager.get_context(k)
+                    item_contexts = self.xod_config['users'].get_contexts(k)
                 else:
-                    item_context = self.xod_config[listname].keeplist[k].get('context')
-                connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
+                    item_contexts = [self.xod_config[listname].keeplist[k].get('context')]
+                connection_list = self._ctiserver.get_connected({'contexts': item_contexts})
                 for connection in connection_list:
                     connection.append_msg(message)
 
@@ -537,11 +537,7 @@ class Safe(object):
             else:
                 reply = {}
             return reply
-        configdict = self.xod_config[listname].filter_context(user_contexts)
-        if not isinstance(configdict, dict):
-            logger.warning('get_config : problem with listname %s', listname)
-            return reply
-        item_config = configdict.get(item_id)
+        item_config = self.xod_config[listname].get_item_in_contexts(item_id, user_contexts)
         if not isinstance(item_config, dict):
             logger.warning('get_config : problem with item_id %s in listname %s',
                            item_id, listname)

@@ -22,12 +22,12 @@
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('agentlist')
 
 
-class AgentList(AnyList):
+class AgentList(ContextAwareAnyList):
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
@@ -35,10 +35,10 @@ class AgentList(AnyList):
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'agents',
                                    'urloptions': (1, 4, True)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['number'] not in self.reverse_index:

@@ -23,7 +23,6 @@
 import logging
 
 from xivo_cti.cti_anylist import AnyList
-from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('userlist')
 
@@ -53,31 +52,20 @@ class UserList(AnyList):
                 lst[username] = userinfo
         return lst
 
-    def get_contexts(self, userid):
-        if userid:
-            userid = int(userid)
-            return self.commandclass.xod_config['phones'].get_contexts_for_user(userid)
-        else:
-            return []
+    def get_contexts(self, user_id):
+        return self.commandclass.xod_config['phones'].get_contexts_for_user(user_id)
 
-    def filter_context(self, contexts):
-        if not Config.get_instance().part_context():
-            return self.keeplist
-        else:
-            if contexts:
-                user_ids = self._get_user_ids_in_contexts(contexts)
-                users = {}
-                keeplist = self.keeplist
-                for user_id in user_ids:
-                    user_id = str(user_id)
-                    users[user_id] = keeplist[user_id]
-                return users
-            else:
-                return {}
-
-    def _get_user_ids_in_contexts(self, contexts):
+    def list_ids_in_contexts(self, contexts):
         phonelist = self.commandclass.xod_config['phones']
-        user_ids = set()
-        for context in contexts:
-            user_ids.update(phonelist.get_user_ids_for_context(context))
-        return user_ids
+        return phonelist.list_user_ids_in_contexts(contexts)
+
+    def get_item_in_contexts(self, item_id, contexts):
+        try:
+            item = self.keeplist[item_id]
+        except KeyError:
+            return None
+        else:
+            phonelist = self.commandclass.xod_config['phones']
+            if phonelist.is_user_id_in_contexts(item_id, contexts):
+                return item
+            return None

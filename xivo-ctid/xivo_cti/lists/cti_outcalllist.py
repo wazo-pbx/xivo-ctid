@@ -21,16 +21,11 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 
-class OutcallList(AnyList):
+class OutcallList(ContextAwareAnyList):
     def __init__(self, newurls = [], useless = None):
         self.anylist_properties = { 'name' : 'outcall',
                                     'urloptions' : (1, 5, True) }
-        AnyList.__init__(self, newurls)
-    
-    def update(self):
-        ret = AnyList.update(self)
-        # self.reverse_index = {}
-        return ret
+        ContextAwareAnyList.__init__(self, newurls)

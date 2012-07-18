@@ -23,12 +23,12 @@
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('grouplist')
 
 
-class GroupList(AnyList):
+class GroupList(ContextAwareAnyList):
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
@@ -39,10 +39,10 @@ class GroupList(AnyList):
     def __init__(self, newurls=[], virtual=False):
         self.anylist_properties = {'name': 'groups',
                                    'urloptions': (1, 5, True)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:

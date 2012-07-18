@@ -23,21 +23,16 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('trunklist')
 
 
-class TrunkList(AnyList):
+class TrunkList(ContextAwareAnyList):
     def __init__(self, newurls = [], useless = None):
         self.anylist_properties = { 'name' : 'trunk',
                                     'urloptions' : (1, 5, True) }
-        AnyList.__init__(self, newurls)
-
-    def update(self):
-        ret = AnyList.update(self)
-        # self.reverse_index = {}
-        return ret
+        ContextAwareAnyList.__init__(self, newurls)
 
     def ami_dial(self, trunkidsrc, trunkiddst, uidsrc, uiddst, puidsrc, puiddst):
         if trunkidsrc in self.keeplist:

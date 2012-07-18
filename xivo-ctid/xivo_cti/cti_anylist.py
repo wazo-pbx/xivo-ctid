@@ -22,6 +22,7 @@
 
 import logging
 import cti_urllist
+from collections import defaultdict
 from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('anylist')
@@ -109,13 +110,54 @@ class AnyList(object):
             return
         self.update()
 
-    def filter_context(self, contexts):
+    def list_ids_in_contexts(self, contexts):
+        return self.keeplist.keys()
+
+    def get_item_in_contexts(self, item_id, contexts):
+        return self.keeplist.get(item_id)
+
+
+class ContextAwareAnyList(AnyList):
+    def __init__(self, newurls):
+        AnyList.__init__(self, newurls)
+        self._item_ids_by_context = {}
+
+    def update(self):
+        delta = AnyList.update(self)
+        self._update_item_ids_by_context()
+        return delta
+
+    def _update_item_ids_by_context(self):
+        item_ids_by_context = defaultdict(list)
+        for item_id, item in self.keeplist.iteritems():
+            context = item['context']
+            item_ids_by_context[context].append(item_id)
+        self._item_ids_by_context = dict(item_ids_by_context)
+
+    def list_ids_in_contexts(self, contexts):
         if not Config.get_instance().part_context():
-            return self.keeplist
+            return self.keeplist.keys()
+        elif not contexts:
+            return []
+        elif len(contexts) == 1:
+            return self._item_ids_by_context.get(contexts[0], [])
         else:
-            ret = {}
-            contexts = contexts if contexts else []
-            for item_id, item in self.keeplist.iteritems():
-                if 'context' in item and item['context'] in contexts:
-                    ret[item_id] = item
-            return ret
+            item_ids = set()
+            for context in contexts:
+                item_ids.update(self._item_ids_by_context.get(context, []))
+            return list(item_ids)
+
+    def get_item_in_contexts(self, item_id, contexts):
+        try:
+            item = self.keeplist[item_id]
+        except KeyError:
+            return None
+        else:
+            if not Config.get_instance().part_context():
+                return item
+            elif not contexts:
+                return None
+            else:
+                if item['context'] in contexts:
+                    return item
+                return None
