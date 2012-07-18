@@ -37,7 +37,7 @@ class CELDAO(object):
 
     def caller_id_by_unique_id(self, unique_id):
         cel_events = (self._session.query(CEL.cid_name, CEL.cid_num)
-                      .filter(CEL.eventtype == 'CHAN_START')
+                      .filter(CEL.eventtype == 'APP_START')
                       .filter(CEL.uniqueid == unique_id)
                       .all())
         if not cel_events:

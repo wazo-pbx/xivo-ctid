@@ -96,7 +96,7 @@ class TestCELDAO(unittest.TestCase):
         self._insert_cels([
             _new_cel(eventtype='CHAN_START', cid_name='name1', cid_num='num1',
                      uniqueid='1'),
-            _new_cel(eventtype='CHAN_START', cid_name='name2', cid_num='num2',
+            _new_cel(eventtype='APP_START', cid_name='name2', cid_num='num2',
                      uniqueid='2'),
         ])
 
