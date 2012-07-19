@@ -378,3 +378,4 @@ class PhoneList(ContextAwareAnyList):
             for user_context in user_contexts:
                 if user_context in contexts:
                     return True
+            return False
