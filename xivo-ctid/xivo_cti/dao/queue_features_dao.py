@@ -38,10 +38,18 @@ class QueueFeaturesDAO(object):
         self._session = session
 
     def id_from_name(self, queue_name):
-        return self._session.query(QueueFeatures.id).filter(QueueFeatures.name == queue_name).first().id
+        result = self._session.query(QueueFeatures.id).filter(QueueFeatures.name == queue_name).first()
+        if result is None:
+            raise LookupError('No such queue')
+        else:
+            return result.id
 
     def queue_name(self, queue_id):
-        return self._session.query(QueueFeatures.name).filter(QueueFeatures.id == queue_id).first().name
+        result = self._session.query(QueueFeatures.name).filter(QueueFeatures.id == queue_id).first()
+        if result is None:
+            raise LookupError('No such queue')
+        else:
+            return result.name
 
     def is_a_queue(self, name):
         try:
