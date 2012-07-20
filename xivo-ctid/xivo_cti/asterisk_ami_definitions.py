@@ -51,33 +51,8 @@ event_flags['AGENT'] = ['AgentCalled',
 
 event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent' ]
 
-event_flags['DTMF'] = ['DTMF' ]
-
-event_flags['REPORTING'] = ['JitterBufStats', 'RTCPReceived', 'RTCPSent' ]
-
-event_flags['CDR'] = ['Cdr' ]
-
 event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
                             'VarSet' ]
-
-event_flags['AGI'] = ['AGIExec', 'AsyncAGI' ]
-
-# Call Completion events
-# https://wiki.asterisk.org/wiki/download/attachments/9076838/CCSS_architecture.pdf
-
-event_flags['CC'] = ['CCAvailable',
-                      'CCCallerRecalling', 'CCCallerStartMonitoring', 'CCCallerStopMonitoring',
-                      'CCFailure', 'CCMonitorFailed', 'CCOfferTimerStart',
-                      'CCRecallComplete', 'CCRequestAcknowledged', 'CCRequested' ]
-
-event_flags['AOC'] = ['AOC-D', 'AOC-E', 'AOC-S' ]
-
-event_flags['LOG'] = []
-event_flags['VERBOSE'] = []
-event_flags['COMMAND'] = []
-event_flags['CONFIG'] = []
-event_flags['ORIGINATE'] = []
-event_flags['HOOKRESPONSE'] = []
 
 event_others['replies'] = [
     'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
