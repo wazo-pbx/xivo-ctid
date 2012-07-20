@@ -320,9 +320,6 @@ class AMI_1_8(object):
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
 
-    def ami_peerstatus(self, event):
-        self.innerdata.updateregistration(event['Peer'], event.get('Address', ''))
-
     def userevent_user(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)

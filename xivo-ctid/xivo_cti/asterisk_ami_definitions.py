@@ -7,7 +7,7 @@ event_others = dict()
 event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          'Reload', 'Shutdown', 'ModuleLoadReport',
                          'FullyBooted',  # (1.8)
-                         'PeerStatus', 'DNDState', 'MobileStatus', 'Registry',
+                         'DNDState', 'MobileStatus', 'Registry',
                          'ChannelReload', 'ChannelUpdate', 'LogChannel'
                          ]
 

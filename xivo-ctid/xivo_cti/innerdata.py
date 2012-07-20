@@ -155,7 +155,6 @@ class Safe(object):
     props_status = {'users': {'connection': None,
                               'availstate': 'disconnected'},
                     'phones': {'hintstatus': '4',
-                               'reg': '',
                                'channels': [],
                                'queues': [],
                                'groups': []},
@@ -914,20 +913,6 @@ class Safe(object):
                                                 'tipbxid': self.ipbxid,
                                                 'tid': p,
                                                 'status': {'hintstatus': status}})
-
-    def updateregistration(self, peer, reg=''):
-        termination = self.ast_channel_to_termination(peer)
-        p = self.zphones(termination.get('protocol'), termination.get('name'))
-        if p:
-            oldreg = self.xod_status['phones'][p]['reg']
-            self.xod_status['phones'][p]['reg'] = reg
-            if reg != oldreg:
-                self._ctiserver.send_cti_event({'class': 'getlist',
-                                                'listname': 'phones',
-                                                'function': 'updatestatus',
-                                                'tipbxid': self.ipbxid,
-                                                'tid': p,
-                                                'status': {'reg': reg}})
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []
