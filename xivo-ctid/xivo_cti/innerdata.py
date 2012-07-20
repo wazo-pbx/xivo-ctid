@@ -961,9 +961,9 @@ class Safe(object):
 
     def usersummary_from_phoneid(self, phoneid):
         usersummary = {}
-        if phoneid and phoneid in self.xod_config.get('phones').keeplist.keys():
-            phoneprops = self.xod_config.get('phones').keeplist.get(phoneid)
-            userid = str(phoneprops.get('iduserfeatures'))
+        if phoneid in self.xod_config['phones'].keeplist:
+            phoneprops = self.xod_config['phones'].keeplist[phoneid]
+            userid = str(phoneprops['iduserfeatures'])
             user = self.user_features_dao.get(userid)
             usersummary = {'phonenumber': phoneprops.get('number'),
                            'userid': userid,
@@ -1044,9 +1044,8 @@ class Safe(object):
 
     def zphones(self, protocol, name):
         if protocol:
-            for phone_id, phone_config in self.xod_config['phones'].keeplist.iteritems():
-                if phone_config.get('protocol') == protocol.lower() and phone_config.get('name') == name:
-                    return phone_id
+            protocol = protocol.lower()
+            return self.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, name)
 
     def ztrunks(self, protocol, name):
         try:
@@ -1159,15 +1158,6 @@ class Safe(object):
             os.write(self._ctiserver.pipe_queued_threads[1], 'innerdata:%s\n' % self.ipbxid)
         except Exception:
             logger.exception('cb_timer %s', args)
-
-    def _is_phone_channel(self, proto, name):
-        return self._is_listmember_channel(proto, name, 'phones')
-
-    def _is_listmember_channel(self, proto, name, listname):
-        for item in self.xod_config[listname].keeplist.itervalues():
-            if item['protocol'].lower() == proto.lower() and item['name'] == name:
-                return True
-        return False
 
     def regular_update(self):
         """

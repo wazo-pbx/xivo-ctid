@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
               'ignoresdpversion': None,
               'ipfrom': '192.168.32.157',
               'vmexten': None,
-              'name': 'yp0ra4',
+              'name': 'bbbaaa',
               'callingpres': None,
               'textsupport': None,
               'unsolicited_mailbox': None,
@@ -130,7 +130,7 @@ class Test(unittest.TestCase):
               'device': '7',
               'subscribecontext': None,
               'regexten': None,
-              'identity': 'SIP\\/yp0ra4',
+              'identity': 'SIP\\/bbbaaa',
               'deny': None,
               'timerb': None,
               'rtptimeout': None,
@@ -250,6 +250,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.phone_list = PhoneList()
         self.phone_list.keeplist = self.keeplist
+        self.phone_list._update_lookup_dictionaries()
 
     def test_find_phone_by_channel_no_result(self):
         channel = 'SIP/k8fh45-000000023'
@@ -263,7 +264,7 @@ class Test(unittest.TestCase):
 
         phone = self.phone_list.find_phone_by_channel(channel)
 
-        self.assertEqual(phone, self.PHONE_1)
+        self.assertEqual(phone, self.PHONE_2)
 
     def test_get_user_main_line(self):
         user_id = '11'

@@ -37,6 +37,7 @@ class PhoneList(ContextAwareAnyList):
         ContextAwareAnyList.__init__(self, newurls)
         self._contexts_by_user_id = {}
         self._user_ids_by_context = {}
+        self._phone_id_by_proto_and_name = {}
 
     def update(self):
         delta = ContextAwareAnyList.update(self)
@@ -46,12 +47,16 @@ class PhoneList(ContextAwareAnyList):
     def _update_lookup_dictionaries(self):
         contexts_by_user_id = defaultdict(set)
         user_ids_by_context = defaultdict(set)
+        phone_id_by_proto_and_name = {}
 
-        for phone in self.keeplist.itervalues():
+        for phone_id, phone in self.keeplist.iteritems():
             user_id = str(phone['iduserfeatures'])
             context = phone['context']
             contexts_by_user_id[user_id].add(context)
             user_ids_by_context[context].add(user_id)
+
+            proto_and_name = phone['protocol'] + phone['name']
+            phone_id_by_proto_and_name[proto_and_name] = phone_id
 
         self._contexts_by_user_id = dict((user_id, list(contexts)) for
                                          user_id, contexts in
@@ -59,6 +64,7 @@ class PhoneList(ContextAwareAnyList):
         self._user_ids_by_context = dict((context, list(user_ids)) for
                                           context, user_ids in
                                           user_ids_by_context.iteritems())
+        self._phone_id_by_proto_and_name = phone_id_by_proto_and_name
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -332,22 +338,21 @@ class PhoneList(ContextAwareAnyList):
                 self.keeplist[phoneid]['comms'][uid].update(infos)
 
     def find_phone_by_channel(self, channel):
-        protocol, name = channel.split('-', 1)[0].split('/', 1)
-
-        if protocol == 'Local':
+        proto, name = channel.split('-', 1)[0].split('/', 1)
+        phone_id = self.get_phone_id_from_proto_and_name(proto.lower(), name)
+        if phone_id is None:
             return None
-
-        def match_phone(phone):
-            return phone['protocol'].lower() == protocol.lower() and phone['name'] == name
-
-        phones = filter(match_phone, self.keeplist.itervalues())
-
-        return phones[0] if phones else None
+        else:
+            return self.keeplist[phone_id]
 
     def get_main_line(self, user_id):
         users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]
         sorted_phones = sorted(users_phones, key=lambda phone: phone['rules_order'])
         return sorted_phones[0] if sorted_phones else None
+
+    def get_phone_id_from_proto_and_name(self, proto, name):
+        proto_and_name = proto + name
+        return self._phone_id_by_proto_and_name.get(proto_and_name)
 
     def get_contexts_for_user(self, user_id):
         user_id = str(user_id)
