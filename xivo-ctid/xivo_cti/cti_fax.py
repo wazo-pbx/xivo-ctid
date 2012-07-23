@@ -103,8 +103,7 @@ class Fax(object):
             self.callerid = 'anonymous'
         else:
             phoneid = linelist[0]
-            phoneinfo = self.innerdata.xod_config['phones'].keeplist[phoneid]
-            self.callerid = phoneinfo['callerid']
+            self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phoneid)
 
     def setfileparameters(self, size):
         self.size = size

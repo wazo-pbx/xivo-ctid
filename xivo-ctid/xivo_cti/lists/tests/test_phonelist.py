@@ -272,3 +272,28 @@ class Test(unittest.TestCase):
         main_line = self.phone_list.get_main_line(user_id)
 
         self.assertEqual(self.PHONE_1, main_line)
+
+    def test_get_callerid_from_sccp_phone(self):
+        self.phone_list.keeplist = {
+            '1': {
+                'cid_name': 'SccpUser 2',
+                'cid_num': '1002',
+                'protocol': 'sccp',
+            }
+        }
+
+        callerid = self.phone_list.get_callerid_from_phone_id('1')
+
+        self.assertEqual('"SccpUser 2" <1002>', callerid)
+
+    def test_get_callerid_from_sip_phone(self):
+        self.phone_list.keeplist = {
+            '1': {
+                'callerid': '"User 1" <1001>',
+                'protocol': 'sip',
+            }
+        }
+
+        callerid = self.phone_list.get_callerid_from_phone_id('1')
+
+        self.assertEqual('"User 1" <1001>', callerid)

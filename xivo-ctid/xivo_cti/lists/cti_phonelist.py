@@ -354,6 +354,17 @@ class PhoneList(ContextAwareAnyList):
         proto_and_name = proto + name
         return self._phone_id_by_proto_and_name.get(proto_and_name)
 
+    def get_callerid_from_phone_id(self, phone_id):
+        phone = self.keeplist[phone_id]
+        protocol = phone['protocol']
+        if protocol == 'sccp':
+            return self._compute_callerid_for_sccp_phone(phone)
+        else:
+            return phone['callerid']
+
+    def _compute_callerid_for_sccp_phone(self, phone):
+        return '"%s" <%s>' % (phone['cid_name'], phone['cid_num'])
+
     def get_contexts_for_user(self, user_id):
         user_id = str(user_id)
         return self._contexts_by_user_id.get(user_id, [])
