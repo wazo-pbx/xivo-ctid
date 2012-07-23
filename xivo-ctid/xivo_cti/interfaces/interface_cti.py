@@ -24,17 +24,16 @@
 import cjson
 import logging
 import time
-
-from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti import cti_command, cti_config
-from xivo_cti.interfaces import interfaces
-from xivo_cti.cti.commands.login_id import LoginID
 import random
+
+from xivo_cti import cti_command
+from xivo_cti.cti_config import ALPHANUMS, CTI_PROTOCOL_VERSION
+from xivo_cti.cti.cti_command_handler import CTICommandHandler
+from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
+from xivo_cti.interfaces import interfaces
 
 logger = logging.getLogger('interface_cti')
-
-ALLOWED_OS = ['x11', 'win', 'mac', 'ctiserver', 'web', 'android', 'ios']
 
 
 class serialJson(object):
@@ -169,8 +168,8 @@ class CTI(interfaces.Interfaces):
         if connection != self:
             return []
 
-        if version != cti_config.XIVOVERSION_NUM:
-            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM),
+        if version != CTI_PROTOCOL_VERSION:
+            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
                              'class': 'login_id'}
 
         innerdata = self._ctiserver.safe
@@ -180,7 +179,7 @@ class CTI(interfaces.Interfaces):
             self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
                                             'userid': str(user_dict.get('id'))})
 
-        session_id = ''.join(random.sample(cti_config.ALPHANUMS, 10))
+        session_id = ''.join(random.sample(ALPHANUMS, 10))
         self.connection_details['prelogin'] = {'sessionid': session_id}
 
         return 'message', {'sessionid': session_id,

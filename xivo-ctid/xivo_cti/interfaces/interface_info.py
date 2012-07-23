@@ -109,11 +109,9 @@ class INFO(interfaces.Interfaces):
                 elif usefulmsg == 'show_infos':
                     time_uptime = int(time.time() - time.mktime(self._ctiserver.time_start))
                     reply = 'infos=' \
-                            'xivo_version=%s;' \
                             'commandset=%s;' \
                             'uptime=%d s' \
-                            % (self._ctiserver.xivoversion,
-                               self._ctiserver.servername,
+                            % (self._ctiserver.servername,
                                time_uptime)
                     clireply.append(reply)
                     # clireply.append('server capabilities = %s' % (','.join()))

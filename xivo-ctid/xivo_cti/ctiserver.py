@@ -105,7 +105,6 @@ logger = logging.getLogger('main')
 
 class CTIServer(object):
 
-    xivoversion = '1.2'
     servername = 'XiVO CTI Server'
 
     def __init__(self):
@@ -373,8 +372,8 @@ class CTIServer(object):
         self.askedtoquit = False
 
         self.time_start = time.localtime()
-        logger.info('STARTING %s %s (pid %d))',
-                    self.servername, self.xivoversion, os.getpid())
+        logger.info('STARTING %s (pid %d))',
+                    self.servername, os.getpid())
 
         self.lastrequest_time = time.time()
         self.update_userlist = []
@@ -583,8 +582,8 @@ class CTIServer(object):
 
             if self.askedtoquit:
                 time_uptime = int(time.time() - time.mktime(self.time_start))
-                logger.info('STOPPING %s %s (pid %d) / uptime %d s (since %s)',
-                            self.servername, self.xivoversion, os.getpid(),
+                logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
+                            self.servername, os.getpid(),
                             time_uptime, time.asctime(self.time_start))
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (stop) killing thread <%s>' % t.getName()

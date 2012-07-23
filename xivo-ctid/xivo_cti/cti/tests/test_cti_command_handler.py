@@ -23,13 +23,14 @@
 
 import unittest
 
-from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from tests.mock import Mock
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti_config import CTI_PROTOCOL_VERSION
 from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command_handler import CTICommandHandler
+from xivo_cti.cti.commands.invite_confroom import InviteConfroom
+from xivo_cti.cti.commands.login_id import LoginID
 
 
 class TestCTICommandHandler(unittest.TestCase):
@@ -73,7 +74,7 @@ class TestCTICommandHandler(unittest.TestCase):
                         "lastlogout-stopper": "connection_lost",
                         "userlogin": "pascal",
                         "version": "9999",
-                        "xivoversion": "1.2"}
+                        "xivoversion": CTI_PROTOCOL_VERSION}
 
         cti_handler.parse_message(login_id_msg)
 

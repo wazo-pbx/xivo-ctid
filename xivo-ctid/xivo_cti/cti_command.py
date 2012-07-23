@@ -33,9 +33,6 @@ from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 
 logger = logging.getLogger('cti_command')
 
-REQUIRED_LOGIN_FIELD = ['company', 'userlogin', 'ident',
-                       'xivoversion', 'git_hash', 'git_date']
-
 LOGINCOMMANDS = [
     'login_pass', 'login_capas'
     ]
@@ -81,7 +78,6 @@ IPBXCOMMANDS = [
     'queuepause_all', 'queueunpause_all',
     ]
 
-XIVOVERSION_NUM = '1.2'
 XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
