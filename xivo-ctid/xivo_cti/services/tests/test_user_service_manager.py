@@ -33,7 +33,7 @@ from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 

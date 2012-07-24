@@ -3,7 +3,7 @@
 import time
 from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.alchemy.queueinfo import QueueInfo
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.model.queuestatistic import NO_VALUE
 from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
 

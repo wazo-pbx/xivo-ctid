@@ -23,8 +23,8 @@
 
 from xivo_cti.dao.tests import test_dao
 
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao import meetme_features_dao
-from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
 from xivo_cti.dao.alchemy.staticmeetme import StaticMeetme
 

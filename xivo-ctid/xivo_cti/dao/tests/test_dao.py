@@ -1,5 +1,5 @@
 import unittest
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.base import Base
 
 

@@ -24,8 +24,8 @@
 import unittest
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 from tests.mock import Mock
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
-from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 

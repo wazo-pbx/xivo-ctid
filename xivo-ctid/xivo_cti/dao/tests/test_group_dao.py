@@ -21,8 +21,8 @@
 
 import unittest
 
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.groupfeatures import GroupFeatures
-from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao import group_dao
 from xivo_cti.dao.alchemy.base import Base
 from sqlalchemy.schema import MetaData

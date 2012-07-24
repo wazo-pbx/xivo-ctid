@@ -23,7 +23,7 @@
 
 
 from xivo_cti.dao.alchemy.queuemember import QueueMember
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.helpers.queuemember_formatter import QueueMemberFormatter
 
 

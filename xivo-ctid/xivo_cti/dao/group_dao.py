@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.groupfeatures import GroupFeatures
 
 _DB_NAME = 'asterisk'

@@ -31,15 +31,17 @@ import ssl
 import sys
 import time
 import threading
+from sqlalchemy.exc import OperationalError
 
 from xivo import daemonize
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
 from xivo_cti import message_hook
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_info
@@ -64,7 +66,6 @@ from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
-from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
@@ -76,7 +77,6 @@ from xivo_cti.dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
-from sqlalchemy.exc import OperationalError
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier

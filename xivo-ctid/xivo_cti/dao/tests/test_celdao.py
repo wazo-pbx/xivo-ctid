@@ -22,16 +22,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, patch
 from datetime import datetime, timedelta
-from xivo_cti.dao.alchemy.dbconnection import DBConnection
+from xivo_dao.alchemy.dbconnection import DBConnection
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.alchemy.cel import CEL
 from xivo_cti.dao.celdao import CELDAO
-from xivo_cti.dao.helpers.cel_channel import CELChannel
 from xivo_cti.dao.helpers.cel_exception import CELException
-from xivo_cti import cti_config
-from xivo_cti.dao.alchemy import dbconnection
 
 
 def _new_datetime_generator(step=timedelta(seconds=1)):

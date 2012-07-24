@@ -23,7 +23,7 @@
 
 import unittest
 from tests.mock import Mock, call, ANY
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.queuemember import QueueMember
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.queuememberdao import QueueMemberDAO

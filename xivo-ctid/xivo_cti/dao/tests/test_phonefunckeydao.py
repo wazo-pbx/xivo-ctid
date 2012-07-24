@@ -1,5 +1,5 @@
 from xivo_cti.dao.tests import test_dao
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 

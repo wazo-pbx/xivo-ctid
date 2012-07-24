@@ -23,7 +23,7 @@
 
 from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.queuefeatures import QueueFeatures
 from xivo_cti.dao import queue_features_dao
 

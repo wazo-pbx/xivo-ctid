@@ -35,7 +35,7 @@ from xivo_cti.services import call_history_manager
 from xivo_cti.directory import directory
 from xivo_cti import cti_sheets
 from xivo_cti import db_connection_manager
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti import cti_config
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig

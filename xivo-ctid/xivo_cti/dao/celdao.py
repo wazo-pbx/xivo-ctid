@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.cel import CEL
 from xivo_cti.dao.helpers.cel_channel import CELChannel
 from xivo_cti.dao.helpers.cel_exception import CELException

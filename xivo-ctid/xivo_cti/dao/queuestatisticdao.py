@@ -2,7 +2,7 @@
 
 import time
 from xivo_cti.dao.alchemy.queueinfo import QueueInfo
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from sqlalchemy import or_
 from sqlalchemy.sql.expression import func
 from xivo_cti.model.queuestatistic import NO_VALUE

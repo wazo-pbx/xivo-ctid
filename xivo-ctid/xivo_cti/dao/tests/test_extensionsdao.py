@@ -21,9 +21,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.tests import test_dao
 from xivo_cti.dao.extensionsdao import ExtensionsDAO
-from xivo_cti.dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.extension import Extension
 
 

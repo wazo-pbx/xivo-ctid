@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.alchemy.queuefeatures import QueueFeatures
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 
 _DB_NAME = 'asterisk'
 

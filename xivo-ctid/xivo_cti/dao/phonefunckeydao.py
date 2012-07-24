@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.dao.alchemy.phonefunckey import PhoneFunckey
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 
 
 class PhoneFunckeyDAO(object):

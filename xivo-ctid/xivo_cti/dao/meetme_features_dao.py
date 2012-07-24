@@ -23,7 +23,7 @@
 
 from xivo_cti.dao.alchemy.meetmefeatures import MeetmeFeatures
 from xivo_cti.dao.alchemy.staticmeetme import StaticMeetme
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 
 _DB_NAME = 'asterisk'
 

@@ -24,7 +24,7 @@
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.sccpline import SCCPLine
 from xivo_cti.dao.alchemy.usersip import UserSIP
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.tools import caller_id
 from sqlalchemy import and_
 

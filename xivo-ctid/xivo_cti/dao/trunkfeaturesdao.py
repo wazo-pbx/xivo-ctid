@@ -25,7 +25,7 @@ from xivo_cti.dao.alchemy.usersip import UserSIP
 from xivo_cti.dao.alchemy.useriax import UserIAX
 from xivo_cti.dao.alchemy.usercustom import UserCustom
 from xivo_cti.dao.alchemy.trunkfeatures import TrunkFeatures
-from xivo_cti.dao.alchemy import dbconnection
+from xivo_dao.alchemy import dbconnection
 
 TRUNK_TYPES = ['sip', 'iax', 'custom']
 

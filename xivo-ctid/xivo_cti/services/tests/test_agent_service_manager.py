@@ -22,18 +22,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-
-from xivo_cti.services.agent_service_manager import AgentServiceManager
 from tests.mock import Mock, call
-from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
+
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_dao.alchemy import dbconnection
 from xivo_cti.dao.alchemy.userfeatures import UserFeatures
 from xivo_cti.dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.alchemy.base import Base
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):
