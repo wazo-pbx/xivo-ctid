@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
-from xivo_cti.model.queuestatistic import QueueStatistic, NO_VALUE
+from xivo_dao import queue_features_dao
+from xivo_dao.queuestatisticdao import QueueStatisticDAO
+from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
@@ -59,7 +60,7 @@ class QueueStatisticsManager(object):
         return queue_statistic
 
     def get_queue_summary(self, queue_name):
-        if self._queue_features_dao.is_a_queue(queue_name):
+        if queue_features_dao.is_a_queue(queue_name):
             self.ami_wrapper.queuesummary(queue_name)
 
     def get_all_queue_summary(self):

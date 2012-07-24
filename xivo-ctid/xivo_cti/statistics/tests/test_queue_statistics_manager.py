@@ -3,12 +3,11 @@
 import unittest
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
-from tests.mock import Mock
-from xivo_cti.dao.queuestatisticdao import QueueStatisticDAO
+from tests.mock import Mock, patch
+from xivo_dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.model.queuestatistic import NO_VALUE
-from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
 
 class TestQueueStatisticsManager(unittest.TestCase):
@@ -140,12 +139,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.queue_statistics_manager.get_queue_summary.assert_was_called_with('service')
         self.queue_statistics_manager.get_queue_summary.assert_was_called_with('beans')
 
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
     def test_get_queue_summary(self):
         queue_name = 'services'
 
         self.ami_wrapper = Mock(AMIClass)
         self.queue_statistics_manager.ami_wrapper = self.ami_wrapper
-        self.queue_statistics_manager._queue_features_dao = Mock(QueueFeaturesDAO)
 
         self.queue_statistics_manager.get_queue_summary(queue_name)
 

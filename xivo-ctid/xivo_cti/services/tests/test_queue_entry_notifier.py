@@ -23,11 +23,11 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, patch
 
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
+from xivo_dao import queue_features_dao
 
 QUEUE_NAME_1, QUEUE_ID_1 = 'testqueue', 1
 QUEUE_NAME_2, QUEUE_ID_2 = 'anothertestqueue', 2
@@ -37,15 +37,15 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
     def setUp(self):
         self.notifier = QueueEntryNotifier()
-        self.notifier.queue_features_dao = Mock(QueueFeaturesDAO)
 
+    @patch('xivo_dao.queue_features_dao.queue_name', Mock())
     def test_subscribe(self):
         connection_1 = Mock(CTI)
         connection_2 = Mock(CTI)
 
-        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        queue_features_dao.queue_name.return_value = QUEUE_NAME_1
         self.notifier.subscribe(connection_1, QUEUE_ID_1)
-        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_2
+        queue_features_dao.queue_name.return_value = QUEUE_NAME_2
         self.notifier.subscribe(connection_2, QUEUE_ID_2)
 
         subscriptions = self.notifier._subscriptions[QUEUE_NAME_1]
@@ -57,16 +57,18 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
         self.assertTrue(connection_2 in subscriptions_2)
 
+    @patch('xivo_dao.queue_features_dao.queue_name', Mock())
     def test_publish(self):
         new_state = 'queue_1_entries'
         connection_1 = Mock(CTI)
-        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        queue_features_dao.queue_name.return_value = QUEUE_NAME_1
         self.notifier.subscribe(connection_1, QUEUE_ID_1)
 
         self.notifier.publish(QUEUE_NAME_1, new_state)
 
         connection_1.send_message.assert_called_once_with(new_state)
 
+    @patch('xivo_dao.queue_features_dao.queue_name', Mock())
     def test_subscribe_after_message(self):
         connection_1 = Mock(CTI)
         new_state = 'queue_1_entries'
@@ -75,7 +77,7 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
         self.assertEquals(connection_1.send_message.call_count, 0)
 
-        self.notifier.queue_features_dao.queue_name.return_value = QUEUE_NAME_1
+        queue_features_dao.queue_name.return_value = QUEUE_NAME_1
         self.notifier.subscribe(connection_1, QUEUE_ID_1)
 
         connection_1.send_message.assert_called_once_with(new_state)

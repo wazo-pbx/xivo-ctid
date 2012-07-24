@@ -26,9 +26,9 @@ import time
 
 from xivo_dao.alchemy import dbconnection
 from xivo_dao.alchemy.agentfeatures import AgentFeatures
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.alchemy.contextinclude import ContextInclude
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.contextinclude import ContextInclude
+from xivo_dao.alchemy.userfeatures import UserFeatures
 from sqlalchemy import and_
 
 logger = logging.getLogger("UserFeaturesDAO")

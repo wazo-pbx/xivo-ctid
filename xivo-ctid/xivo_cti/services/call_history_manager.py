@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
-from xivo_cti.dao.celdao import CELDAO
+from xivo_dao.celdao import CELDAO
 
 
 ReceivedCall = namedtuple('ReceivedCall', ['date', 'duration', 'caller_name'])

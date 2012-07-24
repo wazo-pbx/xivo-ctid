@@ -35,7 +35,7 @@ from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
+from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 
 class TestSafe(unittest.TestCase):

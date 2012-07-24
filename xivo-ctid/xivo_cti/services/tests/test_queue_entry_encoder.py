@@ -24,10 +24,10 @@
 import unittest
 import time
 
-from mock import Mock
+from mock import Mock, patch
+from xivo_dao import queue_features_dao
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
-from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
 
 class TestQueueEntryEncoder(unittest.TestCase):
@@ -52,12 +52,11 @@ class TestQueueEntryEncoder(unittest.TestCase):
                                             'number': '3333',
                                             'join_time': self.now + 1}]
 
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
     def test_encode_queue_entry_update(self):
         encoder = QueueEntryEncoder()
 
-        queue_features_dao = Mock(QueueFeaturesDAO)
         queue_features_dao.id_from_name.return_value = self._queue_id
-        encoder.queue_features_dao = queue_features_dao
 
         expected = {'class': 'queueentryupdate',
                     'state': {'queue_name': self._queue_name,
@@ -87,11 +86,10 @@ class TestQueueEntryEncoder(unittest.TestCase):
 
         self.assertEqual(result, self._expected_queue_entry_list)
 
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
     def test_build_state(self):
         encoder = QueueEntryEncoder()
-        queue_features_dao = Mock(QueueFeaturesDAO)
         queue_features_dao.id_from_name.return_value = self._queue_id
-        encoder.queue_features_dao = queue_features_dao
 
         expected = {'queue_name': self._queue_name,
                     'queue_id': self._queue_id,

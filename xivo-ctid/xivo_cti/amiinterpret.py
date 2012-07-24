@@ -26,9 +26,9 @@ import random
 import string
 import time
 
+from xivo_dao import group_dao
 from xivo_cti.dao import userfeaturesdao
-from xivo_cti.dao import group_dao
-from xivo_cti.dao import queue_features_dao
+from xivo_dao import queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 

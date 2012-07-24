@@ -21,12 +21,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.helpers import queuemember_formatter
-from xivo_cti.tools.delta_computer import DictDelta
-from xivo_cti.dao import queue_features_dao
-from xivo_cti.dao import userfeaturesdao
-from xivo_cti.dao import group_dao
 import logging
+from xivo_dao import group_dao
+from xivo_dao.helpers import queuemember_formatter
+from xivo_cti.tools.delta_computer import DictDelta
+from xivo_dao import queue_features_dao
+from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger("QueueMemberServiceManager")
 
@@ -84,7 +84,7 @@ class QueueMemberServiceManager(object):
         if queue_id == 'all':
             queue_name = 'all'
         else:
-            queue_name = self.queue_features_dao.queue_name(queue_id)
+            queue_name = queue_features_dao.queue_name(queue_id)
 
         if command in ['queuepause', 'queueunpause'] and dopause is not None:
             if queue_name == 'all':

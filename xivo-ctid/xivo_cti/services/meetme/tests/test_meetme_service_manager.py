@@ -74,9 +74,9 @@ class TestUserServiceManager(unittest.TestCase):
                                                              caller_id_name,
                                                              caller_id_number)
 
-    @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
-    @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
-    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
+    @patch('xivo_dao.meetme_features_dao.get_config', get_config)
+    @patch('xivo_dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     @patch('time.time', my_time)
     def test_join(self):
         start = 12345.123
@@ -107,9 +107,9 @@ class TestUserServiceManager(unittest.TestCase):
         self.publish.assert_called_once_with()
 
     @patch('time.time', my_time)
-    @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
-    @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
-    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
+    @patch('xivo_dao.meetme_features_dao.get_config', get_config)
+    @patch('xivo_dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     def test_join_second(self):
         start_time = 12345678.123
         join_time = 12345699.123
@@ -182,8 +182,8 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
-    @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
+    @patch('xivo_dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_dao.meetme_features_dao.get_config', get_config)
     def test_set_room_config(self):
         find_by_confno.return_value = 2
         get_config.return_value = (conf_room_name, conf_room_number, True, 'my_context')
@@ -286,9 +286,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertTrue(self.manager._has_members('800'))
 
-    @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
-    @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
-    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
+    @patch('xivo_dao.meetme_features_dao.get_config', get_config)
+    @patch('xivo_dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     @patch('time.time', my_time)
     def test_join_when_empty(self):
         channel = 'SIP/kljfh-1234'
@@ -320,7 +320,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
-    @patch('xivo_cti.dao.meetme_features_dao.get_configs', get_configs)
+    @patch('xivo_dao.meetme_features_dao.get_configs', get_configs)
     def test_initial_state(self):
         get_configs.return_value = [('Conference1', '9000', True, 'default'),
                                     ('Conference2', '9001', False, 'test'),
@@ -363,7 +363,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
-    @patch('xivo_cti.dao.meetme_features_dao.get_configs', get_configs)
+    @patch('xivo_dao.meetme_features_dao.get_configs', get_configs)
     def test_initialize_configs_with_members(self):
         get_configs.return_value = [('Conference2', '9001', False, 'test'),
                                     ('Conference3', '9002', False, 'test')]
@@ -428,8 +428,8 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager.refresh.assert_called_once_with(channel, '800', 1, 'My Name', '666', False)
 
-    @patch('xivo_cti.dao.meetme_features_dao.get_config', get_config)
-    @patch('xivo_cti.dao.meetme_features_dao.find_by_confno', find_by_confno)
+    @patch('xivo_dao.meetme_features_dao.get_config', get_config)
+    @patch('xivo_dao.meetme_features_dao.find_by_confno', find_by_confno)
     def test_refresh_empty(self):
         channel = 'DAHDI/i1/5555555555-1'
         conf_no = '800'
@@ -596,9 +596,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         service_notifier.notifier.publish_meetme_update.assert_called_once_with(manager._cache)
 
-    @patch('xivo_cti.dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
+    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', muted_on_join_by_number)
     @patch('time.time', my_time)
-    @patch('xivo_cti.dao.linefeaturesdao.get_cid_for_channel', get_cid_for_channel)
+    @patch('xivo_dao.linefeaturesdao.get_cid_for_channel', get_cid_for_channel)
     def test_join_originate(self):
         channel = 'SIP/kljfh-1234'
         join_time = 12345.654

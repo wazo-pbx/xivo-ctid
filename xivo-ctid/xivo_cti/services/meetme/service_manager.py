@@ -21,8 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao import meetme_features_dao
-from xivo_cti.dao import linefeaturesdao
+from xivo_dao import linefeaturesdao
+from xivo_dao import meetme_features_dao
 from xivo_cti.services.meetme import service_notifier
 from xivo_cti.ami import ami_callback_handler
 from copy import deepcopy

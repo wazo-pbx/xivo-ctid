@@ -23,18 +23,18 @@
 
 import time
 import unittest
-from xivo_dao.alchemy.agentfeatures import AgentFeatures
 from xivo_dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.alchemy.contextinclude import ContextInclude
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
+from xivo_dao.alchemy.base import Base
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.contextinclude import ContextInclude
 from xivo_cti.dao import userfeaturesdao
+from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
 from sqlalchemy.schema import MetaData
-from xivo_cti.dao.alchemy.base import Base
 
 
 class TestUserFeaturesDAO(unittest.TestCase):

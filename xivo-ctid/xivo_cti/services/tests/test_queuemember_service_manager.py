@@ -24,8 +24,8 @@
 import unittest
 
 from tests.mock import Mock, call, ANY, patch
+from xivo_dao.helpers import queuemember_formatter
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
-from xivo_cti.dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.dao.innerdatadao import InnerdataDAO
@@ -204,8 +204,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
                       change=queuemember_formatted,
                       delete={}))
 
+    @patch('xivo_dao.queue_features_dao.get_queue_name', get_queue_name)
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
-    @patch('xivo_cti.dao.queue_features_dao.get_queue_name', get_queue_name)
     @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', get_agent_number)
     def test_is_queue_member_user_member(self):
         user_id = 1
@@ -229,8 +229,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertTrue(result)
 
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
-    @patch('xivo_cti.dao.queue_features_dao.get_queue_name', get_queue_name)
     @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', get_agent_number)
+    @patch('xivo_dao.queue_features_dao.get_queue_name', get_queue_name)
     def test_is_queue_member_agent(self):
         user_id = 1
         queue_id = 2
@@ -254,7 +254,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
 
         self.assertTrue(result)
 
-    @patch('xivo_cti.dao.group_dao.get_name', get_group_name)
+    @patch('xivo_dao.group_dao.get_name', get_group_name)
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
     def test_is_group_member_user_member(self):
         user_id = 1

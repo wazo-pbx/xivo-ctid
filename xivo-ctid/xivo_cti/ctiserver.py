@@ -34,14 +34,19 @@ import threading
 from sqlalchemy.exc import OperationalError
 
 from xivo import daemonize
+from xivo_dao.alchemy import dbconnection
 from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_dao.extensionsdao import ExtensionsDAO
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.queuememberdao import QueueMemberDAO
+from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
 from xivo_cti import message_hook
 from xivo_cti.client_connection import ClientConnection
-from xivo_dao.alchemy import dbconnection
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_info
@@ -64,16 +69,11 @@ from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyF
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
-from xivo_cti.dao.extensionsdao import ExtensionsDAO
-from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.cti.commands.agent_login import AgentLogin
-from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
-from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
-from xivo_cti.dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
@@ -89,7 +89,6 @@ from xivo_cti.services.queue_entry_manager import QueueEntryManager
 
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
-from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
@@ -185,7 +184,6 @@ class CTIServer(object):
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
         self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
-        self._queue_features_dao = QueueFeaturesDAO.new_from_uri('queue_stats')
         self._trunk_features_dao = TrunkFeaturesDAO.new_from_uri('queue_stats')
 
         self._funckey_manager.extensionsdao = self._extensions_dao
@@ -214,20 +212,15 @@ class CTIServer(object):
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
         self._queue_statistic_manager = QueueStatisticsManager.get_instance()
-        self._queue_statistic_manager._queue_features_dao = self._queue_features_dao
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 
         self._queue_entry_manager._notifier = self._queue_entry_notifier
         self._queue_entry_manager._encoder = self._queue_entry_encoder
-        self._queue_entry_manager._queue_features_dao = self._queue_features_dao
         self._queue_entry_manager._statistics_notifier = self._statistics_notifier
-        self._queue_entry_encoder.queue_features_dao = self._queue_features_dao
-        self._queue_entry_notifier.queue_features_dao = self._queue_features_dao
 
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
-        self._queuemember_service_manager.queue_features_dao = self._queue_features_dao
         self._queuemember_service_manager.agent_service_manager = self._agent_service_manager
         self._queuemember_service_manager.delta_computer = DeltaComputer()
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier

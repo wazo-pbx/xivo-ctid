@@ -25,10 +25,10 @@ import unittest
 
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from tests.mock import Mock
-from xivo_cti.dao.extensionsdao import ExtensionsDAO
+from xivo_dao.extensionsdao import ExtensionsDAO
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 
 
 class TestFunckeyManager(unittest.TestCase):

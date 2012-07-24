@@ -24,18 +24,18 @@
 import unittest
 
 from tests.mock import Mock
+from xivo_dao.alchemy import dbconnection
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
-from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
-from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
-from xivo_dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.userfeatures import UserFeatures
 
 
 class TestUserServiceManager(unittest.TestCase):
