@@ -27,19 +27,18 @@ def add_hook(conditions, function):
 
 
 def run_hooks(event):
-    [func(event) for func in _get_matching_functions(event)]
+    for func in _get_matching_functions(event):
+        func(event)
 
 
 def _get_matching_functions(event):
-    result = []
     for conditions, function in _hooks:
         if _event_match_conditions(event, conditions):
-            result.append(function)
-    return result
+            yield function
 
 
 def _event_match_conditions(event, conditions):
-    for (name, value) in conditions:
-        if name not in event or name in event and event[name] != value:
+    for name, value in conditions:
+        if name not in event or event[name] != value:
             return False
     return True

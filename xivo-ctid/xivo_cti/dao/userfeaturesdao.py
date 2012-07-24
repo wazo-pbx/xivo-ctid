@@ -109,10 +109,10 @@ class UserFeaturesDAO(object):
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
 
     def get(self, user_id):
-        res = self._session.query(UserFeatures).filter(UserFeatures.id == int(user_id))
-        if res.count() == 0:
-            raise LookupError
-        return res[0]
+        result = self._session.query(UserFeatures).filter(UserFeatures.id == int(user_id)).first()
+        if result is None:
+            raise LookupError()
+        return result
 
     def find_by_agent_id(self, agent_id):
         res = self._session.query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))

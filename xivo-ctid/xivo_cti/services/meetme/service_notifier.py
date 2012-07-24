@@ -33,19 +33,17 @@ logger = logging.getLogger('meetme_service_notifier')
 
 class MeetmeServiceNotifier(object):
 
-    STATUS_MESSAGE = {'class': 'getlist',
-                      'listname': 'meetmes',
-                      'function': '',
-                      'tipbxid': ''}
-
     def __init__(self):
         self._subscriptions = {}
         self._current_state = None
 
     def _prepare_message(self):
-        msg = deepcopy(self.STATUS_MESSAGE)
-        msg.update({'tipbxid': self.ipbx_id})
-        return msg
+        return {
+            'class': 'getlist',
+            'listname': 'meetmes',
+            'function': '',
+            'tipbxid': self.ipbx_id,
+        }
 
     def _prepare_event_add(self, list):
         filter_status_msg = self._prepare_message()

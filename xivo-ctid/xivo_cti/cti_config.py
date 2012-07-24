@@ -49,7 +49,6 @@ class Config(object):
 
     def __init__(self, * urilist):
         self.urilist = urilist
-        self.ipwebs = XIVOIP
         self.xc_json = {}
         self._context_separation = None
 

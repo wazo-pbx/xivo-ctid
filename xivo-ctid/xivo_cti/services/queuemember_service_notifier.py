@@ -30,7 +30,7 @@ class QueueMemberServiceNotifier(object):
     _instance = None
 
     def __init__(self):
-        self._callbacks = list()
+        self._callbacks = []
 
     def subscribe(self, function):
         self._callbacks.append(function)

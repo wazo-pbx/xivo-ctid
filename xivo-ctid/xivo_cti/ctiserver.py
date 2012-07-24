@@ -127,7 +127,6 @@ class CTIServer(object):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
         for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
-            print '--- living thread <%s>' % (t.getName())
             t._Thread__stop()
         self.askedtoquit = True
 
@@ -544,7 +543,7 @@ class CTIServer(object):
     def _init_socket(self):
         try:
             fdtodel = []
-            for cn in self.fdlist_established.keys():
+            for cn in self.fdlist_established:
                 if isinstance(cn, ClientConnection):
                     if cn.isClosed and cn not in fdtodel:
                         fdtodel.append(cn)
@@ -552,22 +551,21 @@ class CTIServer(object):
                         cn.close()
                         if cn not in fdtodel:
                             fdtodel.append(cn)
-            if fdtodel:
-                for cn in fdtodel:
-                    del self.fdlist_established[cn]
+            for cn in fdtodel:
+                del self.fdlist_established[cn]
 
-            self.fdlist_full = list()
+            self.fdlist_full = []
             self.fdlist_full.append(self.pipe_queued_threads[0])
             self.fdlist_full.append(self.ami_sock)
-            self.fdlist_full.extend(self.fdlist_listen_cti.keys())
-            self.fdlist_full.extend(self.fdlist_udp_cti.keys())
-            self.fdlist_full.extend(self.fdlist_established.keys())
+            self.fdlist_full.extend(self.fdlist_listen_cti)
+            self.fdlist_full.extend(self.fdlist_udp_cti)
+            self.fdlist_full.extend(self.fdlist_established)
 
             writefds = []
             for iconn, kind in self.fdlist_established.iteritems():
                 if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
                     writefds.append(iconn)
-            [sels_i, sels_o, sels_e] = select.select(self.fdlist_full, writefds, [])
+            sels_i, sels_o, sels_e = select.select(self.fdlist_full, writefds, [])
             return (sels_i, sels_o, sels_e)
 
         except Exception:
@@ -769,39 +767,37 @@ class CTIServer(object):
         sels_i, sels_o, sels_e = self._init_socket()
 
         try:
-            if sels_o:
-                for sel_o in sels_o:
-                    try:
-                        sel_o.process_sending()
-                    except ClientConnection.CloseException:
-                        if sel_o in self.fdlist_established:
-                            kind = self.fdlist_established[sel_o]
-                            kind.disconnected(DisconnectCause.broken_pipe)
-                            sel_o.close()
-                            del self.fdlist_established[sel_o]
+            for sel_o in sels_o:
+                try:
+                    sel_o.process_sending()
+                except ClientConnection.CloseException:
+                    if sel_o in self.fdlist_established:
+                        kind = self.fdlist_established[sel_o]
+                        kind.disconnected(DisconnectCause.broken_pipe)
+                        sel_o.close()
+                        del self.fdlist_established[sel_o]
         except Exception:
             logger.exception('Socket writer')
 
         try:
-            if sels_i:
-                for sel_i in sels_i:
-                    # these AMI connection are used in order to manage AMI commands and events
-                    if sel_i == self.ami_sock:
-                        self._socket_ami_read(sel_i)
-                    # the UDP messages (ANNOUNCE) are catched here
-                    elif sel_i in self.fdlist_udp_cti:
-                        self._socket_udp_cti_read(sel_i)
-                    # the new TCP connections (CTI, WEBI, INFO) are catched here
-                    elif sel_i in self.fdlist_listen_cti:
-                        self._socket_detect_new_tcp_connection(sel_i)
-                    # incoming TCP connections (CTI, WEBI, INFO)
-                    elif sel_i in self.fdlist_established:
-                        self._socket_established_read(sel_i)
-                    # local pipe fd
-                    elif self.pipe_queued_threads[0] == sel_i:
-                        self._socket_pipe_queue_read(sel_i)
+            for sel_i in sels_i:
+                # these AMI connection are used in order to manage AMI commands and events
+                if sel_i == self.ami_sock:
+                    self._socket_ami_read(sel_i)
+                # the UDP messages (ANNOUNCE) are catched here
+                elif sel_i in self.fdlist_udp_cti:
+                    self._socket_udp_cti_read(sel_i)
+                # the new TCP connections (CTI, WEBI, INFO) are catched here
+                elif sel_i in self.fdlist_listen_cti:
+                    self._socket_detect_new_tcp_connection(sel_i)
+                # incoming TCP connections (CTI, WEBI, INFO)
+                elif sel_i in self.fdlist_established:
+                    self._socket_established_read(sel_i)
+                # local pipe fd
+                elif self.pipe_queued_threads[0] == sel_i:
+                    self._socket_pipe_queue_read(sel_i)
 
-                    self._empty_cti_events_queue()
-                    self._update_safe_list()
+                self._empty_cti_events_queue()
+                self._update_safe_list()
         except Exception:
             logger.exception('Socket Reader')

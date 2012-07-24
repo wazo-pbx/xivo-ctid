@@ -22,24 +22,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from copy import deepcopy
 
 logger = logging.getLogger('user_service_notifier')
 
 
 class UserServiceNotifier(object):
 
-    STATUS_MESSAGE = {"class": "getlist",
-                   "function": "updateconfig",
-                   "listname": "users",
-                   "tid": '',
-                   "tipbxid": ''}
-
     def _prepare_message(self, user_id):
-        msg = deepcopy(self.STATUS_MESSAGE)
-        msg.update({'tid': user_id,
-                    'tipbxid': self.ipbx_id})
-        return msg
+        return {
+            'class': 'getlist',
+            'function': 'updateconfig',
+            'listname': 'users',
+            'tid': user_id,
+            'tipbxid': self.ipbx_id,
+        }
 
     def _prepare_dnd_message(self, dnd_status, user_id):
         dnd_enabled_msg = self._prepare_message(user_id)

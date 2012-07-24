@@ -60,10 +60,7 @@ class QueueStatisticsProducer(object):
             self.queues_of_agent[agentid] = set()
 
     def on_agent_loggedoff(self, agentid):
-        try:
-            self.logged_agents.remove(agentid)
-        except KeyError:
-            pass
+        self.logged_agents.discard(agentid)
         if agentid in self.queues_of_agent:
             for queueid in self.queues_of_agent[agentid]:
                 self._notify_change(queueid)
@@ -76,9 +73,8 @@ class QueueStatisticsProducer(object):
 
     def on_queue_removed(self, queueid):
         self.queues.remove(queueid)
-        for agentid in self.queues_of_agent:
-            if queueid in self.queues_of_agent[agentid]:
-                self.queues_of_agent[agentid].remove(queueid)
+        for queues_of_current_agent in self.queues_of_agent.itervalues():
+            queues_of_current_agent.discard(queueid)
 
     def on_queue_summary(self, queue_id, counters):
         message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT, TALKINGAGENT_STATNAME: counters.Talking}}

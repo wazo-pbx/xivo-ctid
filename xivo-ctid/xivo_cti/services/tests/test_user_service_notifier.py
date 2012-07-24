@@ -175,10 +175,6 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_prepare_message(self):
-        self.notifier._prepare_message('123')
-        self.assertEqual(self.notifier.STATUS_MESSAGE['tid'], '')
-
     def test_presence_updated(self):
         user_id = 64
         expected = {"class": "getlist",

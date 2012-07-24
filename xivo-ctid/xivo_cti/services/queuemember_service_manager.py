@@ -59,7 +59,7 @@ class QueueMemberServiceManager(object):
 
     def _get_queuemembers_to_request(self, delta):
         ret = []
-        for queuemember in delta.add.values():
+        for queuemember in delta.add.itervalues():
             ret.append((queuemember['interface'], queuemember['queue_name']))
         for queuemember in delta.change:
             queuemember_local = self.innerdata_dao.get_queuemember(queuemember)

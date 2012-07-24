@@ -177,12 +177,6 @@ class AMI(object):
                                             event_name,
                                             event))
                 self.handle_ami_function(event_name, event)
-
-                if event_name not in ['Newexten',
-                                      'Newchannel',
-                                      'Newstate',
-                                      'Newcallerid']:
-                    pass
             elif 'Response' in event and event['Response'] is not None:
                 response = event['Response']
                 if (response == 'Follows' and 'Privilege' in event

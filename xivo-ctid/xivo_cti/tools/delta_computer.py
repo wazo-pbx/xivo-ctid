@@ -30,13 +30,13 @@ class DeltaComputer(object):
 
     @staticmethod
     def compute_delta(new_dict, old_dict):
-        added_keys = list(set(new_dict) - set(old_dict))
-        added_items = dict([(item_key, new_dict[item_key]) for item_key in added_keys])
-        removed_keys = list(set(old_dict) - set(new_dict))
-        removed_items = dict([(item_key, old_dict[item_key]) for item_key in removed_keys])
-        changed = dict([(new_key, new_value) for (new_key, new_value) in new_dict.iteritems()
-                        if new_key in old_dict
-                        and old_dict[new_key] != new_dict[new_key]])
+        added_keys = set(new_dict).difference(old_dict)
+        added_items = dict((item_key, new_dict[item_key]) for item_key in added_keys)
+        removed_keys = set(old_dict).difference(new_dict)
+        removed_items = dict((item_key, old_dict[item_key]) for item_key in removed_keys)
+        changed = dict((new_key, new_value) for (new_key, new_value) in new_dict.iteritems()
+                       if new_key in old_dict
+                       and old_dict[new_key] != new_dict[new_key])
         return DictDelta(added_items, changed, removed_items)
 
     @classmethod
