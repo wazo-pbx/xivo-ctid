@@ -229,17 +229,6 @@ class AMI_1_8(object):
         opts = {'paused': 'on' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
-    def ami_join(self, event):
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'],
-                                        time.time())
-
-    def ami_leave(self, event):
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'])
-
     def ami_queuemember(self, event):
         self.innerdata.queuememberupdate(event['Queue'],
                                          event['Location'],
@@ -250,13 +239,6 @@ class AMI_1_8(object):
                                           event['Penalty'],
                                           event['LastCall']))
         self.queuemember_service_manager.update_one_queuemember(event)
-
-    def ami_queueentry(self, event):
-        timestart = self.timeconvert(event['Wait'])
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'],
-                                        timestart)
 
     def ami_queuememberstatus(self, event):
         self.innerdata.queuememberupdate(event['Queue'],

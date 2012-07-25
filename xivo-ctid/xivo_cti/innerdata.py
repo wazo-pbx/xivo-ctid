@@ -777,38 +777,6 @@ class Safe(object):
         for k, v in status.iteritems():
             self.queuemembers[queue_member_id][k] = v
 
-    def queueentryupdate(self, queuename, channel, position, timestart=None):
-        try:
-            qid = self._ctiserver._queue_service_manager.get_queue_id(queuename)
-        except NotAQueueException:
-            return
-
-        # send a notification event if no new member
-        self.handle_cti_stack('set', ('queues', 'updatestatus', qid))
-
-        incalls = self.xod_status['queues'][qid]['incalls']
-        if timestart:
-            if channel not in incalls:
-                if int(position) != len(incalls) + 1:
-                    # can it occur ? : for meetme, it occurs when 2 people join the room almost
-                    # simultaneously as first and second members
-                    logger.warning('queueentryupdate (add) : mismatch between %d and %d',
-                                   int(position), len(incalls) + 1)
-                incalls.append(channel)
-            if channel in self.channels:
-                self.handle_cti_stack('set', ('channels', 'updatestatus', channel))
-                self.channels[channel].addrelation('queue:%s' % qid)
-        else:
-            if int(position) != incalls.index(channel) + 1:
-                logger.warning('queueentryupdate (del) : mismatch between %d and %d',
-                               int(position), incalls.index(channel) + 1)
-            incalls.remove(channel)
-            if channel in self.channels:
-                self.handle_cti_stack('set', ('channels', 'updatestatus', channel))
-                self.channels[channel].delrelation('queue:%s' % qid)
-
-        self.handle_cti_stack('empty_stack')
-
     def update(self, channel):
         chanprops = self.channels.get(channel)
         relations = chanprops.relations
