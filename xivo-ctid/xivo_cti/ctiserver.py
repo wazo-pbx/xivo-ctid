@@ -136,19 +136,20 @@ class CTIServer(object):
         self.askedtoquit = False
 
     def _set_logger(self):
-        logging.basicConfig(level=logging.INFO)
-        try:
-            logfilehandler = logging.FileHandler(cti_config.LOGFILENAME)
-            formatter = logging.Formatter(
-                '%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
-                % cti_config.DAEMONNAME)
-            logfilehandler.setFormatter(formatter)
-            root_logger = logging.getLogger()
-            root_logger.addHandler(logfilehandler)
-            if cti_config.DEBUG_MODE:
-                root_logger.setLevel(logging.DEBUG)
-        except Exception:
-            logger.exception('logfilehandler')
+        file_handler = logging.FileHandler(cti_config.LOGFILENAME)
+        file_formatter = logging.Formatter(
+            '%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
+            % cti_config.DAEMONNAME)
+        file_handler.setFormatter(file_formatter)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(file_handler)
+        root_logger.setLevel(logging.INFO)
+        if cti_config.DEBUG_MODE:
+            stream_handler = logging.StreamHandler()
+            stream_formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s: %(message)s')
+            stream_handler.setFormatter(stream_formatter)
+            root_logger.addHandler(stream_handler)
+            root_logger.setLevel(logging.DEBUG)
 
     def _daemonize(self):
         if not cti_config.DEBUG_MODE:
