@@ -30,7 +30,7 @@ def parse_queue_member_status(event):
 def parse_queue_member_update(delta):
     manager = QueueStatisticsManager.get_instance()
     for queue_members in (delta.add, delta.change, delta.delete):
-        for queue_member in queue_members.values():
+        for queue_member in queue_members.itervalues():
             manager.get_queue_summary(queue_member['queue_name'])
 
 
