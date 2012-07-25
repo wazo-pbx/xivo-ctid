@@ -599,8 +599,6 @@ class Safe(object):
         if channel_name not in self.channels:
             # might occur when requesting channels at launch time
             channel = Channel(channel_name, context, unique_id)
-            if event:
-                channel.update_from_event(event)
             self.channels[channel_name] = channel
             self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
         self.updaterelations(channel_name)
@@ -925,8 +923,6 @@ class Safe(object):
             p = self.zphones(termination.get('protocol'), termination.get('name'))
             if p:
                 self.channels[channel].addrelation('phone:%s' % p)
-                userid = str(self.xod_config['phones'].keeplist[p]['iduserfeatures'])
-                self.channels[channel].properties['thisdisplay'] = self.user_features_dao.get(userid).fullname
                 oldchans = self.xod_status['phones'][p].get('channels')
                 if channel not in oldchans:
                     self.handle_cti_stack('set', ('phones', 'updatestatus', p))
@@ -1233,7 +1229,6 @@ class Channel(object):
                            'direction': None,
                            'commstatus': 'ready',
                            'timestamp': time.time(),
-                           'thisdisplay': None,
                            # peerdisplay : to be used in order to override a default value
                            'peerdisplay': None,
                            'talkingto_kind': None,
@@ -1283,10 +1278,6 @@ class Channel(object):
                 self.extra_data[family][varname] = varvalue
         else:
             self.extra_data[family][varname] = varvalue
-
-    def update_from_event(self, event):
-        if 'CallerIDName' in event and self.properties['thisdisplay'] == None:
-            self.properties['thisdisplay'] = event['CallerIDName']
 
 
 def split_channel(channel):
