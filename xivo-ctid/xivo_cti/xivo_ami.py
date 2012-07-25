@@ -133,8 +133,6 @@ class AMIClass(object):
     def _exec_command(self, *args):
         try:
             return self.sendcommand(*args)
-        except self.AMIError:
-            return False
         except Exception:
             return False
 
