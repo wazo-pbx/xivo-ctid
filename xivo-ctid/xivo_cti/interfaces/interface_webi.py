@@ -34,27 +34,6 @@ logger = logging.getLogger('interface_webi')
 
 XIVO_CLI_WEBI_HEADER = 'XIVO-CLI-WEBI'
 
-AMI_REQUESTS = [
-    'core show version',
-    'core show channels',
-    'dialplan reload',
-    'sccp reload',
-    'sip reload',
-    'moh reload',
-    'iax2 reload',
-    'module reload',
-    'module reload app_queue.so',
-    'module reload chan_agent.so',
-    'module reload app_meetme.so',
-    'features reload',
-    'voicemail reload',
-    'module reload chan_sccp.so',
-    'sccp show version',
-    'sccp show devices',
-    'sccp show config',
-    'sccp update config',
-    ]
-
 UPDATE_REQUESTS = [
     'xivo[cticonfig,update]',
     'xivo[userlist,update]',
@@ -89,53 +68,18 @@ class WEBI(interfaces.Interfaces):
     def disconnected(self, cause):
         interfaces.Interfaces.disconnected(self, cause)
 
-    def _parse_webi_command(self, raw_msg):
-        if len(raw_msg) == 0 or not ':' in raw_msg:
-            logger.warning('WEBI did an unexpected request %s', raw_msg)
-            raise BadWebiCommandException()
-
-        raw_msg = raw_msg.strip()
-        type = raw_msg.split(':')[0]
-        msg = raw_msg.split(':')[1]
-
-        if type not in ['sync', 'async']:
-            logger.warning('WEBI did an unexpected type %s', type)
-            raise BadWebiCommandException()
-        elif len(msg) == 0:
-            logger.warning('WEBI send empty msg')
-            raise BadWebiCommandException()
-
-        if type == 'sync':
-            logger.info('Synchronous WEBI command received: %s', msg)
-        else:
-            logger.info('Asynchronous WEBI command received: %s', msg)
-
-        return (type, msg)
-
-    def _send_ami_request(self, type, msg):
-        if type == 'async':
-            self._ctiserver.myami.delayed_action(msg)
-            return True
-        else:
-            self._ctiserver.myami.delayed_action(msg, self)
-            return False
-
-    def manage_connection(self, raw_msg):
+    def manage_connection(self, msg):
         clireply = []
         closemenow = True
 
         live_reload_conf = self._config.getconfig('main')['live_reload_conf']
 
         if not live_reload_conf:
-            logger.info('WEBI command received (%s) but live reload configuration has been disabled', raw_msg)
+            logger.info('WEBI command received (%s) but live reload configuration has been disabled', msg)
             return [{'message': clireply,
                      'closemenow': closemenow}]
 
-        try:
-            type, msg = self._parse_webi_command(raw_msg)
-        except BadWebiCommandException:
-            return [{'message': clireply,
-                     'closemenow': closemenow}]
+        logger.info('WEBI command received: %s', msg)
 
         if msg == 'xivo[daemon,reload]':
             self._ctiserver.askedtoquit = True
@@ -145,10 +89,6 @@ class WEBI(interfaces.Interfaces):
             self._ctiserver.update_userlist.append(msg)
             if msg == 'xivo[meetmelist,update]':
                 meetme_manager.initialize()
-        elif msg in AMI_REQUESTS:
-            closemenow = self._send_ami_request(type, msg)
-        elif msg.startswith('sip show peer '):
-            closemenow = self._send_ami_request(type, msg)
         else:
             logger.warning('WEBI did an unexpected request %s', msg)
 
