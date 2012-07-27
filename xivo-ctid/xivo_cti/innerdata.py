@@ -375,10 +375,10 @@ class Safe(object):
                 self._ctiserver.send_cti_event(message)
             else:
                 if listname == 'users':
-                    item_contexts = self.xod_config['users'].get_contexts(k)
+                    item_context = self.user_service_manager.get_context(k)
                 else:
-                    item_contexts = [self.xod_config[listname].keeplist[k].get('context')]
-                connection_list = self._ctiserver.get_connected({'contexts': item_contexts})
+                    item_context = self.xod_config[listname].keeplist[k].get('context')
+                connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
                 for connection in connection_list:
                     connection.append_msg(message)
 

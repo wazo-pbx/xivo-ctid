@@ -50,13 +50,16 @@ class PhoneList(ContextAwareAnyList):
         phone_id_by_proto_and_name = {}
 
         for phone_id, phone in self.keeplist.iteritems():
-            user_id = str(phone['iduserfeatures'])
+            proto_and_name = phone['protocol'] + phone['name']
+            phone_id_by_proto_and_name[proto_and_name] = phone_id
+
+            raw_user_id = phone['iduserfeatures']
+            if not raw_user_id:
+                continue
+            user_id = str(raw_user_id)
             context = phone['context']
             contexts_by_user_id[user_id].add(context)
             user_ids_by_context[context].add(user_id)
-
-            proto_and_name = phone['protocol'] + phone['name']
-            phone_id_by_proto_and_name[proto_and_name] = phone_id
 
         self._contexts_by_user_id = dict((user_id, list(contexts)) for
                                          user_id, contexts in
