@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 # Copyright (C) 2007-2011  Avencall

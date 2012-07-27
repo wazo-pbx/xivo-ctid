@@ -390,7 +390,7 @@ class CTIServer(object):
         self.myipbxid = 'xivo'
 
         ipbxconfig = self._config.getconfig('ipbx')
-        safe = innerdata.Safe(self, self.myipbxid, ipbxconfig.get('urllists'))
+        safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
         safe.user_service_manager = self._user_service_manager
         safe.user_features_dao = self._user_features_dao
         safe.trunk_features_dao = self._trunk_features_dao

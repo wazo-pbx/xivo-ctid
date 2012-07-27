@@ -1,4 +1,5 @@
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 # Copyright (C) 2007-2012  Avencall

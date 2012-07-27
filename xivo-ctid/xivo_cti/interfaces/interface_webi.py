@@ -24,6 +24,7 @@ __copyright__ = 'Copyright (C) 2007-2012  Avencall'
 WEBI Interface
 """
 
+import re
 from xivo_cti import cti_config
 from xivo_cti.interfaces import interfaces
 from xivo_cti.services.meetme.service_manager import manager as meetme_manager
@@ -34,20 +35,28 @@ logger = logging.getLogger('interface_webi')
 
 XIVO_CLI_WEBI_HEADER = 'XIVO-CLI-WEBI'
 
-UPDATE_REQUESTS = [
-    'xivo[cticonfig,update]',
-    'xivo[userlist,update]',
-    'xivo[devicelist,update]',
-    'xivo[linelist,update]',
-    'xivo[phonelist,update]',
-    'xivo[trunklist,update]',
-    'xivo[agentlist,update]',
-    'xivo[queuelist,update]',
-    'xivo[grouplist,update]',
-    'xivo[meetmelist,update]',
-    'xivo[voicemaillist,update]',
-    'xivo[incalllist,update]',
-    'xivo[phonebooklist,update]'
+_CMD_WEBI_PATTERN = re.compile('xivo\[(.*),(add|edit|delete|deleteall|enable|disable),(\d+)\]')
+_OBJECTS = [
+    'user',
+    'device',
+    'line',
+    'phone',
+    'trunk',
+    'agent',
+    'queue',
+    'group',
+    'meetme',
+    'voicemail',
+    'incall',
+    'phonebook'
+    ]
+STATES = [
+    'add',
+    'edit',
+    'delete',
+    'deleteall',
+    'enable',
+    'disable'
     ]
 
 
@@ -68,6 +77,17 @@ class WEBI(interfaces.Interfaces):
     def disconnected(self, cause):
         interfaces.Interfaces.disconnected(self, cause)
 
+    def _object_request_cmd(self, sre_obj):
+            object_name = sre_obj.group(1)
+            state = sre_obj.group(2)
+            id = int(sre_obj.group(3) if sre_obj.group(3) else 0)
+            if object_name not in _OBJECTS:
+                logger.warning('WEBI did an unknow object %s', object_name)
+            else:
+                self._ctiserver.update_userlist.append('xivo[%slist,update]' % object_name)
+                if object == 'meetme':
+                    meetme_manager.initialize()
+
     def manage_connection(self, msg):
         clireply = []
         closemenow = True
@@ -81,14 +101,16 @@ class WEBI(interfaces.Interfaces):
 
         logger.info('WEBI command received: %s', msg)
 
+        sre_obj = _CMD_WEBI_PATTERN.match(msg)
+
         if msg == 'xivo[daemon,reload]':
             self._ctiserver.askedtoquit = True
+        elif msg == 'xivo[cticonfig,update]':
+            self._ctiserver.update_userlist.append(msg)
         elif msg == 'xivo[queuemember,update]':
             self.queuemember_service_manager.update_config()
-        elif msg in UPDATE_REQUESTS:
-            self._ctiserver.update_userlist.append(msg)
-            if msg == 'xivo[meetmelist,update]':
-                meetme_manager.initialize()
+        elif sre_obj:
+            self._object_request_cmd(sre_obj)
         else:
             logger.warning('WEBI did an unexpected request %s', msg)
 

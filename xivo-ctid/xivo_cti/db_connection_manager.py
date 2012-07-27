@@ -1,4 +1,5 @@
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'

@@ -1,4 +1,5 @@
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 # Copyright (C) 2007-2012  Avencall'
@@ -20,6 +21,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 import copy
 import hashlib
@@ -68,6 +70,10 @@ class Safe(object):
         'contexts': 'urllist_contexts',
         # 'entities' : 'urllist_entities',
         'phonebooks': 'urllist_phonebook'
+        }
+
+    datas = {
+        'meetmes': 'meetme_features_dao',
         }
 
     # defines the list of parameters that might be sent to xivo clients
@@ -185,10 +191,10 @@ class Safe(object):
 
     permission_kinds = ['regcommands', 'userstatus']
 
-    def __init__(self, ctiserver, ipbxid, cnf=None):
+    def __init__(self, ctiserver, cnf=None):
         self._config = cti_config.Config.get_instance()
         self._ctiserver = ctiserver
-        self.ipbxid = ipbxid
+        self.ipbxid = 'xivo'
         self.xod_config = {}
         self.xod_status = {}
         self.user_features_dao = None
@@ -219,6 +225,7 @@ class Safe(object):
             try:
                 cf = eval('lists.cti_%slist' % listname[:-1])
                 cn = '%s%sList' % (listname[0].upper(), listname[1:-1])
+
                 if cnf and urllistkey in cnf:
                     self.xod_config[listname] = getattr(cf, cn)(cnf[urllistkey])
                 else:
