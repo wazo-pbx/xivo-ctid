@@ -72,10 +72,6 @@ class Safe(object):
         'phonebooks': 'urllist_phonebook'
         }
 
-    datas = {
-        'meetmes': 'meetme_features_dao',
-        }
-
     # defines the list of parameters that might be sent to xivo clients
     props_config = {'users': ['loginclient',
                               'firstname',
@@ -358,10 +354,6 @@ class Safe(object):
                                                 'tid': tid,
                                                 'status': self.xod_status[listname][tid]})
 
-    def update_config_list_all(self):
-        for listname in self.urlvars:
-            self.update_config_list(listname)
-
     def _initialize_item_status(self, listname, index):
         self.xod_status[listname][index] = {}
         if listname in self.props_status and len(self.props_status[listname]) > 0:
@@ -424,7 +416,7 @@ class Safe(object):
 
         return do_fill_lines
 
-    def update_config_list(self, listname):
+    def update_config_list(self, listname, state, id):
         try:
             try:
                 deltas = self.xod_config[listname].update()
@@ -438,6 +430,10 @@ class Safe(object):
                     self.fill_lines_into_users()
         except Exception:
             logger.exception('update_config_list %s', listname)
+
+    def update_config_list_all(self):
+        for listname in self.urlvars:
+            self.update_config_list(listname, None, None)
 
     def init_status(self):
         '''

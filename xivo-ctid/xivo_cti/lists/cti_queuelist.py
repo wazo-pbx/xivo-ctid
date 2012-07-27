@@ -35,13 +35,13 @@ class QueueList(ContextAwareAnyList):
                           'LastCall', 'CallsTaken', 'Xivo-QueueMember-StateTime']
 
     def __init__(self, newurls=[], misc=None):
-        self.anylist_properties = { 'name' : 'queues',
-                                    'urloptions' : (1, 5, True) }
+        self.anylist_properties = {'name': 'queues',
+                                    'urloptions': (1, 5, True)}
         ContextAwareAnyList.__init__(self, newurls)
+        self.reverse_index = {}
 
     def update(self):
         ret = ContextAwareAnyList.update(self)
-        self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:
                 self.reverse_index[ag['name']] = idx
@@ -50,7 +50,7 @@ class QueueList(ContextAwareAnyList):
         return ret
 
     def hasqueue(self, queuename):
-        return self.reverse_index.has_key(queuename)
+        return queuename in self.reverse_index
 
     def idbyqueuename(self, queuename):
         if queuename in self.reverse_index:
@@ -74,10 +74,10 @@ class QueueList(ContextAwareAnyList):
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
         if queueid in self.keeplist:
-            self.keeplist[queueid]['channels'][channel] = { 'position' : position,
-                                                            'entrytime' : entrytime,
-                                                            'calleridnum' : calleridnum,
-                                                            'calleridname' : calleridname }
+            self.keeplist[queueid]['channels'][channel] = {'position': position,
+                                                           'entrytime': entrytime,
+                                                           'calleridnum': calleridnum,
+                                                           'calleridname': calleridname}
 
     def queueentry_remove(self, queueid, channel):
         if queueid in self.keeplist:

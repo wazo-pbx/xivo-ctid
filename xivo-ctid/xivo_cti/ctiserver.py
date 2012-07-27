@@ -743,17 +743,17 @@ class CTIServer(object):
         if self.update_userlist:
             self.lastrequest_time = time.time()
             try:
-                self._config.update()
+                if 'xivo[cticonfig,update]' in self.update_userlist:
+                    self._config.update()
+                    self.update_userlist.pop(self.update_userlist.index('xivo[cticonfig,update]'))
                 self.safe.regular_update()
             except Exception:
                 logger.exception('failed while updating lists and sockets (computed timeout)')
             try:
                 while self.update_userlist:
-                    tmp_ltr = self.update_userlist.pop()
-                    if tmp_ltr != 'xivo[cticonfig,update]':
-                        listtorequest = tmp_ltr[5:-12] + 's'
-                        self.safe.update_config_list(listtorequest)
-                        self._empty_cti_events_queue()
+                    msg = self.update_userlist.pop()
+                    self.safe.update_config_list('%ss' % msg['object_name'], msg['state'], msg['id'])
+                    self._empty_cti_events_queue()
             except Exception:
                 logger.exception('commandclass.updates() (computed timeout)')
 
