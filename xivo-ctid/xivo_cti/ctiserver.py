@@ -791,7 +791,7 @@ class CTIServer(object):
                 elif self.pipe_queued_threads[0] == sel_i:
                     self._socket_pipe_queue_read(sel_i)
 
-                self._empty_cti_events_queue()
                 self._update_safe_list()
+                self._empty_cti_events_queue()
         except Exception:
             logger.exception('Socket Reader')
