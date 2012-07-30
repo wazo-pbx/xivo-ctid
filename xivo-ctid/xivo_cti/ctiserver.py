@@ -745,10 +745,10 @@ class CTIServer(object):
             try:
                 if 'xivo[cticonfig,update]' in self.update_userlist:
                     self._config.update()
+                    self.safe.update_directories()
                     self.update_userlist.pop(self.update_userlist.index('xivo[cticonfig,update]'))
-                self.safe.regular_update()
             except Exception:
-                logger.exception('failed while updating lists and sockets (computed timeout)')
+                logger.exception('failed while executing xivo[cticonfig,update]')
             try:
                 while self.update_userlist:
                     msg = self.update_userlist.pop()

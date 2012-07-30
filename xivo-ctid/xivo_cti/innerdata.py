@@ -1126,13 +1126,6 @@ class Safe(object):
         except Exception:
             logger.exception('cb_timer %s', args)
 
-    def regular_update(self):
-        """
-        Define here the tasks one would like to complete on a regular basis.
-        """
-        # like loggerout_all_agents(), according to 'regupdates'
-        self.update_directories()
-
     def update_directories(self):
         # This function must be called after a certain amount of initialization
         # went by in the _ctiserver object since some of the directories depends on
