@@ -1,8 +1,11 @@
+# -*- coding: UTF-8 -*-
+
 import unittest
 
 from mock import Mock
 from xivo_cti import cti_sheets
 from xivo_cti.innerdata import Channel
+
 
 class TestSheets(unittest.TestCase):
 
@@ -24,7 +27,7 @@ class TestSheets(unittest.TestCase):
         self.sheet.channelprops = Mock(Channel)
         self.sheet.channelprops.channel = 'mychannel'
         self.sheet.channelprops.unique_id = 12345
-    
+
     def test_split_format_string(self):
         format_string = '{xivo-var}'
 
@@ -48,7 +51,7 @@ class TestSheets(unittest.TestCase):
         expected = {'name': self.title,
                     'type': self.field_type,
                     'contents': self.var_value}
- 
+
         result = self.sheet.resolv_line_content(self.line_properties)
 
         self.assertEquals(result, expected)
@@ -62,7 +65,7 @@ class TestSheets(unittest.TestCase):
         result = self.sheet.resolv_line_content(self.line_properties)
 
         self.assertEquals(result, expected)
-        
+
     def test_resolv_line_content_callerpicture(self):
         user_id = '6'
         encoded_picture = 'my picture base 64 encoding'

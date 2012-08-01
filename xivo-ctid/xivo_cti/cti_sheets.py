@@ -51,17 +51,19 @@ class Sheet(object):
         self.linestosend = []
 
     def setoptions(self, options):
-        self.options = options if options else self.options
+        if options:
+            self.options = options
 
     def setdisplays(self, displays):
-        self.displays = displays if displays else self.displays
+        if displays:
+            self.displays = displays
 
     def addinternal(self, varname, varvalue):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
-        [title, ftype, defaultval, sformat] = lineprops[:4]
+        title, ftype, defaultval, sformat = lineprops[:4]
 
         if disabled:
             return {}
@@ -167,7 +169,7 @@ class Sheet(object):
         contexts = self.conditions.get('contexts')
         profileids = self.conditions.get('profileids')
 
-        tomatch = dict()
+        tomatch = {}
         if profileids:
             tomatch['profileids'] = profileids
         if contexts:
@@ -184,6 +186,6 @@ class Sheet(object):
 
 def split_format_string(format_string):
     if not FORMAT_STRING_PATTERN.match(format_string):
-        raise ValueError('Invalid format string: %s', format_string)
+        raise ValueError('Invalid format string: %s' % format_string)
 
     return format_string[1:-1].split('-', 1)
