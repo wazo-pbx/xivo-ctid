@@ -45,26 +45,39 @@ class TestSheets(unittest.TestCase):
         self.assertRaises(ValueError,
                           lambda: cti_sheets.split_format_string(format_string))
 
-    def test_resolv_line_content(self):
-        self.sheet.channelprops.extra_data = {'xivo':
-                                                  {'test': self.var_value}}
-        expected = {'name': self.title,
-                    'type': self.field_type,
-                    'contents': self.var_value}
+    def test_resolv_line_content_with_simple_and_present_substitution(self):
+        default_value = ''
+        display_value = '{xivo-test}'
+        data = {'xivo': {'test': 'foobar'}}
 
-        result = self.sheet.resolv_line_content(self.line_properties)
+        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
 
-        self.assertEquals(result, expected)
+        self.assertEqual(data['xivo']['test'], result)
 
-    def test_resolv_line_content_default(self):
-        self.sheet.channelprops.extra_data = {}
-        expected = {'name': self.title,
-                    'type': self.field_type,
-                    'contents': self.default_value}
+    def test_resolv_line_content_with_simple_and_missing_substitution_with_default(self):
+        default_value = 'bar'
+        display_value = '{xivo-test}'
+        data = {}
 
-        result = self.sheet.resolv_line_content(self.line_properties)
+        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
 
-        self.assertEquals(result, expected)
+        self.assertEqual(default_value, result)
+
+    def test_resolv_line_content_with_simple_and_missing_substitution_with_no_default(self):
+        default_value = ''
+        display_value = '{xivo-test}'
+        data = {}
+
+        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+
+        self.assertEqual(display_value, result)
+
+    def _substitute_via_resolv_line_content(self, default_value, display_value, data):
+        self.sheet.channelprops.extra_data = data
+
+        result = self.sheet.resolv_line_content(('title', 'ftype', default_value, display_value))
+
+        return result['contents']
 
     def test_resolv_line_content_callerpicture(self):
         user_id = '6'
@@ -81,4 +94,4 @@ class TestSheets(unittest.TestCase):
                                                  '{xivo-callerpicture}'])
         self.sheet._get_user_picture.assert_called_once_with(user_id)
 
-        self.assertEquals(result, expected)
+        self.assertEqual(result, expected)
