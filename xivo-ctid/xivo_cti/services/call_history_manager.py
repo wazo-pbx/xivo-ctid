@@ -36,7 +36,7 @@ class CallHistoryMgr(object):
         self._cel_dao = cel_dao
 
     def answered_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone)
+        channels = self._cel_dao.channels_for_phone(phone, limit)
         answering_channels = [channel
                               for channel in channels
                               if not channel.is_caller()
@@ -45,7 +45,7 @@ class CallHistoryMgr(object):
         return received_calls
 
     def missed_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone)
+        channels = self._cel_dao.channels_for_phone(phone, limit)
         missed_channels = [channel
                            for channel in channels
                            if not channel.is_caller()
@@ -54,7 +54,7 @@ class CallHistoryMgr(object):
         return received_calls
 
     def outgoing_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone)
+        channels = self._cel_dao.channels_for_phone(phone, limit)
         outgoing_channels = [channel
                              for channel in channels
                              if channel.is_caller()]

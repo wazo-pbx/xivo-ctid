@@ -48,7 +48,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         received_calls = self._call_history_manager.answered_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
@@ -68,7 +68,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         received_calls = self._call_history_manager.answered_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
@@ -97,7 +97,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         received_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
@@ -118,7 +118,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         received_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
@@ -150,7 +150,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         received_calls = self._call_history_manager.outgoing_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_received_calls, received_calls)
 
     def test_outgoing_calls_for_phone_with_no_outgoing_calls(self):
@@ -168,7 +168,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         sent_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone)
+        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_sent_calls, sent_calls)
 
     def _insert_answered_channel_for_phone(self,
