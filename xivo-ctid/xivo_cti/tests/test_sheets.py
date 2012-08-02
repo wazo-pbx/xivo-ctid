@@ -15,7 +15,6 @@ class TestSheets(unittest.TestCase):
         self.default_value = 'my_default_value'
         self.format_string = '{xivo-test}'
         self.disabled = 0
-        self.var_value = 'my_test_var_content'
 
         self.line_properties = [self.title,
                                 self.field_type,
@@ -25,117 +24,128 @@ class TestSheets(unittest.TestCase):
 
         self.sheet = cti_sheets.Sheet(None, None, None)
         self.sheet.channelprops = Mock(Channel)
-        self.sheet.channelprops.channel = 'mychannel'
-        self.sheet.channelprops.unique_id = 12345
 
-    def test_split_format_string(self):
-        format_string = '{xivo-var}'
+    def test_resolv_line_content_no_substitution_with_default(self):
+        data = {}
+        default_value = 'bar'
+        display_value = 'foobar'
+        expected = display_value
 
-        family, var = cti_sheets.split_format_string(format_string)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(family, 'xivo')
-        self.assertEqual(var, 'var')
+        self.assertEqual(expected, result)
 
-    def test_split_format_string_invalid(self):
-        format_string = 'xivo-var'
-        self.assertRaises(ValueError,
-                          lambda: cti_sheets.split_format_string(format_string))
+    def test_resolv_line_content_no_substitution_with_no_default(self):
+        data = {}
+        default_value = ''
+        display_value = 'foobar'
+        expected = display_value
 
-        format_string = '{xivo/var}'
-        self.assertRaises(ValueError,
-                          lambda: cti_sheets.split_format_string(format_string))
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
+
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_simple_and_present_substitution(self):
+        data = {'xivo': {'test': 'foobar'}}
         default_value = ''
         display_value = '{xivo-test}'
-        data = {'xivo': {'test': 'foobar'}}
+        expected = data['xivo']['test']
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(data['xivo']['test'], result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_simple_and_missing_substitution_with_default(self):
+        data = {}
         default_value = 'bar'
         display_value = '{xivo-test}'
-        data = {}
+        expected = default_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(default_value, result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_simple_and_missing_substitution_with_no_default(self):
+        data = {}
         default_value = ''
         display_value = '{xivo-test}'
-        data = {}
+        expected = display_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(display_value, result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_complex_and_present_substitution(self):
+        data = {'xivo': {'test': 'foobar'}}
         default_value = ''
         display_value = 'A {xivo-test}.'
-        data = {'xivo': {'test': 'foobar'}}
+        expected = 'A foobar.'
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual('A foobar.', result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_complex_and_missing_substitution_with_default(self):
+        data = {}
         default_value = 'bar'
         display_value = 'A {xivo-test}.'
-        data = {}
+        expected = default_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(default_value, result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_complex_and_missing_substitution_with_no_default(self):
+        data = {}
         default_value = ''
         display_value = 'A {xivo-test}.'
-        data = {}
+        expected = display_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(display_value, result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_multiple_substitutions(self):
+        data = {'xivo': {'test1': 'foo', 'test2': 'bar'}}
         default_value = ''
         display_value = 'A {xivo-test1} and {xivo-test2}.'
-        data = {'xivo': {'test1': 'foo', 'test2': 'bar'}}
+        expected = 'A foo and bar.'
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual('A foo and bar.', result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_multiple_substitutions_and_one_missing(self):
+        data = {'xivo': {'test1': 'foo'}}
         default_value = ''
         display_value = 'A {xivo-test1} and {xivo-test2}.'
-        data = {'xivo': {'test1': 'foo'}}
+        expected = 'A foo and .'
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual('A foo and .', result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_multiple_substitutions_and_all_missing_and_default(self):
+        data = {}
         default_value = 'bar'
         display_value = 'A {xivo-test1} and {xivo-test2}.'
-        data = {}
+        expected = default_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(default_value, result)
+        self.assertEqual(expected, result)
 
     def test_resolv_line_content_with_multiple_substitutions_and_all_missing_and_no_default(self):
+        data = {}
         default_value = ''
         display_value = 'A {xivo-test1} and {xivo-test2}.'
-        data = {}
+        expected = display_value
 
-        result = self._substitute_via_resolv_line_content(default_value, display_value, data)
+        result = self._substitute_via_resolv_line_content(data, default_value, display_value)
 
-        self.assertEqual(display_value, result)
+        self.assertEqual(expected, result)
 
-    def _substitute_via_resolv_line_content(self, default_value, display_value, data):
+    def _substitute_via_resolv_line_content(self, data, default_value, display_value):
         self.sheet.channelprops.extra_data = data
 
         result = self.sheet.resolv_line_content(('title', 'ftype', default_value, display_value))
