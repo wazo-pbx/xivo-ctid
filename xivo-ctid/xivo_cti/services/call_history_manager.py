@@ -47,17 +47,17 @@ class CallHistoryMgr(object):
     def missed_calls_for_phone(self, phone, limit):
         channels = self._cel_dao.channels_for_phone(phone)
         missed_channels = [channel
-                              for channel in channels
-                              if not channel.is_caller()
-                              and not channel.is_answered()]
+                           for channel in channels
+                           if not channel.is_caller()
+                           and not channel.is_answered()]
         received_calls = self._convert_incoming_channels(missed_channels, limit)
         return received_calls
 
     def outgoing_calls_for_phone(self, phone, limit):
         channels = self._cel_dao.channels_for_phone(phone)
         outgoing_channels = [channel
-                           for channel in channels
-                           if channel.is_caller()]
+                             for channel in channels
+                             if channel.is_caller()]
         sent_calls = self._convert_outgoing_channels(outgoing_channels, limit)
         return sent_calls
 
@@ -80,7 +80,6 @@ class CallHistoryMgr(object):
                                  outgoing_channel.exten())
             sent_calls.append(sent_call)
         return sent_calls
-
 
     @classmethod
     def new_from_uri(cls, uri):
