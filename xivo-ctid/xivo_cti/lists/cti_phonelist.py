@@ -341,12 +341,24 @@ class PhoneList(ContextAwareAnyList):
                 self.keeplist[phoneid]['comms'][uid].update(infos)
 
     def find_phone_by_channel(self, channel):
-        proto, name = channel.split('-', 1)[0].split('/', 1)
-        phone_id = self.get_phone_id_from_proto_and_name(proto.lower(), name)
+        proto, phonename_from_channel = channel.split('-', 1)[0].split('/', 1)
+        if proto == 'sccp':
+            phonename = self._sccpname(phonename_from_channel)
+        else:
+            phonename = self._sipname(phonename_from_channel)
+
+        phone_id = self.get_phone_id_from_proto_and_name(proto.lower(), phonename)
+
         if phone_id is None:
             return None
         else:
             return self.keeplist[phone_id]
+
+    def _sccpname(self, phonename):
+        return phonename.split('@')[0]
+
+    def _sipname(self, phonename):
+        return phonename
 
     def get_main_line(self, user_id):
         users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]

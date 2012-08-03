@@ -244,8 +244,117 @@ class Test(unittest.TestCase):
               'rtptimeout': None,
               'allow': None}
 
+    PHONE_3 = {'protocol': 'sccp',
+              'buggymwi': None,
+              'amaflags': 'default',
+              'sendrpid': None,
+              'videosupport': None,
+              'regseconds': '0',
+              'maxcallbitrate': None,
+              'registertrying': None,
+              'session-minse': None,
+              'maxforwards': None,
+              'internal': False,
+              'rtpholdtimeout': None,
+              'session-expires': None,
+              'defaultip': None,
+              'ignoresdpversion': None,
+              'ipfrom': '192.168.32.157',
+              'vmexten': None,
+              'name': '102',
+              'callingpres': None,
+              'textsupport': None,
+              'unsolicited_mailbox': None,
+              'outboundproxy': None,
+              'fromuser': None,
+              'cid_number': None,
+              'commented': False,
+              'useclientcode': None,
+              'rules_type': '',
+              'call-limit': '10',
+              'num': 1,
+              'initialized': False,
+              'progressinband': None,
+              'port': None,
+              'transport': None,
+              'category': 'user',
+              'md5secret': '',
+              'regserver': None,
+              'directmedia': None,
+              'mailbox': None,
+              'qualifyfreq': None,
+              'host': 'dynamic',
+              'promiscredir': None,
+              'disallow': None,
+              'allowoverlap': None,
+              'accountcode': None,
+              'dtmfmode': None,
+              'language': 'fr_FR',
+              'usereqphone': None,
+              'qualify': None,
+              'useridentity': 'User3 ',
+              'trustrpid': None,
+              'context': 'default',
+              'timert1': None,
+              'session-refresher': None,
+              'provisioningid': 152530,
+              'mohinterpret': None,
+              'allowsubscribe': None,
+              'number': '102',
+              'session-timers': None,
+              'busylevel': None,
+              'callcounter': None,
+              'rules_time': '30',
+              'callerid': '"User3" <102>',
+              'line_num': 0,
+              'configregistrar': 'default',
+              'encryption': False,
+              'remotesecret': None,
+              'secret': 'XM5Y4J',
+              'use_q850_reason': None,
+              'type': 'friend',
+              'username': None,
+              'callbackextension': None,
+              'protocolid': 21,
+              'disallowed_methods': None,
+              'rules_group': '',
+              'rfc2833compensate': None,
+              'g726nonstandard': None,
+              'contactdeny': None,
+              'iduserfeatures': 11,
+              'snom_aoc_enabled': None,
+              'fullname': None,
+              'rules_order': 2, # phone order
+              't38pt_udptl': None,
+              'subscribemwi': '0',
+              'mohsuggest': None,
+              'id': 22,
+              'autoframing': None,
+              't38pt_usertpsource': None,
+              'ipaddr': '',
+              'fromdomain': None,
+              'allowtransfer': None,
+              'nat': None,
+              'config': '',
+              'setvar': 'XIVO_USERID=11',
+              'contactpermit': None,
+              'rtpkeepalive': None,
+              'description': '',
+              'insecure': None,
+              'permit': None,
+              'lastms': '',
+              'device': '7',
+              'subscribecontext': None,
+              'regexten': None,
+              'identity': 'SIP\\/yp0ra4',
+              'deny': None,
+              'timerb': None,
+              'rtptimeout': None,
+              'allow': None}
+
     keeplist = {PHONE_1['id']: PHONE_1,
-                PHONE_2['id']: PHONE_2}
+                PHONE_2['id']: PHONE_2,
+                PHONE_3['id']: PHONE_3}
 
     def setUp(self):
         self.phone_list = PhoneList()
@@ -259,12 +368,19 @@ class Test(unittest.TestCase):
 
         self.assertEqual(phone, None)
 
-    def test_find_phone_by_channel(self):
+    def test_find_phone_by_channel_sip(self):
         channel = 'SIP/yp0ra4-000000023'
 
         phone = self.phone_list.find_phone_by_channel(channel)
 
         self.assertEqual(phone, self.PHONE_2)
+
+    def test_find_phone_by_channel_sccp(self):
+        channel = 'sccp/102@SEP004F3355A2FF'
+        
+        phone = self.phone_list.find_phone_by_channel(channel)
+        
+        self.assertEqual(phone, self.PHONE_3)
 
     def test_get_user_main_line(self):
         user_id = '11'
