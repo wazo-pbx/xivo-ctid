@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import logging
 from xivo_dao import queue_features_dao
 from xivo_dao.queuestatisticdao import QueueStatisticDAO
@@ -7,6 +8,7 @@ from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
 logger = logging.getLogger("QueueStatisticsManager")
+
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
@@ -68,6 +70,6 @@ class QueueStatisticsManager(object):
 
     @classmethod
     def get_instance(cls):
-        if cls._instance == None:
+        if cls._instance is None:
             cls._instance = cls()
         return cls._instance

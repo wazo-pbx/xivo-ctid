@@ -127,7 +127,7 @@ class CTI(interfaces.Interfaces):
         replies.extend(self._cti_command_handler.run_commands())
 
         # Commands from the cti_command.Command class
-        if len(replies) == 0:
+        if not replies:
             command = cti_command.Command(self, decoded_command)
             replies.extend(command.parse())
 
