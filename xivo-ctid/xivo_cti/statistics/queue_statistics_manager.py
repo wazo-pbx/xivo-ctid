@@ -44,21 +44,28 @@ class QueueStatisticsManager(object):
         self._queue_statistic_dao = QueueStatisticDAO()
 
     def get_statistics(self, queue_name, xqos, window):
-        queue_statistic = QueueStatistic()
-        queue_statistic.received_call_count = self._queue_statistic_dao.get_received_call_count(queue_name, window)
-        queue_statistic.answered_call_count = self._queue_statistic_dao.get_answered_call_count(queue_name, window)
-        queue_statistic.abandonned_call_count = self._queue_statistic_dao.get_abandonned_call_count(queue_name, window)
-        queue_statistic.max_hold_time = self._queue_statistic_dao.get_max_hold_time(queue_name, window)
-        queue_statistic.mean_hold_time = self._queue_statistic_dao.get_mean_hold_time(queue_name, window)
+        dao_queue_statistic = self._queue_statistic_dao.get_statistics(queue_name, window, xqos)
 
-        received_and_done = self._queue_statistic_dao.get_received_and_done(queue_name, window)
+        queue_statistic = QueueStatistic()
+        queue_statistic.received_call_count = dao_queue_statistic.received_call_count
+        queue_statistic.answered_call_count = dao_queue_statistic.answered_call_count
+        queue_statistic.abandonned_call_count = dao_queue_statistic.abandonned_call_count
+        if dao_queue_statistic.max_hold_time is None:
+            queue_statistic.max_hold_time = ''
+        else:
+            queue_statistic.max_hold_time = dao_queue_statistic.max_hold_time
+        if dao_queue_statistic.mean_hold_time is None:
+            queue_statistic.mean_hold_time = ''
+        else:
+            queue_statistic.mean_hold_time = dao_queue_statistic.mean_hold_time
 
         if queue_statistic.answered_call_count:
+            received_and_done = dao_queue_statistic.received_and_done
             if received_and_done:
-                queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100), 0))
+                queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100)))
 
-            answered_in_qos = self._queue_statistic_dao.get_answered_call_in_qos_count(queue_name, window, xqos)
-            queue_statistic.qos = int(round((float(answered_in_qos) / queue_statistic.answered_call_count * 100), 0))
+            answered_in_qos = dao_queue_statistic.answered_call_in_qos_count
+            queue_statistic.qos = int(round(float(answered_in_qos) / queue_statistic.answered_call_count * 100))
         return queue_statistic
 
     def get_queue_summary(self, queue_name):

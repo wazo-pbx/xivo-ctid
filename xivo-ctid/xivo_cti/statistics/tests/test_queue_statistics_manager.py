@@ -23,13 +23,15 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_getStatistics(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_received_call_count.return_value = 7
-        self.queue_statistic_dao.get_answered_call_count.return_value = 12
-        self.queue_statistic_dao.get_abandonned_call_count.return_value = 11
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
-        self.queue_statistic_dao.get_received_and_done.return_value = 11
-        self.queue_statistic_dao.get_max_hold_time.return_value = 120
-        self.queue_statistic_dao.get_mean_hold_time.return_value = 15
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 7
+        dao_queue_statistic.answered_call_count = 12
+        dao_queue_statistic.answered_call_in_qos_count = 0
+        dao_queue_statistic.abandonned_call_count = 11
+        dao_queue_statistic.received_and_done = 11
+        dao_queue_statistic.max_hold_time = 120
+        dao_queue_statistic.mean_hold_time = 15
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -38,19 +40,17 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.assertEqual(queue_statistics.abandonned_call_count, 11)
         self.assertEqual(queue_statistics.max_hold_time, 120)
         self.assertEqual(queue_statistics.mean_hold_time, 15)
-        self.queue_statistic_dao.get_received_call_count.assert_called_with('3', window)
-        self.queue_statistic_dao.get_answered_call_count.assert_called_with('3', window)
-        self.queue_statistic_dao.get_abandonned_call_count.assert_called_with('3', window)
-        self.queue_statistic_dao.get_max_hold_time.assert_called_with('3', window)
-        self.queue_statistic_dao.get_mean_hold_time.assert_called_with('3', window)
+        self.queue_statistic_dao.get_statistics.assert_called_with('3', window, xqos)
 
     def test_calculate_efficiency_round_down(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_received_call_count.return_value = 18
-        self.queue_statistic_dao.get_answered_call_count.return_value = 3
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
-        self.queue_statistic_dao.get_received_and_done.return_value = 11
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 18
+        dao_queue_statistic.answered_call_count = 3
+        dao_queue_statistic.answered_call_in_qos_count = 0
+        dao_queue_statistic.received_and_done = 11
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -59,10 +59,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_calculate_efficiency_round_up(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_received_call_count.return_value = 18
-        self.queue_statistic_dao.get_answered_call_count.return_value = 12
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
-        self.queue_statistic_dao.get_received_and_done.return_value = 14
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 18
+        dao_queue_statistic.answered_call_count = 12
+        dao_queue_statistic.answered_call_in_qos_count = 0
+        dao_queue_statistic.received_and_done = 14
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -71,10 +73,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_efficiency_no_call_received_and_done(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_received_call_count.return_value = 3
-        self.queue_statistic_dao.get_answered_call_count.return_value = 0
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 0
-        self.queue_statistic_dao.get_received_and_done.return_value = 0
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 3
+        dao_queue_statistic.answered_call_count = 0
+        dao_queue_statistic.answered_call_in_qos_count = 0
+        dao_queue_statistic.received_and_done = 0
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -83,7 +87,9 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_qos_no_answered_calls_in_period(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_answered_call_count.return_value = 0
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.answered_call_count = 0
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -93,10 +99,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_qos_round_down(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_answered_call_count.return_value = 11
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 3
-        self.queue_statistic_dao.get_received_call_count.return_value = 50
-        self.queue_statistic_dao.get_received_and_done.return_value = 11
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 50
+        dao_queue_statistic.answered_call_count = 11
+        dao_queue_statistic.answered_call_in_qos_count = 3
+        dao_queue_statistic.received_and_done = 11
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
@@ -105,10 +113,12 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_qos_round_up(self):
         window = 3600
         xqos = 25
-        self.queue_statistic_dao.get_answered_call_count.return_value = 14
-        self.queue_statistic_dao.get_answered_call_in_qos_count.return_value = 12
-        self.queue_statistic_dao.get_received_call_count.return_value = 50
-        self.queue_statistic_dao.get_received_and_done.return_value = 14
+        dao_queue_statistic = Mock()
+        dao_queue_statistic.received_call_count = 50
+        dao_queue_statistic.answered_call_count = 14
+        dao_queue_statistic.answered_call_in_qos_count = 12
+        dao_queue_statistic.received_and_done = 14
+        self.queue_statistic_dao.get_statistics.return_value = dao_queue_statistic
 
         queue_statistics = self.queue_statistics_manager.get_statistics('3', xqos, window)
 
