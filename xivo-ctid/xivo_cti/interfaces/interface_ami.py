@@ -146,7 +146,7 @@ class AMI(object):
         for raw_event in events:
             try:
                 decoded_event = raw_event.decode('utf8')
-            except Exception:
+            except UnicodeError:
                 logger.exception('could not decode event %r', raw_event)
                 continue
             event = {}
@@ -232,18 +232,15 @@ class AMI(object):
         functions = []
         if 'Event' in event:
             functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event['Event']))
-        try:
-            if evfunction in ami_def.evfunction_to_method_name:
-                methodname = ami_def.evfunction_to_method_name.get(evfunction)
-                if hasattr(self._ctiserver.commandclass, methodname):
-                    functions.append(getattr(self._ctiserver.commandclass, methodname))
-            for function in set(functions):
-                try:
-                    function(event)
-                except KeyError:
-                    logger.exception('Missing fields to handle this event: %s', event)
-        except Exception:
-            logger.exception('%s : event %s', evfunction, event)
+        if evfunction in ami_def.evfunction_to_method_name:
+            methodname = ami_def.evfunction_to_method_name.get(evfunction)
+            if hasattr(self._ctiserver.commandclass, methodname):
+                functions.append(getattr(self._ctiserver.commandclass, methodname))
+        for function in set(functions):
+            try:
+                function(event)
+            except KeyError:
+                logger.exception('Missing fields to handle this event: %s', event)
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')

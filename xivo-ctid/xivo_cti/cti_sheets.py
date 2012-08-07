@@ -31,6 +31,7 @@ import re
 
 logger = logging.getLogger('sheet')
 
+FORMAT_STRING_PATTERN = re.compile(r'\{\w+\-\w+\}')
 USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 LINE_TEMPLATE = '<internal name="%s"><![CDATA[%s]]></internal>'
 
@@ -50,50 +51,49 @@ class Sheet(object):
         self.linestosend = []
 
     def setoptions(self, options):
-        if options:
-            self.options = options
+        self.options = options if options else self.options
 
     def setdisplays(self, displays):
-        if displays:
-            self.displays = displays
+        self.displays = displays if displays else self.displays
 
     def addinternal(self, varname, varvalue):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
+        [title, ftype, defaultval, sformat] = lineprops[:4]
+
         if disabled:
             return {}
 
-        title, ftype, defaultval, sformat = lineprops[:4]
-        data = self.channelprops.extra_data
-
-        def replacement_callback(variable_name):
-            try:
-                family, name = variable_name.split('-', 1)
-            except ValueError:
-                logger.warning('Invalid variable %r', variable_name)
-                return None
+        try:
+            family, name = split_format_string(sformat)
+            data = self.channelprops.extra_data
+            if family == 'xivo' and name == 'callerpicture':
+                user_id = data['xivo']['userid']
+                finalstring = self._get_user_picture(user_id)
             else:
-                if family == 'xivo' and name == 'callerpicture':
-                    user_id = data['xivo']['userid']
-                    return self._get_user_picture(user_id)
-                else:
-                    try:
-                        value = data[family][name]
-                    except KeyError:
-                        logger.warning('No value for variable %r', variable_name)
-                        return None
-                    else:
-                        return value if value else None
+                finalstring = data[family][name]
+                if not finalstring:
+                    raise ValueError('Empty variable substitution')
+        except (ValueError, LookupError):
+            logger.warning('Could not replace %s, using default value - %s %s',
+                           sformat, self.channelprops.channel, self.channelprops.unique_id)
+            finalstring = defaultval if defaultval else sformat
 
-        finalstring = _substitute(defaultval, sformat, replacement_callback)
-        return {'name': title, 'type': ftype, 'contents': finalstring}
+        result = {'name': title,
+                  'type': ftype,
+                  'contents': finalstring}
+
+        return result
 
     def _get_user_picture(self, user_id):
-        url = USER_PICTURE_URL % user_id
-        picture_data = urllib2.urlopen(url).read()
-        return base64.b64encode(picture_data)
+        try:
+            url = USER_PICTURE_URL % user_id
+            picture_data = urllib2.urlopen(url).read()
+            return base64.b64encode(picture_data)
+        except Exception:
+            raise LookupError('Could not retrieve user picture')
 
     def setfields(self):
         for sheetpart, v in self.displays.iteritems():
@@ -170,7 +170,7 @@ class Sheet(object):
         contexts = self.conditions.get('contexts')
         profileids = self.conditions.get('profileids')
 
-        tomatch = {}
+        tomatch = dict()
         if profileids:
             tomatch['profileids'] = profileids
         if contexts:
@@ -185,35 +185,8 @@ class Sheet(object):
         return tomatch
 
 
-def _substitute(default_value, display_value, replacement_callback):
-    substituer = _Substituer(replacement_callback)
-    return substituer.substitute(default_value, display_value)
+def split_format_string(format_string):
+    if not FORMAT_STRING_PATTERN.match(format_string):
+        raise ValueError('Invalid format string: %s', format_string)
 
-
-class _Substituer(object):
-
-    _VARIABLE_NAME_REGEX = re.compile(r'\{([^}]+)\}')
-
-    def __init__(self, replacement_callback):
-        self._nb_substitutions = 0
-        self._nb_failed_substitutions = 0
-        self._replacement_callback = replacement_callback
-
-    def substitute(self, default_value, display_value):
-        substitution_result = self._VARIABLE_NAME_REGEX.sub(self._regex_callback, display_value)
-        if self._nb_substitutions == 0:
-            return display_value
-        elif self._nb_failed_substitutions == self._nb_substitutions:
-            return default_value if default_value else display_value
-        else:
-            return substitution_result
-
-    def _regex_callback(self, m):
-        variable_name = m.group(1)
-        variable_value = self._replacement_callback(variable_name)
-        self._nb_substitutions += 1
-        if variable_value is None:
-            self._nb_failed_substitutions += 1
-            return ''
-        else:
-            return variable_value
+    return format_string[1:-1].split('-', 1)

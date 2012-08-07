@@ -75,11 +75,7 @@ class AMIClass(object):
             t0 = time.time()
             towritefields = ['Action: %s' % action]
             for (name, value) in args:
-                try:
-                    towritefields.append('%s: %s' % (name, value))
-                except Exception:
-                    logger.exception('(sendcommand build %s : %s = %s (%r))',
-                                     action, name, value, value)
+                towritefields.append('%s: %s' % (name, value))
             if self.actionid:
                 towritefields.append('ActionId: %s' % self.actionid)
             towritefields.append('\r\n')
@@ -118,11 +114,6 @@ class AMIClass(object):
                 logger.exception('(sendcommand I/O Error Other (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
-        except Exception:
-            t1 = time.time()
-            logger.exception('(sendcommand exception (%s %s %s) timespent=%f)',
-                             action, self.actionid, self.fd, (t1 - t0))
-            ret = False
         if self.actionid:
             self.actionid = None
         return ret
@@ -131,10 +122,7 @@ class AMIClass(object):
         self.actionid = actionid
 
     def _exec_command(self, *args):
-        try:
-            return self.sendcommand(*args)
-        except Exception:
-            return False
+        return self.sendcommand(*args)
 
     def sendqueuestatus(self, queue=None):
         if queue is None:
@@ -202,33 +190,29 @@ class AMIClass(object):
                   locext, extravars={}, timeout=3600):
         # originate a call btw src and dst
         # src will ring first, and dst will ring when src responds
-        try:
-            phonedst = normalize_exten(phonedst)
-            if phoneproto == 'custom':
-                channel = phonesrcname.replace('\\', '')
+        phonedst = normalize_exten(phonedst)
+        if phoneproto == 'custom':
+            channel = phonesrcname.replace('\\', '')
+        else:
+            channel = '%s/%s' % (phoneproto, phonesrcname)
+        command_details = [('Channel', channel),
+                            ('Exten', phonedst),
+                            ('Context', locext),
+                            ('Priority', '1'),
+                            ('Timeout', str(timeout * 1000)),
+                            ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
+                            ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
+                            ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
+                            ('Async', 'true')]
+        if switch_originates:
+            if (phonedst.startswith('#')):
+                command_details.append(('CallerID', '"%s"' % cidnamedst))
             else:
-                channel = '%s/%s' % (phoneproto, phonesrcname)
-            command_details = [('Channel', channel),
-                               ('Exten', phonedst),
-                               ('Context', locext),
-                               ('Priority', '1'),
-                               ('Timeout', str(timeout * 1000)),
-                               ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
-                               ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
-                               ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
-                               ('Async', 'true')]
-            if switch_originates:
-                if (phonedst.startswith('#')):
-                    command_details.append(('CallerID', '"%s"' % cidnamedst))
-                else:
-                    command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
-            else:
-                command_details.append(('CallerID', '"%s"' % cidnamesrc))
-            for var, val in extravars.iteritems():
-                command_details.append(('Variable', '%s=%s' % (var, val)))
-        except Exception, e:
-            logger.warning('Originate failed: %s', e.message)
-            return False
+                command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
+        else:
+            command_details.append(('CallerID', '"%s"' % cidnamesrc))
+        for var, val in extravars.iteritems():
+            command_details.append(('Variable', '%s=%s' % (var, val)))
         return self._exec_command('Originate', command_details)
 
     # \brief Requests the Extension Statuses
@@ -391,6 +375,4 @@ class AMIClass(object):
         except socket.timeout:
             return False
         except socket:
-            return False
-        except Exception:
             return False

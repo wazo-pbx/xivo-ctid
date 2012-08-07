@@ -117,7 +117,7 @@ class QueueEntryManager(object):
         try:
             self.insert(queue_name, pos, name, number, unique_id, 0)
             self._count_check(queue_name, count)
-        except Exception:
+        except (LookupError, AssertionError):
             self.synchronize(queue_name)
             logger.exception('Failed to insert queue entry')
         else:
@@ -131,7 +131,7 @@ class QueueEntryManager(object):
             if queue_name not in self._queue_entries:
                 self._queue_entries[queue_name] = {}
             self._queue_entries[queue_name][unique_id] = entry
-        except Exception:
+        except LookupError:
             logger.exception('Failed to insert queue entry')
 
     def leave(self, queue_name, pos, count, unique_id):
@@ -142,7 +142,7 @@ class QueueEntryManager(object):
             self._queue_entries[queue_name].pop(unique_id)
             self._decrement_position(queue_name, pos)
             self._count_check(queue_name, count)
-        except Exception:
+        except (LookupError, AssertionError):
             self.synchronize(queue_name)
             logger.exception('Failed to remove queue entry')
         else:
@@ -177,7 +177,7 @@ class QueueEntryManager(object):
                                            entry.number,
                                            entry.join_time)
                     self._queue_entries[queue_name][unique_id] = new_entry
-        except Exception:
+        except (LookupError, AssertionError):
             logger.exception('Failed to decrement queue positions')
             self.synchronize(queue_name)
 

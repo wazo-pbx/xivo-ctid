@@ -31,7 +31,7 @@ import ssl
 import sys
 import time
 import threading
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, InvalidRequestError
 
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
@@ -115,6 +115,7 @@ class CTIServer(object):
         self._config = None
         self._user_service_manager = None
         self._cti_events = Queue.Queue()
+        self._pg_fallback_retries = 0
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -599,17 +600,11 @@ class CTIServer(object):
                 s.close()
 
     def _socket_ami_read(self, sel_i):
-        try:
-            buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
-            if len(buf) == 0:
-                self._on_ami_down()
-            else:
-                try:
-                    self.myami.handle_event(buf)
-                except Exception:
-                    logger.exception('(handle_event)')
-        except Exception:
-            logger.exception('(amilist)')
+        buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
+        if len(buf) == 0:
+            self._on_ami_down()
+        else:
+            self.myami.handle_event(buf)
 
     def _socket_udp_cti_read(self, sel_i):
         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
@@ -688,13 +683,15 @@ class CTIServer(object):
                 try:
                     msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
                     lmsg = len(msg)
-                except Exception:
+                except socket.error:
                     logger.exception('connection to %s (%s)', requester, interface_obj)
                     lmsg = 0
 
                 if lmsg > 0:
                     try:
                         closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
+                    except (OperationalError, InvalidRequestError):
+                        self._on_pg_down()
                     except Exception:
                         logger.exception('handling %s (%s)', requester, interface_obj)
                 else:
@@ -704,40 +701,36 @@ class CTIServer(object):
                 interface_obj.disconnected(DisconnectCause.by_client)
                 sel_i.close()
                 del self.fdlist_established[sel_i]
-        except OperationalError:
-            logger.warning('Postgresql has been stopped, stopping...')
-            sys.exit(1)
+        except (OperationalError, InvalidRequestError):
+            self._on_pg_down()
         except Exception:
             logger.exception('[%s] %s', interface_obj, sel_i)
-            try:
-                logger.warning('unexpected socket breakup')
-                interface_obj.disconnected(DisconnectCause.broken_pipe)
-                sel_i.close()
-                del self.fdlist_established[sel_i]
-            except Exception:
-                logger.exception('[%s] (2nd exception)', interface_obj)
+            logger.warning('unexpected socket breakup')
+            interface_obj.disconnected(DisconnectCause.broken_pipe)
+            sel_i.close()
+            del self.fdlist_established[sel_i]
 
     def _socket_pipe_queue_read(self, sel_i):
-        try:
-            pipebuf = os.read(sel_i, 1024)
-            if len(pipebuf) == 0:
-                logger.warning('pipe_queued_threads has been closed')
-            else:
-                for pb in pipebuf.split('\n'):
-                    if not pb:
-                        continue
-                    [kind, where] = pb.split(':')
-                    if kind in ['main', 'innerdata', 'ami']:
-                        if kind == 'main':
-                            self.checkqueue()
-                        elif kind == 'innerdata':
-                            self.safe.checkqueue()
-                        elif kind == 'ami':
-                            self.myami.checkqueue()
-                    else:
-                        logger.warning('unknown kind for %s', pb)
-        except Exception:
-            logger.exception('[pipe_queued_threads]')
+        #try:
+        pipebuf = os.read(sel_i, 1024)
+        if len(pipebuf) == 0:
+            logger.warning('pipe_queued_threads has been closed')
+        else:
+            for pb in pipebuf.split('\n'):
+                if not pb:
+                    continue
+                [kind, where] = pb.split(':')
+                if kind in ['main', 'innerdata', 'ami']:
+                    if kind == 'main':
+                        self.checkqueue()
+                    elif kind == 'innerdata':
+                        self.safe.checkqueue()
+                    elif kind == 'ami':
+                        self.myami.checkqueue()
+                else:
+                    logger.warning('unknown kind for %s', pb)
+        #except Exception:
+        #    logger.exception('[pipe_queued_threads]')
 
     def _update_safe_list(self):
         if self.update_userlist:
@@ -770,6 +763,8 @@ class CTIServer(object):
                         kind.disconnected(DisconnectCause.broken_pipe)
                         sel_o.close()
                         del self.fdlist_established[sel_o]
+        except (OperationalError, InvalidRequestError):
+            self._on_pg_down()
         except Exception:
             logger.exception('Socket writer')
 
@@ -793,5 +788,16 @@ class CTIServer(object):
 
                 self._update_safe_list()
                 self._empty_cti_events_queue()
+        except (OperationalError, InvalidRequestError):
+            self._on_pg_down()
         except Exception:
             logger.exception('Socket Reader')
+
+    def _on_pg_down(self):
+        self._pg_fallback_retries += 1
+        logger.warning('Problem communicating with PostgreSQL. Re-initializing db connection...')
+        self._init_db_connection_pool()
+        self._init_db_uri()
+        if self._pg_fallback_retries > 10:
+            logger.warning('Could not communicate with PostgreSQL. Closing CTId')
+            sys.exit(1)

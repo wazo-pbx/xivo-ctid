@@ -444,10 +444,7 @@ class Command(object):
         # check whether ipbxcommand is in the users's profile capabilities
         zs = []
         if hasattr(self, methodname):
-            try:
                 zs = getattr(self, methodname)()
-            except Exception:
-                logger.exception('exception when calling %s %s', methodname, self._commanddict)
 
         # if some actions have been requested ...
         if self.commandid:  # pass the commandid on the actionid # 'user action - forwarded'
@@ -660,7 +657,7 @@ class Command(object):
 
             return [{'amicommand': 'transfer',
                       'amiargs': [channel, extentodial, dst_context]}]
-        except Exception:
+        except KeyError:
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
 
@@ -669,7 +666,7 @@ class Command(object):
             exten = self.parseid(self._commanddict['destination'])['id']
             context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
             channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
-        except:
+        except KeyError:
             logger.exception('Atxfer failed %s', self._commanddict)
             return [{'error': 'Incomplete info'}]
         else:
@@ -685,7 +682,7 @@ class Command(object):
                      'amiargs': [chan_id,
                                  main_line['number'],
                                  main_line['context']]}]
-        except Exception:
+        except KeyError:
             logger.warning('Failed to complete interception')
             return [{'error': 'Incomplete info'}]
 

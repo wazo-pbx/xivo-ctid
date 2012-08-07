@@ -260,7 +260,7 @@ class Safe(object):
                     data_id = str(userfeaturesdao.find_by_line_id(phone_id))
                 channel.set_extra_data('xivo', 'desttype', data_type)
                 channel.set_extra_data('xivo', 'destid', data_id)
-        except Exception:
+        except (AttributeError, LookupError):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_linked(self, event):
@@ -418,17 +418,13 @@ class Safe(object):
 
     def update_config_list(self, listname, state, id):
         try:
-            try:
-                deltas = self.xod_config[listname].update()
-            except Exception:
-                logger.exception('unable to update %s', listname)
-            else:
-                added = self._update_config_list_add(listname, deltas)
-                deleted = self._update_config_list_del(listname, deltas)
-                changed = self._update_config_list_change(listname, deltas)
-                if listname in ['phones', 'users'] and (added or changed or deleted):
-                    self.fill_lines_into_users()
-        except Exception:
+            deltas = self.xod_config[listname].update()
+            added = self._update_config_list_add(listname, deltas)
+            deleted = self._update_config_list_del(listname, deltas)
+            changed = self._update_config_list_change(listname, deltas)
+            if listname in ['phones', 'users'] and (added or changed or deleted):
+                self.fill_lines_into_users()
+        except LookupError:
             logger.exception('update_config_list %s', listname)
 
     def update_config_list_all(self):
@@ -461,7 +457,7 @@ class Safe(object):
                     lxlist[key] = xitem
                     # meetme : admin_moderationmode => moderated
                     # meetme : uniqueids and adminnum statuses
-            except Exception:
+            except KeyError:
                 logger.exception('(get_x_list : %s)', xitem)
         return lxlist
 
@@ -903,7 +899,7 @@ class Safe(object):
             t = self.ztrunks(termination.get('protocol'), termination.get('name'))
             if t:
                 self.channels[channel].addrelation('trunk:%s' % t)
-        except Exception:
+        except LookupError:
             logger.exception('find termination according to channel %s', channel)
 
     def masquerade(self, oldchannel, newchannel):

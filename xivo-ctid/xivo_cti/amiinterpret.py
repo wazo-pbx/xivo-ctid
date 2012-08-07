@@ -89,7 +89,7 @@ class AMI_1_8(object):
                     phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
                     if phone:
                         self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
-                except Exception:
+                except LookupError:
                     logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'
                 self.innerdata.channels[channel].properties['commstatus'] = 'calling'
@@ -151,7 +151,7 @@ class AMI_1_8(object):
                         if chan_start in chan:
                             self.innerdata.channels[chan].properties['holded'] = status
                             logger.debug('%s on hold(%s)', chan, status)
-                except Exception:
+                except LookupError:
                     logger.warning('Could not find %s peer channel to put it on hold', channel_name)
 
     def ami_channelupdate(self, event):
@@ -538,7 +538,7 @@ class AMI_1_8(object):
             child = event['Child']
             if parent in self.innerdata.channels and child in self.innerdata.channels:
                 self.innerdata.channels[child].extra_data.update(self.innerdata.channels[parent].extra_data)
-        except Exception:
+        except LookupError:
             logger.exception('Failed to copy parents variable to child channel')
 
     def amiresponse_extensionstatus(self, event):
