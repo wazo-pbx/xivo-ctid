@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import time
 from xivo_cti.statistics import queue_statistics_manager
-from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
+from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager,\
+    CachingQueueStatisticsManagerDecorator
 from tests.mock import Mock, patch
 from xivo_dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.xivo_ami import AMIClass
@@ -14,6 +16,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
     def setUp(self):
         self.queue_statistic_dao = Mock(QueueStatisticDAO)
+        QueueStatisticsManager._instance = QueueStatisticsManager()
         self.queue_statistics_manager = QueueStatisticsManager.get_instance()
         self.queue_statistics_manager._queue_statistic_dao = self.queue_statistic_dao
 
@@ -167,3 +170,32 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.queue_statistics_manager.get_all_queue_summary()
 
         self.ami_wrapper.queuesummary.assert_called_once_with()
+
+
+class TestCachingQueueStatisticsManagerDecorator(unittest.TestCase):
+
+    def test_get_statistics_return_cached_result_if_inside_time(self):
+        queue_stats_mgr = self._new_caching_queue_stats_mgr(1.0)
+
+        queue_stats_mgr._queue_stats_mgr.get_statistics.return_value = 1
+        result = queue_stats_mgr.get_statistics('foo', 15, 3600)
+        self.assertEqual(1, result)
+
+        queue_stats_mgr._queue_stats_mgr.get_statistics.return_value = 2
+        result = queue_stats_mgr.get_statistics('foo', 15, 3600)
+        self.assertEqual(1, result)
+
+    def test_get_statistics_return_fresh_result_if_outside_time(self):
+        queue_stats_mgr = self._new_caching_queue_stats_mgr(0.1)
+
+        queue_stats_mgr._queue_stats_mgr.get_statistics.return_value = 1
+        result = queue_stats_mgr.get_statistics('foo', 15, 3600)
+        self.assertEqual(1, result)
+
+        time.sleep(0.2)
+        queue_stats_mgr._queue_stats_mgr.get_statistics.return_value = 2
+        result = queue_stats_mgr.get_statistics('foo', 15, 3600)
+        self.assertEqual(2, result)
+
+    def _new_caching_queue_stats_mgr(self, caching_time):
+        return CachingQueueStatisticsManagerDecorator(Mock(), caching_time)

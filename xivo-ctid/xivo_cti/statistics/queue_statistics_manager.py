@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import time
 from xivo_dao import queue_features_dao
 from xivo_dao.queuestatisticdao import QueueStatisticDAO
 from xivo_cti.model.queuestatistic import QueueStatistic
@@ -78,5 +79,43 @@ class QueueStatisticsManager(object):
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            cls._instance = cls()
+            cls._instance = CachingQueueStatisticsManagerDecorator(cls())
         return cls._instance
+
+
+class CachingQueueStatisticsManagerDecorator(object):
+
+    _DEFAULT_CACHING_TIME = 5
+
+    def __init__(self, queue_stats_mgr, caching_time=None):
+        self._queue_stats_mgr = queue_stats_mgr
+        self._caching_time = self._compute_caching_time(caching_time)
+        self._cache = {}
+
+    def _compute_caching_time(self, caching_time):
+        if caching_time is None:
+            return self._DEFAULT_CACHING_TIME
+        else:
+            return caching_time
+
+    def get_statistics(self, queue_name, xqos, window):
+        current_time = time.time()
+        cache_key = (queue_name, xqos, window)
+        if cache_key in self._cache:
+            cache_time, cache_value = self._cache[cache_key]
+            if cache_time + self._caching_time > current_time:
+                return cache_value
+        new_value = self._queue_stats_mgr.get_statistics(queue_name, xqos, window)
+        self._cache[cache_key] = (current_time, new_value)
+        return new_value
+
+    def __getattr__(self, name):
+        return getattr(self._queue_stats_mgr, name)
+
+    @property
+    def ami_wrapper(self):
+        return self._queue_stats_mgr.ami_wrapper
+
+    @ami_wrapper.setter
+    def ami_wrapper(self, value):
+        self._queue_stats_mgr.ami_wrapper = value

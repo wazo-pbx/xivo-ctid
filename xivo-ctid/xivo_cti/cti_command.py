@@ -89,7 +89,7 @@ class Command(object):
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistics_manager = QueueStatisticsManager()
+        self._queue_statistics_manager = QueueStatisticsManager.get_instance()
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
     def parse(self):
