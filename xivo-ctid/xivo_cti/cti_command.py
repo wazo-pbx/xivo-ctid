@@ -30,6 +30,7 @@ from xivo_cti import cti_fax
 from xivo_cti import cti_config
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
+from xivo_dao.celdao import UnsupportedLineProtocolException
 
 logger = logging.getLogger('cti_command')
 
@@ -316,14 +317,16 @@ class Command(object):
     def _get_history_for_phone(self, phone):
         mode = int(self._commanddict['mode'])
         limit = int(self._commanddict['size'])
-        if mode == 0:
-            return self._get_outgoing_history_for_phone(phone, limit)
-        elif mode == 1:
-            return self._get_answered_history_for_phone(phone, limit)
-        elif mode == 2:
-            return self._get_missed_history_for_phone(phone, limit)
-        else:
-            return None
+        try:
+            if mode == 0:
+                return self._get_outgoing_history_for_phone(phone, limit)
+            elif mode == 1:
+                return self._get_answered_history_for_phone(phone, limit)
+            elif mode == 2:
+                return self._get_missed_history_for_phone(phone, limit)
+        except UnsupportedLineProtocolException:
+            logger.warning('Could not get history for phone: %s', phone['name'])
+        return None
 
     def _get_outgoing_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
