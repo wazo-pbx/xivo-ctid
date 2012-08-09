@@ -89,7 +89,7 @@ class WEBI(interfaces.Interfaces):
                             'id': id
                             }
                 self._ctiserver.update_userlist.append(msg_data)
-                if object == 'meetme':
+                if object_name == 'meetme':
                     meetme_manager.initialize()
 
     def manage_connection(self, msg):
