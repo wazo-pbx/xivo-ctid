@@ -220,4 +220,4 @@ class _Substituer(object):
             self._nb_failed_substitutions += 1
             return ''
         else:
-            return variable_value
+            return str(variable_value)
