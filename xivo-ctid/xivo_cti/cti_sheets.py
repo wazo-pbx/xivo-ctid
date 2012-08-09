@@ -75,17 +75,21 @@ class Sheet(object):
                 logger.warning('Invalid variable %r', variable_name)
                 return None
             else:
-                if family == 'xivo' and name == 'callerpicture':
-                    user_id = data['xivo']['userid']
-                    return self._get_user_picture(user_id)
-                else:
-                    try:
-                        value = data[family][name]
-                    except KeyError:
-                        logger.warning('No value for variable %r', variable_name)
-                        return None
+                try:
+                    if family == 'xivo' and name == 'callerpicture':
+                        user_id = data['xivo']['userid']
+                        return self._get_user_picture(user_id)
                     else:
-                        return value if value else None
+                        try:
+                            value = data[family][name]
+                        except KeyError:
+                            logger.warning('No value for variable %r', variable_name)
+                            return None
+                        else:
+                            return value if value else None
+                except Exception as e:
+                    logger.warning('Could not replace variable %r: %s', variable_name, e)
+                    return None
 
         finalstring = _substitute(defaultval, sformat, replacement_callback)
         return {'name': title, 'type': ftype, 'contents': finalstring}
