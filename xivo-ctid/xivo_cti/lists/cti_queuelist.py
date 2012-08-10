@@ -38,10 +38,10 @@ class QueueList(ContextAwareAnyList):
         self.anylist_properties = {'name': 'queues',
                                     'urloptions': (1, 5, True)}
         ContextAwareAnyList.__init__(self, newurls)
-        self.reverse_index = {}
 
     def update(self):
         ret = ContextAwareAnyList.update(self)
+        self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:
                 self.reverse_index[ag['name']] = idx
