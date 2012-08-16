@@ -162,7 +162,7 @@ class MeetmeServiceManager(object):
                                'members': {}}
 
     def _has_members(self, room_number):
-        return len(self._cache[room_number]['members']) > 0
+        return bool(self._cache[room_number]['members'])
 
     def _has_member(self, room_number, seq_number, name, number):
         try:

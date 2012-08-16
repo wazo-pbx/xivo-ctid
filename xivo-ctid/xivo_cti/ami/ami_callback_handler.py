@@ -39,7 +39,7 @@ class AMICallbackHandler(object):
         callback_key = event_name.lower()
         if callback_key in self._callbacks:
             self._callbacks[callback_key].remove(function)
-            if len(self._callbacks[callback_key]) == 0:
+            if not self._callbacks[callback_key]:
                 self._callbacks.pop(callback_key)
 
     def get_callbacks(self, event_name):

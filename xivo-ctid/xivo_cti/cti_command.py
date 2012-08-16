@@ -133,7 +133,7 @@ class Command(object):
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname) and 'warning_string' not in messagebase:
                 method_result = getattr(self, methodname)()
-                if method_result is None or len(method_result) == 0:
+                if not method_result:
                     messagebase['warning_string'] = 'return_is_none'
                 elif isinstance(method_result, str):
                     messagebase['error_string'] = method_result
@@ -163,7 +163,7 @@ class Command(object):
         for argum in ['hashedpassword']:
             if argum not in self._commanddict:
                 missings.append(argum)
-        if len(missings) > 0:
+        if missings:
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
@@ -192,7 +192,7 @@ class Command(object):
         for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
             if argum not in self._commanddict:
                 missings.append(argum)
-        if len(missings) > 0:
+        if missings:
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
@@ -414,7 +414,7 @@ class Command(object):
         reply = {'fileid': fileid}
         self.innerdata.faxes[fileid] = cti_fax.Fax(self.innerdata, fileid)
         contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
-        if len(contexts):
+        if contexts:
             self.innerdata.faxes[fileid].setfaxparameters(self.ruserid,
                                                           contexts[0],
                                                           self._commanddict.get('destination'),

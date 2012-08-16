@@ -40,7 +40,7 @@ class AgentServiceManager(object):
                              'class': 'ipbxcommand'}
         if not agent_exten:
             extens = self.find_agent_exten(agent_id)
-            agent_exten = extens[0] if len(extens) else None
+            agent_exten = extens[0] if extens else None
 
         if not self.line_features_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)

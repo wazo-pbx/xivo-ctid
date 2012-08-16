@@ -316,7 +316,7 @@ class Safe(object):
 
     def set_extenfeatures(self, urls):
         '''Retrieve and assign extenfeatures from a url list'''
-        if urls is None or len(urls) < 1:
+        if not urls:
             self.extenfeatures = {}
             return
         extenfeatures = cti_urllist.UrlList(urls[0])
@@ -356,7 +356,7 @@ class Safe(object):
 
     def _initialize_item_status(self, listname, index):
         self.xod_status[listname][index] = {}
-        if listname in self.props_status and len(self.props_status[listname]) > 0:
+        if self.props_status.get(listname):
             self.xod_status[listname][index] = copy.deepcopy(self.props_status[listname])
 
     def _update_config_list_add(self, listname, deltas):

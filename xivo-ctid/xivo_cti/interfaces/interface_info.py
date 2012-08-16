@@ -94,7 +94,7 @@ class INFO(interfaces.Interfaces):
 
         for iusefulmsg in multimsg:
             usefulmsg = iusefulmsg.strip()
-            if len(usefulmsg) == 0:
+            if not usefulmsg:
                 break
             try:
                 retstr = 'OK'

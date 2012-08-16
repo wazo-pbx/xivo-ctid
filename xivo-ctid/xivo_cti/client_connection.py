@@ -61,12 +61,12 @@ class ClientConnection(object):
     def append_queue(self, data):
         if self.isClosed:
             raise self.CloseException()
-        if len(data) > 0:
+        if data:
             self.sendqueue.append(data)
 
     # to be called when the socket is ready for writing
     def process_sending(self):
-        while len(self.sendqueue) > 0:
+        while self.sendqueue:
             data = self.sendqueue.popleft()
             try:
                 n = self.socket.send(data)
@@ -86,13 +86,13 @@ class ClientConnection(object):
 
     # do we have some data to be sent ?
     def need_sending(self):
-        return len(self.sendqueue) > 0
+        return bool(self.sendqueue)
 
     # to be called when the socked is ready for reading
     def recv(self):
         try:
             s = self.socket.recv(BUFSIZE_LARGE)
-            if len(s) > 0:
+            if s:
                 self.readbuff += s
             else:
                 # remote host closed the connection

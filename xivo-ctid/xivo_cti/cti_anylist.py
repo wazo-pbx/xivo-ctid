@@ -106,7 +106,7 @@ class AnyList(object):
 
     def setandupdate(self, newurls):
         self.__add_urls__(newurls)
-        if len(self.requested_list) == 0:
+        if not self.requested_list:
             return
         self.update()
 

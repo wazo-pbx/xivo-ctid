@@ -601,7 +601,7 @@ class CTIServer(object):
 
     def _socket_ami_read(self, sel_i):
         buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
-        if len(buf) == 0:
+        if not buf:
             self._on_ami_down()
         else:
             self.myami.handle_event(buf)
@@ -682,12 +682,11 @@ class CTIServer(object):
             else:
                 try:
                     msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
-                    lmsg = len(msg)
                 except socket.error:
                     logger.exception('connection to %s (%s)', requester, interface_obj)
-                    lmsg = 0
+                    msg = ''
 
-                if lmsg > 0:
+                if msg:
                     try:
                         closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
                     except (OperationalError, InvalidRequestError):
@@ -713,7 +712,7 @@ class CTIServer(object):
     def _socket_pipe_queue_read(self, sel_i):
         #try:
         pipebuf = os.read(sel_i, 1024)
-        if len(pipebuf) == 0:
+        if not pipebuf:
             logger.warning('pipe_queued_threads has been closed')
         else:
             for pb in pipebuf.split('\n'):

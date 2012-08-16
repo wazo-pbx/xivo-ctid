@@ -51,7 +51,7 @@ class MeetmeList(ContextAwareAnyList):
 
     def update_computed_fields(self, newlist):
         for item in newlist.itervalues():
-            item['pin_needed'] = 'pin' in item and len(item['pin']) > 0
+            item['pin_needed'] = bool(item.get('pin'))
 
     def idbyroomnumber(self, roomnumber):
         idx = self.reverse_index.get(roomnumber)
