@@ -152,7 +152,7 @@ class AMI(object):
             event = {}
             nocolon = []
             for line in decoded_event.split(self.LINE_SEPARATOR):
-                if line.find('\n') < 0:
+                if '\n' not in line:
                     if line != '--END COMMAND--':  # occurs when requesting "module reload xxx.so"
                         key_value = line.split(self.FIELD_SEPARATOR, 1)
                         if len(key_value) == 2:

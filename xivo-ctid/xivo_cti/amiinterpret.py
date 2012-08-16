@@ -547,7 +547,7 @@ class AMI_1_8(object):
 
     @staticmethod
     def timeconvert(duration):
-        if duration.find(':') >= 0:
+        if ':' in duration:
             # like in core show channels output
             vdur = duration.split(':')
             duration_secs = int(vdur[0]) * 3600 + int(vdur[1]) * 60 + int(vdur[2])

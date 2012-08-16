@@ -645,7 +645,7 @@ class Safe(object):
         idx = self.xod_config['agents'].idbyagentnumber(agentnumber)
         self.handle_cti_stack('set', ('agents', 'updatestatus', idx))
         agstatus = self.xod_status['agents'].get(idx)
-        if channel.find('@') >= 0:
+        if '@' in channel:
             # static agent mode
             agstatus['phonenumber'] = channel.split('@')[0]
         else:

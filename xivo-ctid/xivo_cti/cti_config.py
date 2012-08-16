@@ -58,9 +58,7 @@ class Config(object):
         self.update_uri(self.urilist[0])
 
     def update_uri(self, uri):
-        if uri.find('json') < 0:
-            return
-        if uri.find(':') < 0:
+        if 'json' not in uri or ':' not in uri:
             return
 
         got_webi_answer = False
