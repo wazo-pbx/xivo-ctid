@@ -35,7 +35,7 @@ logger = logging.getLogger('interface_webi')
 
 XIVO_CLI_WEBI_HEADER = 'XIVO-CLI-WEBI'
 
-_CMD_WEBI_PATTERN = re.compile('xivo\[(.*),(add|edit|delete|deleteall|enable|disable),(\d+)\]')
+_CMD_WEBI_PATTERN = re.compile('xivo\[(.*),(add|edit|delete|deleteall|enable|disable),(\w*)\]')
 _OBJECTS = [
     'user',
     'device',
