@@ -158,7 +158,7 @@ class CTI(interfaces.Interfaces):
 
     def loginko(self, errorstring):
         logger.warning('user can not connect (%s) : sending %s',
-                       self.details, errorstring)
+                       self.connection_details, errorstring)
         # self.logintimer.cancel() + close
         tosend = {'class': 'loginko',
                   'error_string': errorstring}

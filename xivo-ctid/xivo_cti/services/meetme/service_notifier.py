@@ -37,24 +37,6 @@ class MeetmeServiceNotifier(object):
         self._subscriptions = {}
         self._current_state = None
 
-    def _prepare_message(self):
-        return {
-            'class': 'getlist',
-            'listname': 'meetmes',
-            'function': '',
-            'tipbxid': self.ipbx_id,
-        }
-
-    def _prepare_event_add(self, list):
-        filter_status_msg = self._prepare_message()
-        status_update = {'function': 'addconfig',
-                         'list': [list]}
-        filter_status_msg.update(status_update)
-        return filter_status_msg
-
-    def add(self, meetme_id):
-        self.send_cti_event(self._prepare_event_add(meetme_id))
-
     def subscribe(self, client_connection):
         try:
             user_id = client_connection.user_id()

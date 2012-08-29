@@ -48,23 +48,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def tearDown(self):
         Config.instance = None
 
-    def test_prepare_message(self):
-        result = self.notifier._prepare_message()
-
-        self.assertEqual(result['tipbxid'], 'xivo')
-
-    def test_add(self):
-        meetme_id = 64
-        expected = {"class": "getlist",
-                    "function": "addconfig",
-                    "listname": "meetmes",
-                    "tipbxid": self.ipbx_id,
-                    'list': [meetme_id]}
-
-        self.notifier.add(meetme_id)
-
-        self.notifier.send_cti_event.assert_called_once_with(expected)
-
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
     def test_subscribe_update(self):
         user_id = 5

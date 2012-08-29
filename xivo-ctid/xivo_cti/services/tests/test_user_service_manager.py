@@ -291,33 +291,9 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.user_features_dao.is_agent.assert_never_called()
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
 
-
-    def _insert_user(self):
-        user = UserFeatures()
-        user.firstname = 'test'
-        self.session.add(user)
-        self.session.commit()
-
-        return user.id
-
-    def _insert_line_with_user(self, user_id, number, context='test_context'):
-        line = LineFeatures()
-        line.iduserfeatures = user_id
-        line.protocolid = 1
-        line.provisioningid = 0
-        line.name = 'ix8pa'
-        line.context = context
-        line.number = number
-        self.session.add(line)
-
-        self.session.commit()
-
-        return line
-
     def test_get_context(self):
         user1_id = 34
 
         self.user_service_manager.get_context(user1_id)
 
         self.user_service_manager.line_features_dao.find_context_by_user_id.assert_called_once_with(user1_id)
-

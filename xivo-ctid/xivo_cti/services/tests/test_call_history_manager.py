@@ -217,23 +217,3 @@ class CallHistoryMgrTest(unittest.TestCase):
 
     def _insert_caller_id(self, linked_id, caller_id):
         self._cel_dao.caller_ids[linked_id] = caller_id
-
-    def _test_outgoing_calls_for_endpoint(self):
-        date = datetime.now()
-        duration = 1
-        extension = u'100'
-
-        cel_channel = Mock()
-        cel_channel.channel_start_time.return_value = date
-        cel_channel.answer_duration.return_value = duration
-        cel_channel.exten.return_value = extension
-
-        cel_dao = Mock()
-        cel_dao.outgoing_channels_for_endpoint.return_value = [
-            cel_channel
-        ]
-
-        call_history_mgr = CallHistoryMgr(cel_dao)
-        sent_calls = call_history_mgr.outgoing_calls_for_endpoint(u'SIP/A', 5)
-
-        self.assertEqual([SentCall(date, duration, extension)], sent_calls)

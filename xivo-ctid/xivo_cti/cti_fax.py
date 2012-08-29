@@ -69,7 +69,7 @@ class asyncActionsThread(threading.Thread):
         else:
             reply = 'ko;filetype'
             logger.warning('(ref %s) the file received is a <%s> one : format not supported',
-                           self.reference, brieffile)
+                           self.tmpfilepath, brieffile)
             ret = -1
         print reply
         os.unlink(self.tmpfilepath)

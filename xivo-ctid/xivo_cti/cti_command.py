@@ -363,18 +363,6 @@ class Command(object):
             mode = int(self._commanddict['mode'])
             return {'mode': mode, 'history': history}
 
-    def regcommand_parking(self):
-        reply = {}
-        for ipbxid, pcalls in self.parkedcalls.iteritems():
-            for parkingbay, pprops in pcalls.iteritems():
-                tosend = {'class': 'parkcall',
-                          'eventkind': 'parkedcall',
-                          'ipbxid': ipbxid,
-                          'parkingbay': parkingbay,
-                          'payload': pprops}
-                repstr = self.__cjson_encode__(tosend)
-        return reply
-
     def regcommand_logfromclient(self):
         logger.warning('logfromclient from user %s (level %s) : %s : %s',
                          self.ruserid,
