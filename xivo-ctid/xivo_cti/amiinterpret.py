@@ -326,6 +326,9 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calledidname', destination_name)
 
     def userevent_queue(self, chanprops, event):
+        callerid_name = event.get('XIVO_CALLERIDNAME')
+        callerid_number = event.get('XIVO_CALLERIDNUMBER')
+
         queue_id = int(event['XIVO_DSTID'])
         queue_name, queue_number = queue_features_dao.get_display_name_number(queue_id)
 
@@ -333,6 +336,10 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'destid', queue_id)
         chanprops.set_extra_data('xivo', 'calledidname', queue_name)
         chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
+        if not chanprops.has_extra_data('xivo', 'calleridname'):
+            chanprops.set_extra_data('xivo', 'calleridname', callerid_name)
+        if not chanprops.has_extra_data('xivo', 'calleridnum'):
+            chanprops.set_extra_data('xivo', 'calleridnum', callerid_number)
 
         self.innerdata.sheetsend('dial', chanprops.channel)
 
