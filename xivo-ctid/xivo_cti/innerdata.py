@@ -1239,6 +1239,9 @@ class Channel(object):
         else:
             self.extra_data[family][varname] = varvalue
 
+    def has_extra_data(self, family, varname):
+        return family in self.extra_data and varname in self.extra_data[family]
+
 
 def split_channel(channel):
     protocol, end = channel.split('/', 1)

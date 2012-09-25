@@ -143,3 +143,19 @@ class TestSafe(unittest.TestCase):
             self.assertTrue(trunk_id in safe.xod_status['trunks'])
             self.assertEqual(safe.xod_status['trunks'][trunk_id], safe.props_status['trunks'])
             self.assertFalse(safe.xod_status['trunks'][trunk_id] is safe.props_status['trunks'])
+
+
+class TestChannel(unittest.TestCase):
+
+    def test_has_extra_data(self):
+        channel = Channel('local/1002@statcenter', 'statcenter', '1234.12')
+
+        result = channel.has_extra_data('xivo', 'calleridname')
+
+        self.assertFalse(result)
+
+        channel.set_extra_data('xivo', 'calleridname', 'test')
+
+        result = channel.has_extra_data('xivo', 'calleridname')
+
+        self.assertTrue(result)
