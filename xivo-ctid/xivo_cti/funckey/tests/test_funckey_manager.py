@@ -1,7 +1,6 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,36 +42,41 @@ class TestFunckeyManager(unittest.TestCase):
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami
 
-    def tearDown(self):
-        pass
-
     def test_dnd_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
 
         self.manager.dnd_in_use(self.user_id, True)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***225 INUSE')]
+        )
 
     def test_dnd_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
 
         self.manager.dnd_in_use(self.user_id, False)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')]
+        )
 
     def test_call_filter_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
 
         self.manager.call_filter_in_use(self.user_id, True)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***227 INUSE')]
+        )
 
     def test_call_filter_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
 
         self.manager.call_filter_in_use(self.user_id, False)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')]
+        )
 
     def test_fwd_unc_in_use(self):
         destination = '123'
@@ -80,7 +84,9 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.manager.unconditional_fwd_in_use(self.user_id, destination, True)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***221*123 INUSE')]
+        )
 
     def test_fwd_unc_not_in_use(self):
         destination = '123'
@@ -88,7 +94,9 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.manager.unconditional_fwd_in_use(self.user_id, destination, False)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')]
+        )
 
     def test_disable_all_fwd_unc(self):
         unc_dest = ['123', '666', '', '012']

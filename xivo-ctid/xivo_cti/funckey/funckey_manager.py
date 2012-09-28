@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
 
 # Copyright (C) 2007-2012  Avencall
 #
@@ -38,7 +37,9 @@ class FunckeyManager(object):
                                         (user_id, self.extensionsdao.exten_by_name(name), destination)))
 
     def _send(self, device, status):
-        self.ami.sendcommand('Command', [('Command', 'devstate change %s %s' % (device, self.INUSE if status else self.NOT_INUSE))])
+        self.ami.sendcommand(
+            'Command', [('Command', 'devstate change %s %s' % (device, self.INUSE if status else self.NOT_INUSE))]
+        )
 
     def dnd_in_use(self, user_id, status):
         device = self._device(user_id, 'enablednd')
