@@ -79,24 +79,54 @@ class TestFunckeyManager(unittest.TestCase):
         )
 
     def test_fwd_unc_in_use(self):
-        destination = '123'
-        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        destination = '1002'
+
+        def fkey_exten(prefix, args):
+            if args[2]:
+                return '*735123***221*%s' % args[2]
+            else:
+                return '*735123***221'
+
+        xivo_helpers.fkey_extension.side_effect = fkey_exten
 
         self.manager.unconditional_fwd_in_use(self.user_id, destination, True)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Command', [('Command', 'devstate change Custom:*735123***221*123 INUSE')]
-        )
+        expected_calls = [
+            (('Command', [('Command', 'devstate change Custom:*735123***221*1002 INUSE')]), {}),
+            (('Command', [('Command', 'devstate change Custom:*735123***221 INUSE')]), {}),
+        ]
+
+        calls = self.manager.ami.sendcommand.call_args_list
+
+        expected_calls = sorted(expected_calls)
+        calls = sorted(calls)
+
+        self.assertEqual(calls, expected_calls)
 
     def test_fwd_unc_not_in_use(self):
-        destination = '123'
-        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        destination = '1003'
+
+        def fkey_exten(prefix, args):
+            if args[2]:
+                return '*735123***221*%s' % args[2]
+            else:
+                return '*735123***221'
+
+        xivo_helpers.fkey_extension.side_effect = fkey_exten
 
         self.manager.unconditional_fwd_in_use(self.user_id, destination, False)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')]
-        )
+        expected_calls = [
+            (('Command', [('Command', 'devstate change Custom:*735123***221*1003 NOT_INUSE')]), {}),
+            (('Command', [('Command', 'devstate change Custom:*735123***221 NOT_INUSE')]), {}),
+        ]
+
+        calls = self.manager.ami.sendcommand.call_args_list
+
+        expected_calls = sorted(expected_calls)
+        calls = sorted(calls)
+
+        self.assertEqual(calls, expected_calls)
 
     def test_disable_all_fwd_unc(self):
         unc_dest = ['123', '666', '', '012']

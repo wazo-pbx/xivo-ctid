@@ -31,10 +31,13 @@ class FunckeyManager(object):
     NOT_INUSE = 'NOT_INUSE'
 
     def _device(self, user_id, name, destination=''):
-        return (
-            self.DEVICE_PATTERN %
-            xivo_helpers.fkey_extension(self.extensionsdao.exten_by_name('phoneprogfunckey'),
-                                        (user_id, self.extensionsdao.exten_by_name(name), destination)))
+        funckey_prefix = self.extensionsdao.exten_by_name('phoneprogfunckey')
+        funckey_args = (user_id, self.extensionsdao.exten_by_name(name), destination)
+        funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
+
+        hint = self.DEVICE_PATTERN % funckey_pattern
+
+        return hint
 
     def _send(self, device, status):
         self.ami.sendcommand(
@@ -50,6 +53,9 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def unconditional_fwd_in_use(self, user_id, destination, status):
+        device = self._device(user_id, 'fwdunc')
+        self._send(device, status)
+
         device = self._device(user_id, 'fwdunc', destination)
         self._send(device, status)
 
