@@ -1,7 +1,6 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,7 +8,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
+# contracted with Avencall. See the LICENSE file at top of the
 # source tree or delivered in the installable package in which XiVO CTI Server
 # is distributed for more details.
 #
@@ -34,8 +33,6 @@ from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
-from xivo_dao.alchemy.linefeatures import LineFeatures
-from xivo_dao.alchemy.userfeatures import UserFeatures
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -126,7 +123,14 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, destination)
-        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, destination, True)
+
+        expected_calls = sorted([
+            ((user_id, '', True), {}),
+            ((user_id, destination, True), {})
+        ])
+        calls = sorted(self.funckey_manager.unconditional_fwd_in_use.call_args_list)
+
+        self.assertEquals(calls, expected_calls)
 
     def test_disable_unconditional_fwd(self):
         user_id = 543
