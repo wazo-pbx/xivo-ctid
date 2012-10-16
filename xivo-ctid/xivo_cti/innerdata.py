@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import copy
 import hashlib
 import logging
@@ -679,6 +678,7 @@ class Safe(object):
                                                          'new': new,
                                                          'waiting': waiting})
                 self.handle_cti_stack('empty_stack')
+                logger.info("voicemail %s updated. new:%s old:%s waiting:%s", mailbox, new, old, waiting)
                 break
 
     def _update_agent_member(self, location, props, queue_id, list_name):

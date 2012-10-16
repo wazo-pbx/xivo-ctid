@@ -328,7 +328,10 @@ class AMIClass(object):
     # \brief Request a mailbox count
     # context is for tracking only
     def mailboxcount(self, mailbox, context=None):
-        return self._exec_command('MailboxCount', (('MailBox', mailbox),))
+        full_mailbox = mailbox
+        if context:
+            full_mailbox = "%s@%s" % (mailbox, context)
+        return self._exec_command('MailboxCount', (('MailBox', full_mailbox),))
 
     # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):

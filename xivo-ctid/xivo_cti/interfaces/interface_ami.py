@@ -317,7 +317,7 @@ class AMI(object):
 
     def _handle_vmupdate_success(self, event, properties):
         try:
-            mailbox = event['Mailbox'] + '@' + properties['amiargs'][1]
+            mailbox = event['Mailbox']
             self.innerdata.voicemailupdate(mailbox,
                                            event['NewMessages'],
                                            event['OldMessages'])
@@ -348,7 +348,7 @@ class AMI(object):
                 # of the request when using track_and_execute with an
                 # extra argument
                 context = properties['amiargs'][1]
-                fullmailbox = event['Mailbox'] + '@' + context
+                fullmailbox = event['Mailbox']
                 self.innerdata.voicemailupdate(fullmailbox,
                                                event['NewMessages'],
                                                event['OldMessages'])
