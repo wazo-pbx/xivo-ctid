@@ -22,7 +22,6 @@
 "queuemembers" : [],
 "queueentrydetails" : ["agents"],
 
-"agentsnext" : ["agents"],
 "calls" : ["dial"],
 "switchboard" : ["dial"],
 "operator" : ["dial"],
