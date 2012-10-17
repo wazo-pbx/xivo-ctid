@@ -48,6 +48,9 @@ class UserServiceManager(object):
         self.funckey_manager.call_filter_in_use(user_id, False)
 
     def enable_unconditional_fwd(self, user_id, destination):
+        if destination == '':
+            self.disable_unconditional_fwd(user_id, destination)
+            return
         self.user_features_dao.enable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd(user_id)
