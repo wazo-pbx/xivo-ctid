@@ -137,13 +137,7 @@ class Safe(object):
             'action'
         ],
         'outcalls': [],
-        'contexts': [
-            'context',
-            'contextnumbers',
-            'contexttype',
-            'deletable',
-            'contextinclude'
-        ],
+        'contexts': [],
         'phonebooks': [],
         'queuemembers': [
             'queue_name',
