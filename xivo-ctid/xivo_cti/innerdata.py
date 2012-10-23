@@ -116,11 +116,7 @@ class Safe(object):
             'displayname',
             'number'
         ],
-        'groups': [
-            'context',
-            'name',
-            'number'
-        ],
+        'groups': [],
         'voicemails': [
             'context',
             'fullname',
