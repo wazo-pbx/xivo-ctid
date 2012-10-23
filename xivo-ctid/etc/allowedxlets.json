@@ -23,7 +23,6 @@
 "queueentrydetails" : ["agents"],
 
 "calls" : ["dial"],
-"switchboard" : ["dial"],
 "operator" : ["dial"],
 "callcampaign" : []
 }
