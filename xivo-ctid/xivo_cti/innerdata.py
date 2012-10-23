@@ -109,8 +109,6 @@ class Safe(object):
             'firstname',
             'lastname',
             'number',
-            'ackcall',
-            'wrapuptime'
         ],
         'queues': [
             'context',
