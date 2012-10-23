@@ -101,13 +101,7 @@ class Safe(object):
             'iduserfeatures',
             'rules_order',
             'identity',
-            'firstname',
-            'lastname',
-            'call-limit',
-            'dtmfmode',
-            'language',
             'initialized',
-            'outcallerid',
             'allowtransfer',
         ],
         'agents': [
