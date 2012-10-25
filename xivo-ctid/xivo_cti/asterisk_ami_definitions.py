@@ -24,7 +24,7 @@ event_flags['CALL'] = ['MeetmeJoin',
                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
                        'ParkedCallStatus',  # CLG addendum
                        'ParkedCall', 'UnParkedCall', 'ParkedCallTimeOut', 'ParkedCallGiveUp',
-                       'MonitorStart', 'MonitorStop', 'ChanSpyStart', 'ChanSpyStop',
+                       'ChanSpyStart', 'ChanSpyStop',
                        'DAHDIChannel',
                        'Newchannel',
                        'NewAccountCode',  # (1.8)

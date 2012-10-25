@@ -532,16 +532,6 @@ class AMI_1_8(object):
         # relation to Old/New/Waiting in MessageWaiting UserEvent ?
         self.innerdata.voicemailupdate(fullmailbox, event['NewMessageCount'])
 
-    def ami_monitorstart(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels.get(channel).properties['monitored'] = True
-
-    def ami_monitorstop(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels.get(channel).properties['monitored'] = False
-
     def ami_inherit(self, event):
         try:
             parent = event['Parent']
