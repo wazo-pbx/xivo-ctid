@@ -783,7 +783,7 @@ class Safe(object):
     def statusbylist(self, listname, item_id):
         if listname == 'channels':
             if item_id and item_id in self.channels:
-                return self.channels.get(item_id).properties
+                return self.channels[item_id].properties
         elif listname == 'queuemembers':
             if item_id and item_id in self.queuemembers:
                 return self.queuemembers.get(item_id)
@@ -1170,25 +1170,26 @@ class Channel(object):
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
-        self.properties = {'monitored': False, # for meetme as well as for regular calls ? agent calls ?
-                           'spy': False, # spier or spied ?
-                           'holded': False,
-                           'parked': False,
-                           'meetme_ismuted': False,
-                           'meetme_isauthed': False,
-                           'meetme_isadmin': False,
-                           'meetme_usernum': 0,
-                           'agent': False,
-                           'direction': None,
-                           'commstatus': 'ready',
-                           'timestamp': time.time(),
-                           # peerdisplay : to be used in order to override a default value
-                           'peerdisplay': None,
-                           'talkingto_kind': None,
-                           'talkingto_id': None,
-                           'autocall': False,
-                           'history': [],
-                           'extra': None}
+        self.properties = {
+            'monitored': False,
+            'spy': False,
+            'holded': False,
+            'parked': False,
+            'meetme_ismuted': False,
+            'meetme_isauthed': False,
+            'meetme_isadmin': False,
+            'meetme_usernum': 0,
+            'agent': False,
+            'direction': None,
+            'commstatus': 'ready',
+            'timestamp': time.time(),
+            'peerdisplay': None,
+            'talkingto_kind': None,
+            'talkingto_id': None,
+            'autocall': False,
+            'history': [],
+            'extra': None
+        }
         self.relations = []
         self.extra_data = {}
 
