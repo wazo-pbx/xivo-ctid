@@ -1178,7 +1178,6 @@ class Channel(object):
         # to be ready when a sheet will be sent to the 'destination'
 
         self.properties = {
-            'spy': False,
             'holded': False,
             'parked': False,
             'meetme_ismuted': False,
