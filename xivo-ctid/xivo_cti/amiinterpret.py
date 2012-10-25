@@ -52,15 +52,14 @@ class AMI_1_8(object):
         self._ctiserver = ctiserver
         self.innerdata = self._ctiserver.safe
 
-    def ami_newstate(self, event):
-        self.innerdata.newstate(event['Channel'], event['ChannelState'])
-
     def ami_newchannel(self, event):
         channel = event['Channel']
-        channelstate = event['ChannelState']
+        state = event['ChannelState']
+        state_description = event['ChannelStateDesc']
         context = event['Context']
         unique_id = event['Uniqueid']
-        self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
+
+        self.innerdata.newchannel(channel, context, state, state_description, unique_id)
 
     def ami_hangup(self, event):
         channel = event['Channel']
@@ -492,9 +491,11 @@ class AMI_1_8(object):
         application = event['Application']
         bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
+        state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
+        unique_id = event['Uniqueid']
 
-        self.innerdata.newchannel(channel, context, state)
+        self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
 
         channelstruct.properties['timestamp'] = timestamp_start
@@ -512,7 +513,7 @@ class AMI_1_8(object):
                 channelstruct.properties['commstatus'] = 'ringing'
 
         if state == '6' and bridgedchannel:
-            self.innerdata.newchannel(bridgedchannel, context, state)
+            self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
             self.innerdata.setpeerchannel(channel, bridgedchannel)
             self.innerdata.setpeerchannel(bridgedchannel, channel)
 

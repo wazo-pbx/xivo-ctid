@@ -30,7 +30,6 @@ event_flags['CALL'] = ['MeetmeJoin',
                        'NewAccountCode',  # (1.8)
                        'NewCallerid',  # was 'Newcallerid' in 1.4
                        'NewPeerAccount',
-                       'Newstate',
                        'CEL', 'MCID',
                        'Join', 'Leave',
                        'ExtensionStatus', 'MusicOnHold',

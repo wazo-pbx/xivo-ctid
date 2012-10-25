@@ -236,6 +236,7 @@ class Safe(object):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
+        ami_handler.register_callback('Newstate', self.new_state)
 
     def _channel_extra_vars_agent_linked_unlinked(self, event):
         try:
@@ -580,20 +581,23 @@ class Safe(object):
         self.channels[channel].properties['autocall'] = actionid
         self.handle_cti_stack('empty_stack')
 
-    def newstate(self, channel, state):
-        if channel in self.channels:
-            self.channels[channel].update_state(state)
+    def new_state(self, event):
+        channel = event['Channel']
+        state = event['ChannelState']
+        description = event['ChannelStateDesc']
 
-    def newchannel(self, channel_name, context, state, event=None, unique_id=None):
+        if channel in self.channels:
+            self.channels[channel].update_state(state, description)
+
+    def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:
             return
         if channel_name not in self.channels:
-            # might occur when requesting channels at launch time
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
-            self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+        self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
         self.updaterelations(channel_name)
-        self.channels[channel_name].update_state(state)
+        self.channels[channel_name].update_state(state, state_description)
         self.handle_cti_stack('empty_stack')
 
     def meetmeupdate(self, confno, channel=None, opts={}):
@@ -896,24 +900,27 @@ class Safe(object):
             logger.exception('find termination according to channel %s', channel)
 
     def masquerade(self, oldchannel, newchannel):
-        oldrelations = self.channels[oldchannel].relations
-        newrelations = self.channels[newchannel].relations
+        try:
+            oldrelations = self.channels[oldchannel].relations
+            newrelations = self.channels[newchannel].relations
 
-        oldchannelz = oldchannel + '<ZOMBIE>'
-        self.channels[oldchannelz] = self.channels.pop(newchannel)
-        self.channels[oldchannelz].channel = oldchannelz
-        self.channels[newchannel] = self.channels.pop(oldchannel)
-        self.channels[newchannel].channel = newchannel
+            oldchannelz = oldchannel + '<ZOMBIE>'
+            self.channels[oldchannelz] = self.channels.pop(newchannel)
+            self.channels[oldchannelz].channel = oldchannelz
+            self.channels[newchannel] = self.channels.pop(oldchannel)
+            self.channels[newchannel].channel = newchannel
 
-        for r in oldrelations:
-            if r.startswith('phone:'):
-                p = r[6:]
-                self.xod_status['phones'][p]['channels'].remove(oldchannel)
-                self.channels[newchannel].delrelation(r)
-        self.channels[newchannel].relations = newrelations
-        newfirstchannel = self.channels[newchannel].peerchannel
-        if newfirstchannel:
-            self.setpeerchannel(newfirstchannel, newchannel)
+            for r in oldrelations:
+                if r.startswith('phone:'):
+                    p = r[6:]
+                    self.xod_status['phones'][p]['channels'].remove(oldchannel)
+                    self.channels[newchannel].delrelation(r)
+            self.channels[newchannel].relations = newrelations
+            newfirstchannel = self.channels[newchannel].peerchannel
+            if newfirstchannel:
+                self.setpeerchannel(newfirstchannel, newchannel)
+        except KeyError:
+            logger.warning('Trying to do as masquerade on an unexistant channel')
 
     def usersummary_from_phoneid(self, phoneid):
         usersummary = {}
@@ -1188,7 +1195,8 @@ class Channel(object):
             'talkingto_id': None,
             'autocall': False,
             'history': [],
-            'extra': None
+            'extra': None,
+            'state': 'Unknown',
         }
         self.relations = []
         self.extra_data = {}
@@ -1213,12 +1221,14 @@ class Channel(object):
         if relation in self.relations:
             self.relations.remove(relation)
 
-    def update_state(self, state):
+    def update_state(self, state, description):
         # values
         # 0 Down (creation time)
         # 5 Ringing
         # 6 Up
         self.state = state
+        if description:
+            self.properties['state'] = description
 
     # extra dialplan data that may be reachable from sheets
 
