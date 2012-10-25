@@ -301,7 +301,6 @@ class AMI(object):
         if 'Value' in event and event['Value']:
             value = event['Value']
             channel, dummyvarname = properties.get('amiargs')
-            self.innerdata.autocall(channel, value)
             if value in self.originate_actionids:
                 request = self.originate_actionids[value].get('request')
                 cn = request.get('requester')

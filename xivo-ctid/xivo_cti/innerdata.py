@@ -576,11 +576,6 @@ class Safe(object):
 
         return reply
 
-    def autocall(self, channel, actionid):
-        self.handle_cti_stack('set', ('channels', 'updatestatus', channel))
-        self.channels[channel].properties['autocall'] = actionid
-        self.handle_cti_stack('empty_stack')
-
     def new_state(self, event):
         channel = event['Channel']
         state = event['ChannelState']
@@ -1180,20 +1175,12 @@ class Channel(object):
         self.properties = {
             'holded': False,
             'parked': False,
-            'meetme_ismuted': False,
-            'meetme_isauthed': False,
-            'meetme_isadmin': False,
-            'meetme_usernum': 0,
-            'agent': False,
             'direction': None,
             'commstatus': 'ready',
             'timestamp': time.time(),
             'peerdisplay': None,
             'talkingto_kind': None,
             'talkingto_id': None,
-            'autocall': False,
-            'history': [],
-            'extra': None,
             'state': 'Unknown',
         }
         self.relations = []
