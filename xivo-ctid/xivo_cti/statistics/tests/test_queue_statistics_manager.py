@@ -152,16 +152,16 @@ class TestQueueStatisticsManager(unittest.TestCase):
         self.queue_statistics_manager.get_queue_summary.assert_was_called_with('service')
         self.queue_statistics_manager.get_queue_summary.assert_was_called_with('beans')
 
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
-    def test_get_queue_summary(self):
+    @patch('xivo_dao.queue_features_dao.is_a_queue', return_value=True)
+    def test_get_queue_summary(self, mock_is_a_queue):
         queue_name = 'services'
 
-        self.ami_wrapper = Mock(AMIClass)
-        self.queue_statistics_manager.ami_wrapper = self.ami_wrapper
+        mock_ami_wrapper = Mock(AMIClass)
+        self.queue_statistics_manager.ami_wrapper = mock_ami_wrapper
 
         self.queue_statistics_manager.get_queue_summary(queue_name)
 
-        self.ami_wrapper.queuesummary.assert_called_once_with(queue_name)
+        mock_ami_wrapper.queuesummary.assert_called_once_with(queue_name)
 
     def test_get_all_queue_summary(self):
         self.ami_wrapper = Mock(AMIClass)

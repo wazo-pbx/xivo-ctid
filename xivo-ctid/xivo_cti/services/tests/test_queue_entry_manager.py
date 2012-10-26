@@ -38,6 +38,7 @@ from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.xivo_ami import AMIClass
 
 QUEUE_NAME = 'testqueue'
+QUEUE_ID = 77
 
 CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1 = 'Super Tester', '111', '12345677.99'
 CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2 = 'Second Tester', '222', '123543121.43'
@@ -97,9 +98,6 @@ QUEUE_ENTRY_MESSAGE = {'Event': 'QueueEntry',
                        'ConnectedLineName': 'unknown',
                        'Wait': str(WAIT_TIME_1)}
 
-my_time = Mock()
-the_longest_wait_time_calculator = Mock()
-
 
 class TestQueueEntryManager(unittest.TestCase):
 
@@ -115,21 +113,22 @@ class TestQueueEntryManager(unittest.TestCase):
     def tearDown(self):
         QueueEntryManager._instance = None
 
-    @patch('time.time', my_time)
+    @patch('time.time', Mock(return_value=JOIN_TIME_1))
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def _join_1(self):
-        my_time.return_value = JOIN_TIME_1
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-    @patch('time.time', my_time)
+    @patch('time.time', Mock(return_value=JOIN_TIME_2))
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def _join_2(self):
-        my_time.return_value = JOIN_TIME_2
         self.manager.join(QUEUE_NAME, 2, 2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
 
-    @patch('time.time', my_time)
+    @patch('time.time', Mock(return_value=JOIN_TIME_3))
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def _join_3(self):
-        my_time.return_value = JOIN_TIME_3
         self.manager.join(QUEUE_NAME, 3, 3, CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3)
 
     def test_parse_new_entry(self):
@@ -168,8 +167,6 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager.insert = insert
 
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
     def test_new_entry(self):
         self._join_1()
 
@@ -179,9 +176,6 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertEqual(entry, QUEUE_ENTRY_1)
 
-    @patch('time.time', my_time)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
     def test_multiple_entries(self):
         self._join_1()
         self._join_2()
@@ -204,7 +198,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager.leave = leave
 
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def test_leave_event(self):
         self._join_1()
         self._join_2()
@@ -216,7 +210,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEqual(count, 1)
 
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def test_count_check(self):
         self._join_1()
 
@@ -238,7 +232,7 @@ class TestQueueEntryManager(unittest.TestCase):
                           lambda: self.manager._count_check('un-tracked', 1))
 
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     def test_position_change(self):
         self._join_1()
         self._join_2()
@@ -282,9 +276,8 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEqual(entries[2].position, 1)
         self.assertEqual(entries[4].position, 2)
 
-    @patch('time.time', my_time)
+    @patch('time.time', Mock(return_value=JOIN_TIME_1))
     def test_update(self):
-        my_time.return_value = JOIN_TIME_1
         expected = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1 - WAIT_TIME_1)
 
         self.manager.insert(QUEUE_NAME, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1,
@@ -294,8 +287,6 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertEquals(entry, expected)
 
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
     def test_clear_data(self):
         self._join_1()
         self._join_2()
@@ -347,7 +338,7 @@ class TestQueueEntryManager(unittest.TestCase):
         ami_class.sendqueuestatus.assert_called_once_with(QUEUE_NAME)
 
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
     @patch('xivo_dao.queue_features_dao.queue_name', Mock())
     def test_publish(self):
         msg = {'encoded': 'result'}
@@ -370,110 +361,121 @@ class TestQueueEntryManager(unittest.TestCase):
         # Called twice because we get an update when subscribing
         self.assertEqual(handler.send_message.call_count, 2)
 
-    @patch('time.time', my_time)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    def test_publish_longest_wait_time_no_call_in_queue(self):
-
-        my_time.return_value = 98797987
-
-        queue_id = 77
-
-        queue_features_dao.id_from_name.return_value = queue_id
+    @patch('time.time', Mock(return_value=98797987))
+    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=QUEUE_ID)
+    def test_publish_longest_wait_time_no_call_in_queue(self, mock_id_from_name):
 
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-        queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 0}})
+        mock_id_from_name.assert_called_with(QUEUE_NAME)
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with(
+            {
+                '%s' % QUEUE_ID: {
+                    'Xivo-WaitingCalls': 1,
+                    'Xivo-LongestWaitTime': 0
+                }
+            })
 
-
-    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    def test_publish_real_time_stats_on_leave_with_calls_in_queue(self):
-
-        queue_id = 77
-        queue_features_dao.id_from_name.return_value = queue_id
-        the_longest_wait_time_calculator.return_value = 789
+    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', return_value=789)
+    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=QUEUE_ID)
+    def test_publish_real_time_stats_on_leave_with_calls_in_queue(self, mock_id_from_name, mock_longest_wait_time_calculator):
 
         self._join_1()
         self._join_2()
 
         self.manager._statistics_notifier.reset_mock()
 
-
         self.manager.leave(QUEUE_NAME, 1, 1, UNIQUE_ID_1)
 
-
         queue_features_dao.id_from_name.assert_called_with(QUEUE_NAME)
-        the_longest_wait_time_calculator.assert_called_with(self.manager._queue_entries[QUEUE_NAME])
+        mock_longest_wait_time_calculator.assert_called_with(self.manager._queue_entries[QUEUE_NAME])
 
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 789L}})
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with(
+            {
+                '%s' % QUEUE_ID: {
+                    'Xivo-WaitingCalls': 1,
+                    'Xivo-LongestWaitTime': 789L
+                }
+            })
 
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock(return_value=QUEUE_ID))
     def test_publish_real_time_stats_on_leave_with_one_call_in_queue(self):
-        queue_id = 77
-        queue_features_dao.id_from_name.return_value = queue_id
-
         self._join_1()
 
         self.manager._statistics_notifier.reset_mock()
 
         self.manager.leave(QUEUE_NAME, 1, 0, UNIQUE_ID_1)
 
-        self.manager._statistics_notifier.on_stat_changed.assert_called_with({'%s' % queue_id:{'Xivo-WaitingCalls':0}})
+        self.manager._statistics_notifier.on_stat_changed.assert_called_with(
+            {
+                '%s' % QUEUE_ID: {
+                    'Xivo-WaitingCalls': 0
+                }
+            })
 
-
-    @patch('time.time', my_time)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
-    def test_calculate_longest_wait_time_one_call(self):
-        my_time.return_value = long(TIME_NOW) - 300
+    @patch('time.time')
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock(return_value=QUEUE_ID))
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
+    def test_calculate_longest_wait_time_one_call(self, mock_time):
+        mock_time.return_value = long(TIME_NOW) - 300
 
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-        my_time.return_value = long(TIME_NOW)
+        mock_time.return_value = long(TIME_NOW)
         longest_wait_time = queue_entry_manager.longest_wait_time_calculator(self.manager._queue_entries[QUEUE_NAME])
 
         self.assertEquals(longest_wait_time, 300)
 
-    @patch('time.time', my_time)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
-    def test_calculate_longest_wait_time_multiple_calls(self):
-        TIME_NOW = long(873218632)
-        my_time.return_value = long(TIME_NOW) - 150
+    @patch('time.time')
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock(return_value=QUEUE_ID))
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
+    def test_calculate_longest_wait_time_multiple_calls(self, mock_time):
+        mock_time.return_value = long(TIME_NOW) - 150
         self.manager.join(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-        my_time.return_value = long(TIME_NOW) - 400
+        mock_time.return_value = long(TIME_NOW) - 400
         self.manager.join(QUEUE_NAME, 2, 2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
 
-        my_time.return_value = long(TIME_NOW)
+        mock_time.return_value = long(TIME_NOW)
         longest_wait_time = queue_entry_manager.longest_wait_time_calculator(self.manager._queue_entries[QUEUE_NAME])
 
         self.assertEquals(longest_wait_time, 400)
 
-    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', the_longest_wait_time_calculator)
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
-    def test_publish_all_realtime_stats(self):
+    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', Mock(return_value=765))
+    @patch('xivo_dao.queue_features_dao.id_from_name')
+    def test_publish_all_realtime_stats(self, mock_id_from_name):
         cti_connection = {}
-        the_longest_wait_time_calculator.return_value = 765
         queue_ids = {'service': 56, 'boats': 34}
 
         self.manager.join('service', 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
         self.manager.join('boats', 1, 1, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, UNIQUE_ID_2)
 
-        queue_features_dao.id_from_name.side_effect = lambda queue_name : queue_ids[queue_name]
+        queue_features_dao.id_from_name.side_effect = lambda queue_name: queue_ids[queue_name]
 
         self.manager.publish_all_realtime_stats(cti_connection)
 
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 56:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 765}}, cti_connection)
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with({'%s' % 34:{'Xivo-WaitingCalls':1, 'Xivo-LongestWaitTime': 765}}, cti_connection)
+        self.manager._statistics_notifier.send_statistic.assert_was_called_with(
+            {
+                '%s' % 56: {
+                    'Xivo-WaitingCalls': 1,
+                    'Xivo-LongestWaitTime': 765
+                }
+            },
+            cti_connection)
+        self.manager._statistics_notifier.send_statistic.assert_was_called_with(
+            {
+                '%s' % 34: {
+                    'Xivo-WaitingCalls': 1,
+                    'Xivo-LongestWaitTime': 765
+                }
+            },
+            cti_connection)
 
-
-    @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
+    @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', Mock(return_value=765))
+    @patch('xivo_dao.queue_features_dao.id_from_name', Mock(side_effect=LookupError('No such queue')))
     def test_publish_all_realtime_stats_removed_queue(self):
 
         cti_connection = {}
-        the_longest_wait_time_calculator.return_value = 765
 
         self.manager.join('service', 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
@@ -484,19 +486,17 @@ class TestQueueEntryManager(unittest.TestCase):
         self.manager._statistics_notifier.send_statistic.assert_never_called()
         self.assertTrue('service' not in self.manager._queue_entries)
 
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=False))
     def test_join_group(self):
         self.manager.insert = Mock()
-        queue_features_dao.is_a_queue.return_value = False
 
         self.manager.join('not_a_queue', 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
         self.assertFalse(self.manager.insert.called)
 
-    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock())
+    @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=False))
     def test_leave_group(self):
         self.manager.synchronize = Mock()
-        queue_features_dao.is_a_queue.return_value = False
 
         self.manager.leave('not_a_queue', 1, 1, UNIQUE_ID_1)
 
