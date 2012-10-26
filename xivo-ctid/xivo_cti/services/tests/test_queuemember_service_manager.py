@@ -30,10 +30,13 @@ from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
-get_line_identity = Mock()
-get_queue_name = Mock()
-get_group_name = Mock()
-get_agent_number = Mock()
+
+LINE_IDENTITY = 'sip/i7vbu0'
+USER_INTERFACE = u'SIP/i7vbu0'
+AGENT_INTERFACE = u'Agent/3001'
+AGENT_NUMBER = '3001'
+GROUP_NAME = 'group'
+QUEUE_NAME = 'file'
 
 
 class TestQueueMemberServiceManager(unittest.TestCase):
@@ -88,8 +91,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         queuemember_dao = Mock()
         queuemember_dao.get_queuemembers = Mock()
         queuemember_dao.get_queuemembers.return_value = {self.keyA: self.A,
-                                            self.keyB: self.B,
-                                            self.keyC: self.C}
+                                                         self.keyB: self.B,
+                                                         self.keyC: self.C}
         self.queuemember_service_manager.queuemember_dao = queuemember_dao
         innerdata_dao = Mock()
         innerdata_dao.get_queuemembers_static = Mock()
@@ -150,11 +153,15 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_get_queuemember_to_request_full(self):
-        delta = DictDelta({self.keyA: self.A,
-                           self.keyB: self.B},
-                           {self.keyC: {
-                    'penalty': '0'}},
-                          {self.keyD: self.D})
+        delta = DictDelta(
+            {
+                self.keyA: self.A,
+                self.keyB: self.B
+            },
+            {
+                self.keyC: {'penalty': '0'}
+            },
+            {self.keyD: self.D})
         expected_result = [self.tupleA,
                            self.tupleB,
                            self.tupleC]
@@ -176,11 +183,13 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_get_queuemember_to_remove_full(self):
-        delta = DictDelta({self.keyA: self.A},
-                           {self.keyB: {
-                    'penalty': '0'}},
-                          {self.keyC: self.C,
-                           self.keyD: self.D})
+        delta = DictDelta(
+            {self.keyA: self.A},
+            {self.keyB: {'penalty': '0'}},
+            {
+                self.keyC: self.C,
+                self.keyD: self.D
+            })
         expected_result = DictDelta({}, {}, {self.keyC: self.C,
                                              self.keyD: self.D})
 
@@ -204,75 +213,65 @@ class TestQueueMemberServiceManager(unittest.TestCase):
                       change=queuemember_formatted,
                       delete={}))
 
-    @patch('xivo_dao.queue_features_dao.get_queue_name', get_queue_name)
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
-    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', get_agent_number)
+    @patch('xivo_dao.queue_features_dao.get_queue_name', Mock(return_value=QUEUE_NAME))
+    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
+    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', Mock(return_value=AGENT_NUMBER))
     def test_is_queue_member_user_member(self):
         user_id = 1
         queue_id = 2
-        queue_members = {u'SIP/i7vbu0,file': {'interface': u'SIP/i7vbu0',
-                                              'membership': u'static',
-                                              'paused': u'0',
-                                              'penalty': u'0',
-                                              'queue_name': u'file',
-                                              'status': u'1'}}
+        queue_members = {'%s,%s' % (USER_INTERFACE, QUEUE_NAME): {'interface': USER_INTERFACE,
+                                                                  'membership': u'static',
+                                                                  'paused': u'0',
+                                                                  'penalty': u'0',
+                                                                  'queue_name': u'file',
+                                                                  'status': u'1'}}
         innerdata_dao = Mock(InnerdataDAO)
         innerdata_dao.get_queuemembers_config.return_value = queue_members
 
         self.queuemember_service_manager.innerdata_dao = innerdata_dao
 
-        get_line_identity.return_value = 'sip/i7vbu0'
-        get_queue_name.return_value = 'file'
-
         result = self.queuemember_service_manager.is_queue_member(user_id, queue_id)
 
         self.assertTrue(result)
 
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
-    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', get_agent_number)
-    @patch('xivo_dao.queue_features_dao.get_queue_name', get_queue_name)
+    @patch('xivo_dao.queue_features_dao.get_queue_name', Mock(return_value=QUEUE_NAME))
+    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
+    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', Mock(return_value=AGENT_NUMBER))
     def test_is_queue_member_agent(self):
         user_id = 1
         queue_id = 2
-        queue_members = {u'Agent/3001,file': {'interface': u'Agent/3001',
-                                              'membership': u'static',
-                                              'paused': u'0',
-                                              'penalty': u'0',
-                                              'queue_name': u'file',
-                                              'status': u'1'}}
+        queue_members = {'%s,%s' % (AGENT_INTERFACE, QUEUE_NAME): {'interface': AGENT_INTERFACE,
+                                                                   'membership': u'static',
+                                                                   'paused': u'0',
+                                                                   'penalty': u'0',
+                                                                   'queue_name': u'file',
+                                                                   'status': u'1'}}
 
         innerdata_dao = Mock(InnerdataDAO)
         innerdata_dao.get_queuemembers_config.return_value = queue_members
 
         self.queuemember_service_manager.innerdata_dao = innerdata_dao
-
-        get_line_identity.return_value = 'sip/i7vbu0'
-        get_queue_name.return_value = 'file'
-        get_agent_number.return_value = '3001'
 
         result = self.queuemember_service_manager.is_queue_member(user_id, queue_id)
 
         self.assertTrue(result)
 
-    @patch('xivo_dao.group_dao.get_name', get_group_name)
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
+    @patch('xivo_dao.group_dao.get_name', Mock(return_value=GROUP_NAME))
+    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
     def test_is_group_member_user_member(self):
         user_id = 1
         group_id = 2
-        queue_members = {u'SIP/i7vbu0,file': {'interface': u'SIP/i7vbu0',
-                                              'membership': u'static',
-                                              'paused': u'0',
-                                              'penalty': u'0',
-                                              'queue_name': u'file',
-                                              'status': u'1'}}
+        queue_members = {'%s,%s' % (USER_INTERFACE, GROUP_NAME): {'interface': USER_INTERFACE,
+                                                                  'membership': u'static',
+                                                                  'paused': u'0',
+                                                                  'penalty': u'0',
+                                                                  'queue_name': u'file',
+                                                                  'status': u'1'}}
 
         innerdata_dao = Mock(InnerdataDAO)
         innerdata_dao.get_queuemembers_config.return_value = queue_members
 
         self.queuemember_service_manager.innerdata_dao = innerdata_dao
-
-        get_line_identity.return_value = 'sip/i7vbu0'
-        get_group_name.return_value = 'file'
 
         result = self.queuemember_service_manager.is_group_member(user_id, group_id)
 
