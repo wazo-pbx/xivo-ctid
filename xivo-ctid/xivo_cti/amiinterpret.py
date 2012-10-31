@@ -137,6 +137,7 @@ class AMI_1_8(object):
         channel_name = event['Channel']
         status = event['Status'] == 'On'
         if channel_name in self.innerdata.channels:
+            self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
             channel = self.innerdata.channels[channel_name]
             channel.properties['holded'] = status
             logger.debug('%s on hold(%s)', channel_name, status)
@@ -152,6 +153,7 @@ class AMI_1_8(object):
                             logger.debug('%s on hold(%s)', chan, status)
                 except LookupError:
                     logger.warning('Could not find %s peer channel to put it on hold', channel_name)
+            self.innerdata.handle_cti_stack('empty_stack')
 
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
