@@ -221,11 +221,10 @@ class AMIClass(object):
                                                      ('Context', context)])
 
     # \brief Logs in an Agent
-    def agentcallbacklogin(self, agentnum, extension, context, ackcall):
+    def agentcallbacklogin(self, agentnum, extension, context):
         return self._exec_command('AgentCallbackLogin', [('Agent', agentnum),
                                                          ('Context', context),
-                                                         ('Exten', extension),
-                                                         ('AckCall', ackcall)])
+                                                         ('Exten', extension)])
 
     # \brief Logs off an Agent
     def agentlogoff(self, agentnum, soft=True):

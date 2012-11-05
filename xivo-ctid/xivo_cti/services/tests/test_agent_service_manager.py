@@ -92,8 +92,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.agent_1_exten,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def test_log_agent_no_number(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -105,8 +104,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.line_number,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def test_find_agent_exten(self):
         agent = self._insert_agent()
@@ -121,16 +119,15 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_executor = Mock()
         self.agent_manager.agent_executor = self.agent_executor
 
-        number, exten, context, ackcall = '1000', '1234', 'test', False
+        number, exten, context = '1000', '1234', 'test'
         ami = Mock(AMIClass)
         self.agent_manager.ami = ami
 
         self.agent_manager.agent_call_back_login(number,
                                                  exten,
-                                                 context,
-                                                 ackcall)
+                                                 context,)
 
-        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
+        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context)
 
     def test_agent_special_me(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -142,8 +139,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.line_number,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def _insert_line_with_number(self, number):
         line = LineFeatures()
