@@ -125,7 +125,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login(number,
                                                  exten,
-                                                 context,)
+                                                 context)
 
         self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context)
 
