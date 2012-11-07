@@ -244,7 +244,7 @@ class TestInnerdataDAO(unittest.TestCase):
             }
         }
 
-        self.innerdata_dao.set_agent_status(agent_id, expected_agent_availability)
+        self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
         agent_status = self.innerdata.xod_status['agents'][agent_id]
 
@@ -267,7 +267,7 @@ class TestInnerdataDAO(unittest.TestCase):
             }
         }
 
-        self.innerdata_dao.set_agent_status(agent_id, expected_agent_availability)
+        self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
         agent = self.innerdata.xod_status['agents'][agent_id]
 

@@ -30,13 +30,13 @@ class AgentStatusNotifier(object):
         self.scheduler = scheduler
 
     def agent_logged_in(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.available)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
 
     def agent_logged_out(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.logged_out)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.logged_out)
 
     def agent_answered(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.unavailable)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
 
     def agent_call_completed(self, agent_id, wrapup_time):
         if wrapup_time != 0:
@@ -44,13 +44,13 @@ class AgentStatusNotifier(object):
                                     self.agent_wrapup_completed,
                                     agent_id)
         else:
-            self.innerdata_dao.set_agent_status(agent_id, AgentStatus.available)
+            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
 
     def agent_wrapup_completed(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.available)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
 
     def agent_paused_all(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.unavailable)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
 
     def agent_unpaused(self, agent_id):
-        self.innerdata_dao.set_agent_status(agent_id, AgentStatus.available)
+        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
