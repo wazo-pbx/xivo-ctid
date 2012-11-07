@@ -23,7 +23,8 @@
 import unittest
 from tests.mock import Mock
 from xivo_cti.scheduler import Scheduler
-from xivo_cti.services.agent_status_notifier import AgentStatusNotifier, AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent_status_notifier import AgentStatusNotifier
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 

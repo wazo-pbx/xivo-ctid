@@ -21,12 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.scheduler import Scheduler
-
-
-class AgentStatus(object):
-    available = 'available'
-    unavailable = 'unavailable'
-    logged_out = 'logged_out'
+from xivo_cti.services.agent_status import AgentStatus
 
 
 class AgentStatusNotifier(object):

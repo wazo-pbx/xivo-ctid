@@ -23,7 +23,7 @@
 
 import logging
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.services.agent_status_notifier import AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger("AMIAgentLogin")
 

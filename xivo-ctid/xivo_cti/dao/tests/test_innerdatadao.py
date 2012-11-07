@@ -25,7 +25,7 @@ from tests.mock import Mock, call, patch
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.services.queue_service_manager import NotAQueueException
-from xivo_cti.services.agent_status_notifier import AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
 
 
 class TestInnerdataDAO(unittest.TestCase):

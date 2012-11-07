@@ -27,7 +27,7 @@ from tests.mock import Mock
 from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.dao.innerdatadao import InnerdataDAO
-from xivo_cti.services.agent_status_notifier import AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
 
 
 class TestAMIAgentLoginLogoff(unittest.TestCase):

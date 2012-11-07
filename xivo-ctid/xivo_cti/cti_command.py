@@ -31,7 +31,7 @@ from xivo_cti import cti_config
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
-from xivo_cti.services.agent_status_notifier import AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('cti_command')
 
