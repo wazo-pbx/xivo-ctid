@@ -23,6 +23,7 @@
 
 import logging
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti.services.agent_status_notifier import AgentStatus
 
 logger = logging.getLogger("AMIAgentLogin")
 
@@ -61,8 +62,14 @@ class AMIAgentLoginLogoff(object):
     def _initialize_agents_status(self, event):
         agent_name = event['Agent']
         agent_id = self.agent_features_dao.agent_id(agent_name)
-        agent_status = event['Status']
-        self.innerdata_dao.set_agent_status(agent_id, agent_status)
+        agent_status_ami = event['Status']
+        if agent_status_ami == self.AGENTSTATUS_IDLE:
+            agent_status_cti = AgentStatus.available
+        elif agent_status_ami == self.AGENTSTATUS_ONCALL:
+            agent_status_cti = AgentStatus.unavailable
+        else:
+            agent_status_cti = AgentStatus.logged_out
+        self.innerdata_dao.set_agent_status(agent_id, agent_status_cti)
 
     @classmethod
     def register_callbacks(cls):

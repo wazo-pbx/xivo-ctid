@@ -31,6 +31,7 @@ from xivo_cti import cti_config
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
+from xivo_cti.services.agent_status_notifier import AgentStatus
 
 logger = logging.getLogger('cti_command')
 
@@ -705,7 +706,7 @@ class Command(object):
 
     def ipbxcommand_agentlogout(self):
         agent, status = self.get_agent_info(self._commanddict)
-        if status['status'] != 'AGENT_LOGGEDOFF':
+        if status['availability'] != AgentStatus.logged_out:
             return [{'amicommand': 'agentlogoff',
                      'amiargs': [agent['number'], True]}]
 

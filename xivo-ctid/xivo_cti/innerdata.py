@@ -47,6 +47,7 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.cti_config import Config
 from xivo_cti.dao import userfeaturesdao
+from xivo_cti.service.agent_status_notifier import AgentStatus
 
 logger = logging.getLogger('innerdata')
 
@@ -156,9 +157,10 @@ class Safe(object):
                                'channels': [],
                                'queues': [],
                                'groups': []},
-                    'agents': {'phonenumber': None, # static mode
-                               'channel': None, # dynamic mode
-                               'status': 'undefined', # statuses are AGENT_LOGGEDOFF, _ONCALL, _IDLE and '' (undefined)
+                    'agents': {'phonenumber': None,
+                               'channel': None,
+                               'availability': AgentStatus.logged_out,
+                               'availability_since': time.time(),
                                'queues': [],
                                'groups': []},
                     'queues': {'agentmembers': [],
@@ -642,7 +644,7 @@ class Safe(object):
         else:
             # dynamic agent mode
             agstatus['channel'] = channel
-        agstatus['status'] = 'AGENT_IDLE'
+        agstatus['availability'] = AgentStatus.available
         # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
@@ -650,7 +652,7 @@ class Safe(object):
         idx = self.xod_config['agents'].idbyagentnumber(agentnumber)
         self.handle_cti_stack('set', ('agents', 'updatestatus', idx))
         agstatus = self.xod_status['agents'].get(idx)
-        agstatus['status'] = 'AGENT_LOGGEDOFF'
+        agstatus['availability'] = AgentStatus.logged_out
         # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
