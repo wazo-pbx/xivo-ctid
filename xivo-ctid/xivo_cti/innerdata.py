@@ -47,7 +47,7 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.cti_config import Config
 from xivo_cti.dao import userfeaturesdao
-from xivo_cti.service.agent_status import AgentStatus
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('innerdata')
 

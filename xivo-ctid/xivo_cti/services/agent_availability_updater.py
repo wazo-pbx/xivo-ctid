@@ -24,7 +24,7 @@ from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
 
 
-class AgentStatusNotifier(object):
+class AgentAvailabilityUpdater(object):
     def __init__(self, innerdata_dao, scheduler=Scheduler()):
         self.innerdata_dao = innerdata_dao
         self.scheduler = scheduler

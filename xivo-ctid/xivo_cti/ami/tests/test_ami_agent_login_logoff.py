@@ -94,4 +94,4 @@ class TestAMIAgentLoginLogoff(unittest.TestCase):
         self.ami_agent_login_logoff._initialize_agents_status(event)
 
         agent_dao.agent_id.assert_called_once_with('22011')
-        innerdata_dao.set_agent_status.assert_called_once_with(1234, AgentStatus.logged_out)
+        innerdata_dao.set_agent_availability.assert_called_once_with(1234, AgentStatus.logged_out)

@@ -69,7 +69,7 @@ class AMIAgentLoginLogoff(object):
             agent_status_cti = AgentStatus.unavailable
         else:
             agent_status_cti = AgentStatus.logged_out
-        self.innerdata_dao.set_agent_status(agent_id, agent_status_cti)
+        self.innerdata_dao.set_agent_availability(agent_id, agent_status_cti)
 
     @classmethod
     def register_callbacks(cls):

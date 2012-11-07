@@ -24,7 +24,7 @@ import unittest
 from tests.mock import Mock
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
-from xivo_cti.services.agent_status_notifier import AgentStatusNotifier
+from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 
@@ -34,7 +34,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         self.mock_innerdata_dao = Mock(InnerdataDAO)
 
     def test_agent_logged_in(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
@@ -44,7 +44,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
                                                                                AgentStatus.available)
 
     def test_agent_logged_out(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
@@ -54,7 +54,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
                                                                                AgentStatus.logged_out)
 
     def test_agent_answered(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
@@ -65,7 +65,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_agent_call_completed(self):
         mock_scheduler = Mock(Scheduler)
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao, mock_scheduler)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao, mock_scheduler)
 
         agent_id = 12
         wrapup_time = 25
@@ -78,7 +78,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_agent_call_completed_no_wrapup(self):
         mock_scheduler = Mock(Scheduler)
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao, mock_scheduler)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao, mock_scheduler)
 
         agent_id = 12
         wrapup_time = 0
@@ -90,7 +90,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         self.mock_innerdata_dao.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
 
     def test_agent_wrapup_completed(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
@@ -99,7 +99,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         self.mock_innerdata_dao.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
 
     def test_agent_paused_all(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
@@ -108,7 +108,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         self.mock_innerdata_dao.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.unavailable)
 
     def test_agent_unpaused(self):
-        agent_status_notifier = AgentStatusNotifier(self.mock_innerdata_dao)
+        agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)
 
         agent_id = 12
 
