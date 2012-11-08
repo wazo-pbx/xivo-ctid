@@ -274,6 +274,27 @@ class TestInnerdataDAO(unittest.TestCase):
         self.assertEqual(expected_agent_availability, agent['availability'])
         self.assertEqual(expected_agent_availability_since, agent['availability_since'])
 
+    def test_agent_status(self):
+        agent_id = 42
+        expected_status = {
+            'availability': AgentStatus.logged_out,
+            'availability_since': 1234566778,
+            'channel': 'Agent/4242',
+        }
+        self.innerdata.xod_status = {
+            'agents': {
+                agent_id: {
+                    'availability': AgentStatus.logged_out,
+                    'availability_since': 1234566778,
+                    'channel': 'Agent/4242',
+                }
+            }
+        }
+
+        agent_status = self.innerdata_dao.agent_status(agent_id)
+
+        self.assertEqual(agent_status, expected_status)
+
     def _assert_contains_same_elements(self, list, expected_list):
         self.assertEquals(len(list), len(expected_list))
         for element in list:

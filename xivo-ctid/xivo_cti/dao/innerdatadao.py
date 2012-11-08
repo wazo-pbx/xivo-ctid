@@ -82,3 +82,7 @@ class InnerdataDAO(object):
         if availability != agent_status['availability']:
             agent_status['availability_since'] = time.time()
             agent_status['availability'] = availability
+
+    def agent_status(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][agent_id]
+        return agent_status
