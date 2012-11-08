@@ -46,6 +46,7 @@ from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
 from xivo_cti import message_hook
+from xivo_cti import dao
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.queue_logger import QueueLogger
@@ -424,6 +425,7 @@ class CTIServer(object):
         safe.user_features_dao = self._user_features_dao
         safe.trunk_features_dao = self._trunk_features_dao
         safe.queuemember_service_manager = self._queuemember_service_manager
+        dao.instanciate_dao(safe)
         safe.init_status()
         self.safe = safe
         self._user_features_dao._innerdata = safe
