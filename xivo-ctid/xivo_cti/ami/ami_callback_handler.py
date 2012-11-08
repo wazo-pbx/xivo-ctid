@@ -32,8 +32,8 @@ class AMICallbackHandler(object):
     def register_callback(self, event_name, function):
         key = event_name.lower()
         if not key in self._callbacks:
-            self._callbacks[key] = set()
-        self._callbacks[key].add(function)
+            self._callbacks[key] = list()
+        self._callbacks[key].append(function)
 
     def unregister_callback(self, event_name, function):
         callback_key = event_name.lower()
@@ -43,7 +43,7 @@ class AMICallbackHandler(object):
                 self._callbacks.pop(callback_key)
 
     def get_callbacks(self, event_name):
-        return list(self._callbacks.get(event_name.lower(), []))
+        return self._callbacks.get(event_name.lower(), [])
 
     @classmethod
     def get_instance(cls):
