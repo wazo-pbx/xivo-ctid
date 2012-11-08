@@ -20,7 +20,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+
+logger = logging.getLogger(__name__)
 
 
 class AgentAvailabilityNotifier(object):

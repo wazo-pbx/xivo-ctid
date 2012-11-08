@@ -20,9 +20,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
+
+logger = logging.getLogger(__name__)
 
 
 def parse_ami_login(ami_event, agent_availability_updater):
