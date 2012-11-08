@@ -33,6 +33,25 @@ class TestAgentDAO(unittest.TestCase):
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
 
+    def test_get_id_from_interface(self):
+        agent_number = '1234'
+        agent_interface = 'Agent/1234'
+        agent_id = 6
+        agents_config = Mock()
+        agents_config.keeplist = {
+            str(agent_id): {
+                'number': agent_number,
+            }
+        }
+        self.innerdata.xod_config = {
+            'agents': agents_config
+        }
+        agent_dao = AgentDAO(self.innerdata, Mock())
+
+        result = agent_dao.get_id_from_interface(agent_interface)
+
+        self.assertEqual(result, agent_id)
+
     def test_get_id_from_number(self):
         agent_number = '1234'
         agent_id = 6

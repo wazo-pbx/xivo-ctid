@@ -30,6 +30,10 @@ class AgentDAO(object):
         self.innerdata = innerdata
         self.queue_member_dao = queue_member_dao
 
+    def get_id_from_interface(self, agent_interface):
+        _, agent_number = agent_interface.split('/', 1)
+        return self.get_id_from_number(agent_number)
+
     def get_id_from_number(self, agent_number):
         agent_list = self.innerdata.xod_config['agents'].keeplist
         for (agent_id, agent) in agent_list.iteritems():

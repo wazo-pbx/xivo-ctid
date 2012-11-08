@@ -63,9 +63,9 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_answered(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
+        ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'AgentConnect'}
-        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.get_id_from_interface.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
         agent_availability_updater.parse_ami_answered(ami_event, mock_agent_availability_updater)
@@ -76,10 +76,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         agent_id = 12
         wrapup_time = 15
 
-        ami_event = {'Agent': '1234',
+        ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'AgentComplete',
                      'WrapupTime': str(wrapup_time)}
-        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.get_id_from_interface.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
         agent_availability_updater.parse_ami_call_completed(ami_event, mock_agent_availability_updater)
@@ -88,11 +88,11 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_paused_partially(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
+        ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'QueueMemberPaused',
                      'Queue': 'q01',
                      'Paused': '1'}
-        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.get_id_from_interface.return_value = agent_id
         dao.agent.is_completely_paused.return_value = False
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
@@ -102,11 +102,11 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_paused_completely(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
+        ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'QueueMemberPaused',
                      'Queue': 'q01',
                      'Paused': '1'}
-        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.get_id_from_interface.return_value = agent_id
         dao.agent.is_completely_paused.return_value = True
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
@@ -116,11 +116,11 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_unpaused(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
+        ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'QueueMemberPaused',
                      'Queue': 'q01',
                      'Paused': '0'}
-        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.get_id_from_interface.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
         agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)

@@ -41,22 +41,22 @@ def parse_ami_logout(ami_event, agent_availability_updater):
 
 
 def parse_ami_answered(ami_event, agent_availability_updater):
-    agent_number = ami_event['Agent']
-    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_interface = ami_event['MemberName']
+    agent_id = dao.agent.get_id_from_interface(agent_interface)
     agent_availability_updater.agent_answered(agent_id)
 
 
 def parse_ami_call_completed(ami_event, agent_availability_updater):
-    agent_number = ami_event['Agent']
+    agent_interface = ami_event['MemberName']
     agent_wrapup = int(ami_event['WrapupTime'])
-    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_id = dao.agent.get_id_from_interface(agent_interface)
     agent_availability_updater.agent_call_completed(agent_id, agent_wrapup)
 
 
 def parse_ami_paused(ami_event, agent_availability_updater):
-    agent_number = ami_event['Agent']
-    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_interface = ami_event['MemberName']
     paused = ami_event['Paused'] == '1'
+    agent_id = dao.agent.get_id_from_interface(agent_interface)
     if paused and dao.agent.is_completely_paused(agent_id):
         agent_availability_updater.agent_paused_all(agent_id)
     else:
