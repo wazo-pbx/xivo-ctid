@@ -20,8 +20,47 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
+
+
+def parse_ami_login(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_availability_updater.agent_logged_in(agent_id)
+
+
+def parse_ami_logout(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_availability_updater.agent_logged_out(agent_id)
+
+
+def parse_ami_answered(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_availability_updater.agent_answered(agent_id)
+
+
+def parse_ami_call_completed(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_wrapup = int(ami_event['WrapupTime'])
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_availability_updater.agent_call_completed(agent_id, agent_wrapup)
+
+
+def parse_ami_paused(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    if dao.agent.is_completely_paused(agent_id):
+        agent_availability_updater.agent_paused_all(agent_id)
+
+
+def parse_ami_unpaused(ami_event, agent_availability_updater):
+    agent_number = ami_event['Agent']
+    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_availability_updater.agent_unpaused(agent_id)
 
 
 class AgentAvailabilityUpdater(object):

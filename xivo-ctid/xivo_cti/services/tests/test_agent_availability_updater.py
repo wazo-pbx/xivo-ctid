@@ -21,17 +21,109 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock
+from mock import Mock, patch
+from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
+from xivo_cti.services import agent_availability_updater
 from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.agent_dao import AgentDAO
 
 
 class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def setUp(self):
+        dao.agent = Mock(AgentDAO)
         self.mock_innerdata_dao = Mock(InnerdataDAO)
+
+    def test_parse_ami_login(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'Agentcallbacklogin'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_login(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_logged_in.assert_called_with(agent_id)
+
+    def test_parse_ami_logout(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'Agentcallbacklogoff'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_logout(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_logged_out.assert_called_with(agent_id)
+
+    def test_parse_ami_answered(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'AgentConnect'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_answered(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_answered.assert_called_with(agent_id)
+
+    def test_parse_ami_call_completed(self):
+        agent_id = 12
+        wrapup_time = 15
+
+        ami_event = {'Agent': '1234',
+                     'Event': 'AgentComplete',
+                     'WrapupTime': str(wrapup_time)}
+        dao.agent.get_id_from_number.return_value = agent_id
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_call_completed(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_call_completed.assert_called_with(agent_id, wrapup_time)
+
+    def test_parse_ami_paused_partially(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'QueueMemberPaused',
+                     'Queue': 'q01',
+                     'Paused': '1'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.is_completely_paused.return_value = False
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)
+
+        self.assertEqual(mock_agent_availability_updater.agent_paused_all.call_count, 0)
+
+    def test_parse_ami_paused_completely(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'QueueMemberPaused',
+                     'Queue': 'q01',
+                     'Paused': '1'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        dao.agent.is_completely_paused.return_value = True
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_paused_all.assert_called_once_with(agent_id)
+
+    def test_parse_ami_unpaused(self):
+        agent_id = 12
+        ami_event = {'Agent': '1234',
+                     'Event': 'QueueMemberPaused',
+                     'Queue': 'q01',
+                     'Paused': '0'}
+        dao.agent.get_id_from_number.return_value = agent_id
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_unpaused(ami_event, mock_agent_availability_updater)
+
+        mock_agent_availability_updater.agent_unpaused.assert_called_once_with(agent_id)
 
     def test_agent_logged_in(self):
         agent_status_notifier = AgentAvailabilityUpdater(self.mock_innerdata_dao)

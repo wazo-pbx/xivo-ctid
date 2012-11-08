@@ -46,6 +46,7 @@ from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import innerdata
 from xivo_cti import message_hook
+from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
@@ -84,12 +85,12 @@ from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
-
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
-
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services import queue_entry_manager
+from xivo_cti.services import agent_availability_notifier
+from xivo_cti.services import agent_availability_updater
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.cti.commands.logout import Logout
@@ -228,6 +229,9 @@ class CTIServer(object):
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
+        self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
+        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao)
+
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
         self._queue_statistics_producer.notifier = self._statistics_notifier
@@ -278,6 +282,12 @@ class CTIServer(object):
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
 
         SubscribeMeetmeUpdate.register_callback_params(meetme_service_notifier.notifier.subscribe, ['cti_connection'])
+
+    def _register_ami_callbacks(self):
+        callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        callback_handler.register_callback('Agentcallbacklogin',
+                                           lambda event: agent_availability_updater.parse_ami_login(event,
+                                                                                                    self._agent_availability_updater))
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
