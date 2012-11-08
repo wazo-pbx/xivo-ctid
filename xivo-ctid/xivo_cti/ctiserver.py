@@ -231,7 +231,7 @@ class CTIServer(object):
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
         self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
-        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao)
+        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier)
 
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
