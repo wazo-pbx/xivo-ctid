@@ -33,23 +33,19 @@ class TestQueueMemberDAO(unittest.TestCase):
     def test_get_queue_count_for_agent(self):
         agent_interface = 'Agent/1234'
         expected_result = 2
-        queuemembers_config = Mock()
-        queuemembers_config.keeplist = {
+        self.innerdata.queuemembers_config = {
             'queue_name_1,Agent/1234': {
-                'paused': True,
+                'paused': '1',
                 'interface': 'Agent/1234',
             },
             'queue_name_2,Agent/1234': {
-                'paused': True,
+                'paused': '0',
                 'interface': 'Agent/1234',
             },
             'queue_name_3,Agent/5678': {
-                'paused': False,
+                'paused': '0',
                 'interface': 'Agent/5678',
             },
-        }
-        self.innerdata.xod_config = {
-            'queuemembers': queuemembers_config
         }
         queue_member_dao = QueueMemberDAO(self.innerdata)
 
@@ -60,27 +56,23 @@ class TestQueueMemberDAO(unittest.TestCase):
     def test_get_paused_count_for_agent(self):
         agent_interface = 'Agent/1234'
         expected_result = 1
-        queuemembers_config = Mock()
-        queuemembers_config.keeplist = {
+        self.innerdata.queuemembers_config = {
             'queue_name_1,Agent/1234': {
-                'paused': False,
+                'paused': '0',
                 'interface': 'Agent/1234',
             },
             'queue_name_2,Agent/1234': {
-                'paused': True,
+                'paused': '1',
                 'interface': 'Agent/1234',
             },
             'queue_name_3,Agent/5678': {
-                'paused': False,
+                'paused': '0',
                 'interface': 'Agent/5678',
             },
             'queue_name_3,Agent/5678': {
-                'paused': True,
+                'paused': '1',
                 'interface': 'Agent/5678',
             },
-        }
-        self.innerdata.xod_config = {
-            'queuemembers': queuemembers_config
         }
         queue_member_dao = QueueMemberDAO(self.innerdata)
 

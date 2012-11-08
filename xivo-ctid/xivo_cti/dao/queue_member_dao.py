@@ -30,16 +30,16 @@ class QueueMemberDAO(object):
         self.innerdata = innerdata
 
     def get_paused_count_for_agent(self, agent_interface):
-        queue_members = self.innerdata.xod_config['queuemembers'].keeplist
+        queue_members = self.innerdata.queuemembers_config
         paused_count = 0
         for queue_member in queue_members.itervalues():
             if queue_member['interface'] == agent_interface:
-                if queue_member['paused'] is True:
+                if queue_member['paused'] == '1':
                     paused_count += 1
         return paused_count
 
     def get_queue_count_for_agent(self, agent_interface):
-        queue_members = self.innerdata.xod_config['queuemembers'].keeplist
+        queue_members = self.innerdata.queuemembers_config
         queue_count = 0
         for queue_member in queue_members.itervalues():
             if queue_member['interface'] == agent_interface:
