@@ -285,7 +285,25 @@ class CTIServer(object):
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        callback_handler.register_callback('QueueMember', self._queuemember_service_manager.update_one_queuemember)
+        callback_handler.register_callback('QueueMemberStatus', self.queuemember_service_manager.update_one_queuemember)
+        callback_handler.register_callback('QueueMemberAdded', self.queuemember_service_manager.add_dynamic_queuemember)
+        callback_handler.register_callback('QueueMemberRemoved', self.queuemember_service_manager.remove_dynamic_queuemember)
+        callback_handler.register_callback('QueueMemberPaused', self.queuemember_service_manager.toggle_pause)
+
         callback_handler.register_callback('Agentcallbacklogin',
+                                           lambda event: agent_availability_updater.parse_ami_login(event,
+                                                                                                    self._agent_availability_updater))
+        callback_handler.register_callback('Agentcallbacklogoff',
+                                           lambda event: agent_availability_updater.parse_ami_login(event,
+                                                                                                    self._agent_availability_updater))
+        callback_handler.register_callback('AgentConnect',
+                                           lambda event: agent_availability_updater.parse_ami_login(event,
+                                                                                                    self._agent_availability_updater))
+        callback_handler.register_callback('AgentComplete',
+                                           lambda event: agent_availability_updater.parse_ami_login(event,
+                                                                                                    self._agent_availability_updater))
+        callback_handler.register_callback('QueueMemberPaused',
                                            lambda event: agent_availability_updater.parse_ami_login(event,
                                                                                                     self._agent_availability_updater))
 
@@ -430,7 +448,6 @@ class CTIServer(object):
         self.myami = interface_ami.AMI(self)
         self.commandclass = amiinterpret.AMI_1_8(self)
         self.commandclass.user_features_dao = self._user_features_dao
-        self.commandclass.queuemember_service_manager = self._queuemember_service_manager
 
         self.ami_sock = self.myami.connect()
         if not self.ami_sock:
