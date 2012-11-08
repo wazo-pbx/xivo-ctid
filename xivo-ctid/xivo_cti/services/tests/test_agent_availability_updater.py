@@ -123,7 +123,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         dao.agent.get_id_from_number.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
-        agent_availability_updater.parse_ami_unpaused(ami_event, mock_agent_availability_updater)
+        agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)
 
         mock_agent_availability_updater.agent_unpaused.assert_called_once_with(agent_id)
 

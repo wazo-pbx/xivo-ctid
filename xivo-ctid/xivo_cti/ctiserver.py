@@ -247,6 +247,7 @@ class CTIServer(object):
         service_manager.register_ami_events()
 
         self._register_cti_callbacks()
+        self._register_ami_callbacks()
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
@@ -287,26 +288,26 @@ class CTIServer(object):
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         callback_handler.register_callback('QueueMember', self._queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberStatus', self.queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberAdded', self.queuemember_service_manager.add_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberRemoved', self.queuemember_service_manager.remove_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberPaused', self.queuemember_service_manager.toggle_pause)
+        callback_handler.register_callback('QueueMemberStatus', self._queuemember_service_manager.update_one_queuemember)
+        callback_handler.register_callback('QueueMemberAdded', self._queuemember_service_manager.add_dynamic_queuemember)
+        callback_handler.register_callback('QueueMemberRemoved', self._queuemember_service_manager.remove_dynamic_queuemember)
+        callback_handler.register_callback('QueueMemberPaused', self._queuemember_service_manager.toggle_pause)
 
         callback_handler.register_callback('Agentcallbacklogin',
                                            lambda event: agent_availability_updater.parse_ami_login(event,
                                                                                                     self._agent_availability_updater))
         callback_handler.register_callback('Agentcallbacklogoff',
-                                           lambda event: agent_availability_updater.parse_ami_login(event,
-                                                                                                    self._agent_availability_updater))
+                                           lambda event: agent_availability_updater.parse_ami_logout(event,
+                                                                                                     self._agent_availability_updater))
         callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_availability_updater.parse_ami_login(event,
-                                                                                                    self._agent_availability_updater))
+                                           lambda event: agent_availability_updater.parse_ami_answered(event,
+                                                                                                       self._agent_availability_updater))
         callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_availability_updater.parse_ami_login(event,
-                                                                                                    self._agent_availability_updater))
+                                           lambda event: agent_availability_updater.parse_ami_call_completed(event,
+                                                                                                             self._agent_availability_updater))
         callback_handler.register_callback('QueueMemberPaused',
-                                           lambda event: agent_availability_updater.parse_ami_login(event,
-                                                                                                    self._agent_availability_updater))
+                                           lambda event: agent_availability_updater.parse_ami_paused(event,
+                                                                                                     self._agent_availability_updater))
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
