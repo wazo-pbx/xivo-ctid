@@ -26,6 +26,7 @@ from mock import Mock
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.dao.queue_member_dao import QueueMemberDAO
 from xivo_cti import innerdata
+from xivo_cti.services.agent_status import AgentStatus
 
 
 class TestAgentDAO(unittest.TestCase):
@@ -122,3 +123,27 @@ class TestAgentDAO(unittest.TestCase):
         result = agent_dao.get_interface_from_id(agent_id)
 
         self.assertEqual(result, expected_interface)
+
+    def test_is_logged(self):
+        agent_id = 12
+
+        agent_status = {str(agent_id): {'availability': AgentStatus.logged_out}}
+        self.innerdata.xod_status = {'agents': agent_status}
+
+        agent_dao = AgentDAO(self.innerdata, Mock())
+
+        result = agent_dao.is_logged(agent_id)
+
+        self.assertEqual(result, False)
+
+    def test_is_logged_true(self):
+        agent_id = 12
+
+        agent_status = {str(agent_id): {'availability': AgentStatus.available}}
+        self.innerdata.xod_status = {'agents': agent_status}
+
+        agent_dao = AgentDAO(self.innerdata, Mock())
+
+        result = agent_dao.is_logged(agent_id)
+
+        self.assertEqual(result, True)

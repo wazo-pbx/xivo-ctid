@@ -22,6 +22,8 @@
 
 import logging
 
+from xivo_cti.services.agent_status import AgentStatus
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,3 +56,7 @@ class AgentDAO(object):
 
         paused_count = self.queue_member_dao.get_paused_count_for_agent(agent_interface)
         return paused_count == agent_membership_count
+
+    def is_logged(self, agent_id):
+        availability = self.innerdata.xod_status['agents'][str(agent_id)]['availability']
+        return availability != AgentStatus.logged_out

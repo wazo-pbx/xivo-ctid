@@ -218,6 +218,8 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         self.mock_agent_availability_notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_unpaused(self):
+        dao.agent = Mock(AgentDAO)
+        dao.agent.is_logged.return_value = True
         agent_status_updater = AgentAvailabilityUpdater(self.mock_innerdata_dao,
                                                         self.mock_agent_availability_notifier)
 
@@ -227,3 +229,16 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.mock_innerdata_dao.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
         self.mock_agent_availability_notifier.notify.assert_called_once_with(agent_id)
+
+    def test_agent_unpaused_while_unlogged(self):
+        dao.agent = Mock(AgentDAO)
+        dao.agent.is_logged.return_value = False
+        agent_status_updater = AgentAvailabilityUpdater(self.mock_innerdata_dao,
+                                                        self.mock_agent_availability_notifier)
+
+        agent_id = 12
+
+        agent_status_updater.agent_unpaused(agent_id)
+
+        self.assertEqual(self.mock_innerdata_dao.set_agent_availability.call_count, 0)
+        self.assertEqual(self.mock_agent_availability_notifier.notify.call_count, 0)
