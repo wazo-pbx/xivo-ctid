@@ -95,8 +95,9 @@ class AgentAvailabilityUpdater(object):
         self.notifier.notify(agent_id)
 
     def agent_paused_all(self, agent_id):
-        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
-        self.notifier.notify(agent_id)
+        if dao.agent.is_logged(agent_id):
+            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
+            self.notifier.notify(agent_id)
 
     def agent_unpaused(self, agent_id):
         if dao.agent.is_logged(agent_id):
