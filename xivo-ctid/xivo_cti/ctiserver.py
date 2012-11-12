@@ -47,6 +47,7 @@ from xivo_cti import cti_config
 from xivo_cti import innerdata
 from xivo_cti import message_hook
 from xivo_cti import dao
+from xivo_cti.scheduler import Scheduler
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.queue_logger import QueueLogger
@@ -113,7 +114,7 @@ class CTIServer(object):
         self.myami = None
         self.safe = None
         self.timeout_queue = None
-        self.pipe_queued_threads = None
+        self.pipe_queued_threads = os.pipe()
         self._config = None
         self._user_service_manager = None
         self._cti_events = Queue.Queue()
@@ -230,8 +231,9 @@ class CTIServer(object):
         self._queuemember_service_manager.queuemember_notifier = self._queuemember_service_notifier
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
+        self.scheduler = Scheduler(self.pipe_queued_threads[1])
         self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
-        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier)
+        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier, self.scheduler)
 
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
@@ -408,9 +410,6 @@ class CTIServer(object):
         self._config.set_context_separation(xivoconf_general.get('context_separation'))
 
         socket.setdefaulttimeout(socktimeout)
-
-        if not self.pipe_queued_threads:
-            self.pipe_queued_threads = os.pipe()
 
         # sockets management
         self.fdlist_established = {}

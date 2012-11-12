@@ -644,23 +644,6 @@ class Safe(object):
         else:
             # dynamic agent mode
             agstatus['channel'] = channel
-        agstatus['availability'] = AgentStatus.available
-        # define relations for agent:x : channel:y and phone:z
-        self.handle_cti_stack('empty_stack')
-
-    def agentlogout(self, agentnumber):
-        idx = self.xod_config['agents'].idbyagentnumber(agentnumber)
-        self.handle_cti_stack('set', ('agents', 'updatestatus', idx))
-        agstatus = self.xod_status['agents'].get(idx)
-        agstatus['availability'] = AgentStatus.logged_out
-        # define relations for agent:x : channel:y and phone:z
-        self.handle_cti_stack('empty_stack')
-
-    def agentstatus(self, agentnumber, status):
-        idx = self.xod_config['agents'].idbyagentnumber(agentnumber)
-        self.handle_cti_stack('set', ('agents', 'updatestatus', idx))
-        agstatus = self.xod_status['agents'].get(idx)
-        agstatus['status'] = status
         # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 

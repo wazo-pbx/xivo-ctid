@@ -64,7 +64,7 @@ def parse_ami_paused(ami_event, agent_availability_updater):
 
 
 class AgentAvailabilityUpdater(object):
-    def __init__(self, innerdata_dao, notifier, scheduler=Scheduler()):
+    def __init__(self, innerdata_dao, notifier, scheduler):
         self.innerdata_dao = innerdata_dao
         self.scheduler = scheduler
         self.notifier = notifier

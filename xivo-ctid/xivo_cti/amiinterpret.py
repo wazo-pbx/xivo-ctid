@@ -262,14 +262,8 @@ class AMI_1_8(object):
     def ami_agentlogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Channel'])
 
-    def ami_agentlogoff(self, event):
-        self.innerdata.agentlogout(event['Agent'])
-
     def ami_agentcallbacklogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Loginchan'])
-
-    def ami_agentcallbacklogoff(self, event):
-        self.innerdata.agentlogout(event['Agent'])
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
