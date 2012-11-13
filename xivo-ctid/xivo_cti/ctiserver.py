@@ -93,6 +93,7 @@ from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services import agent_availability_notifier
 from xivo_cti.services import agent_availability_updater
+from xivo_cti.services import agent_on_call_updater
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.cti.commands.logout import Logout
@@ -234,6 +235,7 @@ class CTIServer(object):
         self.scheduler = Scheduler(self.pipe_queued_threads[1])
         self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
         self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier, self.scheduler)
+        self._agent_on_call_updater = agent_on_call_updater.AgentOnCallUpdater()
 
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 
@@ -310,6 +312,12 @@ class CTIServer(object):
         callback_handler.register_callback('QueueMemberPaused',
                                            lambda event: agent_availability_updater.parse_ami_paused(event,
                                                                                                      self._agent_availability_updater))
+        callback_handler.register_callback('AgentConnect',
+                                           lambda event: agent_on_call_updater.parse_ami_answered(event,
+                                                                                                  self._agent_on_call_updater))
+        callback_handler.register_callback('AgentComplete',
+                                           lambda event: agent_on_call_updater.parse_ami_call_completed(event,
+                                                                                                             self._agent_on_call_updater))
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),

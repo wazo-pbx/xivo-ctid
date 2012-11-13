@@ -70,7 +70,10 @@ class AgentAvailabilityUpdater(object):
         self.notifier = notifier
 
     def agent_logged_in(self, agent_id):
-        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+        if dao.agent.is_completely_paused(agent_id):
+            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
+        else:
+            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
         self.notifier.notify(agent_id)
 
     def agent_logged_out(self, agent_id):
@@ -87,10 +90,15 @@ class AgentAvailabilityUpdater(object):
                                     self.agent_wrapup_completed,
                                     agent_id)
         else:
-            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
-            self.notifier.notify(agent_id)
+            if not dao.agent.is_completely_paused(agent_id):
+                self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+                self.notifier.notify(agent_id)
 
     def agent_wrapup_completed(self, agent_id):
+        if dao.agent.is_completely_paused(agent_id):
+            return
+        if not dao.agent.is_logged(agent_id):
+            return
         self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
         self.notifier.notify(agent_id)
 
@@ -100,6 +108,6 @@ class AgentAvailabilityUpdater(object):
             self.notifier.notify(agent_id)
 
     def agent_unpaused(self, agent_id):
-        if dao.agent.is_logged(agent_id):
+        if dao.agent.is_logged(agent_id) and not dao.agent.on_call(agent_id):
             self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
             self.notifier.notify(agent_id)
