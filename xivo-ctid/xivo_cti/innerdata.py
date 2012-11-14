@@ -161,6 +161,7 @@ class Safe(object):
                                'channel': None,
                                'availability': AgentStatus.logged_out,
                                'availability_since': time.time(),
+                               'on_call': False,
                                'queues': [],
                                'groups': []},
                     'queues': {'agentmembers': [],
