@@ -48,34 +48,42 @@ def register_ami_events():
 
 
 def parse_join(event):
-    manager.join(
-        event[CHANNEL],
-        event[CONF_ROOM_NUMBER],
-        int(event[USERNUM]),
-        event[CIDNAME],
-        event[CIDNUMBER])
+    number = event[CONF_ROOM_NUMBER]
+    if meetme_features_dao.is_a_meetme(number):
+        manager.join(
+            event[CHANNEL],
+            number,
+            int(event[USERNUM]),
+            event[CIDNAME],
+            event[CIDNUMBER])
 
 
 def parse_leave(event):
-    manager.leave(event[CONF_ROOM_NUMBER], int(event[USERNUM]))
+    number = event[CONF_ROOM_NUMBER]
+    if meetme_features_dao.is_a_meetme(number):
+        manager.leave(number, int(event[USERNUM]))
 
 
 def parse_meetmelist(event):
-    manager.refresh(
-        event[CHANNEL],
-        event['Conference'],
-        int(event['UserNumber']),
-        event['CallerIDName'],
-        event['CallerIDNum'],
-        event['Muted'] == YES)
+    number = event['Conference']
+    if meetme_features_dao.is_a_meetme(number):
+        manager.refresh(
+            event[CHANNEL],
+            number,
+            int(event['UserNumber']),
+            event['CallerIDName'],
+            event['CallerIDNum'],
+            event['Muted'] == YES)
 
 
 def parse_meetmemute(event):
-    muting = event['Status'] == 'on'
-    if muting:
-        manager.mute(event['Meetme'], int(event['Usernum']))
-    else:
-        manager.unmute(event['Meetme'], int(event['Usernum']))
+    number = event['Meetme']
+    if meetme_features_dao.is_a_meetme(number):
+        muting = event['Status'] == 'on'
+        if muting:
+            manager.mute(number, int(event['Usernum']))
+        else:
+            manager.unmute(number, int(event['Usernum']))
 
 
 class MeetmeServiceManager(object):

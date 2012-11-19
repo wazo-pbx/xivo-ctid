@@ -38,6 +38,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.publish = Mock()
         self.manager = service_manager.MeetmeServiceManager()
 
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_join(self):
         channel = 'SIP/i7vbu0-00000001'
         number = '800'
@@ -65,6 +66,31 @@ class TestUserServiceManager(unittest.TestCase):
                                                              1,
                                                              caller_id_name,
                                                              caller_id_number)
+
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    def test_parse_join_paging(self):
+        channel = 'SIP/i7vbu0-00000001'
+        number = '8834759845'
+        caller_id_name = 'Père Noël'
+        caller_id_number = '1000'
+        event = {'Event': 'MeetmeJoin',
+                 'Privilege': 'call,all',
+                 'Channel': channel,
+                 'Uniqueid': '1338219287.2',
+                 'Meetme': number,
+                 'PseudoChan': 'DAHDI/pseudo-965958986',
+                 'Admin': 'No',
+                 'NoAuthed': 'No',
+                 'Usernum': '1',
+                 'CallerIDnum': caller_id_number,
+                 'CallerIDname': caller_id_name,
+                 'ConnectedLineNum': '<unknown>',
+                 'ConnectedLineName': '<unknown>'}
+
+        service_manager.manager = Mock(service_manager.MeetmeServiceManager)
+        service_manager.parse_join(event)
+
+        self.assertEqual(service_manager.manager.join.call_count, 0)
 
     @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
     @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=5))
@@ -185,6 +211,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_leave(self):
         event = {'Event': 'MeetmeLeave',
                  'Privilege': 'call,all',
@@ -204,6 +231,27 @@ class TestUserServiceManager(unittest.TestCase):
         service_manager.parse_leave(event)
 
         manager.leave.assert_called_once_with('800', 1)
+
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    def test_parse_leave_paging(self):
+        event = {'Event': 'MeetmeLeave',
+                 'Privilege': 'call,all',
+                 'Channel': 'SIP/i7vbu0-00000000',
+                 'Uniqueid': '1338219251.0',
+                 'Meetme': '0834758704',
+                 'Usernum': '1',
+                 'CallerIDNum': '1000',
+                 'CallerIDName': 'Père Noël',
+                 'ConnectedLineNum': '<unknown>',
+                 'ConnectedLineName': '<unknown>',
+                 'Duration': '31'}
+
+        manager = Mock(service_manager.MeetmeServiceManager)
+        service_manager.manager = manager
+
+        service_manager.parse_leave(event)
+
+        self.assertEqual(manager.leave.call_count, 0)
 
     def test_leave(self):
         start_time = 1234556.123
@@ -386,6 +434,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_meetmelist(self):
         channel = 'SIP/pcm_dev-00000003'
         event = {'Event': 'MeetmeList',
@@ -408,6 +457,30 @@ class TestUserServiceManager(unittest.TestCase):
         service_manager.parse_meetmelist(event)
 
         manager.refresh.assert_called_once_with(channel, '800', 1, 'My Name', '666', False)
+
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    def test_parse_meetmelist_paging(self):
+        channel = 'SIP/pcm_dev-00000003'
+        event = {'Event': 'MeetmeList',
+                 'Conference': '800',
+                 'UserNumber': '1',
+                 'CallerIDNum': '666',
+                 'CallerIDName': 'My Name',
+                 'ConnectedLineNum': '<unknown>',
+                 'ConnectedLineName': '<noname>',
+                 'Channel': channel,
+                 'Admin': 'No',
+                 'Role': 'Talkandlisten',
+                 'MarkedUser': 'No',
+                 'Muted': 'No',
+                 'Talking': 'Notmonitored'}
+
+        manager = Mock(service_manager.MeetmeServiceManager)
+        service_manager.manager = manager
+
+        service_manager.parse_meetmelist(event)
+
+        self.assertEqual(manager.refresh.call_count, 0)
 
     @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, False, 'dev')))
     @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=1))
@@ -530,6 +603,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.assertEqual(self.manager._cache, expected)
         self.publish.assert_called_once_with()
 
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_mute(self):
         event = {'Event': 'MeetmeMute',
                  'Privilege': 'call,all',
@@ -546,6 +620,24 @@ class TestUserServiceManager(unittest.TestCase):
 
         manager.mute.assert_called_once_with('800', 1)
 
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    def test_parse_mute_paging(self):
+        event = {'Event': 'MeetmeMute',
+                 'Privilege': 'call,all',
+                 'Channel': 'SIP/pcm_dev-0000000b',
+                 'Uniqueid': '1338379282.18',
+                 'Meetme': '800',
+                 'Usernum': '1',
+                 'Status': 'on'}
+
+        manager = Mock(service_manager.MeetmeServiceManager)
+        service_manager.manager = manager
+
+        service_manager.parse_meetmemute(event)
+
+        self.assertEquals(manager.mute.call_count, 0)
+
+    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_unmute(self):
         event = {'Event': 'MeetmeMute',
                  'Privilege': 'call,all',
