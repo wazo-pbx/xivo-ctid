@@ -206,7 +206,6 @@ class CTIServer(object):
         self._user_service_manager.line_features_dao = self._line_features_dao
         self._user_service_manager.presence_service_manager = self._presence_service_manager
         self._user_service_manager.presence_service_executor = self._presence_service_executor
-        self._user_service_manager.agent_service_manager = self._agent_service_manager
         self._user_service_manager.funckey_manager = self._funckey_manager
 
         self._agent_service_manager.line_features_dao = self._line_features_dao
