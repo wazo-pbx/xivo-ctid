@@ -115,10 +115,13 @@ def _getargspec(factory):
     if inspect.isclass(factory):
         factory = factory.__init__
 
-    args, vargs, vkw, defaults = inspect.getargspec(factory)
-    if inspect.ismethod(factory):
-        args = args[1:]
-    return args, defaults
+    try:
+        args, vargs, vkw, defaults = inspect.getargspec(factory)
+        if inspect.ismethod(factory):
+            args = args[1:]
+        return args, defaults
+    except TypeError:
+        raise Exception('The function "%s" does not exist' % factory.__name__)
 
 
 context = Context()
