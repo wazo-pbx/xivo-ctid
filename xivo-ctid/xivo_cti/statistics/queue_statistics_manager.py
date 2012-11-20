@@ -4,9 +4,9 @@ import logging
 import time
 from xivo_dao import queue_features_dao
 from xivo_dao.queuestatisticdao import QueueStatisticDAO
+from xivo_cti.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 
 logger = logging.getLogger("QueueStatisticsManager")
 
@@ -18,7 +18,7 @@ def register_events():
     callback_handler.register_callback('QueueMemberRemoved', parse_queue_member_status)
     callback_handler.register_callback('QueueMemberPaused', parse_queue_member_status)
 
-    queue_member_callback_handler = QueueMemberServiceNotifier.get_instance()
+    queue_member_callback_handler = context.get('queuemember_service_notifier')
     queue_member_callback_handler.subscribe(parse_queue_member_update)
 
 

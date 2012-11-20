@@ -26,9 +26,6 @@ from xivo_cti.services.queue_service_manager import NotAQueueException
 
 
 class QueueMemberServiceNotifier(object):
-
-    _instance = None
-
     def __init__(self):
         self._callbacks = []
 
@@ -96,9 +93,3 @@ class QueueMemberServiceNotifier(object):
                                   [('Member', member),
                                    ('Queue', queue)])}
             self.interface_ami.execute_and_track(actionid, params)
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance == None:
-            cls._instance = cls()
-        return cls._instance
