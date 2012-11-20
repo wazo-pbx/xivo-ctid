@@ -23,6 +23,11 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
 
 from xivo_cti.context import context
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_dao.extensionsdao import ExtensionsDAO
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_manager import UserServiceManager
@@ -58,6 +63,11 @@ def _register_context(context):
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
     context.register('user_features_dao', UserFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('extensions_dao', ExtensionsDAO.new_from_uri, 'queue_stats')
+    context.register('phone_funckey_dao', PhoneFunckeyDAO.new_from_uri, 'queue_stats')
+    context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('line_features_dao', LineFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('trunk_features_dao', TrunkFeaturesDAO.new_from_uri, 'queue_stats')
 
 
 def _parse_args(args):

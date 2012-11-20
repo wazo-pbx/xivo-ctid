@@ -35,12 +35,7 @@ from sqlalchemy.exc import OperationalError, InvalidRequestError
 
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
-from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
-from xivo_dao.extensionsdao import ExtensionsDAO
-from xivo_dao.linefeaturesdao import LineFeaturesDAO
-from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
-from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
@@ -174,13 +169,13 @@ class CTIServer(object):
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()
 
+        self._agent_features_dao = context.get('agent_features_dao')
+        self._extensions_dao = context.get('extensions_dao')
         self._innerdata_dao = context.get('innerdata_dao')
+        self._line_features_dao = context.get('line_features_dao')
+        self._phone_funckey_dao = context.get('phone_funckey_dao')
+        self._trunk_features_dao = context.get('trunk_features_dao')
         self._user_features_dao = context.get('user_features_dao')
-        self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
-        self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
-        self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
-        self._line_features_dao = LineFeaturesDAO.new_from_uri('queue_stats')
-        self._trunk_features_dao = TrunkFeaturesDAO.new_from_uri('queue_stats')
 
         self._funckey_manager.extensionsdao = self._extensions_dao
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
