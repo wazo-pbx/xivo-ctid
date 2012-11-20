@@ -112,8 +112,7 @@ class CTIServer(object):
                  user_service_manager,
                  user_service_notifier,
                  funckey_manager,
-                 agent_service_manager,
-                 agent_executor):
+                 agent_service_manager):
         self.mycti = {}
         self.myami = None
         self.safe = None
@@ -125,7 +124,6 @@ class CTIServer(object):
         self._user_service_notifier = user_service_notifier
         self._funckey_manager = funckey_manager
         self._agent_service_manager = agent_service_manager
-        self._agent_executor = agent_executor
 
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
@@ -214,7 +212,6 @@ class CTIServer(object):
         self._agent_service_manager.line_features_dao = self._line_features_dao
         self._agent_service_manager.agent_features_dao = self._agent_features_dao
         self._agent_service_manager.user_features_dao = self._user_features_dao
-        self._agent_service_manager.agent_executor = self._agent_executor
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = QueueEntryManager.get_instance()
@@ -467,7 +464,7 @@ class CTIServer(object):
         self._queuemember_service_notifier.interface_ami = self.myami
         self._queue_entry_manager._ami = self.myami.amiclass
         self._funckey_manager.ami = self.myami.amiclass
-        self._agent_service_manager.agent_executor.ami = self.myami.amiclass
+        context.get('agent_executor').ami = self.myami.amiclass
         self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
