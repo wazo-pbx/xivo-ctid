@@ -210,7 +210,7 @@ class CTIServer(object):
         self._agent_service_manager.user_features_dao = self._user_features_dao
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
-        self._queue_entry_manager = QueueEntryManager.get_instance()
+        self._queue_entry_manager = context.get('queue_entry_manager')
         self._queue_statistic_manager = QueueStatisticsManager.get_instance()
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()

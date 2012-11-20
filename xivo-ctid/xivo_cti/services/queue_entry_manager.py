@@ -23,6 +23,7 @@
 
 from collections import namedtuple
 from xivo_dao import queue_features_dao
+from xivo_cti.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 
 import time
@@ -47,7 +48,7 @@ def register_events():
 
 def parse_join(event):
     try:
-        manager = QueueEntryManager.get_instance()
+        manager = context.get('queue_entry_manager')
         manager.join(event[QUEUE],
                      int(event[POSITION]),
                      int(event[COUNT]),
@@ -60,7 +61,7 @@ def parse_join(event):
 
 def parse_queue_entry(event):
     try:
-        manager = QueueEntryManager.get_instance()
+        manager = context.get('queue_entry_manager')
         manager.insert(event[QUEUE],
                        int(event[POSITION]),
                        event[NAME],
@@ -73,7 +74,7 @@ def parse_queue_entry(event):
 
 def parse_leave(event):
     try:
-        manager = QueueEntryManager.get_instance()
+        manager = context.get('queue_entry_manager')
         manager.leave(event[QUEUE],
                       int(event[POSITION]),
                       int(event[COUNT]),
@@ -84,13 +85,14 @@ def parse_leave(event):
 
 def parse_queue_params(event):
     try:
-        manager = QueueEntryManager.get_instance()
+        manager = context.get('queue_entry_manager')
         manager.clear_data(event[QUEUE])
     except KeyError:
         logger.warning('Failed to parse QueueParams event %s', event)
 
+
 def parse_queue_status_complete(event):
-    manager = QueueEntryManager.get_instance()
+    manager = context.get('queue_entry_manager')
     manager.publish()
 
 
@@ -101,9 +103,8 @@ def longest_wait_time_calculator(queue_infos):
             call_entry_time = queue_infos[call].join_time
     return time.time() - call_entry_time
 
-class QueueEntryManager(object):
 
-    _instance = None
+class QueueEntryManager(object):
 
     def __init__(self):
         self._queue_entries = {}
@@ -187,7 +188,7 @@ class QueueEntryManager(object):
                                                   self._queue_entries[queue_name])
             logger.info('Publishing entries for %s: %s', queue_name, encoded_status)
             self._notifier.publish(queue_name, encoded_status)
-        elif queue_name == None:
+        elif queue_name is None:
             for q in self._queue_entries.keys():
                 self.publish(q)
 
@@ -216,9 +217,3 @@ class QueueEntryManager(object):
             logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
             realtime_stat["%s" % queue_id][u'Xivo-LongestWaitTime'] = long(longest_wait_time)
         return realtime_stat
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance == None:
-            cls._instance = cls()
-        return cls._instance
