@@ -179,7 +179,7 @@ class CTIServer(object):
         self._init_db_uri()
 
         self._presence_service_manager = context.get('presence_service_manager')
-        self._presence_service_executor = PresenceServiceExecutor()
+        self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = StatisticsNotifier()
         self._queue_service_manager = QueueServiceManager.get_instance()
         self._queue_statistics_producer = QueueStatisticsProducer.get_instance()

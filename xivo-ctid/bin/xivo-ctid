@@ -29,6 +29,7 @@ from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 def main():
@@ -48,6 +49,7 @@ def _register_context(context):
     context.register('agent_service_manager', AgentServiceManager)
     context.register('agent_executor', AgentExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
+    context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('innerdata_dao', InnerdataDAO)
 
 
