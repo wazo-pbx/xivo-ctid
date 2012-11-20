@@ -22,8 +22,9 @@ class PresenceServiceExecutor(object):
                            'queuepause_all',
                            'queueunpause_all']
 
-    def __init__(self):
-        pass
+    def __init__(self, user_service_manager, agent_service_manager):
+        self.user_service_manager = user_service_manager
+        self.agent_service_manager = agent_service_manager
 
     def execute_actions(self, user_id, presence):
         actions = self._innerdata.get_user_permissions('userstatus', user_id)

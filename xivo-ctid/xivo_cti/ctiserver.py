@@ -198,8 +198,6 @@ class CTIServer(object):
         self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
 
         self._presence_service_executor.user_features_dao = self._user_features_dao
-        self._presence_service_executor.user_service_manager = self._user_service_manager
-        self._presence_service_executor.agent_service_manager = self._agent_service_manager
 
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
