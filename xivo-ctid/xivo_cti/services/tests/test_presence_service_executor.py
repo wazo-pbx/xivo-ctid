@@ -13,10 +13,11 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     def setUp(self):
         self.user_service_manager = Mock(UserServiceManager)
         self.agent_service_manager = Mock(AgentServiceManager)
+        self.user_features_dao = Mock(UserFeaturesDAO)
         self.presence_service_executor = PresenceServiceExecutor(self.user_service_manager,
-                                                                 self.agent_service_manager)
+                                                                 self.agent_service_manager,
+                                                                 self.user_features_dao)
         self.presence_service_executor._innerdata = Mock(Safe)
-        self.presence_service_executor.user_features_dao = Mock(UserFeaturesDAO)
 
     def tearDown(self):
         pass

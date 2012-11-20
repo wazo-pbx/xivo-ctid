@@ -177,11 +177,6 @@ class CTIServer(object):
         self._trunk_features_dao = context.get('trunk_features_dao')
         self._user_features_dao = context.get('user_features_dao')
 
-        self._funckey_manager.extensionsdao = self._extensions_dao
-        self._funckey_manager.phone_funckey_dao = self._phone_funckey_dao
-
-        self._presence_service_executor.user_features_dao = self._user_features_dao
-
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
         self._user_service_manager.line_features_dao = self._line_features_dao
