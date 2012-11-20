@@ -35,6 +35,12 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.queue_statistics_producer = QueueStatisticsProducer()
         self.statistics_notifier = Mock(StatisticsNotifier)
         self.queue_statistics_producer.set_notifier(self.statistics_notifier)
+        self.queue_service_manager = Mock(QueueServiceManager)
+        self.dependencies = {
+            'queue_service_manager': self.queue_service_manager,
+            'queue_statistics_producer': self.queue_statistics_producer,
+        }
+        self.mock_context = lambda module: self.dependencies[module]
 
     def tearDown(self):
         QueueStatisticsProducer._instance = None
@@ -311,10 +317,8 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Talking': '1',
                               'HoldTime': '7'}
         expected_counters = QueueCounters(available='5', EWT='7', Talking='1')
-        mock_context.return_value = self.queue_statistics_producer
-        queue_service_manager = Mock(QueueServiceManager)
-        QueueServiceManager._instance = queue_service_manager
-        queue_service_manager.get_queue_id.return_value = queue_id
+        mock_context.side_effect = self.mock_context
+        self.queue_service_manager.get_queue_id.return_value = queue_id
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
@@ -323,7 +327,6 @@ class TestQueueStatisticsProducer(unittest.TestCase):
     @patch('xivo_cti.context.context.get')
     def test_parse_queue_summary_not_a_queue(self, mock_context):
         self.queue_statistics_producer.on_queue_summary = Mock()
-        queue_service_manager = Mock(QueueServiceManager)
 
         queue_name = 'services'
         queuesummary_event = {'Event': 'QueueSummary',
@@ -331,10 +334,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Available': '5',
                               'Talking': '1',
                               'HoldTime': '7'}
-        mock_context.return_value = self.queue_statistics_producer
-
-        QueueServiceManager._instance = queue_service_manager
-        queue_service_manager.get_queue_id.side_effect = NotAQueueException
+        mock_context.side_effect = self.mock_context
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 

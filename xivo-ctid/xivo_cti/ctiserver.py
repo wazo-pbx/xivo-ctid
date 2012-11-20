@@ -66,7 +66,6 @@ from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEnt
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
 from xivo_cti.cti.commands.agent_login import AgentLogin
-from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
@@ -164,7 +163,7 @@ class CTIServer(object):
         self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = StatisticsNotifier()
-        self._queue_service_manager = QueueServiceManager.get_instance()
+        self._queue_service_manager = context.get('queue_service_manager')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()

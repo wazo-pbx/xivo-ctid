@@ -23,7 +23,7 @@
 
 import unittest
 
-from tests.mock import Mock, call, ANY
+from tests.mock import Mock
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.dao.innerdatadao import InnerdataDAO
