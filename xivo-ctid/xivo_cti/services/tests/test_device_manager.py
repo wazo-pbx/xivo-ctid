@@ -25,16 +25,15 @@
 import unittest
 import mock
 
-from xivo_cti import dao
+from mock import patch
+
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
-from xivo_cti.dao.device_dao import DeviceDAO
 
 
 class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
-        dao.device = mock.Mock(DeviceDAO)
         self.aastra_controller = mock.Mock(AastraController)
 
     def test_answer(self):
@@ -81,36 +80,39 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEquals(manager.send_ami.call_count, 0)
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
-    def test_is_supported_device_6757i(self):
+    @patch('xivo_dao.device_dao.get_vendor_model')
+    def test_is_supported_device_6757i(self, mock_get_vendor_model):
         device_id = 13
         vendor = 'Aastra'
         model = '6757i'
 
-        dao.device.get_vendor_model.return_value = vendor, model
+        mock_get_vendor_model.return_value = vendor, model
 
         self.manager = DeviceManager()
         result = self.manager.is_supported_device(device_id)
 
         self.assertEqual(result, True)
 
-    def test_is_supported_device_6755i(self):
+    @patch('xivo_dao.device_dao.get_vendor_model')
+    def test_is_supported_device_6755i(self, mock_get_vendor_model):
         device_id = 13
         vendor = 'Aastra'
         model = '6755i'
 
-        dao.device.get_vendor_model.return_value = vendor, model
+        mock_get_vendor_model.return_value = vendor, model
 
         self.manager = DeviceManager()
         result = self.manager.is_supported_device(device_id)
 
         self.assertEqual(result, True)
 
-    def test_is_not_supported_device(self):
+    @patch('xivo_dao.device_dao.get_vendor_model')
+    def test_is_not_supported_device(self, mock_get_vendor_model):
         device_id = 13
         vendor = 'Cisco'
         model = '1234'
 
-        dao.device.get_vendor_model.return_value = vendor, model
+        mock_get_vendor_model.return_value = vendor, model
 
         self.manager = DeviceManager()
         result = self.manager.is_supported_device(device_id)

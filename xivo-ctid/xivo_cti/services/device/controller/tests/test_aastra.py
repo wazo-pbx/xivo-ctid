@@ -1,22 +1,18 @@
-
 import unittest
-import mock
+
+from mock import patch
 
 from xivo_cti.services.device.controller.aastra import AastraController
-from xivo_cti import dao
-from xivo_cti.dao.device_dao import DeviceDAO
 
 
 class TestAastraController(unittest.TestCase):
 
-    def setUp(self):
-        dao.device = mock.Mock(DeviceDAO)
-
-    def test_answer(self):
+    @patch('xivo_dao.device_dao.get_peer_name')
+    def test_answer(self, mock_get_peer_name):
         device_id = 66
         peer = 'SIP/1234'
 
-        dao.device.get_peer_name.return_value = peer
+        mock_get_peer_name.return_value = peer
 
         aastra_controller = AastraController()
 
@@ -30,11 +26,12 @@ class TestAastraController(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_answer_good_peer(self):
+    @patch('xivo_dao.device_dao.get_peer_name')
+    def test_answer_good_peer(self, mock_get_peer_name):
         device_id = 66
         peer = 'SIP/abcde'
 
-        dao.device.get_peer_name.return_value = peer
+        mock_get_peer_name.return_value = peer
 
         aastra_controller = AastraController()
 
