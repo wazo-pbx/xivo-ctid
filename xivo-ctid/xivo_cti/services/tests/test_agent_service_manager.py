@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, call
+from tests.mock import Mock, call, patch
 
 from xivo_dao.alchemy import dbconnection
 from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
@@ -111,11 +111,14 @@ class TestAgentServiceManager(unittest.TestCase):
                                                                          agent.context)
 
     def test_find_agent_exten(self):
-        agent = self._insert_agent()
-        user_id = self._insert_user_with_agent(agent.id)
-        self._insert_line_with_user(user_id)
+        agent_id = 11
+        self.user_features_dao = self.agent_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.line_features_dao = self.agent_manager.line_features_dao = Mock(LineFeaturesDAO)
+        self.user_features_dao.find_by_agent_id.return_value = [12]
+        self.line_features_dao.find_line_id_by_user_id.return_value = [13]
+        self.line_features_dao.number.return_value = self.line_number
 
-        extens = self.agent_manager.find_agent_exten(agent.id)
+        extens = self.agent_manager.find_agent_exten(agent_id)
 
         self.assertEqual(extens[0], self.line_number)
 
@@ -132,17 +135,29 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context)
 
-    def test_agent_special_me(self):
+    @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    def test_agent_special_me(self, mock_id_converter):
+        user_id = 12
+        agent_number = '1234'
+        agent_context = 'test_context'
+        mock_id_converter.return_value = 44
+        self.user_features_dao = self.agent_manager.user_features_dao = Mock(UserFeaturesDAO)
+        self.line_features_dao = self.agent_manager.line_features_dao = Mock(LineFeaturesDAO)
+        self.agent_features_dao = self.agent_manager.agent_features_dao = Mock(AgentFeaturesDAO)
+        self.user_features_dao.agent_id.return_value = 44
+        self.user_features_dao.find_by_agent_id.return_value = [user_id]
+        self.line_features_dao.find_line_id_by_user_id.return_value = [13]
+        self.line_features_dao.number.return_value = self.line_number
+        self.line_features_dao.is_phone_exten.return_value = True
+        self.agent_features_dao.agent_number.return_value = agent_number
+        self.agent_features_dao.agent_context.return_value = agent_context
         self.agent_manager.agent_call_back_login = Mock()
-        agent = self._insert_agent()
-        user_id = self._insert_user_with_agent(agent.id)
-        self._insert_line_with_user(user_id)
 
         self.agent_manager.log_agent(user_id, 'agent:special:me')
 
-        self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
+        self.agent_manager.agent_call_back_login.assert_called_once_with(agent_number,
                                                                          self.line_number,
-                                                                         agent.context)
+                                                                         agent_context)
 
     def _insert_line_with_number(self, number):
         line = LineFeatures()
