@@ -57,7 +57,6 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces.interfaces import DisconnectCause
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
@@ -176,7 +175,7 @@ class CTIServer(object):
         self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()
 
         self._innerdata_dao = context.get('innerdata_dao')
-        self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
+        self._user_features_dao = context.get('user_features_dao')
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
         self._agent_features_dao = AgentFeaturesDAO.new_from_uri('queue_stats')
