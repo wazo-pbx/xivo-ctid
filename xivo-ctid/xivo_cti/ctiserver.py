@@ -71,11 +71,9 @@ from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyF
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
-from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
-from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
@@ -83,9 +81,6 @@ from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProduce
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
-from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
-from xivo_cti.services.presence_service_manager import PresenceServiceManager
-from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services import queue_entry_manager

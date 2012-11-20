@@ -44,15 +44,15 @@ def main():
 
 
 def _register_context(context):
-    context.register('user_service_manager', UserServiceManager)
-    context.register('user_service_notifier', UserServiceNotifier)
-    context.register('funckey_manager', FunckeyManager)
     context.register('agent_service_manager', AgentServiceManager)
     context.register('agent_executor', AgentExecutor)
-    context.register('queue_entry_manager', QueueEntryManager)
-    context.register('presence_service_manager', PresenceServiceManager)
-    context.register('presence_service_executor', PresenceServiceExecutor)
+    context.register('funckey_manager', FunckeyManager)
     context.register('innerdata_dao', InnerdataDAO)
+    context.register('queue_entry_manager', QueueEntryManager)
+    context.register('presence_service_executor', PresenceServiceExecutor)
+    context.register('presence_service_manager', PresenceServiceManager)
+    context.register('user_service_manager', UserServiceManager)
+    context.register('user_service_notifier', UserServiceNotifier)
 
 
 def _parse_args(args):
