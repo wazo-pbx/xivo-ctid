@@ -22,7 +22,7 @@ import sys
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
 
-from xivo_cti.context import Context
+from xivo_cti.context import context
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.funckey.funckey_manager import FunckeyManager
@@ -32,7 +32,6 @@ from xivo_cti.services.agent_executor import AgentExecutor
 def main():
     _parse_args(sys.argv[1:])
 
-    context = Context()
     _register_context(context)
 
     ctid = context.build(CTIServer)

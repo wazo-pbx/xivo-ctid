@@ -121,6 +121,9 @@ def _getargspec(factory):
     return args, defaults
 
 
+context = Context()
+
+
 if __name__ == "__main__":
     class Demo:
         def __init__(self, title, user, console):
