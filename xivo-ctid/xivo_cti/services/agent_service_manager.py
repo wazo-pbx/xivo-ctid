@@ -29,6 +29,18 @@ logger = logging.getLogger('Agent Manager')
 
 class AgentServiceManager(object):
 
+    def __init__(self,
+                 agent_executor,
+                 agent_features_dao,
+                 innerdata_dao,
+                 line_features_dao,
+                 user_features_dao):
+        self.agent_executor = agent_executor
+        self.agent_features_dao = agent_features_dao
+        self.innerdata_dao = innerdata_dao
+        self.line_features_dao = line_features_dao
+        self.user_features_dao = user_features_dao
+
     def log_agent(self, user_id, agent_id=None, agent_exten=None):
         if not agent_id or agent_id == 'agent:special:me':
             agent_id = self.user_features_dao.agent_id(user_id)

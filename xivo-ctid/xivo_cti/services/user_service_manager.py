@@ -1,7 +1,7 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 # XiVO CTI Server
-# Copyright (C) 2009-2011  Avencall
+# Copyright (C) 2009-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,22 @@
 
 
 class UserServiceManager(object):
+
+    def __init__(self,
+                 user_service_notifier,
+                 agent_service_manager,
+                 presence_service_manager,
+                 funckey_manager,
+                 user_features_dao,
+                 phone_funckey_dao,
+                 line_features_dao):
+        self.user_service_notifier = user_service_notifier
+        self.agent_service_manager = agent_service_manager
+        self.presence_service_manager = presence_service_manager
+        self.funckey_manager = funckey_manager
+        self.user_features_dao = user_features_dao
+        self.phone_funckey_dao = phone_funckey_dao
+        self.line_features_dao = line_features_dao
 
     def enable_dnd(self, user_id):
         self.user_features_dao.enable_dnd(user_id)

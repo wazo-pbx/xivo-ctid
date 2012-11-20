@@ -102,7 +102,7 @@ QUEUE_ENTRY_MESSAGE = {'Event': 'QueueEntry',
 class TestQueueEntryManager(unittest.TestCase):
 
     def setUp(self):
-        self.manager = QueueEntryManager.get_instance()
+        self.manager = QueueEntryManager()
         self.encoder = QueueEntryEncoder.get_instance()
         self.notifier = QueueEntryNotifier.get_instance()
         self.manager._notifier = self.notifier
@@ -131,41 +131,38 @@ class TestQueueEntryManager(unittest.TestCase):
     def _join_3(self):
         self.manager.join(QUEUE_NAME, 3, 3, CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3)
 
-    def test_parse_new_entry(self):
-        join, handler = self.manager.join, Mock()
-        self.manager.join = handler
+    @patch('xivo_cti.context.context.get')
+    def test_parse_new_entry(self, mock_context):
+        self.manager.join = Mock()
+        mock_context.return_value = self.manager
 
         queue_entry_manager.parse_join(JOIN_MESSAGE_1)
 
-        handler.assert_called_once_with(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
+        self.manager.join.assert_called_once_with(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-        self.manager.join = join
-
-    def test_parse_queue_status_complete(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_status_complete(self, mock_context):
         msg = {'Event': 'QueueStatusComplete'}
-        publish, handler = self.manager.publish, Mock()
-        self.manager.publish = handler
+        self.manager.publish = Mock()
+        mock_context.return_value = self.manager
 
         queue_entry_manager.parse_queue_status_complete(msg)
 
-        handler.assert_called_once_with()
+        self.manager.publish.assert_called_once_with()
 
-        self.manager.publish = publish
-
-    def test_parse_queue_entry(self):
-        insert, handler = self.manager.insert, Mock()
-        self.manager.insert = handler
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_entry(self, mock_context):
+        self.manager.insert = Mock()
+        mock_context.return_value = self.manager
 
         queue_entry_manager.parse_queue_entry(QUEUE_ENTRY_MESSAGE)
 
-        handler.assert_called_once_with(QUEUE_NAME,
-                                        1,
-                                        CALLER_ID_NAME_1,
-                                        CALLER_ID_NUMBER_1,
-                                        UNIQUE_ID_1,
-                                        WAIT_TIME_1)
-
-        self.manager.insert = insert
+        self.manager.insert.assert_called_once_with(QUEUE_NAME,
+                                             1,
+                                             CALLER_ID_NAME_1,
+                                             CALLER_ID_NUMBER_1,
+                                             UNIQUE_ID_1,
+                                             WAIT_TIME_1)
 
     def test_new_entry(self):
         self._join_1()
@@ -187,15 +184,14 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEquals(QUEUE_ENTRY_1, self.manager._queue_entries[QUEUE_NAME][UNIQUE_ID_1])
         self.assertEquals(QUEUE_ENTRY_2, self.manager._queue_entries[QUEUE_NAME][UNIQUE_ID_2])
 
-    def test_handle_leave(self):
-        leave, handler = self.manager.leave, Mock()
-        self.manager.leave = handler
+    @patch('xivo_cti.context.context.get')
+    def test_handle_leave(self, mock_context):
+        self.manager.leave = Mock()
+        mock_context.return_value = self.manager
 
         queue_entry_manager.parse_leave(LEAVE_MESSAGE_1)
 
-        handler.assert_called_once_with(QUEUE_NAME, 1, 0, UNIQUE_ID_1)
-
-        self.manager.leave = leave
+        self.manager.leave.assert_called_once_with(QUEUE_NAME, 1, 0, UNIQUE_ID_1)
 
     @patch('xivo_dao.queue_features_dao.id_from_name', Mock())
     @patch('xivo_dao.queue_features_dao.is_a_queue', Mock(return_value=True))
@@ -295,7 +291,8 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertFalse(QUEUE_NAME in self.manager._queue_entries)
 
-    def test_parse_queue_params(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_params(self, mock_context):
         msg = {'Event': 'QueueParams',
                'Queue': QUEUE_NAME,
                'Max': '0',
@@ -309,14 +306,12 @@ class TestQueueEntryManager(unittest.TestCase):
                'ServicelevelPerf': '0.0',
                'Weight': '0'}
 
-        clear_data, handler = self.manager.clear_data, Mock()
-        self.manager.clear_data = handler
+        self.manager.clear_data = Mock()
+        mock_context.return_value = self.manager
 
         queue_entry_manager.parse_queue_params(msg)
 
-        handler.assert_called_once_with(QUEUE_NAME)
-
-        self.manager.clear_data = clear_data
+        self.manager.clear_data.assert_called_once_with(QUEUE_NAME)
 
     def test_synchronize_queue_all(self):
         ami_class = Mock(AMIClass)

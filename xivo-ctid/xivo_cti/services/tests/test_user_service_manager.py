@@ -39,7 +39,6 @@ class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
 
-        self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
         self.line_features_dao = Mock(LineFeaturesDAO)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
@@ -47,15 +46,15 @@ class TestUserServiceManager(unittest.TestCase):
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
 
-        self.user_service_manager.user_features_dao = self.user_features_dao
-        self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
-        self.user_service_manager.user_service_notifier = self.user_service_notifier
-        self.user_service_manager.funckey_manager = self.funckey_manager
-        self.user_service_manager.line_features_dao = self.line_features_dao
-        self.user_service_manager.presence_service_manager = self.presence_service_manager
-        self.user_service_manager.agent_service_manager = self.agent_service_manager
+        self.user_service_manager = UserServiceManager(self.user_service_notifier,
+                                                       self.agent_service_manager,
+                                                       self.presence_service_manager,
+                                                       self.funckey_manager,
+                                                       self.user_features_dao,
+                                                       self.phone_funckey_dao,
+                                                       self.line_features_dao)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
 
     def tearDown(self):

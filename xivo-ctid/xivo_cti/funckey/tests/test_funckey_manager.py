@@ -34,9 +34,9 @@ class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
         self.user_id = 123
-        self.manager = FunckeyManager()
-        self.manager.extensionsdao = Mock(ExtensionsDAO)
+        self.extensionsdao = Mock(ExtensionsDAO)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
+        self.manager = FunckeyManager(self.extensionsdao, self.phone_funckey_dao)
         self.manager.phone_funckey_dao = self.phone_funckey_dao
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)

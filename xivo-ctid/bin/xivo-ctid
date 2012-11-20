@@ -1,7 +1,7 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-# Copyright (C) 2011       Avencall
+# Copyright (C) 2012       Avencall
 # Copyright (C) 2007-2010  Proformatique
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,15 +19,57 @@
 
 import argparse
 import sys
-from xivo_cti import ctiserver
+from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
+
+from xivo_cti.context import context
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_dao.extensionsdao import ExtensionsDAO
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
+from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
+from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
+from xivo_cti.services.queue_entry_manager import QueueEntryManager
+from xivo_cti.services.queue_service_manager import QueueServiceManager
+from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.services.user_service_notifier import UserServiceNotifier
+from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 
 
 def main():
     _parse_args(sys.argv[1:])
-    ctid = ctiserver.CTIServer()
+
+    _register_context(context)
+
+    ctid = context.build(CTIServer)
     ctid.setup()
     ctid.run()
+
+
+def _register_context(context):
+    context.register('agent_executor', AgentExecutor)
+    context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('agent_service_manager', AgentServiceManager)
+    context.register('extensions_dao', ExtensionsDAO.new_from_uri, 'queue_stats')
+    context.register('funckey_manager', FunckeyManager)
+    context.register('innerdata_dao', InnerdataDAO)
+    context.register('line_features_dao', LineFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('queue_entry_manager', QueueEntryManager)
+    context.register('queue_service_manager', QueueServiceManager)
+    context.register('queue_statistics_producer', QueueStatisticsProducer)
+    context.register('phone_funckey_dao', PhoneFunckeyDAO.new_from_uri, 'queue_stats')
+    context.register('presence_service_executor', PresenceServiceExecutor)
+    context.register('presence_service_manager', PresenceServiceManager)
+    context.register('trunk_features_dao', TrunkFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('user_service_manager', UserServiceManager)
+    context.register('user_service_notifier', UserServiceNotifier)
+    context.register('user_features_dao', UserFeaturesDAO.new_from_uri, 'queue_stats')
 
 
 def _parse_args(args):

@@ -28,6 +28,9 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
+    def __init__(self):
+        pass
+
     def _prepare_message(self, user_id):
         return {
             'class': 'getlist',
