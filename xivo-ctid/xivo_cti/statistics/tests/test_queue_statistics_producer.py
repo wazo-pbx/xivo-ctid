@@ -2,7 +2,7 @@ import unittest
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
-from tests.mock import Mock
+from mock import Mock, patch
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queue_service_manager import NotAQueueException
@@ -300,7 +300,8 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                         .nb_of_logged_agents(0)
                                                                         .build(), connection_cti)
 
-    def test_parse_queue_summary(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_summary(self, mock_context):
         self.queue_statistics_producer.on_queue_summary = Mock()
         queue_name = 'services'
         queue_id = 12
@@ -310,6 +311,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Talking': '1',
                               'HoldTime': '7'}
         expected_counters = QueueCounters(available='5', EWT='7', Talking='1')
+        mock_context.return_value = self.queue_statistics_producer
         queue_service_manager = Mock(QueueServiceManager)
         QueueServiceManager._instance = queue_service_manager
         queue_service_manager.get_queue_id.return_value = queue_id
@@ -318,7 +320,8 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 
-    def test_parse_queue_summary_not_a_queue(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_summary_not_a_queue(self, mock_context):
         self.queue_statistics_producer.on_queue_summary = Mock()
         queue_service_manager = Mock(QueueServiceManager)
 
@@ -328,6 +331,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Available': '5',
                               'Talking': '1',
                               'HoldTime': '7'}
+        mock_context.return_value = self.queue_statistics_producer
 
         QueueServiceManager._instance = queue_service_manager
         queue_service_manager.get_queue_id.side_effect = NotAQueueException

@@ -11,10 +11,11 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 
 class TestPresenceServiceExecutor(unittest.TestCase):
     def setUp(self):
-        self.presence_service_executor = PresenceServiceExecutor()
+        self.user_service_manager = Mock(UserServiceManager)
+        self.agent_service_manager = Mock(AgentServiceManager)
+        self.presence_service_executor = PresenceServiceExecutor(self.user_service_manager,
+                                                                 self.agent_service_manager)
         self.presence_service_executor._innerdata = Mock(Safe)
-        self.presence_service_executor.user_service_manager = Mock(UserServiceManager)
-        self.presence_service_executor.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_executor.user_features_dao = Mock(UserFeaturesDAO)
 
     def tearDown(self):

@@ -29,6 +29,7 @@ from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_dao.alchemy.agentfeatures import AgentFeatures
 from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_dao.alchemy.base import Base
@@ -71,7 +72,8 @@ class TestAgentServiceManager(unittest.TestCase):
         self.user_features_dao = UserFeaturesDAO(self.session)
         self.line_features_dao = LineFeaturesDAO(self.session)
 
-        self.agent_manager = AgentServiceManager()
+        self.agent_executor = Mock(AgentExecutor)
+        self.agent_manager = AgentServiceManager(self.agent_executor)
         self.agent_manager.agent_features_dao = self.agent_features_dao
         self.agent_manager.user_features_dao = self.user_features_dao
         self.agent_manager.line_features_dao = self.line_features_dao
@@ -116,7 +118,6 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(extens[0], self.line_number)
 
     def test_agent_callback_login(self):
-        self.agent_executor = Mock()
         self.agent_manager.agent_executor = self.agent_executor
 
         number, exten, context = '1000', '1234', 'test'

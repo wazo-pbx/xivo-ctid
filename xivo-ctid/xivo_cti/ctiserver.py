@@ -102,20 +102,13 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self,
-                 user_service_manager,
-                 funckey_manager,
-                 agent_service_manager):
+    def __init__(self):
         self.mycti = {}
         self.myami = None
         self.safe = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
         self._config = None
-
-        self._user_service_manager = user_service_manager
-        self._funckey_manager = funckey_manager
-        self._agent_service_manager = agent_service_manager
 
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
@@ -169,6 +162,10 @@ class CTIServer(object):
         self._set_signal_handlers()
         self._init_db_connection_pool()
         self._init_db_uri()
+
+        self._user_service_manager = context.get('user_service_manager')
+        self._funckey_manager = context.get('funckey_manager')
+        self._agent_service_manager = context.get('agent_service_manager')
 
         self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = context.get('presence_service_executor')
