@@ -28,11 +28,17 @@ class UserServiceManager(object):
                  user_service_notifier,
                  agent_service_manager,
                  presence_service_manager,
-                 funckey_manager):
+                 funckey_manager,
+                 user_features_dao,
+                 phone_funckey_dao,
+                 line_features_dao):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
         self.funckey_manager = funckey_manager
+        self.user_features_dao = user_features_dao
+        self.phone_funckey_dao = phone_funckey_dao
+        self.line_features_dao = line_features_dao
 
     def enable_dnd(self, user_id):
         self.user_features_dao.enable_dnd(user_id)

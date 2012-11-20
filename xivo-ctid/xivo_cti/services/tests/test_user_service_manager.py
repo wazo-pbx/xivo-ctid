@@ -51,11 +51,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager = UserServiceManager(self.user_service_notifier,
                                                        self.agent_service_manager,
                                                        self.presence_service_manager,
-                                                       self.funckey_manager)
-        self.user_service_manager.line_features_dao = self.line_features_dao
+                                                       self.funckey_manager,
+                                                       self.user_features_dao,
+                                                       self.phone_funckey_dao,
+                                                       self.line_features_dao)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
-        self.user_service_manager.user_features_dao = self.user_features_dao
-        self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
 
     def tearDown(self):
         dbconnection.unregister_db_connection_pool()
