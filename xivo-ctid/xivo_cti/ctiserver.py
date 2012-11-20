@@ -105,7 +105,6 @@ class CTIServer(object):
 
     def __init__(self,
                  user_service_manager,
-                 user_service_notifier,
                  funckey_manager,
                  agent_service_manager):
         self.mycti = {}
@@ -116,7 +115,6 @@ class CTIServer(object):
         self._config = None
 
         self._user_service_manager = user_service_manager
-        self._user_service_notifier = user_service_notifier
         self._funckey_manager = funckey_manager
         self._agent_service_manager = agent_service_manager
 
@@ -426,8 +424,8 @@ class CTIServer(object):
         safe.init_status()
         self.safe = safe
         self._user_features_dao._innerdata = safe
-        self._user_service_notifier.send_cti_event = self.send_cti_event
-        self._user_service_notifier.ipbx_id = self.myipbxid
+        context.get('user_service_notifier').send_cti_event = self.send_cti_event
+        context.get('user_service_notifier').ipbx_id = self.myipbxid
         self._innerdata_dao.innerdata = safe
         self._queuemember_service_notifier.send_cti_event = self.send_cti_event
         self._queuemember_service_notifier.ipbx_id = self.myipbxid
