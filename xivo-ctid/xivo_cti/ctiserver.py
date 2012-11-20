@@ -50,6 +50,7 @@ from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
+from xivo_cti.context import context
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_info
@@ -119,11 +120,13 @@ class CTIServer(object):
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
         self._config = None
+
         self._user_service_manager = user_service_manager
         self._user_service_notifier = user_service_notifier
         self._funckey_manager = funckey_manager
         self._agent_service_manager = agent_service_manager
         self._agent_executor = agent_executor
+
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
 
@@ -177,7 +180,7 @@ class CTIServer(object):
         self._init_db_connection_pool()
         self._init_db_uri()
 
-        self._presence_service_manager = PresenceServiceManager()
+        self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = PresenceServiceExecutor()
         self._statistics_notifier = StatisticsNotifier()
         self._queue_service_manager = QueueServiceManager.get_instance()
@@ -185,7 +188,7 @@ class CTIServer(object):
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()
 
-        self._innerdata_dao = InnerdataDAO()
+        self._innerdata_dao = context.get('innerdata_dao')
         self._user_features_dao = UserFeaturesDAO.new_from_uri('queue_stats')
         self._extensions_dao = ExtensionsDAO.new_from_uri('queue_stats')
         self._phone_funckey_dao = PhoneFunckeyDAO.new_from_uri('queue_stats')
@@ -199,8 +202,6 @@ class CTIServer(object):
         self._presence_service_executor.user_features_dao = self._user_features_dao
         self._presence_service_executor.user_service_manager = self._user_service_manager
         self._presence_service_executor.agent_service_manager = self._agent_service_manager
-
-        self._presence_service_manager.innerdata_dao = self._innerdata_dao
 
         self._user_service_manager.user_features_dao = self._user_features_dao
         self._user_service_manager.phone_funckey_dao = self._phone_funckey_dao
@@ -439,7 +440,7 @@ class CTIServer(object):
         self._user_features_dao._innerdata = safe
         self._user_service_notifier.send_cti_event = self.send_cti_event
         self._user_service_notifier.ipbx_id = self.myipbxid
-        self._queuemember_service_manager.innerdata_dao.innerdata = safe
+        self._innerdata_dao.innerdata = safe
         self._queuemember_service_notifier.send_cti_event = self.send_cti_event
         self._queuemember_service_notifier.ipbx_id = self.myipbxid
         self._user_service_manager.presence_service_executor._innerdata = safe
