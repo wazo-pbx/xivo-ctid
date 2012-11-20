@@ -5,12 +5,13 @@ based on their named arguments.
 
 See the demo usage at the end of file.
 
-Source : http://code.activestate.com/recipes/576609/
+Author: Ivo Danihelka
+Source: http://code.activestate.com/recipes/576609/
+License: MIT
 """
 
-import logging
-
 NO_DEFAULT = "NO_DEFAULT"
+
 
 class Context:
     """A depencency injection container.
@@ -34,8 +35,8 @@ class Context:
         """
         if (factory_args or factory_kw) and not callable(factory):
             raise ValueError(
-                    "Only callable factory supports extra args: %s, %s(%s, %s)"
-                    % (property, factory, factory_args, factory_kw))
+                "Only callable factory supports extra args: %s, %s(%s, %s)"
+                % (property, factory, factory_args, factory_kw))
 
         self.factories[property] = factory, factory_args, factory_kw
 
@@ -66,12 +67,9 @@ class Context:
 
     def _instantiate(self, name, factory, factory_args, factory_kw):
         if not callable(factory):
-            #logging.debug("Property %r: %s", name, factory)
             return factory
 
         kwargs = self._prepare_kwargs(factory, factory_args, factory_kw)
-        #logging.debug("Property %r: %s(%s, %s)", name, factory.__name__,
-        #        factory_args, kwargs)
         return factory(*factory_args, **kwargs)
 
     def _prepare_kwargs(self, factory, factory_args, factory_kw):
@@ -91,6 +89,7 @@ class Context:
         defaults.update(factory_kw)
         return defaults
 
+
 def get_argdefaults(factory, num_skipped=0):
     """Returns dict of (arg_name, default_value) pairs.
     The default_value could be NO_DEFAULT
@@ -106,6 +105,7 @@ def get_argdefaults(factory, num_skipped=0):
 
     return dict(zip(args, default_values)[num_skipped:])
 
+
 def _getargspec(factory):
     """Describes needed arguments for the given factory.
     Returns tuple (args, defaults) with argument names
@@ -115,14 +115,10 @@ def _getargspec(factory):
     if inspect.isclass(factory):
         factory = factory.__init__
 
-    #logging.debug("Inspecting %r", factory)
     args, vargs, vkw, defaults = inspect.getargspec(factory)
     if inspect.ismethod(factory):
         args = args[1:]
     return args, defaults
-
-
-
 
 
 if __name__ == "__main__":
@@ -131,6 +127,7 @@ if __name__ == "__main__":
             self.title = title
             self.user = user
             self.console = console
+
         def say_hello(self):
             self.console.println("*** IoC Demo ***")
             self.console.println(self.title)
@@ -139,6 +136,7 @@ if __name__ == "__main__":
     class Console:
         def __init__(self, prefix=""):
             self.prefix = prefix
+
         def println(self, message):
             print self.prefix, message
 
