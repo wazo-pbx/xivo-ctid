@@ -33,6 +33,7 @@ from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_dao.alchemy.base import Base
+from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.xivo_ami import AMIClass
 
@@ -73,10 +74,11 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao = LineFeaturesDAO(self.session)
 
         self.agent_executor = Mock(AgentExecutor)
-        self.agent_manager = AgentServiceManager(self.agent_executor)
-        self.agent_manager.agent_features_dao = self.agent_features_dao
-        self.agent_manager.user_features_dao = self.user_features_dao
-        self.agent_manager.line_features_dao = self.line_features_dao
+        self.agent_manager = AgentServiceManager(self.agent_executor,
+                                                 self.agent_features_dao,
+                                                 Mock(InnerdataDAO),
+                                                 self.line_features_dao,
+                                                 self.user_features_dao)
 
     def _empty_tables(self):
         for table in self.tables:
