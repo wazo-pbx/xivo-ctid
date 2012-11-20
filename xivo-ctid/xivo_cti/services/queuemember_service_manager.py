@@ -32,6 +32,9 @@ logger = logging.getLogger("QueueMemberServiceManager")
 
 
 class QueueMemberServiceManager(object):
+    def __init__(self):
+        pass
+
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
         old_queuemembers = self.innerdata_dao.get_queuemembers_static()
