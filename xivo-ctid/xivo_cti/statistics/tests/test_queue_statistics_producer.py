@@ -32,7 +32,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
 
     def setUp(self):
-        self.queue_statistics_producer = QueueStatisticsProducer.get_instance()
+        self.queue_statistics_producer = QueueStatisticsProducer()
         self.statistics_notifier = Mock(StatisticsNotifier)
         self.queue_statistics_producer.set_notifier(self.statistics_notifier)
 

@@ -77,7 +77,6 @@ from xivo_cti.services.queuemember_service_manager import QueueMemberServiceMana
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
-from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
@@ -175,7 +174,7 @@ class CTIServer(object):
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = StatisticsNotifier()
         self._queue_service_manager = QueueServiceManager.get_instance()
-        self._queue_statistics_producer = QueueStatisticsProducer.get_instance()
+        self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = QueueMemberServiceManager()
         self._queuemember_service_notifier = QueueMemberServiceNotifier.get_instance()
 

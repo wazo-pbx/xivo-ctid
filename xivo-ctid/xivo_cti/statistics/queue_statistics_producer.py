@@ -1,6 +1,7 @@
 import logging
 from collections import namedtuple
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
+from xivo_cti.context import context
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
@@ -20,7 +21,7 @@ def parse_queue_summary(queuesummary_event):
     queue_name = queuesummary_event['Queue']
     counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'], Talking=queuesummary_event['Talking'])
 
-    queue_statistics_producer = QueueStatisticsProducer.get_instance()
+    queue_statistics_producer = context.get('queue_statistics_producer')
     queue_service_manager = QueueServiceManager.get_instance()
     try:
         queue_id = queue_service_manager.get_queue_id(queue_name)
