@@ -48,8 +48,8 @@ class AgentExecutor(object):
     def logoff(self, number):
         self.ami.agentlogoff(number)
 
-    def agentcallbacklogin(self, number, exten, context, ackcall):
-        self.ami.agentcallbacklogin(number, exten, context, ackcall)
+    def agentcallbacklogin(self, number, exten, context):
+        self.ami.agentcallbacklogin(number, exten, context)
 
     def log_presence(self, agent_interface, presence):
         self.ami.queuelog('NONE', 'PRESENCE', interface=agent_interface, message=presence)

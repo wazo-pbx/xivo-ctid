@@ -26,7 +26,9 @@ import random
 import string
 import time
 
-from xivo_cti import cti_config
+from xivo_dao import group_dao
+from xivo_cti.dao import userfeaturesdao
+from xivo_dao import queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -38,7 +40,6 @@ class AMI_1_8(object):
     userevents = ('Feature',
                   'OutCall',
                   'Custom',
-                  'LocalCall',
                   'dialplan2cti',
                   'LookupDirectory',
                   'User',
@@ -47,44 +48,18 @@ class AMI_1_8(object):
                   'Meetme',
                   'Did',)
 
-    def __init__(self, ctiserver, ipbxid):
+    def __init__(self, ctiserver):
         self._ctiserver = ctiserver
-        self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
-        fagiport = (cti_config.Config.get_instance().getconfig('main')
-                    .get('incoming_tcp').get('FAGI')[1])
-        self.fagiportstring = ':%s/' % fagiport
-
-    def ami_newstate(self, event):
-        self.innerdata.newstate(event['Channel'], event['ChannelState'])
+        self.innerdata = self._ctiserver.safe
 
     def ami_newchannel(self, event):
         channel = event['Channel']
-        channelstate = event['ChannelState']
+        state = event['ChannelState']
+        state_description = event['ChannelStateDesc']
         context = event['Context']
         unique_id = event['Uniqueid']
-        actionid = 'nc:%s' % ''.join(random.sample(ALPHANUMS, 10))
-        params = {'mode': 'newchannel',
-                  'amicommand': 'getvar',
-                  'amiargs': [channel, 'XIVO_ORIGACTIONID']}
-        self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
-        self.innerdata.newchannel(channel, context, channelstate, event, unique_id)
 
-    def ami_newcallerid(self, event):
-        self.innerdata.update_parking_cid(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
-
-    def ami_newexten(self, event):
-        application = event['Application']
-        appdata = event['AppData']
-        channel = event['Channel']
-        if application == 'AGI':
-            if self.fagiportstring in appdata:  # match against ~ ':5002/' in appdata
-                # warning : this might cause problems if AMI not connected
-                if self.innerdata.fagi_sync('get', channel, 'agi'):
-                    self.innerdata.fagi_sync('clear', channel)
-                    self.innerdata.fagi_handle(channel, 'AMI')
-                else:
-                    self.innerdata.fagi_sync('set', channel, 'ami')
+        self.innerdata.newchannel(channel, context, state, state_description, unique_id)
 
     def ami_hangup(self, event):
         channel = event['Channel']
@@ -113,7 +88,7 @@ class AMI_1_8(object):
                     phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
                     if phone:
                         self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
-                except Exception:
+                except LookupError:
                     logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'
                 self.innerdata.channels[channel].properties['commstatus'] = 'calling'
@@ -141,7 +116,6 @@ class AMI_1_8(object):
             self.innerdata.channels[channel1].properties['commstatus'] = 'linked-caller'
             self.innerdata.setpeerchannel(channel1, channel2)
             self.innerdata.update(channel1)
-            self.innerdata.sheetsend('link', channel1)
         if channel2 in self.innerdata.channels:
             self.innerdata.channels[channel2].properties['talkingto_kind'] = 'channel'
             self.innerdata.channels[channel2].properties['talkingto_id'] = channel1
@@ -149,6 +123,7 @@ class AMI_1_8(object):
             self.innerdata.channels[channel2].properties['commstatus'] = 'linked-called'
             self.innerdata.setpeerchannel(channel2, channel1)
             self.innerdata.update(channel2)
+            self.innerdata.sheetsend('link', channel1)
 
     def ami_unlink(self, event):
         self.innerdata.sheetsend('unlink', event['Channel1'])
@@ -157,12 +132,12 @@ class AMI_1_8(object):
         original = event['Original']
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
-        self.innerdata.update_parking_parked(original, clone)
 
     def ami_hold(self, event):
         channel_name = event['Channel']
         status = event['Status'] == 'On'
         if channel_name in self.innerdata.channels:
+            self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
             channel = self.innerdata.channels[channel_name]
             channel.properties['holded'] = status
             logger.debug('%s on hold(%s)', channel_name, status)
@@ -176,8 +151,9 @@ class AMI_1_8(object):
                         if chan_start in chan:
                             self.innerdata.channels[chan].properties['holded'] = status
                             logger.debug('%s on hold(%s)', chan, status)
-                except Exception:
+                except LookupError:
                     logger.warning('Could not find %s peer channel to put it on hold', channel_name)
+            self.innerdata.handle_cti_stack('empty_stack')
 
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
@@ -199,8 +175,8 @@ class AMI_1_8(object):
         # 1 : CLI 'channel request hangup' on the 1st phone's channel
         # 5 : 1st phone rejected the call (reject button or all lines busy)
         # 8 : 1st phone did not answer early enough
-        if actionid in self._ctiserver.myami.get(self.ipbxid).originate_actionids:
-            properties = self._ctiserver.myami.get(self.ipbxid).originate_actionids.pop(actionid)
+        if actionid in self._ctiserver.myami.originate_actionids:
+            properties = self._ctiserver.myami.originate_actionids.pop(actionid)
             request = properties.get('request')
             cn = request.get('requester')
             try:
@@ -254,17 +230,6 @@ class AMI_1_8(object):
         opts = {'paused': 'on' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
-    def ami_join(self, event):
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'],
-                                        time.time())
-
-    def ami_leave(self, event):
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'])
-
     def ami_queuemember(self, event):
         self.innerdata.queuememberupdate(event['Queue'],
                                          event['Location'],
@@ -274,14 +239,6 @@ class AMI_1_8(object):
                                           event['CallsTaken'],
                                           event['Penalty'],
                                           event['LastCall']))
-        self.queuemember_service_manager.update_one_queuemember(event)
-
-    def ami_queueentry(self, event):
-        timestart = self.timeconvert(event['Wait'])
-        self.innerdata.queueentryupdate(event['Queue'],
-                                        event['Channel'],
-                                        event['Position'],
-                                        timestart)
 
     def ami_queuememberstatus(self, event):
         self.innerdata.queuememberupdate(event['Queue'],
@@ -292,31 +249,21 @@ class AMI_1_8(object):
                                           event['CallsTaken'],
                                           event['Penalty'],
                                           event['LastCall']))
-        self.queuemember_service_manager.update_one_queuemember(event)
 
     def ami_queuememberadded(self, event):
         self.ami_queuememberstatus(event)
-        self.queuemember_service_manager.add_dynamic_queuemember(event)
 
     def ami_queuememberremoved(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'])
-        self.queuemember_service_manager.remove_dynamic_queuemember(event)
 
     def ami_queuememberpaused(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
-        self.queuemember_service_manager.toggle_pause(event)
 
     def ami_agentlogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Channel'])
 
-    def ami_agentlogoff(self, event):
-        self.innerdata.agentlogout(event['Agent'])
-
     def ami_agentcallbacklogin(self, event):
         self.innerdata.agentlogin(event['Agent'], event['Loginchan'])
-
-    def ami_agentcallbacklogoff(self, event):
-        self.innerdata.agentlogout(event['Agent'])
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
@@ -332,7 +279,6 @@ class AMI_1_8(object):
             'cid_num': event.pop('CallerIDNum'),
             'parktime': time.time(),
             }
-        self.innerdata.update_parking(parkinglot, exten, parkingevent)
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].setparking(exten, parkinglot)
 
@@ -340,24 +286,18 @@ class AMI_1_8(object):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
-        self.innerdata.unpark(channel)
 
     def ami_parkedcalltimeout(self, event):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
-        self.innerdata.unpark(channel)
-
-    def ami_parkedcallgiveup(self, event):
-        self.innerdata.unpark(event['Channel'])
-
-    def ami_peerstatus(self, event):
-        self.innerdata.updateregistration(event['Peer'], event.get('Address', ''))
 
     def userevent_user(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
         xivo_srcnum = event.get('XIVO_SRCNUM')
+        destination_user_id = int(event['XIVO_DSTID'])
+        destination_name, destination_number = userfeaturesdao.get_name_number(destination_user_id)
         if userprops is not None:
             usersummary_src = {'fullname': userprops.get('fullname'),
                                'phonenumber': xivo_srcnum}
@@ -365,35 +305,44 @@ class AMI_1_8(object):
             usersummary_src = {'fullname': xivo_srcnum,
                                'phonenumber': xivo_srcnum}
 
-        xivo_lineid = event.get('XIVO_LINEID')
-        usersummary_dst = self.innerdata.usersummary_from_phoneid(xivo_lineid)
-
         chanprops.set_extra_data('xivo', 'desttype', 'user')
-        chanprops.set_extra_data('xivo', 'destid', usersummary_dst.get('userid'))
+        chanprops.set_extra_data('xivo', 'destid', destination_user_id)
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
         chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
         chanprops.set_extra_data('xivo', 'direction', 'internal')
         chanprops.set_extra_data('xivo', 'calleridnum', usersummary_src.get('phonenumber'))
         chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
-        chanprops.set_extra_data('xivo', 'calledidnum', usersummary_dst.get('phonenumber'))
-        chanprops.set_extra_data('xivo', 'calledidname', usersummary_dst.get('fullname'))
-
-    def userevent_group(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'desttype', 'group')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
+        chanprops.set_extra_data('xivo', 'calledidnum', destination_number)
+        chanprops.set_extra_data('xivo', 'calledidname', destination_name)
 
     def userevent_queue(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        queue_id = event['XIVO_DSTID']
+        callerid_name = event.get('XIVO_CALLERIDNAME')
+        callerid_number = event.get('XIVO_CALLERIDNUMBER')
+
+        queue_id = int(event['XIVO_DSTID'])
+        queue_name, queue_number = queue_features_dao.get_display_name_number(queue_id)
+
         chanprops.set_extra_data('xivo', 'desttype', 'queue')
         chanprops.set_extra_data('xivo', 'destid', queue_id)
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
+        chanprops.set_extra_data('xivo', 'calledidname', queue_name)
+        chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
+        if not chanprops.has_extra_data('xivo', 'calleridname'):
+            chanprops.set_extra_data('xivo', 'calleridname', callerid_name)
+        if not chanprops.has_extra_data('xivo', 'calleridnum'):
+            chanprops.set_extra_data('xivo', 'calleridnum', callerid_number)
 
-    def userevent_meetme(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'desttype', 'meetme')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
+        self.innerdata.sheetsend('dial', chanprops.channel)
+
+    def userevent_group(self, chanprops, event):
+        group_id = int(event['XIVO_DSTID'])
+        group_name, group_number = group_dao.get_name_number(group_id)
+
+        chanprops.set_extra_data('xivo', 'desttype', 'group')
+        chanprops.set_extra_data('xivo', 'destid', group_id)
+        chanprops.set_extra_data('xivo', 'calledidname', group_name)
+        chanprops.set_extra_data('xivo', 'calledidnum', group_number)
+
+        self.innerdata.sheetsend('dial', chanprops.channel)
 
     def userevent_outcall(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
@@ -470,10 +419,10 @@ class AMI_1_8(object):
             event = {'class': 'getlist',
                      'listname': 'users',
                      'function': 'updateconfig',
-                     'tipbxid': self.ipbxid,
+                     'tipbxid': self._ctiserver.myipbxid,
                      'tid': userid,
                      'config': user}
-            self.innerdata.events_cti.put(event)
+            self._ctiserver.send_cti_event(event)
         return reply
 
     def userevent_dialplan2cti(self, chanprops, event):
@@ -497,9 +446,6 @@ class AMI_1_8(object):
                     chanprops = self.innerdata.channels[channel]
                     getattr(self, methodname)(chanprops, event)
 
-    def handle_fagi(self, fastagi):
-        return
-
     def ami_messagewaiting(self, event):
         try:
             full_mailbox = event['Mailbox']
@@ -509,13 +455,15 @@ class AMI_1_8(object):
                     old = event.get('Old') or previous_status['old']
                     new = event.get('New') or previous_status['new']
                     waiting = event.get('Waiting') or previous_status['waiting']
+                    logger.info("Voicemail event received. mailbox:%s new:%s old:%s waiting:%s", full_mailbox, new, old, waiting)
                     self.innerdata.voicemailupdate(full_mailbox, new, old, waiting)
             if 'Old' not in event and 'New' not in event:
+                logger.info("Voicemail event did not contain 'old' and 'new' count. retrieving mailbox count")
                 params = {'mode': 'vmupdate',
                           'amicommand': 'mailboxcount',
                           'amiargs': full_mailbox.split('@')}
                 actionid = ''.join(random.sample(ALPHANUMS, 10))
-                self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                self._ctiserver.myami.execute_and_track(actionid, params)
         except KeyError:
             logger.warning('ami_messagewaiting Failed to update mailbox')
 
@@ -534,9 +482,11 @@ class AMI_1_8(object):
         application = event['Application']
         bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
+        state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
+        unique_id = event['Uniqueid']
 
-        self.innerdata.newchannel(channel, context, state)
+        self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
 
         channelstruct.properties['timestamp'] = timestamp_start
@@ -554,7 +504,7 @@ class AMI_1_8(object):
                 channelstruct.properties['commstatus'] = 'ringing'
 
         if state == '6' and bridgedchannel:
-            self.innerdata.newchannel(bridgedchannel, context, state)
+            self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
             self.innerdata.setpeerchannel(channel, bridgedchannel)
             self.innerdata.setpeerchannel(bridgedchannel, channel)
 
@@ -565,7 +515,7 @@ class AMI_1_8(object):
             params = {'mode': 'extension',
                       'amicommand': 'sendextensionstate',
                       'amiargs': (extension, event['Context'])}
-            self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
+            self._ctiserver.myami.execute_and_track(actionid, params)
 
     def ami_voicemailuserentry(self, event):
         fullmailbox = '%s@%s' % (event['VoiceMailbox'], event['VMContext'])
@@ -573,23 +523,13 @@ class AMI_1_8(object):
         # relation to Old/New/Waiting in MessageWaiting UserEvent ?
         self.innerdata.voicemailupdate(fullmailbox, event['NewMessageCount'])
 
-    def ami_monitorstart(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels.get(channel).properties['monitored'] = True
-
-    def ami_monitorstop(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels.get(channel).properties['monitored'] = False
-
     def ami_inherit(self, event):
         try:
             parent = event['Parent']
             child = event['Child']
             if parent in self.innerdata.channels and child in self.innerdata.channels:
                 self.innerdata.channels[child].extra_data.update(self.innerdata.channels[parent].extra_data)
-        except Exception:
+        except LookupError:
             logger.exception('Failed to copy parents variable to child channel')
 
     def amiresponse_extensionstatus(self, event):
@@ -598,7 +538,7 @@ class AMI_1_8(object):
 
     @staticmethod
     def timeconvert(duration):
-        if duration.find(':') >= 0:
+        if ':' in duration:
             # like in core show channels output
             vdur = duration.split(':')
             duration_secs = int(vdur[0]) * 3600 + int(vdur[1]) * 60 + int(vdur[2])

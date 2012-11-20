@@ -23,6 +23,7 @@
 
 import logging
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger("AMIAgentLogin")
 
@@ -50,9 +51,25 @@ class AMIAgentLoginLogoff(object):
         self.queue_statistics_producer.on_agent_loggedoff(agent_id)
 
     def on_event_agent_init(self, event):
+        self._initialize_queue_statistics_producer(event)
+        self._initialize_agents_status(event)
+
+    def _initialize_queue_statistics_producer(self, event):
         if (event['Status'] in self.AGENTSTATUS_WHEN_LOGGED_IN):
             agent_id = self._build_agent_id_from_event(event)
             self.queue_statistics_producer.on_agent_loggedon(agent_id)
+
+    def _initialize_agents_status(self, event):
+        agent_name = event['Agent']
+        agent_id = self.agent_features_dao.agent_id(agent_name)
+        agent_status_ami = event['Status']
+        if agent_status_ami == self.AGENTSTATUS_IDLE:
+            agent_status_cti = AgentStatus.available
+        elif agent_status_ami == self.AGENTSTATUS_ONCALL:
+            agent_status_cti = AgentStatus.unavailable
+        else:
+            agent_status_cti = AgentStatus.logged_out
+        self.innerdata_dao.set_agent_availability(agent_id, agent_status_cti)
 
     @classmethod
     def register_callbacks(cls):

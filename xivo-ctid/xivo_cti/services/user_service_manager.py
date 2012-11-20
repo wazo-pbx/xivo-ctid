@@ -51,10 +51,15 @@ class UserServiceManager(object):
         self.funckey_manager.call_filter_in_use(user_id, False)
 
     def enable_unconditional_fwd(self, user_id, destination):
+        if destination == '':
+            self.disable_unconditional_fwd(user_id, destination)
+            return
         self.user_features_dao.enable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd(user_id)
-        if destination in self.phone_funckey_dao.get_dest_unc(user_id):
+        destinations = self.phone_funckey_dao.get_dest_unc(user_id)
+        self.funckey_manager.unconditional_fwd_in_use(user_id, '', True)
+        if destination in destinations:
             self.funckey_manager.unconditional_fwd_in_use(user_id, destination, True)
 
     def disable_unconditional_fwd(self, user_id, destination):

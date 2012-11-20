@@ -1,6 +1,6 @@
 import unittest
 
-from xivo_cti.tools.caller_id import build_caller_id, _complete_caller_id, build_agi_caller_id
+from xivo_cti.tools.caller_id import build_caller_id, _complete_caller_id, extract_number
 
 
 class TestCallerID(unittest.TestCase):
@@ -32,27 +32,12 @@ class TestCallerID(unittest.TestCase):
 
         self.assertTrue(_complete_caller_id(cid))
 
-    def test_build_agi_caller_id_empty(self):
-        self.assertEqual(build_agi_caller_id(None, None, None), {})
+    def test_extract_number(self):
+        caller_id = '"User 1" <1001>'
 
-    def test_build_agi_caller_id(self):
-        name = 'Tester'
-        number = '1234'
-        full = '"%s" <%s>' % (name, number)
-        expected = {'CALLERID(all)': full,
-                    'CALLERID(name)': name,
-                    'CALLERID(number)': number}
+        ret = extract_number(caller_id)
 
-        ret = build_agi_caller_id(full, name, number)
+        self.assertEqual(ret, '1001')
 
-        self.assertEqual(ret, expected)
-
-    def test_build_agi_caller_id_partial(self):
-        name = 'Tester'
-        number = '1234'
-        expected = {'CALLERID(name)': name,
-                    'CALLERID(number)': number}
-
-        ret = build_agi_caller_id(None, name, number)
-
-        self.assertEqual(ret, expected)
+    def test_extract_number_not_a_caller_id(self):
+        self.assertRaises(ValueError, extract_number, '1001')

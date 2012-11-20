@@ -1,7 +1,6 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,7 +8,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
+# contracted with Avencall. See the LICENSE file at top of the
 # source tree or delivered in the installable package in which XiVO CTI Server
 # is distributed for more details.
 #
@@ -25,10 +24,10 @@ import unittest
 
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from tests.mock import Mock
-from xivo_cti.dao.extensionsdao import ExtensionsDAO
+from xivo_dao.extensionsdao import ExtensionsDAO
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 
 
 class TestFunckeyManager(unittest.TestCase):
@@ -43,63 +42,91 @@ class TestFunckeyManager(unittest.TestCase):
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami
 
-        self._funckey_exten = '_*735'
-        self._enablednd_exten = '*25'
-        self._call_filter_exten = '*27'
-        self._unc_fwd = "*21."
-
-    def tearDown(self):
-        pass
-
     def test_dnd_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
+
         self.manager.dnd_in_use(self.user_id, True)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._enablednd_exten
-
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***225 INUSE')]
+        )
 
     def test_dnd_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
+
         self.manager.dnd_in_use(self.user_id, False)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._enablednd_exten
-
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')]
+        )
 
     def test_call_filter_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
+
         self.manager.call_filter_in_use(self.user_id, True)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_filter_exten
-
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***227 INUSE')]
+        )
 
     def test_call_filter_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
+
         self.manager.call_filter_in_use(self.user_id, False)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_filter_exten
-
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')])
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')]
+        )
 
     def test_fwd_unc_in_use(self):
-        destination = '123'
-        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        destination = '1002'
+
+        def fkey_exten(prefix, args):
+            if args[2]:
+                return '*735123***221*%s' % args[2]
+            else:
+                return '*735123***221'
+
+        xivo_helpers.fkey_extension.side_effect = fkey_exten
+
         self.manager.unconditional_fwd_in_use(self.user_id, destination, True)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_unc_fwd
+        expected_calls = [
+            (('Command', [('Command', 'devstate change Custom:*735123***221*1002 INUSE')]), {}),
+            (('Command', [('Command', 'devstate change Custom:*735123***221 INUSE')]), {}),
+        ]
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 INUSE')])
+        calls = self.manager.ami.sendcommand.call_args_list
+
+        expected_calls = sorted(expected_calls)
+        calls = sorted(calls)
+
+        self.assertEqual(calls, expected_calls)
 
     def test_fwd_unc_not_in_use(self):
-        destination = '123'
-        xivo_helpers.fkey_extension.return_value = '*735123***221*%s' % destination
+        destination = '1003'
+
+        def fkey_exten(prefix, args):
+            if args[2]:
+                return '*735123***221*%s' % args[2]
+            else:
+                return '*735123***221'
+
+        xivo_helpers.fkey_extension.side_effect = fkey_exten
+
         self.manager.unconditional_fwd_in_use(self.user_id, destination, False)
 
-        self.manager.extensionsdao.exten_by_name = lambda x: self._funckey_exten if x == 'phoneprogfunckey' else self._call_unc_fwd
+        expected_calls = [
+            (('Command', [('Command', 'devstate change Custom:*735123***221*1003 NOT_INUSE')]), {}),
+            (('Command', [('Command', 'devstate change Custom:*735123***221 NOT_INUSE')]), {}),
+        ]
 
-        self.manager.ami.sendcommand.assert_called_once_with('Command', [('Command', 'devstate change Custom:*735123***221*123 NOT_INUSE')])
+        calls = self.manager.ami.sendcommand.call_args_list
+
+        expected_calls = sorted(expected_calls)
+        calls = sorted(calls)
+
+        self.assertEqual(calls, expected_calls)
 
     def test_disable_all_fwd_unc(self):
         unc_dest = ['123', '666', '', '012']

@@ -59,13 +59,6 @@ class Test(unittest.TestCase):
         callbacks = self.handler._callbacks[event_name.lower()]
         self.assertEqual(len(callbacks), 1)
 
-        self.handler.register_callback(event_name, a_function)
-
-        self.assertEqual(len(self.handler._callbacks), 1)
-        self.assertTrue(event_name.lower() in self.handler._callbacks)
-        callbacks = self.handler._callbacks[event_name.lower()]
-        self.assertEqual(len(callbacks), 1)
-
         def another_function(event):
             pass
 
@@ -121,4 +114,21 @@ class Test(unittest.TestCase):
 
         self.handler.unregister_callback(event_name, f1)
 
-        self.assertEqual(self.handler._callbacks, {event_name.lower(): set([f2])})
+        self.assertEqual(self.handler._callbacks, {event_name.lower(): list([f2])})
+
+    def test_callback_order(self):
+        event_name = 'ATestEvent'
+
+        def f1(event):
+            pass
+
+        def f2(event):
+            pass
+
+        self.handler.register_callback(event_name, f1)
+        self.handler.register_callback(event_name, f2)
+        expected_callbacks = [f1, f2]
+
+        callbacks = self.handler.get_callbacks(event_name)
+
+        self.assertEqual(callbacks, expected_callbacks)

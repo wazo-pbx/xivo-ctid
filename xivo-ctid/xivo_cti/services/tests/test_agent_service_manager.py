@@ -22,26 +22,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-
-from xivo_cti.services.agent_service_manager import AgentServiceManager
 from tests.mock import Mock, call
-from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.agentfeatures import AgentFeatures
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.alchemy.base import Base
+
+from xivo_dao.alchemy import dbconnection
+from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.base import Base
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
-from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.dao.agentfeaturesdao import AgentFeaturesDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):
 
     line_number = '1432'
     connected_user_id = 6
+    tables = [LineFeatures, UserFeatures, AgentFeatures]
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
 
@@ -49,14 +51,19 @@ class TestAgentServiceManager(unittest.TestCase):
         dbconnection.add_connection_as(uri, 'asterisk')
         connection = dbconnection.get_connection('asterisk')
 
-        self.session = connection.get_session()
+        cls.session = connection.get_session()
 
-        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [AgentFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [AgentFeatures.__table__])
+        Base.metadata.drop_all(connection.get_engine(), [table.__table__ for table in cls.tables])
+        Base.metadata.create_all(connection.get_engine(), [table.__table__ for table in cls.tables])
+
+        connection.get_engine().dispose()
+
+    @classmethod
+    def tearDownClass(cls):
+        dbconnection.unregister_db_connection_pool()
+
+    def setUp(self):
+        self._empty_tables()
 
         self.agent_1_exten = '1000'
 
@@ -69,8 +76,10 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.user_features_dao = self.user_features_dao
         self.agent_manager.line_features_dao = self.line_features_dao
 
-    def tearDown(self):
-        dbconnection.unregister_db_connection_pool()
+    def _empty_tables(self):
+        for table in self.tables:
+            entries = self.session.query(table)
+            map(self.session.delete, entries)
 
     def test_log_agent(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -83,8 +92,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.agent_1_exten,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def test_log_agent_no_number(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -96,8 +104,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.line_number,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def test_find_agent_exten(self):
         agent = self._insert_agent()
@@ -112,16 +119,15 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_executor = Mock()
         self.agent_manager.agent_executor = self.agent_executor
 
-        number, exten, context, ackcall = '1000', '1234', 'test', False
+        number, exten, context = '1000', '1234', 'test'
         ami = Mock(AMIClass)
         self.agent_manager.ami = ami
 
         self.agent_manager.agent_call_back_login(number,
                                                  exten,
-                                                 context,
-                                                 ackcall)
+                                                 context)
 
-        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context, ackcall)
+        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context)
 
     def test_agent_special_me(self):
         self.agent_manager.agent_call_back_login = Mock()
@@ -133,8 +139,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_call_back_login.assert_called_once_with(agent.number,
                                                                          self.line_number,
-                                                                         agent.context,
-                                                                         agent.ackcall != 'no')
+                                                                         agent.context)
 
     def _insert_line_with_number(self, number):
         line = LineFeatures()

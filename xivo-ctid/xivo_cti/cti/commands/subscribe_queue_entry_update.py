@@ -22,19 +22,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.commands.subscribe import Subscribe
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-class SubscribeQueueEntryUpdate(CTICommand):
+class SubscribeQueueEntryUpdate(Subscribe):
 
-    COMMAND_CLASS = 'subscribe'
     QUEUE_ID = 'queueid'
-    MESSAGE = 'message'
     MESSAGE_NAME = 'queueentryupdate'
 
-    required_fields = [CTICommand.CLASS, MESSAGE, QUEUE_ID]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS),
-                  (MESSAGE, MESSAGE_NAME)]
+    required_fields = [CTICommand.CLASS, Subscribe.MESSAGE, QUEUE_ID]
+    conditions = [(CTICommand.CLASS, Subscribe.COMMAND_CLASS),
+                  (Subscribe.MESSAGE, MESSAGE_NAME)]
     _callbacks, _callbacks_with_params = [], []
 
     def _init_from_dict(self, msg):

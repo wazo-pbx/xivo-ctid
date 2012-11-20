@@ -1,7 +1,6 @@
-#!/usr/bin/python
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,7 +8,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
+# contracted with Avencall. See the LICENSE file at top of the
 # source tree or delivered in the installable package in which XiVO CTI Server
 # is distributed for more details.
 #
@@ -24,36 +23,21 @@
 import unittest
 
 from tests.mock import Mock
+from xivo_dao.alchemy import dbconnection
+from xivo_dao.linefeaturesdao import LineFeaturesDAO
+from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
-from xivo_cti.dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
-from xivo_cti.dao.linefeaturesdao import LineFeaturesDAO
-from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy.base import Base
+
 
 class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
-        db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
-        dbconnection.register_db_connection_pool(db_connection_pool)
-
-        uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
-        dbconnection.add_connection_as(uri, 'asterisk')
-        connection = dbconnection.get_connection('asterisk')
-
-        self.session = connection.get_session()
-
-        Base.metadata.drop_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [LineFeatures.__table__])
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
 
         self.user_service_manager = UserServiceManager()
         self.user_features_dao = Mock(UserFeaturesDAO)
@@ -62,11 +46,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
+
         self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.phone_funckey_dao = self.phone_funckey_dao
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
-        self.user_service_manager.user_features_dao = self.user_features_dao
         self.user_service_manager.user_service_notifier = self.user_service_notifier
         self.user_service_manager.funckey_manager = self.funckey_manager
         self.user_service_manager.line_features_dao = self.line_features_dao
@@ -139,7 +123,14 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_features_dao.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, destination)
-        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, destination, True)
+
+        expected_calls = sorted([
+            ((user_id, '', True), {}),
+            ((user_id, destination, True), {})
+        ])
+        calls = sorted(self.funckey_manager.unconditional_fwd_in_use.call_args_list)
+
+        self.assertEquals(calls, expected_calls)
 
     def test_disable_unconditional_fwd(self):
         user_id = 543
@@ -304,39 +295,9 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.user_features_dao.is_agent.assert_never_called()
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
 
-
-    def _insert_user(self):
-        user = UserFeatures()
-        user.firstname = 'test'
-        self.session.add(user)
-        self.session.commit()
-
-        return user.id
-
-    def _insert_line_with_user(self, user_id, number, context='test_context'):
-        line = LineFeatures()
-        line.iduserfeatures = user_id
-        line.protocolid = 1
-        line.provisioningid = 0
-        line.name = 'ix8pa'
-        line.context = context
-        line.number = number
-        self.session.add(line)
-
-        self.session.commit()
-
-        return line
-
     def test_get_context(self):
-        user1_id = self._insert_user()
-        line1 = self._insert_line_with_user(user1_id, '100', 'context1')
-        user2_id = self._insert_user()
-        line2 = self._insert_line_with_user(user2_id, '101', 'context2')
+        user1_id = 34
 
-        self.line_features_dao.find_context_by_user_id.side_effect = lambda x: 'context1' if x == user1_id else 'context2'
+        self.user_service_manager.get_context(user1_id)
 
-        context1 = self.user_service_manager.get_context(user1_id)
-        context2 = self.user_service_manager.get_context(user2_id)
-
-        self.assertEqual(context1, line1.context)
-        self.assertEqual(context2, line2.context)
+        self.user_service_manager.line_features_dao.find_context_by_user_id.assert_called_once_with(user1_id)

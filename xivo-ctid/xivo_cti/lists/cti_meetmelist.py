@@ -20,7 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 import logging
 
@@ -31,16 +31,16 @@ from xivo_cti.cti.missing_field_exception import MissingFieldException
 logger = logging.getLogger('meetmelist')
 
 
-class MeetmeList(AnyList):
+class MeetmeList(ContextAwareAnyList):
 
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'meetme',
                                    'urloptions': (1, 5, True)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
         InviteConfroom.register_callback_params(self.invite, ['invitee', 'cti_connection'])
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['confno'] not in self.reverse_index:
@@ -51,7 +51,7 @@ class MeetmeList(AnyList):
 
     def update_computed_fields(self, newlist):
         for item in newlist.itervalues():
-            item['pin_needed'] = 'pin' in item and len(item['pin']) > 0
+            item['pin_needed'] = bool(item.get('pin'))
 
     def idbyroomnumber(self, roomnumber):
         idx = self.reverse_index.get(roomnumber)
@@ -68,7 +68,7 @@ class MeetmeList(AnyList):
                 return meetme_id
 
     def invite(self, invitee, connection):
-        ami = self._ctiserver.myami[self._ipbxid].amicl
+        ami = self._ctiserver.myami.amiclass
 
         try:
             (_, invitee_id) = invitee.split('/', 1)

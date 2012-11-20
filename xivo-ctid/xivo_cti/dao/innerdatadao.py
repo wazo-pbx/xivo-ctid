@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# XiVO CTI Server
 # Copyright (C) 2009-2012  Avencall
-#
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -22,9 +21,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import time
+
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
 logger = logging.getLogger("InnerdataDAO")
+
 
 class InnerdataDAO(object):
 
@@ -75,3 +77,12 @@ class InnerdataDAO(object):
         profile_id = self.innerdata._config.getconfig('profiles').get(profile).get('userstatus')
         return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
 
+    def set_agent_availability(self, agent_id, availability):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        if availability != agent_status['availability']:
+            agent_status['availability_since'] = time.time()
+            agent_status['availability'] = availability
+
+    def agent_status(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status

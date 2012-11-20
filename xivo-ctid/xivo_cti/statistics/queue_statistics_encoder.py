@@ -28,11 +28,12 @@ class QueueStatisticsEncoder(object):
     def encode(self, statistics):
         res = {}
         for queue_name, statistic in statistics.iteritems():
-            res[queue_name] = {'Xivo-Join': statistic.received_call_count,
-                               'Xivo-Link': statistic.answered_call_count,
-                               'Xivo-Lost': statistic.abandonned_call_count,
-                               'Xivo-Rate': statistic.efficiency,
-                               'Xivo-Qos': statistic.qos,
-                               'Xivo-Holdtime-max': statistic.max_hold_time
+            res[queue_name] = {'Xivo-Join': '%s' % statistic.received_call_count,
+                               'Xivo-Link': '%s' % statistic.answered_call_count,
+                               'Xivo-Lost': '%s' % statistic.abandonned_call_count,
+                               'Xivo-Rate': '%s' % statistic.efficiency,
+                               'Xivo-Qos': '%s' % statistic.qos,
+                               'Xivo-Holdtime-avg': '%s' % statistic.mean_hold_time,
+                               'Xivo-Holdtime-max': '%s' % statistic.max_hold_time
                                }
         return {'stats': res}

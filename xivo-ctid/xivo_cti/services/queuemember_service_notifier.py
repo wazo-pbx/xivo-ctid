@@ -30,7 +30,7 @@ class QueueMemberServiceNotifier(object):
     _instance = None
 
     def __init__(self):
-        self._callbacks = list()
+        self._callbacks = []
 
     def subscribe(self, function):
         self._callbacks.append(function)
@@ -38,7 +38,7 @@ class QueueMemberServiceNotifier(object):
     def queuemember_config_updated(self, delta):
         self.innerdata_dao.apply_queuemember_delta(delta)
         for event in self._prepare_queuemember_config_updated(delta):
-            self.events_cti.put(event)
+            self.send_cti_event(event)
         for callback in self._callbacks:
             callback(delta)
 

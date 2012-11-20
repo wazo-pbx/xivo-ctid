@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,7 +25,9 @@ import unittest
 
 from xivo_cti.tools.extension import normalize_exten
 
+
 class TestExtension(unittest.TestCase):
+
     def test_normalize_exten(self):
         extens = ['00.11.22.33.44',
                   '00 11 22 33 44',
@@ -42,4 +44,8 @@ class TestExtension(unittest.TestCase):
 
     def test_normalize_exten_any_valid_char(self):
         exten = '-@%^& ":<>/?:";'
-        self.assertEqual(normalize_exten(exten), None)
+        self.assertRaises(ValueError, normalize_exten, exten)
+
+    def test_normalize_exten_caller_id(self):
+        exten = '"User 1" <1001>"'
+        self.assertEqual(normalize_exten(exten), '1001')

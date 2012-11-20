@@ -49,55 +49,54 @@ class AMI(object):
     FIELD_SEPARATOR = ': '
     ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-    def __init__(self, ctiserver, ipbxid):
+    def __init__(self, ctiserver):
         self._ctiserver = ctiserver
-        self.ipbxid = ipbxid
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
         config = cti_config.Config.get_instance()
-        ipbxconfig = (config.getconfig('ipbxes').get(self.ipbxid)
-                      .get('ipbx_connection'))
+        ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
         self.ami_login = ipbxconfig.get('username', 'xivouser')
         self.ami_pass = ipbxconfig.get('password', 'xivouser')
         self.timeout_queue = Queue.Queue()
-        self.amicl = None
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
         ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
         AMIAgentLoginLogoff.register_callbacks()
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
+        ami_agent_login_logoff.agent_features_dao = self._ctiserver._agent_features_dao
+        ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
         self._ami_initializer = AMIInitializer()
-        self.amicl = xivo_ami.AMIClass(self.ipbxid,
+        self.amiclass = xivo_ami.AMIClass(self._ctiserver.myipbxid,
                                        self.ipaddress, self.ipport,
                                        self.ami_login, self.ami_pass,
                                        True)
-        self._ami_initializer._ami_class = self.amicl
+        self._ami_initializer._ami_class = self.amiclass
         self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
 
     def connect(self):
         logger.info('connecting ami .....')
         try:
             self._ami_initializer.register()
-            self.amicl.connect()
-            self.amicl.login()
-            return self.amicl.sock
+            self.amiclass.connect()
+            self.amiclass.login()
+            return self.amiclass.sock
         except Exception:
-            logger.exception('unable to connect/login')
+            logger.warning('unable to connect/login')
 
     def disconnect(self):
         logger.info('ami disconnected')
-        self.amicl.sock.close()
+        self.amiclass.sock.close()
 
     def connected(self):
-        if self.amicl and self.amicl.sock:
+        if self.amiclass and self.amiclass.sock:
             try:
-                return self.amicl.sock.getpeername()
+                return self.amiclass.sock.getpeername()
             except Exception:
                 return None
 
@@ -105,7 +104,7 @@ class AMI(object):
         try:
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
-                      self.ipbxid)
+                      self._ctiserver.myipbxid)
         except Exception:
             logger.exception('cb_timer %s', args)
 
@@ -125,7 +124,7 @@ class AMI(object):
 
     def delayed_action(self, usefulmsg, replyto=None):
         actionid = self.make_actionid()
-        self.amicl.sendcommand('Command', [('Command', usefulmsg),
+        self.amiclass.sendcommand('Command', [('Command', usefulmsg),
                                            ('ActionID', actionid)])
         if replyto is not None:
             self.waiting_actionid[actionid] = replyto
@@ -147,13 +146,13 @@ class AMI(object):
         for raw_event in events:
             try:
                 decoded_event = raw_event.decode('utf8')
-            except Exception:
+            except UnicodeError:
                 logger.exception('could not decode event %r', raw_event)
                 continue
             event = {}
             nocolon = []
             for line in decoded_event.split(self.LINE_SEPARATOR):
-                if line.find('\n') < 0:
+                if '\n' not in line:
                     if line != '--END COMMAND--':  # occurs when requesting "module reload xxx.so"
                         key_value = line.split(self.FIELD_SEPARATOR, 1)
                         if len(key_value) == 2:
@@ -174,16 +173,10 @@ class AMI(object):
                             if doallow:
                                 ik.sendall('%.3f %s %s %s\n' %
                                            (time.time(),
-                                            self.ipbxid,
+                                            self._ctiserver.myipbxid,
                                             event_name,
                                             event))
                 self.handle_ami_function(event_name, event)
-
-                if event_name not in ['Newexten',
-                                      'Newchannel',
-                                      'Newstate',
-                                      'Newcallerid']:
-                    pass
             elif 'Response' in event and event['Response'] is not None:
                 response = event['Response']
                 if (response == 'Follows' and 'Privilege' in event
@@ -239,18 +232,15 @@ class AMI(object):
         functions = []
         if 'Event' in event:
             functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event['Event']))
-        try:
-            if evfunction in ami_def.evfunction_to_method_name:
-                methodname = ami_def.evfunction_to_method_name.get(evfunction)
-                if hasattr(self._ctiserver.commandclass, methodname):
-                    functions.append(getattr(self._ctiserver.commandclass, methodname))
-            for function in set(functions):
-                try:
-                    function(event)
-                except KeyError:
-                    logger.exception('Missing fields to handle this event: %s', event)
-        except Exception:
-            logger.exception('%s : event %s', evfunction, event)
+        if evfunction in ami_def.evfunction_to_method_name:
+            methodname = ami_def.evfunction_to_method_name.get(evfunction)
+            if hasattr(self._ctiserver.commandclass, methodname):
+                functions.append(getattr(self._ctiserver.commandclass, methodname))
+        for function in set(functions):
+            try:
+                function(event)
+            except KeyError:
+                logger.exception('Missing fields to handle this event: %s', event)
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
@@ -290,7 +280,7 @@ class AMI(object):
                         actionid, mode, event, properties)
 
     def execute_and_track(self, actionid, params):
-        conn_ami = self.amicl
+        conn_ami = self.amiclass
         mode = params.get('mode')
         if conn_ami and 'amicommand' in params:
             amicommand = params['amicommand']
@@ -311,7 +301,6 @@ class AMI(object):
         if 'Value' in event and event['Value']:
             value = event['Value']
             channel, dummyvarname = properties.get('amiargs')
-            self.innerdata.autocall(channel, value)
             if value in self.originate_actionids:
                 request = self.originate_actionids[value].get('request')
                 cn = request.get('requester')
@@ -327,7 +316,7 @@ class AMI(object):
 
     def _handle_vmupdate_success(self, event, properties):
         try:
-            mailbox = event['Mailbox'] + '@' + properties['amiargs'][1]
+            mailbox = event['Mailbox']
             self.innerdata.voicemailupdate(mailbox,
                                            event['NewMessages'],
                                            event['OldMessages'])
@@ -358,7 +347,7 @@ class AMI(object):
                 # of the request when using track_and_execute with an
                 # extra argument
                 context = properties['amiargs'][1]
-                fullmailbox = event['Mailbox'] + '@' + context
+                fullmailbox = event['Mailbox']
                 self.innerdata.voicemailupdate(fullmailbox,
                                                event['NewMessages'],
                                                event['OldMessages'])

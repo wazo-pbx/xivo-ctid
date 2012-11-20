@@ -22,21 +22,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import Queue
 from tests.mock import Mock, call, ANY
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.services.queue_service_manager import NotAQueueException
 
+
 class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.ipbx_id = 'xivo_test'
+        self.ipbx_id = 'xivo'
         self.notifier = QueueMemberServiceNotifier()
         self.notifier.ipbx_id = self.ipbx_id
         self.notifier.innerdata_dao = Mock()
-        self.notifier.events_cti = Queue.Queue()
+        self.notifier.send_cti_event = Mock()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)
         self.notifier.queue_statistics_producer = self.queue_statistics_producer
         self.callback = Mock()
@@ -44,9 +44,9 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def test_queuemember_config_updated_add(self):
         input_delta = DictDelta({'Agent/2345,service':
-                                    {'queue_name':'service', 'interface':'Agent/2345'},
+                                    {'queue_name': 'service', 'interface': 'Agent/2345'},
                                  'Agent/2309,service':
-                                    {'queue_name':'service', 'interface':'Agent/2309'}
+                                    {'queue_name': 'service', 'interface': 'Agent/2309'}
                                  }, {}, {})
         queuemembers_to_add = ['Agent/2309,service', 'Agent/2345,service']
 
@@ -55,7 +55,7 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.notifier.queuemember_config_updated(input_delta)
 
         self.notifier.innerdata_dao.apply_queuemember_delta.assert_called_once_with(input_delta)
-        cti_event = self.notifier.events_cti.get()
+        cti_event = self.notifier.send_cti_event.call_args[0][0]
         self._assert_cti_event_is_addconfig_queuemembers_for(cti_event, queuemembers_to_add)
 
         self.queue_statistics_producer.on_agent_added.assert_was_called_with('34', 'Agent/2345')
@@ -65,10 +65,9 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
         self.callback.assert_called_once_with(input_delta)
 
-
     def test_queuemember_config_updated_add_in_group(self):
         input_delta = DictDelta({'SIP/2345,group':
-                                    {'queue_name':'group', 'interface':'SIP/2345'}
+                                    {'queue_name': 'group', 'interface': 'SIP/2345'}
                                  }, {}, {})
         expected_cti_event = {'class': 'getlist',
                               'function': 'addconfig',
@@ -81,7 +80,7 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.notifier.queuemember_config_updated(input_delta)
 
         self.notifier.innerdata_dao.apply_queuemember_delta.assert_called_once_with(input_delta)
-        cti_event = self.notifier.events_cti.get()
+        cti_event = self.notifier.send_cti_event.call_args[0][0]
         self.assertEqual(cti_event, expected_cti_event)
 
         self.queue_statistics_producer.on_agent_added.assert_never_called()
@@ -90,19 +89,18 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
         self.callback.assert_called_once_with(input_delta)
 
-
     def test_queuemember_deleted(self):
         input_delta = DictDelta({}, {}, {'Agent/2345,service':
-                                    {'queue_name':'service', 'interface':'Agent/2345'},
+                                    {'queue_name': 'service', 'interface': 'Agent/2345'},
                                  'Agent/2309,service':
-                                    {'queue_name':'service', 'interface':'Agent/2309'}})
+                                    {'queue_name': 'service', 'interface': 'Agent/2309'}})
 
         self.notifier.innerdata_dao.get_queue_id.return_value = '34'
 
         self.notifier.queuemember_config_updated(input_delta)
 
         self.notifier.innerdata_dao.apply_queuemember_delta.assert_called_once_with(input_delta)
-        cti_event = self.notifier.events_cti.get()
+        cti_event = self.notifier.send_cti_event.call_args[0][0]
         self._assert_cti_event_is_delconfig_queuemembers_for(cti_event, ['Agent/2345,service', 'Agent/2309,service'])
 
         self.queue_statistics_producer.on_agent_removed.assert_was_called_with('34', 'Agent/2345')
@@ -130,9 +128,7 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.notifier.queuemember_config_updated(input_delta)
 
         innerdata_method_calls = self.notifier.innerdata_dao.method_calls
-        cti_events = []
-        while not self.notifier.events_cti.empty():
-            cti_events.append(self.notifier.events_cti.get())
+        cti_events = list(self.notifier.send_cti_event.call_args[0])
         self.assertEqual(innerdata_method_calls, [call.apply_queuemember_delta(ANY)])
         self.assertEqual(cti_events.sort(), expected_cti_events.sort())
 

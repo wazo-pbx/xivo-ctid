@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf-8 :
 # XiVO CTI Server
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012 Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,23 +23,21 @@
 
 import cjson
 import logging
-import os
 import time
-
-
-from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti import cti_command, cti_config
-from xivo_cti.interfaces import interfaces
-from xivo_cti.cti.commands.login_id import LoginID
 import random
+
+from xivo_cti import cti_command
+from xivo_cti.cti_config import ALPHANUMS, CTI_PROTOCOL_VERSION
+from xivo_cti.cti.cti_command_handler import CTICommandHandler
+from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
+from xivo_cti.interfaces import interfaces
 
 logger = logging.getLogger('interface_cti')
 
-ALLOWED_OS = ['x11', 'win', 'mac', 'ctiserver', 'web', 'android', 'ios']
-
 
 class serialJson(object):
+
     def decode(self, linein):
         # Output of the cjson.decode is a Unicode object, even though the
         # non-ASCII characters have not been decoded.
@@ -51,6 +49,10 @@ class serialJson(object):
     def encode(self, obj):
         obj['timenow'] = time.time()
         return cjson.encode(obj)
+
+
+class NotLoggedException(StandardError):
+    pass
 
 
 class CTI(interfaces.Interfaces):
@@ -71,6 +73,14 @@ class CTI(interfaces.Interfaces):
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
 
+    def user_id(self):
+        try:
+            user_id = self.connection_details['userid']
+        except KeyError:
+            raise NotLoggedException()
+        else:
+            return user_id
+
     def _register_login_callbacks(self):
         LoginID.register_callback_params(self.receive_login_id, ['userlogin',
                                                                  'xivo_version',
@@ -81,15 +91,18 @@ class CTI(interfaces.Interfaces):
         self.logintimer.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
-        elif 'userid' in self.connection_details:
-            user_id = self.connection_details['userid']
-            if cause == self.DisconnectCause.by_client \
-            or cause == self.DisconnectCause.by_server_stop \
-            or cause == self.DisconnectCause.by_server_reload \
-            or cause == self.DisconnectCause.broken_pipe:
-                self._ctiserver._user_service_manager.disconnect_no_action(user_id)
-            else:
-                raise TypeError('invalid DisconnectCause %s' % cause)
+        else:
+            try:
+                user_id = self.user_id()
+                if (cause == self.DisconnectCause.by_client
+                    or cause == self.DisconnectCause.by_server_stop
+                    or cause == self.DisconnectCause.by_server_reload
+                    or cause == self.DisconnectCause.broken_pipe):
+                    self._ctiserver._user_service_manager.disconnect_no_action(user_id)
+                else:
+                    raise TypeError('invalid DisconnectCause %s' % cause)
+            except NotLoggedException:
+                logger.warning('Called disconnected with no user_id')
 
     def manage_connection(self, msg):
         if self.transferconnection:
@@ -114,7 +127,7 @@ class CTI(interfaces.Interfaces):
         replies.extend(self._cti_command_handler.run_commands())
 
         # Commands from the cti_command.Command class
-        if len(replies) == 0:
+        if not replies:
             command = cti_command.Command(self, decoded_command)
             replies.extend(command.parse())
 
@@ -145,7 +158,7 @@ class CTI(interfaces.Interfaces):
 
     def loginko(self, errorstring):
         logger.warning('user can not connect (%s) : sending %s',
-                       self.details, errorstring)
+                       self.connection_details, errorstring)
         # self.logintimer.cancel() + close
         tosend = {'class': 'loginko',
                   'error_string': errorstring}
@@ -155,19 +168,18 @@ class CTI(interfaces.Interfaces):
         if connection != self:
             return []
 
-        if version != cti_config.XIVOVERSION_NUM:
-            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, cti_config.XIVOVERSION_NUM),
+        if version != CTI_PROTOCOL_VERSION:
+            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
                              'class': 'login_id'}
 
-        ipbxid = self._ctiserver.myipbxid
-        innerdata = self._ctiserver.safe[ipbxid]
+        innerdata = self._ctiserver.safe
         user_dict = innerdata.xod_config.get('users').finduser(login)
 
         if user_dict:
-            self.connection_details.update({'ipbxid': ipbxid,
+            self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
                                             'userid': str(user_dict.get('id'))})
 
-        session_id = ''.join(random.sample(cti_config.ALPHANUMS, 10))
+        session_id = ''.join(random.sample(ALPHANUMS, 10))
         self.connection_details['prelogin'] = {'sessionid': session_id}
 
         return 'message', {'sessionid': session_id,

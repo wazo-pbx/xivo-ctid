@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,11 +21,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.helpers import queuemember_formatter
-from xivo_cti.tools.delta_computer import DictDelta
 import logging
+from xivo_dao import group_dao
+from xivo_dao.helpers import queuemember_formatter
+from xivo_cti.tools.delta_computer import DictDelta
+from xivo_dao import queue_features_dao
+from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger("QueueMemberServiceManager")
+
 
 class QueueMemberServiceManager(object):
     def update_config(self):
@@ -55,7 +59,7 @@ class QueueMemberServiceManager(object):
 
     def _get_queuemembers_to_request(self, delta):
         ret = []
-        for queuemember in delta.add.values():
+        for queuemember in delta.add.itervalues():
             ret.append((queuemember['interface'], queuemember['queue_name']))
         for queuemember in delta.change:
             queuemember_local = self.innerdata_dao.get_queuemember(queuemember)
@@ -80,7 +84,7 @@ class QueueMemberServiceManager(object):
         if queue_id == 'all':
             queue_name = 'all'
         else:
-            queue_name = self.queue_features_dao.queue_name(queue_id)
+            queue_name = queue_features_dao.queue_name(queue_id)
 
         if command in ['queuepause', 'queueunpause'] and dopause is not None:
             if queue_name == 'all':
@@ -98,3 +102,43 @@ class QueueMemberServiceManager(object):
         elif command == 'queueremove':
             self.agent_service_manager.queueremove(queue_name, agent_id)
 
+    def is_queue_member(self, user_id, queue_id):
+        try:
+            queue_name = queue_features_dao.get_queue_name(queue_id)
+        except LookupError:
+            return False
+
+        lowered_keys = map(lambda x: x.lower(),
+                           self.innerdata_dao.get_queuemembers_config().keys())
+
+        try:
+            chan = ('Agent/%s' % (userfeaturesdao.get_agent_number(user_id))).lower()
+        except LookupError:
+            pass  # User has no agent or it's a group
+        else:
+            key = '%s,%s' % (chan, queue_name)
+            if key in lowered_keys:
+                return True
+
+        try:
+            line_proto_name = userfeaturesdao.get_line_identity(user_id)
+        except LookupError:
+            pass  # This user has no line
+        else:
+            key = '%s,%s' % (line_proto_name.lower(), queue_name)
+            if key in lowered_keys:
+                return True
+
+        return False
+
+    def is_group_member(self, user_id, group_id):
+        try:
+            group_name = group_dao.get_name(group_id)
+            line_proto_name = userfeaturesdao.get_line_identity(user_id)
+        except KeyError:
+            return False
+        else:
+            lowered_keys = map(lambda x: x.lower(),
+                               self.innerdata_dao.get_queuemembers_config().keys())
+
+            return '%s,%s' % (line_proto_name.lower(), group_name) in lowered_keys

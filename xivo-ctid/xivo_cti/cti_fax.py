@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'
@@ -28,7 +30,7 @@ import threading
 
 logger = logging.getLogger('async')
 
-PATH_SPOOL_ASTERISK     = '/var/spool/asterisk'
+PATH_SPOOL_ASTERISK = '/var/spool/asterisk'
 PATH_SPOOL_ASTERISK_FAX = PATH_SPOOL_ASTERISK + '/fax'
 PATH_SPOOL_ASTERISK_TMP = PATH_SPOOL_ASTERISK + '/tmp'
 PDF2FAX = '/usr/bin/xivo_pdf2fax'
@@ -67,7 +69,7 @@ class asyncActionsThread(threading.Thread):
         else:
             reply = 'ko;filetype'
             logger.warning('(ref %s) the file received is a <%s> one : format not supported',
-                           self.reference, brieffile)
+                           self.tmpfilepath, brieffile)
             ret = -1
         print reply
         os.unlink(self.tmpfilepath)
@@ -103,8 +105,7 @@ class Fax(object):
             self.callerid = 'anonymous'
         else:
             phoneid = linelist[0]
-            phoneinfo = self.innerdata.xod_config['phones'].keeplist[phoneid]
-            self.callerid = phoneinfo['callerid']
+            self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phoneid)
 
     def setfileparameters(self, size):
         self.size = size
@@ -124,7 +125,7 @@ class Fax(object):
                                      {'innerdata' : self.innerdata,
                                       'fileid' : self.fileid,
                                       'rawfile' : self.rawfile
-                                      } )
+                                      })
         sthread.start()
 
     def step(self, stepname):
@@ -133,7 +134,7 @@ class Fax(object):
             self.requester.reply({'class' : 'faxsend',
                                   'fileid' : self.fileid,
                                   'step' : stepname
-                                  } )
+                                  })
         except Exception:
             # when requester is not connected any more ...
             pass

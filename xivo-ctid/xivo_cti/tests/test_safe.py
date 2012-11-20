@@ -33,22 +33,21 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import innerdata
 from tests.mock import Mock
-from xivo_cti.tools.caller_id import build_agi_caller_id
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.dao.trunkfeaturesdao import TrunkFeaturesDAO
+from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 
 class TestSafe(unittest.TestCase):
 
-    _ipbx_id = 'xivo_test'
+    _ipbx_id = 'xivo'
 
     def setUp(self):
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager())
         config = Config.get_instance()
-        config.xc_json = {'ipbxes': {self._ipbx_id: {'cdr_db_uri': 'sqlite://'}}}
+        config.xc_json = {'ipbx': {'cdr_db_uri': 'sqlite://'}}
         self.safe = Safe(self._ctiserver, self._ipbx_id)
         self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
         self.safe.trunk_features_dao.get_ids.return_value = []
@@ -59,7 +58,6 @@ class TestSafe(unittest.TestCase):
 
     def test_safe(self):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)
-        self.assertEqual(self.safe.ipbxid, self._ipbx_id)
 
     def test_register_cti_handlers(self):
         self.safe.register_cti_handlers()
@@ -96,6 +94,14 @@ class TestSafe(unittest.TestCase):
         self.assertEqual(proto, 'SIP')
         self.assertEqual(name, 'test-ha-1')
 
+    def test_split_channel_local(self):
+        sip_trunk_channel = 'Local/1105@default-3d0f;2'
+
+        proto, name = innerdata.split_channel(sip_trunk_channel)
+
+        self.assertEqual(proto, 'Local')
+        self.assertEqual(name, '1105@default')
+
     def test_split_channel_dahdi(self):
         dahdi_trunk_channel = 'DAHDI/i1/0612345678-577'
 
@@ -103,69 +109,6 @@ class TestSafe(unittest.TestCase):
 
         self.assertEqual(proto, 'custom')
         self.assertEqual(name, 'DAHDI/i1')
-
-    def test_resolve_incoming_caller_id_already_set(self):
-        ret = self.safe._resolve_incoming_caller_id('SIP/test-123', 'Tester', '6666', None)
-
-        self.assertEqual(ret, {})
-
-    def test_resolve_incoming_caller_id_phone(self):
-        channel_id = 'SIP/abcdef-1234'
-        self.safe._get_cid_for_phone = Mock()
-        self.safe._is_phone_channel = Mock()
-        name = 'tester'
-        number = '1234'
-        full = '"%s" <%s>' % (name, number)
-        self.safe._get_cid_for_phone.return_value = (full, name, number)
-        self.safe._is_phone_channel.return_value = True
-
-        expected = build_agi_caller_id(full, name, number)
-
-        ret = self.safe._resolve_incoming_caller_id(channel_id, number, number, None)
-
-        self.assertEqual(expected, ret)
-
-    def test_resolve_incoming_caller_id_trunk(self):
-        self.safe._is_phone_channel = Mock()
-        self.safe._is_phone_channel.return_value = False
-        self.safe._is_trunk_channel = Mock()
-        self.safe._is_trunk_channel.return_value = True
-        self.safe._get_cid_directory_lookup = Mock()
-        channel_id = 'SIP/my-test-trunk-123456'
-        name = 'tester'
-        number = '666'
-        full = '"%s" <%s>' % (name, number)
-        self.safe._get_cid_directory_lookup.return_value = (full, name, number)
-
-        expected = build_agi_caller_id(full, name, number)
-
-        ret = self.safe._resolve_incoming_caller_id(channel_id, number, number, 1)
-
-        self.assertEqual(ret, expected)
-
-    def test_resolve_incoming_caller_id_queue_internal(self):
-        channel = 'Local/1000@default-19e6;2'
-        name = 'tester'
-        number = '1234'
-
-        ret = self.safe._resolve_incoming_caller_id(channel, name, number, None)
-
-        self.assertEqual(ret, {})
-
-    def test_resolve_incoming_caller_id_queue_trunk(self):
-        channel = 'Local/1000@default-19e6;2'
-        number = '1234'
-        name = 'Tester'
-        full = '"%s" <%s>' % (name, number)
-        self.safe._get_cid_directory_lookup = Mock()
-        self.safe._get_cid_directory_lookup.return_value = ('"%s" <%s>' % (name, number),
-                                                            name, number)
-
-        expected = build_agi_caller_id(full, name, number)
-
-        ret = self.safe._resolve_incoming_caller_id(channel, number, number, None)
-
-        self.assertEqual(ret, expected)
 
     def assert_callback_registered(self, cls, fn):
         found = False
@@ -200,3 +143,29 @@ class TestSafe(unittest.TestCase):
             self.assertTrue(trunk_id in safe.xod_status['trunks'])
             self.assertEqual(safe.xod_status['trunks'][trunk_id], safe.props_status['trunks'])
             self.assertFalse(safe.xod_status['trunks'][trunk_id] is safe.props_status['trunks'])
+
+
+class TestChannel(unittest.TestCase):
+
+    def test_has_extra_data(self):
+        channel = Channel('local/1002@statcenter', 'statcenter', '1234.12')
+
+        result = channel.has_extra_data('xivo', 'calleridname')
+
+        self.assertFalse(result)
+
+        channel.set_extra_data('xivo', 'calleridname', 'test')
+
+        result = channel.has_extra_data('xivo', 'calleridname')
+
+        self.assertTrue(result)
+
+    def test_update_state(self):
+        state = 'Ringing'
+
+        channel = Channel('1001@my-ctx-00000', 'my-ctx', '1234567.33')
+
+        channel.update_state(5, state)
+
+        self.assertEqual(channel.state, 5)
+        self.assertEqual(channel.properties['state'], state)

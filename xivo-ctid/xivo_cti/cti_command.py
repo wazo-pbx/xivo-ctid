@@ -30,11 +30,10 @@ from xivo_cti import cti_fax
 from xivo_cti import cti_config
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
+from xivo_dao.celdao import UnsupportedLineProtocolException
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('cti_command')
-
-REQUIRED_LOGIN_FIELD = ['company', 'userlogin', 'ident',
-                       'xivoversion', 'git_hash', 'git_date']
 
 LOGINCOMMANDS = [
     'login_pass', 'login_capas'
@@ -81,7 +80,6 @@ IPBXCOMMANDS = [
     'queuepause_all', 'queueunpause_all',
     ]
 
-XIVOVERSION_NUM = '1.2'
 XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -93,7 +91,7 @@ class Command(object):
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistics_manager = QueueStatisticsManager()
+        self._queue_statistics_manager = QueueStatisticsManager.get_instance()
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
     def parse(self):
@@ -102,16 +100,16 @@ class Command(object):
 
         self.ipbxid = self._connection.connection_details.get('ipbxid')
         self.userid = self._connection.connection_details.get('userid')
-        self.innerdata = self._ctiserver.safe.get(self.ipbxid)
+        self.innerdata = self._ctiserver.safe
 
         # identifiers for the requester
         self.ripbxid = self._commanddict.get('ipbxid', self.ipbxid)
         self.ruserid = self._commanddict.get('userid', self.userid)
-        self.rinnerdata = self._ctiserver.safe.get(self.ripbxid)
+        self.rinnerdata = self._ctiserver.safe
 
         # identifiers for the requested
         self.tipbxid = self._commanddict.get('tipbxid', self.ipbxid)
-        self.tinnerdata = self._ctiserver.safe.get(self.tipbxid)
+        self.tinnerdata = self._ctiserver.safe
 
         messagebase = {'class': self.command}
         if self.commandid:
@@ -135,17 +133,13 @@ class Command(object):
 
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname) and 'warning_string' not in messagebase:
-                try:
-                    ztmp = getattr(self, methodname)()
-                    if ztmp is None or len(ztmp) == 0:
-                        messagebase['warning_string'] = 'return_is_none'
-                    elif isinstance(ztmp, str):
-                        messagebase['error_string'] = ztmp
-                    else:
-                        messagebase.update(ztmp)
-                except Exception:
-                    logger.exception('Exception')
-                    messagebase['warning_string'] = 'exception'
+                method_result = getattr(self, methodname)()
+                if not method_result:
+                    messagebase['warning_string'] = 'return_is_none'
+                elif isinstance(method_result, str):
+                    messagebase['error_string'] = method_result
+                else:
+                    messagebase.update(method_result)
             else:
                 messagebase['warning_string'] = 'unimplemented'
         else:
@@ -170,7 +164,7 @@ class Command(object):
         for argum in ['hashedpassword']:
             if argum not in self._commanddict:
                 missings.append(argum)
-        if len(missings) > 0:
+        if missings:
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
@@ -182,7 +176,7 @@ class Command(object):
         sessionid = cdetails.get('prelogin').get('sessionid')
 
         if ipbxid and userid:
-            ref_hashed_password = self._ctiserver.safe[ipbxid].user_get_hashed_password(userid, sessionid)
+            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(userid, sessionid)
             if ref_hashed_password != this_hashed_password:
                 logger.warning('%s - wrong hashed password', head)
                 return 'login_password'
@@ -199,7 +193,7 @@ class Command(object):
         for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
             if argum not in self._commanddict:
                 missings.append(argum)
-        if len(missings) > 0:
+        if missings:
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
@@ -273,7 +267,7 @@ class Command(object):
         userid = cdetails.get('userid')
         if capaid not in self._config.getconfig('profiles').keys():
             return 'unknownprofile'
-        if capaid != self._ctiserver.safe[ipbxid].xod_config['users'].keeplist[userid]['profileclient']:
+        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['profileclient']:
             return 'wrongprofile'
         # XXX : too much users ?
 
@@ -281,7 +275,7 @@ class Command(object):
         cdetails = self._connection.connection_details
         ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
-        self._ctiserver.safe[ipbxid].xod_status['users'][userid]['connection'] = 'yes'
+        self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver._user_service_manager.set_presence(userid, availstate)
 
     # end of login/logout related commands
@@ -298,7 +292,7 @@ class Command(object):
     def regcommand_actionfiche(self):
         reply = {}
         infos = self._commanddict.get('infos')
-        uri = self._config.getconfig('ipbxes').get(self.ripbxid).get('cdr_db_uri')
+        uri = self._config.getconfig('ipbx').get('cdr_db_uri')
         self.rinnerdata.fill_user_ctilog(uri,
                                          self.ruserid,
                                          'cticommand:actionfiche',
@@ -324,46 +318,44 @@ class Command(object):
     def _get_history_for_phone(self, phone):
         mode = int(self._commanddict['mode'])
         limit = int(self._commanddict['size'])
-        endpoint = self._get_endpoint_from_phone(phone)
-        if mode == 0:
-            return self._get_outgoing_history_for_endpoint(endpoint, limit)
-        elif mode == 1:
-            return self._get_answered_history_for_endpoint(endpoint, limit)
-        elif mode == 2:
-            return self._get_missed_history_for_endpoint(endpoint, limit)
-        else:
-            return None
+        try:
+            if mode == 0:
+                return self._get_outgoing_history_for_phone(phone, limit)
+            elif mode == 1:
+                return self._get_answered_history_for_phone(phone, limit)
+            elif mode == 2:
+                return self._get_missed_history_for_phone(phone, limit)
+        except UnsupportedLineProtocolException:
+            logger.warning('Could not get history for phone: %s', phone['name'])
+        return None
 
-    def _get_outgoing_history_for_endpoint(self, endpoint, limit):
+    def _get_outgoing_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for sent_call in call_history_mgr.outgoing_calls_for_endpoint(endpoint, limit):
+        for sent_call in call_history_mgr.outgoing_calls_for_phone(phone, limit):
             result.append({'calldate': sent_call.date.isoformat(),
                            'duration': sent_call.duration,
                            # XXX this is not fullname, this is just an extension number like in 1.1
                            'fullname': sent_call.extension})
         return result
 
-    def _get_answered_history_for_endpoint(self, endpoint, limit):
+    def _get_answered_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.answered_calls_for_endpoint(endpoint, limit):
+        for received_call in call_history_mgr.answered_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})
         return result
 
-    def _get_missed_history_for_endpoint(self, endpoint, limit):
+    def _get_missed_history_for_phone(self, phone, limit):
         call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.missed_calls_for_endpoint(endpoint, limit):
+        for received_call in call_history_mgr.missed_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})
         return result
-
-    def _get_endpoint_from_phone(self, phone):
-        return "%s/%s" % (phone['protocol'].upper(), phone['name'])
 
     def _format_history_reply(self, history):
         if history is None:
@@ -371,18 +363,6 @@ class Command(object):
         else:
             mode = int(self._commanddict['mode'])
             return {'mode': mode, 'history': history}
-
-    def regcommand_parking(self):
-        reply = {}
-        for ipbxid, pcalls in self.parkedcalls.iteritems():
-            for parkingbay, pprops in pcalls.iteritems():
-                tosend = {'class': 'parkcall',
-                          'eventkind': 'parkedcall',
-                          'ipbxid': ipbxid,
-                          'parkingbay': parkingbay,
-                          'payload': pprops}
-                repstr = self.__cjson_encode__(tosend)
-        return reply
 
     def regcommand_logfromclient(self):
         logger.warning('logfromclient from user %s (level %s) : %s : %s',
@@ -423,7 +403,7 @@ class Command(object):
         reply = {'fileid': fileid}
         self.innerdata.faxes[fileid] = cti_fax.Fax(self.innerdata, fileid)
         contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
-        if len(contexts):
+        if contexts:
             self.innerdata.faxes[fileid].setfaxparameters(self.ruserid,
                                                           contexts[0],
                                                           self._commanddict.get('destination'),
@@ -432,7 +412,7 @@ class Command(object):
         return reply
 
     def regcommand_getipbxlist(self):
-        return {'ipbxlist': self._config.getconfig('ipbxes').keys()}
+        return {'ipbxlist': ['xivo']}
 
     def regcommand_ipbxcommand(self):
         reply = {}
@@ -456,10 +436,7 @@ class Command(object):
         # check whether ipbxcommand is in the users's profile capabilities
         zs = []
         if hasattr(self, methodname):
-            try:
                 zs = getattr(self, methodname)()
-            except Exception:
-                logger.exception('exception when calling %s %s', methodname, self._commanddict)
 
         # if some actions have been requested ...
         if self.commandid:  # pass the commandid on the actionid # 'user action - forwarded'
@@ -477,7 +454,7 @@ class Command(object):
                           'amicommand': z.get('amicommand'),
                           'amiargs': z.get('amiargs')}
                 actionid = '%s-%03d' % (baseactionid, idz)
-                ipbxreply = self._ctiserver.myami.get(self.ipbxid).execute_and_track(actionid, params)
+                ipbxreply = self._ctiserver.myami.execute_and_track(actionid, params)
             else:
                 ipbxreply = z.get('error')
             idz += 1
@@ -528,12 +505,7 @@ class Command(object):
         if not dst:
             return [{'error': 'destination'}]
 
-        if src.get('ipbxid') != dst.get('ipbxid'):
-            return [{'error': 'ipbxids'}]
-        if src.get('ipbxid') not in self._ctiserver.safe:
-            return [{'error': 'ipbxid'}]
-
-        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
+        innerdata = self._ctiserver.safe
 
         orig_protocol = None
         orig_name = None
@@ -553,9 +525,6 @@ class Command(object):
             if src.get('id') in innerdata.xod_config.get('phones').keeplist:
                 phoneidstruct_src = innerdata.xod_config.get('phones').keeplist.get(src.get('id'))
         elif src.get('type') == 'exten':
-            # in android cases
-            # there was a warning back to revision 6095 - maybe to avoid making arbitrary calls on behalf
-            # of the local telephony system ?
             orig_context = 'mamaop'  # XXX how should we define or guess the proper context here ?
             orig_protocol = 'local'
             orig_name = '%s@%s' % (src.get('id'), orig_context)  # this is the number actually dialed, in local channel mode
@@ -628,46 +597,8 @@ class Command(object):
         return [rep]
 
     def ipbxcommand_meetme(self):
-        function = self._commanddict['function']
-        args = self._commanddict['functionargs']
-
-        if function in ('record',) and len(args) >= 4:
-            mxid, usernum, adminnum, status = args[:4]
-        elif (function in ('MeetmeMute', 'MeetmeUnmute')
-              and len(args) >= 2):
-            mxid, usernum = args[:2]
-        elif (len(args) >= 3 and function in
-              ('MeetmeAccept', 'MeetmeKick', 'MeetmeTalk')):
-            mxid, usernum, adminnum = args[:3]
-        mid = mxid.split("/", 1)[1]
-
-        meetme_conf = self.innerdata.xod_config['meetmes'].keeplist[mid]
-        meetme_status = self.innerdata.xod_status['meetmes'][mid]
-
-        if 'record' in function and status in ('start', 'stop'):
-            chan = ''
-            for key, value in meetme_status.iteritems():
-                if value['usernum'] == usernum:
-                    chan = key
-            if status == 'start' and chan:
-                datestring = time.strftime('%Y%m%d-%H%M%S', time.localtime())
-                filename = ('cti-meetme-%s-%s' %
-                            (meetme_conf['name'], datestring))
-                return [{'amicommand': 'monitor',
-                          'amiargs': (chan, filename)}]
-            elif status == 'stop':
-                return [{'amicommand': 'stopmonitor',
-                          'amiargs': (chan,)}]
-        elif function in ('MeetmePause',):
-            return [{'amicommand': function.lower(),
-                      'amiargs': (meetme_conf['confno'], status)}]
-        elif function in ('MeetmeKick', 'MeetmeAccept', 'MeetmeTalk'):
-            return [{'amicommand': 'meetmemoderation',
-                      'amiargs': (function, meetme_conf['confno'],
-                                    usernum, adminnum)}]
-        elif function in ['MeetmeMute', 'MeetmeUnmute']:
-            return [{'amicommand': function.lower(),
-                     'amiargs': (meetme_conf['confno'], usernum)}]
+        return [{'amicommand': self._commanddict['function'].lower(),
+                 'amiargs': self._commanddict['functionargs']}]
 
     def ipbxcommand_sipnotify(self):
         if 'variables' in self._commanddict:
@@ -689,41 +620,6 @@ class Command(object):
             return [{'amicommand': 'mailboxcount',
                       'amiargs': (self._commanddict['mailbox'],
                                     self._commanddict['context'])}]
-
-    # transfers
-    def ipbxcommand_parking(self):
-        src = self.parseid(self._commanddict.get('source'))
-        if not src:
-            return [{'error': 'source'}]
-        dst = self.parseid(self._commanddict.get('destination'))
-        if not dst:
-            return {'error': 'destination'}
-
-        if src.get('ipbxid') != dst.get('ipbxid'):
-            return {'error': 'ipbxids'}
-        if src.get('ipbxid') not in self._ctiserver.safe:
-            return {'error': 'ipbxid'}
-
-        innerdata = self._ctiserver.safe.get(src.get('ipbxid'))
-
-        if src.get('type') == 'chan':
-            if src.get('id') in innerdata.channels:
-                channel = src.get('id')
-                peerchannel = innerdata.channels.get(channel).peerchannel
-        else:
-            pass
-
-        if dst.get('type') == 'parking':
-            try:
-                parkinglot = innerdata.xod_config['parkinglots'].keeplist[dst['id']]['name']
-                if parkinglot is not 'default':
-                    parkinglot = 'parkinglot_' + parkinglot
-            except Exception:
-                parkinglot = 'default'
-
-        rep = {'amicommand': 'park',
-               'amiargs': (channel, peerchannel, parkinglot, 120000)}
-        return [rep, ]
 
     def ipbxcommand_transfer(self):
         try:
@@ -753,7 +649,7 @@ class Command(object):
 
             return [{'amicommand': 'transfer',
                       'amiargs': [channel, extentodial, dst_context]}]
-        except Exception:
+        except KeyError:
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
 
@@ -762,7 +658,7 @@ class Command(object):
             exten = self.parseid(self._commanddict['destination'])['id']
             context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
             channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
-        except:
+        except KeyError:
             logger.exception('Atxfer failed %s', self._commanddict)
             return [{'error': 'Incomplete info'}]
         else:
@@ -778,7 +674,7 @@ class Command(object):
                      'amiargs': [chan_id,
                                  main_line['number'],
                                  main_line['context']]}]
-        except Exception:
+        except KeyError:
             logger.warning('Failed to complete interception')
             return [{'error': 'Incomplete info'}]
 
@@ -796,7 +692,7 @@ class Command(object):
             ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
         else:
             ipbx_id, agent_id = self.ipbxid, command_dict['agentids']
-        innerdata = self._ctiserver.safe[ipbx_id]
+        innerdata = self._ctiserver.safe
         if agent_id in innerdata.xod_config['agents'].keeplist:
             agent = innerdata.xod_config['agents'].keeplist[agent_id]
             status = innerdata.xod_status['agents'][agent_id]
@@ -810,7 +706,7 @@ class Command(object):
 
     def ipbxcommand_agentlogout(self):
         agent, status = self.get_agent_info(self._commanddict)
-        if status['status'] != 'AGENT_LOGGEDOFF':
+        if status['availability'] != AgentStatus.logged_out:
             return [{'amicommand': 'agentlogoff',
                      'amiargs': [agent['number'], True]}]
 

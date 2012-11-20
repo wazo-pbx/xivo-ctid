@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,44 +21,67 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 import unittest
-
-from xivo_cti.dao.alchemy import dbconnection
-from xivo_cti.dao.alchemy.base import Base
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.alchemy import dbconnection
+from xivo_dao.alchemy.base import Base
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.contextinclude import ContextInclude
+from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
-import time
+from sqlalchemy.schema import MetaData
 
 
-class Test(unittest.TestCase):
+class TestUserFeaturesDAO(unittest.TestCase):
 
-    def setUp(self):
+    tables = [UserFeatures, LineFeatures, ContextInclude, AgentFeatures]
+
+    @classmethod
+    def setUpClass(cls):
         db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
         dbconnection.register_db_connection_pool(db_connection_pool)
 
         uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
         dbconnection.add_connection_as(uri, 'asterisk')
-        connection = dbconnection.get_connection('asterisk')
+        cls.connection = dbconnection.get_connection('asterisk')
 
-        Base.metadata.drop_all(connection.get_engine(), [UserFeatures.__table__])
-        Base.metadata.create_all(connection.get_engine(), [UserFeatures.__table__])
+        cls.cleanTables()
 
-        self.session = connection.get_session()
+        cls.session = cls.connection.get_session()
 
-        self.session.commit()
+    @classmethod
+    def tearDownClass(cls):
+        dbconnection.unregister_db_connection_pool()
 
+    @classmethod
+    def cleanTables(cls):
+        if len(cls.tables):
+            engine = cls.connection.get_engine()
+
+            meta = MetaData(engine)
+            meta.reflect()
+            meta.drop_all()
+
+            table_list = [table.__table__ for table in cls.tables]
+            Base.metadata.create_all(engine, table_list)
+            engine.dispose()
+
+    def empty_tables(self):
+        for table in self.tables:
+            self.session.execute("TRUNCATE %s CASCADE;" % table.__tablename__)
+
+    def setUp(self):
+        self.empty_tables()
         self._innerdata = Mock(Safe)
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
-
         self.dao = UserFeaturesDAO(self.session)
-
-    def tearDown(self):
-        dbconnection.unregister_db_connection_pool()
 
     def test_get_one_result(self):
         user_id = self._insert_user('first')
@@ -75,7 +98,7 @@ class Test(unittest.TestCase):
         self.assertEqual(user.id, user_id)
 
     def test_get_no_result(self):
-        self.assertRaises(LookupError, lambda: self.dao.get(1))
+        self.assertRaises(LookupError, self.dao.get, 1)
 
     def test_set_dnd(self):
         user_id = self._insert_user_dnd_not_set()
@@ -454,3 +477,285 @@ class Test(unittest.TestCase):
         result = self.dao.get_profile(user.id)
 
         self.assertEqual(result, expected_user_profile)
+
+    def _add_user_with_line(self, name, context):
+        user = UserFeatures()
+        user.firstname = name
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.iduserfeatures = user.id
+        line.context = context
+        line.protocolid = 1
+        line.name = 'jk1j3'
+        line.provisioningid = '12345'
+
+        self.session.add(line)
+        self.session.commit()
+
+        return user
+
+    def test_get_reachable_contexts(self):
+        context = 'my_context'
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        self.assertEqual(result, [context])
+
+    def test_get_reachable_context_no_line(self):
+        user = UserFeatures()
+        user.name = 'Tester'
+
+        self.session.add(user)
+        self.session.commit()
+
+        self.assertEqual(self.dao.get_reachable_contexts(user.id), [])
+
+    def test_get_reachable_context_included_ctx(self):
+        context = 'my_context'
+        included_context = 'second_ctx'
+
+        ctx_include = ContextInclude()
+        ctx_include.context = context
+        ctx_include.include = included_context
+
+        self.session.add(ctx_include)
+        self.session.commit()
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        self.assertEqual(result, [context, included_context])
+
+    def test_get_reachable_context_loop(self):
+        context = 'my_context'
+        included_context = 'second_ctx'
+        looping_context = 'third_ctx'
+
+        ctx = ContextInclude()
+        ctx.context = context
+        ctx.include = included_context
+
+        ctx_include = ContextInclude()
+        ctx_include.context = included_context
+        ctx_include.include = looping_context
+
+        ctx_loop = ContextInclude()
+        ctx_loop.context = looping_context
+        ctx_loop.include = context
+
+        map(self.session.add, [ctx, ctx_include, ctx_loop])
+        self.session.commit()
+
+        user = self._add_user_with_line('Tester', context)
+
+        result = self.dao.get_reachable_contexts(user.id)
+
+        for context in [context, included_context, looping_context]:
+            self.assertTrue(context in result)
+
+    def test_get_line_identity(self):
+        self.assertRaises(LookupError, userfeaturesdao.get_line_identity, 1234)
+
+        user = UserFeatures()
+        user.name = 'Tester'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.protocolid = 1
+        line.name = 'a1b2c3'
+        line.protocol = 'sip'
+        line.iduserfeatures = user.id
+        line.context = 'ctx'
+        line.provisioningid = 1234
+
+        self.session.add(line)
+        self.session.commit()
+
+        expected = 'sip/a1b2c3'
+        result = userfeaturesdao.get_line_identity(user.id)
+
+        self.assertEqual(result, expected)
+
+    def test_find_by_line_id(self):
+        user = UserFeatures()
+        user.firstname = 'test'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.protocolid = 1
+        line.name = 'abc'
+        line.context = 'test_ctx'
+        line.provisioningid = 2
+        line.iduserfeatures = user.id
+
+        self.session.add(line)
+        self.session.commit()
+
+        user_id = userfeaturesdao.find_by_line_id(line.id)
+
+        self.assertEqual(user_id, user.id)
+
+    def test_get_agent_number(self):
+        self.assertRaises(LookupError, userfeaturesdao.get_agent_number, 1)
+
+        agent = AgentFeatures()
+        agent.number = '1234'
+        agent.numgroup = 0
+        agent.passwd = ''
+        agent.context = 'ctx'
+        agent.language = 'fr'
+
+        self.session.add(agent)
+        self.session.commit()
+
+        user = UserFeatures()
+        user.agentid = agent.id
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_agent_number(user.id)
+
+        self.assertEqual(result, agent.number)
+
+    def test_get_dest_unc(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_unc(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destunc = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_unc(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_unc(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_unc(user.id)
+
+        self.assertFalse(result)
+
+        user.enableunc = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_unc(user.id)
+
+        self.assertTrue(result)
+
+    def test_get_dest_busy(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_busy(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destbusy = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_busy(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_busy(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_busy(user.id)
+
+        self.assertFalse(result)
+
+        user.enablebusy = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_busy(user.id)
+
+        self.assertTrue(result)
+
+    def test_get_dest_rna(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_rna(user.id)
+
+        self.assertEqual(result, '')
+
+        user.destrna = '1002'
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_dest_rna(user.id)
+
+        self.assertEqual(result, '1002')
+
+    def test_get_fwd_rna(self):
+        user = UserFeatures()
+
+        self.session.add(user)
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_rna(user.id)
+
+        self.assertFalse(result)
+
+        user.enablerna = 1
+
+        self.session.commit()
+
+        result = userfeaturesdao.get_fwd_rna(user.id)
+
+        self.assertTrue(result)
+
+    def test_get_name_number(self):
+        user = UserFeatures()
+        user.firstname = 'Toto'
+        user.lastname = 'Plop'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.number = '1234'
+        line.name = '12kjdhf'
+        line.context = 'context'
+        line.provisioningid = 1234
+        line.iduserfeatures = user.id
+        line.protocolid = 1
+
+        self.session.add(line)
+        self.session.commit()
+
+        name, number = userfeaturesdao.get_name_number(user.id)
+
+        self.assertEqual(name, '%s %s' % (user.firstname, user.lastname))
+        self.assertEqual(number, '1234')

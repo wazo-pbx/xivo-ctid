@@ -40,40 +40,27 @@ SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
 XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
-XIVO_CONF_OVER = None
-XIVOVERSION_NUM = '1.2'
+CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
 class Config(object):
-
-    PART_OPTION_CONTEXT = 'context'
-
     instance = None
 
     def __init__(self, * urilist):
         self.urilist = urilist
-        self.ipwebs = None
         self.xc_json = {}
-        self.overconf = None
-        self._parting_options = []
+        self._context_separation = None
 
     def update(self):
         # the aim of the urilist would be to handle the URI's one after the other
         # when there is a reachability issue (like it can happen in first steps ...)
         self.update_uri(self.urilist[0])
 
-    def set_ipwebs(self, ipwebs):
-        self.ipwebs = ipwebs
-
     def update_uri(self, uri):
-        if uri.find('json') < 0:
-            return
-        if uri.find(':') < 0:
+        if 'json' not in uri or ':' not in uri:
             return
 
-        # web-interface/tpl/www/bloc/cti/general.php
-        # web-interface/action/www/cti/web_services/configuration.php
         got_webi_answer = False
         while not got_webi_answer:
             try:
@@ -98,32 +85,6 @@ class Config(object):
                     if xlet_attr[1] == 'grid':
                         del xlet_attr[2]
 
-        self.translate()
-
-        if self.overconf:
-            self.xc_json['ipbxes'] = self.overconf
-
-    def translate(self):
-        """
-        Translate the config fetched from the remote IP ipwebs
-        in order to have the urllist and IPBX connection items pointing also to this IP.
-        The remote access(es) should be allowed there, of course.
-        """
-        if self.ipwebs is None or self.ipwebs == 'localhost':
-            return
-        for k, v in self.xc_json.get('ipbxes', {}).iteritems():
-            for kk, vv in v.get('urllists', {}).iteritems():
-                nl = []
-                for item in vv:
-                    z = item.replace('://localhost/', '://%s/' % self.ipwebs).replace('/private/', '/restricted/')
-                    nl.append(z)
-                v['urllists'][kk] = nl
-            if 'ipbx_connection' in v:
-                v.get('ipbx_connection')['ipaddress'] = self.ipwebs
-            cdruri = v.get('cdr_db_uri')
-            if cdruri:
-                v['cdr_db_uri'] = cdruri.replace('@localhost/', '@%s/' % self.ipwebs)
-
     def getconfig(self, key=None):
         if key:
             ret = self.xc_json.get(key, {})
@@ -131,12 +92,15 @@ class Config(object):
             ret = self.xc_json
         return ret
 
-    def set_parting_options(self, parting_options=None):
-        self._parting_options = parting_options if parting_options else []
-        logger.debug('New parting options: %s', self._parting_options)
+    def set_context_separation(self, context_separation=None):
+        if context_separation:
+            self._context_separation = context_separation
+        else:
+            self._context_separation = False
+        logger.debug('Context separation: %s', self._context_separation)
 
     def part_context(self):
-        return self.PART_OPTION_CONTEXT in self._parting_options
+        return self._context_separation == True
 
     @classmethod
     def get_instance(cls):

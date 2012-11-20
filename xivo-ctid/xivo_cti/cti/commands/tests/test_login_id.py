@@ -1,5 +1,8 @@
-from xivo_cti.cti.commands.login_id import LoginID
+# -*- coding: UTF-8 -*-
+
 import unittest
+from xivo_cti.cti_config import CTI_PROTOCOL_VERSION
+from xivo_cti.cti.commands.login_id import LoginID
 
 
 class Test(unittest.TestCase):
@@ -18,7 +21,7 @@ class Test(unittest.TestCase):
         company = 'default'
         ident = 'X11-LE-25439'
         userlogin = 'test_user'
-        xivo_version = '1.2'
+        xivo_version = CTI_PROTOCOL_VERSION
         login_id = LoginID.from_dict({'class': "login_id",
                                       'commandid': commandid,
                                       'company': company,

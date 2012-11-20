@@ -90,7 +90,7 @@ class Test(unittest.TestCase):
 
     def test_call_dead_weak_method_bound(self):
         class TestClass:
-            def func():
+            def func(self):
                 pass
         instance = TestClass()
         ref = WeakMethodBound(instance.func)

@@ -23,12 +23,12 @@
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('grouplist')
 
 
-class GroupList(AnyList):
+class GroupList(ContextAwareAnyList):
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
@@ -39,10 +39,10 @@ class GroupList(AnyList):
     def __init__(self, newurls=[], virtual=False):
         self.anylist_properties = {'name': 'groups',
                                    'urloptions': (1, 5, True)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:
@@ -115,7 +115,7 @@ class GroupList(AnyList):
         else:
             logger.warning('queuememberupdate : no such queueid %s', queueid)
         return changed
-    
+
     def queuememberremove(self, queueid, location):
         changed = False
         if queueid in self.keeplist:
@@ -125,7 +125,7 @@ class GroupList(AnyList):
         else:
             logger.warning('queuememberremove : no such queueid %s', queueid)
         return changed
-    
+
     def update_queuestats(self, queueid, event):
         changed = False
         if queueid in self.keeplist:
@@ -142,22 +142,6 @@ class GroupList(AnyList):
         else:
             logger.warning('update_queuestats : no such queueid %s', queueid)
         return changed
-    
+
     def get_queues(self):
         return self.keeplist.keys()
-    
-    def get_queues_byagent(self, agid):
-        queuelist = {}
-        for qref, ql in self.keeplist.iteritems():
-            lst = {}
-            if agid in ql['agents_in_queue']:
-                agprop = ql['agents_in_queue'][agid]
-                for v in self.queuelocationprops:
-                    if v in agprop:
-                        lst[v] = agprop[v]
-                    else:
-                        logger.warning('get_queues_byagent : no property %s for agent %s in queue %s',
-                                       v, agid, qref)
-            lst['context'] = ql['context']
-            queuelist[qref] = lst
-        return queuelist

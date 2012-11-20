@@ -23,16 +23,51 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from collections import defaultdict
+from xivo_cti.cti_anylist import ContextAwareAnyList
+from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('phonelist')
 
 
-class PhoneList(AnyList):
+class PhoneList(ContextAwareAnyList):
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'phones',
                                    'urloptions': (1, 12, False)}
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
+        self._contexts_by_user_id = {}
+        self._user_ids_by_context = {}
+        self._phone_id_by_proto_and_name = {}
+
+    def update(self):
+        delta = ContextAwareAnyList.update(self)
+        self._update_lookup_dictionaries()
+        return delta
+
+    def _update_lookup_dictionaries(self):
+        contexts_by_user_id = defaultdict(set)
+        user_ids_by_context = defaultdict(set)
+        phone_id_by_proto_and_name = {}
+
+        for phone_id, phone in self.keeplist.iteritems():
+            proto_and_name = phone['protocol'] + phone['name']
+            phone_id_by_proto_and_name[proto_and_name] = phone_id
+
+            raw_user_id = phone['iduserfeatures']
+            if not raw_user_id:
+                continue
+            user_id = str(raw_user_id)
+            context = phone['context']
+            contexts_by_user_id[user_id].add(context)
+            user_ids_by_context[context].add(user_id)
+
+        self._contexts_by_user_id = dict((user_id, list(contexts)) for
+                                         user_id, contexts in
+                                         contexts_by_user_id.iteritems())
+        self._user_ids_by_context = dict((context, list(user_ids)) for
+                                          context, user_ids in
+                                          user_ids_by_context.iteritems())
+        self._phone_id_by_proto_and_name = phone_id_by_proto_and_name
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -306,19 +341,72 @@ class PhoneList(AnyList):
                 self.keeplist[phoneid]['comms'][uid].update(infos)
 
     def find_phone_by_channel(self, channel):
-        protocol, name = channel.split('-', 1)[0].split('/', 1)
+        proto, phonename_from_channel = channel.split('-', 1)[0].split('/', 1)
+        if proto == 'sccp':
+            phonename = self._sccpname(phonename_from_channel)
+        else:
+            phonename = self._sipname(phonename_from_channel)
 
-        if protocol == 'Local':
+        phone_id = self.get_phone_id_from_proto_and_name(proto.lower(), phonename)
+
+        if phone_id is None:
             return None
+        else:
+            return self.keeplist[phone_id]
 
-        def match_phone(phone):
-            return phone['protocol'].lower() == protocol.lower() and phone['name'] == name
+    def _sccpname(self, phonename):
+        return phonename.split('@')[0]
 
-        phones = filter(match_phone, self.keeplist.itervalues())
-
-        return phones[0] if phones else None
+    def _sipname(self, phonename):
+        return phonename
 
     def get_main_line(self, user_id):
         users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]
         sorted_phones = sorted(users_phones, key=lambda phone: phone['rules_order'])
         return sorted_phones[0] if sorted_phones else None
+
+    def get_phone_id_from_proto_and_name(self, proto, name):
+        proto_and_name = proto + name
+        return self._phone_id_by_proto_and_name.get(proto_and_name)
+
+    def get_callerid_from_phone_id(self, phone_id):
+        phone = self.keeplist[phone_id]
+        protocol = phone['protocol']
+        if protocol == 'sccp':
+            return self._compute_callerid_for_sccp_phone(phone)
+        else:
+            return phone['callerid']
+
+    def _compute_callerid_for_sccp_phone(self, phone):
+        return '"%s" <%s>' % (phone['cid_name'], phone['cid_num'])
+
+    def get_contexts_for_user(self, user_id):
+        user_id = str(user_id)
+        return self._contexts_by_user_id.get(user_id, [])
+
+    def list_user_ids_in_contexts(self, contexts):
+        if not Config.get_instance().part_context():
+            userlist = self.commandclass.xod_config['users']
+            return userlist.keeplist.keys()
+        elif not contexts:
+            return []
+        elif len(contexts) == 1:
+            return self._user_ids_by_context.get(contexts[0], [])
+        else:
+            user_ids = set()
+            for context in contexts:
+                user_ids.update(self._user_ids_by_context.get(context, []))
+            return list(user_ids)
+
+    def is_user_id_in_contexts(self, user_id, contexts):
+        if not Config.get_instance().part_context():
+            return True
+        elif not contexts:
+            return False
+        else:
+            user_id = str(user_id)
+            user_contexts = self._contexts_by_user_id.get(user_id, [])
+            for user_context in user_contexts:
+                if user_context in contexts:
+                    return True
+            return False

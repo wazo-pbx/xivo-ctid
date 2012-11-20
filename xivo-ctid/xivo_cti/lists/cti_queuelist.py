@@ -1,4 +1,5 @@
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'
@@ -23,23 +24,23 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 
 import logging
 import time
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('queuelist')
 
 
-class QueueList(AnyList):
+class QueueList(ContextAwareAnyList):
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty',
                           'LastCall', 'CallsTaken', 'Xivo-QueueMember-StateTime']
 
     def __init__(self, newurls=[], misc=None):
-        self.anylist_properties = { 'name' : 'queues',
-                                    'urloptions' : (1, 5, True) }
-        AnyList.__init__(self, newurls)
+        self.anylist_properties = {'name': 'queues',
+                                    'urloptions': (1, 5, True)}
+        ContextAwareAnyList.__init__(self, newurls)
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:
@@ -49,7 +50,7 @@ class QueueList(AnyList):
         return ret
 
     def hasqueue(self, queuename):
-        return self.reverse_index.has_key(queuename)
+        return queuename in self.reverse_index
 
     def idbyqueuename(self, queuename):
         if queuename in self.reverse_index:
@@ -73,10 +74,10 @@ class QueueList(AnyList):
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
         if queueid in self.keeplist:
-            self.keeplist[queueid]['channels'][channel] = { 'position' : position,
-                                                            'entrytime' : entrytime,
-                                                            'calleridnum' : calleridnum,
-                                                            'calleridname' : calleridname }
+            self.keeplist[queueid]['channels'][channel] = {'position': position,
+                                                           'entrytime': entrytime,
+                                                           'calleridnum': calleridnum,
+                                                           'calleridname': calleridname}
 
     def queueentry_remove(self, queueid, channel):
         if queueid in self.keeplist:
@@ -126,19 +127,3 @@ class QueueList(AnyList):
 
     def get_all_queues(self):
         return self.keeplist
-
-    def get_queues_byagent(self, agid):
-        queuelist = {}
-        for qref, ql in self.keeplist.iteritems():
-            lst = {}
-            if agid in ql['agents_in_queue']:
-                agprop = ql['agents_in_queue'][agid]
-                for v in self.queuelocationprops:
-                    if v in agprop:
-                        lst[v] = agprop[v]
-                    else:
-                        logger.warning('get_queues_byagent : no property %s for agent %s in queue %s',
-                                       v, agid, qref)
-            lst['context'] = ql['context']
-            queuelist[qref] = lst
-        return queuelist

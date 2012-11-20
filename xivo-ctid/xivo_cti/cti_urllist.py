@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
 
 __copyright__ = 'Copyright (C) 2007-2011  Avencall'
@@ -99,7 +101,7 @@ class UrlList(object):
                         for k in self.jsonreply:
                             k[var] = val
                     self.urlmd5 = self.listmd5
-                except Exception:
+                except (AttributeError, KeyError):
                     logger.exception('(UrlList) trying to enforce setting %s', self.url)
                 ret = 2
             elif http_contenttype == [] or http_contenttype == ['text/html; charset=UTF-8']:

@@ -23,16 +23,16 @@
 
 import unittest
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
-
+from mock import Mock
 import Queue
 
 
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.ipbx_id = 'xivo_test'
+        self.ipbx_id = 'xivo'
         self.notifier = UserServiceNotifier()
-        self.notifier.events_cti = Queue.Queue()
+        self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
     def tearDown(self):
@@ -40,9 +40,9 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_dnd_enabled(self):
         user_id = 34
-        ipbx_id = 'xivo_test'
+        ipbx_id = 'xivo'
         notifier = UserServiceNotifier()
-        notifier.events_cti = Queue.Queue()
+        notifier.send_cti_event = Mock()
         notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablednd": True},
@@ -53,15 +53,13 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         notifier.dnd_enabled(user_id)
 
-        self.assertTrue(notifier.events_cti.qsize() > 0)
-        event = notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_dnd_disabled(self):
         user_id = 34
-        ipbx_id = 'xivo_test'
+        ipbx_id = 'xivo'
         notifier = UserServiceNotifier()
-        notifier.events_cti = Queue.Queue()
+        notifier.send_cti_event = Mock()
         notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablednd": False},
@@ -72,9 +70,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         notifier.dnd_disabled(user_id)
 
-        self.assertTrue(notifier.events_cti.qsize() > 0)
-        event = notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_filter_enabled(self):
         user_id = 32
@@ -87,9 +83,8 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tipbxid": self.ipbx_id}
 
         self.notifier.filter_enabled(user_id)
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_filter_disabled(self):
         user_id = 932
@@ -102,9 +97,8 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tipbxid": self.ipbx_id}
 
         self.notifier.filter_disabled(user_id)
-        self.assertTrue(self.notifier.events_cti.qsize() > 0, 'No event in queue for filter disabled')
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_unconditional_fwd_enabled(self):
         user_id = 456
@@ -119,9 +113,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.unconditional_fwd_enabled(user_id, destination)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_rna_fwd_enabled(self):
         user_id = 456
@@ -136,9 +128,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.rna_fwd_enabled(user_id, destination)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_rna_fwd_disabled(self):
         user_id = 456
@@ -153,9 +143,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.rna_fwd_disabled(user_id, destination)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_busy_fwd_enabled(self):
         user_id = 456
@@ -170,9 +158,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.busy_fwd_enabled(user_id, destination)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_busy_fwd_disabled(self):
         user_id = 456
@@ -187,13 +173,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.busy_fwd_disabled(user_id, destination)
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
-
-    def test_prepare_message(self):
-        self.notifier._prepare_message('123')
-        self.assertEqual(self.notifier.STATUS_MESSAGE['tid'], '')
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_presence_updated(self):
         user_id = 64
@@ -206,6 +186,4 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.presence_updated(user_id, 'available')
 
-        self.assertTrue(self.notifier.events_cti.qsize() > 0)
-        event = self.notifier.events_cti.get()
-        self.assertEqual(event, expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)

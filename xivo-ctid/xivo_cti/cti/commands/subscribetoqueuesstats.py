@@ -11,10 +11,5 @@ class SubscribeToQueuesStats(CTICommand):
     _callbacks = []
     _callbacks_with_params = []
 
-    def __init__(self):
-        super(SubscribeToQueuesStats, self).__init__()
-
-    def _init_from_dict(self, msg):
-        super(SubscribeToQueuesStats, self)._init_from_dict(msg)
 
 CTICommandFactory.register_class(SubscribeToQueuesStats)

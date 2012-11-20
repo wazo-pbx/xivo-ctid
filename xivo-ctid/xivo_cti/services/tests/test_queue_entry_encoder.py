@@ -24,17 +24,17 @@
 import unittest
 import time
 
-from mock import Mock
+from mock import patch
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
-from xivo_cti.dao.queue_features_dao import QueueFeaturesDAO
 
 
 class TestQueueEntryEncoder(unittest.TestCase):
 
+    _queue_name = 'test_queue'
+    _queue_id = 2
+
     def setUp(self):
-        self._queue_name = 'test_queue'
-        self._queue_id = 2
         self.now = time.time()
         self._queue_entries = {'111.11': QueueEntry(1, 'Tester One', '1111', self.now + 10),
                                '222.22': QueueEntry(2, 'Tester Two', '2222', self.now + 7),
@@ -52,12 +52,9 @@ class TestQueueEntryEncoder(unittest.TestCase):
                                             'number': '3333',
                                             'join_time': self.now + 1}]
 
-    def test_encode_queue_entry_update(self):
+    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=_queue_id)
+    def test_encode_queue_entry_update(self, mock_id_from_name):
         encoder = QueueEntryEncoder()
-
-        queue_features_dao = Mock(QueueFeaturesDAO)
-        queue_features_dao.id_from_name.return_value = self._queue_id
-        encoder.queue_features_dao = queue_features_dao
 
         expected = {'class': 'queueentryupdate',
                     'state': {'queue_name': self._queue_name,
@@ -87,11 +84,9 @@ class TestQueueEntryEncoder(unittest.TestCase):
 
         self.assertEqual(result, self._expected_queue_entry_list)
 
-    def test_build_state(self):
+    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=_queue_id)
+    def test_build_state(self, mock_id_from_name):
         encoder = QueueEntryEncoder()
-        queue_features_dao = Mock(QueueFeaturesDAO)
-        queue_features_dao.id_from_name.return_value = self._queue_id
-        encoder.queue_features_dao = queue_features_dao
 
         expected = {'queue_name': self._queue_name,
                     'queue_id': self._queue_id,

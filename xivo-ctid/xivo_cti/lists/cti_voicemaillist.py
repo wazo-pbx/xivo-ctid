@@ -21,18 +21,18 @@ __copyright__ = 'Copyright (C) 2007-2011  Avencall'
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('voicemaillist')
 
-class VoicemailList(AnyList):
+class VoicemailList(ContextAwareAnyList):
     def __init__(self, newurls = [], useless = None):
         self.anylist_properties = { 'name' : 'voicemail',
                                     'urloptions' : (1, 5, True) }
-        AnyList.__init__(self, newurls)
+        ContextAwareAnyList.__init__(self, newurls)
 
     def update(self):
-        ret = AnyList.update(self)
+        ret = ContextAwareAnyList.update(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             rev = '%s@%s' % (ag['mailbox'], ag['context'])

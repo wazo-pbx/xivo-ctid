@@ -1,7 +1,8 @@
 # vim: set fileencoding=utf-8 :
 # xivo-ctid
+import errno
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +10,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,7 +27,6 @@ Asterisk AMI utilities.
 """
 
 import logging
-import re
 import socket
 import string
 import time
@@ -64,6 +64,7 @@ class AMIClass(object):
         if sockret:
             logger.warning('unable to connect to %s:%d - reason %d',
                            self.ipaddress, self.ipport, sockret)
+            raise self.AMIError('failed to connect')
         else:
             self.sock.settimeout(30)
             self.fd = self.sock.fileno()
@@ -74,11 +75,7 @@ class AMIClass(object):
             t0 = time.time()
             towritefields = ['Action: %s' % action]
             for (name, value) in args:
-                try:
-                    towritefields.append('%s: %s' % (name, value))
-                except Exception:
-                    logger.exception('(sendcommand build %s : %s = %s (%r))',
-                                     action, name, value, value)
+                towritefields.append('%s: %s' % (name, value))
             if self.actionid:
                 towritefields.append('ActionId: %s' % self.actionid)
             towritefields.append('\r\n')
@@ -103,30 +100,20 @@ class AMIClass(object):
             logger.exception('(sendcommand timeout (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
-        except Exception:
+        except socket.error, e:
             t1 = time.time()
-            logger.exception('(sendcommand other (%s %s %s) timespent=%f)',
+            logger.exception('(sendcommand socket error (%s %s %s) timespent=%f)',
                              action, self.actionid, self.fd, (t1 - t0))
             ret = False
-        if ret == False:
-            if loopnum == 0:
-                logger.warning('second attempt for AMI command (%s %s %s)',
-                               action, self.actionid, self.fd)
-                # tries to reconnect
-                try:
-                    self.sock.close()
-
-                    self.connect()
-                    self.login()
-                    if self:
-                        # "retrying AMI command=<%s> args=<%s>" % (action, str(args)))
-                        self.sendcommand(action, args, 1)
-                except Exception:
-                    logger.exception('reconnection (%s %s %s)',
-                                     action, self.actionid, self.fd)
+        except IOError, e:
+            t1 = time.time()
+            if e.errno == errno.EPIPE:
+                logger.exception('(sendcommand I/O Error EPIPE (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
             else:
-                logger.warning('2 attempts have failed for AMI command (%s %s %s)',
-                               action, self.actionid, self.fd)
+                logger.exception('(sendcommand I/O Error Other (%s %s %s) timespent=%f)',
+                             action, self.actionid, self.fd, (t1 - t0))
+            ret = False
         if self.actionid:
             self.actionid = None
         return ret
@@ -135,12 +122,7 @@ class AMIClass(object):
         self.actionid = actionid
 
     def _exec_command(self, *args):
-        try:
-            return self.sendcommand(*args)
-        except self.AMIError:
-            return False
-        except Exception:
-            return False
+        return self.sendcommand(*args)
 
     def sendqueuestatus(self, queue=None):
         if queue is None:
@@ -193,21 +175,12 @@ class AMIClass(object):
                                                  ('Variable', var),
                                                  ('Value', val)])
 
-    def park(self, channel, channel_timeout, parkinglot, timeout=45000):
-        return self._exec_command('Park',
-                                  [('Channel', channel),
-                                   ('Channel2', channel_timeout),
-                                   ('Parkinglot', parkinglot),
-                                   ('Timeout', timeout)
-                                  ])
-
     def origapplication(self, application, data, phoneproto, phonesrcname, phonesrcnum, context):
         return self._exec_command('Originate', [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
                                                 ('Context', context),
                                                 ('Priority', '1'),
                                                 ('Application', application),
                                                 ('Data', data),
-                                                ('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid),
                                                 ('Variable', 'XIVO_ORIGAPPLI=%s' % application),
                                                 ('Async', 'true')])
 
@@ -218,30 +191,28 @@ class AMIClass(object):
         # originate a call btw src and dst
         # src will ring first, and dst will ring when src responds
         phonedst = normalize_exten(phonedst)
-        try:
-            if phoneproto == 'custom':
-                channel = phonesrcname.replace('\\', '')
+        if phoneproto == 'custom':
+            channel = phonesrcname.replace('\\', '')
+        else:
+            channel = '%s/%s' % (phoneproto, phonesrcname)
+        command_details = [('Channel', channel),
+                            ('Exten', phonedst),
+                            ('Context', locext),
+                            ('Priority', '1'),
+                            ('Timeout', str(timeout * 1000)),
+                            ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
+                            ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
+                            ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
+                            ('Async', 'true')]
+        if switch_originates:
+            if (phonedst.startswith('#')):
+                command_details.append(('CallerID', '"%s"' % cidnamedst))
             else:
-                channel = '%s/%s' % (phoneproto, phonesrcname)
-            command_details = [('Channel', channel),
-                               ('Exten', phonedst),
-                               ('Context', locext),
-                               ('Priority', '1'),
-                               ('Timeout', str(timeout * 1000)),
-                               ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
-                               ('Async', 'true')]
-            if switch_originates:
-                if (phonedst.startswith('#')):
-                    command_details.append(('CallerID', '"%s"' % cidnamedst))
-                else:
-                    command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
-            else:
-                command_details.append(('CallerID', '"%s"' % cidnamesrc))
-            for var, val in extravars.iteritems():
-                command_details.append(('Variable', '%s=%s' % (var, val)))
-            command_details.append(('Variable', 'XIVO_ORIGACTIONID=%s' % self.actionid))
-        except Exception:
-            return False
+                command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
+        else:
+            command_details.append(('CallerID', '"%s"' % cidnamesrc))
+        for var, val in extravars.iteritems():
+            command_details.append(('Variable', '%s=%s' % (var, val)))
         return self._exec_command('Originate', command_details)
 
     # \brief Requests the Extension Statuses
@@ -250,23 +221,20 @@ class AMIClass(object):
                                                      ('Context', context)])
 
     # \brief Logs in an Agent
-    def agentcallbacklogin(self, agentnum, extension, context, ackcall):
+    def agentcallbacklogin(self, agentnum, extension, context):
         return self._exec_command('AgentCallbackLogin', [('Agent', agentnum),
                                                          ('Context', context),
-                                                         ('Exten', extension),
-                                                         ('AckCall', ackcall)])
+                                                         ('Exten', extension)])
 
     # \brief Logs off an Agent
     def agentlogoff(self, agentnum, soft=True):
         return self._exec_command('AgentLogoff', [('Agent', agentnum),
                                                   ('Soft', soft)])
 
-    # \brief Mute a meetme user
     def meetmemute(self, meetme, usernum):
         return self._exec_command('MeetmeMute', (('Meetme', meetme),
                                                  ('Usernum', usernum)))
 
-    # \brief Unmute a meetme user
     def meetmeunmute(self, meetme, usernum):
         return self._exec_command('MeetmeUnmute', (('Meetme', meetme),
                                                    ('Usernum', usernum)))
@@ -319,7 +287,7 @@ class AMIClass(object):
         return self._exec_command('QueueLog', command_details)
 
     def queuesummary(self, queuename=None):
-        if(queuename is None):
+        if queuename is None:
             return self._exec_command('QueueSummary', [])
         else:
             return self._exec_command('QueueSummary', [('Queue', queuename)])
@@ -359,24 +327,37 @@ class AMIClass(object):
     # \brief Request a mailbox count
     # context is for tracking only
     def mailboxcount(self, mailbox, context=None):
-        return self._exec_command('MailboxCount', (('MailBox', mailbox),))
+        full_mailbox = mailbox
+        if context:
+            full_mailbox = "%s@%s" % (mailbox, context)
+        return self._exec_command('MailboxCount', (('MailBox', full_mailbox),))
 
     # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
-        extension = normalize_exten(extension)
-        command_details = [('Channel', channel),
-                           ('Exten', extension),
-                           ('Context', context),
-                           ('Priority', '1')]
+        try:
+            extension = normalize_exten(extension)
+        except ValueError, e:
+            logger.warning('Transfer failed: %s', e.message)
+            return False
+        else:
+            command_details = [('Channel', channel),
+                               ('Exten', extension),
+                               ('Context', context),
+                               ('Priority', '1')]
         return self._exec_command('Redirect', command_details)
 
     # \brief Atxfer a channel towards a new extension.
     def atxfer(self, channel, extension, context):
-        extension = normalize_exten(extension)
-        return self._exec_command('Atxfer', [('Channel', channel),
-                                             ('Exten', extension),
-                                             ('Context', context),
-                                             ('Priority', '1')])
+        try:
+            extension = normalize_exten(extension)
+        except ValueError, e:
+            logger.warning('Attended transfer failed: %s', e.message)
+            return False
+        else:
+            return self._exec_command('Atxfer', [('Channel', channel),
+                                                 ('Exten', extension),
+                                                 ('Context', context),
+                                                 ('Priority', '1')])
 
     def txfax(self, faxpath, userid, callerid, number, context):
         # originate a call btw src and dst
@@ -396,6 +377,4 @@ class AMIClass(object):
         except socket.timeout:
             return False
         except socket:
-            return False
-        except Exception:
             return False

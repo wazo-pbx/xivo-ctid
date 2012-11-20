@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2007-2011  Avencall
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,27 +22,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from copy import deepcopy
 
 logger = logging.getLogger('user_service_notifier')
 
 
 class UserServiceNotifier(object):
 
-    STATUS_MESSAGE = {"class": "getlist",
-                   "function": "updateconfig",
-                   "listname": "users",
-                   "tid": '',
-                   "tipbxid": ''}
-
     def __init__(self):
         pass
 
     def _prepare_message(self, user_id):
-        msg = deepcopy(self.STATUS_MESSAGE)
-        msg.update({'tid': user_id,
-                    'tipbxid': self.ipbx_id})
-        return msg
+        return {
+            'class': 'getlist',
+            'function': 'updateconfig',
+            'listname': 'users',
+            'tid': user_id,
+            'tipbxid': self.ipbx_id,
+        }
 
     def _prepare_dnd_message(self, dnd_status, user_id):
         dnd_enabled_msg = self._prepare_message(user_id)
@@ -80,34 +76,34 @@ class UserServiceNotifier(object):
         return filter_status_msg
 
     def dnd_enabled(self, user_id):
-        self.events_cti.put(self._prepare_dnd_message(True, user_id))
+        self.send_cti_event(self._prepare_dnd_message(True, user_id))
 
     def dnd_disabled(self, user_id):
-        self.events_cti.put(self._prepare_dnd_message(False, user_id))
+        self.send_cti_event(self._prepare_dnd_message(False, user_id))
 
     def filter_enabled(self, user_id):
-        self.events_cti.put(self._prepare_filter_message(True, user_id))
+        self.send_cti_event(self._prepare_filter_message(True, user_id))
 
     def filter_disabled(self, user_id):
-        self.events_cti.put(self._prepare_filter_message(False, user_id))
+        self.send_cti_event(self._prepare_filter_message(False, user_id))
 
     def unconditional_fwd_enabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_unconditional_fwd_message(True, destination, user_id))
+        self.send_cti_event(self._prepare_unconditional_fwd_message(True, destination, user_id))
 
     def unconditional_fwd_disabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_unconditional_fwd_message(False, destination, user_id))
+        self.send_cti_event(self._prepare_unconditional_fwd_message(False, destination, user_id))
 
     def rna_fwd_enabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_rna_fwd_message(True, destination, user_id))
+        self.send_cti_event(self._prepare_rna_fwd_message(True, destination, user_id))
 
     def rna_fwd_disabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_rna_fwd_message(False, destination, user_id))
+        self.send_cti_event(self._prepare_rna_fwd_message(False, destination, user_id))
 
     def busy_fwd_enabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_busy_fwd_message(True, destination, user_id))
+        self.send_cti_event(self._prepare_busy_fwd_message(True, destination, user_id))
 
     def busy_fwd_disabled(self, user_id, destination):
-        self.events_cti.put(self._prepare_busy_fwd_message(False, destination, user_id))
+        self.send_cti_event(self._prepare_busy_fwd_message(False, destination, user_id))
 
     def presence_updated(self, user_id, presence):
-        self.events_cti.put(self._prepare_presence_updated(user_id, presence))
+        self.send_cti_event(self._prepare_presence_updated(user_id, presence))

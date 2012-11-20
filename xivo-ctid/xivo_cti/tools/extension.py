@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,6 +24,7 @@
 
 import re
 import logging
+from xivo_cti.tools import caller_id
 
 logger = logging.getLogger('extension')
 
@@ -31,8 +32,12 @@ VALID_EXTENSION_PATTERN = re.compile('[^a-z0-9#*+]', re.I)
 
 
 def normalize_exten(exten):
-    extentodial = re.sub(VALID_EXTENSION_PATTERN, '', exten)
+    try:
+        extentodial = caller_id.extract_number(exten)
+    except ValueError:
+        extentodial = re.sub(VALID_EXTENSION_PATTERN, '', exten)
+
     if not extentodial:
-        logger.exception('Invalid extension: %s', exten)
-        extentodial = None
+        raise ValueError('Invalid extension %s', exten)
+
     return extentodial

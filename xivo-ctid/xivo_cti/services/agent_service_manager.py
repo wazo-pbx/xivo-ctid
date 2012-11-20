@@ -43,7 +43,7 @@ class AgentServiceManager(object):
                              'class': 'ipbxcommand'}
         if not agent_exten:
             extens = self.find_agent_exten(agent_id)
-            agent_exten = extens[0] if len(extens) else None
+            agent_exten = extens[0] if extens else None
 
         if not self.line_features_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
@@ -52,8 +52,7 @@ class AgentServiceManager(object):
 
         self.agent_call_back_login(self.agent_features_dao.agent_number(agent_id),
                                    agent_exten,
-                                   self.agent_features_dao.agent_context(agent_id),
-                                   self.agent_features_dao.agent_ackcall(agent_id) != 'no')
+                                   self.agent_features_dao.agent_context(agent_id))
 
     def logoff(self, agent_id):
         number = self.agent_features_dao.agent_number(agent_id)
@@ -67,8 +66,8 @@ class AgentServiceManager(object):
             line_ids.extend(self.line_features_dao.find_line_id_by_user_id(user_id))
         return [self.line_features_dao.number(line_id) for line_id in line_ids]
 
-    def agent_call_back_login(self, number, exten, context, ackcall):
-        self.agent_executor.agentcallbacklogin(number, exten, context, ackcall)
+    def agent_call_back_login(self, number, exten, context):
+        self.agent_executor.agentcallbacklogin(number, exten, context)
 
     def queueadd(self, queuename, agentid, paused=False, skills=''):
         interface = self.agent_features_dao.agent_interface(agentid)

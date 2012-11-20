@@ -14,18 +14,15 @@
 
 "mylocaldir" : [],
 
-"xletweb" : [],
 "customerinfo" : ["customerinfo"],
 
 "agents" : ["agents"],
 "agentdetails" : ["agents"],
 "queues" : ["agents"],
-"queuedetails" : ["agents"],
+"queuemembers" : [],
 "queueentrydetails" : ["agents"],
 
-"agentsnext" : ["agents"],
 "calls" : ["dial"],
-"switchboard" : ["dial"],
 "operator" : ["dial"],
 "callcampaign" : []
 }

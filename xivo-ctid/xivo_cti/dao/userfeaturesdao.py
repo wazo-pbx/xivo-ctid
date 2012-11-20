@@ -9,9 +9,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,12 +22,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-
-from xivo_cti.dao.alchemy.userfeatures import UserFeatures
-from xivo_cti.dao.alchemy import dbconnection
 import time
 
+from xivo_dao.alchemy import dbconnection
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.contextinclude import ContextInclude
+from xivo_dao.alchemy.userfeatures import UserFeatures
+from sqlalchemy import and_
+
 logger = logging.getLogger("UserFeaturesDAO")
+
+_DB_NAME = 'asterisk'
+
+
+def _session():
+    connection = dbconnection.get_connection(_DB_NAME)
+    return connection.get_session()
 
 
 class UserFeaturesDAO(object):
@@ -98,10 +109,10 @@ class UserFeaturesDAO(object):
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
 
     def get(self, user_id):
-        res = self._session.query(UserFeatures).filter(UserFeatures.id == int(user_id))
-        if res.count() == 0:
-            raise LookupError
-        return res[0]
+        result = self._session.query(UserFeatures).filter(UserFeatures.id == int(user_id)).first()
+        if result is None:
+            raise LookupError()
+        return result
 
     def find_by_agent_id(self, agent_id):
         res = self._session.query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))
@@ -132,7 +143,77 @@ class UserFeaturesDAO(object):
     def get_profile(self, user_id):
         return self.get(user_id).profileclient
 
+    def _get_included_contexts(self, context):
+        return [line.include for line in (self._session.query(ContextInclude.include)
+                                           .filter(ContextInclude.context == context))]
+
+    def _get_nested_contexts(self, contexts):
+        checked = []
+        to_check = set(contexts) - set(checked)
+        while to_check:
+            context = to_check.pop()
+            contexts.extend(self._get_included_contexts(context))
+            checked.append(context)
+            to_check = set(contexts) - set(checked)
+
+        return list(set(contexts))
+
+    def get_reachable_contexts(self, user_id):
+        line_contexts = [line.context for line in (self._session.query(LineFeatures)
+                                                    .filter(LineFeatures.iduserfeatures == user_id))]
+
+        return self._get_nested_contexts(line_contexts)
+
     @classmethod
     def new_from_uri(cls, uri):
         connection = dbconnection.get_connection(uri)
         return cls(connection.get_session())
+
+
+def find_by_line_id(line_id):
+    return _session().query(LineFeatures.iduserfeatures).filter(LineFeatures.id == line_id)[0].iduserfeatures
+
+
+def get_line_identity(user_id):
+    try:
+        line = (_session().query(LineFeatures.protocol, LineFeatures.name)
+                         .filter(LineFeatures.iduserfeatures == user_id))[0]
+    except IndexError:
+        raise LookupError('Could not find a line for user %s', user_id)
+    else:
+        return '%s/%s' % (line.protocol, line.name)
+
+
+def get_agent_number(user_id):
+    return (_session().query(AgentFeatures.number, UserFeatures.agentid)
+            .filter(and_(UserFeatures.id == user_id,
+                           AgentFeatures.id == UserFeatures.agentid))[0].number)
+
+
+def get_dest_unc(user_id):
+    return _session().query(UserFeatures.destunc).filter(UserFeatures.id == int(user_id))[0].destunc
+
+
+def get_fwd_unc(user_id):
+    return (_session().query(UserFeatures.enableunc).filter(UserFeatures.id == int(user_id))[0].enableunc == 1)
+
+
+def get_dest_busy(user_id):
+    return _session().query(UserFeatures.destbusy).filter(UserFeatures.id == int(user_id))[0].destbusy
+
+
+def get_fwd_busy(user_id):
+    return (_session().query(UserFeatures.enablebusy).filter(UserFeatures.id == int(user_id))[0].enablebusy == 1)
+
+
+def get_dest_rna(user_id):
+    return _session().query(UserFeatures.destrna).filter(UserFeatures.id == int(user_id))[0].destrna
+
+
+def get_fwd_rna(user_id):
+    return (_session().query(UserFeatures.enablerna).filter(UserFeatures.id == int(user_id))[0].enablerna == 1)
+
+def get_name_number(user_id):
+    res = (_session().query(UserFeatures.firstname, UserFeatures.lastname, LineFeatures.number).
+           filter(and_(UserFeatures.id == LineFeatures.iduserfeatures, UserFeatures.id == user_id)))[0]
+    return '%s %s' % (res.firstname, res.lastname), res.number
