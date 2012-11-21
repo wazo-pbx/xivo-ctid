@@ -26,6 +26,7 @@ setup(
               'xivo_cti.model',
               'xivo_cti.services',
               'xivo_cti.services.device',
+              'xivo_cti.services.device.controller',
               'xivo_cti.services.meetme',
               'xivo_cti.statistics',
               'xivo_cti.tools'],
