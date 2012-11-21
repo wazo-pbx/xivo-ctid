@@ -27,7 +27,8 @@ from xivo_cti.services.queue_service_manager import NotAQueueException
 
 
 class QueueMemberServiceNotifier(object):
-    def __init__(self):
+    def __init__(self, innerdata_dao):
+        self.innerdata_dao = innerdata_dao
         self._callbacks = []
 
     def subscribe(self, function):

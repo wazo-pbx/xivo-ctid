@@ -181,7 +181,6 @@ class CTIServer(object):
 
         self._queuemember_service_manager.queuemember_dao = context.get('queuemember_dao')
         self._queuemember_service_manager.delta_computer = context.get('delta_computer')
-        self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
         self.scheduler = Scheduler(self.pipe_queued_threads[1])
         self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)

@@ -24,6 +24,7 @@
 
 import unittest
 from tests.mock import Mock, call, ANY
+from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
@@ -34,9 +35,9 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.notifier = QueueMemberServiceNotifier()
+        self.innerdata_dao = Mock(InnerdataDAO)
+        self.notifier = QueueMemberServiceNotifier(self.innerdata_dao)
         self.notifier.ipbx_id = self.ipbx_id
-        self.notifier.innerdata_dao = Mock()
         self.notifier.send_cti_event = Mock()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)
         self.notifier.queue_statistics_producer = self.queue_statistics_producer
