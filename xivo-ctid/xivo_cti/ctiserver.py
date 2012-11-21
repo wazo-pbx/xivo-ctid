@@ -172,7 +172,6 @@ class CTIServer(object):
         self._user_features_dao = context.get('user_features_dao')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
-        self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = context.get('queue_entry_manager')
         self._queue_statistic_manager = context.get('queue_statistics_manager')

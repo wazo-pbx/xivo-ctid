@@ -34,8 +34,7 @@ class TestQueueServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.innerdata_dao = Mock(InnerdataDAO)
-        self.queue_service_manager = QueueServiceManager()
-        self.queue_service_manager.innerdata_dao = self.innerdata_dao
+        self.queue_service_manager = QueueServiceManager(self.innerdata_dao)
 
     def tearDown(self):
         pass

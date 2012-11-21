@@ -28,8 +28,8 @@ class NotAQueueException(Exception):
 
 
 class QueueServiceManager(object):
-    def __init__(self):
-        pass
+    def __init__(self, innerdata_dao):
+        self.innerdata_dao = innerdata_dao
 
     def get_queue_id(self, queue_name):
         return self.innerdata_dao.get_queue_id(queue_name)
