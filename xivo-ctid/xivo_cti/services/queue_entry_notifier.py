@@ -29,8 +29,6 @@ from xivo_cti.client_connection import ClientConnection
 
 class QueueEntryNotifier(object):
 
-    _instance = None
-
     def __init__(self):
         self._subscriptions = defaultdict(set)
         self._cache = defaultdict(dict)
@@ -51,9 +49,3 @@ class QueueEntryNotifier(object):
                 to_remove.append(connection)
         for connection in to_remove:
             self._subscriptions[queue_name].remove(connection)
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance == None:
-            cls._instance = cls()
-        return cls._instance

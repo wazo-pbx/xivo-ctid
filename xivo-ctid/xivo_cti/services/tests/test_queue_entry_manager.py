@@ -105,7 +105,7 @@ class TestQueueEntryManager(unittest.TestCase):
     def setUp(self):
         self.manager = QueueEntryManager()
         self.encoder = QueueEntryEncoder.get_instance()
-        self.notifier = QueueEntryNotifier.get_instance()
+        self.notifier = QueueEntryNotifier()
         self.manager._notifier = self.notifier
         self.manager._encoder = self.encoder
 

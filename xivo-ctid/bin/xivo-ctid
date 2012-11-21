@@ -36,6 +36,7 @@ from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
+from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
@@ -65,7 +66,9 @@ def _register_context(context):
     context.register('innerdata_dao', InnerdataDAO)
     context.register('line_features_dao', LineFeaturesDAO.new_from_uri, 'queue_stats')
     context.register('queue_entry_manager', QueueEntryManager)
+    context.register('queue_entry_notifier', QueueEntryNotifier)
     context.register('queue_service_manager', QueueServiceManager)
+    context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)
     context.register('phone_funckey_dao', PhoneFunckeyDAO.new_from_uri, 'queue_stats')
     context.register('presence_service_executor', PresenceServiceExecutor)
@@ -77,7 +80,6 @@ def _register_context(context):
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
     context.register('user_features_dao', UserFeaturesDAO.new_from_uri, 'queue_stats')
-    context.register('queue_statistics_manager', QueueStatisticsManager)
 
 
 def _parse_args(args):
