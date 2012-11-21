@@ -53,6 +53,7 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces.interfaces import DisconnectCause
+from xivo_cti.cti.commands.answer import Answer
 from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
@@ -210,6 +211,7 @@ class CTIServer(object):
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
+        Answer.register_callback_params(self._device_manager.pickup_the_phone, ['user_id'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])

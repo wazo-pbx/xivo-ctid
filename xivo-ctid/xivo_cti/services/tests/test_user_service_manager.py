@@ -33,6 +33,8 @@ from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.services.device.manager import DeviceManager
+from mock import patch
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -45,6 +47,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
+        self.device_manager = Mock(DeviceManager)
 
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
@@ -54,7 +57,8 @@ class TestUserServiceManager(unittest.TestCase):
                                                        self.funckey_manager,
                                                        self.user_features_dao,
                                                        self.phone_funckey_dao,
-                                                       self.line_features_dao)
+                                                       self.line_features_dao,
+                                                       self.device_manager)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
 
     def tearDown(self):
@@ -300,3 +304,14 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.get_context(user1_id)
 
         self.user_service_manager.line_features_dao.find_context_by_user_id.assert_called_once_with(user1_id)
+
+    @patch('xivo_cti.dao.userfeaturesdao.get_device_id')
+    def test_pickup_the_phone(self, mock_get_device_id):
+        user_id = 23
+        device_id = 32
+
+        mock_get_device_id.return_value = device_id
+
+        self.user_service_manager.pickup_the_phone(user_id)
+
+        self.device_manager.answer.assert_called_once_with(device_id)

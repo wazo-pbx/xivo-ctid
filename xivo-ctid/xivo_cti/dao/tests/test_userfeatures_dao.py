@@ -759,3 +759,74 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
         self.assertEqual(name, '%s %s' % (user.firstname, user.lastname))
         self.assertEqual(number, '1234')
+
+    def test_get_device_id_with_one_user(self):
+        device_id = 8
+
+        user = UserFeatures()
+        user.firstname = 'Toto'
+        user.lastname = 'Plop'
+
+        self.session.add(user)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.number = '1234'
+        line.name = '12kjdhf'
+        line.context = 'context'
+        line.provisioningid = 1234
+        line.iduserfeatures = user.id
+        line.protocolid = 1
+        line.device = str(8)
+
+        self.session.add(line)
+        self.session.commit()
+
+        result = userfeaturesdao.get_device_id(user.id)
+
+        self.assertEqual(result, device_id)
+
+    def test_get_device_id_with_two_users(self):
+        device_id = 24
+
+        user1 = UserFeatures()
+        user1.firstname = 'Toto1'
+        user1.lastname = 'Plop1'
+
+        self.session.add(user1)
+
+        user2 = UserFeatures()
+        user2.firstname = 'Toto2'
+        user2.lastname = 'Plop2'
+
+        self.session.add(user2)
+        self.session.commit()
+
+        line = LineFeatures()
+        line.number = '1234'
+        line.name = '12kjdhf'
+        line.context = 'context'
+        line.provisioningid = 1234
+        line.iduserfeatures = user2.id
+        line.protocolid = 1
+        line.device = str(device_id)
+
+        self.session.add(line)
+        self.session.commit()
+
+        result = userfeaturesdao.get_device_id(user2.id)
+
+        self.assertEqual(result, device_id)
+
+    def test_get_device_id_no_line(self):
+        user = UserFeatures()
+        user.firstname = 'Toto'
+        user.lastname = 'Plop'
+
+        self.session.add(user)
+        self.session.commit()
+
+        self.assertRaises(LookupError, userfeaturesdao.get_device_id, user.id)
+
+    def test_get_device_id_no_user(self):
+        self.assertRaises(LookupError, userfeaturesdao.get_device_id, 666)

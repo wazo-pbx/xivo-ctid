@@ -213,7 +213,19 @@ def get_dest_rna(user_id):
 def get_fwd_rna(user_id):
     return (_session().query(UserFeatures.enablerna).filter(UserFeatures.id == int(user_id))[0].enablerna == 1)
 
+
 def get_name_number(user_id):
     res = (_session().query(UserFeatures.firstname, UserFeatures.lastname, LineFeatures.number).
            filter(and_(UserFeatures.id == LineFeatures.iduserfeatures, UserFeatures.id == user_id)))[0]
     return '%s %s' % (res.firstname, res.lastname), res.number
+
+
+def get_device_id(user_id):
+    row = (_session()
+           .query(LineFeatures.iduserfeatures, LineFeatures.device)
+           .filter(LineFeatures.iduserfeatures == user_id)).first()
+
+    if not row:
+        raise LookupError('Cannot find a device from this user id %s' % user_id)
+
+    return int(row.device)
