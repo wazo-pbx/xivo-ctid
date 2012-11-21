@@ -70,7 +70,6 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services import queue_entry_manager
-from xivo_cti.services import agent_availability_notifier
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
 from xivo_cti.statistics import queue_statistics_manager
@@ -180,7 +179,7 @@ class CTIServer(object):
 
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
         self.scheduler = context.get('scheduler')
-        self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
+        self._agent_availability_notifier = context.get('agent_availability_notifier')
         self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier, self.scheduler)
         self._agent_on_call_updater = agent_on_call_updater.AgentOnCallUpdater()
 

@@ -32,6 +32,7 @@ from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.services.device.manager import DeviceManager
@@ -56,15 +57,17 @@ def main():
 
     _register_context(context)
 
-    ctid = context.build(CTIServer)
+    ctid = context.get('cti_server')
     ctid.setup()
     ctid.run()
 
 
 def _register_context(context):
+    context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_executor', AgentExecutor)
     context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('cti_server', CTIServer)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
     context.register('extensions_dao', ExtensionsDAO.new_from_uri, 'queue_stats')
