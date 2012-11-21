@@ -29,7 +29,7 @@ import threading
 import time
 from xivo_cti import cti_fax
 from xivo_cti import cti_config
-from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
+from xivo_cti.context import context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
 from xivo_cti.services.agent_status import AgentStatus
@@ -92,7 +92,7 @@ class Command(object):
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistics_manager = QueueStatisticsManager.get_instance()
+        self._queue_statistics_manager = context.get('queue_statistics_manager')
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
     def parse(self):

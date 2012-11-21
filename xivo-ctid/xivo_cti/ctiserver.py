@@ -69,7 +69,6 @@ from xivo_cti.funckey import funckey_manager
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
-from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
@@ -178,7 +177,7 @@ class CTIServer(object):
         self._queue_service_manager.innerdata_dao = self._innerdata_dao
 
         self._queue_entry_manager = context.get('queue_entry_manager')
-        self._queue_statistic_manager = QueueStatisticsManager.get_instance()
+        self._queue_statistic_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = QueueEntryNotifier.get_instance()
         self._queue_entry_encoder = QueueEntryEncoder.get_instance()
 

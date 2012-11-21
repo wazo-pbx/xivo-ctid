@@ -17,7 +17,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def setUp(self):
         self.queue_statistic_dao = Mock(QueueStatisticDAO)
         QueueStatisticsManager._instance = QueueStatisticsManager()
-        self.queue_statistics_manager = QueueStatisticsManager.get_instance()
+        self.queue_statistics_manager = QueueStatisticsManager()
         self.queue_statistics_manager._queue_statistic_dao = self.queue_statistic_dao
 
     def tearDown(self):
@@ -127,8 +127,10 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.assertEqual(queue_statistics.qos, 86)
 
-    def test_parse_queue_member_status(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_member_status(self, mock_context):
         self.queue_statistics_manager.get_queue_summary = Mock()
+        mock_context.return_value = self.queue_statistics_manager
         queue_name = 'services'
         queuememberstatus_event = {'Event': 'QueueMemberStatus',
                                    'Queue': queue_name,
@@ -138,8 +140,10 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.queue_statistics_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-    def test_parse_queue_member_update(self):
+    @patch('xivo_cti.context.context.get')
+    def test_parse_queue_member_update(self, mock_context):
         self.queue_statistics_manager.get_queue_summary = Mock()
+        mock_context.return_value = self.queue_statistics_manager
 
         input_delta = DictDelta({'Agent/2345,service': {'queue_name': 'service',
                                                         'interface': 'Agent/2345'},

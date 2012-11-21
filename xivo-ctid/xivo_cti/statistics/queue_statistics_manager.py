@@ -24,22 +24,20 @@ def register_events():
 
 def parse_queue_member_status(event):
     try:
-        manager = QueueStatisticsManager.get_instance()
+        manager = context.get('queue_statistics_manager')
         manager.get_queue_summary(event['Queue'])
     except (KeyError, ValueError):
         logger.warning('Failed to parse QueueSummary event %s', event)
 
 
 def parse_queue_member_update(delta):
-    manager = QueueStatisticsManager.get_instance()
+    manager = context.get('queue_statistics_manager')
     for queue_members in (delta.add, delta.change, delta.delete):
         for queue_member in queue_members.itervalues():
             manager.get_queue_summary(queue_member['queue_name'])
 
 
 class QueueStatisticsManager(object):
-
-    _instance = None
 
     def __init__(self):
         self._queue_statistic_dao = QueueStatisticDAO()
@@ -75,12 +73,6 @@ class QueueStatisticsManager(object):
 
     def get_all_queue_summary(self):
         self.ami_wrapper.queuesummary()
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = CachingQueueStatisticsManagerDecorator(cls())
-        return cls._instance
 
 
 class CachingQueueStatisticsManagerDecorator(object):

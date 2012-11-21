@@ -2,7 +2,7 @@
 
 import unittest
 
-from tests.mock import Mock
+from mock import Mock, patch
 from xivo_cti.cti_command import Command
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
@@ -23,12 +23,14 @@ class Test(unittest.TestCase):
         self.conn._ctiserver = self._ctiserver
         self._ctiserver.safe = self._innerdata
 
+    @patch('xivo_cti.context.context.get', Mock())
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
         cti_command = Command(self.conn, message)
         self.assertEqual(cti_command.regcommand_getqueuesstats(), {},
                          'Default return an empty dict')
 
+    @patch('xivo_cti.context.context.get', Mock())
     def test_regcommand_getqueuesstats_one_queue(self):
         queueList = Mock(QueueList)
         queueList.keeplist = {'3': {'name': 'service'}}
