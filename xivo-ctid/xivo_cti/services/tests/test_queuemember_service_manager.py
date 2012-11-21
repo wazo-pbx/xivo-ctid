@@ -26,10 +26,13 @@ import unittest
 
 from tests.mock import Mock, call, ANY, patch
 from xivo_dao.helpers import queuemember_formatter
-from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
-from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
-from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
+from xivo_dao.helpers.queuemember_formatter import QueueMemberFormatter
 from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.queue_member_dao import QueueMemberDAO
+from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
+from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
+from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.tools.delta_computer import DictDelta, DeltaComputer
 
 
 LINE_IDENTITY = 'sip/i7vbu0'
@@ -43,12 +46,18 @@ QUEUE_NAME = 'file'
 class TestQueueMemberServiceManager(unittest.TestCase):
 
     def setUp(self):
-        self.queuemember_service_manager = QueueMemberServiceManager()
         self.queuemember_service_notifier = Mock(QueueMemberServiceNotifier)
-        self.queuemember_service_manager.queuemember_notifier = self.queuemember_service_notifier
+        self.queuemember_dao = Mock(QueueMemberDAO)
+        self.innerdata_dao = Mock(InnerdataDAO)
+        self.agent_service_manager = Mock(AgentServiceManager)
 
         self.old_queuemember_formatter = queuemember_formatter.QueueMemberFormatter
-        queuemember_formatter.QueueMemberFormatter = Mock()
+        queuemember_formatter.QueueMemberFormatter = Mock(QueueMemberFormatter)
+
+        self.queuemember_service_manager = QueueMemberServiceManager(self.queuemember_dao,
+                                                                     self.innerdata_dao,
+                                                                     self.agent_service_manager,
+                                                                     self.queuemember_service_notifier)
 
         self.ami_event = {
             'Queue': 'queue1',

@@ -32,8 +32,15 @@ logger = logging.getLogger("QueueMemberServiceManager")
 
 
 class QueueMemberServiceManager(object):
-    def __init__(self):
-        pass
+    def __init__(self,
+                 queuemember_dao,
+                 innerdata_dao,
+                 agent_service_manager,
+                 queuemember_service_notifier):
+        self.queuemember_dao = queuemember_dao
+        self.innerdata_dao = innerdata_dao
+        self.agent_service_manager = agent_service_manager
+        self.queuemember_notifier = queuemember_service_notifier
 
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
