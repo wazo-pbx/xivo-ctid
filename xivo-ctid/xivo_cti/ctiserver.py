@@ -67,7 +67,6 @@ from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEnt
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
 from xivo_cti.cti.commands.agent_login import AgentLogin
-from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services import queue_entry_manager
@@ -181,7 +180,7 @@ class CTIServer(object):
         self._queue_entry_encoder = context.get('queue_entry_encoder')
 
         self._queuemember_service_manager.queuemember_dao = context.get('queuemember_dao')
-        self._queuemember_service_manager.delta_computer = DeltaComputer()
+        self._queuemember_service_manager.delta_computer = context.get('delta_computer')
         self._queuemember_service_notifier.innerdata_dao = self._queuemember_service_manager.innerdata_dao
 
         self.scheduler = Scheduler(self.pipe_queued_threads[1])

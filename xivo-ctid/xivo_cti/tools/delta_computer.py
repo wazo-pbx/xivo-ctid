@@ -28,6 +28,8 @@ DictDelta = namedtuple('DictDelta', ['add', 'change', 'delete'])
 
 
 class DeltaComputer(object):
+    def __init__(self):
+        pass
 
     @staticmethod
     def compute_delta(new_dict, old_dict):

@@ -48,6 +48,7 @@ from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
+from xivo_cti.tools.delta_computer import DeltaComputer
 
 
 def main():
@@ -64,6 +65,7 @@ def _register_context(context):
     context.register('agent_executor', AgentExecutor)
     context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
     context.register('extensions_dao', ExtensionsDAO.new_from_uri, 'queue_stats')
     context.register('funckey_manager', FunckeyManager)
