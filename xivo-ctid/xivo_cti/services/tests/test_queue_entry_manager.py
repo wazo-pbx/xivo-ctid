@@ -104,13 +104,12 @@ QUEUE_ENTRY_MESSAGE = {'Event': 'QueueEntry',
 class TestQueueEntryManager(unittest.TestCase):
 
     def setUp(self):
-        self.manager = QueueEntryManager()
-        self.encoder = context.get('queue_entry_encoder')
-        self.notifier = QueueEntryNotifier()
-        self.manager._notifier = self.notifier
-        self.manager._encoder = self.encoder
-
-        self.manager._statistics_notifier = Mock(StatisticsNotifier)
+        self.encoder = Mock(QueueEntryEncoder)
+        self.notifier = Mock(QueueEntryNotifier)
+        self.statistics_notifier = Mock(StatisticsNotifier)
+        self.manager = QueueEntryManager(self.notifier,
+                                         self.encoder,
+                                         self.statistics_notifier)
 
     def tearDown(self):
         QueueEntryManager._instance = None

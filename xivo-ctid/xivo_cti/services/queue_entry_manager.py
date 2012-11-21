@@ -107,11 +107,15 @@ def longest_wait_time_calculator(queue_infos):
 
 class QueueEntryManager(object):
 
-    def __init__(self):
+    def __init__(self,
+                 queue_entry_notifier,
+                 queue_entry_encoder,
+                 statistics_notifier):
         self._queue_entries = {}
         self._ami = None
-        self._notifier = None
-        self._encoder = None
+        self._notifier = queue_entry_notifier
+        self._encoder = queue_entry_encoder
+        self._statistics_notifier = statistics_notifier
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         if not queue_features_dao.is_a_queue(queue_name):

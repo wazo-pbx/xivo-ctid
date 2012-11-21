@@ -179,10 +179,6 @@ class CTIServer(object):
         self._queue_entry_notifier = context.get('queue_entry_notifier')
         self._queue_entry_encoder = context.get('queue_entry_encoder')
 
-        self._queue_entry_manager._notifier = self._queue_entry_notifier
-        self._queue_entry_manager._encoder = self._queue_entry_encoder
-        self._queue_entry_manager._statistics_notifier = self._statistics_notifier
-
         self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
         self._queuemember_service_manager.agent_service_manager = self._agent_service_manager
