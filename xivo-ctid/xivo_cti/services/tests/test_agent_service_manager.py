@@ -34,7 +34,6 @@ from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
-from xivo_cti.xivo_ami import AMIClass
 
 
 class TestAgentServiceManager(unittest.TestCase):
@@ -115,11 +114,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(extens[0], self.line_number)
 
     def test_agent_callback_login(self):
-        self.agent_manager.agent_executor = self.agent_executor
-
         number, exten, context = '1000', '1234', 'test'
-        ami = Mock(AMIClass)
-        self.agent_manager.ami = ami
 
         self.agent_manager.agent_call_back_login(number,
                                                  exten,
