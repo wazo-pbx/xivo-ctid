@@ -33,6 +33,7 @@ from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
@@ -62,6 +63,7 @@ def _register_context(context):
     context.register('agent_executor', AgentExecutor)
     context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('device_manager', DeviceManager)
     context.register('extensions_dao', ExtensionsDAO.new_from_uri, 'queue_stats')
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata_dao', InnerdataDAO)

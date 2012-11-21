@@ -34,8 +34,11 @@ class DeviceManager(object):
     def answer(self, device_id):
         if self.is_supported_device(device_id):
             cmd = self.aastra_controller.answer(device_id)
-            self.send_ami(cmd)
+            self.send_sipnotify(cmd)
 
     def is_supported_device(self, device_id):
         vendor, model = device_dao.get_vendor_model(device_id)
         return vendor == 'Aastra' and model in ['6757i', '6755i']
+
+    def send_sipnotify(self, cmd):
+        self.ami.sipnotify(cmd)

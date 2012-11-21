@@ -106,7 +106,7 @@ class CTIServer(object):
         signal.signal(signal.SIGTERM, self._sighandler)
         signal.signal(signal.SIGHUP, self._sighandler_reload)
 
-    ## \brief Handler for catching signals (in the main thread)
+    # # \brief Handler for catching signals (in the main thread)
     def _sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
@@ -114,7 +114,7 @@ class CTIServer(object):
             t._Thread__stop()
         self.askedtoquit = True
 
-    ## \brief Handler for catching signals (in the main thread)
+    # # \brief Handler for catching signals (in the main thread)
     def _sighandler_reload(self, signum, frame):
         logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
                        signum, frame.f_lineno, self.askedtoquit)
@@ -154,6 +154,7 @@ class CTIServer(object):
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
+        self._device_manager = context.get('device_manager')
 
         self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = context.get('presence_service_executor')
@@ -295,7 +296,7 @@ class CTIServer(object):
         Dispatches the message's handling according to the connection's kind.
         """
         closemenow = False
-        if not isinstance(kind, str):   # CTI, INFO, WEBI
+        if not isinstance(kind, str):  # CTI, INFO, WEBI
             replies = kind.manage_connection(msg)
             for reply in replies:
                 if reply:
@@ -420,6 +421,7 @@ class CTIServer(object):
         self._queuemember_service_notifier.interface_ami = self.myami
         self._queue_entry_manager._ami = self.myami.amiclass
         self._funckey_manager.ami = self.myami.amiclass
+        context.get('device_manager').ami = self.myami.amiclass
         context.get('agent_executor').ami = self.myami.amiclass
         self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
@@ -701,7 +703,7 @@ class CTIServer(object):
             del self.fdlist_established[sel_i]
 
     def _socket_pipe_queue_read(self, sel_i):
-        #try:
+        # try:
         pipebuf = os.read(sel_i, 1024)
         if not pipebuf:
             logger.warning('pipe_queued_threads has been closed')
@@ -719,7 +721,7 @@ class CTIServer(object):
                         self.myami.checkqueue()
                 else:
                     logger.warning('unknown kind for %s', pb)
-        #except Exception:
+        # except Exception:
         #    logger.exception('[pipe_queued_threads]')
 
     def _update_safe_list(self):
