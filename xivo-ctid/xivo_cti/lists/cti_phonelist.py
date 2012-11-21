@@ -1,17 +1,18 @@
-# vim: set fileencoding=utf-8 :
+# -*- coding: utf-8 -*-
+
 # XiVO CTI Server
-
-__copyright__ = 'Copyright (C) 2007-2011  Avencall'
-
+#
+# Copyright (C) 2007-2012  Avencall
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,6 +32,7 @@ logger = logging.getLogger('phonelist')
 
 
 class PhoneList(ContextAwareAnyList):
+
     def __init__(self, newurls=[], useless=None):
         self.anylist_properties = {'name': 'phones',
                                    'urloptions': (1, 12, False)}
@@ -121,7 +123,7 @@ class PhoneList(ContextAwareAnyList):
                      'status': 'calling',
                      'time-dial': 0,
                      'timestamp-dial': time.time(),
-                     #'calleridname' : puidsrc.get('calleridname'),
+                     # 'calleridname' : puidsrc.get('calleridname'),
                      'calleridnum': puidsrc.get('extension')
                      }
             self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
@@ -281,7 +283,7 @@ class PhoneList(ContextAwareAnyList):
         if phoneid in self.keeplist:
             if status not in self.display_hints:
                 status = '-2'
-            #changed = not (self.keeplist[phoneid]['hintstatus'] == self.display_hints.get(status))
+            # changed = not (self.keeplist[phoneid]['hintstatus'] == self.display_hints.get(status))
             changed = not isinstance(self.keeplist[phoneid]['hintstatus'], dict) or not (self.keeplist[phoneid]['hintstatus'].get('code') == status)
             if changed:
                 self.keeplist[phoneid]['hintstatus'] = self.display_hints.get(status)
@@ -308,7 +310,7 @@ class PhoneList(ContextAwareAnyList):
                          'thischannel': ctuid['channel'],
                          'peerchannel': ctuid['peerchannel'],
                          'time-link': 0,
-                         #'calleridnum' : ctuid['parkexten-callback'],
+                         # 'calleridnum' : ctuid['parkexten-callback'],
                          'timestamp-link': time.time()}
                 self.keeplist[phoneid]['comms'][uid].update(infos)
             else:
@@ -317,7 +319,7 @@ class PhoneList(ContextAwareAnyList):
                          'thischannel': ctuid['channel'],
                          'peerchannel': ctuid['peerchannel'],
                          'time-link': 0,
-                         #'calleridnum' : ctuid['parkexten-callback']
+                         # 'calleridnum' : ctuid['parkexten-callback']
                          'timestamp-link': time.time()}
                 self.keeplist[phoneid]['comms'][uid] = infos
                 self.setlinenum(phoneid, uid)

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # XiVO CTI Server
-# Copyright (C) 2009-2012  Avencall
+#
+# Copyright (C) 2007-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,9 +10,9 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Pro-formatique SARL. See the LICENSE file at top of the
-# source tree or delivered in the installable package in which XiVO CTI Server
-# is distributed for more details.
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,6 +31,7 @@ from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataS
 logger = logging.getLogger('csv directory')
 
 class CSVFileDirectoryDataSource(DirectoryDataSource):
+
     def __init__(self, csv_file, delimiter, key_mapping):
         """
         csv_file -- the path to the CSV file
