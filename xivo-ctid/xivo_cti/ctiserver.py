@@ -36,7 +36,6 @@ from sqlalchemy.exc import OperationalError, InvalidRequestError
 
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
-from xivo_dao.queuememberdao import QueueMemberDAO
 
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
@@ -181,7 +180,7 @@ class CTIServer(object):
         self._queue_entry_notifier = context.get('queue_entry_notifier')
         self._queue_entry_encoder = context.get('queue_entry_encoder')
 
-        self._queuemember_service_manager.queuemember_dao = QueueMemberDAO.new_from_uri('queue_stats')
+        self._queuemember_service_manager.queuemember_dao = context.get('queuemember_dao')
         self._queuemember_service_manager.innerdata_dao = self._innerdata_dao
         self._queuemember_service_manager.agent_service_manager = self._agent_service_manager
         self._queuemember_service_manager.delta_computer = DeltaComputer()
