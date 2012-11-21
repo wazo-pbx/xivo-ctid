@@ -178,7 +178,8 @@ class CTIServer(object):
         self._queue_entry_notifier = context.get('queue_entry_notifier')
         self._queue_entry_encoder = context.get('queue_entry_encoder')
 
-        self.scheduler = Scheduler(self.pipe_queued_threads[1])
+        context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
+        self.scheduler = context.get('scheduler')
         self._agent_availability_notifier = agent_availability_notifier.AgentAvailabilityNotifier(self._innerdata_dao, self)
         self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier, self.scheduler)
         self._agent_on_call_updater = agent_on_call_updater.AgentOnCallUpdater()
