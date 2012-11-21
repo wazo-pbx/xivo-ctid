@@ -27,8 +27,6 @@ from xivo_dao import queue_features_dao
 
 class QueueEntryEncoder(object):
 
-    _instance = None
-
     MSG_TEMPLATE = {'class': 'queueentryupdate',
                     'state': None}
 
@@ -40,6 +38,9 @@ class QueueEntryEncoder(object):
     STATE_TEMPLATE = {'queue_name': None,
                       'queue_id': None,
                       'entries': []}
+
+    def __init__(self):
+        pass
 
     def encode(self, queue_name, entries):
         msg = dict(self.MSG_TEMPLATE)
@@ -71,9 +72,3 @@ class QueueEntryEncoder(object):
         state['entries'] = entry_list
 
         return state
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance == None:
-            cls._instance = cls()
-        return cls._instance

@@ -29,6 +29,7 @@ from mock import patch
 import time
 
 from xivo_dao import queue_features_dao
+from xivo_cti.context import context
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager
@@ -104,7 +105,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
     def setUp(self):
         self.manager = QueueEntryManager()
-        self.encoder = QueueEntryEncoder.get_instance()
+        self.encoder = context.get('queue_entry_encoder')
         self.notifier = QueueEntryNotifier()
         self.manager._notifier = self.notifier
         self.manager._encoder = self.encoder

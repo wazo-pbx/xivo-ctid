@@ -35,6 +35,7 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
+from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
@@ -65,6 +66,7 @@ def _register_context(context):
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata_dao', InnerdataDAO)
     context.register('line_features_dao', LineFeaturesDAO.new_from_uri, 'queue_stats')
+    context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
     context.register('queue_service_manager', QueueServiceManager)

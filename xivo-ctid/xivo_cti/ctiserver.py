@@ -70,7 +70,6 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
-from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services import agent_availability_notifier
 from xivo_cti.services import agent_availability_updater
@@ -178,7 +177,7 @@ class CTIServer(object):
         self._queue_entry_manager = context.get('queue_entry_manager')
         self._queue_statistic_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
-        self._queue_entry_encoder = QueueEntryEncoder.get_instance()
+        self._queue_entry_encoder = context.get('queue_entry_encoder')
 
         self._queue_entry_manager._notifier = self._queue_entry_notifier
         self._queue_entry_manager._encoder = self._queue_entry_encoder
