@@ -50,6 +50,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_dao = Mock(QueueMemberDAO)
         self.innerdata_dao = Mock(InnerdataDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
+        self.delta_computer = Mock(DeltaComputer)
 
         self.old_queuemember_formatter = queuemember_formatter.QueueMemberFormatter
         queuemember_formatter.QueueMemberFormatter = Mock(QueueMemberFormatter)
@@ -57,7 +58,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_service_manager = QueueMemberServiceManager(self.queuemember_dao,
                                                                      self.innerdata_dao,
                                                                      self.agent_service_manager,
-                                                                     self.queuemember_service_notifier)
+                                                                     self.queuemember_service_notifier,
+                                                                     self.delta_computer)
 
         self.ami_event = {
             'Queue': 'queue1',

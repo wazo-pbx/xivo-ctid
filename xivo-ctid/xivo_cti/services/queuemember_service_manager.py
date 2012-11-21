@@ -36,11 +36,13 @@ class QueueMemberServiceManager(object):
                  queuemember_dao,
                  innerdata_dao,
                  agent_service_manager,
-                 queuemember_service_notifier):
+                 queuemember_service_notifier,
+                 delta_computer):
         self.queuemember_dao = queuemember_dao
         self.innerdata_dao = innerdata_dao
         self.agent_service_manager = agent_service_manager
         self.queuemember_notifier = queuemember_service_notifier
+        self.delta_computer = delta_computer
 
     def update_config(self):
         new_queuemembers = self.queuemember_dao.get_queuemembers()
