@@ -211,7 +211,7 @@ class CTIServer(object):
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
-        Answer.register_callback_params(self._device_manager.pickup_the_phone, ['user_id'])
+        Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
