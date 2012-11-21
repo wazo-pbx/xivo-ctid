@@ -41,4 +41,4 @@ class DeviceManager(object):
         return vendor == 'Aastra' and model in ['6757i', '6755i']
 
     def send_sipnotify(self, cmd):
-        self.ami.sipnotify(cmd)
+        self.ami.sipnotify(*cmd)

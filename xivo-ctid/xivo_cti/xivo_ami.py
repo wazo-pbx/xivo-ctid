@@ -317,13 +317,14 @@ class AMIClass(object):
         return self._exec_command('Getvar', [('Channel', channel),
                                              ('Variable', varname)])
 
-    # \brief Sends a sipnotify
-    def sipnotify(self, *variables):
-        channel = variables[0]
-        arglist = [('Variable', '%s=%s' % (k, v.replace('"', '\\"')))
-            for k, v in variables[len(variables) - 1].iteritems()]
-        arglist.append(('Channel', channel))
-        return self._exec_command('SIPNotify', arglist)
+    def sipnotify(self, channel, variables):
+        if not variables or not channel:
+            raise ValueError('Missing fields to send a SIPNotify')
+
+        arg_list = [('Channel', channel)]
+        arg_list.extend(('Variable', '%s=%s' % (name, value)) for name, value in variables.iteritems())
+
+        return self._exec_command('SIPNotify', arg_list)
 
     # \brief Request a mailbox count
     # context is for tracking only

@@ -40,11 +40,11 @@ class TestAastraController(unittest.TestCase):
 
         result = aastra_controller.answer(device_id)
 
-        var_content = ('Content', '<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>')
-        var_event = ('Event', 'aastra-xml')
-        var_content_type = ('Content-type', 'application/xml')
+        var_content = {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
+                       'Event': 'aastra-xml',
+                       'Content-type': 'application/xml'}
 
-        expected_result = [peer, var_content, var_event, var_content_type]
+        expected_result = (peer, var_content)
 
         self.assertEqual(result, expected_result)
 
@@ -59,10 +59,10 @@ class TestAastraController(unittest.TestCase):
 
         result = aastra_controller.answer(device_id)
 
-        var_content = ('Content', '<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>')
-        var_event = ('Event', 'aastra-xml')
-        var_content_type = ('Content-type', 'application/xml')
+        var_content = {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
+                       'Event': 'aastra-xml',
+                       'Content-type': 'application/xml'}
 
-        expected_result = [peer, var_content, var_event, var_content_type]
+        expected_result = (peer, var_content)
 
         self.assertEqual(result, expected_result)

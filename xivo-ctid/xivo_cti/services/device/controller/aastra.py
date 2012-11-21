@@ -29,8 +29,6 @@ class AastraController(object):
 
     def answer(self, device_id):
         peer = device_dao.get_peer_name(device_id)
-        var_content = ('Content', '<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>')
-        var_event = ('Event', 'aastra-xml')
-        var_content_type = ('Content-type', 'application/xml')
-
-        return [peer, var_content, var_event, var_content_type]
+        return peer, {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
+                      'Event': 'aastra-xml',
+                      'Content-type': 'application/xml'}

@@ -39,7 +39,7 @@ class TestDeviceManager(unittest.TestCase):
 
     def test_answer(self):
         device_id = 13
-        formatted_answer_ami_command = 'answer the phone'
+        formatted_answer_ami_command = 'peer', {'var': 'val'}
         self.aastra_controller.answer.return_value = formatted_answer_ami_command
         manager = DeviceManager()
         manager.aastra_controller = self.aastra_controller
@@ -53,7 +53,7 @@ class TestDeviceManager(unittest.TestCase):
 
     def test_answer_from_good_device_manager(self):
         device_id = 13
-        formatted_answer_ami_command = 'aastra_specific_answer'
+        formatted_answer_ami_command = 'peer', {'var': 'val'}
         self.aastra_controller.answer.return_value = formatted_answer_ami_command
         manager = DeviceManager()
         manager.aastra_controller = self.aastra_controller
@@ -67,7 +67,7 @@ class TestDeviceManager(unittest.TestCase):
 
     def test_answer_with_unsupported_device(self):
         device_id = 13
-        formatted_answer_ami_command = 'aastra_specific_answer'
+        formatted_answer_ami_command = 'peer', {'var': 'val'}
         self.aastra_controller.answer.return_value = formatted_answer_ami_command
         manager = DeviceManager()
         manager.aastra_controller = self.aastra_controller
@@ -121,11 +121,12 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEqual(result, False)
 
     def test_send_sipnotify(self):
-        cmd = 'sipnotify_command'
+        channel, vars = 'SIP/abc', {'un': 1}
+        cmd = channel, vars
         ami = mock.Mock(AMIClass)
 
         self.manager = DeviceManager()
         self.manager.ami = ami
         self.manager.send_sipnotify(cmd)
 
-        ami.sipnotify.assert_called_once_with(cmd)
+        ami.sipnotify.assert_called_once_with(channel, vars)
