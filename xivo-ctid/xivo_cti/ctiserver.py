@@ -180,8 +180,8 @@ class CTIServer(object):
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
         self.scheduler = context.get('scheduler')
         self._agent_availability_notifier = context.get('agent_availability_notifier')
-        self._agent_availability_updater = agent_availability_updater.AgentAvailabilityUpdater(self._innerdata_dao, self._agent_availability_notifier, self.scheduler)
-        self._agent_on_call_updater = agent_on_call_updater.AgentOnCallUpdater()
+        self._agent_availability_updater = context.get('agent_availability_updater')
+        self._agent_on_call_updater = context.get('agent_on_call_updater')
 
         self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
 

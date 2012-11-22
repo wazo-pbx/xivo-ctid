@@ -38,6 +38,8 @@ def parse_ami_call_completed(ami_event, agent_on_call_updater):
 
 
 class AgentOnCallUpdater(object):
+    def __init__(self):
+        pass
 
     def answered_call(self, agent_id):
         dao.agent.set_on_call(agent_id, True)

@@ -24,7 +24,6 @@
 
 import logging
 from xivo_cti import dao
-from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger(__name__)
@@ -67,10 +66,10 @@ def parse_ami_paused(ami_event, agent_availability_updater):
 
 class AgentAvailabilityUpdater(object):
 
-    def __init__(self, innerdata_dao, notifier, scheduler):
+    def __init__(self, innerdata_dao, agent_availability_notifier, scheduler):
         self.innerdata_dao = innerdata_dao
         self.scheduler = scheduler
-        self.notifier = notifier
+        self.notifier = agent_availability_notifier
 
     def agent_logged_in(self, agent_id):
         if dao.agent.is_completely_paused(agent_id):
