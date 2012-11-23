@@ -26,10 +26,14 @@ import copy
 from mock import Mock
 from mock import patch
 from xivo_cti.services.meetme import service_manager
+from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme import service_notifier
 
 conf_room_number = '800'
 conf_room_name = 'test_conf'
+
+mock_manager = Mock(MeetmeServiceManager)
+mock_context = Mock(return_value=mock_manager)
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -38,6 +42,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.publish = Mock()
         self.manager = service_manager.MeetmeServiceManager()
 
+    @patch('xivo_cti.context.context.get', mock_context)
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_join(self):
         channel = 'SIP/i7vbu0-00000001'
@@ -58,14 +63,13 @@ class TestUserServiceManager(unittest.TestCase):
                  'ConnectedLineNum': '<unknown>',
                  'ConnectedLineName': '<unknown>'}
 
-        service_manager.manager = Mock(service_manager.MeetmeServiceManager)
         service_manager.parse_join(event)
 
-        service_manager.manager.join.assert_called_once_with(channel,
-                                                             number,
-                                                             1,
-                                                             caller_id_name,
-                                                             caller_id_number)
+        mock_manager.join.assert_called_once_with(channel,
+                                                  number,
+                                                  1,
+                                                  caller_id_name,
+                                                  caller_id_number)
 
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_join_paging(self):
@@ -211,6 +215,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    @patch('xivo_cti.context.context.get', mock_context)
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_leave(self):
         event = {'Event': 'MeetmeLeave',
@@ -225,15 +230,13 @@ class TestUserServiceManager(unittest.TestCase):
                  'ConnectedLineName': '<unknown>',
                  'Duration': '31'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_leave(event)
 
-        manager.leave.assert_called_once_with('800', 1)
+        mock_manager.leave.assert_called_once_with('800', 1)
 
+    @patch('xivo_cti.context.context.get')
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
-    def test_parse_leave_paging(self):
+    def test_parse_leave_paging(self, mock_context):
         event = {'Event': 'MeetmeLeave',
                  'Privilege': 'call,all',
                  'Channel': 'SIP/i7vbu0-00000000',
@@ -245,13 +248,12 @@ class TestUserServiceManager(unittest.TestCase):
                  'ConnectedLineNum': '<unknown>',
                  'ConnectedLineName': '<unknown>',
                  'Duration': '31'}
-
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
+        mock_manager = Mock(MeetmeServiceManager)
+        mock_context.return_value = mock_manager
 
         service_manager.parse_leave(event)
 
-        self.assertEqual(manager.leave.call_count, 0)
+        self.assertEqual(mock_manager.leave.call_count, 0)
 
     def test_leave(self):
         start_time = 1234556.123
@@ -434,6 +436,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
+    @patch('xivo_cti.context.context.get', mock_context)
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_meetmelist(self):
         channel = 'SIP/pcm_dev-00000003'
@@ -451,12 +454,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'Muted': 'No',
                  'Talking': 'Notmonitored'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_meetmelist(event)
 
-        manager.refresh.assert_called_once_with(channel, '800', 1, 'My Name', '666', False)
+        mock_manager.refresh.assert_called_once_with(channel, '800', 1, 'My Name', '666', False)
 
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_meetmelist_paging(self):
@@ -603,6 +603,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.assertEqual(self.manager._cache, expected)
         self.publish.assert_called_once_with()
 
+    @patch('xivo_cti.context.context.get', mock_context)
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_mute(self):
         event = {'Event': 'MeetmeMute',
@@ -613,12 +614,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'Usernum': '1',
                  'Status': 'on'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_meetmemute(event)
 
-        manager.mute.assert_called_once_with('800', 1)
+        mock_manager.mute.assert_called_once_with('800', 1)
 
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_mute_paging(self):
@@ -637,6 +635,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEquals(manager.mute.call_count, 0)
 
+    @patch('xivo_cti.context.context.get', mock_context)
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_unmute(self):
         event = {'Event': 'MeetmeMute',
@@ -647,12 +646,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'Usernum': '1',
                  'Status': 'off'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_meetmemute(event)
 
-        manager.unmute.assert_called_once_with('800', 1)
+        mock_manager.unmute.assert_called_once_with('800', 1)
 
     def test_publish_change(self):
         service_notifier.notifier = Mock(service_notifier.MeetmeServiceNotifier)

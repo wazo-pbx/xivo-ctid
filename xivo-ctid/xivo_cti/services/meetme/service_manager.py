@@ -23,6 +23,7 @@
 
 from xivo_dao import linefeaturesdao
 from xivo_dao import meetme_features_dao
+from xivo_cti.context import context
 from xivo_cti.services.meetme import service_notifier
 from xivo_cti.ami import ami_callback_handler
 from copy import deepcopy
@@ -50,7 +51,7 @@ def register_ami_events():
 def parse_join(event):
     number = event[CONF_ROOM_NUMBER]
     if meetme_features_dao.is_a_meetme(number):
-        manager.join(
+        context.get('meetme_service_manager').join(
             event[CHANNEL],
             number,
             int(event[USERNUM]),
@@ -61,13 +62,13 @@ def parse_join(event):
 def parse_leave(event):
     number = event[CONF_ROOM_NUMBER]
     if meetme_features_dao.is_a_meetme(number):
-        manager.leave(number, int(event[USERNUM]))
+        context.get('meetme_service_manager').leave(number, int(event[USERNUM]))
 
 
 def parse_meetmelist(event):
     number = event['Conference']
     if meetme_features_dao.is_a_meetme(number):
-        manager.refresh(
+        context.get('meetme_service_manager').refresh(
             event[CHANNEL],
             number,
             int(event['UserNumber']),
@@ -81,9 +82,9 @@ def parse_meetmemute(event):
     if meetme_features_dao.is_a_meetme(number):
         muting = event['Status'] == 'on'
         if muting:
-            manager.mute(number, int(event['Usernum']))
+            context.get('meetme_service_manager').mute(number, int(event['Usernum']))
         else:
-            manager.unmute(number, int(event['Usernum']))
+            context.get('meetme_service_manager').unmute(number, int(event['Usernum']))
 
 
 class MeetmeServiceManager(object):
@@ -197,6 +198,3 @@ def _build_member_status(join_seq_number, name, number, channel, is_muted):
             'name': name,
             'channel': channel,
             'muted': is_muted}
-
-
-manager = MeetmeServiceManager()

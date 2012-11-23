@@ -79,6 +79,7 @@ from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_remove import QueueRemove
 from xivo_cti.services.meetme import service_notifier as meetme_service_notifier
+from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 
 logger = logging.getLogger('main')
 
@@ -189,9 +190,9 @@ class CTIServer(object):
         queue_statistics_producer.register_events()
 
         meetme_service_notifier.notifier.user_features_dao = self._user_features_dao
-        from xivo_cti.services.meetme import service_manager
-        service_manager.manager.initialize()
-        service_manager.register_ami_events()
+        meetme_service_manager = context.get('meetme_service_manager')
+        meetme_service_manager.initialize()
+        meetme_service_manager_module.register_ami_events()
 
         self._register_cti_callbacks()
         self._register_ami_callbacks()

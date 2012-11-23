@@ -27,7 +27,7 @@ WEBI Interface
 import re
 from xivo_cti import cti_config
 from xivo_cti.interfaces import interfaces
-from xivo_cti.services.meetme.service_manager import manager as meetme_manager
+from xivo_cti.context import context
 
 import logging
 
@@ -90,7 +90,7 @@ class WEBI(interfaces.Interfaces):
                             }
                 self._ctiserver.update_userlist.append(msg_data)
                 if object_name == 'meetme':
-                    meetme_manager.initialize()
+                    context.get('meetme_service_manager').initialize()
 
     def manage_connection(self, msg):
         clireply = []
