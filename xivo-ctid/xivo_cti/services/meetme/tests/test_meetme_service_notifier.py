@@ -36,13 +36,13 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.notifier = MeetmeServiceNotifier()
+        self.user_dao = Mock(UserFeaturesDAO)
+        self.notifier = MeetmeServiceNotifier(self.user_dao)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
         self.config = Mock(Config)
         self.config.part_context.return_value = False
         Config.instance = self.config
-        self.user_dao = Mock(UserFeaturesDAO)
         self.notifier.user_features_dao = self.user_dao
 
     def tearDown(self):

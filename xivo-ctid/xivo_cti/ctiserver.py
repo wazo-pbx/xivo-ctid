@@ -189,7 +189,6 @@ class CTIServer(object):
         queue_statistics_producer.register_events()
         meetme_service_manager_module.register_ami_events()
 
-        context.get('meetme_service_notifier').user_features_dao = self._user_features_dao
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()
 

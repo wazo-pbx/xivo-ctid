@@ -33,7 +33,8 @@ logger = logging.getLogger('meetme_service_notifier')
 
 class MeetmeServiceNotifier(object):
 
-    def __init__(self):
+    def __init__(self, user_features_dao):
+        self.user_features_dao = user_features_dao
         self._subscriptions = {}
         self._current_state = None
 
