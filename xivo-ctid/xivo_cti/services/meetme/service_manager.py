@@ -24,7 +24,6 @@
 from xivo_dao import linefeaturesdao
 from xivo_dao import meetme_features_dao
 from xivo_cti.context import context
-from xivo_cti.services.meetme import service_notifier
 from xivo_cti.ami import ami_callback_handler
 from copy import deepcopy
 import time
@@ -182,7 +181,7 @@ class MeetmeServiceManager(object):
             return member['name'] == name and member['number'] == number
 
     def _publish_change(self):
-        service_notifier.notifier.publish_meetme_update(self._cache)
+        context.get('meetme_service_notifier').publish_meetme_update(self._cache)
 
 
 def _build_joining_member_status(join_seq, name, number, channel, is_muted):

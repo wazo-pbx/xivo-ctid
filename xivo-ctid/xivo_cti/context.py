@@ -40,6 +40,10 @@ class Context:
 
         self.factories[property] = factory, factory_args, factory_kw
 
+    def reset(self):
+        self.instances = {}
+        self.factories = {}
+
     def get(self, property):
         """Lookups the given property name in context.
         Raises KeyError when no such property is found.

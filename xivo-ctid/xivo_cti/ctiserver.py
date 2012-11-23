@@ -78,7 +78,6 @@ from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_remove import QueueRemove
-from xivo_cti.services.meetme import service_notifier as meetme_service_notifier
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 
 logger = logging.getLogger('main')
@@ -188,11 +187,11 @@ class CTIServer(object):
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
+        meetme_service_manager_module.register_ami_events()
 
-        meetme_service_notifier.notifier.user_features_dao = self._user_features_dao
+        context.get('meetme_service_notifier').user_features_dao = self._user_features_dao
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()
-        meetme_service_manager_module.register_ami_events()
 
         self._register_cti_callbacks()
         self._register_ami_callbacks()
@@ -232,7 +231,7 @@ class CTIServer(object):
         QueueRemove.register_callback_params(
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
 
-        SubscribeMeetmeUpdate.register_callback_params(meetme_service_notifier.notifier.subscribe, ['cti_connection'])
+        SubscribeMeetmeUpdate.register_callback_params(context.get('meetme_service_notifier').subscribe, ['cti_connection'])
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
