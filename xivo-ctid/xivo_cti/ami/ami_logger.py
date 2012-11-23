@@ -29,9 +29,7 @@ from xivo_cti.ami import ami_callback_handler
 class AMILogger(object):
     _instance = None
     _log_header = 'AMI logger'
-    logged_events = ['Agentcallbacklogoff',
-                     'Agentcallbacklogin',
-                     'ChanSpyStart',
+    logged_events = ['ChanSpyStart',
                      'ChanSpyStop',
                      'Dial',
                      'ChannelReload',

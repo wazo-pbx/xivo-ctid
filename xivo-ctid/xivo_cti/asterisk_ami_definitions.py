@@ -65,8 +65,6 @@ event_flags['AGENT'] = ['AgentCalled',
                         'AgentComplete',
                         'AgentDump',
                         'AgentRingNoAnswer',
-                        'Agentlogin',
-                        'Agentlogoff',
                         'QueueCallerAbandon', 'QueueMemberAdded',
                         'QueueMemberPaused', 'QueueMemberPenalty',
                         'QueueMemberRemoved', 'QueueMemberStatus'

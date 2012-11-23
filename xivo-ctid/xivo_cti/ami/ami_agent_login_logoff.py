@@ -78,8 +78,6 @@ class AMIAgentLoginLogoff(object):
         ami_agent_login = cls.get_instance()
         callback_handler.register_callback('Agentcallbacklogin', ami_agent_login.on_event_agent_login)
         callback_handler.register_callback('Agentcallbacklogoff', ami_agent_login.on_event_agent_logoff)
-        callback_handler.register_callback('Agentlogin', ami_agent_login.on_event_agent_login)
-        callback_handler.register_callback('Agentlogoff', ami_agent_login.on_event_agent_logoff)
         callback_handler.register_callback('Agents', ami_agent_login.on_event_agent_init)
 
     @classmethod
