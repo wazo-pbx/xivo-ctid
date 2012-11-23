@@ -67,7 +67,6 @@ from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEnt
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.funckey import funckey_manager
 from xivo_cti.cti.commands.agent_login import AgentLogin
-from xivo_cti.statistics.statistics_producer_initializer import StatisticsProducerInitializer
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services import agent_availability_updater
@@ -183,7 +182,7 @@ class CTIServer(object):
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
 
-        self._statistics_producer_initializer = StatisticsProducerInitializer(self._queue_service_manager)
+        self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
         self._queue_statistics_producer.notifier = self._statistics_notifier
 
