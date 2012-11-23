@@ -30,7 +30,7 @@ import string
 import threading
 import time
 
-from xivo_cti import xivo_ami, cti_config
+from xivo_cti import xivo_ami
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
@@ -39,6 +39,7 @@ from xivo_cti.ami import ami_status_request_logger
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
+from xivo_cti.context import context as cti_context
 
 logger = logging.getLogger('interface_ami')
 
@@ -58,7 +59,7 @@ class AMI(object):
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
-        config = cti_config.Config.get_instance()
+        config = cti_context.get('config')
         ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))

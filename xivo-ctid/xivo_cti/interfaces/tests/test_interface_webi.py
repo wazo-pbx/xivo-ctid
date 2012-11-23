@@ -1,20 +1,24 @@
 # -*- coding: UTF-8 -*-
 
 import unittest
-from xivo_cti.interfaces.interface_webi import WEBI, _CMD_WEBI_PATTERN
+from xivo_cti.interfaces.interface_webi import WEBI
 from xivo_cti.ctiserver import CTIServer
-from tests.mock import Mock
-from xivo_cti import cti_config
+from mock import Mock, NonCallableMock
+from xivo_cti.context import context
+from xivo_cti.cti_config import Config
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 
 
 class Test(unittest.TestCase):
     def setUp(self):
+        mock_config = NonCallableMock(Config)
+        mock_config.getconfig.return_value = {'live_reload_conf': True}
+        context.register('config', mock_config)
         self._ctiserver = Mock(CTIServer)
         self._interface_webi = WEBI(self._ctiserver)
-        self._interface_webi._config = Mock(cti_config)
-        self._interface_webi._config.getconfig = Mock()
-        self._interface_webi._config.getconfig.return_value = {'live_reload_conf': True}
+
+    def tearDown(self):
+        context.reset()
 
     def test_manage_connection_reload_daemon(self):
         raw_msg = 'xivo[daemon,reload]'

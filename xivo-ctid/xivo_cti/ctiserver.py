@@ -141,7 +141,7 @@ class CTIServer(object):
     def setup(self):
         self._set_logger()
         self._daemonize()
-        self._config = cti_config.Config.get_instance()
+        self._config = context.get('config')
         self._config.update()
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()

@@ -24,7 +24,7 @@
 
 from itertools import izip
 from xivo_cti import db_connection_manager
-from xivo_cti.cti_config import Config
+from xivo_cti.context import context as cti_context
 import logging
 from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
 
@@ -49,7 +49,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
                 'LEFT JOIN linefeatures ON userfeatures.id = linefeatures.iduserfeatures ' \
                 'WHERE '
         request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
-        if Config.get_instance().part_context():
+        if cti_context.get('config').part_context():
             if contexts:
                 request_contexts = ' OR '.join("linefeatures.context = '%s'" % context for context in contexts)
             else:
@@ -86,6 +86,6 @@ class InternalDirectoryDataSource(DirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        db_uri = (Config.get_instance().getconfig('ipbx')['userfeatures_db_uri'])
+        db_uri = (cti_context.get('config').getconfig('ipbx')['userfeatures_db_uri'])
         key_mapping = cls._get_key_mapping(contents)
         return cls(db_uri, key_mapping)

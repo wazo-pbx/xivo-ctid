@@ -25,9 +25,8 @@ WEBI Interface
 """
 
 import re
-from xivo_cti import cti_config
-from xivo_cti.interfaces import interfaces
 from xivo_cti.context import context
+from xivo_cti.interfaces import interfaces
 
 import logging
 
@@ -69,7 +68,7 @@ class WEBI(interfaces.Interfaces):
 
     def __init__(self, ctiserver):
         interfaces.Interfaces.__init__(self, ctiserver)
-        self._config = cti_config.Config.get_instance()
+        self._config = context.get('config')
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)

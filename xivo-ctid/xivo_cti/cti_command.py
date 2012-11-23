@@ -28,8 +28,7 @@ import string
 import threading
 import time
 from xivo_cti import cti_fax
-from xivo_cti import cti_config
-from xivo_cti.context import context
+from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
 from xivo_cti.services.agent_status import AgentStatus
@@ -87,12 +86,12 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 class Command(object):
     def __init__(self, connection, thiscommand):
-        self._config = cti_config.Config.get_instance()
+        self._config = cti_context.get('config')
         self._connection = connection
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
         self._othermessages = list()
-        self._queue_statistics_manager = context.get('queue_statistics_manager')
+        self._queue_statistics_manager = cti_context.get('queue_statistics_manager')
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
     def parse(self):

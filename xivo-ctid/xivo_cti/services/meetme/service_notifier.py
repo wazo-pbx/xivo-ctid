@@ -25,7 +25,7 @@ import logging
 from copy import deepcopy
 from xivo_cti.services.meetme import encoder
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.cti_config import Config
+from xivo_cti.context import context
 from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger('meetme_service_notifier')
@@ -94,7 +94,7 @@ class MeetmeServiceNotifier(object):
 
     def _push_to_client(self, client_connection):
         if self._current_state:
-            if Config.get_instance().part_context():
+            if context.get('config').part_context():
                 user_id = client_connection.user_id()
                 reachable_contexts = self.user_features_dao.get_reachable_contexts(user_id)
                 msg = encoder.encode_update_for_contexts(self._current_state, reachable_contexts)

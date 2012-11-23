@@ -25,6 +25,7 @@
 import logging
 import cti_urllist
 from collections import defaultdict
+from xivo_cti.context import context as cti_context
 from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('anylist')
@@ -137,7 +138,7 @@ class ContextAwareAnyList(AnyList):
         self._item_ids_by_context = dict(item_ids_by_context)
 
     def list_ids_in_contexts(self, contexts):
-        if not Config.get_instance().part_context():
+        if not cti_context.get('config').part_context():
             return self.keeplist.keys()
         elif not contexts:
             return []
@@ -155,7 +156,7 @@ class ContextAwareAnyList(AnyList):
         except KeyError:
             return None
         else:
-            if not Config.get_instance().part_context():
+            if not cti_context.get('config').part_context():
                 return item
             elif not contexts:
                 return None

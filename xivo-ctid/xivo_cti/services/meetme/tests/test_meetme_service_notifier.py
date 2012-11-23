@@ -22,12 +22,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from mock import Mock, call, patch
+from mock import Mock, call, patch, NonCallableMock
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.cti_config import Config
+from xivo_cti.context import context
 
 get_line_identity = Mock()
 
@@ -40,13 +41,12 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.notifier = MeetmeServiceNotifier(self.user_dao)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
-        self.config = Mock(Config)
+        self.config = NonCallableMock(Config)
         self.config.part_context.return_value = False
-        Config.instance = self.config
-        self.notifier.user_features_dao = self.user_dao
+        context.register('config', self.config)
 
     def tearDown(self):
-        Config.instance = None
+        context.reset()
 
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
     def test_subscribe_update(self):

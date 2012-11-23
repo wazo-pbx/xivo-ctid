@@ -37,7 +37,7 @@ from xivo_cti.directory import directory
 from xivo_cti import cti_sheets
 from xivo_cti import db_connection_manager
 from xivo_dao.alchemy import dbconnection
-from xivo_cti import cti_config
+from xivo_cti.context import context as cti_context
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
@@ -183,7 +183,7 @@ class Safe(object):
     permission_kinds = ['regcommands', 'userstatus']
 
     def __init__(self, ctiserver, cnf=None):
-        self._config = cti_config.Config.get_instance()
+        self._config = cti_context.get('config')
         self._ctiserver = ctiserver
         self.ipbxid = 'xivo'
         self.xod_config = {}
@@ -366,7 +366,7 @@ class Safe(object):
                        'tipbxid': self.ipbxid,
                        'list': [k]}
 
-            if not Config.get_instance().part_context():
+            if not cti_context.get('config').part_context():
                 self._ctiserver.send_cti_event(message)
             else:
                 if listname == 'users':

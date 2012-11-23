@@ -22,6 +22,7 @@ import sys
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
 
+from xivo_cti import cti_config
 from xivo_cti.context import context
 from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_dao.extensionsdao import ExtensionsDAO
@@ -74,6 +75,7 @@ def _register_context(context):
     context.register('agent_features_dao', AgentFeaturesDAO.new_from_uri, 'queue_stats')
     context.register('agent_on_call_updater', AgentOnCallUpdater)
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('config', cti_config.config_factory)
     context.register('cti_server', CTIServer)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)

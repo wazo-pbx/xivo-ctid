@@ -46,9 +46,11 @@ CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
-class Config(object):
-    instance = None
+def config_factory():
+    return Config(XIVO_CONF_FILE, XIVO_CONF_FILE_DEFAULT)
 
+
+class Config(object):
     def __init__(self, * urilist):
         self.urilist = urilist
         self.xc_json = {}
@@ -103,9 +105,3 @@ class Config(object):
 
     def part_context(self):
         return self._context_separation == True
-
-    @classmethod
-    def get_instance(cls):
-        if not cls.instance:
-            cls.instance = cls(XIVO_CONF_FILE, XIVO_CONF_FILE_DEFAULT)
-        return cls.instance

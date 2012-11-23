@@ -26,7 +26,7 @@ import logging
 import time
 from collections import defaultdict
 from xivo_cti.cti_anylist import ContextAwareAnyList
-from xivo_cti.cti_config import Config
+from xivo_cti.context import context as cti_context
 
 logger = logging.getLogger('phonelist')
 
@@ -387,7 +387,7 @@ class PhoneList(ContextAwareAnyList):
         return self._contexts_by_user_id.get(user_id, [])
 
     def list_user_ids_in_contexts(self, contexts):
-        if not Config.get_instance().part_context():
+        if not cti_context.get('config').part_context():
             userlist = self.commandclass.xod_config['users']
             return userlist.keeplist.keys()
         elif not contexts:
@@ -401,7 +401,7 @@ class PhoneList(ContextAwareAnyList):
             return list(user_ids)
 
     def is_user_id_in_contexts(self, user_id, contexts):
-        if not Config.get_instance().part_context():
+        if not cti_context.get('config').part_context():
             return True
         elif not contexts:
             return False

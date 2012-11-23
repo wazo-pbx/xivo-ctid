@@ -26,12 +26,13 @@ import unittest
 
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, Channel
-from xivo_cti.cti_config import Config
+from xivo_cti.context import context
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
+from xivo_cti import cti_config
 from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.services.user_service_manager import UserServiceManager
@@ -44,10 +45,11 @@ class TestSafe(unittest.TestCase):
     _ipbx_id = 'xivo'
 
     def setUp(self):
+        context.register('config', cti_config.config_factory)
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
-        config = Config.get_instance()
+        config = context.get('config')
         config.xc_json = {'ipbx': {'cdr_db_uri': 'sqlite://'}}
         self.safe = Safe(self._ctiserver, self._ipbx_id)
         self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
