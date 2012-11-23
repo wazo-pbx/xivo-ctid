@@ -33,15 +33,11 @@ def parse_queue_summary(queuesummary_event):
 
 class QueueStatisticsProducer(object):
 
-    _instance = None
-
-    def __init__(self):
+    def __init__(self, statistics_notifier):
+        self.notifier = statistics_notifier
         self.queues_of_agent = {}
         self.logged_agents = set()
         self.queues = set()
-
-    def set_notifier(self, notifier):
-        self.notifier = notifier
 
     def on_queue_added(self, queueid):
         self.queues.add(queueid)

@@ -184,8 +184,6 @@ class CTIServer(object):
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
-        self._queue_statistics_producer.notifier = self._statistics_notifier
-
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()

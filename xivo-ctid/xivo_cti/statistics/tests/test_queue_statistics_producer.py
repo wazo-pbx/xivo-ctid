@@ -5,7 +5,6 @@ from xivo_cti.statistics.queue_statistics_producer import QueueCounters
 from mock import Mock, patch
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.services.queue_service_manager import QueueServiceManager
-from xivo_cti.services.queue_service_manager import NotAQueueException
 
 
 def _aQueueStat():
@@ -32,9 +31,8 @@ class QueueStatBuilder(object):
 class TestQueueStatisticsProducer(unittest.TestCase):
 
     def setUp(self):
-        self.queue_statistics_producer = QueueStatisticsProducer()
         self.statistics_notifier = Mock(StatisticsNotifier)
-        self.queue_statistics_producer.set_notifier(self.statistics_notifier)
+        self.queue_statistics_producer = QueueStatisticsProducer(self.statistics_notifier)
         self.queue_service_manager = Mock(QueueServiceManager)
         self.dependencies = {
             'queue_service_manager': self.queue_service_manager,
