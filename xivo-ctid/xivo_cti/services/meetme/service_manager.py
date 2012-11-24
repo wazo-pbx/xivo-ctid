@@ -88,7 +88,8 @@ def parse_meetmemute(event):
 
 class MeetmeServiceManager(object):
 
-    def __init__(self):
+    def __init__(self, meetme_service_notifier):
+        self.notifier = meetme_service_notifier
         self._cache = {}
 
     def initialize(self):
@@ -181,7 +182,7 @@ class MeetmeServiceManager(object):
             return member['name'] == name and member['number'] == number
 
     def _publish_change(self):
-        context.get('meetme_service_notifier').publish_meetme_update(self._cache)
+        self.notifier.publish_meetme_update(self._cache)
 
 
 def _build_joining_member_status(join_seq, name, number, channel, is_muted):

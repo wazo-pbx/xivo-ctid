@@ -38,8 +38,8 @@ class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.publish = Mock()
-        self.manager = service_manager.MeetmeServiceManager()
         self.mock_notifier = NonCallableMock(MeetmeServiceNotifier)
+        self.manager = service_manager.MeetmeServiceManager(self.mock_notifier)
         self.mock_manager = NonCallableMock(MeetmeServiceManager)
         context.register('meetme_service_notifier', self.mock_notifier)
         context.register('meetme_service_manager', self.mock_manager)
@@ -648,7 +648,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.mock_manager.unmute.assert_called_once_with('800', 1)
 
     def test_publish_change(self):
-        manager = service_manager.MeetmeServiceManager()
+        manager = service_manager.MeetmeServiceManager(self.mock_notifier)
         manager._cache = {'test': 'status'}
 
         manager._publish_change()
