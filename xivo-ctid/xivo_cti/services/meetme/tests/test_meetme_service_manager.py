@@ -37,7 +37,6 @@ conf_room_name = 'test_conf'
 class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
-        self.publish = Mock()
         self.mock_notifier = NonCallableMock(MeetmeServiceNotifier)
         self.manager = service_manager.MeetmeServiceManager(self.mock_notifier)
         self.mock_manager = NonCallableMock(MeetmeServiceManager)
@@ -95,10 +94,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'ConnectedLineNum': '<unknown>',
                  'ConnectedLineName': '<unknown>'}
 
-        service_manager.manager = Mock(service_manager.MeetmeServiceManager)
         service_manager.parse_join(event)
 
-        self.assertEqual(service_manager.manager.join.call_count, 0)
+        self.assertEqual(self.mock_manager.join.call_count, 0)
 
     @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
     @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=5))
@@ -109,8 +107,6 @@ class TestUserServiceManager(unittest.TestCase):
         channel = 'SIP/mon_trunk-1234'
 
         mock_time.return_value = start
-
-        self.manager._publish_change = self.publish
 
         self.manager.join(channel, conf_room_number, 1, 'Tester 1', '1002')
 
@@ -126,8 +122,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'channel': channel,
                                                        'muted': True}}}}
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'test')))
     @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=4))
@@ -141,7 +136,6 @@ class TestUserServiceManager(unittest.TestCase):
 
         mock_time.return_value = start_time
 
-        self.manager._publish_change = self.publish
         self.manager._cache = {conf_room_number: {'number': conf_room_number,
                                                   'name': conf_room_name,
                                                   'pin_required': True,
@@ -155,7 +149,6 @@ class TestUserServiceManager(unittest.TestCase):
 
         mock_time.return_value = join_time
         self.manager.join(channel, conf_room_number, 2, phone_number, phone_number)
-        result = self.manager._cache
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -173,8 +166,8 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'name': phone_number,
                                                        'channel': channel,
                                                        'muted': True}}}}
-        self.assertEqual(result, expected)
-        self.publish.assert_called_once_with()
+
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_build_member_status(self):
         channel = 'SIP/kjsdfh-12356'
@@ -258,8 +251,6 @@ class TestUserServiceManager(unittest.TestCase):
     def test_leave(self):
         start_time = 1234556.123
 
-        self.manager._publish_change = self.publish
-
         self.manager._cache = {conf_room_number: {'number': conf_room_number,
                                                   'name': conf_room_name,
                                                   'pin_required': True,
@@ -277,9 +268,6 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.manager.leave('800', 1)
 
-        self.publish.assert_called_once_with()
-        self.publish.reset_mock()
-
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
                                        'pin_required': True,
@@ -290,7 +278,8 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'name': '4181235555',
                                                        'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.assertEqual(self.manager._cache, expected)
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
+        self.mock_notifier.reset_mock()
 
         self.manager.leave('800', 2)
 
@@ -300,8 +289,7 @@ class TestUserServiceManager(unittest.TestCase):
                                        'start_time': 0,
                                        'members': {}}}
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_has_members(self):
         self.manager._cache = {'800': {'members': {}}}
@@ -357,7 +345,6 @@ class TestUserServiceManager(unittest.TestCase):
                                          ('Conference2', '9001', False, 'test'),
                                          ('Conference3', '9002', False, 'test')]
 
-        self.manager._publish_change = self.publish
         self.manager.initialize()
 
         expected = {'9000': {'number': '9000',
@@ -379,8 +366,7 @@ class TestUserServiceManager(unittest.TestCase):
                              'context': 'test',
                              'members': {}}}
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_add_room(self):
         self.manager._add_room('Conference1', '9000', True, 'ctx')
@@ -474,12 +460,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'Muted': 'No',
                  'Talking': 'Notmonitored'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_meetmelist(event)
 
-        self.assertEqual(manager.refresh.call_count, 0)
+        self.assertEqual(self.mock_manager.refresh.call_count, 0)
 
     @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, False, 'dev')))
     @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=1))
@@ -487,8 +470,6 @@ class TestUserServiceManager(unittest.TestCase):
         channel = 'DAHDI/i1/5555555555-1'
         name = 'First Testeur'
         number = '5555555555'
-
-        self.manager._publish_change = self.publish
 
         self.manager.refresh(channel, conf_room_number, 1, name, number, is_muted=True)
 
@@ -504,8 +485,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                        'channel': channel,
                                                        'muted': True}}}}
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_refresh_already_there(self):
         name, number = 'Tester One', '6666'
@@ -537,8 +517,6 @@ class TestUserServiceManager(unittest.TestCase):
         self.assertTrue(self.manager._has_member('800', 1, 'Tester One', '1234'))
 
     def test_muting(self):
-        self.manager._publish_change = self.publish
-
         try:
             self.manager.mute(conf_room_number, 1)
         except Exception:
@@ -566,12 +544,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.manager.mute(conf_room_number, 2)
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_unmuting(self):
-        self.manager._publish_change = self.publish
-
         try:
             self.manager.unmute(conf_room_number, 1)
         except Exception:
@@ -599,8 +574,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.manager.unmute(conf_room_number, 2)
 
-        self.assertEqual(self.manager._cache, expected)
-        self.publish.assert_called_once_with()
+        self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_mute(self):
@@ -626,12 +600,9 @@ class TestUserServiceManager(unittest.TestCase):
                  'Usernum': '1',
                  'Status': 'on'}
 
-        manager = Mock(service_manager.MeetmeServiceManager)
-        service_manager.manager = manager
-
         service_manager.parse_meetmemute(event)
 
-        self.assertEquals(manager.mute.call_count, 0)
+        self.assertEquals(self.mock_manager.mute.call_count, 0)
 
     @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_unmute(self):
@@ -646,14 +617,6 @@ class TestUserServiceManager(unittest.TestCase):
         service_manager.parse_meetmemute(event)
 
         self.mock_manager.unmute.assert_called_once_with('800', 1)
-
-    def test_publish_change(self):
-        manager = service_manager.MeetmeServiceManager(self.mock_notifier)
-        manager._cache = {'test': 'status'}
-
-        manager._publish_change()
-
-        self.mock_notifier.publish_meetme_update.assert_called_once_with(manager._cache)
 
     @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=False))
     @patch('xivo_dao.linefeaturesdao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
