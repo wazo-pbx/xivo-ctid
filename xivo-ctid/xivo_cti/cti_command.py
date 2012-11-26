@@ -119,7 +119,8 @@ class Command(object):
 
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
             if self.ripbxid:
-                regcommands = self.rinnerdata.get_user_permissions('regcommands', self.ruserid)
+                # regcommands = self.rinnerdata.get_user_permissions('regcommands', self.ruserid)
+                regcommands = REGCOMMANDS + LOGINCOMMANDS
                 if regcommands:
                     if self.command not in regcommands:
                         logger.warning('user %s/%s : unallowed command %s',
@@ -424,7 +425,8 @@ class Command(object):
         profileclient = self.rinnerdata.xod_config['users'].keeplist[self.ruserid].get('profileclient')
         profilespecs = self._config.getconfig('profiles').get(profileclient)
         ipbxcommands_id = profilespecs.get('ipbxcommands')
-        ipbxcommands = self._config.getconfig('ipbxcommands').get(ipbxcommands_id)
+        # ipbxcommands = self._config.getconfig('ipbxcommands').get(ipbxcommands_id)
+        ipbxcommands = IPBXCOMMANDS
         if self.ipbxcommand not in ipbxcommands:
             logger.warning('profile %s : unallowed ipbxcommand %s (intermediate %s)',
                            profileclient, self.ipbxcommand, ipbxcommands_id)
