@@ -31,7 +31,8 @@ from xivo_cti.xivo_ami import AMIClass
 class TestAgentExecutor(unittest.TestCase):
 
     def setUp(self):
-        self.executor = AgentExecutor()
+        self.agent_client = Mock()
+        self.executor = AgentExecutor(self.agent_client)
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 
@@ -84,11 +85,11 @@ class TestAgentExecutor(unittest.TestCase):
         self.assertEqual(self.ami.method_calls, [call.queuepause(queue_name, interface, 'False')])
 
     def test_logoff(self):
-        number = '1234'
+        agent_id = 1234
 
-        self.executor.logoff(number)
+        self.executor.logoff(agent_id)
 
-        self.assertEqual(self.ami.method_calls, [call.agentlogoff(number)])
+        self.agent_client.logoff_agent.assert_called_once_with(agent_id)
 
     def test_log_presence(self):
         presence = 'disconnected'

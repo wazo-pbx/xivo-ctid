@@ -60,14 +60,12 @@ class AgentServiceManager(object):
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
 
-        self.agent_call_back_login(self.agent_features_dao.agent_number(agent_id),
+        self.agent_call_back_login(agent_id,
                                    agent_exten,
                                    self.agent_features_dao.agent_context(agent_id))
 
     def logoff(self, agent_id):
-        number = self.agent_features_dao.agent_number(agent_id)
-        if number is not None:
-            self.agent_executor.logoff(number)
+        self.agent_executor.logoff(agent_id)
 
     def find_agent_exten(self, agent_id):
         user_ids = self.user_features_dao.find_by_agent_id(agent_id)
@@ -76,8 +74,8 @@ class AgentServiceManager(object):
             line_ids.extend(self.line_features_dao.find_line_id_by_user_id(user_id))
         return [self.line_features_dao.number(line_id) for line_id in line_ids]
 
-    def agent_call_back_login(self, number, exten, context):
-        self.agent_executor.agentcallbacklogin(number, exten, context)
+    def agent_call_back_login(self, agent_id, exten, context):
+        self.agent_executor.agentcallbacklogin(agent_id, exten, context)
 
     def queueadd(self, queuename, agentid, paused=False, skills=''):
         interface = self.agent_features_dao.agent_interface(agentid)

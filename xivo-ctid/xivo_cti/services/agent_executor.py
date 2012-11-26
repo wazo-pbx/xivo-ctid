@@ -22,11 +22,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_agent.ctl import error
+from xivo_agent.exception import AgentClientError
+
 
 class AgentExecutor(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, agent_client):
+        self._agent_client = agent_client
 
     def queue_add(self, queuename, interface, paused=False, skills=''):
         self.ami.queueadd(queuename, interface, paused, skills)
@@ -46,11 +49,15 @@ class AgentExecutor(object):
     def queues_unpause(self, interface):
         self.ami.queuepauseall(interface, 'False')
 
-    def logoff(self, number):
-        self.ami.agentlogoff(number)
+    def logoff(self, agent_id):
+        try:
+            self._agent_client.logoff_agent(agent_id)
+        except AgentClientError as e:
+            if e.error != error.NOT_LOGGED:
+                raise
 
-    def agentcallbacklogin(self, number, exten, context):
-        self.ami.agentcallbacklogin(number, exten, context)
+    def agentcallbacklogin(self, agent_id, exten, context):
+        self._agent_client.login_agent(agent_id, exten, context)
 
     def log_presence(self, agent_interface, presence):
         self.ami.queuelog('NONE', 'PRESENCE', interface=agent_interface, message=presence)

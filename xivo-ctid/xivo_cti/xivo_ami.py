@@ -221,17 +221,6 @@ class AMIClass(object):
         return self._exec_command('ExtensionState', [('Exten', extension),
                                                      ('Context', context)])
 
-    # \brief Logs in an Agent
-    def agentcallbacklogin(self, agentnum, extension, context):
-        return self._exec_command('AgentCallbackLogin', [('Agent', agentnum),
-                                                         ('Context', context),
-                                                         ('Exten', extension)])
-
-    # \brief Logs off an Agent
-    def agentlogoff(self, agentnum, soft=True):
-        return self._exec_command('AgentLogoff', [('Agent', agentnum),
-                                                  ('Soft', soft)])
-
     def meetmemute(self, meetme, usernum):
         return self._exec_command('MeetmeMute', (('Meetme', meetme),
                                                  ('Usernum', usernum)))
