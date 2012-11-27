@@ -42,13 +42,10 @@ class AgentServiceManager(object):
         self.line_features_dao = line_features_dao
         self.user_features_dao = user_features_dao
 
-    def log_agent(self, user_id, agent_id=None, agent_exten=None):
-        if not agent_id or agent_id == 'agent:special:me':
-            agent_id = self.user_features_dao.agent_id(user_id)
-        agent_id = IdConverter.xid_to_id(agent_id)
-
+    def log_agent(self, user_id, agent_xid=None, agent_exten=None):
+        agent_id = self._transform_agent_xid(user_id, agent_xid)
         if not agent_id:
-            logger.info('%s not an agent (%s)', agent_id, agent_exten)
+            logger.info('%s not an agent (%s)', agent_xid, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
         if not agent_exten:
@@ -63,6 +60,22 @@ class AgentServiceManager(object):
         self.agent_call_back_login(agent_id,
                                    agent_exten,
                                    self.agent_features_dao.agent_context(agent_id))
+
+    def logoff_agent(self, user_id, agent_xid=None):
+        agent_id = self._transform_agent_xid(user_id, agent_xid)
+        if not agent_id:
+            logger.info('%s not an agent', agent_xid)
+            return 'error', {'error_string': 'invalid_exten',
+                             'class': 'ipbxcommand'}
+
+        self.logoff(agent_id)
+
+    def _transform_agent_xid(self, user_id, agent_id):
+        if not agent_id or agent_id == 'agent:special:me':
+            agent_id = self.user_features_dao.agent_id(user_id)
+        else:
+            agent_id = IdConverter.xid_to_id(agent_id)
+        return agent_id
 
     def logoff(self, agent_id):
         self.agent_executor.logoff(agent_id)

@@ -73,7 +73,6 @@ IPBXCOMMANDS = [
     'record',
     'listen',
 
-    'agentlogout',
     'queueadd', 'queueremove',
     'queuepause', 'queueunpause',
     'queueremove_all',
@@ -703,12 +702,6 @@ class Command(object):
             return command_dict['agentphonenumber']
         user_ids = [user['id'] for user in self.innerdata.xod_config['users'].keeplist.itervalues() if user['agentid'] == str(agent_id)]
         return self.innerdata.xod_config['phones'].get_main_line(user_ids[0])['number'] if user_ids else None
-
-    def ipbxcommand_agentlogout(self):
-        agent, status = self.get_agent_info(self._commanddict)
-        if status['availability'] != AgentStatus.logged_out:
-            return [{'amicommand': 'agentlogoff',
-                     'amiargs': [agent['number'], True]}]
 
     def ipbxcommand_record(self):
         subcommand = self._commanddict.pop('subcommand')

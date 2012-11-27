@@ -79,6 +79,7 @@ from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_remove import QueueRemove
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
+from xivo_cti.cti.commands.agent_logout import AgentLogout
 
 logger = logging.getLogger('main')
 
@@ -221,6 +222,8 @@ class CTIServer(object):
 
         AgentLogin.register_callback_params(self._agent_service_manager.log_agent,
                                             ['user_id', 'agent_id', 'agent_phone_number'])
+        AgentLogout.register_callback_params(self._agent_service_manager.logoff_agent,
+                                             ['user_id', 'agent_id'])
 
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
 
