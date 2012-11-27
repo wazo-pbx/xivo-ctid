@@ -77,6 +77,16 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    def test_on_cti_agent_logout(self, mock_id_converter):
+        agent_id = 11
+        mock_id_converter.return_value = agent_id
+        self.agent_manager.logoff = Mock()
+
+        self.agent_manager.on_cti_agent_logout(self.connected_user_id, agent_id)
+
+        self.agent_manager.logoff.assert_called_once_with(agent_id)
+
+    @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_on_cti_agent_login_no_number(self, mock_id_converter):
         user_id = 10
         agent_id = 11
