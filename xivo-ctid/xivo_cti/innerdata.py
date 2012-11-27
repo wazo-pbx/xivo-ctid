@@ -240,6 +240,7 @@ class Safe(object):
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
         ami_handler.register_callback('Newstate', self.new_state)
+        ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _channel_extra_vars_agent_linked_unlinked(self, event):
         try:
@@ -275,6 +276,14 @@ class Safe(object):
         self._channel_extra_vars_agent_linked_unlinked(event)
         if 'Channel' in event and event['Channel'] in self.channels:
             self.sheetsend('agentunlinked', event['Channel'])
+
+    def handle_agent_login(self, event):
+        agent_id = event['AgentID']
+        self.handle_cti_stack('set', ('agents', 'updatestatus', agent_id))
+        agstatus = self.xod_status['agents'].get(agent_id)
+        agstatus['phonenumber'] = event['Extension']
+        # define relations for agent:x : channel:y and phone:z
+        self.handle_cti_stack('empty_stack')
 
     def handle_getlist_list_id(self, listname, user_id):
         if listname in self.xod_config or listname == 'queuemembers':
@@ -633,19 +642,6 @@ class Safe(object):
             # (end)
             status['pseudochan'] = None
             status['channels'] = {}
-        self.handle_cti_stack('empty_stack')
-
-    def agentlogin(self, agentnumber, channel):
-        idx = self.xod_config['agents'].idbyagentnumber(agentnumber)
-        self.handle_cti_stack('set', ('agents', 'updatestatus', idx))
-        agstatus = self.xod_status['agents'].get(idx)
-        if '@' in channel:
-            # static agent mode
-            agstatus['phonenumber'] = channel.split('@')[0]
-        else:
-            # dynamic agent mode
-            agstatus['channel'] = channel
-        # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
     def voicemailupdate(self, mailbox, new, old=None, waiting=None):

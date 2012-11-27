@@ -73,6 +73,8 @@ class Test(unittest.TestCase):
     def test_get_callbacks(self):
         event_1_name = 'TestEvent'
         event_2_name = 'NewChannel'
+        event_1 = self._new_event(event_1_name)
+        event_2 = self._new_event(event_2_name)
         log_function = Mock()
         newchannel_function = Mock()
 
@@ -80,9 +82,9 @@ class Test(unittest.TestCase):
         self.handler.register_callback(event_2_name, log_function)
         self.handler.register_callback(event_2_name, newchannel_function)
 
-        callbacks_1 = self.handler.get_callbacks(event_1_name)
-        callbacks_2 = self.handler.get_callbacks(event_2_name)
-        empty_callback = self.handler.get_callbacks('NoCallbackEvent')
+        callbacks_1 = self.handler.get_callbacks(event_1)
+        callbacks_2 = self.handler.get_callbacks(event_2)
+        empty_callback = self.handler.get_callbacks(self._new_event('NoCallbackEvent'))
 
         self.assertEqual(callbacks_1, [log_function])
         self.assertEqual(len(callbacks_1), 1)
@@ -119,6 +121,7 @@ class Test(unittest.TestCase):
 
     def test_callback_order(self):
         event_name = 'ATestEvent'
+        event = self._new_event(event_name)
 
         def f1(event):
             pass
@@ -130,6 +133,33 @@ class Test(unittest.TestCase):
         self.handler.register_callback(event_name, f2)
         expected_callbacks = [f1, f2]
 
-        callbacks = self.handler.get_callbacks(event_name)
+        callbacks = self.handler.get_callbacks(event)
 
         self.assertEqual(callbacks, expected_callbacks)
+
+    def test_userevent_callback(self):
+        userevent_name = 'Foobar'
+        callback = Mock()
+        self.handler.register_userevent_callback(userevent_name, callback)
+
+        callbacks = self.handler.get_callbacks(self._new_userevent(userevent_name))
+
+        self.assertEqual([callback], callbacks)
+
+    def test_subscribe_to_generic_userevent(self):
+        userevent_name = 'Foobar'
+        callback1 = Mock()
+        callback2 = Mock()
+
+        self.handler.register_callback('UserEvent', callback1)
+        self.handler.register_userevent_callback(userevent_name, callback2)
+
+        callbacks = self.handler.get_callbacks(self._new_userevent(userevent_name))
+
+        self.assertEqual(sorted([callback1, callback2]), sorted(callbacks))
+
+    def _new_event(self, event_name):
+        return {'Event': event_name}
+
+    def _new_userevent(self, userevent_name):
+        return {'Event': 'UserEvent', 'UserEvent': userevent_name}

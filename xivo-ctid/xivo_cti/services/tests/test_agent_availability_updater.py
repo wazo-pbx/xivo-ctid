@@ -44,8 +44,9 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_login(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
-                     'Event': 'Agentcallbacklogin'}
+        ami_event = {'AgentID': agent_id,
+                     'Event': 'UserEvent',
+                     'UserEvent': 'AgentLogin'}
         dao.agent.get_id_from_number.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 
@@ -55,8 +56,9 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_parse_ami_logout(self):
         agent_id = 12
-        ami_event = {'Agent': '1234',
-                     'Event': 'Agentcallbacklogoff'}
+        ami_event = {'AgentID': agent_id,
+                     'Event': 'UserEvent',
+                     'UserEvent': 'AgentLogoff'}
         dao.agent.get_id_from_number.return_value = agent_id
         mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
 

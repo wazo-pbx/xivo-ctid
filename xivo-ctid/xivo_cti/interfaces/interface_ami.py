@@ -234,7 +234,7 @@ class AMI(object):
         """
         functions = []
         if 'Event' in event:
-            functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event['Event']))
+            functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event))
         if evfunction in ami_def.evfunction_to_method_name:
             methodname = ami_def.evfunction_to_method_name.get(evfunction)
             if hasattr(self._ctiserver.commandclass, methodname):

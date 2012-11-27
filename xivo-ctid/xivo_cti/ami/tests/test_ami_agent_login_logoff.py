@@ -38,14 +38,14 @@ class TestAMIAgentLoginLogoff(unittest.TestCase):
         self.ami_agent_login_logoff.queue_statistics_producer = self.queue_statistics_producer
 
     def test_receive_event_agentlogin(self):
-        event = {'Agent': '22011'}
+        event = {'AgentNumber': '22011'}
 
         self.ami_agent_login_logoff.on_event_agent_login(event)
 
         self.queue_statistics_producer.on_agent_loggedon.assert_called_with('Agent/22011')
 
     def test_receive_event_agentlogoff(self):
-        event = {'Agent': '22011'}
+        event = {'AgentNumber': '22011'}
 
         self.ami_agent_login_logoff.on_event_agent_logoff(event)
 

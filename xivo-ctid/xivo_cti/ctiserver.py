@@ -243,12 +243,6 @@ class CTIServer(object):
         callback_handler.register_callback('QueueMemberRemoved', self._queuemember_service_manager.remove_dynamic_queuemember)
         callback_handler.register_callback('QueueMemberPaused', self._queuemember_service_manager.toggle_pause)
 
-        callback_handler.register_callback('Agentcallbacklogin',
-                                           lambda event: agent_availability_updater.parse_ami_login(event,
-                                                                                                    self._agent_availability_updater))
-        callback_handler.register_callback('Agentcallbacklogoff',
-                                           lambda event: agent_availability_updater.parse_ami_logout(event,
-                                                                                                     self._agent_availability_updater))
         callback_handler.register_callback('AgentConnect',
                                            lambda event: agent_availability_updater.parse_ami_answered(event,
                                                                                                        self._agent_availability_updater))
@@ -264,6 +258,15 @@ class CTIServer(object):
         callback_handler.register_callback('AgentComplete',
                                            lambda event: agent_on_call_updater.parse_ami_call_completed(event,
                                                                                                              self._agent_on_call_updater))
+
+        callback_handler.register_userevent_callback(
+            'AgentLogin',
+             lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
+        )
+        callback_handler.register_userevent_callback(
+            'AgentLogoff',
+            lambda event: agent_availability_updater.parse_ami_logout(event, self._agent_availability_updater)
+        )
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),

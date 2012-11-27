@@ -30,14 +30,12 @@ logger = logging.getLogger(__name__)
 
 
 def parse_ami_login(ami_event, agent_availability_updater):
-    agent_number = ami_event['Agent']
-    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_id = int(ami_event['AgentID'])
     agent_availability_updater.agent_logged_in(agent_id)
 
 
 def parse_ami_logout(ami_event, agent_availability_updater):
-    agent_number = ami_event['Agent']
-    agent_id = dao.agent.get_id_from_number(agent_number)
+    agent_id = int(ami_event['AgentID'])
     agent_availability_updater.agent_logged_out(agent_id)
 
 

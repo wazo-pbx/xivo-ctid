@@ -98,8 +98,6 @@ event_others['replies'] = [
     ]
 
 event_others['extra'] = [
-    'Agentcallbacklogin',  # (old events : find the way to replace them)
-    'Agentcallbacklogoff',  # (old events : find the way to replace them)
     'MeetmeNoAuthed',  # (xivo) when a member was accepted or not by an admin
     'MeetmePause',  # (xivo) when a meetme room is put in pause or activated
     'Atxfer',  # (patch to fetch ?)

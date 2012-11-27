@@ -260,9 +260,6 @@ class AMI_1_8(object):
     def ami_queuememberpaused(self, event):
         self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
 
-    def ami_agentcallbacklogin(self, event):
-        self.innerdata.agentlogin(event['Agent'], event['Loginchan'])
-
     def ami_parkedcall(self, event):
         channel = event['Channel']
         exten = event['Exten']
