@@ -41,15 +41,14 @@ PIDFILE = '/var/run/%s.pid' % DAEMONNAME
 PORTDELTA = 0
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
-XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
-XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
+XIVO_CONF_URI = 'http://localhost/cti/json.php/private/configuration'
 CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 
 def config_factory():
-    return Config(XIVO_CONF_FILE, XIVO_CONF_FILE_DEFAULT)
+    return Config(XIVO_CONF_URI)
 
 
 class Config(object):
