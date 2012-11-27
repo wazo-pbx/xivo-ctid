@@ -119,7 +119,6 @@ class Command(object):
 
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
             if self.ripbxid:
-                # regcommands = self.rinnerdata.get_user_permissions('regcommands', self.ruserid)
                 regcommands = REGCOMMANDS + LOGINCOMMANDS
                 if regcommands:
                     if self.command not in regcommands:
