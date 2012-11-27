@@ -27,11 +27,11 @@ import random
 import string
 import threading
 import time
+
 from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
-from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('cti_command')
 
@@ -263,7 +263,6 @@ class Command(object):
 
     def __check_capa_connection__(self, capaid):
         cdetails = self._connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         if capaid not in self._config.getconfig('profiles').keys():
             return 'unknownprofile'
@@ -273,7 +272,6 @@ class Command(object):
 
     def __connect_user__(self, availstate, c):
         cdetails = self._connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver._user_service_manager.set_presence(userid, availstate)
@@ -692,7 +690,7 @@ class Command(object):
         if '/' in command_dict['agentids']:
             ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
         else:
-            ipbx_id, agent_id = self.ipbxid, command_dict['agentids']
+            agent_id = command_dict['agentids']
         innerdata = self._ctiserver.safe
         if agent_id in innerdata.xod_config['agents'].keeplist:
             agent = innerdata.xod_config['agents'].keeplist[agent_id]
