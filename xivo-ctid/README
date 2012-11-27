@@ -2,7 +2,6 @@ Dependencies :
 
 apt-get install python-tz python-cjson
 
-
 To run dao tests
 
 - Install postgres sql
