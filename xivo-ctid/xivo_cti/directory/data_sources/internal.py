@@ -31,6 +31,7 @@ from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataS
 
 logger = logging.getLogger('internal directory')
 
+
 class InternalDirectoryDataSource(DirectoryDataSource):
 
     def __init__(self, db_uri, key_mapping):
@@ -65,6 +66,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
         try:
             cursor = connection['cur']
             cursor.query(request, columns, params)
+
             def generator():
                 try:
                     while True:
@@ -86,6 +88,6 @@ class InternalDirectoryDataSource(DirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        db_uri = (cti_context.get('config').getconfig('ipbx')['userfeatures_db_uri'])
+        db_uri = (cti_context.get('config').getconfig('ipbx')['db_uri'])
         key_mapping = cls._get_key_mapping(contents)
         return cls(db_uri, key_mapping)

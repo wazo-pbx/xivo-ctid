@@ -44,8 +44,6 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.services.queue_service_manager import NotAQueueException
-from xivo_cti.cti_config import Config
 from xivo_cti.dao import userfeaturesdao
 from xivo_cti.services.agent_status import AgentStatus
 
@@ -201,9 +199,9 @@ class Safe(object):
         self.contexts_mgr = directory.ContextsMgr()
         self.directories_mgr = directory.DirectoriesMgr()
 
-        cdr_uri = self._config.getconfig('ipbx')['cdr_db_uri']
-        dbconnection.add_connection(cdr_uri)
-        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(cdr_uri)
+        db_uri = self._config.getconfig('ipbx')['db_uri']
+        dbconnection.add_connection(db_uri)
+        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(db_uri)
 
         self.ctistack = []
 

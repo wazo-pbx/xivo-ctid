@@ -142,12 +142,12 @@ class CTIServer(object):
     def setup(self):
         self._set_logger()
         self._daemonize()
+        self._init_db_connection_pool()
+        self._init_db_uri()
         self._config = context.get('config')
         self._config.update()
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
-        self._init_db_connection_pool()
-        self._init_db_uri()
 
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
@@ -349,10 +349,10 @@ class CTIServer(object):
         return dbconnection.DBConnectionPool(dbconnection.DBConnection)
 
     def _init_db_uri(self):
-        queue_stats_uri = self._config.getconfig('main')['asterisk_queuestat_db']
-        QueueLogger.init(queue_stats_uri)
-        dbconnection.add_connection_as(queue_stats_uri, 'queue_stats')
-        dbconnection.add_connection_as(queue_stats_uri, 'asterisk')
+        db_uri = cti_config.DB_URI
+        QueueLogger.init(db_uri)
+        dbconnection.add_connection_as(db_uri, 'queue_stats')
+        dbconnection.add_connection_as(db_uri, 'asterisk')
 
     def main_loop(self):
         self.askedtoquit = False
@@ -365,10 +365,7 @@ class CTIServer(object):
         self.update_userlist = []
 
         xivoconf_general = self._config.getconfig('main')
-        # loads the general configuration
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
-        self._config.set_context_separation(xivoconf_general.get('context_separation'))
-
         socket.setdefaulttimeout(socktimeout)
 
         # sockets management

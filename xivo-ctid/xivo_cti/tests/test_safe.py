@@ -50,7 +50,7 @@ class TestSafe(unittest.TestCase):
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
         config = context.get('config')
-        config.xc_json = {'ipbx': {'cdr_db_uri': 'sqlite://'}}
+        config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
         self.safe = Safe(self._ctiserver, self._ipbx_id)
         self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
         self.safe.trunk_features_dao.get_ids.return_value = []

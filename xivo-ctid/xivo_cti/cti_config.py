@@ -28,6 +28,7 @@ import cjson
 import ssl
 import string
 import time
+from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao
 
 logger = logging.getLogger('cti_config')
 
@@ -44,6 +45,7 @@ XIVO_CONF_FILE = 'http://localhost/cti/json.php/private/configuration'
 XIVO_CONF_FILE_DEFAULT = 'file:///etc/pf-xivo/xivo-ctid/default_config.json'
 CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
+DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 
 def config_factory():
@@ -76,18 +78,55 @@ class Config(object):
                 logger.warning('Waiting for XiVO web services')
                 time.sleep(5)
 
-        for profdef in self.xc_json.get('profiles', {}).itervalues():
-            if profdef['xlets']:
-                for xlet_attr in profdef['xlets']:
-                    if 'N/A' in xlet_attr:
-                        xlet_attr.remove('N/A')
-                    # XXX what should be done when 'tabber' is in xlet_attr ?
-                    #     this was currently a no-op due to what looked like a
-                    #     programming bug
-                    if 'tab' in xlet_attr:
-                        del xlet_attr[2]
-                    if xlet_attr[1] == 'grid':
-                        del xlet_attr[2]
+        self.fill_conf()
+
+        self.set_context_separation(self.xc_json['main']['context_separation'])
+
+    def fill_conf(self):
+        self.xc_json['profiles'] = self._get_profiles()
+        self.xc_json['services'] = self._get_services()
+        self.xc_json['preferences'] = self._get_preferences()
+
+    def _get_profiles(self):
+        profiles = cti_profile_dao.get_profiles()
+        res = {}
+        for profile_key, profile_value in profiles.iteritems():
+            new_profile = profile_value
+            if 'xlets' in profile_value:
+                new_xlet_list = []
+                for xlet in profile_value['xlets']:
+                    new_xlet = [xlet['name'], xlet['layout']]
+                    if xlet['layout'] == 'dock':
+                        args = ''
+                        args += 'f' if xlet['floating'] else ''
+                        args += 'c' if xlet['closable'] else ''
+                        args += 'm' if xlet['movable'] else ''
+                        args += 's' if xlet['scrollable'] else ''
+                        new_xlet.append(args)
+                    if xlet['order']:
+                        new_xlet.append(str(xlet['order']))
+                    new_xlet_list.append(new_xlet)
+                    new_profile['xlets'] = new_xlet_list
+            res[profile_key] = new_profile
+        return res
+
+    def _get_services(self):
+        services = cti_service_dao.get_services()
+        res = {}
+        for service_key, service_value in services.iteritems():
+            new_service_key = 'itm_services_%s' % service_key
+            new_service_value = [''] if not service_value else service_value
+            res[new_service_key] = new_service_value
+        return res
+
+    def _get_preferences(self):
+        preferences = cti_preference_dao.get_preferences()
+        res = {}
+        for preference_key, preference_value in preferences.iteritems():
+            new_preference_key = 'itm_preferences_%s' % preference_key
+            new_preference_value = False if not preference_value else preference_value
+            res[new_preference_key] = new_preference_value
+        return res
 
     def getconfig(self, key=None):
         if key:
@@ -96,7 +135,7 @@ class Config(object):
             ret = self.xc_json
         return ret
 
-    def set_context_separation(self, context_separation=None):
+    def set_context_separation(self, context_separation):
         if context_separation:
             self._context_separation = context_separation
         else:
