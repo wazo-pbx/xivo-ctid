@@ -111,25 +111,13 @@ class Command(object):
         self.tinnerdata = self._ctiserver.safe
 
         messagebase = {'class': self.command}
+
         if self.commandid:
             messagebase['replyid'] = self.commandid
 
         if self.command in REGCOMMANDS and not self._connection.connection_details.get('logged'):
             messagebase['error_string'] = 'notloggedyet'
-
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
-            if self.ripbxid:
-                regcommands = REGCOMMANDS + LOGINCOMMANDS
-                if regcommands:
-                    if self.command not in regcommands:
-                        logger.warning('user %s/%s : unallowed command %s',
-                                       self.ripbxid, self.ruserid, self.command)
-                        messagebase['warning_string'] = 'unallowed'
-                else:
-                    logger.warning('user %s/%s : unallowed command %s - empty regcommands',
-                                   self.ripbxid, self.ruserid, self.command)
-                    messagebase['warning_string'] = 'no_regcommands'
-
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname) and 'warning_string' not in messagebase:
                 method_result = getattr(self, methodname)()
@@ -414,20 +402,11 @@ class Command(object):
     def regcommand_ipbxcommand(self):
         reply = {}
         self.ipbxcommand = self._commanddict.get('command')
-        if not self.ipbxcommand:
+
+        if not self.ipbxcommand or self.ipbxcommand not in IPBXCOMMANDS:
             return reply
+
         reply['command'] = self.ipbxcommand
-        if self.ipbxcommand not in IPBXCOMMANDS:
-            return None
-        profileclient = self.rinnerdata.xod_config['users'].keeplist[self.ruserid].get('profileclient')
-        profilespecs = self._config.getconfig('profiles').get(profileclient)
-        ipbxcommands_id = profilespecs.get('ipbxcommands')
-        # ipbxcommands = self._config.getconfig('ipbxcommands').get(ipbxcommands_id)
-        ipbxcommands = IPBXCOMMANDS
-        if self.ipbxcommand not in ipbxcommands:
-            logger.warning('profile %s : unallowed ipbxcommand %s (intermediate %s)',
-                           profileclient, self.ipbxcommand, ipbxcommands_id)
-            return reply
 
         methodname = 'ipbxcommand_%s' % self.ipbxcommand
 
