@@ -220,9 +220,9 @@ class CTIServer(object):
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
 
-        AgentLogin.register_callback_params(self._agent_service_manager.log_agent,
+        AgentLogin.register_callback_params(self._agent_service_manager.on_cti_agent_login,
                                             ['user_id', 'agent_id', 'agent_phone_number'])
-        AgentLogout.register_callback_params(self._agent_service_manager.logoff_agent,
+        AgentLogout.register_callback_params(self._agent_service_manager.on_cti_agent_logout,
                                              ['user_id', 'agent_id'])
 
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])

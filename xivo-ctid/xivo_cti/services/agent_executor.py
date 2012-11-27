@@ -49,15 +49,15 @@ class AgentExecutor(object):
     def queues_unpause(self, interface):
         self.ami.queuepauseall(interface, 'False')
 
+    def login(self, agent_id, exten, context):
+        self._agent_client.login_agent(agent_id, exten, context)
+
     def logoff(self, agent_id):
         try:
             self._agent_client.logoff_agent(agent_id)
         except AgentClientError as e:
             if e.error != error.NOT_LOGGED:
                 raise
-
-    def agentcallbacklogin(self, agent_id, exten, context):
-        self._agent_client.login_agent(agent_id, exten, context)
 
     def log_presence(self, agent_interface, presence):
         self.ami.queuelog('NONE', 'PRESENCE', interface=agent_interface, message=presence)

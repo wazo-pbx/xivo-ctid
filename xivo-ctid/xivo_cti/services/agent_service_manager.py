@@ -42,7 +42,7 @@ class AgentServiceManager(object):
         self.line_features_dao = line_features_dao
         self.user_features_dao = user_features_dao
 
-    def log_agent(self, user_id, agent_xid=None, agent_exten=None):
+    def on_cti_agent_login(self, user_id, agent_xid=None, agent_exten=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
         if not agent_id:
             logger.info('%s not an agent (%s)', agent_xid, agent_exten)
@@ -57,11 +57,9 @@ class AgentServiceManager(object):
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
 
-        self.agent_call_back_login(agent_id,
-                                   agent_exten,
-                                   self.agent_features_dao.agent_context(agent_id))
+        self.login(agent_id, agent_exten, self.agent_features_dao.agent_context(agent_id))
 
-    def logoff_agent(self, user_id, agent_xid=None):
+    def on_cti_agent_logout(self, user_id, agent_xid=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
         if not agent_id:
             logger.info('%s not an agent', agent_xid)
@@ -77,9 +75,6 @@ class AgentServiceManager(object):
             agent_id = IdConverter.xid_to_id(agent_id)
         return agent_id
 
-    def logoff(self, agent_id):
-        self.agent_executor.logoff(agent_id)
-
     def find_agent_exten(self, agent_id):
         user_ids = self.user_features_dao.find_by_agent_id(agent_id)
         line_ids = []
@@ -87,8 +82,11 @@ class AgentServiceManager(object):
             line_ids.extend(self.line_features_dao.find_line_id_by_user_id(user_id))
         return [self.line_features_dao.number(line_id) for line_id in line_ids]
 
-    def agent_call_back_login(self, agent_id, exten, context):
-        self.agent_executor.agentcallbacklogin(agent_id, exten, context)
+    def login(self, agent_id, exten, context):
+        self.agent_executor.login(agent_id, exten, context)
+
+    def logoff(self, agent_id):
+        self.agent_executor.logoff(agent_id)
 
     def queueadd(self, queuename, agentid, paused=False, skills=''):
         interface = self.agent_features_dao.agent_interface(agentid)

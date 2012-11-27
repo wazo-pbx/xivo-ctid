@@ -58,7 +58,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                                  self.user_features_dao)
 
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_log_agent(self, mock_id_converter):
+    def test_on_cti_agent_login(self, mock_id_converter):
         user_id = 10
         agent_id = 11
         line_id = 12
@@ -70,16 +70,14 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
         self.agent_features_dao.agent_context.return_value = agent_context
-        self.agent_manager.agent_call_back_login = Mock()
+        self.agent_manager.login = Mock()
 
-        self.agent_manager.log_agent(self.connected_user_id, agent_id, self.agent_1_exten)
+        self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id, self.agent_1_exten)
 
-        self.agent_manager.agent_call_back_login.assert_called_once_with(agent_id,
-                                                                         self.agent_1_exten,
-                                                                         agent_context)
+        self.agent_manager.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_log_agent_no_number(self, mock_id_converter):
+    def test_on_cti_agent_login_no_number(self, mock_id_converter):
         user_id = 10
         agent_id = 11
         line_id = 12
@@ -91,32 +89,11 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
         self.agent_features_dao.agent_context.return_value = agent_context
-        self.agent_manager.agent_call_back_login = Mock()
+        self.agent_manager.login = Mock()
 
-        self.agent_manager.log_agent(self.connected_user_id, agent_id)
+        self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id)
 
-        self.agent_manager.agent_call_back_login.assert_called_once_with(agent_id,
-                                                                         self.line_number,
-                                                                         agent_context)
-
-    def test_find_agent_exten(self):
-        agent_id = 11
-        self.user_features_dao.find_by_agent_id.return_value = [12]
-        self.line_features_dao.find_line_id_by_user_id.return_value = [13]
-        self.line_features_dao.number.return_value = self.line_number
-
-        extens = self.agent_manager.find_agent_exten(agent_id)
-
-        self.assertEqual(extens[0], self.line_number)
-
-    def test_agent_callback_login(self):
-        number, exten, context = '1000', '1234', 'test'
-
-        self.agent_manager.agent_call_back_login(number,
-                                                 exten,
-                                                 context)
-
-        self.agent_executor.agentcallbacklogin.assert_called_once_with(number, exten, context)
+        self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_agent_special_me(self, mock_id_converter):
@@ -130,13 +107,28 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
         self.agent_features_dao.agent_context.return_value = agent_context
-        self.agent_manager.agent_call_back_login = Mock()
+        self.agent_manager.login = Mock()
 
-        self.agent_manager.log_agent(user_id, 'agent:special:me')
+        self.agent_manager.on_cti_agent_login(user_id, 'agent:special:me')
 
-        self.agent_manager.agent_call_back_login.assert_called_once_with(agent_id,
-                                                                         self.line_number,
-                                                                         agent_context)
+        self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
+
+    def test_find_agent_exten(self):
+        agent_id = 11
+        self.user_features_dao.find_by_agent_id.return_value = [12]
+        self.line_features_dao.find_line_id_by_user_id.return_value = [13]
+        self.line_features_dao.number.return_value = self.line_number
+
+        extens = self.agent_manager.find_agent_exten(agent_id)
+
+        self.assertEqual(extens[0], self.line_number)
+
+    def test_login(self):
+        number, exten, context = '1000', '1234', 'test'
+
+        self.agent_manager.login(number, exten, context)
+
+        self.agent_executor.login.assert_called_once_with(number, exten, context)
 
     def test_logoff(self):
         agent_id = 44
