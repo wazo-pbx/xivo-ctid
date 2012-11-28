@@ -27,11 +27,11 @@ import random
 import string
 import threading
 import time
+
 from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
-from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('cti_command')
 
@@ -111,26 +111,13 @@ class Command(object):
         self.tinnerdata = self._ctiserver.safe
 
         messagebase = {'class': self.command}
+
         if self.commandid:
             messagebase['replyid'] = self.commandid
 
         if self.command in REGCOMMANDS and not self._connection.connection_details.get('logged'):
             messagebase['error_string'] = 'notloggedyet'
-
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
-            if self.ripbxid:
-                # regcommands = self.rinnerdata.get_user_permissions('regcommands', self.ruserid)
-                regcommands = REGCOMMANDS + LOGINCOMMANDS
-                if regcommands:
-                    if self.command not in regcommands:
-                        logger.warning('user %s/%s : unallowed command %s',
-                                       self.ripbxid, self.ruserid, self.command)
-                        messagebase['warning_string'] = 'unallowed'
-                else:
-                    logger.warning('user %s/%s : unallowed command %s - empty regcommands',
-                                   self.ripbxid, self.ruserid, self.command)
-                    messagebase['warning_string'] = 'no_regcommands'
-
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname) and 'warning_string' not in messagebase:
                 method_result = getattr(self, methodname)()
@@ -263,7 +250,6 @@ class Command(object):
 
     def __check_capa_connection__(self, capaid):
         cdetails = self._connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         if capaid not in self._config.getconfig('profiles').keys():
             return 'unknownprofile'
@@ -273,7 +259,6 @@ class Command(object):
 
     def __connect_user__(self, availstate, c):
         cdetails = self._connection.connection_details
-        ipbxid = cdetails.get('ipbxid')
         userid = cdetails.get('userid')
         self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
         self._ctiserver._user_service_manager.set_presence(userid, availstate)
@@ -417,20 +402,11 @@ class Command(object):
     def regcommand_ipbxcommand(self):
         reply = {}
         self.ipbxcommand = self._commanddict.get('command')
-        if not self.ipbxcommand:
+
+        if not self.ipbxcommand or self.ipbxcommand not in IPBXCOMMANDS:
             return reply
+
         reply['command'] = self.ipbxcommand
-        if self.ipbxcommand not in IPBXCOMMANDS:
-            return None
-        profileclient = self.rinnerdata.xod_config['users'].keeplist[self.ruserid].get('profileclient')
-        profilespecs = self._config.getconfig('profiles').get(profileclient)
-        ipbxcommands_id = profilespecs.get('ipbxcommands')
-        # ipbxcommands = self._config.getconfig('ipbxcommands').get(ipbxcommands_id)
-        ipbxcommands = IPBXCOMMANDS
-        if self.ipbxcommand not in ipbxcommands:
-            logger.warning('profile %s : unallowed ipbxcommand %s (intermediate %s)',
-                           profileclient, self.ipbxcommand, ipbxcommands_id)
-            return reply
 
         methodname = 'ipbxcommand_%s' % self.ipbxcommand
 
@@ -692,7 +668,7 @@ class Command(object):
         if '/' in command_dict['agentids']:
             ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
         else:
-            ipbx_id, agent_id = self.ipbxid, command_dict['agentids']
+            agent_id = command_dict['agentids']
         innerdata = self._ctiserver.safe
         if agent_id in innerdata.xod_config['agents'].keeplist:
             agent = innerdata.xod_config['agents'].keeplist[agent_id]

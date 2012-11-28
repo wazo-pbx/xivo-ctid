@@ -31,6 +31,4 @@ setup(
               'xivo_cti.statistics',
               'xivo_cti.tools'],
     scripts=['bin/xivo-ctid'],
-    data_files=[('/etc/pf-xivo/xivo-ctid', ['etc/allowedxlets.json',
-                                            'etc/default_config.json'])],
 )

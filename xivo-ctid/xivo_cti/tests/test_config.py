@@ -49,42 +49,6 @@ class TestConfig(unittest.TestCase):
 
         self.assertFalse(config.part_context())
 
-    def test_get_var(self):
-        config = Config([])
-        config.xc_json = {
-            'key1': {
-                'key12': {
-                    'key13': 'var'
-                }
-            },
-            'key2': 'var2'
-        }
-
-        expected_result = 'var'
-
-        result = config.get_var('key1', 'key12', 'key13')
-
-        self.assertEquals(result, expected_result)
-
-        expected_result = 'var2'
-
-        result = config.get_var('key2')
-
-        self.assertEquals(result, expected_result)
-
-    def test_get_var_unknow_key(self):
-        config = Config([])
-        config.xc_json = {
-            'key1': {
-                'key12': {
-                    'key13': 'var'
-                }
-            },
-            'key2': 'var2'
-        }
-
-        self.assertRaises(IndexError, config.get_var, 'key1', 'key666')
-
     @patch('xivo_dao.cti_service_dao.get_services')
     def test_get_services(self, mock_get_services_dao):
         expected_result = {

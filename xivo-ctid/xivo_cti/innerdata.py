@@ -946,25 +946,6 @@ class Safe(object):
         rep.append('--------------')
         return rep
 
-    def get_user_permissions(self, kind, userid):
-        ret = {}
-        if kind not in self.permission_kinds:
-            return ret
-        profileclient = self.user_features_dao.get_profile(userid)
-        if profileclient:
-            profilespecs = self._config.getconfig('profiles').get(profileclient)
-            if profilespecs:
-                kindid = profilespecs.get(kind)
-                if kindid:
-                    ret = self._config.getconfig(kind).get(kindid)
-                else:
-                    logger.warning('get_user_permissions %s %s : no kindid', kind, userid)
-            else:
-                logger.warning('get_user_permissions %s %s : no profilespecs', kind, userid)
-        else:
-            logger.warning('get_user_permissions %s %s : no profileclient', kind, userid)
-        return ret
-
     # IPBX side
 
     def ast_channel_to_termination(self, channel):

@@ -1,5 +1,27 @@
 # -*- coding: utf-8 -*-
 
+# XiVO CTI Server
+#
+# Copyright (C) 2007-2012  Avencall
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Alternatively, XiVO CTI Server is available under other licenses directly
+# contracted with Avencall. See the LICENSE file at top of the souce tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import logging
 
 logger = logging.getLogger('PresenceServiceExecutor')
@@ -25,18 +47,23 @@ class PresenceServiceExecutor(object):
     def __init__(self,
                  user_service_manager,
                  agent_service_manager,
-                 user_features_dao):
+                 user_features_dao,
+                 config):
         self.user_service_manager = user_service_manager
         self.agent_service_manager = agent_service_manager
         self.user_features_dao = user_features_dao
+        self.config = config
 
     def execute_actions(self, user_id, presence):
-        actions = self._innerdata.get_user_permissions('userstatus', user_id)
+        user_profile = self.user_features_dao.get_profile(user_id)
+        config = self.config.getconfig()
+        presence_group_name = config['profiles'][user_profile]['userstatus']
+        presence_group = config['userstatus'][presence_group_name]
 
-        if presence not in actions:
+        if presence not in presence_group:
             raise ValueError('Unknown service %s' % presence)
 
-        list_action = actions[presence].get('actions', {})
+        list_action = presence_group[presence].get('actions', {})
 
         for action_name, action_param in list_action.iteritems():
             if action_name in self.services_actions_list:
