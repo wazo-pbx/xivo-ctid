@@ -22,10 +22,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from itertools import izip
-from xivo_cti import db_connection_manager
-from xivo_cti.context import context as cti_context
 import logging
+
+from itertools import izip
+from xivo_cti import db_connection_manager, cti_config
+from xivo_cti.context import context as cti_context
 from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
 
 
@@ -34,8 +35,7 @@ logger = logging.getLogger('internal directory')
 
 class InternalDirectoryDataSource(DirectoryDataSource):
 
-    def __init__(self, db_uri, key_mapping):
-        self._db_uri = db_uri
+    def __init__(self, key_mapping):
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
 
@@ -61,7 +61,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
         params = ('%' + string + '%',) * len(test_columns)
         columns = tuple(self._key_mapping.itervalues())
 
-        conn_mgr = db_connection_manager.DbConnectionPool(self._db_uri)
+        conn_mgr = db_connection_manager.DbConnectionPool(cti_config.DB_URI)
         connection = conn_mgr.get()
         try:
             cursor = connection['cur']
@@ -88,6 +88,5 @@ class InternalDirectoryDataSource(DirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        db_uri = (cti_context.get('config').getconfig('ipbx')['db_uri'])
         key_mapping = cls._get_key_mapping(contents)
-        return cls(db_uri, key_mapping)
+        return cls(key_mapping)

@@ -277,9 +277,7 @@ class Command(object):
     def regcommand_actionfiche(self):
         reply = {}
         infos = self._commanddict.get('infos')
-        uri = self._config.getconfig('ipbx').get('db_uri')
-        self.rinnerdata.fill_user_ctilog(uri,
-                                         self.ruserid,
+        self.rinnerdata.fill_user_ctilog(self.ruserid,
                                          'cticommand:actionfiche',
                                          infos.get('buttonname'))
         logger.info('Received from client : %s' % infos.get('variables'))

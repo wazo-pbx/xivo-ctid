@@ -30,7 +30,7 @@ import string
 import time
 import Queue
 import cti_urllist
-from xivo_cti import lists
+from xivo_cti import lists, cti_config
 from xivo_cti.lists import *
 from xivo_cti.services import call_history_manager
 from xivo_cti.directory import directory
@@ -199,9 +199,8 @@ class Safe(object):
         self.contexts_mgr = directory.ContextsMgr()
         self.directories_mgr = directory.DirectoriesMgr()
 
-        db_uri = self._config.getconfig('ipbx')['db_uri']
-        dbconnection.add_connection(db_uri)
-        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(db_uri)
+        dbconnection.add_connection(cti_config.DB_URI)
+        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(cti_config.DB_URI)
 
         self.ctistack = []
 
@@ -972,7 +971,7 @@ class Safe(object):
         except (LookupError, ValueError):
             return None
 
-    def fill_user_ctilog(self, uri, userid, what, options='', callduration=None):
+    def fill_user_ctilog(self, userid, what, options='', callduration=None):
         request = "INSERT INTO ctilog (${columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
@@ -985,7 +984,7 @@ class Safe(object):
                      userstatus,
                      what, options, callduration)
 
-        with db_connection_manager.DbConnectionPool(uri) as connection:
+        with db_connection_manager.DbConnectionPool(cti_config.DB_URI) as connection:
             connection['cur'].query(request, columns, arguments)
             connection['conn'].commit()
 

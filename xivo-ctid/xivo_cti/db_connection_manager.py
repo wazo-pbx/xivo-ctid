@@ -25,7 +25,6 @@
 import Queue
 
 from xivo import anysql
-from xivo.BackSQL import backpostgresql
 
 
 class DbConnectionPool(object):
