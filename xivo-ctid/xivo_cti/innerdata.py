@@ -57,16 +57,13 @@ class Safe(object):
     urlvars = {
         'users': 'urllist_users',
         'phones': 'urllist_lines',
-        # 'devices' : 'urllist_devices',
         'agents': 'urllist_agents',
         'queues': 'urllist_queues',
         'groups': 'urllist_groups',
         'meetmes': 'urllist_meetmes',
         'voicemails': 'urllist_voicemails',
         'incalls': 'urllist_incalls',
-        # 'outcalls' : 'urllist_outcalls',
         'contexts': 'urllist_contexts',
-        # 'entities' : 'urllist_entities',
         'phonebooks': 'urllist_phonebook'
     }
 
