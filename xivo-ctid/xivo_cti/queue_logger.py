@@ -25,7 +25,7 @@
 import time
 import logging
 
-from xivo_cti import db_connection_manager
+from xivo_cti import db_connection_manager, cti_config
 from xivo_cti.ami import ami_callback_handler
 
 logger = logging.getLogger('XiVO queue logger')
@@ -39,8 +39,7 @@ class QueueLogger(object):
                             # from the cache when a call is not answered
 
     @classmethod
-    def init(cls, uri):
-        cls._uri = uri
+    def init(cls):
         cls.last_transaction = time.time()
         cls.cache = {}
         cls._register_ami_callbacks()
@@ -55,7 +54,7 @@ class QueueLogger(object):
 
     @classmethod
     def _store_in_db(cls, sql):
-        with db_connection_manager.DbConnectionPool(cls._uri) as connection:
+        with db_connection_manager.DbConnectionPool(cti_config.DB_URI) as connection:
             connection['cur'].query(str(sql))
             connection['conn'].commit()
 

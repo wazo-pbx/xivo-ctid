@@ -52,6 +52,7 @@ def config_factory():
 
 
 class Config(object):
+
     def __init__(self, * urilist):
         self.urilist = urilist
         self.xc_json = {}

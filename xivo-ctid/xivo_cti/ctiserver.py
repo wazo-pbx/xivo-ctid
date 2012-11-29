@@ -349,10 +349,7 @@ class CTIServer(object):
         return dbconnection.DBConnectionPool(dbconnection.DBConnection)
 
     def _init_db_uri(self):
-        db_uri = cti_config.DB_URI
-        QueueLogger.init(cti_config.DB_URI)
-        dbconnection.add_connection_as(db_uri, 'queue_stats')
-        dbconnection.add_connection_as(db_uri, 'asterisk')
+        dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
 
     def main_loop(self):
         self.askedtoquit = False
