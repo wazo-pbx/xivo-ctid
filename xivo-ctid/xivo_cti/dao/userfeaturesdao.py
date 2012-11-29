@@ -165,6 +165,10 @@ class UserFeaturesDAO(object):
         return self._get_nested_contexts(line_contexts)
 
 
+def all():
+    return _session().query(UserFeatures).all()
+
+
 def find_by_line_id(line_id):
     return _session().query(LineFeatures.iduserfeatures).filter(LineFeatures.id == line_id)[0].iduserfeatures
 
