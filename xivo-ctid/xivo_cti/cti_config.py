@@ -47,29 +47,21 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 
-def config_factory():
-    return Config()
-
-
 class Config(object):
 
     def __init__(self):
         self.xc_json = {}
-        self._context_separation = None
 
     def update(self):
-        self.update_uri(XIVO_CONF_URI)
+        self.update_uri()
 
-    def update_uri(self, uri):
-        if 'json' not in uri or ':' not in uri:
-            return
-
+    def update_uri(self):
         got_webi_answer = False
         while not got_webi_answer:
             try:
-                response = urllib2.urlopen(uri)
-                self.json_config = response.read().replace('\/', '/')
-                self.xc_json = cjson.decode(self.json_config)
+                response = urllib2.urlopen(XIVO_CONF_URI)
+                json_config = response.read().replace('\/', '/')
+                self.xc_json = cjson.decode(json_config)
                 got_webi_answer = True
             except Exception:
                 logger.warning('Waiting for XiVO web services')

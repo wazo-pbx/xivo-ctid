@@ -45,7 +45,7 @@ class TestSafe(unittest.TestCase):
     _ipbx_id = 'xivo'
 
     def setUp(self):
-        context.register('config', cti_config.config_factory)
+        context.register('config', cti_config.Config())
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
