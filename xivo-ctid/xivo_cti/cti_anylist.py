@@ -23,15 +23,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import cti_urllist
 from collections import defaultdict
 from xivo_cti.context import context as cti_context
-from xivo_cti.cti_config import Config
+from xivo_cti import cti_urllist, cti_daolist
 
 logger = logging.getLogger('anylist')
 
+DAO_LIST = ['users', 'lines', 'groups', 'agents', 'meetme',
+            'queues', 'voicemail', 'context', 'phonebook', 'incall']
+
 
 class AnyList(object):
+
     def __init__(self, newurls):
         self.commandclass = None
         self._ctiserver = None
@@ -48,11 +51,14 @@ class AnyList(object):
         newlist = {}
 
         # Get new list from Web services.
-        for urllist in self.requested_list.itervalues():
-            gl = urllist.getlist(* self.anylist_properties['urloptions'])
-            if gl == 2:
-                tmplist = getattr(self.commandclass, self.getter)(urllist.jsonreply)
-                newlist.update(tmplist)
+        for instance in self.requested_list.itervalues():
+            if instance.__class__.__name__ == 'UrlList':
+                gl = instance.getlist(* self.anylist_properties['urloptions'])
+                if gl == 2:
+                    tmplist = getattr(self.commandclass, self.getter)(instance.jsonreply)
+                    newlist.update(tmplist)
+            elif instance.__class__.__name__ == 'DaoList':
+                newlist = instance.get_list()
 
         # Update computed fields, if any.
         self.update_computed_fields(newlist)
@@ -74,6 +80,7 @@ class AnyList(object):
                             keywords.append(bk)
                     if keywords:
                         lstchange[a] = keywords
+
         for a, b in oldlist.iteritems():
             if a not in newlist:
                 lstdel.append(a)
@@ -105,7 +112,11 @@ class AnyList(object):
     def __add_urls__(self, newurls):
         for url in newurls:
             if url not in self.requested_list:
-                self.requested_list[url] = cti_urllist.UrlList(url)
+                listname = url.split('/').pop(-1)
+                if listname in DAO_LIST:
+                    self.requested_list[url] = cti_daolist.DaoList(listname)
+                else:
+                    self.requested_list[url] = cti_urllist.UrlList(url)
 
     def setandupdate(self, newurls):
         self.__add_urls__(newurls)
