@@ -69,6 +69,8 @@ class Config(object):
 
         self.fill_conf()
 
+        logger.info('Config successfully updated')
+
     def fill_conf(self):
         self.xc_json['profiles'] = self._get_profiles()
         self.xc_json['services'] = self._get_services()
