@@ -416,6 +416,7 @@ class Safe(object):
         return do_fill_lines
 
     def update_config_list(self, listname, state, id):
+        start_time = time.time()
         try:
             deltas = self.xod_config[listname].update()
             added = self._update_config_list_add(listname, deltas)
@@ -425,6 +426,8 @@ class Safe(object):
                 self.fill_lines_into_users()
         except LookupError:
             logger.exception('update_config_list %s', listname)
+        end_time = time.time()
+        logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
 
     def update_config_list_all(self):
         for listname in self.urlvars:
