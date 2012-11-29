@@ -77,8 +77,6 @@ class Config(object):
 
         self.fill_conf()
 
-        self.set_context_separation(self.xc_json['main']['context_separation'])
-
     def fill_conf(self):
         self.xc_json['profiles'] = self._get_profiles()
         self.xc_json['services'] = self._get_services()
@@ -132,12 +130,5 @@ class Config(object):
             ret = self.xc_json
         return ret
 
-    def set_context_separation(self, context_separation):
-        if context_separation:
-            self._context_separation = context_separation
-        else:
-            self._context_separation = False
-        logger.debug('Context separation: %s', self._context_separation)
-
     def part_context(self):
-        return self._context_separation == True
+        return self.xc_json['main']['context_separation'] == True

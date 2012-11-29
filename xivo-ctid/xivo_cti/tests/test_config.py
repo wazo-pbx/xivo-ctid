@@ -29,23 +29,18 @@ from mock import patch
 
 class TestConfig(unittest.TestCase):
 
-    def test_set_parting(self):
-        config = Config()
-
-        self.assertEqual(config._context_separation, None)
-
-        config.set_context_separation(True)
-
-        self.assertTrue(config._context_separation)
-
     def test_part_context(self):
         config = Config()
 
-        config.set_context_separation(True)
+        config.xc_json = {
+            'main': {'context_separation': True}
+        }
 
         self.assertTrue(config.part_context)
 
-        config.set_context_separation(False)
+        config.xc_json = {
+            'main': {'context_separation': False}
+        }
 
         self.assertFalse(config.part_context())
 
