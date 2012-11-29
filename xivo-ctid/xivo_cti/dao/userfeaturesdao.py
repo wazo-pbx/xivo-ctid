@@ -43,79 +43,79 @@ def _session():
 
 class UserFeaturesDAO(object):
 
-    def __init__(self, session):
-        self._session = session
+    def __init__(self):
+        pass
 
     def enable_dnd(self, user_id):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 1})
-        self._session.commit()
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 1})
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = True
 
     def disable_dnd(self, user_id):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 0})
-        self._session.commit()
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 0})
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = False
 
     def enable_filter(self, user_id):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 1})
-        self._session.commit()
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 1})
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = True
 
     def disable_filter(self, user_id):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 0})
-        self._session.commit()
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 0})
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
 
     def enable_unconditional_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 1,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 1,
                                                                                      'destunc': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
 
     def disable_unconditional_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 0,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 0,
                                                                                      'destunc': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = False
 
     def enable_rna_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 1,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 1,
                                                                                      'destrna': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
 
     def disable_rna_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 0,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 0,
                                                                                      'destrna': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = False
 
     def enable_busy_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 1,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 1,
                                                                                      'destbusy': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
 
     def disable_busy_fwd(self, user_id, destination):
-        self._session.query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 0,
+        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 0,
                                                                                      'destbusy': destination})
-        self._session.commit()
+        _session().commit()
         self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
 
     def get(self, user_id):
-        result = self._session.query(UserFeatures).filter(UserFeatures.id == int(user_id)).first()
+        result = _session().query(UserFeatures).filter(UserFeatures.id == int(user_id)).first()
         if result is None:
             raise LookupError()
         return result
 
     def find_by_agent_id(self, agent_id):
-        res = self._session.query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))
+        res = _session().query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))
         return [user.id for user in res]
 
     def agent_id(self, user_id):
@@ -144,7 +144,7 @@ class UserFeaturesDAO(object):
         return self.get(user_id).profileclient
 
     def _get_included_contexts(self, context):
-        return [line.include for line in (self._session.query(ContextInclude.include)
+        return [line.include for line in (_session().query(ContextInclude.include)
                                            .filter(ContextInclude.context == context))]
 
     def _get_nested_contexts(self, contexts):
@@ -159,15 +159,10 @@ class UserFeaturesDAO(object):
         return list(set(contexts))
 
     def get_reachable_contexts(self, user_id):
-        line_contexts = [line.context for line in (self._session.query(LineFeatures)
+        line_contexts = [line.context for line in (_session().query(LineFeatures)
                                                     .filter(LineFeatures.iduserfeatures == user_id))]
 
         return self._get_nested_contexts(line_contexts)
-
-    @classmethod
-    def new_from_uri(cls, uri):
-        connection = dbconnection.get_connection(uri)
-        return cls(connection.get_session())
 
 
 def find_by_line_id(line_id):

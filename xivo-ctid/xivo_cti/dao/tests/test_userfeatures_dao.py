@@ -81,7 +81,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
-        self.dao = UserFeaturesDAO(self.session)
+        self.dao = UserFeaturesDAO()
 
     def test_get_one_result(self):
         user_id = self._insert_user('first')
@@ -102,7 +102,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
     def test_set_dnd(self):
         user_id = self._insert_user_dnd_not_set()
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.enable_dnd(user_id)
@@ -111,7 +111,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
     def test_unset_dnd(self):
         user_id = self._insert_user_dnd_set()
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.disable_dnd(user_id)
@@ -162,7 +162,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
     def test_enable_filter(self):
         user_id = self._insert_user_with_filter(0)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.enable_filter(user_id)
@@ -172,7 +172,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
 
     def test_disable_filter(self):
         user_id = self._insert_user_with_filter(1)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.disable_filter(user_id)
@@ -204,7 +204,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_enable_unconditional_fwd(self):
         destination = '765'
         user_id = self._insert_user_with_unconditional_fwd(destination, 0)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.enable_unconditional_fwd(user_id, destination)
@@ -237,7 +237,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_unconditional_fwd_disabled(self):
         destination = '4321'
         user_id = self._insert_user_with_unconditional_fwd('', 0)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.disable_unconditional_fwd(user_id, destination)
@@ -258,7 +258,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_rna_fwd_enabled(self):
         destination = '4321'
         user_id = self._insert_user_with_rna_fwd('', 1)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.enable_rna_fwd(user_id, destination)
@@ -271,7 +271,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_rna_fwd_disabled(self):
         destination = '4325'
         user_id = self._insert_user_with_rna_fwd('', 0)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.disable_rna_fwd(user_id, destination)
@@ -312,7 +312,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_busy_fwd_disabled(self):
         destination = '435'
         user_id = self._insert_user_with_busy_fwd('', 0)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.disable_busy_fwd(user_id, destination)
@@ -325,7 +325,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def test_busy_fwd_enabled(self):
         destination = '435'
         user_id = self._insert_user_with_busy_fwd('', 1)
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
         dao._innerdata = self._innerdata
 
         dao.enable_busy_fwd(user_id, destination)
@@ -345,7 +345,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
         self.session.add(user)
         self.session.commit()
 
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
 
         user_ids = dao.find_by_agent_id(agent_id)
 
@@ -361,7 +361,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
         self.session.add(user)
         self.session.commit()
 
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
 
         res = dao.agent_id(user.id)
 
@@ -375,7 +375,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
         self.session.add(user)
         self.session.commit()
 
-        dao = UserFeaturesDAO(self.session)
+        dao = UserFeaturesDAO()
 
         res = dao.agent_id(user.id)
 
