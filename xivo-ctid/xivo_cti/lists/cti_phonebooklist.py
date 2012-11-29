@@ -27,24 +27,21 @@ from xivo_cti.cti_anylist import AnyList
 
 logger = logging.getLogger('phonebook')
 
+
 class PhonebookList(AnyList):
 
     def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = { 'name' : 'phonebook',
-                                    'urloptions' : (1, 5, True)}
+        self.anylist_properties = {'name': 'phonebook',
+                                   'urloptions': (1, 5, True)}
         AnyList.__init__(self, newurls)
         self.commandclass = self
         self.getter = '_getphonebook'
 
     def setcommandclass(self, commandclass):
-        # WARNING: this is a hack, i.e. we are overriding the setcommandclass
-        # so that it's not possible to change the commandclass, and this
-        # breaks with the expected behaviour of the setcommandclass method
-        logger.debug("In PhonebookList: ignoring setcommandclass")
+        pass
 
     def setgetter(self, getter):
-        # WARNING: this is a hack, see setcommandclass for more info.
-        logger.debug("In PhonebookList: ignoring setgetter")
+        pass
 
     def _getphonebook(self, jsonreply):
         pblist = {}
