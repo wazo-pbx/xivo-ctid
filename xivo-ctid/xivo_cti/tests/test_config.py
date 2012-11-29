@@ -30,7 +30,7 @@ from mock import patch
 class TestConfig(unittest.TestCase):
 
     def test_set_parting(self):
-        config = Config([])
+        config = Config()
 
         self.assertEqual(config._context_separation, None)
 
@@ -39,7 +39,7 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(config._context_separation)
 
     def test_part_context(self):
-        config = Config([])
+        config = Config()
 
         config.set_context_separation(True)
 
@@ -67,7 +67,7 @@ class TestConfig(unittest.TestCase):
                        "fwdrna"]
         }
 
-        config = Config([])
+        config = Config()
 
         result = config._get_services()
 
@@ -93,7 +93,7 @@ class TestConfig(unittest.TestCase):
             }
         }
 
-        config = Config([])
+        config = Config()
 
         result = config._get_preferences()
 
@@ -151,7 +151,7 @@ class TestConfig(unittest.TestCase):
             }
         }
 
-        config = Config([])
+        config = Config()
 
         result = config._get_profiles()
 

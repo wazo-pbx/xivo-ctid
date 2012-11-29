@@ -48,20 +48,17 @@ DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 
 def config_factory():
-    return Config(XIVO_CONF_URI)
+    return Config()
 
 
 class Config(object):
 
-    def __init__(self, * urilist):
-        self.urilist = urilist
+    def __init__(self):
         self.xc_json = {}
         self._context_separation = None
 
     def update(self):
-        # the aim of the urilist would be to handle the URI's one after the other
-        # when there is a reachability issue (like it can happen in first steps ...)
-        self.update_uri(self.urilist[0])
+        self.update_uri(XIVO_CONF_URI)
 
     def update_uri(self, uri):
         if 'json' not in uri or ':' not in uri:
