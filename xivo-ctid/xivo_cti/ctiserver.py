@@ -46,7 +46,6 @@ from xivo_cti.scheduler import Scheduler
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.context import context
-from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
@@ -138,6 +137,16 @@ class CTIServer(object):
         if not cti_config.DEBUG_MODE:
             daemonize.daemonize()
         daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
+
+    def _init_db_connection_pool(self):
+        dbconnection.unregister_db_connection_pool()
+        dbconnection.register_db_connection_pool(self._new_db_connection_pool())
+
+    def _new_db_connection_pool(self):
+        return dbconnection.DBConnectionPool(dbconnection.DBConnection)
+
+    def _init_db_uri(self):
+        dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
 
     def setup(self):
         self._set_logger()
@@ -339,17 +348,6 @@ class CTIServer(object):
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:
             logger.exception('cb_timer %s', args)
-
-    def _init_db_connection_pool(self):
-        # XXX we should probably close the db_connection_pool when main loop exit
-        dbconnection.unregister_db_connection_pool()
-        dbconnection.register_db_connection_pool(self._new_db_connection_pool())
-
-    def _new_db_connection_pool(self):
-        return dbconnection.DBConnectionPool(dbconnection.DBConnection)
-
-    def _init_db_uri(self):
-        dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
 
     def main_loop(self):
         self.askedtoquit = False
