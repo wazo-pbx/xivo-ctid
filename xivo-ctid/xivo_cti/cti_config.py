@@ -24,11 +24,12 @@
 
 import logging
 import urllib2
-import cjson
+import json
 import ssl
 import string
 import time
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao
+from StringIO import StringIO
 
 logger = logging.getLogger('cti_config')
 
@@ -61,7 +62,8 @@ class Config(object):
             try:
                 response = urllib2.urlopen(XIVO_CONF_URI)
                 json_config = response.read().replace('\/', '/')
-                self.xc_json = cjson.decode(json_config)
+                io = StringIO(json_config)
+                self.xc_json = json.load(io)
                 got_webi_answer = True
             except Exception:
                 logger.warning('Waiting for XiVO web services')
