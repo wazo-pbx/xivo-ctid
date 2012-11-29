@@ -54,20 +54,21 @@ class Config(object):
         self.xc_json = {}
 
     def update(self):
-        self.update_uri()
-
-    def update_uri(self):
         got_webi_answer = False
         while not got_webi_answer:
             try:
                 response = urllib2.urlopen(XIVO_CONF_URI)
-                json_config = response.read().replace('\/', '/')
-                io = StringIO(json_config)
-                self.xc_json = json.load(io)
-                got_webi_answer = True
             except Exception:
                 logger.warning('Waiting for XiVO web services')
                 time.sleep(5)
+            else:
+                try:
+                    io = StringIO(response.read())
+                    self.xc_json = json.load(io)
+                    got_webi_answer = True
+                except ValueError:
+                    logger.error("No JSON object could be decoded")
+                    exit()
 
         self.fill_conf()
 
