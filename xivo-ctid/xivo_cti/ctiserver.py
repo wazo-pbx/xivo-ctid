@@ -287,7 +287,6 @@ class CTIServer(object):
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
-        self._queuemember_service_notifier.queue_statistics_producer = self._queue_statistics_producer
 
     def run(self):
         while True:
