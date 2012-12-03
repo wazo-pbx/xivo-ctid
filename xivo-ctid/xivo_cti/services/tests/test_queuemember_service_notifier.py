@@ -36,20 +36,26 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
     def setUp(self):
         self.ipbx_id = 'xivo'
         self.innerdata_dao = Mock(InnerdataDAO)
-        self.notifier = QueueMemberServiceNotifier(self.innerdata_dao)
+        self.queue_statistics_producer = Mock(QueueStatisticsProducer)
+        self.notifier = QueueMemberServiceNotifier(self.innerdata_dao,
+                                                   self.queue_statistics_producer)
         self.notifier.ipbx_id = self.ipbx_id
         self.notifier.send_cti_event = Mock()
-        self.queue_statistics_producer = Mock(QueueStatisticsProducer)
-        self.notifier.queue_statistics_producer = self.queue_statistics_producer
         self.callback = Mock()
         self.notifier._callbacks.append(self.callback)
 
     def test_queuemember_config_updated_add(self):
-        input_delta = DictDelta({'Agent/2345,service':
-                                    {'queue_name': 'service', 'interface': 'Agent/2345'},
-                                 'Agent/2309,service':
-                                    {'queue_name': 'service', 'interface': 'Agent/2309'}
-                                 }, {}, {})
+        input_delta = DictDelta(
+            {
+                'Agent/2345,service': {
+                    'queue_name': 'service', 'interface': 'Agent/2345'
+                },
+                'Agent/2309,service': {
+                    'queue_name': 'service', 'interface': 'Agent/2309'
+                }
+            },
+            {},
+            {})
         queuemembers_to_add = ['Agent/2309,service', 'Agent/2345,service']
 
         self.notifier.innerdata_dao.get_queue_id.return_value = '34'
@@ -68,9 +74,14 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.callback.assert_called_once_with(input_delta)
 
     def test_queuemember_config_updated_add_in_group(self):
-        input_delta = DictDelta({'SIP/2345,group':
-                                    {'queue_name': 'group', 'interface': 'SIP/2345'}
-                                 }, {}, {})
+        input_delta = DictDelta(
+            {
+                'SIP/2345,group': {
+                    'queue_name': 'group', 'interface': 'SIP/2345'
+                }
+            },
+            {},
+            {})
         expected_cti_event = {'class': 'getlist',
                               'function': 'addconfig',
                               'listname': 'queuemembers',
@@ -92,10 +103,17 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.callback.assert_called_once_with(input_delta)
 
     def test_queuemember_deleted(self):
-        input_delta = DictDelta({}, {}, {'Agent/2345,service':
-                                    {'queue_name': 'service', 'interface': 'Agent/2345'},
-                                 'Agent/2309,service':
-                                    {'queue_name': 'service', 'interface': 'Agent/2309'}})
+        input_delta = DictDelta(
+            {},
+            {},
+            {
+                'Agent/2345,service': {
+                    'queue_name': 'service', 'interface': 'Agent/2345'
+                },
+                'Agent/2309,service': {
+                    'queue_name': 'service', 'interface': 'Agent/2309'
+                }
+            })
 
         self.notifier.innerdata_dao.get_queue_id.return_value = '34'
 
