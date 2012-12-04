@@ -527,14 +527,11 @@ class Command(object):
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst.get('type') == 'voicemail':
             try:
-                vmusermsg = extensionsdao.exten_by_name('vmusermsg')
+                exten = extensionsdao.exten_by_name('vmusermsg')
                 vm = innerdata.xod_config['voicemails'].keeplist[dst['id']]
-                if not vmusermsg['commented']:
-                    extentodial = vmusermsg['exten']
-                    dst_context = vm['context']
-                    dst_identity = 'Voicemail'
-                else:
-                    extentodial = None
+                extentodial = exten
+                dst_context = vm['context']
+                dst_identity = 'Voicemail'
             except KeyError:
                 logger.exception('Missing info to call this voicemail')
                 extentodial = None
