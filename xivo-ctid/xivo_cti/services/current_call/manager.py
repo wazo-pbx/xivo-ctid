@@ -71,7 +71,7 @@ class CurrentCallManager(object):
         self._change_hold_status(line, False)
 
     def get_line_calls(self, line_identity):
-        return self._lines[line_identity]
+        return self._lines.get(line_identity, [])
 
     def _change_hold_status(self, line, new_status):
         peer_lines = [self._identity_from_channel(c['channel']) for c in self._lines[line]]

@@ -179,6 +179,29 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEquals(calls, current_call_manager._lines[line_1])
 
+    def test_get_line_calls_no_line(self):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
+        channel_1 = 'SIP/tc8nb4-00000004'
+        channel_2 = 'SIP/6s7foq-00000005'
+        current_call_manager = manager.CurrentCallManager()
+        current_call_manager._lines = {
+            line_1: [
+                {'channel': channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': True}
+            ],
+            line_2: [
+                {'channel': channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+
+        calls = current_call_manager.get_line_calls('SCCP/654')
+
+        self.assertEquals(calls, [])
+
     def test_line_identity_from_channel(self):
         channel = 'SIP/abcd-12345'
         line = 'SIP/abcd'
