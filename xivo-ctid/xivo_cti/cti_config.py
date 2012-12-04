@@ -54,6 +54,7 @@ class Config(object):
         self.xc_json = {}
 
     def update(self):
+        start_time = time.time()
         got_webi_answer = False
         while not got_webi_answer:
             try:
@@ -72,7 +73,7 @@ class Config(object):
 
         self.fill_conf()
 
-        logger.info('Config successfully updated')
+        logger.info('Config successfully updated in %.6f seconds', (time.time() - start_time))
 
     def fill_conf(self):
         self.xc_json['profiles'] = self._get_profiles()
