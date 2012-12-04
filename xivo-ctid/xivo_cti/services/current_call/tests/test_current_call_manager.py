@@ -33,6 +33,8 @@ class TestCurrentCallManager(unittest.TestCase):
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
         channel_1 = 'SIP/tc8nb4-00000004'
         channel_2 = 'SIP/6s7foq-00000005'
         bridge_time = time.time()
@@ -42,31 +44,33 @@ class TestCurrentCallManager(unittest.TestCase):
         current_call_manager.bridge_channels(channel_1, channel_2)
 
         expected = {
-            channel_1: [
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': bridge_time,
                  'on_hold': False}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': bridge_time,
                  'on_hold': False}
             ],
         }
 
-        self.assertEqual(current_call_manager._channels, expected)
+        self.assertEqual(current_call_manager._lines, expected)
 
     def test_hold_channel(self):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
         channel_1 = 'SIP/tc8nb4-00000004'
         channel_2 = 'SIP/6s7foq-00000005'
         current_call_manager = manager.CurrentCallManager()
-        current_call_manager._channels = {
-            channel_1: [
+        current_call_manager._lines = {
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
                  'on_hold': False}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': 1234,
                  'on_hold': False}
@@ -76,31 +80,33 @@ class TestCurrentCallManager(unittest.TestCase):
         current_call_manager.hold_channel(channel_2)
 
         expected = {
-            channel_1: [
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
                  'on_hold': True}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': 1234,
                  'on_hold': False}
             ],
         }
 
-        self.assertEqual(current_call_manager._channels, expected)
+        self.assertEqual(current_call_manager._lines, expected)
 
     def test_unhold_channel(self):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
         channel_1 = 'SIP/tc8nb4-00000004'
         channel_2 = 'SIP/6s7foq-00000005'
         current_call_manager = manager.CurrentCallManager()
-        current_call_manager._channels = {
-            channel_1: [
+        current_call_manager._lines = {
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
                  'on_hold': True}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': 1234,
                  'on_hold': False}
@@ -110,31 +116,33 @@ class TestCurrentCallManager(unittest.TestCase):
         current_call_manager.unhold_channel(channel_2)
 
         expected = {
-            channel_1: [
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
                  'on_hold': False}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': 1234,
                  'on_hold': False}
             ],
         }
 
-        self.assertEqual(current_call_manager._channels, expected)
+        self.assertEqual(current_call_manager._lines, expected)
 
     def test_unbridge_channels(self):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
         channel_1 = 'SIP/tc8nb4-00000004'
         channel_2 = 'SIP/6s7foq-00000005'
         current_call_manager = manager.CurrentCallManager()
-        current_call_manager._channels = {
-            channel_1: [
+        current_call_manager._lines = {
+            line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
                  'on_hold': True}
             ],
-            channel_2: [
+            line_2: [
                 {'channel': channel_1,
                  'bridge_time': 1234,
                  'on_hold': False}
@@ -146,4 +154,37 @@ class TestCurrentCallManager(unittest.TestCase):
         expected = {
         }
 
-        self.assertEqual(current_call_manager._channels, expected)
+        self.assertEqual(current_call_manager._lines, expected)
+
+    def test_get_line_calls(self):
+        line_1 = 'SIP/tc8nb4'
+        line_2 = 'SIP/6s7foq'
+        channel_1 = 'SIP/tc8nb4-00000004'
+        channel_2 = 'SIP/6s7foq-00000005'
+        current_call_manager = manager.CurrentCallManager()
+        current_call_manager._lines = {
+            line_1: [
+                {'channel': channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': True}
+            ],
+            line_2: [
+                {'channel': channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+
+        calls = current_call_manager.get_line_calls(line_1)
+
+        self.assertEquals(calls, current_call_manager._lines[line_1])
+
+    def test_line_identity_from_channel(self):
+        channel = 'SIP/abcd-12345'
+        line = 'SIP/abcd'
+
+        current_call_manager = manager.CurrentCallManager()
+
+        result = current_call_manager._identity_from_channel(channel)
+
+        self.assertEqual(result, line)

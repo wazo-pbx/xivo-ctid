@@ -28,46 +28,60 @@ import time
 class CurrentCallManager(object):
 
     def __init__(self):
-        self._channels = {}
+        self._lines = {}
 
     def bridge_channels(self, channel_1, channel_2):
-        self._channels[channel_1] = [
+        line_1 = self._identity_from_channel(channel_1)
+        line_2 = self._identity_from_channel(channel_2)
+        self._lines[line_1] = [
             {'channel': channel_2,
              'bridge_time': time.time(),
              'on_hold': False}]
-        self._channels[channel_2] = [
+        self._lines[line_2] = [
             {'channel': channel_1,
              'bridge_time': time.time(),
              'on_hold': False}]
 
     def unbridge_channels(self, channel_1, channel_2):
-        self._remove_peer_channel(channel_1, channel_2)
-        self._remove_peer_channel(channel_2, channel_1)
+        line_1 = self._identity_from_channel(channel_1)
+        line_2 = self._identity_from_channel(channel_2)
+        self._remove_peer_channel(line_1, channel_2)
+        self._remove_peer_channel(line_2, channel_1)
 
-    def _remove_peer_channel(self, channel, peer_channel):
+    def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
 
-        for position, channel_status in enumerate(self._channels[channel]):
-            if channel_status['channel'] != peer_channel:
+        for position, call_status in enumerate(self._lines[line]):
+            if call_status['channel'] != peer_channel:
                 continue
             to_be_removed.append(position)
 
         for position in to_be_removed:
-            self._channels[channel].pop(position)
+            self._lines[line].pop(position)
 
-        if not self._channels[channel]:
-            self._channels.pop(channel)
+        if not self._lines[line]:
+            self._lines.pop(line)
 
     def hold_channel(self, holded_channel):
-        self._change_hold_status(holded_channel, True)
+        line = self._identity_from_channel(holded_channel)
+        self._change_hold_status(line, True)
 
     def unhold_channel(self, unholded_channel):
-        self._change_hold_status(unholded_channel, False)
+        line = self._identity_from_channel(unholded_channel)
+        self._change_hold_status(line, False)
 
-    def _change_hold_status(self, holded_channel, new_status):
-        peer_channels = [c['channel'] for c in self._channels[holded_channel]]
-        for peer_channel in peer_channels:
-            for channel in self._channels[peer_channel]:
-                if channel['channel'] != holded_channel:
+    def get_line_calls(self, line_identity):
+        return self._lines[line_identity]
+
+    def _change_hold_status(self, line, new_status):
+        peer_lines = [self._identity_from_channel(c['channel']) for c in self._lines[line]]
+        for peer_line in peer_lines:
+            for call in self._lines[peer_line]:
+                if line not in call['channel']:
                     continue
-                channel['on_hold'] = new_status
+                call['on_hold'] = new_status
+
+    @staticmethod
+    def _identity_from_channel(channel):
+        last_dash = channel.rfind('-')
+        return channel[:last_dash]
