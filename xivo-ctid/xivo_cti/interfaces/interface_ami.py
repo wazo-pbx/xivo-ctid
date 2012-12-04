@@ -60,7 +60,7 @@ class AMI(object):
         self.actionids = {}
         self.originate_actionids = {}
         config = cti_context.get('config')
-        ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
+        ipbxconfig = config.getconfig('ipbx_connection')
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
         self.ami_login = ipbxconfig.get('username', 'xivouser')
