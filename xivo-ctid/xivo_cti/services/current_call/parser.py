@@ -22,6 +22,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
+from xivo_cti.ami import ami_callback_handler
+
+logger = logging.getLogger(__name__)
+
 
 class CurrentCallParser(object):
 
@@ -49,3 +55,10 @@ class CurrentCallParser(object):
             event['Channel1'],
             event['Channel2']
         )
+
+    def register_ami_events(self):
+        logger.debug('Registering to AMI events')
+        ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        ami_handler.register_callback('Bridge', self.parse_bridge)
+        ami_handler.register_callback('Hold', self.parse_hold)
+        ami_handler.register_callback('Unlink', self.parse_unlink)
