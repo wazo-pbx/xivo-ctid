@@ -30,8 +30,7 @@ log_ami_events_statusrequest = True
 class AMIStatusRequestLogger(AMILogger):
     _instance = None
     _log_header = 'AMI status request logger'
-    logged_events = ['Agents',
-                     'CoreShowChannel',
+    logged_events = ['CoreShowChannel',
                      'ParkedCallStatus',
                      'RegistryEntry',
                      'Status',

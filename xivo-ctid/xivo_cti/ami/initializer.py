@@ -67,15 +67,11 @@ class AMIInitializer(object):
                                              ['StatusComplete'],
                                              ['ShowDialPlan'])
     SHOW_DIALPLAN_COMPLETE = InitializingEntry('ShowDialPlanComplete',
-                                               ['AgentsComplete'],
+                                               ['UserEvent'],
                                                ['ShowDialPlanComplete'],
-                                               ['Agents'])
-    AGENTS_COMPLETE = InitializingEntry('AgentsComplete',
-                                        ['UserEvent'],
-                                        ['AgentsComplete'],
-                                        ['VoicemailUsersList',
-                                         'MeetmeList',
-                                         ['UserEvent', [('UserEvent', 'InitComplete')]]])
+                                               ['VoicemailUsersList',
+                                                'MeetmeList',
+                                                ['UserEvent', [('UserEvent', 'InitComplete')]]])
     INIT_COMPLETE = InitializingEntry('UserEvent', [], ['UserEvent'], [])
 
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
@@ -87,8 +83,7 @@ class AMIInitializer(object):
                      PARKED_CALLS_COMPLETE.trigger: PARKED_CALLS_COMPLETE,
                      SHOW_STATUS_COMPLETE.trigger: SHOW_STATUS_COMPLETE,
                      SHOW_DIALPLAN_COMPLETE.trigger: SHOW_DIALPLAN_COMPLETE,
-                     INIT_COMPLETE.trigger: INIT_COMPLETE,
-                     AGENTS_COMPLETE.trigger: AGENTS_COMPLETE}
+                     INIT_COMPLETE.trigger: INIT_COMPLETE}
 
     def __init__(self):
         self._sent_commands = []

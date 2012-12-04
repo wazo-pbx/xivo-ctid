@@ -159,18 +159,8 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('AgentsComplete')
-        self.ami_initializer._unregister.assert_called_once_with('ShowDialPlanComplete')
-        self.ami_initializer._send.assert_called_once_with('Agents')
-
-    def test_go_agents_complete(self):
-        self.setup_mock()
-        msg = {'Event': 'AgentsComplete'}
-
-        self.ami_initializer.go(msg)
-
         self.ami_initializer._register.assert_called_once_with('UserEvent')
-        self.ami_initializer._unregister.assert_called_once_with('AgentsComplete')
+        self.ami_initializer._unregister.assert_called_once_with('ShowDialPlanComplete')
         self.ami_initializer._send.assert_has_calls([call('VoicemailUsersList'),
                                                      call('MeetmeList'),
                                                      call(['UserEvent', [('UserEvent', 'InitComplete')]])])

@@ -80,7 +80,6 @@ event_others['replies'] = [
     'ParkedCallsComplete',  # after ParkedCalls
     'MeetmeList', 'MeetmeListComplete',  # after MeetMeList
     'Status' , 'StatusComplete',  # after Status
-    'Agents', 'AgentsComplete',  # after Agents
     'QueueParams', 'QueueEntry', 'QueueMember', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary
     'CoreShowChannel', 'CoreShowChannelsComplete',  # after CoreShowChannels
@@ -229,7 +228,6 @@ ami_error_responses_list = ['No such channel',
 
 ami_success_responses_list = ['Channel status will follow',
                               'Parked calls will follow',
-                              'Agents will follow',
                               'Queue status will follow',
                               'Variable Set',
                               'Attended transfer started',

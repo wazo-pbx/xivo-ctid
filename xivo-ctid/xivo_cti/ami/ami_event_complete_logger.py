@@ -30,8 +30,7 @@ log_ami_events_complete = False
 class AMIEventCompleteLogger(AMILogger):
     _instance = None
     _log_header = 'AMI event complete logger'
-    logged_events = ['AgentsComplete',
-                     'CoreShowChannelsComplete',
+    logged_events = ['CoreShowChannelsComplete',
                      'DAHDIShowChannelsComplete',
                      'MeetmeListComplete',
                      'ParkedCallsComplete',

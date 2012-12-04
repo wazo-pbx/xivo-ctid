@@ -70,6 +70,7 @@ from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
+from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.cti.commands.logout import Logout
@@ -194,8 +195,8 @@ class CTIServer(object):
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
-        agent_client = context.get('agent_client')
-        agent_client.connect('localhost')
+        self._agent_client = context.get('agent_client')
+        self._agent_client.connect('localhost')
 
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
@@ -287,6 +288,14 @@ class CTIServer(object):
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
+
+    def _init_agent_availability(self):
+        for agent_status in self._agent_client.get_agent_statuses():
+            if agent_status.logged:
+                agent_status_cti = AgentStatus.available
+            else:
+                agent_status_cti = AgentStatus.logged_out
+            self._innerdata_dao.set_agent_availability(agent_status.id, agent_status_cti)
 
     def run(self):
         while True:
@@ -398,6 +407,7 @@ class CTIServer(object):
         except Exception:
             logger.exception('commandclass.updates()')
         self._init_statistics_producers()
+        self._init_agent_availability()
 
         logger.info('(2/3) Local AMI socket connection')
         self.myami = interface_ami.AMI(self)
