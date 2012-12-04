@@ -3,7 +3,6 @@
 import logging
 
 from xivo_cti.dao import userfeaturesdao
-from xivo_cti.services.current_call import formatter
 from xivo_cti.client_connection import ClientConnection
 
 logger = logging.getLogger(__name__)
@@ -11,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 class CurrentCallNotifier(object):
 
-    def __init__(self):
+    def __init__(self, formatter):
         self._subscriptions = {}
+        self._formatter = formatter
 
     def subscribe(self, client_connection):
         try:
@@ -29,7 +29,7 @@ class CurrentCallNotifier(object):
             self._report_current_call(line_identity)
 
     def _report_current_call(self, line_identity):
-        formatted_current_call = formatter.get_line_current_call(line_identity)
+        formatted_current_call = self._formatter.get_line_current_call(line_identity)
 
         try:
             self._subscriptions[line_identity].send_message(formatted_current_call)

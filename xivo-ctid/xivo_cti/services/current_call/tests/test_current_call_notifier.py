@@ -6,6 +6,7 @@ from mock import Mock
 from mock import patch
 
 from xivo_cti.services.current_call import notifier
+from xivo_cti.services.current_call import formatter
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.client_connection import ClientConnection
 
@@ -13,7 +14,8 @@ from xivo_cti.client_connection import ClientConnection
 class TestCurrentCallNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.notifier = notifier.CurrentCallNotifier()
+        self.current_call_formatter = Mock(formatter.CurrentCallFormatter)
+        self.notifier = notifier.CurrentCallNotifier(self.current_call_formatter)
         self.line_identity_1 = 'SCCP/1234'
         self.line_identity_2 = 'SIP/abkljhsdf'
         self.client_connection_1 = Mock(CTI)
@@ -52,11 +54,10 @@ class TestCurrentCallNotifier(unittest.TestCase):
 
         self.assertEquals(self.notifier._report_current_call.call_count, 0)
 
-    @patch('xivo_cti.services.current_call.formatter.get_line_current_call')
-    def test_report_current_call(self, mock_get_line_current_call):
+    def test_report_current_call(self):
         formatted_current_call = {'class': 'current_call',
                                   'current_call': []}
-        mock_get_line_current_call.return_value = formatted_current_call
+        self.current_call_formatter.get_line_current_call.return_value = formatted_current_call
 
         self.notifier._subscriptions[self.line_identity_1] = self.client_connection_1
         self.notifier._subscriptions[self.line_identity_2] = self.client_connection_2
@@ -66,11 +67,10 @@ class TestCurrentCallNotifier(unittest.TestCase):
         self.client_connection_1.send_message.assert_called_once_with(formatted_current_call)
         self.assertEqual(self.client_connection_2.call_count, 0)
 
-    @patch('xivo_cti.services.current_call.formatter.get_line_current_call')
-    def test_report_current_call_connection_closed(self, mock_get_line_current_call):
+    def test_report_current_call_connection_closed(self):
         formatted_current_call = {'class': 'current_call',
                                   'current_call': []}
-        mock_get_line_current_call.return_value = formatted_current_call
+        self.current_call_formatter.get_line_current_call.return_value = formatted_current_call
 
         self.notifier._subscriptions[self.line_identity_1] = self.client_connection_1
         self.notifier._subscriptions[self.line_identity_2] = self.client_connection_2
