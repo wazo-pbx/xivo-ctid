@@ -527,7 +527,7 @@ class Command(object):
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst.get('type') == 'voicemail':
             try:
-                vmusermsg = innerdata.extenfeatures['extenfeatures']['vmusermsg']
+                vmusermsg = extensionsdao.exten_by_name('vmusermsg')
                 vm = innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 if not vmusermsg['commented']:
                     extentodial = vmusermsg['exten']
@@ -609,10 +609,10 @@ class Command(object):
             elif dst['type'] == 'exten':
                 extentodial = dst['id']
             elif dst['type'] == 'voicemail' and dst['id'] in self.innerdata.xod_config['voicemails'].keeplist:
-                # *97 vm number
                 voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
-                prefix = self.innerdata.extenfeatures['extenfeatures']['vmboxslt']['exten']
+                prefix = extensionsdao.exten_by_name('vmboxslt')
+                prefix = prefix['exten']
                 prefix = prefix[:len(prefix) - 1]
                 extentodial = prefix + vm_number
                 dst_context = voicemail['context']
