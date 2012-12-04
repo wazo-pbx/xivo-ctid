@@ -26,7 +26,6 @@ from xivo_cti import cti_config
 from xivo_cti import cti_config
 from xivo_cti.context import context
 from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
-from xivo_dao.extensionsdao import ExtensionsDAO
 from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
@@ -92,7 +91,6 @@ def _register_context(context):
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
-    context.register('extensions_dao', ExtensionsDAO)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata_dao', InnerdataDAO)
     context.register('line_features_dao', LineFeaturesDAO)
