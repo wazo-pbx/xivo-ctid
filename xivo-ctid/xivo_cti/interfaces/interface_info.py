@@ -158,7 +158,6 @@ class INFO(interfaces.Interfaces):
                                 logger.setLevel(newlevel)
                                 logging.getLogger('xivocti').setLevel(newlevel)
                                 logging.getLogger('xivo_ami').setLevel(newlevel)
-                                logging.getLogger('urllist').setLevel(newlevel)
                                 clireply.append('loglevel set to %s (%s)' % (levelname, newlevel))
                             else:
                                 clireply.append('unknown level name <%s> to set' % levelname)
