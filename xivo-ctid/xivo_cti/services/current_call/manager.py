@@ -27,8 +27,9 @@ import time
 
 class CurrentCallManager(object):
 
-    def __init__(self):
+    def __init__(self, current_call_notifier):
         self._lines = {}
+        self._current_call_notifier = current_call_notifier
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
@@ -41,12 +42,16 @@ class CurrentCallManager(object):
             {'channel': channel_1,
              'bridge_time': time.time(),
              'on_hold': False}]
+        self._current_call_notifier.publish_current_call(line_1)
+        self._current_call_notifier.publish_current_call(line_2)
 
     def unbridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
         line_2 = self._identity_from_channel(channel_2)
         self._remove_peer_channel(line_1, channel_2)
         self._remove_peer_channel(line_2, channel_1)
+        self._current_call_notifier.publish_current_call(line_1)
+        self._current_call_notifier.publish_current_call(line_2)
 
     def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
@@ -63,23 +68,23 @@ class CurrentCallManager(object):
             self._lines.pop(line)
 
     def hold_channel(self, holded_channel):
-        line = self._identity_from_channel(holded_channel)
-        self._change_hold_status(line, True)
+        self._change_hold_status(holded_channel, True)
 
     def unhold_channel(self, unholded_channel):
-        line = self._identity_from_channel(unholded_channel)
-        self._change_hold_status(line, False)
+        self._change_hold_status(unholded_channel, False)
 
     def get_line_calls(self, line_identity):
         return self._lines.get(line_identity, [])
 
-    def _change_hold_status(self, line, new_status):
+    def _change_hold_status(self, channel, new_status):
+        line = self._identity_from_channel(channel)
         peer_lines = [self._identity_from_channel(c['channel']) for c in self._lines[line]]
         for peer_line in peer_lines:
             for call in self._lines[peer_line]:
                 if line not in call['channel']:
                     continue
                 call['on_hold'] = new_status
+                self._current_call_notifier.publish_current_call(peer_line)
 
     @staticmethod
     def _identity_from_channel(channel):
