@@ -20,23 +20,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from tests.mock import Mock
-from xivo_dao.extensionsdao import ExtensionsDAO
+from xivo_dao import extensionsdao
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao.tests.test_dao import DAOTestCase
+from xivo_dao.alchemy.phonefunckey import PhoneFunckey
+from xivo_dao.alchemy.extension import Extension
 
 
-class TestFunckeyManager(unittest.TestCase):
+class TestFunckeyManager(DAOTestCase):
+
+    tables = [PhoneFunckey, Extension]
 
     def setUp(self):
         self.user_id = 123
-        self.extensionsdao = Mock(ExtensionsDAO)
+        self.extensionsdao = Mock(extensionsdao)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
-        self.manager = FunckeyManager(self.extensionsdao, self.phone_funckey_dao)
+        self.manager = FunckeyManager(self.phone_funckey_dao)
         self.manager.phone_funckey_dao = self.phone_funckey_dao
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)
