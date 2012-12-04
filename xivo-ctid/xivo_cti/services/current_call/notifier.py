@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 class CurrentCallNotifier(object):
 
-    def __init__(self, formatter):
+    def __init__(self, current_call_formatter):
         self._subscriptions = {}
-        self._formatter = formatter
+        self._formatter = current_call_formatter
 
     def subscribe(self, client_connection):
         try:
