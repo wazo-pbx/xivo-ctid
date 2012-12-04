@@ -174,7 +174,6 @@ class CTIServer(object):
         self._queuemember_service_notifier = context.get('queuemember_service_notifier')
 
         self._agent_features_dao = context.get('agent_features_dao')
-        self._extensions_dao = context.get('extensions_dao')
         self._innerdata_dao = context.get('innerdata_dao')
         self._line_features_dao = context.get('line_features_dao')
         self._phone_funckey_dao = context.get('phone_funckey_dao')
