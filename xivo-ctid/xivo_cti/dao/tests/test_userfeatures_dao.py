@@ -33,7 +33,7 @@ from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from tests.mock import Mock
 from xivo_cti.innerdata import Safe
-from xivo_cti.lists.cti_userlist import UserList
+from xivo_cti.lists.users_list import UsersList
 from sqlalchemy.schema import MetaData
 
 
@@ -78,7 +78,7 @@ class TestUserFeaturesDAO(unittest.TestCase):
     def setUp(self):
         self.empty_tables()
         self._innerdata = Mock(Safe)
-        self._userlist = Mock(UserList)
+        self._userlist = Mock(UsersList)
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
         self.dao = UserFeaturesDAO()
