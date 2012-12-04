@@ -19,6 +19,7 @@
 
 import argparse
 import sys
+import time
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
 
@@ -66,7 +67,9 @@ from xivo_agent.ctl.client import AgentClient
 def main():
     _parse_args(sys.argv[1:])
 
+    start_time = time.time()
     _register_context(context)
+    print 'Register Class in %.6f seconds' % ((time.time() - start_time))
 
     ctid = context.get('cti_server')
     ctid.setup()
