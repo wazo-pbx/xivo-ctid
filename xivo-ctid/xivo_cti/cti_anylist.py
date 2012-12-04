@@ -22,107 +22,226 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
+import copy
 import logging
 from collections import defaultdict
 from xivo_cti.context import context as cti_context
-from xivo_cti import cti_urllist, cti_daolist
+from xivo_cti import cti_daolist
+from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('anylist')
-
-DAO_LIST = ['users', 'lines', 'groups', 'agents', 'meetme',
-            'queues', 'voicemail', 'context', 'phonebook', 'incall']
 
 
 class AnyList(object):
 
-    def __init__(self, newurls):
-        self.commandclass = None
-        self._ctiserver = None
-        self.requested_list = {}
+    props_config = {
+        'users': [
+            'firstname',
+            'lastname',
+            'fullname',
+            'mobilephonenumber',
+            'profileclient',
+            'enableclient',
+            'agentid',
+            'voicemailid',
+            'enablerna',
+            'enableunc',
+            'enablebusy',
+            'destrna',
+            'destunc',
+            'destbusy',
+            'enablevoicemail',
+            'enablednd',
+            'enablexfer',
+            'incallfilter',
+            'linelist',
+        ],
+        'phones': [
+            'context',
+            'protocol',
+            'number',
+            'iduserfeatures',
+            'rules_order',
+            'identity',
+            'initialized',
+            'allowtransfer',
+        ],
+        'agents': [
+            'context',
+            'firstname',
+            'lastname',
+            'number',
+        ],
+        'queues': [
+            'context',
+            'name',
+            'displayname',
+            'number'
+        ],
+        'groups': [],
+        'voicemails': [
+            'context',
+            'fullname',
+            'mailbox',
+            'email'
+        ],
+        'meetmes': [
+            'context',
+            'confno',
+            'name',
+            'admin_moderationmode'
+        ],
+        'incalls': [
+            'context',
+            'exten',
+            'destidentity',
+            'action'
+        ],
+        'outcalls': [],
+        'contexts': [],
+        'phonebooks': [],
+        'queuemembers': [
+            'queue_name',
+            'interface',
+            'paused'
+        ]
+    }
+    props_status = {
+        'users': {
+            'connection': None,
+            'availstate': 'disconnected'
+        },
+        'phones': {
+            'hintstatus': '4',
+            'channels': [],
+            'queues': [],
+            'groups': []
+        },
+        'trunks': {
+            'hintstatus': '-2',
+            'channels': [],
+            'queues': [],
+            'groups': []
+        },
+        'agents': {
+            'phonenumber': None,
+            'channel': None,
+            'availability': AgentStatus.logged_out,
+            'availability_since': time.time(),
+            'on_call': False,
+            'queues': [],
+            'groups': []
+        },
+        'queues': {
+            'agentmembers': [],
+            'phonemembers': [],
+            'incalls': []
+        },
+        'groups': {
+            'agentmembers': [],
+            'phonemembers': [],
+            'incalls': []
+        },
+        'meetmes': {
+            'pseudochan': None,
+            'channels': {},
+            'paused': False
+        },
+        'voicemails': {
+            'waiting': False,
+            'old': 0,
+            'new': 0
+        },
+        'incalls': {},
+        'contexts': {},
+        'phonebooks': {}
+    }
+
+    def __init__(self, listname):
         self.keeplist = {}
-        self.__clean_urls__()
-        self.__add_urls__(newurls)
+        self.listname = listname
+        self.listname_obj = cti_daolist.DaoList(listname)
+        self._ctiserver = self._innerdata._ctiserver
+        self.ipbxid = self._innerdata.ipbxid
 
-    def update(self):
-        lstadd = []
-        lstdel = []
-        lstchange = {}
-        oldlist = self.keeplist
-        newlist = {}
+    def init_data(self):
+        self.keeplist = self.listname_obj.get_list()
 
-        # Get new list from Web services.
-        for instance in self.requested_list.itervalues():
-            if instance.__class__.__name__ == 'UrlList':
-                gl = instance.getlist(* self.anylist_properties['urloptions'])
-                if gl == 2:
-                    tmplist = getattr(self.commandclass, self.getter)(instance.jsonreply)
-                    newlist.update(tmplist)
-            elif instance.__class__.__name__ == 'DaoList':
-                newlist = instance.get_list()
+    def init_status(self):
+        res = {}
+        for list_id in self.keeplist.iterkeys():
+            res[list_id] = copy.deepcopy(self.props_status[self.listname])
+        return res
 
-        # Update computed fields, if any.
-        self.update_computed_fields(newlist)
+    def get_status(self):
+        return copy.deepcopy(self.props_status[self.listname])
 
-        # Compare old (self.keeplist) and new (newlist) list:
-        # Compute the differences and update the current list.
-        for a, b in newlist.iteritems():
-            if a not in oldlist:
-                self.keeplist[a] = b
-                lstadd.append(a)
+    def add(self, id):
+        self.keeplist.update(self.listname_obj.get(id))
+
+        message = {'class': 'getlist',
+                   'listname': self.listname,
+                   'function': 'addconfig',
+                   'tipbxid': self.ipbxid,
+                   'list': [id]}
+
+        if not cti_context.get('config').part_context():
+            self._ctiserver.send_cti_event(message)
+        else:
+            if self.listname == 'users':
+                item_context = self.get_contexts(id)
             else:
-                oldfull = self.keeplist[a]
-                if b != oldfull:
-                    keywords = []
-                    for bk, bv in b.iteritems():
-                        oldval = self.keeplist[a][bk]
-                        if bv != oldval:
-                            self.keeplist[a][bk] = bv
-                            keywords.append(bk)
-                    if keywords:
-                        lstchange[a] = keywords
+                item_context = [self.keeplist[id].get('context')]
+            connection_list = self._ctiserver.get_connected({'contexts': item_context})
+            for connection in connection_list:
+                connection.append_msg(message)
+        logger.debug('%s(%s) successfully added', self.listname, id)
 
-        for a, b in oldlist.iteritems():
-            if a not in newlist:
-                lstdel.append(a)
+    def edit(self, id):
+        self.keeplist.update(self.listname_obj.get(id))
+        props = self.keeplist[id]
+        newc = {}
+        for p in props:
+            if p in self.props_config.get(self.listname):
+                newc[p] = props[p]
+        if newc:
+            message = {'class': 'getlist',
+                       'listname': self.listname,
+                       'function': 'updateconfig',
+                       'tipbxid': self.ipbxid,
+                       'tid': id,
+                       'config': newc}
+            self._ctiserver.send_cti_event(message)
+        logger.debug('%s(%s) successfully updated', self.listname, id)
 
-        # Remove old items.
-        for a in lstdel:
-            del self.keeplist[a]
+    def delete(self, id):
+        del self.keeplist[id]
+        self._ctiserver.send_cti_event({'class': 'getlist',
+                                        'listname': self.listname,
+                                        'function': 'delconfig',
+                                        'tipbxid': self.ipbxid,
+                                        'list': [id]})
+        logger.debug('%s(%s) successfully deleted', self.listname, id)
 
-        return {'add': lstadd,
-                'del': lstdel,
-                'change': lstchange}
+    def get_item_config(self, item_id, user_contexts):
+        reply = {}
+        item_config = self.get_item_in_contexts(item_id, user_contexts)
+        if not isinstance(item_config, dict):
+            logger.warning('get_config : problem with item_id %s in listname %s',
+                           item_id, self.listname)
+            return reply
 
-    def update_computed_fields(self, newlist):
-        # "Virtual" function
-        # You should reimplement it if the list items contains fields
-        # that depends on other fields. See MeetmeList for an example.
-        pass
+        for k in self.props_config.get(self.listname, []):
+            reply[k] = item_config.get(k)
 
-    def setcommandclass(self, commandclass):
-        self.commandclass = commandclass
-        self._ctiserver = self.commandclass._ctiserver
+        return reply
 
-    def setgetter(self, getter):
-        self.getter = getter
-
-    def __clean_urls__(self):
-        self.requested_list = {}
-
-    def __add_urls__(self, newurls):
-        for url in newurls:
-            if url not in self.requested_list:
-                listname = url.split('/').pop(-1)
-                if listname in DAO_LIST:
-                    self.requested_list[url] = cti_daolist.DaoList(listname)
-                else:
-                    self.requested_list[url] = cti_urllist.UrlList(url)
-
-    def setandupdate(self, newurls):
-        self.__add_urls__(newurls)
-        if not self.requested_list:
-            return
-        self.update()
+    def get_item_status(self, periddict):
+        reply = {}
+        for k in self.props_status.get(self.listname, []):
+            reply[k] = periddict.get(k)
+        return reply
 
     def list_ids_in_contexts(self, contexts):
         return self.keeplist.keys()
@@ -132,14 +251,14 @@ class AnyList(object):
 
 
 class ContextAwareAnyList(AnyList):
-    def __init__(self, newurls):
-        AnyList.__init__(self, newurls)
+
+    def __init__(self, listname):
+        AnyList.__init__(self, listname)
         self._item_ids_by_context = {}
 
-    def update(self):
-        delta = AnyList.update(self)
+    def init_data(self):
+        AnyList.init_data(self)
         self._update_item_ids_by_context()
-        return delta
 
     def _update_item_ids_by_context(self):
         item_ids_by_context = defaultdict(list)
