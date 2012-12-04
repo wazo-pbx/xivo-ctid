@@ -1,21 +1,27 @@
 # -*- coding: UTF-8 -*-
 
-import unittest
 from datetime import datetime
 from tests.mock import Mock
-from xivo_cti.services.call_history_manager import CallHistoryMgr, ReceivedCall, SentCall
+from xivo_cti.services.call_history_manager import ReceivedCall, SentCall
+from xivo_cti.services import call_history_manager
+from xivo_dao.tests.test_dao import DAOTestCase
+from xivo_dao.alchemy.cel import CEL
+from xivo_dao import celdao
 
 
-class CallHistoryMgrTest(unittest.TestCase):
+class CallHistoryMgrTest(DAOTestCase):
+
+    tables = [CEL]
+
     def setUp(self):
-        self._cel_dao = Mock()
+        self.empty_tables()
+        self._cel_dao = Mock(celdao)
         self._cel_dao.channels_for_phone.return_value = []
         self._cel_dao.caller_ids = {}
+
         def caller_id_by_unique_id_side_effect(unique_id):
             return self._cel_dao.caller_ids[unique_id]
         self._cel_dao.caller_id_by_unique_id.side_effect = caller_id_by_unique_id_side_effect
-
-        self._call_history_manager = CallHistoryMgr(self._cel_dao)
 
     def test_answered_calls_for_phone_with_answered_calls(self):
         phone = {u'protocol': u'sip',
@@ -46,7 +52,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                                 duration=duration3,
                                                 caller_id=caller_name3)
 
-        received_calls = self._call_history_manager.answered_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.answered_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
@@ -57,7 +63,6 @@ class CallHistoryMgrTest(unittest.TestCase):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
         date = datetime.now()
-        duration = 1
         caller_name = u'"Foo" <123>'
 
         expected_received_calls = []
@@ -66,7 +71,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                               start_time=date,
                                               caller_id=caller_name)
 
-        received_calls = self._call_history_manager.answered_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.answered_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_not_called()
@@ -95,7 +100,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                               start_time=date3,
                                               caller_id=caller_name3)
 
-        received_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
@@ -116,7 +121,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                                 duration=duration,
                                                 caller_id=caller_name)
 
-        received_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_not_called()
@@ -148,7 +153,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                                 duration=duration3,
                                                 called_exten=called_exten3)
 
-        received_calls = self._call_history_manager.outgoing_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.outgoing_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_received_calls, received_calls)
@@ -166,7 +171,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                                 duration=duration,
                                                 called_exten=called_exten)
 
-        sent_calls = self._call_history_manager.missed_calls_for_phone(phone, 2)
+        sent_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_sent_calls, sent_calls)

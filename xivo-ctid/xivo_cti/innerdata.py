@@ -29,23 +29,19 @@ import os
 import string
 import time
 import Queue
-import cti_urllist
-from xivo_cti import lists, cti_config
-from xivo_cti.lists import *
-from xivo_cti.services import call_history_manager
-from xivo_cti.directory import directory
-from xivo_cti import cti_sheets
-from xivo_cti import db_connection_manager
-from xivo_dao.alchemy import dbconnection
+from xivo_cti import cti_config, cti_sheets, db_connection_manager
+from xivo_cti.ami import ami_callback_handler
+from xivo_cti.dao import userfeaturesdao
 from xivo_cti.context import context as cti_context
+from xivo_cti.directory import directory
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.ami import ami_callback_handler
-from xivo_cti.dao import userfeaturesdao
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list, \
+    meetmes_list, phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
+    trunks_list
 
 logger = logging.getLogger('innerdata')
 
@@ -53,137 +49,15 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
 class Safe(object):
-    # matches between CTI lists and WEBI-given fields
-    urlvars = {
-        'users': 'urllist_users',
-        'phones': 'urllist_lines',
-        'agents': 'urllist_agents',
-        'queues': 'urllist_queues',
-        'groups': 'urllist_groups',
-        'meetmes': 'urllist_meetmes',
-        'voicemails': 'urllist_voicemails',
-        'incalls': 'urllist_incalls',
-        'contexts': 'urllist_contexts',
-        'phonebooks': 'urllist_phonebook'
-    }
-
-    # defines the list of parameters that might be sent to xivo clients
-    props_config = {
-        'users': [
-            'firstname',
-            'lastname',
-            'fullname',
-            'mobilephonenumber',
-            'profileclient',
-            'enableclient',
-            'agentid',
-            'voicemailid',
-            'enablerna',
-            'enableunc',
-            'enablebusy',
-            'destrna',
-            'destunc',
-            'destbusy',
-            'enablevoicemail',
-            'enablednd',
-            'enablexfer',
-            'incallfilter',
-            'linelist',
-        ],
-        'phones': [
-            'context',
-            'protocol',
-            'number',
-            'iduserfeatures',
-            'rules_order',
-            'identity',
-            'initialized',
-            'allowtransfer',
-        ],
-        'agents': [
-            'context',
-            'firstname',
-            'lastname',
-            'number',
-        ],
-        'queues': [
-            'context',
-            'name',
-            'displayname',
-            'number'
-        ],
-        'groups': [],
-        'voicemails': [
-            'context',
-            'fullname',
-            'mailbox',
-            'email'
-        ],
-        'meetmes': [
-            'context',
-            'confno',
-            'name',
-            'admin_moderationmode',
-            'pin_needed'
-        ],
-        'incalls': [
-            'context',
-            'exten',
-            'destidentity',
-            'action'
-        ],
-        'outcalls': [],
-        'contexts': [],
-        'phonebooks': [],
-        'queuemembers': [
-            'queue_name',
-            'interface',
-            'paused'
-        ]
-    }
-
-    props_status = {'users': {'connection': None,
-                              'availstate': 'disconnected'},
-                    'phones': {'hintstatus': '4',
-                               'channels': [],
-                               'queues': [],
-                               'groups': []},
-                    'trunks': {'hintstatus': '-2',
-                               'channels': [],
-                               'queues': [],
-                               'groups': []},
-                    'agents': {'phonenumber': None,
-                               'channel': None,
-                               'availability': AgentStatus.logged_out,
-                               'availability_since': time.time(),
-                               'on_call': False,
-                               'queues': [],
-                               'groups': []},
-                    'queues': {'agentmembers': [],
-                               'phonemembers': [],
-                               'incalls': []},
-                    'groups': {'agentmembers': [],
-                               'phonemembers': [],
-                               'incalls': []},
-                    'meetmes': {'pseudochan': None,
-                                'channels': {},
-                                'paused': False},
-                    'voicemails': {'waiting': False,
-                                   'old': 0,
-                                   'new': 0},
-                    'incalls': {},
-                    'outcalls': {},
-                    'contexts': {}}
 
     permission_kinds = ['regcommands', 'userstatus']
 
-    def __init__(self, ctiserver, cnf=None):
+    def __init__(self, ctiserver):
         self._config = cti_context.get('config')
         self._ctiserver = ctiserver
         self.ipbxid = 'xivo'
         self.xod_config = {}
         self.xod_status = {}
-        self.user_features_dao = None
 
         self.timeout_queue = Queue.Queue()
 
@@ -196,31 +70,95 @@ class Safe(object):
         self.contexts_mgr = directory.ContextsMgr()
         self.directories_mgr = directory.DirectoriesMgr()
 
-        dbconnection.add_connection(cti_config.DB_URI)
-        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(cti_config.DB_URI)
-
         self.ctistack = []
 
-        self.extenfeatures = {}
+    def init_xod_config(self):
+        self.xod_config['agents'] = agents_list.AgentsList(self)
+        self.xod_config['contexts'] = contexts_list.ContextsList(self)
+        self.xod_config['groups'] = groups_list.GroupsList(self)
+        self.xod_config['incalls'] = incalls_list.IncallsList(self)
+        self.xod_config['meetmes'] = meetmes_list.MeetmesList(self)
+        self.xod_config['phonebooks'] = phonebooks_list.PhonebooksList(self)
+        self.xod_config['phones'] = phones_list.PhonesList(self)
+        self.xod_config['queues'] = queues_list.QueuesList(self)
+        self.xod_config['trunks'] = trunks_list.TrunksList(self)
+        self.xod_config['users'] = users_list.UsersList(self)
+        self.xod_config['voicemails'] = voicemails_list.VoicemailsList(self)
 
-        if cnf and 'urllist_extenfeatures' in cnf:
-            self.set_extenfeatures(cnf['urllist_extenfeatures'])
+        for object in self.xod_config.itervalues():
+            object.init_data()
 
-        for listname, urllistkey in self.urlvars.iteritems():
-            try:
-                cf = eval('lists.cti_%slist' % listname[:-1])
-                cn = '%s%sList' % (listname[0].upper(), listname[1:-1])
+    def init_xod_status(self):
+        self.xod_status['agents'] = self.xod_config['agents'].init_status()
+        self.xod_status['contexts'] = self.xod_config['contexts'].init_status()
+        self.xod_status['groups'] = self.xod_config['groups'].init_status()
+        self.xod_status['incalls'] = self.xod_config['incalls'].init_status()
+        self.xod_status['meetmes'] = self.xod_config['meetmes'].init_status()
+        self.xod_status['phonebooks'] = self.xod_config['phonebooks'].init_status()
+        self.xod_status['phones'] = self.xod_config['phones'].init_status()
+        self.xod_status['queues'] = self.xod_config['queues'].init_status()
+        self.xod_status['trunks'] = self.xod_config['trunks'].init_status()
+        self.xod_status['users'] = self.xod_config['users'].init_status()
+        self.xod_status['voicemails'] = self.xod_config['voicemails'].init_status()
 
-                if cnf and urllistkey in cnf:
-                    self.xod_config[listname] = getattr(cf, cn)(cnf[urllistkey])
-                else:
-                    logger.warning('no such key %s in configuration', urllistkey)
-                    self.xod_config[listname] = getattr(cf, cn)()
-                self.xod_config[listname].setcommandclass(self)
-                self.xod_config[listname].setgetter('get_x_list')
-                self.xod_status[listname] = {}
-            except Exception:
-                logger.exception("%s", listname)
+    def update_config_list(self, listname, state, id):
+        start_time = time.time()
+        try:
+            if state == 'add':
+                self._update_config_list_add(listname, id)
+            elif state in ['edit', 'enable', 'disable']:
+                self._update_config_list_change(listname, id)
+            elif state == 'delete':
+                self._update_config_list_del(listname, id)
+        except KeyError:
+            logger.warning('id "%s" not exist for object %s', id, listname)
+        end_time = time.time()
+        logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
+
+    def _update_config_list_add(self, listname, id):
+        self.xod_config[listname].add(id)
+        self.xod_status[listname][id] = self.xod_config[listname].get_status()
+
+    def _update_config_list_del(self, listname, id):
+        self.xod_config[listname].delete(id)
+        del self.xod_status[listname][id]
+
+    def _update_config_list_change(self, listname, id):
+        self.xod_config[listname].edit(id)
+
+    def get_config(self, listname, item_id, user_contexts=None):
+        reply = {}
+        if listname == 'queuemembers':
+            if item_id in self.queuemembers_config:
+                reply = self.queuemembers_config[item_id]
+            return reply
+        return self.xod_config[listname].get_item_config(item_id, user_contexts)
+
+    def get_status_channel(self, channel_id):
+        if channel_id in self.channels:
+            return self.channels[channel_id].properties
+
+    def get_status_queuemembers(self, queue_member_id):
+        return self.queuemembers.get(queue_member_id)
+
+    def get_status(self, listname, item_id):
+        if listname == 'channels':
+            return self.get_status_channel(item_id)
+        if listname == 'queuemembers':
+            return self.get_status_queuemembers(item_id)
+
+        reply = {}
+        statusdict = self.xod_status.get(listname)
+        if not isinstance(statusdict, dict):
+            logger.warning('get_status : problem with listname %s', listname)
+            return reply
+
+        periddict = statusdict.get(item_id)
+        if not isinstance(periddict, dict):
+            logger.warning('get_status : problem with item_id %s in listname %s',
+                           item_id, listname)
+            return reply
+        return self.xod_config[listname].get_item_status(periddict)
 
     def register_cti_handlers(self):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
@@ -313,26 +251,6 @@ class Safe(object):
                            'class': 'getlist',
                            'status': item}
 
-    def set_extenfeatures(self, urls):
-        '''Retrieve and assign extenfeatures from a url list'''
-        if not urls:
-            self.extenfeatures = {}
-            return
-        extenfeatures = cti_urllist.UrlList(urls[0])
-        extenfeatures.getlist(0, 0, False)
-        self.extenfeatures = extenfeatures.jsonreply
-
-    def fill_lines_into_users(self):
-        user2phone = {}
-        for idphone, v in self.xod_config['phones'].keeplist.iteritems():
-            iduser = str(v.get('iduserfeatures'))
-            if iduser not in user2phone:
-                user2phone[iduser] = []
-            if idphone not in user2phone[iduser]:
-                user2phone[iduser].append(idphone)
-        for iduser, v in self.xod_config['users'].keeplist.iteritems():
-            v['linelist'] = user2phone.get(iduser, [])
-
     def config_from_external(self, listname, contents):
         function = contents.get('function')
         if function == 'listid':
@@ -352,116 +270,6 @@ class Safe(object):
                                                 'tipbxid': self.ipbxid,
                                                 'tid': tid,
                                                 'status': self.xod_status[listname][tid]})
-
-    def _initialize_item_status(self, listname, index):
-        self.xod_status[listname][index] = {}
-        if self.props_status.get(listname):
-            self.xod_status[listname][index] = copy.deepcopy(self.props_status[listname])
-
-    def _update_config_list_add(self, listname, deltas):
-        changed = 'add' in deltas and len(deltas['add']) > 0
-        for k in deltas.get('add', []):
-            self._initialize_item_status(listname, k)
-
-            message = {'class': 'getlist',
-                       'listname': listname,
-                       'function': 'addconfig',
-                       'tipbxid': self.ipbxid,
-                       'list': [k]}
-
-            if not cti_context.get('config').part_context():
-                self._ctiserver.send_cti_event(message)
-            else:
-                if listname == 'users':
-                    item_context = self.user_service_manager.get_context(k)
-                else:
-                    item_context = self.xod_config[listname].keeplist[k].get('context')
-                connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
-                for connection in connection_list:
-                    connection.append_msg(message)
-
-        return changed
-
-    def _update_config_list_del(self, listname, deltas):
-        changed = 'del' in deltas and len(deltas['del']) > 0
-        if changed:
-            self._ctiserver.send_cti_event({'class': 'getlist',
-                                            'listname': listname,
-                                            'function': 'delconfig',
-                                            'tipbxid': self.ipbxid,
-                                            'list': deltas['del']})
-        return changed
-
-    def _update_config_list_change(self, listname, deltas):
-        do_fill_lines = False
-        for tid, v in deltas.get('change', {}).iteritems():
-            if v:
-                props = self.xod_config[listname].keeplist[tid]
-                newc = {}
-                for p in v:
-                    if p in self.props_config.get(listname):
-                        newc[p] = props[p]
-
-                if newc:
-                    message = {'class': 'getlist',
-                               'listname': listname,
-                               'function': 'updateconfig',
-                               'tipbxid': self.ipbxid,
-                               'tid': tid,
-                               'config': newc}
-
-                    self._ctiserver.send_cti_event(message)
-                    do_fill_lines = True
-
-        return do_fill_lines
-
-    def update_config_list(self, listname, state, id):
-        start_time = time.time()
-        try:
-            deltas = self.xod_config[listname].update()
-            added = self._update_config_list_add(listname, deltas)
-            deleted = self._update_config_list_del(listname, deltas)
-            changed = self._update_config_list_change(listname, deltas)
-            if listname in ['phones', 'users'] and (added or changed or deleted):
-                self.fill_lines_into_users()
-        except LookupError:
-            logger.exception('update_config_list %s', listname)
-        end_time = time.time()
-        logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
-
-    def update_config_list_all(self):
-        for listname in self.urlvars:
-            self.update_config_list(listname, None, None)
-
-    def init_status(self):
-        '''
-        Initialize xod_status for lists that are not retrieved using web services
-        '''
-        self.xod_status['trunks'] = {}
-        trunk_ids = self.trunk_features_dao.get_ids()
-        for trunk_id in trunk_ids:
-            self.xod_status['trunks'][trunk_id] = copy.deepcopy(self.props_status['trunks'])
-
-    def get_x_list(self, xlist):
-        lxlist = {}
-        for xitem in xlist:
-            try:
-                if not xitem.get('commented'):
-                    # XXX to work over once redmine#2169 will be solved
-                    if 'id' in xitem:
-                        key = str(xitem.get('id'))
-                    elif 'contextnumbers' in xitem:
-                        # For contexts
-                        key = xitem['context']['name']
-                    else:
-                        # for voicemail case
-                        key = str(xitem.get('uniqueid'))
-                    lxlist[key] = xitem
-                    # meetme : admin_moderationmode => moderated
-                    # meetme : uniqueids and adminnum statuses
-            except KeyError:
-                logger.exception('(get_x_list : %s)', xitem)
-        return lxlist
 
     def user_match(self, userid, tomatch):
         domatch = False
@@ -528,62 +336,6 @@ class Safe(object):
         profileclient = self.user_features_dao.get_profile(userid)
         zz = self._config.getconfig('profiles').get(profileclient)
         return zz.get('userstatus')
-
-    def get_config(self, listname, item_id, limit=None, user_contexts=None):
-        reply = {}
-        if listname == 'queuemembers':
-            if item_id in self.queuemembers_config:
-                reply = self.queuemembers_config[item_id]
-            else:
-                reply = {}
-            return reply
-        item_config = self.xod_config[listname].get_item_in_contexts(item_id, user_contexts)
-        if not isinstance(item_config, dict):
-            logger.warning('get_config : problem with item_id %s in listname %s',
-                           item_id, listname)
-            return reply
-
-        if limit:
-            for k in limit:
-                if k in self.props_config.get(listname, []):
-                    reply[k] = item_config.get(k)
-        else:
-            for k in self.props_config.get(listname, []):
-                reply[k] = item_config.get(k)
-        return reply
-
-    def get_status_channel(self, channel_id, limit=None):
-        if channel_id in self.channels:
-            return self.channels[channel_id].properties
-
-    def get_status_queuemembers(self, queue_member_id, limit=None):
-        return self.queuemembers.get(queue_member_id)
-
-    def get_status(self, listname, item_id, limit=None):
-        if listname == 'channels':
-            return self.get_status_channel(item_id, limit)
-        if listname == 'queuemembers':
-            return self.get_status_queuemembers(item_id, limit)
-        reply = {}
-        statusdict = self.xod_status.get(listname)
-        if not isinstance(statusdict, dict):
-            logger.warning('get_status : problem with listname %s', listname)
-            return reply
-        periddict = statusdict.get(item_id)
-        if not isinstance(periddict, dict):
-            logger.warning('get_status : problem with item_id %s in listname %s',
-                           item_id, listname)
-            return reply
-
-        if limit:
-            for k in limit:
-                if k in self.props_status.get(listname, {}):
-                    reply[k] = periddict.get(k)
-        else:
-            for k in self.props_status.get(listname, {}):
-                reply[k] = periddict.get(k)
-
-        return reply
 
     def new_state(self, event):
         channel = event['Channel']
