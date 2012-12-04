@@ -162,21 +162,15 @@ class CTIServer(object):
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
-        self._device_manager = context.get('device_manager')
 
-        self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
-        self._queue_service_manager = context.get('queue_service_manager')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = context.get('queuemember_service_manager')
         self._queuemember_service_notifier = context.get('queuemember_service_notifier')
 
         self._agent_features_dao = context.get('agent_features_dao')
-        self._extensions_dao = context.get('extensions_dao')
         self._innerdata_dao = context.get('innerdata_dao')
-        self._line_features_dao = context.get('line_features_dao')
-        self._phone_funckey_dao = context.get('phone_funckey_dao')
         self._trunk_features_dao = context.get('trunk_features_dao')
         self._user_features_dao = context.get('user_features_dao')
 
@@ -185,11 +179,8 @@ class CTIServer(object):
         self._queue_entry_manager = context.get('queue_entry_manager')
         self._queue_statistic_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
-        self._queue_entry_encoder = context.get('queue_entry_encoder')
 
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
-        self.scheduler = context.get('scheduler')
-        self._agent_availability_notifier = context.get('agent_availability_notifier')
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
 
