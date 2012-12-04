@@ -31,64 +31,33 @@ from xivo_dao import linefeaturesdao, group_dao, agentfeaturesdao, \
 logger = logging.getLogger('daolist')
 
 
+class UnknownListName(Exception):
+    pass
+
+
 class DaoList(object):
 
     def __init__(self, listname):
         self.listname = listname
 
     def get(self, id):
-        try:
-            if self.listname == 'users':
-                return self._get_user(id)
-            elif self.listname == 'phones':
-                return self._get_line(id)
-            elif self.listname == 'groups':
-                return self._get_group(id)
-            elif self.listname == 'agents':
-                return self._get_agent(id)
-            elif self.listname == 'meetmes':
-                return self._get_meetme(id)
-            elif self.listname == 'queues':
-                return self._get_queue(id)
-            elif self.listname == 'voicemails':
-                return self._get_voicemail(id)
-            elif self.listname == 'contexts':
-                return self._get_context(id)
-            elif self.listname == 'phonebooks':
-                return self._get_phonebook(id)
-            elif self.listname == 'incalls':
-                return self._get_incall(id)
-            elif self.listname == 'trunks':
-                return self._get_trunk(id)
-        except LookupError:
-            return {}
+            name = '_get_%s' % self.listname[0:-1]
+            return self._get(name, id)
 
     def get_list(self):
+            name = '_get_%s' % self.listname
+            return self._get(name)
+
+    def _get(self, name, id=None):
         try:
-            if self.listname == 'users':
-                return self._get_users()
-            elif self.listname == 'phones':
-                return self._get_lines()
-            elif self.listname == 'groups':
-                return self._get_groups()
-            elif self.listname == 'agents':
-                return self._get_agents()
-            elif self.listname == 'meetmes':
-                return self._get_meetmes()
-            elif self.listname == 'queues':
-                return self._get_queues()
-            elif self.listname == 'voicemails':
-                return self._get_voicemails()
-            elif self.listname == 'contexts':
-                return self._get_contexts()
-            elif self.listname == 'phonebooks':
-                return self._get_phonebooks()
-            elif self.listname == 'incalls':
-                return self._get_incalls()
-            elif self.listname == 'trunks':
-                return self._get_trunks()
+            if id:
+                return getattr(self, name)(id)
+            else:
+                return getattr(self, name)()
         except LookupError:
             return {}
+        except AttributeError:
+            raise UnknownListName()
 
     def _get_users(self):
         res = {}
@@ -111,7 +80,7 @@ class DaoList(object):
         res[key]['linelist'] = [str(line_id)]
         return res
 
-    def _get_lines(self):
+    def _get_phones(self):
         full_line = []
         full_line.extend(linefeaturesdao.all_with_protocol('sip'))
         full_line.extend(linefeaturesdao.all_with_protocol('iax'))
@@ -124,7 +93,7 @@ class DaoList(object):
             res.update(self._format_line_data(linefeatures, protocol))
         return res
 
-    def _get_line(self, id):
+    def _get_phone(self, id):
         linefeatures, protocol = linefeaturesdao.get_with_line_id(id)
         return self._format_line_data(linefeatures, protocol)
 
