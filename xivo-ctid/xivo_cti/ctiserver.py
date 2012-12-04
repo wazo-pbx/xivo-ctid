@@ -381,14 +381,17 @@ class CTIServer(object):
 
         self.myipbxid = 'xivo'
 
-        ipbxconfig = self._config.getconfig('ipbx')
-        safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
+        logger.info('(1/3) Retrieving data')
+        safe = innerdata.Safe(self)
         safe.user_service_manager = self._user_service_manager
         safe.user_features_dao = self._user_features_dao
         safe.trunk_features_dao = self._trunk_features_dao
         safe.queuemember_service_manager = self._queuemember_service_manager
         dao.instanciate_dao(safe)
-        safe.init_status()
+
+        safe.init_xod_config()
+        safe.init_xod_status()
+
         self.safe = safe
         self._user_features_dao._innerdata = safe
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
@@ -400,12 +403,6 @@ class CTIServer(object):
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
-
-        logger.info('(1/3) Getting configuration')
-        try:
-            self.safe.update_config_list_all()
-        except Exception:
-            logger.exception('commandclass.updates()')
         self._init_statistics_producers()
         self._init_agent_availability()
 
