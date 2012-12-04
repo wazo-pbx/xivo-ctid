@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -29,4 +29,12 @@ class ChannelDAO(object):
         self.innerdata = innerdata
 
     def get_caller_id_name_number(self, channel):
-        pass
+        if channel not in self.innerdata.channels:
+            raise LookupError('Unknown channe %s' % channel)
+
+        channel = self.innerdata.channels[channel]
+
+        caller_id_name = channel.extra_data['xivo'].get('calleridname', '')
+        caller_id_number = channel.extra_data['xivo'].get('calleridnum', '')
+
+        return caller_id_name, caller_id_number
