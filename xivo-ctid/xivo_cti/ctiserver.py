@@ -89,6 +89,7 @@ class CTIServer(object):
     servername = 'XiVO CTI Server'
 
     def __init__(self):
+        self.start_time = time.time()
         self.mycti = {}
         self.myami = None
         self.safe = None
@@ -363,11 +364,8 @@ class CTIServer(object):
     def main_loop(self):
         self.askedtoquit = False
 
-        start_time = time.time()
-
         self.time_start = time.localtime()
-        logger.info('STARTING %s (pid %d))',
-                    self.servername, os.getpid())
+        logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
 
         self.lastrequest_time = time.time()
         self.update_userlist = []
@@ -429,7 +427,7 @@ class CTIServer(object):
         self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
-        logger.info('CTI Fully Booted in %.6f seconds', (time.time() - start_time))
+        logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
