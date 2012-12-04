@@ -37,7 +37,6 @@ from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 
 
 class TestSafe(unittest.TestCase):
@@ -51,13 +50,7 @@ class TestSafe(unittest.TestCase):
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
         config = context.get('config')
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
-        self.safe = Safe(self._ctiserver, self._ipbx_id)
-        self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
-        self.safe.trunk_features_dao.get_ids.return_value = []
-        self.safe.init_status()
-
-    def tearDown(self):
-        pass
+        self.safe = Safe(self._ctiserver)
 
     def test_safe(self):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)
@@ -126,26 +119,13 @@ class TestSafe(unittest.TestCase):
         channel = Mock(Channel)
         channel.relations = ['trunk:1']
         self.safe.channels[channel_name] = channel
+        self.safe.xod_status['trunks'] = {}
         self.safe.xod_status['trunks'][1] = {'channels': [channel_name]}
 
         self.safe.hangup(channel_name)
 
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
-
-    def test_init_status(self):
-        id_list = [1, 2, 3, 4]
-        safe = Safe(self._ctiserver, self._ipbx_id)
-        safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
-        safe.trunk_features_dao.get_ids.return_value = id_list
-
-        safe.init_status()
-
-        self.assertTrue('trunks' in safe.xod_status)
-        for trunk_id in id_list:
-            self.assertTrue(trunk_id in safe.xod_status['trunks'])
-            self.assertEqual(safe.xod_status['trunks'][trunk_id], safe.props_status['trunks'])
-            self.assertFalse(safe.xod_status['trunks'][trunk_id] is safe.props_status['trunks'])
 
 
 class TestChannel(unittest.TestCase):
