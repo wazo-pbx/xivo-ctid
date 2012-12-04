@@ -22,25 +22,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
-logger = logging.getLogger('voicemaillist')
 
-class VoicemailList(ContextAwareAnyList):
+class IncallsList(ContextAwareAnyList):
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = { 'name' : 'voicemail',
-                                    'urloptions' : (1, 5, True) }
-        ContextAwareAnyList.__init__(self, newurls)
-
-    def update(self):
-        ret = ContextAwareAnyList.update(self)
-        self.reverse_index = {}
-        for idx, ag in self.keeplist.iteritems():
-            rev = '%s@%s' % (ag['mailbox'], ag['context'])
-            if rev not in self.reverse_index:
-                self.reverse_index[rev] = idx
-            else:
-                logger.warning('2 voicemails have the same mailbox@context')
-        return ret
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        ContextAwareAnyList.__init__(self, 'incalls')

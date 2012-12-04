@@ -24,7 +24,10 @@
 
 
 import unittest
-from xivo_cti.lists.cti_phonelist import PhoneList
+from xivo_cti.lists.phones_list import PhonesList
+from tests.mock import Mock
+from xivo_cti.innerdata import Safe
+from xivo_cti.ctiserver import CTIServer
 
 
 class Test(unittest.TestCase):
@@ -358,7 +361,10 @@ class Test(unittest.TestCase):
                 PHONE_3['id']: PHONE_3}
 
     def setUp(self):
-        self.phone_list = PhoneList()
+        innerdata = Mock(Safe)
+        innerdata._ctiserver = Mock(CTIServer)
+        innerdata.ipbxid = 'xivo'
+        self.phone_list = PhonesList(innerdata)
         self.phone_list.keeplist = self.keeplist
         self.phone_list._update_lookup_dictionaries()
 

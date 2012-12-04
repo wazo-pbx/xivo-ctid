@@ -26,31 +26,26 @@ import logging
 import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
-logger = logging.getLogger('grouplist')
+logger = logging.getLogger('queuelist')
 
 
-class GroupList(ContextAwareAnyList):
+class QueuesList(ContextAwareAnyList):
 
-    queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
-                          'Xivo-QueueMember-StateTime']
-    queuestats = ['Abandoned', 'Max', 'Completed', 'ServiceLevel', 'Weight', 'Holdtime',
-                  'Xivo-Join', 'Xivo-Link', 'Xivo-Lost', 'Xivo-Wait', 'Xivo-TalkingTime', 'Xivo-Rate',
-                  'Calls']
+    queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty',
+                          'LastCall', 'CallsTaken', 'Xivo-QueueMember-StateTime']
 
-    def __init__(self, newurls=[], virtual=False):
-        self.anylist_properties = {'name': 'groups',
-                                   'urloptions': (1, 5, True)}
-        ContextAwareAnyList.__init__(self, newurls)
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        ContextAwareAnyList.__init__(self, 'queues')
 
-    def update(self):
-        ret = ContextAwareAnyList.update(self)
+    def init_data(self):
+        ContextAwareAnyList.init_data(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['name'] not in self.reverse_index:
                 self.reverse_index[ag['name']] = idx
             else:
-                logger.warning('2 groups have the same name')
-        return ret
+                logger.warning('2 queues have the same name')
 
     def hasqueue(self, queuename):
         return queuename in self.reverse_index
@@ -77,12 +72,10 @@ class GroupList(ContextAwareAnyList):
 
     def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
         if queueid in self.keeplist:
-            self.keeplist[queueid]['channels'][channel] = { 'position' : position,
-                                                            'entrytime' : entrytime,
-                                                            'calleridnum' : calleridnum,
-                                                            'calleridname' : calleridname }
-        else:
-            logger.warning('queueentry_update : no such queueid %s', queueid)
+            self.keeplist[queueid]['channels'][channel] = {'position': position,
+                                                           'entrytime': entrytime,
+                                                           'calleridnum': calleridnum,
+                                                           'calleridname': calleridname}
 
     def queueentry_remove(self, queueid, channel):
         if queueid in self.keeplist:
@@ -90,7 +83,7 @@ class GroupList(ContextAwareAnyList):
                 del self.keeplist[queueid]['channels'][channel]
             else:
                 logger.warning('queueentry_remove : channel %s is not in queueid %s',
-                            channel, queueid)
+                               channel, queueid)
         else:
             logger.warning('queueentry_remove : no such queueid %s', queueid)
 
@@ -127,22 +120,8 @@ class GroupList(ContextAwareAnyList):
             logger.warning('queuememberremove : no such queueid %s', queueid)
         return changed
 
-    def update_queuestats(self, queueid, event):
-        changed = False
-        if queueid in self.keeplist:
-            thisqueuestats = self.keeplist[queueid]['queuestats']
-            for statfield in self.queuestats:
-                if statfield in event:
-                    if statfield in thisqueuestats:
-                        if thisqueuestats[statfield] != event.get(statfield):
-                            thisqueuestats[statfield] = event.get(statfield)
-                            changed = True
-                    else:
-                        thisqueuestats[statfield] = event.get(statfield)
-                        changed = True
-        else:
-            logger.warning('update_queuestats : no such queueid %s', queueid)
-        return changed
-
     def get_queues(self):
         return self.keeplist.keys()
+
+    def get_all_queues(self):
+        return self.keeplist

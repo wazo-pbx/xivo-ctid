@@ -29,25 +29,23 @@ from xivo_cti.cti_anylist import ContextAwareAnyList
 logger = logging.getLogger('agentlist')
 
 
-class AgentList(ContextAwareAnyList):
+class AgentsList(ContextAwareAnyList):
 
     queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
                           'Xivo-QueueMember-StateTime']
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = {'name': 'agents',
-                                   'urloptions': (1, 4, True)}
-        ContextAwareAnyList.__init__(self, newurls)
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        ContextAwareAnyList.__init__(self, 'agents')
 
-    def update(self):
-        ret = ContextAwareAnyList.update(self)
+    def init_data(self):
+        ContextAwareAnyList.init_data(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['number'] not in self.reverse_index:
                 self.reverse_index[ag['number']] = idx
             else:
                 logger.warning('2 agents have the same number')
-        return ret
 
     def queuememberupdate(self, queuename, queueorgroup, agentnumber, event):
         changed = False
@@ -98,5 +96,5 @@ class AgentList(ContextAwareAnyList):
             return idx
 
     def get_agent_by_user(self, user_id):
-        user = self.commandclass.xod_config['users'].keeplist[str(user_id)]
+        user = self._innerdata.xod_config['users'].keeplist[str(user_id)]
         return self.keeplist.get(user['agentid'])

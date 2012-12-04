@@ -25,13 +25,8 @@
 from xivo_cti.cti_anylist import AnyList
 
 
-class ContextList(AnyList):
+class ContextsList(AnyList):
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = {'name': 'context',
-                                   'urloptions': (1, 5, True)}
-        AnyList.__init__(self, newurls)
-
-    def update(self):
-        ret = AnyList.update(self)
-        return ret
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        AnyList.__init__(self, 'contexts')

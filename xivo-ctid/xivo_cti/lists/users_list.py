@@ -29,16 +29,11 @@ from xivo_cti.cti_anylist import AnyList
 logger = logging.getLogger('userlist')
 
 
-class UserList(AnyList):
+class UsersList(AnyList):
 
-    def __init__(self, newurls=[]):
-        self.anylist_properties = {'name': 'users',
-                                   'urloptions': (0, 11, True)}
-        AnyList.__init__(self, newurls)
-
-    def update(self):
-        delta = AnyList.update(self)
-        return delta
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        AnyList.__init__(self, 'users')
 
     def finduser(self, userid):
         for userinfo in self.keeplist.itervalues():
@@ -56,10 +51,10 @@ class UserList(AnyList):
         return lst
 
     def get_contexts(self, user_id):
-        return self.commandclass.xod_config['phones'].get_contexts_for_user(user_id)
+        return self._innerdata.xod_config['phones'].get_contexts_for_user(user_id)
 
     def list_ids_in_contexts(self, contexts):
-        phonelist = self.commandclass.xod_config['phones']
+        phonelist = self._innerdata.xod_config['phones']
         return phonelist.list_user_ids_in_contexts(contexts)
 
     def get_item_in_contexts(self, item_id, contexts):
@@ -68,7 +63,7 @@ class UserList(AnyList):
         except KeyError:
             return None
         else:
-            phonelist = self.commandclass.xod_config['phones']
+            phonelist = self._innerdata.xod_config['phones']
             if phonelist.is_user_id_in_contexts(item_id, contexts):
                 return item
             return None

@@ -28,20 +28,11 @@ from xivo_cti.cti_anylist import AnyList
 logger = logging.getLogger('phonebook')
 
 
-class PhonebookList(AnyList):
+class PhonebooksList(AnyList):
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = {'name': 'phonebook',
-                                   'urloptions': (1, 5, True)}
-        AnyList.__init__(self, newurls)
-        self.commandclass = self
-        self.getter = '_getphonebook'
-
-    def setcommandclass(self, commandclass):
-        pass
-
-    def setgetter(self, getter):
-        pass
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        AnyList.__init__(self, 'phonebooks')
 
     def _getphonebook(self, jsonreply):
         pblist = {}

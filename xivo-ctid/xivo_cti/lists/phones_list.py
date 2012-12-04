@@ -31,20 +31,18 @@ from xivo_cti.context import context as cti_context
 logger = logging.getLogger('phonelist')
 
 
-class PhoneList(ContextAwareAnyList):
+class PhonesList(ContextAwareAnyList):
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = {'name': 'phones',
-                                   'urloptions': (1, 12, False)}
-        ContextAwareAnyList.__init__(self, newurls)
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        ContextAwareAnyList.__init__(self, 'phones')
         self._contexts_by_user_id = {}
         self._user_ids_by_context = {}
         self._phone_id_by_proto_and_name = {}
 
-    def update(self):
-        delta = ContextAwareAnyList.update(self)
+    def init_data(self):
+        ContextAwareAnyList.init_data(self)
         self._update_lookup_dictionaries()
-        return delta
 
     def _update_lookup_dictionaries(self):
         contexts_by_user_id = defaultdict(set)
@@ -388,7 +386,7 @@ class PhoneList(ContextAwareAnyList):
 
     def list_user_ids_in_contexts(self, contexts):
         if not cti_context.get('config').part_context():
-            userlist = self.commandclass.xod_config['users']
+            userlist = self._innerdata.xod_config['users']
             return userlist.keeplist.keys()
         elif not contexts:
             return []

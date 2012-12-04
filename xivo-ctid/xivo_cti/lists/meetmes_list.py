@@ -33,27 +33,21 @@ from xivo_cti.cti.missing_field_exception import MissingFieldException
 logger = logging.getLogger('meetmelist')
 
 
-class MeetmeList(ContextAwareAnyList):
+class MeetmesList(ContextAwareAnyList):
 
-    def __init__(self, newurls=[], useless=None):
-        self.anylist_properties = {'name': 'meetme',
-                                   'urloptions': (1, 5, True)}
-        ContextAwareAnyList.__init__(self, newurls)
+    def __init__(self, innerdata):
+        self._innerdata = innerdata
+        ContextAwareAnyList.__init__(self, 'meetmes')
         InviteConfroom.register_callback_params(self.invite, ['invitee', 'cti_connection'])
 
-    def update(self):
-        ret = ContextAwareAnyList.update(self)
+    def init_data(self):
+        ContextAwareAnyList.init_data(self)
         self.reverse_index = {}
         for idx, ag in self.keeplist.iteritems():
             if ag['confno'] not in self.reverse_index:
                 self.reverse_index[ag['confno']] = idx
             else:
                 logger.warning('2 meetme have the same room number')
-        return ret
-
-    def update_computed_fields(self, newlist):
-        for item in newlist.itervalues():
-            item['pin_needed'] = bool(item.get('pin'))
 
     def idbyroomnumber(self, roomnumber):
         idx = self.reverse_index.get(roomnumber)
@@ -63,7 +57,7 @@ class MeetmeList(ContextAwareAnyList):
     def find_phone_member(self, protocol, name):
         protocol = protocol.upper()
         channel_start = '%s/%s' % (protocol, name)
-        statuses = self.commandclass.xod_status['meetmes']
+        statuses = self._innerdata.xod_status['meetmes']
         for meetme_id, status in statuses.iteritems():
             channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
             if channel_start in channels:
@@ -77,7 +71,7 @@ class MeetmeList(ContextAwareAnyList):
 
             originate = Originate()
 
-            phones = self.commandclass.xod_config['phones'].keeplist
+            phones = self._innerdata.xod_config['phones'].keeplist
             user_id = int(connection.connection_details['userid'])
             for phone in phones.itervalues():
                 if phone['iduserfeatures'] == int(invitee_id):
