@@ -38,6 +38,10 @@ from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdate
 from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.current_call.formatter import CurrentCallFormatter
+from xivo_cti.services.current_call.manager import CurrentCallManager
+from xivo_cti.services.current_call.notifier import CurrentCallNotifier
+from xivo_cti.services.current_call.parser import CurrentCallParser
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
@@ -79,6 +83,10 @@ def _register_context(context):
     context.register('agent_service_manager', AgentServiceManager)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)
+    context.register('current_call_formatter', CurrentCallFormatter)
+    context.register('current_call_manager', CurrentCallManager)
+    context.register('current_call_notifier', CurrentCallNotifier)
+    context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
     context.register('extensions_dao', ExtensionsDAO)

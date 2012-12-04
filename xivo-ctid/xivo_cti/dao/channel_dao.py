@@ -22,19 +22,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
 
-agent = None
-queue_member = None
-channel = None
+class ChannelDAO(object):
 
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
-def instanciate_dao(innerdata):
-    global queue_member
-    queue_member = QueueMemberDAO(innerdata)
-    global channel
-    channel = ChannelDAO(innerdata)
-    global agent
-    agent = AgentDAO(innerdata, queue_member)
+    def get_caller_id_name_number(self, channel):
+        if channel not in self.innerdata.channels:
+            raise LookupError('Unknown channe %s' % channel)
+
+        channel = self.innerdata.channels[channel]
+
+        caller_id_name = channel.extra_data['xivo'].get('calleridname', '')
+        caller_id_number = channel.extra_data['xivo'].get('calleridnum', '')
+
+        return caller_id_name, caller_id_number
