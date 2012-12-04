@@ -28,6 +28,7 @@ import time
 from mock import Mock
 
 from xivo_cti.services.current_call import formatter
+from xivo_cti.services.current_call import manager
 from xivo_cti import dao
 from xivo_cti.dao.channel_dao import ChannelDAO
 
@@ -35,7 +36,8 @@ from xivo_cti.dao.channel_dao import ChannelDAO
 class TestCurrentCallFormatter(unittest.TestCase):
 
     def setUp(self):
-        self.formatter = formatter.CurrentCallFormatter()
+        self.manager = Mock(manager.CurrentCallManager)
+        self.formatter = formatter.CurrentCallFormatter(self.manager)
         self.line_identity_1 = 'SCCP/7890'
         self.line_identity_2 = 'SIP/abcd'
         now = time.time()
@@ -65,7 +67,7 @@ class TestCurrentCallFormatter(unittest.TestCase):
         formatted_call_1 = {'first': 'call'}
         self.formatter._format_call = Mock()
         self.formatter._format_call.return_value = formatted_call_1
-        self.formatter._state = self._state
+        self.manager.get_line_calls.return_value = self._state[self.line_identity_1]
 
         formatted_current_call = self.formatter.get_line_current_call(self.line_identity_1)
 
@@ -81,7 +83,7 @@ class TestCurrentCallFormatter(unittest.TestCase):
     def test_get_line_current_call_unknown_channel(self):
         self.formatter._format_call = Mock()
         self.formatter._format_call.side_effect = LookupError()
-        self.formatter._state = self._state
+        self.manager.get_line_calls.return_value = self._state[self.line_identity_1]
 
         formatted_current_call = self.formatter.get_line_current_call(self.line_identity_1)
 
@@ -94,6 +96,8 @@ class TestCurrentCallFormatter(unittest.TestCase):
         self.assertEqual(formatted_current_call, expected_current_call)
 
     def test_get_line_current_call_no_state_for_line(self):
+        self.manager.get_line_calls.return_value = []
+
         formatted_current_call = self.formatter.get_line_current_call('SIP/nothere')
 
         expected_current_call = {

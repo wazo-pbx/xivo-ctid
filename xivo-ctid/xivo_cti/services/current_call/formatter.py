@@ -31,13 +31,13 @@ logger = logging.getLogger(__name__)
 
 class CurrentCallFormatter(object):
 
-    def __init__(self):
-        self._state = {}
+    def __init__(self, current_call_manager):
+        self._current_call_manager = current_call_manager
 
     def get_line_current_call(self, line_identity):
         calls = []
 
-        for call in self._state.get(line_identity, {}):
+        for call in self._current_call_manager.get_line_calls(line_identity):
             try:
                 formatted_call = self._format_call(call)
             except LookupError:
