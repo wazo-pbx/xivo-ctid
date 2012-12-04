@@ -281,6 +281,9 @@ class CTIServer(object):
             lambda event: agent_availability_updater.parse_ami_logout(event, self._agent_availability_updater)
         )
 
+        current_call_parser = context.get('current_call_parser')
+        current_call_parser.register_ami_events()
+
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
                                ('listname', 'users')],

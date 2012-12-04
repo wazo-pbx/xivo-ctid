@@ -29,6 +29,7 @@ from mock import patch
 from mock import Mock
 from hamcrest import *
 
+from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
 
@@ -37,7 +38,8 @@ class TestCurrentCallManager(unittest.TestCase):
 
     def setUp(self):
         self.notifier = Mock(notifier.CurrentCallNotifier)
-        self.manager = manager.CurrentCallManager(self.notifier)
+        self.formatter = Mock(formatter.CurrentCallFormatter)
+        self.manager = manager.CurrentCallManager(self.notifier, self.formatter)
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):

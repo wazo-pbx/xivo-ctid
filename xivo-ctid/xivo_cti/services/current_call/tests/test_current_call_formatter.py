@@ -37,7 +37,8 @@ class TestCurrentCallFormatter(unittest.TestCase):
 
     def setUp(self):
         self.manager = Mock(manager.CurrentCallManager)
-        self.formatter = formatter.CurrentCallFormatter(self.manager)
+        self.formatter = formatter.CurrentCallFormatter()
+        self.formatter._current_call_manager = self.manager
         self.line_identity_1 = 'SCCP/7890'
         self.line_identity_2 = 'SIP/abcd'
         now = time.time()
