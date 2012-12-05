@@ -43,7 +43,6 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.dao import userfeaturesdao
 from xivo_cti.services.agent_status import AgentStatus
 
 logger = logging.getLogger('innerdata')
