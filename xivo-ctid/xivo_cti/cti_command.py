@@ -32,6 +32,7 @@ from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.celdao import UnsupportedLineProtocolException
+from xivo_cti.services import call_history_manager
 
 logger = logging.getLogger('cti_command')
 
@@ -313,9 +314,8 @@ class Command(object):
         return None
 
     def _get_outgoing_history_for_phone(self, phone, limit):
-        call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for sent_call in call_history_mgr.outgoing_calls_for_phone(phone, limit):
+        for sent_call in call_history_manager.outgoing_calls_for_phone(phone, limit):
             result.append({'calldate': sent_call.date.isoformat(),
                            'duration': sent_call.duration,
                            # XXX this is not fullname, this is just an extension number like in 1.1
@@ -323,18 +323,16 @@ class Command(object):
         return result
 
     def _get_answered_history_for_phone(self, phone, limit):
-        call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.answered_calls_for_phone(phone, limit):
+        for received_call in call_history_manager.answered_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})
         return result
 
     def _get_missed_history_for_phone(self, phone, limit):
-        call_history_mgr = self.rinnerdata.call_history_mgr
         result = []
-        for received_call in call_history_mgr.missed_calls_for_phone(phone, limit):
+        for received_call in call_history_manager.missed_calls_for_phone(phone, limit):
             result.append({'calldate': received_call.date.isoformat(),
                            'duration': received_call.duration,
                            'fullname': received_call.caller_name})

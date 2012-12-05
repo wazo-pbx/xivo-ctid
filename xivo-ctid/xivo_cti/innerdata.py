@@ -32,7 +32,6 @@ import Queue
 import cti_urllist
 from xivo_cti import lists, cti_config
 from xivo_cti.lists import *
-from xivo_cti.services import call_history_manager
 from xivo_cti.directory import directory
 from xivo_cti import cti_sheets
 from xivo_cti import db_connection_manager
@@ -197,7 +196,6 @@ class Safe(object):
         self.directories_mgr = directory.DirectoriesMgr()
 
         dbconnection.add_connection(cti_config.DB_URI)
-        self.call_history_mgr = call_history_manager.CallHistoryMgr.new_from_uri(cti_config.DB_URI)
 
         self.ctistack = []
 

@@ -23,64 +23,59 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
-from xivo_dao.celdao import CELDAO
+from xivo_dao import celdao
 
 
 ReceivedCall = namedtuple('ReceivedCall', ['date', 'duration', 'caller_name'])
 SentCall = namedtuple('SentCall', ['date', 'duration', 'extension'])
 
 
-class CallHistoryMgr(object):
+def answered_calls_for_phone(phone, limit):
+    channels = celdao.channels_for_phone(phone, limit)
+    answering_channels = [channel
+                          for channel in channels
+                          if not channel.is_caller()
+                          and channel.is_answered()]
+    received_calls = _convert_incoming_channels(answering_channels, limit)
+    return received_calls
 
-    def __init__(self, cel_dao):
-        self._cel_dao = cel_dao
 
-    def answered_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone, limit)
-        answering_channels = [channel
-                              for channel in channels
-                              if not channel.is_caller()
-                              and channel.is_answered()]
-        received_calls = self._convert_incoming_channels(answering_channels, limit)
-        return received_calls
+def missed_calls_for_phone(phone, limit):
+    channels = celdao.channels_for_phone(phone, limit)
+    missed_channels = [channel
+                       for channel in channels
+                       if not channel.is_caller()
+                       and not channel.is_answered()]
+    received_calls = _convert_incoming_channels(missed_channels, limit)
+    return received_calls
 
-    def missed_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone, limit)
-        missed_channels = [channel
-                           for channel in channels
-                           if not channel.is_caller()
-                           and not channel.is_answered()]
-        received_calls = self._convert_incoming_channels(missed_channels, limit)
-        return received_calls
 
-    def outgoing_calls_for_phone(self, phone, limit):
-        channels = self._cel_dao.channels_for_phone(phone, limit)
-        outgoing_channels = [channel
-                             for channel in channels
-                             if channel.is_caller()]
-        sent_calls = self._convert_outgoing_channels(outgoing_channels, limit)
-        return sent_calls
+def outgoing_calls_for_phone(phone, limit):
+    channels = celdao.channels_for_phone(phone, limit)
+    outgoing_channels = [channel
+                         for channel in channels
+                         if channel.is_caller()]
+    sent_calls = _convert_outgoing_channels(outgoing_channels, limit)
+    return sent_calls
 
-    def _convert_incoming_channels(self, incoming_channels, limit):
-        received_calls = []
-        for incoming_channel in incoming_channels[:limit]:
-            call_id = incoming_channel.linked_id()
-            caller_id = self._cel_dao.caller_id_by_unique_id(call_id)
-            received_call = ReceivedCall(incoming_channel.channel_start_time(),
-                                         incoming_channel.answer_duration(),
-                                         caller_id)
-            received_calls.append(received_call)
-        return received_calls
 
-    def _convert_outgoing_channels(self, outgoing_channels, limit):
-        sent_calls = []
-        for outgoing_channel in outgoing_channels[:limit]:
-            sent_call = SentCall(outgoing_channel.channel_start_time(),
-                                 outgoing_channel.answer_duration(),
-                                 outgoing_channel.exten())
-            sent_calls.append(sent_call)
-        return sent_calls
+def _convert_incoming_channels(incoming_channels, limit):
+    received_calls = []
+    for incoming_channel in incoming_channels[:limit]:
+        call_id = incoming_channel.linked_id()
+        caller_id = celdao.caller_id_by_unique_id(call_id)
+        received_call = ReceivedCall(incoming_channel.channel_start_time(),
+                                     incoming_channel.answer_duration(),
+                                     caller_id)
+        received_calls.append(received_call)
+    return received_calls
 
-    @classmethod
-    def new_from_uri(cls, uri):
-        return cls(CELDAO.new_from_uri(uri))
+
+def _convert_outgoing_channels(outgoing_channels, limit):
+    sent_calls = []
+    for outgoing_channel in outgoing_channels[:limit]:
+        sent_call = SentCall(outgoing_channel.channel_start_time(),
+                             outgoing_channel.answer_duration(),
+                             outgoing_channel.exten())
+        sent_calls.append(sent_call)
+    return sent_calls
