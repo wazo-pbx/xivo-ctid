@@ -112,6 +112,8 @@ class Safe(object):
                 self._update_config_list_del(listname, id)
         except KeyError:
             logger.warning('id "%s" not exist for object %s', id, listname)
+        except TypeError:
+            logger.warning('id "%s" not set for object %s', id, listname)
         end_time = time.time()
         logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
 
