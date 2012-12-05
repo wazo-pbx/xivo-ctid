@@ -198,7 +198,7 @@ class DaoList(object):
         contexts = context_dao.all()
         for row in contexts:
             context, contextnumbers, contexttype, contextinclude = row
-            res.update(self._format_context_data(self, context, contextnumbers, contexttype, contextinclude))
+            res.update(self._format_context_data(context, contextnumbers, contexttype, contextinclude))
         return res
 
     def _get_context(self, id):
