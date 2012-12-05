@@ -39,7 +39,7 @@ class CurrentCallNotifier(object):
     def subscribe(self, client_connection):
         try:
             user_id = client_connection.user_id()
-            line_identity = userfeaturesdao.get_line_identity(user_id)
+            line_identity = userfeaturesdao.get_line_identity(user_id).lower()
         except LookupError:
             logging.warning('User %s tried to subscribe to current_calls with no line' % user_id)
         else:
@@ -48,10 +48,12 @@ class CurrentCallNotifier(object):
             self._report_current_call(line_identity)
 
     def publish_current_call(self, line_identity):
+        line_identity = line_identity.lower()
         if line_identity in self._subscriptions:
             self._report_current_call(line_identity)
 
     def _report_current_call(self, line_identity):
+        line_identity = line_identity.lower()
         formatted_current_call = self._formatter.get_line_current_call(line_identity)
 
         try:

@@ -33,19 +33,19 @@ class TestCurrentCallNotifier(unittest.TestCase):
 
         self.notifier.subscribe(self.client_connection_1)
 
-        expected_subscriptions = {self.line_identity_1: self.client_connection_1}
+        expected_subscriptions = {self.line_identity_1.lower(): self.client_connection_1}
         subscriptions = self.notifier._subscriptions
 
         self.assertEqual(subscriptions, expected_subscriptions)
-        self.notifier._report_current_call.assert_called_once_with(self.line_identity_1)
+        self.notifier._report_current_call.assert_called_once_with(self.line_identity_1.lower())
 
     def test_publish_current_call(self):
-        self.notifier._subscriptions[self.line_identity_1] = self.client_connection_1
+        self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
         self.notifier._report_current_call = Mock()
 
         self.notifier.publish_current_call(self.line_identity_1)
 
-        self.notifier._report_current_call.assert_called_once_with(self.line_identity_1)
+        self.notifier._report_current_call.assert_called_once_with(self.line_identity_1.lower())
 
     def test_publish_current_call_no_subscriptions(self):
         self.notifier._report_current_call = Mock()
@@ -59,8 +59,8 @@ class TestCurrentCallNotifier(unittest.TestCase):
                                   'current_call': []}
         self.current_call_formatter.get_line_current_call.return_value = formatted_current_call
 
-        self.notifier._subscriptions[self.line_identity_1] = self.client_connection_1
-        self.notifier._subscriptions[self.line_identity_2] = self.client_connection_2
+        self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
+        self.notifier._subscriptions[self.line_identity_2.lower()] = self.client_connection_2
 
         self.notifier._report_current_call(self.line_identity_1)
 
@@ -72,12 +72,12 @@ class TestCurrentCallNotifier(unittest.TestCase):
                                   'current_call': []}
         self.current_call_formatter.get_line_current_call.return_value = formatted_current_call
 
-        self.notifier._subscriptions[self.line_identity_1] = self.client_connection_1
-        self.notifier._subscriptions[self.line_identity_2] = self.client_connection_2
+        self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
+        self.notifier._subscriptions[self.line_identity_2.lower()] = self.client_connection_2
 
         self.client_connection_1.send_message.side_effect = ClientConnection.CloseException()
 
         self.notifier._report_current_call(self.line_identity_1)
 
         self.assertEqual(self.client_connection_2.call_count, 0)
-        self.assertTrue(self.line_identity_1 not in self.notifier._subscriptions, 'Subscriber not removed')
+        self.assertTrue(self.line_identity_1.lower() not in self.notifier._subscriptions, 'Subscriber not removed')

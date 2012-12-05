@@ -47,6 +47,12 @@ class TestCurrentCallFormatter(unittest.TestCase):
                           'cid_number': '1234',
                           'start': now,
                           'holded': False}
+        self.channel_2 = {'id': 'SCCP/1234-123456',
+                          'cid_name': 'Bob',
+                          'cid_number': '555',
+                          'start': now,
+                          'holded': True}
+
         self._state = {
             self.line_identity_1: [
                 {'channel': self.channel_1['id'],
@@ -123,5 +129,22 @@ class TestCurrentCallFormatter(unittest.TestCase):
                     'cid_number': self.channel_1['cid_number'],
                     'call_status': 'up',
                     'call_start': self.channel_1['start']}
+
+        self.assertEqual(result, expected)
+
+    def test_format_call_on_hold(self):
+        call = {'channel': self.channel_2['id'],
+                'bridge_time': self.channel_2['start'],
+                'on_hold': self.channel_2['holded']}
+
+        dao.channel = Mock(ChannelDAO)
+        dao.channel.get_caller_id_name_number.return_value = self.channel_2['cid_name'], self.channel_2['cid_number']
+
+        result = self.formatter._format_call(call)
+
+        expected = {'cid_name': self.channel_2['cid_name'],
+                    'cid_number': self.channel_2['cid_number'],
+                    'call_status': 'hold',
+                    'call_start': self.channel_2['start']}
 
         self.assertEqual(result, expected)

@@ -50,15 +50,12 @@ class CurrentCallParser(object):
         else:
             self._current_call_manager.unhold_channel(channel)
 
-    def parse_unlink(self, event):
-        self._current_call_manager.unbridge_channels(
-            event['Channel1'],
-            event['Channel2']
-        )
+    def parse_hangup(self, event):
+        self._current_call_manager.end_call(event['Channel'])
 
     def register_ami_events(self):
         logger.debug('Registering to AMI events')
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         ami_handler.register_callback('Bridge', self.parse_bridge)
         ami_handler.register_callback('Hold', self.parse_hold)
-        ami_handler.register_callback('Unlink', self.parse_unlink)
+        ami_handler.register_callback('Hangup', self.parse_hangup)

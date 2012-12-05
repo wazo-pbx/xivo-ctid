@@ -35,24 +35,37 @@ class CurrentCallManager(object):
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
         line_2 = self._identity_from_channel(channel_2)
-        self._lines[line_1] = [
-            {'channel': channel_2,
-             'bridge_time': time.time(),
-             'on_hold': False}]
-        self._lines[line_2] = [
-            {'channel': channel_1,
-             'bridge_time': time.time(),
-             'on_hold': False}]
-        self._current_call_notifier.publish_current_call(line_1)
-        self._current_call_notifier.publish_current_call(line_2)
 
-    def unbridge_channels(self, channel_1, channel_2):
-        line_1 = self._identity_from_channel(channel_1)
-        line_2 = self._identity_from_channel(channel_2)
-        self._remove_peer_channel(line_1, channel_2)
-        self._remove_peer_channel(line_2, channel_1)
-        self._current_call_notifier.publish_current_call(line_1)
-        self._current_call_notifier.publish_current_call(line_2)
+        if line_1 not in self._lines:
+            self._lines[line_1] = [
+                {'channel': channel_2,
+                 'lines_channel': channel_1,
+                 'bridge_time': time.time(),
+                 'on_hold': False}
+            ]
+            self._current_call_notifier.publish_current_call(line_1)
+
+        if line_2 not in self._lines:
+            self._lines[line_2] = [
+                {'channel': channel_1,
+                 'lines_channel': channel_2,
+                 'bridge_time': time.time(),
+                 'on_hold': False}
+            ]
+            self._current_call_notifier.publish_current_call(line_2)
+
+    def end_call(self, channel):
+        to_remove = []
+        for line, calls in self._lines.iteritems():
+            for call in calls:
+                if call['channel'] == channel or call['lines_channel'] == channel:
+                    to_remove.append((line, call['channel']))
+
+        for line, channel in to_remove:
+            self._remove_peer_channel(line, channel)
+
+        for line in set([line for line, _ in to_remove]):
+            self._current_call_notifier.publish_current_call(line)
 
     def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
@@ -82,7 +95,7 @@ class CurrentCallManager(object):
         peer_lines = [self._identity_from_channel(c['channel']) for c in self._lines[line]]
         for peer_line in peer_lines:
             for call in self._lines[peer_line]:
-                if line not in call['channel']:
+                if line not in call['channel'].lower():
                     continue
                 call['on_hold'] = new_status
                 self._current_call_notifier.publish_current_call(peer_line)
@@ -90,4 +103,4 @@ class CurrentCallManager(object):
     @staticmethod
     def _identity_from_channel(channel):
         last_dash = channel.rfind('-')
-        return channel[:last_dash]
+        return channel[:last_dash].lower()
