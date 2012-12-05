@@ -72,6 +72,7 @@ from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces.interfaces import DisconnectCause
+from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
@@ -148,6 +149,7 @@ class CTIServer(object):
 
     def _init_db_uri(self):
         dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
+        QueueLogger.init()
 
     def setup(self):
         self._set_logger()
