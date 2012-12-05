@@ -44,6 +44,7 @@ class CurrentCallNotifier(object):
             logging.warning('User %s tried to subscribe to current_calls with no line' % user_id)
         else:
             self._subscriptions[line_identity] = client_connection
+            logger.info('User %s is now registered to current_calls on line %s', user_id, line_identity)
             self._report_current_call(line_identity)
 
     def publish_current_call(self, line_identity):

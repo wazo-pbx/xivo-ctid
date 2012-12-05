@@ -23,7 +23,6 @@
 
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from tests.mock import Mock
-from xivo_dao import extensionsdao
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
@@ -38,7 +37,6 @@ class TestFunckeyManager(DAOTestCase):
 
     def setUp(self):
         self.user_id = 123
-        self.extensionsdao = Mock(extensionsdao)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
         self.manager = FunckeyManager(self.phone_funckey_dao)
         self.manager.phone_funckey_dao = self.phone_funckey_dao

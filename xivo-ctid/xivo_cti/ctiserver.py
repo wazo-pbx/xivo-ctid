@@ -66,6 +66,7 @@ from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
 from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
 from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
+from xivo_cti.cti.commands.subscribe_current_calls import SubscribeCurrentCalls
 from xivo_cti.funckey import funckey_manager
 from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_cti
@@ -240,7 +241,14 @@ class CTIServer(object):
         QueueRemove.register_callback_params(
             self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
 
-        SubscribeMeetmeUpdate.register_callback_params(context.get('meetme_service_notifier').subscribe, ['cti_connection'])
+        SubscribeMeetmeUpdate.register_callback_params(
+            context.get('meetme_service_notifier').subscribe,
+            ['cti_connection']
+        )
+        SubscribeCurrentCalls.register_callback_params(
+            context.get('current_call_notifier').subscribe,
+            ['cti_connection']
+        )
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
