@@ -22,6 +22,7 @@
 
 from xivo import xivo_helpers
 from xivo_cti.dao import userfeaturesdao
+from xivo_dao import extensionsdao
 
 
 class FunckeyManager(object):
@@ -30,13 +31,12 @@ class FunckeyManager(object):
     INUSE = 'INUSE'
     NOT_INUSE = 'NOT_INUSE'
 
-    def __init__(self, extensions_dao, phone_funckey_dao):
-        self.extensionsdao = extensions_dao
+    def __init__(self, phone_funckey_dao):
         self.phone_funckey_dao = phone_funckey_dao
 
     def _device(self, user_id, name, destination=''):
-        funckey_prefix = self.extensionsdao.exten_by_name('phoneprogfunckey')
-        funckey_args = (user_id, self.extensionsdao.exten_by_name(name), destination)
+        funckey_prefix = extensionsdao.exten_by_name('phoneprogfunckey')
+        funckey_args = (user_id, extensionsdao.exten_by_name(name), destination)
         funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
 
         hint = self.DEVICE_PATTERN % funckey_pattern
