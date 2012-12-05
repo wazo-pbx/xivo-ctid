@@ -39,47 +39,48 @@ from xivo_dao.alchemy import dbconnection
 
 from xivo_cti import amiinterpret
 from xivo_cti import cti_config
+from xivo_cti import dao
 from xivo_cti import innerdata
 from xivo_cti import message_hook
-from xivo_cti import dao
-from xivo_cti.scheduler import Scheduler
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.context import context
+from xivo_cti.cti.commands.agent_login import AgentLogin
+from xivo_cti.cti.commands.agent_logout import AgentLogout
+from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.logout import Logout
+from xivo_cti.cti.commands.queue_add import QueueAdd
+from xivo_cti.cti.commands.queue_pause import QueuePause
+from xivo_cti.cti.commands.queue_remove import QueueRemove
+from xivo_cti.cti.commands.queue_unpause import QueueUnPause
+from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
+from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
+from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
+from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
+from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
+from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
+from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableNoAnswerForward
+from xivo_cti.cti.commands.user_service.disable_unconditional_forward import DisableUnconditionalForward
+from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
+from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
+from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
+from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
+from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
+from xivo_cti.funckey import funckey_manager
 from xivo_cti.interfaces import interface_ami
+from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
-from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces.interfaces import DisconnectCause
-from xivo_cti.cti.commands.answer import Answer
-from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
-from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
-from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
-from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
-from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
-from xivo_cti.cti.commands.user_service.disable_unconditional_forward import DisableUnconditionalForward
-from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
-from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableNoAnswerForward
-from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
-from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
-from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
-from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
-from xivo_cti.funckey import funckey_manager
-from xivo_cti.cti.commands.agent_login import AgentLogin
-from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
-from xivo_cti.services import queue_entry_manager
+from xivo_cti.queue_logger import QueueLogger
+from xivo_cti.scheduler import Scheduler
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
+from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
-from xivo_cti.cti.commands.logout import Logout
-from xivo_cti.cti.commands.queue_unpause import QueueUnPause
-from xivo_cti.cti.commands.queue_pause import QueuePause
-from xivo_cti.cti.commands.queue_add import QueueAdd
-from xivo_cti.cti.commands.queue_remove import QueueRemove
-from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
-from xivo_cti.cti.commands.agent_logout import AgentLogout
 
 logger = logging.getLogger('main')
 
@@ -149,6 +150,7 @@ class CTIServer(object):
 
     def _init_db_uri(self):
         dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
+        QueueLogger.init()
 
     def setup(self):
         self._set_logger()
@@ -163,20 +165,15 @@ class CTIServer(object):
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
-        self._device_manager = context.get('device_manager')
 
-        self._presence_service_manager = context.get('presence_service_manager')
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
-        self._queue_service_manager = context.get('queue_service_manager')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = context.get('queuemember_service_manager')
         self._queuemember_service_notifier = context.get('queuemember_service_notifier')
 
         self._agent_features_dao = context.get('agent_features_dao')
         self._innerdata_dao = context.get('innerdata_dao')
-        self._line_features_dao = context.get('line_features_dao')
-        self._phone_funckey_dao = context.get('phone_funckey_dao')
         self._trunk_features_dao = context.get('trunk_features_dao')
         self._user_features_dao = context.get('user_features_dao')
 
@@ -185,11 +182,8 @@ class CTIServer(object):
         self._queue_entry_manager = context.get('queue_entry_manager')
         self._queue_statistic_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
-        self._queue_entry_encoder = context.get('queue_entry_encoder')
 
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
-        self.scheduler = context.get('scheduler')
-        self._agent_availability_notifier = context.get('agent_availability_notifier')
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
 
