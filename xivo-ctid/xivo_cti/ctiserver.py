@@ -370,7 +370,6 @@ class CTIServer(object):
         logger.info('STARTING %s (pid %d))',
                     self.servername, os.getpid())
 
-        self.lastrequest_time = time.time()
         self.update_userlist = []
 
         xivoconf_general = self._config.getconfig('main')
@@ -731,7 +730,6 @@ class CTIServer(object):
 
     def _update_safe_list(self):
         if self.update_userlist:
-            self.lastrequest_time = time.time()
             try:
                 if 'xivo[cticonfig,update]' in self.update_userlist:
                     self._config.update()
