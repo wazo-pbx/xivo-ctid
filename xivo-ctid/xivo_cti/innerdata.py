@@ -30,7 +30,7 @@ import string
 import time
 import Queue
 import cti_urllist
-from xivo_cti import cti_config
+from xivo_cti import lists, cti_config
 from xivo_cti.lists import *
 from xivo_cti.directory import directory
 from xivo_cti import cti_sheets
