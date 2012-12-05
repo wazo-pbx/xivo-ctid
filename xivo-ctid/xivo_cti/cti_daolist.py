@@ -74,7 +74,7 @@ class DaoList(object):
     def _format_user_data(self, user, line_id):
         res = {}
         key = str(user.id)
-        res[key] = user.todict()
+        res[key] = user.__dict__
         res[key]['fullname'] = '%s %s' % (user.firstname, user.lastname)
         res[key]['identity'] = res[str(user.id)]['fullname']
         res[key]['linelist'] = [str(line_id)]
@@ -100,7 +100,7 @@ class DaoList(object):
     def _format_line_data(self, linefeatures, protocol):
         res = {}
         merged_line = protocol.__dict__
-        merged_line.update(linefeatures.todict())
+        merged_line.update(linefeatures.__dict__)
         res[str(linefeatures.id)] = merged_line
         return res
 
@@ -118,7 +118,7 @@ class DaoList(object):
     def _format_group_data(self, group):
         res = {}
         key = str(group.id)
-        res[key] = group.todict()
+        res[key] = group.__dict__
         res[key]['fullname'] = '%s (%s)' % (group.name, group.context)
         return res
 
@@ -136,7 +136,7 @@ class DaoList(object):
     def _format_agent_data(self, agent):
         res = {}
         key = str(agent.id)
-        res[key] = agent.todict()
+        res[key] = agent.__dict__
         return res
 
     def _get_meetmes(self):
@@ -153,7 +153,7 @@ class DaoList(object):
     def _format_meetme_data(self, meetme):
         res = {}
         key = str(meetme.id)
-        res[key] = meetme.todict()
+        res[key] = meetme.__dict__
         return res
 
     def _get_queues(self):
@@ -170,7 +170,7 @@ class DaoList(object):
     def _format_queue_data(self, queue):
         res = {}
         key = str(queue.id)
-        res[key] = queue.todict()
+        res[key] = queue.__dict__
         res[key]['identity'] = '%s (%s@%s)' % (queue.displayname, queue.number, queue.context)
         return res
 
@@ -188,7 +188,7 @@ class DaoList(object):
     def _format_voicemail_data(self, voicemail):
         res = {}
         key = str(voicemail.uniqueid)
-        res[key] = voicemail.todict()
+        res[key] = voicemail.__dict__
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
         return res
@@ -197,15 +197,15 @@ class DaoList(object):
         res = {}
         contexts = context_dao.all()
         for row in contexts:
-            context, contextnumbers, contextinclude, contexttype = row
-            res.update(self._format_context_data(self, context, contextnumbers, contextinclude, contexttype))
+            context, contextnumbers, contexttype, contextinclude = row
+            res.update(self._format_context_data(self, context, contextnumbers, contexttype, contextinclude))
         return res
 
     def _get_context(self, id):
-        context, contextnumbers, contextinclude, contexttype = context_dao.get_join_elements(id)
-        return self._format_context_data(context, contextnumbers, contextinclude, contexttype)
+        context, contextnumbers, contexttype, contextinclude = context_dao.get_join_elements(id)
+        return self._format_context_data(context, contextnumbers, contexttype, contextinclude)
 
-    def _format_context_data(self, context, contextnumbers, contextinclude, contexttype):
+    def _format_context_data(self, context, contextnumbers, contexttype, contextinclude):
         res = {}
         key = str(context.name)
         res[key]['context'] = context.todict()
@@ -244,7 +244,7 @@ class DaoList(object):
         return res
 
     def _get_incall(self, id):
-        incall, dialaction, user, group, queue, meetme, voicemail = phonebook_dao.get_join_elements(id)
+        incall, dialaction, user, group, queue, meetme, voicemail = incall_dao.get_join_elements(id)
         return self._format_incall_data(incall, dialaction, user, group, queue, meetme, voicemail)
 
     def _format_incall_data(self, incall, dialaction, user, group, queue, meetme, voicemail):
@@ -300,5 +300,5 @@ class DaoList(object):
     def _format_trunk_data(self, trunk):
         res = {}
         key = str(trunk.id)
-        res[key] = trunk.todict()
+        res[key] = trunk.__dict__
         return res

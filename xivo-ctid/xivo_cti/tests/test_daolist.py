@@ -80,3 +80,206 @@ class TestDaoList(unittest.TestCase):
         result = self.daolist.get(user_id)
 
         self.assertEquals(result, {})
+
+    def _generic_object(self, **vars):
+        class generic(object):
+            def __init__(self):
+                for key, var in vars.iteritems():
+                    setattr(self, key, var)
+        return generic()
+
+    def test_format_user_data(self):
+        line_id = 5
+        user_id = 1
+        user_firstname = 'bob'
+        user_lastname = 'marley'
+        user = self._generic_object(id=1,
+                                    firstname=user_firstname,
+                                    lastname=user_lastname)
+
+        expected_result = {
+            str(user_id): {
+                'id': user_id,
+                'firstname': user_firstname,
+                'lastname': user_lastname,
+                'fullname': '%s %s' % (user_firstname, user_lastname),
+                'identity': '%s %s' % (user_firstname, user_lastname),
+                'linelist': [str(line_id)]
+            }
+        }
+
+        result = self.daolist._format_user_data(user, line_id)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_line_data(self):
+        line_id = 7
+        protocol_id = 12
+        user_id = 76
+        protocol_name = 'iuds98f'
+        linefeatures = self._generic_object(id=line_id,
+                                            protocolid=protocol_id,
+                                            iduserfeatures=user_id)
+        protocol = self._generic_object(id=protocol_id,
+                                        name=protocol_name)
+
+        expected_result = {
+            str(line_id): {
+                'id': line_id,
+                'protocolid': protocol_id,
+                'iduserfeatures': user_id,
+                'name': protocol_name
+            }
+        }
+
+        result = self.daolist._format_line_data(linefeatures, protocol)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_group_data(self):
+        group_id = 7
+        name = 'test_group'
+        context = 'default'
+        number = '2000'
+        group = self._generic_object(id=group_id,
+                                     name=name,
+                                     context=context,
+                                     number=number)
+
+        expected_result = {
+            str(group_id): {
+                'id': group_id,
+                'name': name,
+                'context': context,
+                'number': number,
+                'fullname': '%s (%s)' % (group.name, group.context)
+            }
+        }
+
+        result = self.daolist._format_group_data(group)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_agent_data(self):
+        agent_id = 3
+        name = 'test_agent'
+        context = 'default'
+        number = '2000'
+        agent = self._generic_object(id=agent_id,
+                                     name=name,
+                                     context=context,
+                                     number=number)
+
+        expected_result = {
+            str(agent_id): {
+                'id': agent_id,
+                'name': name,
+                'context': context,
+                'number': number
+            }
+        }
+
+        result = self.daolist._format_agent_data(agent)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_meetme_data(self):
+        meetme_id = 3
+        name = 'test_meetme'
+        context = 'default'
+        confno = '2000'
+        meetme = self._generic_object(id=meetme_id,
+                                     name=name,
+                                     context=context,
+                                     confno=confno)
+
+        expected_result = {
+            str(meetme_id): {
+                'id': meetme_id,
+                'name': name,
+                'context': context,
+                'confno': confno
+            }
+        }
+
+        result = self.daolist._format_meetme_data(meetme)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_queue_data(self):
+        queue_id = 7
+        name = 'test_queue'
+        displayname = 'test queue'
+        context = 'default'
+        number = '2000'
+        queue = self._generic_object(id=queue_id,
+                                     name=name,
+                                     displayname=displayname,
+                                     context=context,
+                                     number=number)
+
+        expected_result = {
+            str(queue_id): {
+                'id': queue_id,
+                'name': name,
+                'displayname': displayname,
+                'context': context,
+                'number': number,
+                'identity': '%s (%s@%s)' % (displayname, number, context)
+            }
+        }
+
+        result = self.daolist._format_queue_data(queue)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_voicemail_data(self):
+        voicemail_id = 42
+        mailbox = 'test_queue'
+        fullname = 'test queue'
+        context = 'default'
+        number = '2000'
+        voicemail = self._generic_object(uniqueid=voicemail_id,
+                                     mailbox=mailbox,
+                                     fullname=fullname,
+                                     context=context,
+                                     number=number)
+
+        expected_result = {
+            str(voicemail_id): {
+                'uniqueid': voicemail_id,
+                'mailbox': mailbox,
+                'fullname': fullname,
+                'context': context,
+                'number': number,
+                'fullmailbox': '%s@%s' % (mailbox, context),
+                'identity': '%s (%s@%s)' % (fullname, mailbox, context)
+            }
+        }
+
+        result = self.daolist._format_voicemail_data(voicemail)
+
+        self.assertEquals(result, expected_result)
+
+    def test_format_trunk_data(self):
+        trunk_id = 42
+        protocol = 'sip'
+        protocolid = 15
+        registerid = 0
+        trunk = self._generic_object(id=trunk_id,
+                                     protocol=protocol,
+                                     protocolid=protocolid,
+                                     registerid=registerid)
+
+        expected_result = {
+            str(trunk_id): {
+                'id': trunk_id,
+                'protocol': protocol,
+                'protocolid': protocolid,
+                'registerid': registerid
+            }
+        }
+
+        result = self.daolist._format_trunk_data(trunk)
+
+        self.assertEquals(result, expected_result)
