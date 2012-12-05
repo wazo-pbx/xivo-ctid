@@ -1,28 +1,32 @@
 # -*- coding: UTF-8 -*-
 
+import unittest
+from mock import Mock
+from mock import patch
 from datetime import datetime
-from tests.mock import Mock
 from xivo_cti.services.call_history_manager import ReceivedCall, SentCall
 from xivo_cti.services import call_history_manager
-from xivo_dao.tests.test_dao import DAOTestCase
-from xivo_dao.alchemy.cel import CEL
-from xivo_dao import celdao
+
+mock_channels_for_phone = Mock()
+mock_caller_id_by_unique_id = Mock()
 
 
-class CallHistoryMgrTest(DAOTestCase):
-
-    tables = [CEL]
+class CallHistoryMgrTest(unittest.TestCase):
 
     def setUp(self):
-        self.empty_tables()
-        self._cel_dao = Mock(celdao)
-        self._cel_dao.channels_for_phone.return_value = []
-        self._cel_dao.caller_ids = {}
+        self.caller_ids = {}
+        mock_channels_for_phone.return_value = []
 
         def caller_id_by_unique_id_side_effect(unique_id):
-            return self._cel_dao.caller_ids[unique_id]
-        self._cel_dao.caller_id_by_unique_id.side_effect = caller_id_by_unique_id_side_effect
+            return self.caller_ids[unique_id]
+        mock_caller_id_by_unique_id.side_effect = caller_id_by_unique_id_side_effect
 
+    def tearDown(self):
+        mock_channels_for_phone.reset()
+        mock_caller_id_by_unique_id.reset()
+
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_answered_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -54,11 +58,13 @@ class CallHistoryMgrTest(DAOTestCase):
 
         received_calls = call_history_manager.answered_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
-        self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
-        self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'2')
+        mock_channels_for_phone.called_once_with(phone, 2)
+        mock_caller_id_by_unique_id.assert_was_called_with(u'1')
+        mock_caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
 
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_no_answered_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -73,10 +79,12 @@ class CallHistoryMgrTest(DAOTestCase):
 
         received_calls = call_history_manager.answered_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
-        self._cel_dao.caller_id_by_unique_id.assert_not_called()
+        mock_channels_for_phone.called_once_with(phone, 2)
+        mock_caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_missed_calls_with_missed_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -102,11 +110,13 @@ class CallHistoryMgrTest(DAOTestCase):
 
         received_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
-        self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
-        self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'2')
+        mock_channels_for_phone.called_once_with(phone, 2)
+        mock_caller_id_by_unique_id.assert_was_called_with(u'1')
+        mock_caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
 
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_no_missed_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -123,10 +133,12 @@ class CallHistoryMgrTest(DAOTestCase):
 
         received_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
-        self._cel_dao.caller_id_by_unique_id.assert_not_called()
+        mock_channels_for_phone.called_once_with(phone, 2)
+        mock_caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_outgoing_calls_with_outgoing_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -155,9 +167,11 @@ class CallHistoryMgrTest(DAOTestCase):
 
         received_calls = call_history_manager.outgoing_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
+        mock_channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_received_calls, received_calls)
 
+    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_outgoing_calls_for_phone_with_no_outgoing_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -173,7 +187,7 @@ class CallHistoryMgrTest(DAOTestCase):
 
         sent_calls = call_history_manager.missed_calls_for_phone(phone, 2)
 
-        self._cel_dao.channels_for_phone.called_once_with(phone, 2)
+        mock_channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_sent_calls, sent_calls)
 
     def _insert_answered_channel_for_phone(self,
@@ -218,7 +232,7 @@ class CallHistoryMgrTest(DAOTestCase):
         return channel
 
     def _insert_channel(self, channel):
-        self._cel_dao.channels_for_phone.return_value.append(channel)
+        mock_channels_for_phone.return_value.append(channel)
 
     def _insert_caller_id(self, linked_id, caller_id):
-        self._cel_dao.caller_ids[linked_id] = caller_id
+        self.caller_ids[linked_id] = caller_id
