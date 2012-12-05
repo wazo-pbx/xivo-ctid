@@ -23,10 +23,11 @@
 import unittest
 
 from xivo_cti.funckey.funckey_manager import FunckeyManager
-from tests.mock import Mock
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from mock import patch
+from mock import Mock
 
 
 class TestFunckeyManager(unittest.TestCase):
@@ -40,6 +41,7 @@ class TestFunckeyManager(unittest.TestCase):
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_dnd_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
 
@@ -49,6 +51,7 @@ class TestFunckeyManager(unittest.TestCase):
             'Command', [('Command', 'devstate change Custom:*735123***225 INUSE')]
         )
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_dnd_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***225'
 
@@ -58,6 +61,7 @@ class TestFunckeyManager(unittest.TestCase):
             'Command', [('Command', 'devstate change Custom:*735123***225 NOT_INUSE')]
         )
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_call_filter_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
 
@@ -67,6 +71,7 @@ class TestFunckeyManager(unittest.TestCase):
             'Command', [('Command', 'devstate change Custom:*735123***227 INUSE')]
         )
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_call_filter_not_in_use(self):
         xivo_helpers.fkey_extension.return_value = '*735123***227'
 
@@ -76,6 +81,7 @@ class TestFunckeyManager(unittest.TestCase):
             'Command', [('Command', 'devstate change Custom:*735123***227 NOT_INUSE')]
         )
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_fwd_unc_in_use(self):
         destination = '1002'
 
@@ -101,6 +107,7 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.assertEqual(calls, expected_calls)
 
+    @patch('xivo_dao.extensionsdao.exten_by_name', Mock(return_value='*735'))
     def test_fwd_unc_not_in_use(self):
         destination = '1003'
 

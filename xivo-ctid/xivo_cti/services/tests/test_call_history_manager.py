@@ -2,21 +2,24 @@
 
 import unittest
 from datetime import datetime
-from tests.mock import Mock
-from xivo_cti.services.call_history_manager import CallHistoryMgr, ReceivedCall, SentCall
+from xivo_cti.services.call_history_manager import ReceivedCall, SentCall
+from xivo_cti.services import call_history_manager
+from mock import Mock
+from mock import patch
 
 
 class CallHistoryMgrTest(unittest.TestCase):
+
     def setUp(self):
         self._cel_dao = Mock()
         self._cel_dao.channels_for_phone.return_value = []
         self._cel_dao.caller_ids = {}
+
         def caller_id_by_unique_id_side_effect(unique_id):
             return self._cel_dao.caller_ids[unique_id]
         self._cel_dao.caller_id_by_unique_id.side_effect = caller_id_by_unique_id_side_effect
 
-        self._call_history_manager = CallHistoryMgr(self._cel_dao)
-
+    @patch('xivo_dao.celdao.channels_for_phone', Mock(return_value=[]))
     def test_answered_calls_for_phone_with_answered_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -46,7 +49,7 @@ class CallHistoryMgrTest(unittest.TestCase):
                                                 duration=duration3,
                                                 caller_id=caller_name3)
 
-        received_calls = self._call_history_manager.answered_calls_for_phone(phone, 2)
+        received_calls = call_history_manager.answered_calls_for_phone(phone, 2)
 
         self._cel_dao.channels_for_phone.called_once_with(phone, 2)
         self._cel_dao.caller_id_by_unique_id.assert_was_called_with(u'1')
