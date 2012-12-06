@@ -72,7 +72,7 @@ class Safe(object):
             'lastname',
             'fullname',
             'mobilephonenumber',
-            'profileclient',
+            'cti_profile_id',
             'enableclient',
             'agentid',
             'voicemailid',
@@ -444,7 +444,7 @@ class Safe(object):
 
         if domatch and 'profileids' in tomatch:
             user = self.user_features_dao.get(userid)
-            if user.profileclient not in tomatch.get('profileids'):
+            if user.cti_profile_id not in tomatch.get('profileids'):
                 domatch = False
 
         if domatch and 'entities' in tomatch:
@@ -485,8 +485,8 @@ class Safe(object):
         return sha1sum
 
     def user_get_userstatuskind(self, userid):
-        profileclient = self.user_features_dao.get_profile(userid)
-        zz = self._config.getconfig('profiles').get(profileclient)
+        cti_profile_id = self.user_features_dao.get_profile(userid)
+        zz = self._config.getconfig('profiles').get(cti_profile_id)
         return zz.get('userstatus')
 
     def get_config(self, listname, item_id, limit=None, user_contexts=None):

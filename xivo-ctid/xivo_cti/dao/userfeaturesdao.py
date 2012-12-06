@@ -141,7 +141,7 @@ class UserFeaturesDAO(object):
             return False
 
     def get_profile(self, user_id):
-        return self.get(user_id).profileclient
+        return self.get(user_id).cti_profile_id
 
     def _get_included_contexts(self, context):
         return [line.include for line in (_session().query(ContextInclude.include)

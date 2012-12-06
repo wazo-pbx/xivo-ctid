@@ -45,6 +45,9 @@ class UserList(AnyList):
             if userinfo and userinfo.get('enableclient') and userinfo.get('loginclient') == userid:
                 return userinfo
 
+    def get_cti_profile_id(self, user_id):
+        return int(self.keeplist[user_id]['cti_profile_id'])
+
     def users(self):
         return self.keeplist
 

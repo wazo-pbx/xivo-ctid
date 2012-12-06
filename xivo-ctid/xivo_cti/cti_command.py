@@ -185,8 +185,6 @@ class Command(object):
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
-        # settings (in agent mode for instance)
-        # userinfo['agent']['phonenum'] = phonenum
         cdetails = self._connection.connection_details
 
         state = self._commanddict.get('state')
@@ -195,11 +193,6 @@ class Command(object):
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
             logger.warning('%s - wrong capaid : %s %s', head, iserr, capaid)
-            return iserr
-
-        iserr = self.__check_user_connection__()
-        if iserr is not None:
-            logger.warning('%s - user connection : %s', head, iserr)
             return iserr
 
         self.__connect_user__(state, capaid)
@@ -213,8 +206,8 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        profileclient = self.innerdata.xod_config['users'].keeplist[self.userid].get('profileclient')
-        profilespecs = self._config.getconfig('profiles').get(profileclient)
+        cti_profile_id = self.innerdata.xod_config['users'].get_cti_profile_id(self.userid)
+        profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
         summarycapas = {}
@@ -246,17 +239,15 @@ class Command(object):
         self._connection.logintimer.cancel()
         return reply
 
-    def __check_user_connection__(self):
-        return
-
     def __check_capa_connection__(self, capaid):
         cdetails = self._connection.connection_details
         userid = cdetails.get('userid')
+        capaid = int(capaid)
+
         if capaid not in self._config.getconfig('profiles').keys():
-            return 'unknownprofile'
-        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['profileclient']:
-            return 'wrongprofile'
-        # XXX : too much users ?
+            return 'unknown cti_profile_id'
+        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['cti_profile_id']:
+            return 'wrong cti_profile_id'
 
     def __connect_user__(self, availstate, c):
         cdetails = self._connection.connection_details

@@ -21,59 +21,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-import unittest
-from xivo_dao.alchemy import dbconnection
-from xivo_dao.alchemy.base import Base
-from xivo_dao.alchemy.agentfeatures import AgentFeatures
-from xivo_dao.alchemy.userfeatures import UserFeatures
-from xivo_dao.alchemy.linefeatures import LineFeatures
-from xivo_dao.alchemy.contextinclude import ContextInclude
+from tests.mock import Mock
 from xivo_cti.dao import userfeaturesdao
 from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
-from tests.mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
-from sqlalchemy.schema import MetaData
+from xivo_dao.alchemy.agentfeatures import AgentFeatures
+from xivo_dao.alchemy.contextinclude import ContextInclude
+from xivo_dao.alchemy.cti_profile import CtiProfile
+from xivo_dao.alchemy.ctiphonehintsgroup import CtiPhoneHintsGroup
+from xivo_dao.alchemy.ctipresences import CtiPresences
+from xivo_dao.alchemy.linefeatures import LineFeatures
+from xivo_dao.alchemy.userfeatures import UserFeatures
+from xivo_dao.tests.test_dao import DAOTestCase
+import time
 
 
-class TestUserFeaturesDAO(unittest.TestCase):
+class TestUserFeaturesDAO(DAOTestCase):
 
-    tables = [UserFeatures, LineFeatures, ContextInclude, AgentFeatures]
-
-    @classmethod
-    def setUpClass(cls):
-        db_connection_pool = dbconnection.DBConnectionPool(dbconnection.DBConnection)
-        dbconnection.register_db_connection_pool(db_connection_pool)
-
-        uri = 'postgresql://asterisk:asterisk@localhost/asterisktest'
-        dbconnection.add_connection_as(uri, 'asterisk')
-        cls.connection = dbconnection.get_connection('asterisk')
-
-        cls.cleanTables()
-
-        cls.session = cls.connection.get_session()
-
-    @classmethod
-    def tearDownClass(cls):
-        dbconnection.unregister_db_connection_pool()
-
-    @classmethod
-    def cleanTables(cls):
-        if len(cls.tables):
-            engine = cls.connection.get_engine()
-
-            meta = MetaData(engine)
-            meta.reflect()
-            meta.drop_all()
-
-            table_list = [table.__table__ for table in cls.tables]
-            Base.metadata.create_all(engine, table_list)
-            engine.dispose()
-
-    def empty_tables(self):
-        for table in self.tables:
-            self.session.execute("TRUNCATE %s CASCADE;" % table.__tablename__)
+    tables = [UserFeatures, LineFeatures, ContextInclude, AgentFeatures,
+              CtiPresences, CtiPhoneHintsGroup, CtiProfile]
 
     def setUp(self):
         self.empty_tables()
@@ -466,17 +433,40 @@ class TestUserFeaturesDAO(unittest.TestCase):
         self.assertEqual(result, False)
 
     def test_get_profile(self):
-        expected_user_profile = 'client'
+        user_profile_id = self._add_profile('test_profile')
+
         user = UserFeatures()
         user.firstname = 'test_agent'
-        user.profileclient = 'client'
-
+        user.cti_profile_id = user_profile_id
         self.session.add(user)
         self.session.commit()
 
         result = self.dao.get_profile(user.id)
 
-        self.assertEqual(result, expected_user_profile)
+        self.assertEqual(result, user_profile_id)
+
+    def _add_presence(self, name):
+        cti_presence = CtiPresences()
+        cti_presence.name = name
+        self.session.add(cti_presence)
+        self.session.commit()
+        return cti_presence.id
+
+    def _add_phone_hints_group(self, name):
+        cti_phone_hints_group = CtiPhoneHintsGroup()
+        cti_phone_hints_group.name = name
+        self.session.add(cti_phone_hints_group)
+        self.session.commit()
+        return cti_phone_hints_group.id
+
+    def _add_profile(self, name):
+        cti_profile = CtiProfile()
+        cti_profile.name = name
+        cti_profile.presence_id = self._add_presence('test_presence')
+        cti_profile.phonehints_id = self._add_phone_hints_group('test_add_phone_hints_group')
+        self.session.add(cti_profile)
+        self.session.commit()
+        return cti_profile.id
 
     def _add_user_with_line(self, name, context):
         user = UserFeatures()
