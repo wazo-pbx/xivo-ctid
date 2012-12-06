@@ -479,7 +479,7 @@ class AMI_1_8(object):
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
-        unique_id = event['Uniqueid']
+        unique_id = event['UniqueID']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
