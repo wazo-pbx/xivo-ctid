@@ -72,6 +72,9 @@ class CurrentCallManager(object):
             self._lines[peers_line].append(peers_call)
         else:
             self._lines[peers_line] = [peers_call]
+
+        self.end_call(original)
+
         self._current_call_notifier.publish_current_call(line)
         self._current_call_notifier.publish_current_call(peers_line)
 

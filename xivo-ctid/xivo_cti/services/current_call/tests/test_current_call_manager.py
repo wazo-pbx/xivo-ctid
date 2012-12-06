@@ -84,8 +84,14 @@ class TestCurrentCallManager(unittest.TestCase):
                 {'channel': channel_2,
                  'lines_channel': channel_1,
                  'bridge_time': bridge_time,
-                 'on_hold': False}
+                 'on_hold': False},
             ],
+            'Local/1002@pcm-dev': [
+                {'channel': channel_1,
+                 'lines_channel': channel_2,
+                 'bridge_time': bridge_time,
+                 'on_hold': False},
+            ]
         }
 
         self.manager.masquerade(channel_2, new_channel_2)
@@ -107,7 +113,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(self.manager._lines, expected)
         calls = self._get_notifier_calls()
-        assert_that(calls, only_contains(line_1, line_2))
+        assert_that(calls, only_contains(line_1, line_2, 'Local/1002@pcm-dev'))
 
     def test_bridge_channels_on_hold(self):
         line_1 = 'sip/tc8nb4'
