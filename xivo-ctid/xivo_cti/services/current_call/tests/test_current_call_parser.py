@@ -102,3 +102,21 @@ class TestCurrentCallParser(unittest.TestCase):
         self.parser.parse_hangup(hangup_event)
 
         self.manager.end_call.assert_called_once_with(channel)
+
+    def test_parse_masquerade(self):
+        original_channel = 'Local/1002@pcm-dev-00000001;1',
+        clone_channel = 'SIP/6s7foq-00000005',
+        masquerade_event = {
+            'Event': 'Masquerade',
+            'Privilege': 'call,all',
+            'Clone': clone_channel,
+            'CloneState': 'Up',
+            'Original': original_channel,
+            'OriginalState': 'Up'
+        }
+
+        self.parser.parse_masquerade(masquerade_event)
+
+        self.manager.masquerade.assert_caller_once_with(
+            original_channel, clone_channel
+        )

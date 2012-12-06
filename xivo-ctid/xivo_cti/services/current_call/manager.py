@@ -54,6 +54,34 @@ class CurrentCallManager(object):
             ]
             self._current_call_notifier.publish_current_call(line_2)
 
+    def masquerade(self, original, clone):
+        line, position = self._find_line_and_position(original)
+        if not line:
+            return
+        cloned_call = self._lines[line][position]
+        cloned_call['channel'] = clone
+        self._lines[line][position] = cloned_call
+        peers_call = {
+            'channel': cloned_call['lines_channel'],
+            'lines_channel': clone,
+            'bridge_time': cloned_call['bridge_time'],
+            'on_hold': cloned_call['on_hold']
+        }
+        peers_line = self._identity_from_channel(clone)
+        if peers_line in self._lines:
+            self._lines[peers_line].append(peers_call)
+        else:
+            self._lines[peers_line] = [peers_call]
+        self._current_call_notifier.publish_current_call(line)
+        self._current_call_notifier.publish_current_call(peers_line)
+
+    def _find_line_and_position(self, channel):
+        for line, calls in self._lines.iteritems():
+            for index, call in enumerate(calls):
+                if call['channel'] == channel:
+                    return line, index
+        return None, None
+
     def end_call(self, channel):
         to_remove = []
         for line, calls in self._lines.iteritems():
