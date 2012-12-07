@@ -24,7 +24,6 @@ from xivo_cti import cti_config
 
 from xivo_cti import cti_config
 from xivo_cti.context import context
-from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
@@ -87,7 +86,6 @@ def _register_context(context):
     context.register('device_manager', DeviceManager)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata_dao', InnerdataDAO)
-    context.register('line_features_dao', LineFeaturesDAO)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('queue_entry_encoder', QueueEntryEncoder)

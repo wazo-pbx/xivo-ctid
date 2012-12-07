@@ -24,7 +24,6 @@ import unittest
 
 from tests.mock import Mock
 from xivo_dao.alchemy import dbconnection
-from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
@@ -41,7 +40,6 @@ class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.user_dao = Mock(UserDAO)
-        self.line_features_dao = Mock(LineFeaturesDAO)
         self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
@@ -56,7 +54,6 @@ class TestUserServiceManager(unittest.TestCase):
                                                        self.funckey_manager,
                                                        self.user_dao,
                                                        self.phone_funckey_dao,
-                                                       self.line_features_dao,
                                                        self.device_manager)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
 
@@ -306,12 +303,13 @@ class TestUserServiceManager(unittest.TestCase):
         mock_is_agent.assert_never_called()
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
 
-    def test_get_context(self):
+    @patch('xivo_dao.linefeatures_dao.find_context_by_user_id')
+    def test_get_context(self, mock_find_context_by_user_id):
         user1_id = 34
 
         self.user_service_manager.get_context(user1_id)
 
-        self.user_service_manager.line_features_dao.find_context_by_user_id.assert_called_once_with(user1_id)
+        mock_find_context_by_user_id.assert_called_once_with(user1_id)
 
     @patch('xivo_dao.userfeatures_dao.get_device_id')
     def test_pickup_the_phone(self, mock_get_device_id):

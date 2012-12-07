@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_dao import userfeatures_dao
+from xivo_dao import userfeatures_dao, linefeatures_dao
 
 
 class UserServiceManager(object):
@@ -34,7 +34,6 @@ class UserServiceManager(object):
                  funckey_manager,
                  user_dao,
                  phone_funckey_dao,
-                 line_features_dao,
                  device_manager):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
@@ -42,7 +41,6 @@ class UserServiceManager(object):
         self.funckey_manager = funckey_manager
         self.user_dao = user_dao
         self.phone_funckey_dao = phone_funckey_dao
-        self.line_features_dao = line_features_dao
         self.device_manager = device_manager
 
     def enable_dnd(self, user_id):
@@ -129,7 +127,7 @@ class UserServiceManager(object):
                 self.agent_service_manager.set_presence(agent_id, presence)
 
     def get_context(self, user_id):
-        return self.line_features_dao.find_context_by_user_id(user_id)
+        return linefeatures_dao.find_context_by_user_id(user_id)
 
     def pickup_the_phone(self, user_id):
         device_id = userfeatures_dao.get_device_id(user_id)
