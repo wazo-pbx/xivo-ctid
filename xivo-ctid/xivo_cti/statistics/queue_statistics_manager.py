@@ -2,8 +2,7 @@
 
 import logging
 import time
-from xivo_dao import queue_features_dao
-from xivo_dao.queuestatisticdao import QueueStatisticDAO
+from xivo_dao import queue_features_dao, queue_statistic_dao
 from xivo_cti.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -40,10 +39,10 @@ def parse_queue_member_update(delta):
 class QueueStatisticsManager(object):
 
     def __init__(self):
-        self._queue_statistic_dao = QueueStatisticDAO()
+        pass
 
     def get_statistics(self, queue_name, xqos, window):
-        dao_queue_statistic = self._queue_statistic_dao.get_statistics(queue_name, window, xqos)
+        dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
 
         queue_statistic = QueueStatistic()
         queue_statistic.received_call_count = dao_queue_statistic.received_call_count
