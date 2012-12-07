@@ -296,7 +296,7 @@ class TestCurrentCallManager(unittest.TestCase):
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
 
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity')
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
         self.manager._lines = {
@@ -319,7 +319,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.ami_class.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
 
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity')
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
         user_id = 5
         mock_get_line_identity.side_effect = LookupError()

@@ -22,21 +22,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, Mock
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
+from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
 import time
 import unittest
 
 
-class TestUserFeaturesDAO(unittest.TestCase):
+class TestUserDAO(unittest.TestCase):
 
     def setUp(self):
         self._innerdata = Mock(Safe)
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
         self._innerdata.xod_config = {'users': self._userlist}
-        self.dao = UserFeaturesDAO()
+        self.dao = UserDAO()
         self.dao._innerdata = self._innerdata
 
     @patch('xivo_dao.userfeatures_dao.enable_dnd')

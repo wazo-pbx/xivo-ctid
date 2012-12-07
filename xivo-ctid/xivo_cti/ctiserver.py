@@ -176,7 +176,7 @@ class CTIServer(object):
         self._agent_features_dao = context.get('agent_features_dao')
         self._innerdata_dao = context.get('innerdata_dao')
         self._trunk_features_dao = context.get('trunk_features_dao')
-        self._user_features_dao = context.get('user_features_dao')
+        self._user_dao = context.get('user_dao')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
@@ -392,13 +392,13 @@ class CTIServer(object):
         ipbxconfig = self._config.getconfig('ipbx')
         safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
         safe.user_service_manager = self._user_service_manager
-        safe.user_features_dao = self._user_features_dao
+        safe.user_dao = self._user_dao
         safe.trunk_features_dao = self._trunk_features_dao
         safe.queuemember_service_manager = self._queuemember_service_manager
         dao.instanciate_dao(safe)
         safe.init_status()
         self.safe = safe
-        self._user_features_dao._innerdata = safe
+        self._user_dao._innerdata = safe
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
         self._innerdata_dao.innerdata = safe
@@ -420,7 +420,7 @@ class CTIServer(object):
         logger.info('(2/3) Local AMI socket connection')
         self.myami = interface_ami.AMI(self)
         self.commandclass = amiinterpret.AMI_1_8(self)
-        self.commandclass.user_features_dao = self._user_features_dao
+        self.commandclass.user_dao = self._user_dao
 
         self.ami_sock = self.myami.connect()
         if not self.ami_sock:

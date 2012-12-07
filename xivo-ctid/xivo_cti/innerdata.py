@@ -177,7 +177,7 @@ class Safe(object):
         self.ipbxid = 'xivo'
         self.xod_config = {}
         self.xod_status = {}
-        self.user_features_dao = None
+        self.user_dao = None
 
         self.timeout_queue = Queue.Queue()
 

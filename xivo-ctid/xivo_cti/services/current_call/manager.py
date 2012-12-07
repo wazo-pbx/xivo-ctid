@@ -24,8 +24,8 @@
 
 import time
 import logging
+from xivo_dao import userfeatures_dao
 
-from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class CurrentCallManager(object):
 
     def hangup(self, user_id):
         try:
-            line = userfeaturesdao.get_line_identity(user_id).lower()
+            line = userfeatures_dao.get_line_identity(user_id).lower()
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:

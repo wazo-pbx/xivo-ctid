@@ -29,7 +29,7 @@ from xivo_dao import userfeatures_dao
 logger = logging.getLogger("UserFeaturesDAO")
 
 
-class UserFeaturesDAO(object):
+class UserDAO(object):
 
     def __init__(self):
         pass
