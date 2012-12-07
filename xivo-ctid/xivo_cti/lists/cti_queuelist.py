@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('queuelist')
@@ -88,29 +87,6 @@ class QueueList(ContextAwareAnyList):
                                channel, queueid)
         else:
             logger.warning('queueentry_remove : no such queueid %s', queueid)
-
-    def queuememberupdate(self, queueid, location, event):
-        changed = False
-        if queueid in self.keeplist:
-            if location not in self.keeplist[queueid]['agents_in_queue']:
-                self.keeplist[queueid]['agents_in_queue'][location] = {}
-                changed = True
-            thisqueuelocation = self.keeplist[queueid]['agents_in_queue'][location]
-            for prop in self.queuelocationprops:
-                if prop in event:
-                    if prop in thisqueuelocation:
-                        if thisqueuelocation[prop] != event.get(prop):
-                            thisqueuelocation[prop] = event.get(prop)
-                            changed = True
-                    else:
-                        thisqueuelocation[prop] = event.get(prop)
-                        changed = True
-            if 'Xivo-QueueMember-StateTime' not in thisqueuelocation:
-                thisqueuelocation['Xivo-QueueMember-StateTime'] = time.time()
-                changed = True
-        else:
-            logger.warning('queuememberupdate : no such queueid %s', queueid)
-        return changed
 
     def queuememberremove(self, queueid, location):
         changed = False
