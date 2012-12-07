@@ -25,7 +25,6 @@
 import unittest
 from mock import Mock, patch
 
-from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_dao.alchemy.agentfeatures import AgentFeatures
 from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
@@ -45,19 +44,17 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_1_exten = '1000'
 
         self.line_features_dao = Mock(LineFeaturesDAO)
-        self.agent_features_dao = Mock(AgentFeaturesDAO)
-
         self.agent_executor = Mock(AgentExecutor)
         self.innerdata_dao = Mock(InnerdataDAO)
         self.agent_manager = AgentServiceManager(self.agent_executor,
-                                                 self.agent_features_dao,
                                                  self.innerdata_dao,
                                                  self.line_features_dao)
 
+    @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_on_cti_agent_login(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
+    def test_on_cti_agent_login(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id, mock_agent_context):
         user_id = 10
         agent_id = 11
         line_id = 12
@@ -68,7 +65,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.find_line_id_by_user_id.return_value = [line_id]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
-        self.agent_features_dao.agent_context.return_value = agent_context
+        mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id, self.agent_1_exten)
@@ -85,10 +82,11 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.logoff.assert_called_once_with(agent_id)
 
+    @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_on_cti_agent_login_no_number(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
+    def test_on_cti_agent_login_no_number(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id, mock_agent_context):
         user_id = 10
         agent_id = 11
         line_id = 12
@@ -99,17 +97,18 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.find_line_id_by_user_id.return_value = [line_id]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
-        self.agent_features_dao.agent_context.return_value = agent_context
+        mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id)
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
+    @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_agent_special_me(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
+    def test_agent_special_me(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id, mock_agent_context):
         user_id = 12
         agent_id = 44
         agent_context = 'test_context'
@@ -119,7 +118,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.line_features_dao.find_line_id_by_user_id.return_value = [13]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
-        self.agent_features_dao.agent_context.return_value = agent_context
+        mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(user_id, 'agent:special:me')
@@ -151,69 +150,76 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_executor.logoff.assert_called_once_with(agent_id)
 
-    def test_queue_add(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_add(self, mock_agent_interface):
         queue_name = 'accueil'
         agent_id = 12
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queueadd(queue_name, agent_id)
 
         self.agent_executor.queue_add.assert_called_once_with(queue_name, agent_interface, False, '')
 
-    def test_queue_remove(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_remove(self, mock_agent_interface):
         queue_name = 'accueil'
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queueremove(queue_name, agent_id)
 
         self.agent_executor.queue_remove.assert_called_once_with(queue_name, agent_interface)
 
-    def test_queue_pause_all(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_pause_all(self, mock_agent_interface):
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queuepause_all(agent_id)
 
         self.agent_executor.queues_pause.assert_called_once_with('Agent/1234')
 
-    def test_queue_unpause_all(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_unpause_all(self, mock_agent_interface):
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queueunpause_all(agent_id)
 
         self.agent_executor.queues_unpause(agent_interface)
 
-    def test_queue_pause(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_pause(self, mock_agent_interface):
         queue_name = 'accueil'
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queuepause(queue_name, agent_id)
 
         self.agent_executor.queue_pause.assert_called_once_with(queue_name, agent_interface)
 
-    def test_queue_unpause(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_queue_unpause(self, mock_agent_interface):
         queue_name = 'accueil'
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.queueunpause(queue_name, agent_id)
 
         self.agent_executor.queue_unpause(queue_name, agent_interface)
 
-    def test_set_presence(self):
+    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    def test_set_presence(self, mock_agent_interface):
         presence = 'disconnected'
         agent_id = 34
         agent_interface = 'Agent/1234'
-        self.agent_features_dao.agent_interface.return_value = agent_interface
+        mock_agent_interface.return_value = agent_interface
 
         self.agent_manager.set_presence(agent_id, presence)
 

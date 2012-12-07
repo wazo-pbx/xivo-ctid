@@ -24,7 +24,6 @@ from xivo_cti import cti_config
 
 from xivo_cti import cti_config
 from xivo_cti.context import context
-from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
@@ -76,7 +75,6 @@ def _register_context(context):
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
     context.register('agent_client', AgentClient)
     context.register('agent_executor', AgentExecutor)
-    context.register('agent_features_dao', AgentFeaturesDAO)
     context.register('agent_on_call_updater', AgentOnCallUpdater)
     context.register('agent_service_manager', AgentServiceManager)
     context.register('config', cti_config.Config())
