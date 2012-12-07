@@ -21,7 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo import xivo_helpers
-from xivo_dao import extensionsdao, userfeatures_dao, phonefunckey_dao
+from xivo_dao import extensions_dao, userfeatures_dao, phonefunckey_dao
 
 
 class FunckeyManager(object):
@@ -34,8 +34,8 @@ class FunckeyManager(object):
         pass
 
     def _device(self, user_id, name, destination=''):
-        funckey_prefix = extensionsdao.exten_by_name('phoneprogfunckey')
-        funckey_args = (user_id, extensionsdao.exten_by_name(name), destination)
+        funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')
+        funckey_args = (user_id, extensions_dao.exten_by_name(name), destination)
         funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
 
         hint = self.DEVICE_PATTERN % funckey_pattern
