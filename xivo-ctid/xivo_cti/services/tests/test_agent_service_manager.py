@@ -33,7 +33,6 @@ from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_cti.dao.innerdatadao import InnerdataDAO
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):
@@ -45,7 +44,6 @@ class TestAgentServiceManager(unittest.TestCase):
     def setUp(self):
         self.agent_1_exten = '1000'
 
-        self.user_features_dao = Mock(UserFeaturesDAO)
         self.line_features_dao = Mock(LineFeaturesDAO)
         self.agent_features_dao = Mock(AgentFeaturesDAO)
 
@@ -54,18 +52,19 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager = AgentServiceManager(self.agent_executor,
                                                  self.agent_features_dao,
                                                  self.innerdata_dao,
-                                                 self.line_features_dao,
-                                                 self.user_features_dao)
+                                                 self.line_features_dao)
 
+    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
+    @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_on_cti_agent_login(self, mock_id_converter):
+    def test_on_cti_agent_login(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
         user_id = 10
         agent_id = 11
         line_id = 12
         agent_context = 'test_context'
         mock_id_converter.return_value = agent_id
-        self.user_features_dao.agent_id.return_value = agent_id
-        self.user_features_dao.find_by_agent_id.return_value = [user_id]
+        mock_agent_id.return_value = agent_id
+        mock_find_by_agent_id.return_value = [user_id]
         self.line_features_dao.find_line_id_by_user_id.return_value = [line_id]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
@@ -86,15 +85,17 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.logoff.assert_called_once_with(agent_id)
 
+    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
+    @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_on_cti_agent_login_no_number(self, mock_id_converter):
+    def test_on_cti_agent_login_no_number(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
         user_id = 10
         agent_id = 11
         line_id = 12
         agent_context = 'test_context'
         mock_id_converter.return_value = agent_id
-        self.user_features_dao.agent_id.return_value = agent_id
-        self.user_features_dao.find_by_agent_id.return_value = [user_id]
+        mock_agent_id.return_value = agent_id
+        mock_find_by_agent_id.return_value = [user_id]
         self.line_features_dao.find_line_id_by_user_id.return_value = [line_id]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
@@ -105,14 +106,16 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
+    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
+    @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_agent_special_me(self, mock_id_converter):
+    def test_agent_special_me(self, mock_id_converter, mock_agent_id, mock_find_by_agent_id):
         user_id = 12
         agent_id = 44
         agent_context = 'test_context'
         mock_id_converter.return_value = agent_id
-        self.user_features_dao.agent_id.return_value = agent_id
-        self.user_features_dao.find_by_agent_id.return_value = [user_id]
+        mock_agent_id.return_value = agent_id
+        mock_find_by_agent_id.return_value = [user_id]
         self.line_features_dao.find_line_id_by_user_id.return_value = [13]
         self.line_features_dao.number.return_value = self.line_number
         self.line_features_dao.is_phone_exten.return_value = True
@@ -123,9 +126,10 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
-    def test_find_agent_exten(self):
+    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
+    def test_find_agent_exten(self, mock_find_by_agent_id):
         agent_id = 11
-        self.user_features_dao.find_by_agent_id.return_value = [12]
+        mock_find_by_agent_id.return_value = [12]
         self.line_features_dao.find_line_id_by_user_id.return_value = [13]
         self.line_features_dao.number.return_value = self.line_number
 

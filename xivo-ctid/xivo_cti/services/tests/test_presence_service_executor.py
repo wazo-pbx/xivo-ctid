@@ -26,9 +26,9 @@ import unittest
 from tests.mock import Mock
 from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.user_service_manager import UserServiceManager
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.cti_config import Config
+from mock import patch
 
 
 class TestPresenceServiceExecutor(unittest.TestCase):
@@ -36,11 +36,9 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     def setUp(self):
         self.user_service_manager = Mock(UserServiceManager)
         self.agent_service_manager = Mock(AgentServiceManager)
-        self.user_features_dao = Mock(UserFeaturesDAO)
         self.config = Mock(Config)
         self.presence_service_executor = PresenceServiceExecutor(self.user_service_manager,
                                                                  self.agent_service_manager,
-                                                                 self.user_features_dao,
                                                                  self.config)
 
     def _get_userstatus(self):
@@ -70,14 +68,16 @@ class TestPresenceServiceExecutor(unittest.TestCase):
                 }
             }
 
-    def test_execute_actions(self):
+    @patch('xivo_dao.userfeatures_dao.agent_id')
+    @patch('xivo_dao.userfeatures_dao.get_profile')
+    def test_execute_actions_with_disconnected(self, mock_get_profile, mock_agent_id):
         user_id = 64
+        agent_id = 33
         user_profile = 'client'
         presence_group_name = 'xivo'
 
-        self.presence_service_executor._launch_presence_service = Mock()
-
-        self.presence_service_executor.user_features_dao.get_profile.return_value = user_profile
+        mock_agent_id.return_value = agent_id
+        mock_get_profile.return_value = user_profile
         self.presence_service_executor.config.getconfig.return_value = {
             'profiles': {user_profile: {'userstatus': presence_group_name}},
             'userstatus': {presence_group_name: self._get_userstatus()}
@@ -85,14 +85,35 @@ class TestPresenceServiceExecutor(unittest.TestCase):
 
         self.presence_service_executor.execute_actions(user_id, 'disconnected')
 
-        self.presence_service_executor._launch_presence_service.assert_called_once_with(user_id, 'agentlogoff', False)
+        self.agent_service_manager.logoff.assert_called_once_with(agent_id)
 
-    def test_execute_actions_unknown(self):
+    @patch('xivo_dao.userfeatures_dao.agent_id')
+    @patch('xivo_dao.userfeatures_dao.get_profile')
+    def test_execute_actions_with_available(self, mock_get_profile, mock_agent_id):
+        user_id = 64
+        agent_id = 33
+        user_profile = 'client'
+        presence_group_name = 'xivo'
+
+        mock_agent_id.return_value = agent_id
+        mock_get_profile.return_value = user_profile
+        self.presence_service_executor.config.getconfig.return_value = {
+            'profiles': {user_profile: {'userstatus': presence_group_name}},
+            'userstatus': {presence_group_name: self._get_userstatus()}
+        }
+
+        self.presence_service_executor.execute_actions(user_id, 'available')
+
+        self.user_service_manager.set_dnd.assert_called_once_with(user_id, False)
+        self.agent_service_manager.queueunpause_all.assert_called_once_with(agent_id)
+
+    @patch('xivo_dao.userfeatures_dao.get_profile')
+    def test_execute_actions_unknown(self, mock_get_profile):
         user_id = 64
         user_profile = 'client'
         presence_group_name = 'xivo'
 
-        self.presence_service_executor.user_features_dao.get_profile.return_value = user_profile
+        mock_get_profile.return_value = user_profile
         self.presence_service_executor.config.getconfig.return_value = {
             'profiles': {user_profile: {'userstatus': presence_group_name}},
             'userstatus': {presence_group_name: self._get_userstatus()}
@@ -101,41 +122,3 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         fn = lambda: self.presence_service_executor.execute_actions(user_id, 'unknown')
 
         self.assertRaises(ValueError, fn)
-
-    def test_launch_presence_service_dnd(self):
-        user_id = 1234
-
-        for param in [True, False]:
-            self.presence_service_executor._launch_presence_service(user_id, 'enablednd', param)
-            self.presence_service_executor.user_service_manager.set_dnd.assert_called_once_with(user_id, param)
-            self.presence_service_executor.user_service_manager.reset_mock()
-
-    def test_launch_presence_service_no_handler(self):
-        un_handled = ['enablevoicemail',
-                      'callrecord',
-                      'incallfilter',
-                      'enableunc',
-                      'enablebusy',
-                      'enablerna']
-
-        for service in un_handled:
-            fn = lambda: self.presence_service_executor._launch_presence_service('uid', service, True)
-            self.assertRaises(NotImplementedError, fn)
-
-    def test_launch_presence_service_unknown(self):
-        fn = lambda: self.presence_service_executor._launch_presence_service('uid', 'unknown', True)
-        self.assertRaises(NotImplementedError, fn)
-
-    def test_launch_presence_queue_no_handler(self):
-        un_handled = ['queueadd',
-                      'queueremove',
-                      'queuepause',
-                      'queueunpause']
-
-        for service in un_handled:
-            fn = lambda: self.presence_service_executor._launch_presence_queue('uid', service)
-            self.assertRaises(NotImplementedError, fn)
-
-    def test_launch_presence_queue_unknown(self):
-        fn = lambda: self.presence_service_executor._launch_presence_queue('uid', 'unknown')
-        self.assertRaises(NotImplementedError, fn)

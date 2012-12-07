@@ -226,8 +226,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
                       delete={}))
 
     @patch('xivo_dao.queue_features_dao.get_queue_name', Mock(return_value=QUEUE_NAME))
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
-    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', Mock(return_value=AGENT_NUMBER))
+    @patch('xivo_dao.userfeatures_dao.get_line_identity', Mock(return_value=LINE_IDENTITY))
+    @patch('xivo_dao.userfeatures_dao.get_agent_number', Mock(return_value=AGENT_NUMBER))
     def test_is_queue_member_user_member(self):
         user_id = 1
         queue_id = 2
@@ -247,8 +247,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertTrue(result)
 
     @patch('xivo_dao.queue_features_dao.get_queue_name', Mock(return_value=QUEUE_NAME))
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
-    @patch('xivo_cti.dao.userfeaturesdao.get_agent_number', Mock(return_value=AGENT_NUMBER))
+    @patch('xivo_dao.userfeatures_dao.get_line_identity', Mock(return_value=LINE_IDENTITY))
+    @patch('xivo_dao.userfeatures_dao.get_agent_number', Mock(return_value=AGENT_NUMBER))
     def test_is_queue_member_agent(self):
         user_id = 1
         queue_id = 2
@@ -269,7 +269,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.assertTrue(result)
 
     @patch('xivo_dao.group_dao.get_name', Mock(return_value=GROUP_NAME))
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', Mock(return_value=LINE_IDENTITY))
+    @patch('xivo_dao.userfeatures_dao.get_line_identity', Mock(return_value=LINE_IDENTITY))
     def test_is_group_member_user_member(self):
         user_id = 1
         group_id = 2

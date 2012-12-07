@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao import userfeaturesdao
+from xivo_dao import userfeatures_dao
 
 
 class UserServiceManager(object):
@@ -118,19 +118,19 @@ class UserServiceManager(object):
         self.set_presence(user_id, 'disconnected', action=False)
 
     def set_presence(self, user_id, presence, action=True):
-        user_profile = self.user_features_dao.get_profile(user_id)
+        user_profile = userfeatures_dao.get_profile(user_id)
         if self.presence_service_manager.is_valid_presence(user_profile, presence):
             self.user_features_dao.set_presence(user_id, presence)
             if action is True:
                 self.presence_service_executor.execute_actions(user_id, presence)
             self.user_service_notifier.presence_updated(user_id, presence)
-            if self.user_features_dao.is_agent(user_id):
-                agent_id = self.user_features_dao.agent_id(user_id)
+            if userfeatures_dao.is_agent(user_id):
+                agent_id = userfeatures_dao.agent_id(user_id)
                 self.agent_service_manager.set_presence(agent_id, presence)
 
     def get_context(self, user_id):
         return self.line_features_dao.find_context_by_user_id(user_id)
 
     def pickup_the_phone(self, user_id):
-        device_id = userfeaturesdao.get_device_id(user_id)
+        device_id = userfeatures_dao.get_device_id(user_id)
         self.device_manager.answer(device_id)

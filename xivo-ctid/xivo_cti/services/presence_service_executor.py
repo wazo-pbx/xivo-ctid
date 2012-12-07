@@ -23,6 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from xivo_dao import userfeatures_dao
 
 logger = logging.getLogger('PresenceServiceExecutor')
 
@@ -47,15 +48,13 @@ class PresenceServiceExecutor(object):
     def __init__(self,
                  user_service_manager,
                  agent_service_manager,
-                 user_features_dao,
                  config):
         self.user_service_manager = user_service_manager
         self.agent_service_manager = agent_service_manager
-        self.user_features_dao = user_features_dao
         self.config = config
 
     def execute_actions(self, user_id, presence):
-        user_profile = self.user_features_dao.get_profile(user_id)
+        user_profile = userfeatures_dao.get_profile(user_id)
         config = self.config.getconfig()
         presence_group_name = config['profiles'][user_profile]['userstatus']
         presence_group = config['userstatus'][presence_group_name]
@@ -72,7 +71,7 @@ class PresenceServiceExecutor(object):
                 self._launch_presence_queue(user_id, action_name)
 
     def _launch_presence_queue(self, user_id, action_name):
-        agentid = self.user_features_dao.agent_id(user_id)
+        agentid = userfeatures_dao.agent_id(user_id)
         if agentid:
             if action_name == 'queuepause_all':
                 self.agent_service_manager.queuepause_all(agentid)
@@ -83,7 +82,7 @@ class PresenceServiceExecutor(object):
 
     def _launch_presence_service(self, user_id, action_name, params):
         if action_name == 'agentlogoff':
-            agentid = self.user_features_dao.agent_id(user_id)
+            agentid = userfeatures_dao.agent_id(user_id)
             if agentid:
                 self.agent_service_manager.logoff(agentid)
         elif action_name == 'enablednd':

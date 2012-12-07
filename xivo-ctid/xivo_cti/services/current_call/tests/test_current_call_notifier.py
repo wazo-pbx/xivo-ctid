@@ -21,7 +21,7 @@ class TestCurrentCallNotifier(unittest.TestCase):
         self.client_connection_1 = Mock(CTI)
         self.client_connection_2 = Mock(CTI)
 
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity')
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_subscribe(self, mock_get_line_identity):
         user_id = 5
         mock_get_line_identity.return_value = self.line_identity_1

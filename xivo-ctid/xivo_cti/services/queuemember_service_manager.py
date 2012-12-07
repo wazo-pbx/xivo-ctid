@@ -22,16 +22,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_dao import group_dao
+from xivo_dao import group_dao, userfeatures_dao
 from xivo_dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_dao import queue_features_dao
-from xivo_cti.dao import userfeaturesdao
 
 logger = logging.getLogger("QueueMemberServiceManager")
 
 
 class QueueMemberServiceManager(object):
+
     def __init__(self,
                  queuemember_dao,
                  innerdata_dao,
@@ -124,7 +124,7 @@ class QueueMemberServiceManager(object):
                            self.innerdata_dao.get_queuemembers_config().keys())
 
         try:
-            chan = ('Agent/%s' % (userfeaturesdao.get_agent_number(user_id))).lower()
+            chan = ('Agent/%s' % (userfeatures_dao.get_agent_number(user_id))).lower()
         except LookupError:
             pass  # User has no agent or it's a group
         else:
@@ -133,7 +133,7 @@ class QueueMemberServiceManager(object):
                 return True
 
         try:
-            line_proto_name = userfeaturesdao.get_line_identity(user_id)
+            line_proto_name = userfeatures_dao.get_line_identity(user_id)
         except LookupError:
             pass  # This user has no line
         else:
@@ -146,7 +146,7 @@ class QueueMemberServiceManager(object):
     def is_group_member(self, user_id, group_id):
         try:
             group_name = group_dao.get_name(group_id)
-            line_proto_name = userfeaturesdao.get_line_identity(user_id)
+            line_proto_name = userfeatures_dao.get_line_identity(user_id)
         except KeyError:
             return False
         else:

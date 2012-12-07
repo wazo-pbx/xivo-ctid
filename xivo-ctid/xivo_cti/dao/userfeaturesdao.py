@@ -24,22 +24,9 @@
 import logging
 import time
 
-from xivo_dao.alchemy import dbconnection
-from xivo_dao.alchemy.agentfeatures import AgentFeatures
-from xivo_dao.alchemy.linefeatures import LineFeatures
-from xivo_dao.alchemy.contextinclude import ContextInclude
-from xivo_dao.alchemy.userfeatures import UserFeatures
-from sqlalchemy import and_
 from xivo_dao import userfeatures_dao
 
 logger = logging.getLogger("UserFeaturesDAO")
-
-_DB_NAME = 'asterisk'
-
-
-def _session():
-    connection = dbconnection.get_connection(_DB_NAME)
-    return connection.get_session()
 
 
 class UserFeaturesDAO(object):
@@ -48,64 +35,48 @@ class UserFeaturesDAO(object):
         pass
 
     def enable_dnd(self, user_id):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 1})
-        _session().commit()
+        userfeatures_dao.enable_dnd(user_id)
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = True
 
     def disable_dnd(self, user_id):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablednd': 0})
-        _session().commit()
+        userfeatures_dao.disable_dnd(user_id)
         self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = False
 
     def enable_filter(self, user_id):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 1})
-        _session().commit()
+        userfeatures_dao.enable_filter(user_id)
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = True
 
     def disable_filter(self, user_id):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'incallfilter': 0})
-        _session().commit()
+        userfeatures_dao.disable_filter(user_id)
         self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
 
     def enable_unconditional_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 1,
-                                                                                     'destunc': destination})
-        _session().commit()
+        userfeatures_dao.enable_unconditional_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
 
     def disable_unconditional_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enableunc': 0,
-                                                                                     'destunc': destination})
-        _session().commit()
+        userfeatures_dao.disable_unconditional_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = False
 
     def enable_rna_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 1,
-                                                                                     'destrna': destination})
-        _session().commit()
+        userfeatures_dao.enable_rna_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
 
     def disable_rna_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablerna': 0,
-                                                                                     'destrna': destination})
-        _session().commit()
+        userfeatures_dao.disable_rna_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = False
 
     def enable_busy_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 1,
-                                                                                     'destbusy': destination})
-        _session().commit()
+        userfeatures_dao.enable_busy_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = True
         self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
 
     def disable_busy_fwd(self, user_id, destination):
-        _session().query(UserFeatures).filter(UserFeatures.id == user_id).update({'enablebusy': 0,
-                                                                                     'destbusy': destination})
-        _session().commit()
+        userfeatures_dao.disable_busy_fwd(user_id, destination)
         self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
 
@@ -117,69 +88,3 @@ class UserFeaturesDAO(object):
     def set_presence(self, user_id, presence):
         userdata = self._innerdata.xod_status['users'][user_id]
         userdata['availstate'] = presence
-
-    def get(self, user_id):
-        return userfeatures_dao.get(user_id)
-
-    def find_by_agent_id(self, agent_id):
-        return userfeatures_dao.find_by_agent_id(agent_id)
-
-    def agent_id(self, user_id):
-        return userfeatures_dao.agent_id(user_id)
-
-    def is_agent(self, user_id):
-        return userfeatures_dao.is_agent(user_id)
-
-    def get_profile(self, user_id):
-        return userfeatures_dao.get_profile(user_id)
-
-    def get_reachable_contexts(self, user_id):
-        return userfeatures_dao.get_reachable_contexts(user_id)
-
-
-def all():
-    return userfeatures_dao.all()
-
-
-def find_by_line_id(line_id):
-    return userfeatures_dao.find_by_line_id(line_id)
-
-
-def get_line_identity(user_id):
-    return userfeatures_dao.get_line_identity(user_id)
-
-
-def get_agent_number(user_id):
-    return userfeatures_dao.get_agent_number(user_id)
-
-
-def get_dest_unc(user_id):
-    return userfeatures_dao.get_dest_unc(user_id)
-
-
-def get_fwd_unc(user_id):
-    return userfeatures_dao.get_fwd_unc(user_id)
-
-
-def get_dest_busy(user_id):
-    return userfeatures_dao.get_dest_busy(user_id)
-
-
-def get_fwd_busy(user_id):
-    return userfeatures_dao.get_fwd_busy(user_id)
-
-
-def get_dest_rna(user_id):
-    return userfeatures_dao.get_dest_rna(user_id)
-
-
-def get_fwd_rna(user_id):
-    return userfeatures_dao.get_fwd_rna(user_id)
-
-
-def get_name_number(user_id):
-    return userfeatures_dao.get_name_number(user_id)
-
-
-def get_device_id(user_id):
-    return userfeatures_dao.get_device_id(user_id)
