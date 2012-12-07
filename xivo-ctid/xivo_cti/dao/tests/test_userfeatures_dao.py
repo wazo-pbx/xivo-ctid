@@ -33,7 +33,7 @@ from xivo_dao.alchemy.ctiphonehintsgroup import CtiPhoneHintsGroup
 from xivo_dao.alchemy.ctipresences import CtiPresences
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_dao.alchemy.userfeatures import UserFeatures
-from xivo_dao.tests.test_dao import DAOTestCase
+from xivo_cti.dao.tests.test_dao import DAOTestCase
 import time
 
 

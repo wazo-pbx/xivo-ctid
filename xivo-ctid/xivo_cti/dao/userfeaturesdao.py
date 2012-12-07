@@ -30,6 +30,7 @@ from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_dao.alchemy.contextinclude import ContextInclude
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from sqlalchemy import and_
+from xivo_dao import userfeatures_dao
 
 logger = logging.getLogger("UserFeaturesDAO")
 
@@ -108,22 +109,6 @@ class UserFeaturesDAO(object):
         self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
         self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
 
-    def get(self, user_id):
-        result = _session().query(UserFeatures).filter(UserFeatures.id == int(user_id)).first()
-        if result is None:
-            raise LookupError()
-        return result
-
-    def find_by_agent_id(self, agent_id):
-        res = _session().query(UserFeatures).filter(UserFeatures.agentid == int(agent_id))
-        return [user.id for user in res]
-
-    def agent_id(self, user_id):
-        try:
-            return self.get(user_id).agentid
-        except LookupError:
-            return None
-
     def disconnect(self, user_id):
         userdata = self._innerdata.xod_status['users'][user_id]
         userdata['connection'] = None
@@ -133,98 +118,68 @@ class UserFeaturesDAO(object):
         userdata = self._innerdata.xod_status['users'][user_id]
         userdata['availstate'] = presence
 
+    def get(self, user_id):
+        return userfeatures_dao.get(user_id)
+
+    def find_by_agent_id(self, agent_id):
+        return userfeatures_dao.find_by_agent_id(agent_id)
+
+    def agent_id(self, user_id):
+        return userfeatures_dao.agent_id(user_id)
+
     def is_agent(self, user_id):
-        try:
-            agent_id = self.agent_id(user_id)
-            return agent_id is not None
-        except LookupError:
-            return False
+        return userfeatures_dao.is_agent(user_id)
 
     def get_profile(self, user_id):
-        return self.get(user_id).cti_profile_id
-
-    def _get_included_contexts(self, context):
-        return [line.include for line in (_session().query(ContextInclude.include)
-                                           .filter(ContextInclude.context == context))]
-
-    def _get_nested_contexts(self, contexts):
-        checked = []
-        to_check = set(contexts) - set(checked)
-        while to_check:
-            context = to_check.pop()
-            contexts.extend(self._get_included_contexts(context))
-            checked.append(context)
-            to_check = set(contexts) - set(checked)
-
-        return list(set(contexts))
+        return userfeatures_dao.get_profile(user_id)
 
     def get_reachable_contexts(self, user_id):
-        line_contexts = [line.context for line in (_session().query(LineFeatures)
-                                                    .filter(LineFeatures.iduserfeatures == user_id))]
-
-        return self._get_nested_contexts(line_contexts)
+        return userfeatures_dao.get_reachable_contexts(user_id)
 
 
 def all():
-    return _session().query(UserFeatures).all()
+    return userfeatures_dao.all()
 
 
 def find_by_line_id(line_id):
-    return _session().query(LineFeatures.iduserfeatures).filter(LineFeatures.id == line_id)[0].iduserfeatures
+    return userfeatures_dao.find_by_line_id(line_id)
 
 
 def get_line_identity(user_id):
-    try:
-        line = (_session().query(LineFeatures.protocol, LineFeatures.name)
-                         .filter(LineFeatures.iduserfeatures == user_id))[0]
-    except IndexError:
-        raise LookupError('Could not find a line for user %s', user_id)
-    else:
-        return '%s/%s' % (line.protocol, line.name)
+    return userfeatures_dao.get_line_identity(user_id)
 
 
 def get_agent_number(user_id):
-    return (_session().query(AgentFeatures.number, UserFeatures.agentid)
-            .filter(and_(UserFeatures.id == user_id,
-                           AgentFeatures.id == UserFeatures.agentid))[0].number)
+    return userfeatures_dao.get_agent_number(user_id)
 
 
 def get_dest_unc(user_id):
-    return _session().query(UserFeatures.destunc).filter(UserFeatures.id == int(user_id))[0].destunc
+    return userfeatures_dao.get_dest_unc(user_id)
 
 
 def get_fwd_unc(user_id):
-    return (_session().query(UserFeatures.enableunc).filter(UserFeatures.id == int(user_id))[0].enableunc == 1)
+    return userfeatures_dao.get_fwd_unc(user_id)
 
 
 def get_dest_busy(user_id):
-    return _session().query(UserFeatures.destbusy).filter(UserFeatures.id == int(user_id))[0].destbusy
+    return userfeatures_dao.get_dest_busy(user_id)
 
 
 def get_fwd_busy(user_id):
-    return (_session().query(UserFeatures.enablebusy).filter(UserFeatures.id == int(user_id))[0].enablebusy == 1)
+    return userfeatures_dao.get_fwd_busy(user_id)
 
 
 def get_dest_rna(user_id):
-    return _session().query(UserFeatures.destrna).filter(UserFeatures.id == int(user_id))[0].destrna
+    return userfeatures_dao.get_dest_rna(user_id)
 
 
 def get_fwd_rna(user_id):
-    return (_session().query(UserFeatures.enablerna).filter(UserFeatures.id == int(user_id))[0].enablerna == 1)
+    return userfeatures_dao.get_fwd_rna(user_id)
 
 
 def get_name_number(user_id):
-    res = (_session().query(UserFeatures.firstname, UserFeatures.lastname, LineFeatures.number).
-           filter(and_(UserFeatures.id == LineFeatures.iduserfeatures, UserFeatures.id == user_id)))[0]
-    return '%s %s' % (res.firstname, res.lastname), res.number
+    return userfeatures_dao.get_name_number(user_id)
 
 
 def get_device_id(user_id):
-    row = (_session()
-           .query(LineFeatures.iduserfeatures, LineFeatures.device)
-           .filter(LineFeatures.iduserfeatures == user_id)).first()
-
-    if not row:
-        raise LookupError('Cannot find a device from this user id %s' % user_id)
-
-    return int(row.device)
+    return userfeatures_dao.get_device_id(user_id)
