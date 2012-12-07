@@ -23,6 +23,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import logging
+
+from xivo_cti.dao import userfeaturesdao
+
+logger = logging.getLogger(__name__)
 
 
 class CurrentCallManager(object):
@@ -31,6 +36,7 @@ class CurrentCallManager(object):
         self._lines = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
+        self.ami_class = None
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
@@ -120,6 +126,19 @@ class CurrentCallManager(object):
 
     def get_line_calls(self, line_identity):
         return self._lines.get(line_identity, [])
+
+    def hangup(self, user_id):
+        try:
+            line = userfeaturesdao.get_line_identity(user_id).lower()
+        except LookupError:
+            logger.warning('User %s tried to hangup but has no line', user_id)
+        else:
+            calls = self._lines.get(line, [])
+            ongoing_calls = [call['lines_channel'] for call in calls if call['on_hold'] is False]
+            if not ongoing_calls:
+                logger.warning('User %s tried to hangup with no tracked calls', user_id)
+            else:
+                self.ami_class.sendcommand('hangup', ongoing_calls)
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)
