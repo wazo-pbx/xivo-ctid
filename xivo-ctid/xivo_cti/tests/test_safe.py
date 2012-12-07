@@ -37,14 +37,15 @@ from xivo_cti import innerdata
 from tests.mock import Mock
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
+from mock import patch
 
 
 class TestSafe(unittest.TestCase):
 
     _ipbx_id = 'xivo'
 
-    def setUp(self):
+    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    def setUp(self, mock_get_ids):
         context.register('config', cti_config.Config())
         self._ctiserver = CTIServer()
         self._ctiserver._init_db_connection_pool()
@@ -52,8 +53,7 @@ class TestSafe(unittest.TestCase):
         config = context.get('config')
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
         self.safe = Safe(self._ctiserver, self._ipbx_id)
-        self.safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
-        self.safe.trunk_features_dao.get_ids.return_value = []
+        mock_get_ids.get_ids.return_value = []
         self.safe.init_status()
 
     def tearDown(self):
@@ -133,11 +133,11 @@ class TestSafe(unittest.TestCase):
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
 
-    def test_init_status(self):
+    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    def test_init_status(self, mock_get_ids):
         id_list = [1, 2, 3, 4]
         safe = Safe(self._ctiserver, self._ipbx_id)
-        safe.trunk_features_dao = Mock(TrunkFeaturesDAO)
-        safe.trunk_features_dao.get_ids.return_value = id_list
+        mock_get_ids.return_value = id_list
 
         safe.init_status()
 

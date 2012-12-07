@@ -28,7 +28,6 @@ from xivo_dao.agentfeaturesdao import AgentFeaturesDAO
 from xivo_dao.linefeaturesdao import LineFeaturesDAO
 from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
-from xivo_dao.trunkfeaturesdao import TrunkFeaturesDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.funckey.funckey_manager import FunckeyManager
@@ -107,7 +106,6 @@ def _register_context(context):
     context.register('queuemember_service_notifier', QueueMemberServiceNotifier)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
-    context.register('trunk_features_dao', TrunkFeaturesDAO)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
     context.register('user_dao', UserDAO)

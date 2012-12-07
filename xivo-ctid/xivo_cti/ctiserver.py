@@ -175,7 +175,6 @@ class CTIServer(object):
 
         self._agent_features_dao = context.get('agent_features_dao')
         self._innerdata_dao = context.get('innerdata_dao')
-        self._trunk_features_dao = context.get('trunk_features_dao')
         self._user_dao = context.get('user_dao')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
@@ -393,7 +392,6 @@ class CTIServer(object):
         safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
         safe.user_service_manager = self._user_service_manager
         safe.user_dao = self._user_dao
-        safe.trunk_features_dao = self._trunk_features_dao
         safe.queuemember_service_manager = self._queuemember_service_manager
         dao.instanciate_dao(safe)
         safe.init_status()

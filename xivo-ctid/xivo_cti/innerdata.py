@@ -44,7 +44,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.services.agent_status import AgentStatus
-from xivo_dao import userfeatures_dao
+from xivo_dao import userfeatures_dao, trunkfeatures_dao
 
 logger = logging.getLogger('innerdata')
 
@@ -393,7 +393,7 @@ class Safe(object):
         Initialize xod_status for lists that are not retrieved using web services
         '''
         self.xod_status['trunks'] = {}
-        trunk_ids = self.trunk_features_dao.get_ids()
+        trunk_ids = trunkfeatures_dao.get_ids()
         for trunk_id in trunk_ids:
             self.xod_status['trunks'][trunk_id] = copy.deepcopy(self.props_status['trunks'])
 
@@ -827,7 +827,7 @@ class Safe(object):
 
     def ztrunks(self, protocol, name):
         try:
-            return self.trunk_features_dao.find_by_proto_name(protocol, name)
+            return trunkfeatures_dao.find_by_proto_name(protocol, name)
         except (LookupError, ValueError):
             return None
 
