@@ -147,24 +147,6 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
 
-    def test_delete_other_queuemembers_inexistant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_method_calls = []
-
-        self.innerdata_dao._delete_other_queuemembers('queuemember0_id')
-
-        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
-        self.assertEqual(innerdata_method_calls, expected_method_calls)
-
-    def test_delete_other_queuemembers_existant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_method_calls = [call.queuememberupdate('queue1', 'agent1')]
-
-        self.innerdata_dao._delete_other_queuemembers('queuemember1_id')
-
-        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
-        self.assertEqual(innerdata_method_calls, expected_method_calls)
-
     def test_get_queuemember_inexistant(self):
         self.innerdata_dao.innerdata.queuemembers_config = {}
 

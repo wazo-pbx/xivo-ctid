@@ -231,35 +231,6 @@ class AMI_1_8(object):
         opts = {'paused': 'on' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
-    def ami_queuemember(self, event):
-        self.innerdata.queuememberupdate(event['Queue'],
-                                         event['Location'],
-                                         (event['Status'],
-                                          event['Paused'],
-                                          event['Membership'],
-                                          event['CallsTaken'],
-                                          event['Penalty'],
-                                          event['LastCall']))
-
-    def ami_queuememberstatus(self, event):
-        self.innerdata.queuememberupdate(event['Queue'],
-                                         event['Location'],
-                                         (event['Status'],
-                                          event['Paused'],
-                                          event['Membership'],
-                                          event['CallsTaken'],
-                                          event['Penalty'],
-                                          event['LastCall']))
-
-    def ami_queuememberadded(self, event):
-        self.ami_queuememberstatus(event)
-
-    def ami_queuememberremoved(self, event):
-        self.innerdata.queuememberupdate(event['Queue'], event['Location'])
-
-    def ami_queuememberpaused(self, event):
-        self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
-
     def ami_parkedcall(self, event):
         channel = event['Channel']
         exten = event['Exten']

@@ -181,7 +181,6 @@ class Safe(object):
         self.timeout_queue = Queue.Queue()
 
         self.channels = {}
-        self.queuemembers = {}
         self.queuemembers_config = {}
         self.faxes = {}
 
@@ -511,14 +510,14 @@ class Safe(object):
         if channel_id in self.channels:
             return self.channels[channel_id].properties
 
-    def get_status_queuemembers(self, queue_member_id, limit=None):
-        return self.queuemembers.get(queue_member_id)
+    def get_status_queuemembers(self, queue_member_id):
+        return self.queuemembers_config.get(queue_member_id)
 
     def get_status(self, listname, item_id, limit=None):
         if listname == 'channels':
             return self.get_status_channel(item_id, limit)
         if listname == 'queuemembers':
-            return self.get_status_queuemembers(item_id, limit)
+            return self.get_status_queuemembers(item_id)
         reply = {}
         statusdict = self.xod_status.get(listname)
         if not isinstance(statusdict, dict):
@@ -607,101 +606,6 @@ class Safe(object):
                 logger.info("voicemail %s updated. new:%s old:%s waiting:%s", mailbox, new, old, waiting)
                 break
 
-    def _update_agent_member(self, location, props, queue_id, list_name):
-        aid = self.xod_config['agents'].idbyagentnumber(location[6:])
-        queue_member_id = None
-        if aid:
-            self.handle_cti_stack('set', ('agents', 'updatestatus', aid))
-            queue_member_id = '%sa:%s-%s' % (list_name[0], queue_id, aid)
-        # todo : group all this stuff, take care of relations
-            if props:
-                if aid not in self.xod_status[list_name][queue_id]['agentmembers']:
-                    self.xod_status[list_name][queue_id]['agentmembers'].append(aid)
-                if queue_id not in self.xod_status['agents'][aid][list_name]:
-                    self.xod_status['agents'][aid][list_name].append(queue_id)
-            else:
-                if aid in self.xod_status[list_name][queue_id]['agentmembers']:
-                    self.xod_status[list_name][queue_id]['agentmembers'].remove(aid)
-                if queue_id in self.xod_status['agents'][aid][list_name]:
-                    self.xod_status['agents'][aid][list_name].remove(queue_id)
-        return queue_member_id
-
-    def _update_phone_member(self, location, props, queue_id, list_name):
-        queue_member_id = None
-        termination = self.ast_channel_to_termination(location)
-        pid = self.zphones(termination.get('protocol'), termination.get('name'))
-        if pid:
-            self.handle_cti_stack('set', ('phones', 'updatestatus', pid))
-            queue_member_id = '%sp:%s-%s' % (list_name[0], queue_id, pid)
-            if props:
-                if pid not in self.xod_status[list_name][queue_id]['phonemembers']:
-                    self.xod_status[list_name][queue_id]['phonemembers'].append(pid)
-                if queue_id not in self.xod_status['phones'][pid][list_name]:
-                    self.xod_status['phones'][pid][list_name].append(queue_id)
-            else:
-                if pid in self.xod_status[list_name][queue_id]['phonemembers']:
-                    self.xod_status[list_name][queue_id]['phonemembers'].remove(pid)
-                if queue_id in self.xod_status['phones'][pid][list_name]:
-                    self.xod_status['phones'][pid][list_name].remove(queue_id)
-        return queue_member_id
-
-    def _update_queue_member(self, props, queue_member_id):
-        if props:
-            self.handle_cti_stack('set', ('queuemembers', 'updatestatus', queue_member_id))
-            queue_member_status = self._extract_queue_member_status(props)
-            self._update_queue_member_status(queue_member_id, queue_member_status)
-        elif queue_member_id in self.queuemembers:
-            self._remove_queue_member(queue_member_id)
-
-    def queuememberupdate(self, name, location, props=None):
-        if self.xod_config['queues'].hasqueue(name):
-            list_name = 'queues'
-        elif self.xod_config['groups'].hasqueue(name):
-            list_name = 'groups'
-        else:
-            raise ValueError('%s is not a group or queue' % name)
-
-        item_id = self.xod_config[list_name].idbyqueuename(name)
-
-        # send a notification event if no new member
-        self.handle_cti_stack('set', (list_name, 'updatestatus', item_id))
-        if location.lower().startswith('agent/'):
-            queue_member_id = self._update_agent_member(location, props, item_id, list_name)
-        else:
-            queue_member_id = self._update_phone_member(location, props, item_id, list_name)
-
-        self._update_queue_member(props, queue_member_id)
-
-        # send cti events in reverse order in order for the queuemember details to be received first
-        self.handle_cti_stack('empty_stack')
-
-    def _extract_queue_member_status(self, properties):
-        if len(properties) == 6:
-            (status, paused, membership, callstaken, penalty, lastcall) = properties
-            return {'status': status,
-                    'paused': paused,
-                    'membership': membership,
-                    'callstaken': callstaken,
-                    'penalty': penalty,
-                    'lastcall': lastcall}
-        elif len(properties) == 1:
-            (paused,) = properties
-            return {'paused': paused}
-
-    def _remove_queue_member(self, queue_member_id):
-        del self.queuemembers[queue_member_id]
-        self._ctiserver.send_cti_event({'class': 'getlist',
-                                        'listname': 'queuemembers',
-                                        'function': 'delconfig',
-                                        'tipbxid': self.ipbxid,
-                                        'list': [queue_member_id]})
-
-    def _update_queue_member_status(self, queue_member_id, status):
-        if queue_member_id not in self.queuemembers:
-            self.queuemembers[queue_member_id] = {}
-        for k, v in status.iteritems():
-            self.queuemembers[queue_member_id][k] = v
-
     def update(self, channel):
         chanprops = self.channels.get(channel)
         relations = chanprops.relations
@@ -718,8 +622,8 @@ class Safe(object):
             if item_id and item_id in self.channels:
                 return self.channels[item_id].properties
         elif listname == 'queuemembers':
-            if item_id and item_id in self.queuemembers:
-                return self.queuemembers.get(item_id)
+            if item_id and item_id in self.queuemembers_config:
+                return self.queuemembers_config.get(item_id)
         else:
             if item_id and item_id in self.xod_status[listname]:
                 return self.xod_status[listname].get(item_id)
