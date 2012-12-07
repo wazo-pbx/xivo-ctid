@@ -25,8 +25,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_channels_for_phone.reset()
         mock_caller_id_by_unique_id.reset()
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_answered_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -63,8 +63,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_no_answered_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -84,8 +84,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_missed_calls_with_missed_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -116,8 +116,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_caller_id_by_unique_id.assert_was_called_with(u'2')
         self.assertEqual(expected_received_calls, received_calls)
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_answered_calls_for_phone_with_no_missed_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -138,8 +138,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_caller_id_by_unique_id.assert_not_called()
         self.assertEqual(expected_received_calls, received_calls)
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_outgoing_calls_with_outgoing_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}
@@ -171,8 +171,8 @@ class CallHistoryMgrTest(unittest.TestCase):
         mock_channels_for_phone.called_once_with(phone, 2)
         self.assertEqual(expected_received_calls, received_calls)
 
-    @patch('xivo_dao.celdao.channels_for_phone', mock_channels_for_phone)
-    @patch('xivo_dao.celdao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
+    @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
+    @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)
     def test_outgoing_calls_for_phone_with_no_outgoing_calls(self):
         phone = {u'protocol': u'sip',
                  u'name': u'abcdef'}

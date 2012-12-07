@@ -31,7 +31,7 @@ import time
 from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
-from xivo_dao.celdao import UnsupportedLineProtocolException
+from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services import call_history_manager
 from xivo_dao import userfeatures_dao
 
