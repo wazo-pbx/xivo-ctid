@@ -48,6 +48,7 @@ from xivo_cti.context import context
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
@@ -248,6 +249,10 @@ class CTIServer(object):
             context.get('current_call_notifier').subscribe,
             ['cti_connection']
         )
+        Hangup.register_callback_params(
+            context.get('current_call_manager').hangup,
+            ['user_id']
+        )
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -426,6 +431,7 @@ class CTIServer(object):
         self._funckey_manager.ami = self.myami.amiclass
         context.get('device_manager').ami = self.myami.amiclass
         context.get('agent_executor').ami = self.myami.amiclass
+        context.get('current_call_manager').ami = self.myami.amiclass
         self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
