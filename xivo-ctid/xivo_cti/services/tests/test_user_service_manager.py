@@ -24,7 +24,7 @@ import unittest
 
 from tests.mock import Mock
 from xivo_dao.alchemy import dbconnection
-from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
+from xivo_dao import phonefunckey_dao
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.funckey.funckey_manager import FunckeyManager
@@ -40,7 +40,6 @@ class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.user_dao = Mock(UserDAO)
-        self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
@@ -53,7 +52,6 @@ class TestUserServiceManager(unittest.TestCase):
                                                        self.presence_service_manager,
                                                        self.funckey_manager,
                                                        self.user_dao,
-                                                       self.phone_funckey_dao,
                                                        self.device_manager)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
 
@@ -113,10 +111,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
 
-    def test_enable_unconditional_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
+    def test_enable_unconditional_fwd(self, mock_get_dest_unc):
         user_id = 543321
         destination = '234'
-        self.user_service_manager.phone_funckey_dao.get_dest_unc.return_value = [destination]
+        mock_get_dest_unc.return_value = [destination]
 
         self.user_service_manager.enable_unconditional_fwd(user_id, destination)
 
@@ -131,11 +130,12 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEquals(calls, expected_calls)
 
-    def test_disable_unconditional_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
+    def test_disable_unconditional_fwd(self, mock_get_dest_unc):
         user_id = 543
         destination = '1234'
         fwd_key_dest = '102'
-        self.phone_funckey_dao.get_dest_unc.return_value = [fwd_key_dest]
+        mock_get_dest_unc.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_unconditional_fwd(user_id, destination)
 
@@ -143,10 +143,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.unconditional_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd.assert_called_once_with(user_id)
 
-    def test_enable_rna_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
+    def test_enable_rna_fwd(self, mock_get_dest_rna):
         user_id = 2345
         destination = '3456'
-        self.user_service_manager.phone_funckey_dao.get_dest_rna.return_value = [destination]
+        mock_get_dest_rna.return_value = [destination]
 
         self.user_service_manager.enable_rna_fwd(user_id, destination)
 
@@ -155,11 +156,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
         self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
-    def test_disable_rna_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
+    def test_disable_rna_fwd(self, mock_get_dest_rna):
         user_id = 2345
         destination = '3456'
         fwd_key_dest = '987'
-        self.phone_funckey_dao.get_dest_rna.return_value = [fwd_key_dest]
+        mock_get_dest_rna.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_rna_fwd(user_id, destination)
 
@@ -167,11 +169,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
 
-    def test_enable_busy_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    def test_enable_busy_fwd(self, mock_get_dest_busy):
         user_id = 2345
         destination = '3456'
         fwd_key_dest = '3456'
-        self.phone_funckey_dao.get_dest_busy.return_value = [fwd_key_dest]
+        mock_get_dest_busy.return_value = [fwd_key_dest]
 
         self.user_service_manager.enable_busy_fwd(user_id, destination)
 
@@ -180,11 +183,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
         self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
-    def test_disable_busy_fwd(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    def test_disable_busy_fwd(self, mock_get_dest_busy):
         user_id = 2345
         destination = '3456'
         fwd_key_dest = '666'
-        self.phone_funckey_dao.get_dest_busy.return_value = [fwd_key_dest]
+        mock_get_dest_busy.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_busy_fwd(user_id, destination)
 
@@ -192,11 +196,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
 
-    def test_enable_busy_fwd_not_funckey(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    def test_enable_busy_fwd_not_funckey(self, mock_get_dest_busy):
         user_id = 2345
         destination = '3456'
         fwd_key_dest = '666'
-        self.phone_funckey_dao.get_dest_busy.return_value = [fwd_key_dest]
+        mock_get_dest_busy.return_value = [fwd_key_dest]
 
         self.user_service_manager.enable_busy_fwd(user_id, destination)
 

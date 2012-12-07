@@ -24,7 +24,6 @@ from xivo_cti import cti_config
 
 from xivo_cti import cti_config
 from xivo_cti.context import context
-from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from xivo_dao.queuememberdao import QueueMemberDAO
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.user_dao import UserDAO
@@ -94,7 +93,6 @@ def _register_context(context):
     context.register('queue_service_manager', QueueServiceManager)
     context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)
-    context.register('phone_funckey_dao', PhoneFunckeyDAO)
     context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
     context.register('queuemember_dao', QueueMemberDAO)

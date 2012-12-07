@@ -25,7 +25,6 @@ import unittest
 from xivo_cti.funckey.funckey_manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
-from xivo_dao.phonefunckeydao import PhoneFunckeyDAO
 from mock import patch
 from mock import Mock
 
@@ -34,9 +33,7 @@ class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
         self.user_id = 123
-        self.phone_funckey_dao = Mock(PhoneFunckeyDAO)
-        self.manager = FunckeyManager(self.phone_funckey_dao)
-        self.manager.phone_funckey_dao = self.phone_funckey_dao
+        self.manager = FunckeyManager()
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami
@@ -133,11 +130,12 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.assertEqual(calls, expected_calls)
 
-    def test_disable_all_fwd_unc(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
+    def test_disable_all_fwd_unc(self, mock_get_dest_unc):
         unc_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.unconditional_fwd_in_use = fn
-        self.phone_funckey_dao.get_dest_unc.return_value = unc_dest
+        mock_get_dest_unc.return_value = unc_dest
 
         self.manager.disable_all_unconditional_fwd(self.user_id)
 
@@ -145,11 +143,12 @@ class TestFunckeyManager(unittest.TestCase):
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    def test_disable_all_fwd_rna(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
+    def test_disable_all_fwd_rna(self, mock_get_dest_rna):
         rna_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.rna_fwd_in_use = fn
-        self.phone_funckey_dao.get_dest_rna.return_value = rna_dest
+        mock_get_dest_rna.return_value = rna_dest
 
         self.manager.disable_all_rna_fwd(self.user_id)
 
@@ -157,11 +156,12 @@ class TestFunckeyManager(unittest.TestCase):
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    def test_disable_all_fwd_busy(self):
+    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    def test_disable_all_fwd_busy(self, mock_get_dest_busy):
         busy_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.busy_fwd_in_use = fn
-        self.phone_funckey_dao.get_dest_busy.return_value = busy_dest
+        mock_get_dest_busy.return_value = busy_dest
 
         self.manager.disable_all_busy_fwd(self.user_id)
 

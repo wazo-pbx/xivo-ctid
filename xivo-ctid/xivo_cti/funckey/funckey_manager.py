@@ -21,7 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo import xivo_helpers
-from xivo_dao import extensionsdao, userfeatures_dao
+from xivo_dao import extensionsdao, userfeatures_dao, phonefunckey_dao
 
 
 class FunckeyManager(object):
@@ -30,8 +30,8 @@ class FunckeyManager(object):
     INUSE = 'INUSE'
     NOT_INUSE = 'NOT_INUSE'
 
-    def __init__(self, phone_funckey_dao):
-        self.phone_funckey_dao = phone_funckey_dao
+    def __init__(self):
+        pass
 
     def _device(self, user_id, name, destination=''):
         funckey_prefix = extensionsdao.exten_by_name('phoneprogfunckey')
@@ -71,17 +71,17 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def disable_all_unconditional_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_unc(user_id):
+        for destination in phonefunckey_dao.get_dest_unc(user_id):
             if destination:
                 self.unconditional_fwd_in_use(user_id, destination, False)
 
     def disable_all_rna_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_rna(user_id):
+        for destination in phonefunckey_dao.get_dest_rna(user_id):
             if destination:
                 self.rna_fwd_in_use(user_id, destination, False)
 
     def disable_all_busy_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_busy(user_id):
+        for destination in phonefunckey_dao.get_dest_busy(user_id):
             if destination:
                 self.busy_fwd_in_use(user_id, destination, False)
 
