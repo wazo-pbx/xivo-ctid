@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_dao import group_dao, userfeatures_dao
+from xivo_dao import group_dao, userfeatures_dao, queue_member_dao
 from xivo_dao.helpers import queuemember_formatter
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_dao import queue_features_dao
@@ -33,19 +33,17 @@ logger = logging.getLogger("QueueMemberServiceManager")
 class QueueMemberServiceManager(object):
 
     def __init__(self,
-                 queuemember_dao,
                  innerdata_dao,
                  agent_service_manager,
                  queuemember_service_notifier,
                  delta_computer):
-        self.queuemember_dao = queuemember_dao
         self.innerdata_dao = innerdata_dao
         self.agent_service_manager = agent_service_manager
         self.queuemember_notifier = queuemember_service_notifier
         self.delta_computer = delta_computer
 
     def update_config(self):
-        new_queuemembers = self.queuemember_dao.get_queuemembers()
+        new_queuemembers = queue_member_dao.get_queuemembers()
         old_queuemembers = self.innerdata_dao.get_queuemembers_static()
         delta = self.delta_computer.compute_delta(new_queuemembers, old_queuemembers)
         queuemembers_request = self._get_queuemembers_to_request(delta)

@@ -28,7 +28,6 @@ from tests.mock import Mock, call, ANY, patch
 from xivo_dao.helpers import queuemember_formatter
 from xivo_dao.helpers.queuemember_formatter import QueueMemberFormatter
 from xivo_cti.dao.innerdatadao import InnerdataDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
 from xivo_cti.services.agent_service_manager import AgentServiceManager
@@ -47,7 +46,6 @@ class TestQueueMemberServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.queuemember_service_notifier = Mock(QueueMemberServiceNotifier)
-        self.queuemember_dao = Mock(QueueMemberDAO)
         self.innerdata_dao = Mock(InnerdataDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
         self.delta_computer = Mock(DeltaComputer)
@@ -55,8 +53,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.old_queuemember_formatter = queuemember_formatter.QueueMemberFormatter
         queuemember_formatter.QueueMemberFormatter = Mock(QueueMemberFormatter)
 
-        self.queuemember_service_manager = QueueMemberServiceManager(self.queuemember_dao,
-                                                                     self.innerdata_dao,
+        self.queuemember_service_manager = QueueMemberServiceManager(self.innerdata_dao,
                                                                      self.agent_service_manager,
                                                                      self.queuemember_service_notifier,
                                                                      self.delta_computer)
@@ -99,13 +96,11 @@ class TestQueueMemberServiceManager(unittest.TestCase):
     def tearDown(self):
         queuemember_formatter.QueueMemberFormatter = self.old_queuemember_formatter
 
-    def test_update_config_add(self):
-        queuemember_dao = Mock()
-        queuemember_dao.get_queuemembers = Mock()
-        queuemember_dao.get_queuemembers.return_value = {self.keyA: self.A,
-                                                         self.keyB: self.B,
-                                                         self.keyC: self.C}
-        self.queuemember_service_manager.queuemember_dao = queuemember_dao
+    @patch('xivo_dao.queue_member_dao.get_queuemembers')
+    def test_update_config_add(self, mock_get_queuemembers):
+        mock_get_queuemembers.return_value = {self.keyA: self.A,
+                                              self.keyB: self.B,
+                                              self.keyC: self.C}
         innerdata_dao = Mock()
         innerdata_dao.get_queuemembers_static = Mock()
         innerdata_dao.get_queuemembers_static.return_value = {}
