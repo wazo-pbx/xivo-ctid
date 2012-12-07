@@ -42,7 +42,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.formatter = Mock(formatter.CurrentCallFormatter)
         self.ami_class = Mock(xivo_ami.AMIClass)
         self.manager = manager.CurrentCallManager(self.notifier, self.formatter)
-        self.manager.ami_class = self.ami_class
+        self.manager.ami = self.ami_class
         self.line_1 = 'sip/tc8nb4'
         self.line_2 = 'sip/6s7foq'
         self.channel_1 = 'SIP/tc8nb4-00000004'
@@ -317,7 +317,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.ami_class.sendcommand.assert_called_once_with('hangup', [self.channel_1])
+        self.ami_class.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
 
     @patch('xivo_cti.dao.userfeaturesdao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):

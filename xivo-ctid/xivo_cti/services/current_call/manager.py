@@ -36,7 +36,7 @@ class CurrentCallManager(object):
         self._lines = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
-        self.ami_class = None
+        self.ami = None
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
@@ -138,7 +138,7 @@ class CurrentCallManager(object):
             if not ongoing_calls:
                 logger.warning('User %s tried to hangup with no tracked calls', user_id)
             else:
-                self.ami_class.sendcommand('hangup', ongoing_calls)
+                self.ami.sendcommand('Hangup', [('Channel', ongoing_calls[0])])
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)
