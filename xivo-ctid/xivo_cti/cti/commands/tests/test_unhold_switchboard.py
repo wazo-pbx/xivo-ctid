@@ -22,20 +22,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+import unittest
+
+from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
 
 
-class HoldSwitchboard(CTICommand):
+class TestUnholdSwitchboard(unittest.TestCase):
 
-    COMMAND_CLASS = 'hold_switchboard'
+    def setUp(self):
+        self.commandid = 125731893
+        self.unhold_switchboard_message = {
+            'class': 'unhold_switchboard',
+            'unique_id': '123456.66',
+            'commandid': self.commandid,
+        }
 
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
+    def test_unhold_switchboard(self):
+        self.assertEqual(UnholdSwitchboard.COMMAND_CLASS, 'unhold_switchboard')
 
-    def _init_from_dict(self, msg):
-        super(HoldSwitchboard, self)._init_from_dict(msg)
+    def test_from_dict(self):
+        unhold_switchboard = UnholdSwitchboard.from_dict(self.unhold_switchboard_message)
 
-CTICommandFactory.register_class(HoldSwitchboard)
+        self.assertEqual(unhold_switchboard.commandid, self.commandid)
+        self.assertEqual(unhold_switchboard.unique_id, self.unhold_switchboard_message['unique_id'])
