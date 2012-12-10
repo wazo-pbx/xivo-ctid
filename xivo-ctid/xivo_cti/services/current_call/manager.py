@@ -147,6 +147,20 @@ class CurrentCallManager(object):
         else:
             self.ami.transfer(current_call_channel['channel'], hold_queue_number, hold_queue_ctx)
 
+    def switchboard_unhold(self, user_id, action_id):
+        try:
+            user_line = userfeatures_dao.get_line_identity(user_id).lower()
+            channel = dao.channel.get_channel_from_unique_id(action_id)
+        except LookupError:
+            raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
+        else:
+            self.ami.sendcommand(
+                'Originate',
+                [('Channel', user_line),
+                 ('Application', 'Bridge'),
+                 ('Data', channel)]
+            )
+
     def _get_current_call_channel(self, user_id):
         try:
             line = userfeatures_dao.get_line_identity(user_id).lower()
