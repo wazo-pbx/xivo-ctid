@@ -55,6 +55,7 @@ class QueueEntryEncoder(object):
         result['name'] = queue_entry.name
         result['number'] = queue_entry.number
         result['join_time'] = queue_entry.join_time
+        result['uniqueid'] = queue_entry.unique_id
 
         return result
 

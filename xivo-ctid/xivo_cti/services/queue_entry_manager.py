@@ -32,7 +32,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number', 'join_time'])
+QueueEntry = namedtuple('QueueEntry', ['position', 'name', 'number', 'join_time', 'unique_id'])
 
 NAME, NUMBER, POSITION, QUEUE, UNIQUE_ID, COUNT, WAIT = \
     'CallerIDName', 'CallerIDNum', 'Position', 'Queue', 'Uniqueid', 'Count', 'Wait'
@@ -133,7 +133,7 @@ class QueueEntryManager(object):
     def insert(self, queue_name, pos, name, number, unique_id, wait):
         logger.info("queue %s pos %s name %s number %s wait %s" % (queue_name, pos, name, number, wait))
         try:
-            entry = QueueEntry(pos, name, number, time.time() - wait)
+            entry = QueueEntry(pos, name, number, time.time() - wait, unique_id)
             if queue_name not in self._queue_entries:
                 self._queue_entries[queue_name] = {}
             self._queue_entries[queue_name][unique_id] = entry
@@ -178,10 +178,13 @@ class QueueEntryManager(object):
                 if entry.position > removed_position:
                     pos = entry.position - 1
                     assert(pos > 0)
-                    new_entry = QueueEntry(pos,
-                                           entry.name,
-                                           entry.number,
-                                           entry.join_time)
+                    new_entry = QueueEntry(
+                        pos,
+                        entry.name,
+                        entry.number,
+                        entry.join_time,
+                        unique_id
+                    )
                     self._queue_entries[queue_name][unique_id] = new_entry
         except (LookupError, AssertionError):
             logger.exception('Failed to decrement queue positions')
