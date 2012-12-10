@@ -22,23 +22,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
-from xivo_cti.dao.queue_dao import QueueDAO
+import unittest
 
-agent = None
-queue = None
-queue_member = None
-channel = None
+from xivo_cti.cti.commands.hold_switchboard import HoldSwitchboard
 
 
-def instanciate_dao(innerdata):
-    global queue
-    queue = QueueDAO(innerdata)
-    global queue_member
-    queue_member = QueueMemberDAO(innerdata)
-    global channel
-    channel = ChannelDAO(innerdata)
-    global agent
-    agent = AgentDAO(innerdata, queue_member)
+class TestHoldSwitchboard(unittest.TestCase):
+
+    def setUp(self):
+        self.commandid = 125731893
+        self.hold_switchboard_message = {
+            'class': 'hold_switchboard',
+            'commandid': self.commandid,
+        }
+
+    def test_hold_switchboard(self):
+        self.assertEqual(HoldSwitchboard.COMMAND_CLASS, 'hold_switchboard')
+
+    def test_from_dict(self):
+        hold_switchboard = HoldSwitchboard.from_dict(self.hold_switchboard_message)
+
+        self.assertEqual(hold_switchboard.commandid, self.commandid)

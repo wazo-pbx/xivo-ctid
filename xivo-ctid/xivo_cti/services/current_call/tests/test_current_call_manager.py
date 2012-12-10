@@ -29,10 +29,12 @@ from mock import patch
 from mock import Mock
 from hamcrest import *
 
+from xivo_cti.dao import queue_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
 from xivo_cti import xivo_ami
+from xivo_cti import dao
 
 
 class TestCurrentCallManager(unittest.TestCase):
@@ -327,3 +329,29 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.hangup(user_id)
 
         self.assertEqual(self.ami_class.sendcommand.call_count, 0)
+
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    def test_switchboard_hold(self, mock_get_line_identity):
+        dao.queue = Mock(queue_dao.QueueDAO)
+        dao.queue.get_number_context_from_name.return_value = '3006', 'ctx'
+        user_id = 7
+        mock_get_line_identity.return_value = self.line_2
+
+        self.manager._lines = {
+            self.line_1: [
+                {'channel': self.channel_2,
+                 'lines_channel': self.channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+            self.line_2: [
+                {'channel': self.channel_1,
+                 'lines_channel': self.channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+
+        self.manager.switchboard_hold(user_id)
+
+        self.ami_class.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')

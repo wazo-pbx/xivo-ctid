@@ -57,6 +57,7 @@ from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
+from xivo_cti.cti.commands.hold_switchboard import HoldSwitchboard
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
@@ -249,6 +250,10 @@ class CTIServer(object):
         )
         Hangup.register_callback_params(
             context.get('current_call_manager').hangup,
+            ['user_id']
+        )
+        HoldSwitchboard.register_callback_params(
+            context.get('current_call_manager').switchboard_hold,
             ['user_id']
         )
 

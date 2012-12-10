@@ -22,23 +22,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
-from xivo_cti.dao.queue_dao import QueueDAO
-
-agent = None
-queue = None
-queue_member = None
-channel = None
+from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-def instanciate_dao(innerdata):
-    global queue
-    queue = QueueDAO(innerdata)
-    global queue_member
-    queue_member = QueueMemberDAO(innerdata)
-    global channel
-    channel = ChannelDAO(innerdata)
-    global agent
-    agent = AgentDAO(innerdata, queue_member)
+class HoldSwitchboard(CTICommand):
+
+    COMMAND_CLASS = 'hold_switchboard'
+
+    required_fields = [CTICommand.CLASS]
+    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
+    _callbacks = []
+    _callbacks_with_params = []
+
+    def __init__(self):
+        super(HoldSwitchboard, self).__init__()
+
+    def _init_from_dict(self, msg):
+        super(HoldSwitchboard, self)._init_from_dict(msg)
+
+CTICommandFactory.register_class(HoldSwitchboard)

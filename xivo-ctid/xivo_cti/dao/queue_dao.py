@@ -21,24 +21,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
-from xivo_cti.dao.queue_dao import QueueDAO
-
-agent = None
-queue = None
-queue_member = None
-channel = None
+logger = logging.getLogger(__name__)
 
 
-def instanciate_dao(innerdata):
-    global queue
-    queue = QueueDAO(innerdata)
-    global queue_member
-    queue_member = QueueMemberDAO(innerdata)
-    global channel
-    channel = ChannelDAO(innerdata)
-    global agent
-    agent = AgentDAO(innerdata, queue_member)
+class QueueDAO(object):
+
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
+
+    def get_number_context_from_name(self, queue_name):
+        queues = self.innerdata.xod_config['queues'].keeplist
+        for queue in queues.itervalues():
+            if queue['name'] != queue_name:
+                continue
+            return queue['number'], queue['context']
+        raise LookupError('No such queue %s' % queue_name)
