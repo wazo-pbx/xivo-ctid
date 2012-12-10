@@ -13,3 +13,5 @@ To run dao tests
         create DATABASE asterisktest;
         create USER asterisk with password 'asterisk';
         grant all ON DATABASE asterisktest to asterisk;
+
+Still up to date ?
