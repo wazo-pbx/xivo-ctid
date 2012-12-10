@@ -24,9 +24,7 @@
 
 import unittest
 
-from tests.mock import Mock, call, ANY, patch
-from xivo_dao.helpers import queuemember_formatter
-from xivo_dao.helpers.queuemember_formatter import QueueMemberFormatter
+from tests.mock import Mock, ANY, patch
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
 from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNotifier
@@ -49,16 +47,13 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.innerdata_dao = Mock(InnerdataDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
         self.delta_computer = Mock(DeltaComputer)
-
-        self.old_queuemember_formatter = queuemember_formatter.QueueMemberFormatter
-        queuemember_formatter.QueueMemberFormatter = Mock(QueueMemberFormatter)
-
         self.queuemember_service_manager = QueueMemberServiceManager(self.innerdata_dao,
                                                                      self.agent_service_manager,
                                                                      self.queuemember_service_notifier,
                                                                      self.delta_computer)
 
         self.ami_event = {
+            'Name': USER_INTERFACE,
             'Queue': 'queue1',
             'Location': 'location1',
             'Status': 'status1',
@@ -66,7 +61,7 @@ class TestQueueMemberServiceManager(unittest.TestCase):
             'Membership': 'dynamic',
             'CallsTaken': '0',
             'Penalty': '0',
-            'LastCall': 'none'}
+            'LastCall': '0'}
 
         self.A = {
             'queue_name': 'queueA',
@@ -93,19 +88,23 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.keyD = 'agentD,queueD'
         self.tupleD = ('agentD', 'queueD')
 
-    def tearDown(self):
-        queuemember_formatter.QueueMemberFormatter = self.old_queuemember_formatter
-
     @patch('xivo_dao.queue_member_dao.get_queuemembers')
     def test_update_config_add(self, mock_get_queuemembers):
+        delta = DictDelta(
+            {
+                self.keyA: self.A,
+                self.keyB: self.B,
+                self.keyC: self.C
+            },
+            {},
+            {}
+        )
         mock_get_queuemembers.return_value = {self.keyA: self.A,
                                               self.keyB: self.B,
                                               self.keyC: self.C}
-        innerdata_dao = Mock()
-        innerdata_dao.get_queuemembers_static = Mock()
-        innerdata_dao.get_queuemembers_static.return_value = {}
-        self.queuemember_service_manager.innerdata_dao = innerdata_dao
-        self.queuemember_service_manager.delta_computer = DeltaComputer()
+        self.innerdata_dao.get_queuemembers_static.return_value = {}
+        self.delta_computer.compute_delta.return_value = delta
+
         expected_ami_request = [self.tupleA, self.tupleB, self.tupleC]
         expected_removed = DictDelta({}, {}, {})
 
@@ -114,42 +113,37 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_once_with(expected_removed)
         self.queuemember_service_notifier.request_queuemembers_to_ami.assert_called_once_with(expected_ami_request)
 
-    def test_add_dynamic_queuemember(self):
+    @patch('xivo_dao.helpers.queuemember_formatter.format_queuemember_from_ami_add')
+    def test_add_dynamic_queuemember(self, mock_format_queuemember_from_ami_add):
         queuemember_formatted = {'location1,queue1': {'queue_name': 'queue1',
                                                       'interface': 'location1'}
                                  }
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.return_value = queuemember_formatted
+        mock_format_queuemember_from_ami_add.return_value = queuemember_formatted
         expected_delta = DictDelta(queuemember_formatted, {}, {})
 
         self.queuemember_service_manager.add_dynamic_queuemember(self.ami_event)
 
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add.assert_called_with(self.ami_event)
+        mock_format_queuemember_from_ami_add.assert_called_with(self.ami_event)
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(expected_delta)
 
-    def test_remove_dynamic_queuemember(self):
+    @patch('xivo_dao.helpers.queuemember_formatter.format_queuemember_from_ami_remove')
+    def test_remove_dynamic_queuemember(self, mock_format_queuemember_from_ami_remove):
         queuemembers_to_remove = {'Agent/2345,service': {'queue_name': 'service', 'interface': 'Agent/2345'},
                                   'Agent/2309,service': {'queue_name': 'service', 'interface': 'Agent/2309'}}
 
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.return_value = queuemembers_to_remove
+        mock_format_queuemember_from_ami_remove.return_value = queuemembers_to_remove
 
         self.queuemember_service_manager.remove_dynamic_queuemember(self.ami_event)
 
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove.assert_called_with(self.ami_event)
+        mock_format_queuemember_from_ami_remove.assert_called_with(self.ami_event)
         self.queuemember_service_notifier.queuemember_config_updated.assert_called_with(DictDelta({}, {}, queuemembers_to_remove))
 
-    def test_update_queuemember(self):
-        ami_event = self.ami_event
-        self.queuemember_service_manager.innerdata_dao = Mock()
-        self.queuemember_service_manager.delta_computer = Mock()
+    def test_update_one_queuemember(self):
+        self.queuemember_service_manager.update_one_queuemember(self.ami_event)
 
-        self.queuemember_service_manager.update_one_queuemember(ami_event)
-
-        innerdata_dao_method_calls = self.queuemember_service_manager.innerdata_dao.method_calls
-        delta_computer_method_calls = self.queuemember_service_manager.delta_computer.method_calls
-        notifier_method_calls = self.queuemember_service_manager.queuemember_notifier.method_calls
-        self.assertTrue(innerdata_dao_method_calls == [call.get_queuemembers_config()])
-        self.assertTrue(delta_computer_method_calls == [call.compute_delta_no_delete(ANY, ANY)])
-        self.assertTrue(notifier_method_calls == [call.queuemember_config_updated(ANY)])
+        self.innerdata_dao.get_queuemembers_config.assert_called_once_with()
+        self.delta_computer.compute_delta_no_delete.assert_called_once_with(ANY, ANY)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_once_with(ANY)
 
     def test_get_queuemember_to_request_empty(self):
         delta = DictDelta({}, {}, {})
@@ -172,10 +166,8 @@ class TestQueueMemberServiceManager(unittest.TestCase):
         expected_result = [self.tupleA,
                            self.tupleB,
                            self.tupleC]
-        innerdata_dao_get = Mock()
-        innerdata_dao_get.return_value = self.C
-        self.queuemember_service_manager.innerdata_dao = Mock()
-        self.queuemember_service_manager.innerdata_dao.get_queuemember = innerdata_dao_get
+
+        self.innerdata_dao.get_queuemember.return_value = self.C
 
         result = self.queuemember_service_manager._get_queuemembers_to_request(delta)
 
@@ -204,18 +196,18 @@ class TestQueueMemberServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_toggle_pause(self):
+    @patch('xivo_dao.helpers.queuemember_formatter.format_queuemember_from_ami_pause')
+    def test_toggle_pause(self, mock_format_queuemember_from_ami_pause):
         queuemember_formatted = {'agent1,queue1': {'queue_name': 'queue1',
                                                    'interface': 'agent1',
                                                    'paused': 'yes'}}
 
-        self.queuemember_service_manager.queuemember_notifier = Mock()
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause.return_value = queuemember_formatted
+        mock_format_queuemember_from_ami_pause.return_value = queuemember_formatted
 
         self.queuemember_service_manager.toggle_pause(self.ami_event)
 
-        queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause.assert_called_once_with(self.ami_event)
-        self.queuemember_service_manager.queuemember_notifier.queuemember_config_updated.assert_called_once_with(
+        mock_format_queuemember_from_ami_pause.assert_called_once_with(self.ami_event)
+        self.queuemember_service_notifier.queuemember_config_updated.assert_called_once_with(
             DictDelta(add={},
                       change=queuemember_formatted,
                       delete={}))

@@ -52,17 +52,17 @@ class QueueMemberServiceManager(object):
         self.queuemember_notifier.queuemember_config_updated(delta_remove_only)
 
     def add_dynamic_queuemember(self, ami_event):
-        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_add(ami_event)
+        queuemember_formatted = queuemember_formatter.format_queuemember_from_ami_add(ami_event)
         delta = DictDelta(queuemember_formatted, {}, {})
         self.queuemember_notifier.queuemember_config_updated(delta)
 
     def remove_dynamic_queuemember(self, ami_event):
-        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_remove(ami_event)
+        queuemember_formatted = queuemember_formatter.format_queuemember_from_ami_remove(ami_event)
         delta = DictDelta({}, {}, queuemember_formatted)
         self.queuemember_notifier.queuemember_config_updated(delta)
 
     def update_one_queuemember(self, ami_event):
-        new_queuemembers = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_update(ami_event)
+        new_queuemembers = queuemember_formatter.format_queuemember_from_ami_update(ami_event)
         old_queuemembers = self.innerdata_dao.get_queuemembers_config()
         delta = self.delta_computer.compute_delta_no_delete(new_queuemembers, old_queuemembers)
         self.queuemember_notifier.queuemember_config_updated(delta)
@@ -81,7 +81,7 @@ class QueueMemberServiceManager(object):
         return DictDelta({}, {}, delta.delete)
 
     def toggle_pause(self, ami_event):
-        queuemember_formatted = queuemember_formatter.QueueMemberFormatter.format_queuemember_from_ami_pause(ami_event)
+        queuemember_formatted = queuemember_formatter.format_queuemember_from_ami_pause(ami_event)
         delta = DictDelta({}, queuemember_formatted, {})
         self.queuemember_notifier.queuemember_config_updated(delta)
 
