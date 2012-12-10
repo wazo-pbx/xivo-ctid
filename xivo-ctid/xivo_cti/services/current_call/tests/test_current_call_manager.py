@@ -363,9 +363,11 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
+        cid_name, cid_number = 'Alice', '5565'
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         mock_get_line_identity.return_value = user_line
 
         self.manager.switchboard_unhold(user_id, unique_id)
@@ -374,7 +376,9 @@ class TestCurrentCallManager(unittest.TestCase):
             'Originate',
             [('Channel', user_line),
              ('Application', 'Bridge'),
-             ('Data', channel_to_intercept)]
+             ('Data', channel_to_intercept),
+             ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
+             ('Async', 'true')]
         )
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')

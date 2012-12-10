@@ -151,6 +151,7 @@ class CurrentCallManager(object):
         try:
             user_line = userfeatures_dao.get_line_identity(user_id).lower()
             channel = dao.channel.get_channel_from_unique_id(action_id)
+            cid_name, cid_number = dao.channel.get_caller_id_name_number(channel)
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
@@ -158,7 +159,9 @@ class CurrentCallManager(object):
                 'Originate',
                 [('Channel', user_line),
                  ('Application', 'Bridge'),
-                 ('Data', channel)]
+                 ('Data', channel),
+                 ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
+                 ('Async', 'true')]
             )
 
     def _get_current_call_channel(self, user_id):
