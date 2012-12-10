@@ -35,17 +35,21 @@ class TestChannelDAO(unittest.TestCase):
         self.channel_1 = {'id': 'SIP/abcdef-2135543',
                           'context': 'testctx',
                           'cid_name': 'Alice',
-                          'cid_number': '1234'}
+                          'cid_number': '1234',
+                          'unique_id': 786234234.33}
         channel_1 = innerdata.Channel(self.channel_1['id'],
-                                      self.channel_1['context'])
+                                      self.channel_1['context'],
+                                      self.channel_1['unique_id'])
         channel_1.set_extra_data('xivo', 'calleridname', self.channel_1['cid_name'])
         channel_1.set_extra_data('xivo', 'calleridnum', self.channel_1['cid_number'])
 
         self.channel_2 = {'id': 'SCCP/123-2135543',
                           'context': 'testctx',
-                          'cid_number': '1234'}
+                          'cid_number': '1234',
+                          'unique_id': 123456.43}
         channel_2 = innerdata.Channel(self.channel_2['id'],
-                                      self.channel_2['context'])
+                                      self.channel_2['context'],
+                                      self.channel_2['unique_id'])
         channel_2.set_extra_data('xivo', 'calleridnum', self.channel_2['cid_number'])
 
         self.innerdata = Mock(innerdata.Safe)
@@ -74,3 +78,15 @@ class TestChannelDAO(unittest.TestCase):
         channel_dao = ChannelDAO(self.innerdata)
 
         self.assertRaises(LookupError, channel_dao.get_caller_id_name_number, 'SIP/unknown-1245')
+
+    def test_get_channel_from_unique_id(self):
+        channel_dao = ChannelDAO(self.innerdata)
+
+        channel = channel_dao.get_channel_from_unique_id(self.channel_1['unique_id'])
+
+        self.assertEqual(channel, self.channel_1['id'])
+
+    def test_get_channel_from_unique_id_unknown(self):
+        channel_dao = ChannelDAO(self.innerdata)
+
+        self.assertRaises(LookupError, channel_dao.get_channel_from_unique_id, 'Unknown')
