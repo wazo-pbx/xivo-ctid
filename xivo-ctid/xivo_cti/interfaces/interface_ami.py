@@ -30,7 +30,6 @@ import string
 import threading
 import time
 
-from xivo_cti import xivo_ami
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
