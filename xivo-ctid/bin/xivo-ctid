@@ -33,6 +33,7 @@ from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdate
 from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -75,6 +76,7 @@ def _register_context(context):
     context.register('agent_executor', AgentExecutor)
     context.register('agent_on_call_updater', AgentOnCallUpdater)
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('channel_updater', ChannelUpdater)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)

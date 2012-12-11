@@ -41,6 +41,7 @@ from xivo_cti import amiinterpret, cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti import channel_updater
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
@@ -291,7 +292,7 @@ class CTIServer(object):
 
         callback_handler.register_userevent_callback(
             'AgentLogin',
-             lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
+            lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
         )
         callback_handler.register_userevent_callback(
             'AgentLogoff',
@@ -300,6 +301,9 @@ class CTIServer(object):
 
         current_call_parser = context.get('current_call_parser')
         current_call_parser.register_ami_events()
+
+        callback_handler.register_callback('NewCallerId',
+                                           channel_updater.parse_new_caller_id)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
