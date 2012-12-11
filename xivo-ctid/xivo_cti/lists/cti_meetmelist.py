@@ -70,7 +70,7 @@ class MeetmeList(ContextAwareAnyList):
                 return meetme_id
 
     def invite(self, invitee, connection):
-        ami = self._ctiserver.myami.amiclass
+        ami = self._ctiserver.interface_ami.amiclass
 
         try:
             (_, invitee_id) = invitee.split('/', 1)

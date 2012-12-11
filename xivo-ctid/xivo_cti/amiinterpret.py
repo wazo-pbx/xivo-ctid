@@ -176,8 +176,8 @@ class AMI_1_8(object):
         # 1 : CLI 'channel request hangup' on the 1st phone's channel
         # 5 : 1st phone rejected the call (reject button or all lines busy)
         # 8 : 1st phone did not answer early enough
-        if actionid in self._ctiserver.myami.originate_actionids:
-            properties = self._ctiserver.myami.originate_actionids.pop(actionid)
+        if actionid in self._ctiserver.interface_ami.originate_actionids:
+            properties = self._ctiserver.interface_ami.originate_actionids.pop(actionid)
             request = properties.get('request')
             cn = request.get('requester')
             try:
@@ -429,7 +429,7 @@ class AMI_1_8(object):
                           'amicommand': 'mailboxcount',
                           'amiargs': full_mailbox.split('@')}
                 actionid = ''.join(random.sample(ALPHANUMS, 10))
-                self._ctiserver.myami.execute_and_track(actionid, params)
+                self._ctiserver.interface_ami.execute_and_track(actionid, params)
         except KeyError:
             logger.warning('ami_messagewaiting Failed to update mailbox')
 
@@ -481,7 +481,7 @@ class AMI_1_8(object):
             params = {'mode': 'extension',
                       'amicommand': 'sendextensionstate',
                       'amiargs': (extension, event['Context'])}
-            self._ctiserver.myami.execute_and_track(actionid, params)
+            self._ctiserver.interface_ami.execute_and_track(actionid, params)
 
     def ami_voicemailuserentry(self, event):
         fullmailbox = '%s@%s' % (event['VoiceMailbox'], event['VMContext'])

@@ -94,7 +94,7 @@ class CTIServer(object):
     def __init__(self, config):
         self.mycti = {}
         self.myipbxid = 'xivo'
-        self.myami = None
+        self.interface_ami = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
         self._config = None
@@ -164,7 +164,7 @@ class CTIServer(object):
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
 
-        self.myami = context.get('interface_ami')
+        self.interface_ami = context.get('interface_ami')
         self.commandclass = context.get('ami_18')
 
         self._user_service_manager = context.get('user_service_manager')
@@ -368,7 +368,7 @@ class CTIServer(object):
             if action == 'ipbxup':
                 data = toload.get('properties').get('data')
                 if data.startswith('asterisk'):
-                    if not self.myami.connected():
+                    if not self.interface_ami.connected():
                         self._on_ami_down()
             elif action == 'ctilogin':
                 connc = toload.get('properties')
@@ -429,8 +429,8 @@ class CTIServer(object):
         self._init_agent_availability()
 
         logger.info('(2/3) Local AMI socket connection')
-        self.myami.init_connection()
-        self.ami_sock = self.myami.connect()
+        self.interface_ami.init_connection()
+        self.ami_sock = self.interface_ami.connect()
 
         if not self.ami_sock:
             self._on_ami_down()
@@ -608,7 +608,7 @@ class CTIServer(object):
         if not buf:
             self._on_ami_down()
         else:
-            self.myami.handle_event(buf)
+            self.interface_ami.handle_event(buf)
 
     def _socket_udp_cti_read(self, sel_i):
         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
@@ -729,7 +729,7 @@ class CTIServer(object):
                     elif kind == 'innerdata':
                         self.safe.checkqueue()
                     elif kind == 'ami':
-                        self.myami.checkqueue()
+                        self.interface_ami.checkqueue()
                 else:
                     logger.warning('unknown kind for %s', pb)
         # except Exception:

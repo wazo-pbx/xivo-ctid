@@ -265,7 +265,7 @@ class INFO(interfaces.Interfaces):
 
                 elif usefulmsg.startswith('ami inits '):
                     g = usefulmsg[10:]
-                    self._ctiserver.myami.initrequest(g)
+                    self._ctiserver.interface_ami.initrequest(g)
 
                 elif usefulmsg.startswith('ami '):
                     amicmd = usefulmsg.split()[1:]
