@@ -447,62 +447,58 @@ class CTIServer(object):
         if not self.ami_sock:
             self._on_ami_down()
 
-        logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
+        logger.info('(3/3) Listening sockets')
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - start_time))
-        for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
-            allow_kind = True
-            if len(bind_and_port) > 2:
-                allow_kind = bind_and_port[2]
-            if not allow_kind:
-                logger.warning('%s kind listening socket has been explicitly disabled', kind)
-                continue
-            try:
-                (bind, port) = bind_and_port[:2]
-                trueport = int(port) + cti_config.PORTDELTA
-                gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
-                if not gai:
-                    continue
-                (afinet, socktype, proto, dummy, bindtuple) = gai[0]
-                UIsock = socket.socket(afinet, socktype)
-                UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                UIsock.bind(bindtuple)
-                UIsock.listen(10)
-                self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
-            except Exception:
-                logger.exception('tcp %s %d', bind, trueport)
 
-        for kind, bind_and_port in xivoconf_general.get('incoming_udp', {}).iteritems():
-            allow_kind = True
-            if len(bind_and_port) > 2:
-                allow_kind = bind_and_port[2]
-            if not allow_kind:
-                logger.warning('%s kind listening socket has been explicitly disabled', kind)
-                continue
-            try:
-                (bind, port) = bind_and_port[:2]
-                trueport = int(port) + cti_config.PORTDELTA
-                gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
-                if not gai:
-                    continue
-                (afinet, socktype, proto, dummy, bindtuple) = gai[0]
-                UIsock = socket.socket(afinet, socktype)
-                UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                UIsock.bind(bindtuple)
-                self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
-            except Exception:
-                logger.exception('udp %s %d', bind, trueport)
+        kind_list = {}
+        kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
+        kind_list['udp'] = xivoconf_general.get('incoming_udp', {})
 
-        # Main select() loop - Receive messages
-        if not self._config.getconfig():
-            nsecs = 5
-            logger.info('waiting %d seconds in case a config would be available ...', nsecs)
-            try:
-                time.sleep(nsecs)
-            except:
-                sys.exit()
-        else:
-            while not self.askedtoquit:
-                self.select_step()
+        for kind_type, incoming_list in kind_list.iteritems():
+            for kind, bind_and_port in incoming_list.iteritems():
+                allow_kind = True
+                if len(bind_and_port) > 2:
+                    allow_kind = bind_and_port[2]
+                if not allow_kind:
+                    logger.warning('%s kind listening socket has been explicitly disabled', kind)
+                    continue
+                bind, port = bind_and_port[:2]
+                if kind_type == 'tcp':
+                    self._init_tcp_socket(kind, bind, port)
+                elif kind_type == 'udp':
+                    self._init_udp_socket(kind, bind, port)
+
+        while not self.askedtoquit:
+            self.select_step()
+
+    def _init_tcp_socket(self, kind, bind, port):
+        try:
+            trueport = int(port) + cti_config.PORTDELTA
+            gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
+            if not gai:
+                return
+            (afinet, socktype, proto, dummy, bindtuple) = gai[0]
+            UIsock = socket.socket(afinet, socktype)
+            UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            UIsock.bind(bindtuple)
+            UIsock.listen(10)
+            self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
+        except Exception:
+            logger.exception('tcp %s %d', bind, trueport)
+
+    def _init_udp_socket(self, kind, bind, port):
+        try:
+            trueport = int(port) + cti_config.PORTDELTA
+            gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
+            if not gai:
+                return
+            (afinet, socktype, proto, dummy, bindtuple) = gai[0]
+            UIsock = socket.socket(afinet, socktype)
+            UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            UIsock.bind(bindtuple)
+            self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
+        except Exception:
+            logger.exception('udp %s %d', bind, trueport)
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
