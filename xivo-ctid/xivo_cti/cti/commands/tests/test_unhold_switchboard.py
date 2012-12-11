@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,28 +22,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import unittest
 
-class DisconnectCause(object):
-
-    by_client = 'by_client'
-    by_server_stop = 'by_server_stop'
-    by_server_reload = 'by_server_reload'
-    broken_pipe = 'broken_pipe'
+from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
 
 
-class Interfaces(object):
-    DisconnectCause = DisconnectCause
+class TestUnholdSwitchboard(unittest.TestCase):
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.logintimer = None
-        self.connid = None
-        self.requester = None
+    def setUp(self):
+        self.commandid = 125731893
+        self.unhold_switchboard_message = {
+            'class': 'unhold_switchboard',
+            'unique_id': '123456.66',
+            'commandid': self.commandid,
+        }
 
-    def connected(self, connid):
-        self.connid = connid
-        self.requester = connid.getpeername()[:2]
+    def test_unhold_switchboard(self):
+        self.assertEqual(UnholdSwitchboard.COMMAND_CLASS, 'unhold_switchboard')
 
-    def disconnected(self, cause):
-        self.connid = None
-        self.requester = None
+    def test_from_dict(self):
+        unhold_switchboard = UnholdSwitchboard.from_dict(self.unhold_switchboard_message)
+
+        self.assertEqual(unhold_switchboard.commandid, self.commandid)
+        self.assertEqual(unhold_switchboard.unique_id, self.unhold_switchboard_message['unique_id'])

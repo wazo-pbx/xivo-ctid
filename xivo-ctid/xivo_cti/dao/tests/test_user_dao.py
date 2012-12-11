@@ -27,6 +27,7 @@ from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
 import time
 import unittest
+from xivo_cti.lists.cti_phonelist import PhoneList
 
 
 class TestUserDAO(unittest.TestCase):
@@ -35,9 +36,13 @@ class TestUserDAO(unittest.TestCase):
         self._innerdata = Mock(Safe)
         self._userlist = Mock(UserList)
         self._userlist.keeplist = {}
-        self._innerdata.xod_config = {'users': self._userlist}
-        self.dao = UserDAO()
-        self.dao._innerdata = self._innerdata
+        self._phonelist = Mock(PhoneList)
+        self._phonelist.keeplist = {}
+        self._innerdata.xod_config = {
+            'users': self._userlist,
+            'phones': self._phonelist
+        }
+        self.dao = UserDAO(self._innerdata)
 
     @patch('xivo_dao.userfeatures_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
@@ -186,3 +191,26 @@ class TestUserDAO(unittest.TestCase):
 
         result = self.dao._innerdata.xod_status['users'][user_id]
         self.assertEqual(expected_userdata['availstate'], result['availstate'])
+
+    def test_get_line_identity(self):
+        self.assertRaises(LookupError, self.dao.get_line_identity, 1234)
+
+        user_id = 206
+        line_id = 607
+        self._phonelist.keeplist[line_id] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': user_id,
+            'rules_order': 0,
+            'identity': 'sip/a1b2c3',
+            'initialized': False,
+            'allowtransfer': True,
+        }
+        self._userlist.keeplist[user_id] = {'linelist': [line_id]}
+
+        expected = 'sip/a1b2c3'
+
+        result = self.dao.get_line_identity(user_id)
+
+        self.assertEqual(result, expected)

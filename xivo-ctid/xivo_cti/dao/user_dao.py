@@ -31,60 +31,85 @@ logger = logging.getLogger("UserFeaturesDAO")
 
 class UserDAO(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
+
+    def _phone(self, phone_id):
+        return self.innerdata.xod_config['phones'].keeplist[phone_id]
+
+    def _user(self, user_id):
+        return self.innerdata.xod_config['users'].keeplist[user_id]
+
+    def _user_status(self, user_id):
+        return self.innerdata.xod_status['users'][user_id]
 
     def enable_dnd(self, user_id):
         userfeatures_dao.enable_dnd(user_id)
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = True
+        user = self._user(user_id)
+        user['enablednd'] = True
 
     def disable_dnd(self, user_id):
         userfeatures_dao.disable_dnd(user_id)
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablednd'] = False
+        user = self._user(user_id)
+        user['enablednd'] = False
 
     def enable_filter(self, user_id):
         userfeatures_dao.enable_filter(user_id)
-        self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = True
+        user = self._user(user_id)
+        user['incallfilter'] = True
 
     def disable_filter(self, user_id):
         userfeatures_dao.disable_filter(user_id)
-        self._innerdata.xod_config['users'].keeplist[user_id]['incallfilter'] = False
+        user = self._user(user_id)
+        user['incallfilter'] = False
 
     def enable_unconditional_fwd(self, user_id, destination):
         userfeatures_dao.enable_unconditional_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = True
-        self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
+        user = self._user(user_id)
+        user['enableunc'] = True
+        user['destunc'] = destination
 
     def disable_unconditional_fwd(self, user_id, destination):
         userfeatures_dao.disable_unconditional_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['destunc'] = destination
-        self._innerdata.xod_config['users'].keeplist[user_id]['enableunc'] = False
+        user = self._user(user_id)
+        user['destunc'] = destination
+        user['enableunc'] = False
 
     def enable_rna_fwd(self, user_id, destination):
         userfeatures_dao.enable_rna_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = True
-        self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
+        user = self._user(user_id)
+        user['enablerna'] = True
+        user['destrna'] = destination
 
     def disable_rna_fwd(self, user_id, destination):
         userfeatures_dao.disable_rna_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['destrna'] = destination
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablerna'] = False
+        user = self._user(user_id)
+        user['destrna'] = destination
+        user['enablerna'] = False
 
     def enable_busy_fwd(self, user_id, destination):
         userfeatures_dao.enable_busy_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = True
-        self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
+        user = self._user(user_id)
+        user['enablebusy'] = True
+        user['destbusy'] = destination
 
     def disable_busy_fwd(self, user_id, destination):
         userfeatures_dao.disable_busy_fwd(user_id, destination)
-        self._innerdata.xod_config['users'].keeplist[user_id]['destbusy'] = destination
-        self._innerdata.xod_config['users'].keeplist[user_id]['enablebusy'] = False
+        user = self._user(user_id)
+        user['destbusy'] = destination
+        user['enablebusy'] = False
 
     def disconnect(self, user_id):
-        userdata = self._innerdata.xod_status['users'][user_id]
-        userdata['connection'] = None
-        userdata['last-logouttimestamp'] = time.time()
+        user_status = self._user_status(user_id)
+        user_status['connection'] = None
+        user_status['last-logouttimestamp'] = time.time()
 
     def set_presence(self, user_id, presence):
-        userdata = self._innerdata.xod_status['users'][user_id]
-        userdata['availstate'] = presence
+        user_status = self._user_status(user_id)
+        user_status['availstate'] = presence
+
+    def get_line_identity(self, user_id):
+        user = self._user(user_id)
+        line = self._phone(user['linelist'].pop())
+
+        return line['identity']

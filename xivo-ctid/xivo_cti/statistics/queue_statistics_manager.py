@@ -28,8 +28,8 @@ def parse_queue_member_status(event):
 
 class QueueStatisticsManager(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, ami_class):
+        self.ami_wrapper = ami_class
 
     def get_statistics(self, queue_name, xqos, window):
         dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)

@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,28 +22,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 
-class DisconnectCause(object):
+from xivo_cti.context import context
 
-    by_client = 'by_client'
-    by_server_stop = 'by_server_stop'
-    by_server_reload = 'by_server_reload'
-    broken_pipe = 'broken_pipe'
+logger = logging.getLogger(__name__)
 
 
-class Interfaces(object):
-    DisconnectCause = DisconnectCause
+def parse_new_caller_id(event):
+    updater = context.get('channel_updater')
+    updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.logintimer = None
-        self.connid = None
-        self.requester = None
 
-    def connected(self, connid):
-        self.connid = connid
-        self.requester = connid.getpeername()[:2]
+class ChannelUpdater(object):
 
-    def disconnected(self, cause):
-        self.connid = None
-        self.requester = None
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
+
+    def new_caller_id(self, channel, name, number):
+        try:
+            channel = self.innerdata.channels[channel]
+        except LookupError:
+            logger.info('Tried to update the caller id of an untracked channel')
+        else:
+            channel.set_extra_data('xivo', 'calleridname', name)
+            channel.set_extra_data('xivo', 'calleridnum', number)

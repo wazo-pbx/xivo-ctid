@@ -30,7 +30,6 @@ import string
 import threading
 import time
 
-from xivo_cti import xivo_ami
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
@@ -39,7 +38,7 @@ from xivo_cti.ami import ami_status_request_logger
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
-from xivo_cti.context import context as cti_context
+from xivo_cti.context import context
 
 logger = logging.getLogger('interface_ami')
 
@@ -52,19 +51,16 @@ class AMI(object):
     FIELD_SEPARATOR = ': '
     ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.innerdata = self._ctiserver.safe
+    def __init__(self, cti_server, innerdata, config, ami_class):
+        self._ctiserver = cti_server
+        self.innerdata = innerdata
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
-        config = cti_context.get('config')
-        ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
-        self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
-        self.ipport = int(ipbxconfig.get('ipport', 5038))
-        self.ami_login = ipbxconfig.get('username', 'xivouser')
-        self.ami_pass = ipbxconfig.get('password', 'xivouser')
+        self.amiclass = ami_class
+
+    def init_connection(self):
         self.timeout_queue = Queue.Queue()
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
@@ -74,10 +70,6 @@ class AMI(object):
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
         ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
         self._ami_initializer = AMIInitializer()
-        self.amiclass = xivo_ami.AMIClass(self._ctiserver.myipbxid,
-                                       self.ipaddress, self.ipport,
-                                       self.ami_login, self.ami_pass,
-                                       True)
         self._ami_initializer._ami_class = self.amiclass
         self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()
 

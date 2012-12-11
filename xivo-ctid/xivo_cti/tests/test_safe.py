@@ -47,17 +47,14 @@ class TestSafe(unittest.TestCase):
     @patch('xivo_dao.trunkfeatures_dao.get_ids')
     def setUp(self, mock_get_ids):
         context.register('config', cti_config.Config())
-        self._ctiserver = CTIServer()
+        config = context.get('config')
+        self._ctiserver = CTIServer(config)
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
-        config = context.get('config')
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
-        self.safe = Safe(self._ctiserver, self._ipbx_id)
+        self.safe = Safe(config, self._ctiserver)
         mock_get_ids.get_ids.return_value = []
         self.safe.init_status()
-
-    def tearDown(self):
-        pass
 
     def test_safe(self):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)

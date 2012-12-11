@@ -22,7 +22,7 @@
 
 import unittest
 
-from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from mock import patch
@@ -33,7 +33,8 @@ class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
         self.user_id = 123
-        self.manager = FunckeyManager()
+        ami_class = Mock(AMIClass)
+        self.manager = FunckeyManager(ami_class)
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami

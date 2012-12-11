@@ -30,8 +30,8 @@ class FunckeyManager(object):
     INUSE = 'INUSE'
     NOT_INUSE = 'NOT_INUSE'
 
-    def __init__(self):
-        pass
+    def __init__(self, ami_class):
+        self.ami = ami_class
 
     def _device(self, user_id, name, destination=''):
         funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')

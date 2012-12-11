@@ -32,7 +32,8 @@ class TestAgentExecutor(unittest.TestCase):
 
     def setUp(self):
         self.agent_client = Mock()
-        self.executor = AgentExecutor(self.agent_client)
+        ami_class = Mock(AMIClass)
+        self.executor = AgentExecutor(self.agent_client, ami_class)
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 

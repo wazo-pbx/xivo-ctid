@@ -25,6 +25,7 @@
 import time
 import logging
 from xivo_dao import userfeatures_dao
+from xivo_cti import dao
 
 
 logger = logging.getLogger(__name__)
@@ -32,11 +33,16 @@ logger = logging.getLogger(__name__)
 
 class CurrentCallManager(object):
 
-    def __init__(self, current_call_notifier, current_call_formatter):
+    _SWITCHBOARD_HOLD_QUEUE = '__switchboard_hold'
+
+    def __init__(self,
+                 current_call_notifier,
+                 current_call_formatter,
+                 ami_class):
         self._lines = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
-        self.ami = None
+        self.ami = ami_class
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
@@ -129,16 +135,49 @@ class CurrentCallManager(object):
 
     def hangup(self, user_id):
         try:
-            line = userfeatures_dao.get_line_identity(user_id).lower()
+            current_call_channel = self._get_current_call_channel(user_id)
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:
+            self.ami.sendcommand('Hangup', [('Channel', current_call_channel['lines_channel'])])
+
+    def switchboard_hold(self, user_id):
+        try:
+            current_call_channel = self._get_current_call_channel(user_id)
+            hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(self._SWITCHBOARD_HOLD_QUEUE)
+        except LookupError:
+            logger.warning('User %s tried to put his current on switchboard hold but failed' % user_id)
+        else:
+            self.ami.transfer(current_call_channel['channel'], hold_queue_number, hold_queue_ctx)
+
+    def switchboard_unhold(self, user_id, action_id):
+        try:
+            user_line = userfeatures_dao.get_line_identity(user_id).lower()
+            channel = dao.channel.get_channel_from_unique_id(action_id)
+            cid_name, cid_number = dao.channel.get_caller_id_name_number(channel)
+        except LookupError:
+            raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
+        else:
+            self.ami.sendcommand(
+                'Originate',
+                [('Channel', user_line),
+                 ('Application', 'Bridge'),
+                 ('Data', channel),
+                 ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
+                 ('Async', 'true')]
+            )
+
+    def _get_current_call_channel(self, user_id):
+        try:
+            line = userfeatures_dao.get_line_identity(user_id).lower()
+        except LookupError:
+            raise LookupError('User %s tried to hangup but has no line' % user_id)
+        else:
             calls = self._lines.get(line, [])
-            ongoing_calls = [call['lines_channel'] for call in calls if call['on_hold'] is False]
+            ongoing_calls = [call for call in calls if call['on_hold'] is False]
             if not ongoing_calls:
-                logger.warning('User %s tried to hangup with no tracked calls', user_id)
-            else:
-                self.ami.sendcommand('Hangup', [('Channel', ongoing_calls[0])])
+                raise LookupError('User %s tried to hangup with no tracked calls' % user_id)
+            return ongoing_calls[0]
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)

@@ -29,10 +29,13 @@ from mock import patch
 from mock import Mock
 from hamcrest import *
 
+from xivo_cti.dao import queue_dao
+from xivo_cti.dao import channel_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
-from xivo_cti import xivo_ami
+from xivo_cti import dao
+from xivo_cti.xivo_ami import AMIClass
 
 
 class TestCurrentCallManager(unittest.TestCase):
@@ -40,9 +43,10 @@ class TestCurrentCallManager(unittest.TestCase):
     def setUp(self):
         self.notifier = Mock(notifier.CurrentCallNotifier)
         self.formatter = Mock(formatter.CurrentCallFormatter)
-        self.ami_class = Mock(xivo_ami.AMIClass)
-        self.manager = manager.CurrentCallManager(self.notifier, self.formatter)
-        self.manager.ami = self.ami_class
+        ami_class = Mock(AMIClass)
+        self.manager = manager.CurrentCallManager(self.notifier,
+                                                  self.formatter,
+                                                  ami_class)
         self.line_1 = 'sip/tc8nb4'
         self.line_2 = 'sip/6s7foq'
         self.channel_1 = 'SIP/tc8nb4-00000004'
@@ -317,7 +321,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.ami_class.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
+        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
@@ -326,4 +330,78 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.assertEqual(self.ami_class.sendcommand.call_count, 0)
+        self.assertEqual(self.manager.ami.sendcommand.call_count, 0)
+
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    def test_switchboard_hold(self, mock_get_line_identity):
+        dao.queue = Mock(queue_dao.QueueDAO)
+        dao.queue.get_number_context_from_name.return_value = '3006', 'ctx'
+        user_id = 7
+        mock_get_line_identity.return_value = self.line_2
+
+        self.manager._lines = {
+            self.line_1: [
+                {'channel': self.channel_2,
+                 'lines_channel': self.channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+            self.line_2: [
+                {'channel': self.channel_1,
+                 'lines_channel': self.channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+
+        self.manager.switchboard_hold(user_id)
+
+        self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
+
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    def test_switchboard_unhold(self, mock_get_line_identity):
+        unique_id = '1234567.44'
+        user_id = 5
+        user_line = 'sccp/12345'
+        channel_to_intercept = 'SIP/acbdf-348734'
+        cid_name, cid_number = 'Alice', '5565'
+
+        dao.channel = Mock(channel_dao.ChannelDAO)
+        dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
+        mock_get_line_identity.return_value = user_line
+
+        self.manager.switchboard_unhold(user_id, unique_id)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Originate',
+            [('Channel', user_line),
+             ('Application', 'Bridge'),
+             ('Data', channel_to_intercept),
+             ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
+             ('Async', 'true')]
+        )
+
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    def test_switchboard_unhold_no_line(self, mock_get_line_identity):
+        unique_id = '1234567.44'
+        user_id = 5
+        channel_to_intercept = 'SIP/acbdf-348734'
+
+        dao.channel = Mock(channel_dao.ChannelDAO)
+        dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        mock_get_line_identity.side_effect = LookupError('No such line')
+
+        self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
+
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    def test_switchboard_unhold_no_channel(self, mock_get_line_identity):
+        unique_id = '1234567.44'
+        user_id = 5
+        user_line = 'sccp/12345'
+
+        dao.channel = Mock(channel_dao.ChannelDAO)
+        dao.channel.get_channel_from_unique_id.side_effect = LookupError()
+        mock_get_line_identity.return_value = user_line
+
+        self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)

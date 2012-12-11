@@ -27,14 +27,14 @@ from tests.mock import Mock, patch
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.innerdata import Safe
 
 
 class TestInnerdataDAO(unittest.TestCase):
 
     def setUp(self):
-        self.innerdata_dao = InnerdataDAO()
-        self.innerdata = Mock()
-        self.innerdata_dao.innerdata = self.innerdata
+        self.innerdata = Mock(Safe)
+        self.innerdata_dao = InnerdataDAO(self.innerdata)
 
     def test_get_queue_id(self):
         expected_queue_id = '1'
@@ -81,6 +81,7 @@ class TestInnerdataDAO(unittest.TestCase):
                     'disconnected': {}}
             }
         }
+        self.innerdata_dao.innerdata._config = Mock()
         side_effect = lambda get_config_argument: get_config_return[get_config_argument]
         self.innerdata_dao.innerdata._config.getconfig.side_effect = side_effect
 
@@ -95,7 +96,7 @@ class TestInnerdataDAO(unittest.TestCase):
         expected_agent_availability = AgentStatus.available
         expected_agent_availability_since = time_now
         agent_id = 6573
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.logged_out,
@@ -106,7 +107,7 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent_status = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
 
         self.assertEqual(expected_agent_availability, agent_status['availability'])
         self.assertEqual(expected_agent_availability_since, agent_status['availability_since'])
@@ -118,7 +119,7 @@ class TestInnerdataDAO(unittest.TestCase):
         expected_agent_availability = AgentStatus.unavailable
         expected_agent_availability_since = time_now - 400
         agent_id = 6573
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.unavailable,
@@ -129,7 +130,7 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
-        agent = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
 
         self.assertEqual(expected_agent_availability, agent['availability'])
         self.assertEqual(expected_agent_availability_since, agent['availability_since'])
@@ -141,7 +142,7 @@ class TestInnerdataDAO(unittest.TestCase):
             'availability_since': 1234566778,
             'channel': 'Agent/4242',
         }
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.logged_out,

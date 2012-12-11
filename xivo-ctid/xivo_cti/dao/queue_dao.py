@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -21,29 +21,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class DisconnectCause(object):
+class QueueDAO(object):
 
-    by_client = 'by_client'
-    by_server_stop = 'by_server_stop'
-    by_server_reload = 'by_server_reload'
-    broken_pipe = 'broken_pipe'
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
-
-class Interfaces(object):
-    DisconnectCause = DisconnectCause
-
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.logintimer = None
-        self.connid = None
-        self.requester = None
-
-    def connected(self, connid):
-        self.connid = connid
-        self.requester = connid.getpeername()[:2]
-
-    def disconnected(self, cause):
-        self.connid = None
-        self.requester = None
+    def get_number_context_from_name(self, queue_name):
+        queues = self.innerdata.xod_config['queues'].keeplist
+        for queue in queues.itervalues():
+            if queue['name'] != queue_name:
+                continue
+            return queue['number'], queue['context']
+        raise LookupError('No such queue %s' % queue_name)

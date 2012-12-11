@@ -13,8 +13,9 @@ from xivo_cti.model.queuestatistic import NO_VALUE
 class TestQueueStatisticsManager(unittest.TestCase):
 
     def setUp(self):
-        QueueStatisticsManager._instance = QueueStatisticsManager()
-        self.queue_statistics_manager = QueueStatisticsManager()
+        ami_class = Mock(AMIClass)
+        QueueStatisticsManager._instance = QueueStatisticsManager(ami_class)
+        self.queue_statistics_manager = QueueStatisticsManager(ami_class)
 
     def tearDown(self):
         QueueStatisticsManager._instance = None

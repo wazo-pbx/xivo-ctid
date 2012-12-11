@@ -31,8 +31,9 @@ logger = logging.getLogger("InnerdataDAO")
 
 
 class InnerdataDAO(object):
-    def __init__(self):
-        pass
+
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
     def get_queue_id(self, queue_name):
         queue_id = self.innerdata.xod_config['queues'].idbyqueuename(queue_name)

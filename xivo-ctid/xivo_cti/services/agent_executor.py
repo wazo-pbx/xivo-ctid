@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 
 class AgentExecutor(object):
 
-    def __init__(self, agent_client):
+    def __init__(self, agent_client, ami_class):
         self._agent_client = agent_client
+        self.ami = ami_class
 
     def login(self, agent_id, exten, context):
         self._agent_client.login_agent(agent_id, exten, context)

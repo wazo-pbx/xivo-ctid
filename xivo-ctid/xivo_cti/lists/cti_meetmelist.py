@@ -29,6 +29,7 @@ import logging
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.ami.actions.originate import Originate
 from xivo_cti.cti.missing_field_exception import MissingFieldException
+from xivo_cti.context import context
 
 logger = logging.getLogger('meetmelist')
 
@@ -70,7 +71,7 @@ class MeetmeList(ContextAwareAnyList):
                 return meetme_id
 
     def invite(self, invitee, connection):
-        ami = self._ctiserver.myami.amiclass
+        ami = context.get('ami_class')
 
         try:
             (_, invitee_id) = invitee.split('/', 1)

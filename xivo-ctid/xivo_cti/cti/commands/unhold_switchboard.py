@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,28 +22,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-class DisconnectCause(object):
-
-    by_client = 'by_client'
-    by_server_stop = 'by_server_stop'
-    by_server_reload = 'by_server_reload'
-    broken_pipe = 'broken_pipe'
+from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-class Interfaces(object):
-    DisconnectCause = DisconnectCause
+class UnholdSwitchboard(CTICommand):
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.logintimer = None
-        self.connid = None
-        self.requester = None
+    COMMAND_CLASS = 'unhold_switchboard'
+    UNIQUE_ID = 'unique_id'
 
-    def connected(self, connid):
-        self.connid = connid
-        self.requester = connid.getpeername()[:2]
+    required_fields = [CTICommand.CLASS, UNIQUE_ID]
+    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
+    _callbacks = []
+    _callbacks_with_params = []
 
-    def disconnected(self, cause):
-        self.connid = None
-        self.requester = None
+    def _init_from_dict(self, msg):
+        super(UnholdSwitchboard, self)._init_from_dict(msg)
+        self.unique_id = msg.get(self.UNIQUE_ID)
+
+
+CTICommandFactory.register_class(UnholdSwitchboard)
