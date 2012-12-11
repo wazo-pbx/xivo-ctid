@@ -45,11 +45,11 @@ class AgentExecutor(object):
                 raise
 
     def add_to_queue(self, agent_id, queue_id):
-        # TODO a implementer dans agent_client
+        # TODO to implement in xivo-agent
         self._agent_client.add_agent_to_queue(agent_id, queue_id)
 
     def remove_from_queue(self, agent_id, queue_id):
-        # TODO a implementer dans agent_client
+        # TODO to implement in xivo-agent
         self._agent_client.remove_agent_from_queue(agent_id, queue_id)
 
     def pause_on_queue(self, agent_interface, queue_name):

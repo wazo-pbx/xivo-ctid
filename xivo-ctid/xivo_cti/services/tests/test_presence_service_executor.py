@@ -105,7 +105,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         self.presence_service_executor.execute_actions(user_id, 'available')
 
         self.user_service_manager.set_dnd.assert_called_once_with(user_id, False)
-        self.agent_service_manager.queueunpause_all.assert_called_once_with(agent_id)
+        self.agent_service_manager.unpause_agent_on_all_queues.assert_called_once_with(agent_id)
 
     @patch('xivo_dao.userfeatures_dao.get_profile')
     def test_execute_actions_unknown(self, mock_get_profile):

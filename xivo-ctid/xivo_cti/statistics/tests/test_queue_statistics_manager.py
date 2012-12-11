@@ -7,7 +7,6 @@ from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager,
     CachingQueueStatisticsManagerDecorator
 from tests.mock import Mock, patch
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.model.queuestatistic import NO_VALUE
 
 
@@ -144,21 +143,16 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.queue_statistics_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-    @patch('xivo_cti.context.context.get')
-    def test_parse_queue_member_update(self, mock_context):
-        self.queue_statistics_manager.get_queue_summary = Mock()
-        mock_context.return_value = self.queue_statistics_manager
+    @patch('xivo_dao.queue_features_dao.is_a_queue', return_value=True)
+    def test_on_queue_member_event(self, mock_is_a_queue):
+        queue_member = Mock()
+        queue_member.queue_name = 'foobar'
+        mock_ami_wrapper = Mock(AMIClass)
+        self.queue_statistics_manager.ami_wrapper = mock_ami_wrapper
 
-        input_delta = DictDelta({'Agent/2345,service': {'queue_name': 'service',
-                                                        'interface': 'Agent/2345'},
-                                 'Agent/2309,beans': {'queue_name': 'beans',
-                                                      'interface': 'Agent/2309'}
-                                 }, {}, {})
+        self.queue_statistics_manager._on_queue_member_event(queue_member)
 
-        queue_statistics_manager.parse_queue_member_update(input_delta)
-
-        self.queue_statistics_manager.get_queue_summary.assert_was_called_with('service')
-        self.queue_statistics_manager.get_queue_summary.assert_was_called_with('beans')
+        mock_ami_wrapper.queuesummary.assert_was_called_with(queue_member.queue_name)
 
     @patch('xivo_dao.queue_features_dao.is_a_queue', return_value=True)
     def test_get_queue_summary(self, mock_is_a_queue):

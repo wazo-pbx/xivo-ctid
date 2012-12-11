@@ -182,77 +182,77 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_executor.logoff.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_add(self, mock_agent_interface):
-        queue_name = 'accueil'
-        agent_id = 12
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    def test_add_agent_to_queue(self):
+        agent_id = 42
+        queue_id = 1
 
-        self.agent_manager.queueadd(queue_name, agent_id)
+        self.agent_manager.add_agent_to_queue(agent_id, queue_id)
 
-        self.agent_executor.queue_add.assert_called_once_with(queue_name, agent_interface, False, '')
+        self.agent_executor.add_to_queue.assert_called_once_with(agent_id, queue_id)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_remove(self, mock_agent_interface):
-        queue_name = 'accueil'
-        agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    def test_remove_agent_from_queue(self):
+        agent_id = 42
+        queue_id = 1
 
-        self.agent_manager.queueremove(queue_name, agent_id)
+        self.agent_manager.remove_agent_from_queue(agent_id, queue_id)
 
-        self.agent_executor.queue_remove.assert_called_once_with(queue_name, agent_interface)
+        self.agent_executor.remove_from_queue.assert_called_once_with(agent_id, queue_id)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_pause_all(self, mock_agent_interface):
-        agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    @patch('xivo_dao.queue_features_dao.queue_name')
+    def test_pause_agent_on_queue(self, mock_queue_name):
+        agent_id = 42
+        agent_interface = 'SIP/abcdef'
+        queue_id = 1
+        queue_name = 'foobar'
+        self.agent_manager._get_agent_interface = Mock()
+        self.agent_manager._get_agent_interface.return_value = agent_interface
+        mock_queue_name.return_value = queue_name
 
-        self.agent_manager.queuepause_all(agent_id)
+        self.agent_manager.pause_agent_on_queue(agent_id, queue_id)
 
-        self.agent_executor.queues_pause.assert_called_once_with('Agent/1234')
+        self.agent_executor.pause_on_queue.assert_called_once_with(agent_interface, queue_name)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_unpause_all(self, mock_agent_interface):
-        agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    def test_pause_agent_on_all_queues(self):
+        agent_id = 42
+        agent_interface = 'SIP/abcdef'
+        self.agent_manager._get_agent_interface = Mock()
+        self.agent_manager._get_agent_interface.return_value = agent_interface
 
-        self.agent_manager.queueunpause_all(agent_id)
+        self.agent_manager.pause_agent_on_all_queues(agent_id)
 
-        self.agent_executor.queues_unpause(agent_interface)
+        self.agent_executor.pause_on_all_queues.assert_called_once_with(agent_interface)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_pause(self, mock_agent_interface):
-        queue_name = 'accueil'
-        agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    @patch('xivo_dao.queue_features_dao.queue_name')
+    def test_unpause_agent_on_queue(self, mock_queue_name):
+        agent_id = 42
+        agent_interface = 'SIP/abcdef'
+        queue_id = 1
+        queue_name = 'foobar'
+        self.agent_manager._get_agent_interface = Mock()
+        self.agent_manager._get_agent_interface.return_value = agent_interface
+        mock_queue_name.return_value = queue_name
 
-        self.agent_manager.queuepause(queue_name, agent_id)
+        self.agent_manager.unpause_agent_on_queue(agent_id, queue_id)
 
-        self.agent_executor.queue_pause.assert_called_once_with(queue_name, agent_interface)
+        self.agent_executor.unpause_on_queue.assert_called_once_with(agent_interface, queue_name)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
-    def test_queue_unpause(self, mock_agent_interface):
-        queue_name = 'accueil'
-        agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+    def test_unpause_agent_on_all_queues(self):
+        agent_id = 42
+        agent_interface = 'SIP/abcdef'
+        self.agent_manager._get_agent_interface = Mock()
+        self.agent_manager._get_agent_interface.return_value = agent_interface
 
-        self.agent_manager.queueunpause(queue_name, agent_id)
+        self.agent_manager.unpause_agent_on_all_queues(agent_id)
 
-        self.agent_executor.queue_unpause(queue_name, agent_interface)
+        self.agent_executor.unpause_on_all_queues.assert_called_once_with(agent_interface)
 
     @patch('xivo_dao.agentfeatures_dao.agent_interface')
     def test_set_presence(self, mock_agent_interface):
         presence = 'disconnected'
         agent_id = 34
-        agent_interface = 'Agent/1234'
-        mock_agent_interface.return_value = agent_interface
+        agent_member_name = 'Agent/1234'
+        mock_agent_interface.return_value = agent_member_name
 
         self.agent_manager.set_presence(agent_id, presence)
 
-        self.agent_executor.log_presence.assert_called_once_with(agent_interface, presence)
+        self.agent_executor.log_presence.assert_called_once_with(agent_member_name, presence)

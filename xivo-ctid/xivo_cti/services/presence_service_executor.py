@@ -74,9 +74,9 @@ class PresenceServiceExecutor(object):
         agentid = userfeatures_dao.agent_id(user_id)
         if agentid:
             if action_name == 'queuepause_all':
-                self.agent_service_manager.queuepause_all(agentid)
+                self.agent_service_manager.pause_agent_on_all_queues(agentid)
             elif action_name == 'queueunpause_all':
-                self.agent_service_manager.queueunpause_all(agentid)
+                self.agent_service_manager.unpause_agent_on_all_queues(agentid)
             else:
                 raise NotImplementedError(action_name)
 

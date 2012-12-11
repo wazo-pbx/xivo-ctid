@@ -36,53 +36,51 @@ class TestAgentExecutor(unittest.TestCase):
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 
-    def test_queue_add(self):
+    def test_add_to_queue(self):
+        agent_id = 42
+        queue_id = 1
+
+        self.executor.add_to_queue(agent_id, queue_id)
+
+        self.agent_client.add_agent_to_queue.assert_called_once_with(agent_id, queue_id)
+
+    def test_remove_from_queue(self):
+        agent_id = 42
+        queue_id = 1
+
+        self.executor.remove_from_queue(agent_id, queue_id)
+
+        self.agent_client.remove_agent_from_queue.assert_called_once_with(agent_id, queue_id)
+
+    def test_pause_on_queue(self):
         queue_name = 'accueil'
-        interface = 'Agent/1234'
-        paused = False
-        skills = ''
+        interface = 'SIP/abcdef'
 
-        self.executor.queue_add(queue_name, interface, paused, skills)
-
-        self.assertEqual(self.ami.method_calls, [call.queueadd(queue_name, interface, paused, skills)])
-
-    def test_queue_remove(self):
-        queue_name = 'accueil'
-        interface = 'Agent/1234'
-
-        self.executor.queue_remove(queue_name, interface)
-
-        self.assertEqual(self.ami.method_calls, [call.queueremove(queue_name, interface)])
-
-    def test_queues_pause(self):
-        interface = 'Agent/1234'
-
-        self.executor.queues_pause(interface)
-
-        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'True')])
-
-    def test_queues_unpause(self):
-        interface = 'Agent/1234'
-
-        self.executor.queues_unpause(interface)
-
-        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])
-
-    def test_queue_pause(self):
-        queue_name = 'accueil'
-        interface = 'Agent/1234'
-
-        self.executor.queue_pause(queue_name, interface)
+        self.executor.pause_on_queue(interface, queue_name)
 
         self.assertEqual(self.ami.method_calls, [call.queuepause(queue_name, interface, 'True')])
 
-    def test_queue_unpause(self):
-        queue_name = 'accueil'
-        interface = 'Agent/1234'
+    def test_pause_on_all_queues(self):
+        interface = 'SIP/abcdef'
 
-        self.executor.queue_unpause(queue_name, interface)
+        self.executor.pause_on_all_queues(interface)
+
+        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'True')])
+
+    def test_unpause_on_queue(self):
+        queue_name = 'accueil'
+        interface = 'SIP/abcdef'
+
+        self.executor.unpause_on_queue(interface, queue_name)
 
         self.assertEqual(self.ami.method_calls, [call.queuepause(queue_name, interface, 'False')])
+
+    def test_unpause_on_all_queues(self):
+        interface = 'SIP/abcdef'
+
+        self.executor.unpause_on_all_queues(interface)
+
+        self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])
 
     def test_logoff(self):
         agent_id = 1234
