@@ -29,24 +29,34 @@ from mock import patch
 from mock import Mock
 from hamcrest import *
 
+from xivo_cti.scheduler import Scheduler
 from xivo_cti.dao import queue_dao
 from xivo_cti.dao import channel_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
 from xivo_cti import dao
-from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.services.device.manager import DeviceManager
+from xivo_cti import xivo_ami
 
 
 class TestCurrentCallManager(unittest.TestCase):
 
     def setUp(self):
+        self.scheduler = Mock(Scheduler)
+        self.device_manager = Mock(DeviceManager)
         self.notifier = Mock(notifier.CurrentCallNotifier)
         self.formatter = Mock(formatter.CurrentCallFormatter)
-        ami_class = Mock(AMIClass)
-        self.manager = manager.CurrentCallManager(self.notifier,
-                                                  self.formatter,
-                                                  ami_class)
+        self.ami_class = Mock(xivo_ami.AMIClass)
+
+        self.manager = manager.CurrentCallManager(
+            self.notifier,
+            self.formatter,
+            self.ami_class,
+            self.scheduler,
+            self.device_manager
+        )
+
         self.line_1 = 'sip/tc8nb4'
         self.line_2 = 'sip/6s7foq'
         self.channel_1 = 'SIP/tc8nb4-00000004'
@@ -365,11 +375,13 @@ class TestCurrentCallManager(unittest.TestCase):
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
         cid_name, cid_number = 'Alice', '5565'
+        delay = 0.25
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
         dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         mock_get_line_identity.return_value = user_line
+        self.manager.schedule_answer = Mock()
 
         self.manager.switchboard_unhold(user_id, unique_id)
 
@@ -381,6 +393,8 @@ class TestCurrentCallManager(unittest.TestCase):
              ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
              ('Async', 'true')]
         )
+
+        self.manager.schedule_answer.assert_called_once_with(user_id, delay)
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_switchboard_unhold_no_line(self, mock_get_line_identity):
@@ -405,3 +419,16 @@ class TestCurrentCallManager(unittest.TestCase):
         mock_get_line_identity.return_value = user_line
 
         self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
+
+    @patch('xivo_dao.userfeatures_dao.get_device_id')
+    def test_schedule_answer(self, mock_get_device_id):
+        user_id = 6
+        delay = 0.25
+        device_id = 14
+        mock_get_device_id.return_value = device_id
+
+        self.manager.schedule_answer(user_id, delay)
+
+        self.scheduler.schedule.assert_called_once_with(
+            delay, self.device_manager.answer, device_id
+        )
