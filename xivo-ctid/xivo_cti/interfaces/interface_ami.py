@@ -52,13 +52,15 @@ class AMI(object):
     FIELD_SEPARATOR = ': '
     ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.innerdata = self._ctiserver.safe
+    def __init__(self, cti_server, innerdata):
+        self._ctiserver = cti_server
+        self.innerdata = innerdata
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
+
+    def init_connection(self):
         config = cti_context.get('config')
         ipbxconfig = (config.getconfig('ipbx').get('ipbx_connection'))
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')

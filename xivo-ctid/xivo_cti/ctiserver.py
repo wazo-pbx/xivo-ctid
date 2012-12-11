@@ -37,7 +37,7 @@ from sqlalchemy.exc import OperationalError, InvalidRequestError
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
 
-from xivo_cti import amiinterpret, cti_config
+from xivo_cti import cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
@@ -69,7 +69,6 @@ from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoA
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
 from xivo_cti.cti.commands.subscribe_current_calls import SubscribeCurrentCalls
 from xivo_cti.funckey import funckey_manager
-from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
@@ -201,6 +200,9 @@ class CTIServer(object):
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
+
+        self.myami = context.get('ami')
+        self.commandclass = context.get('ami_18')
 
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
@@ -426,10 +428,9 @@ class CTIServer(object):
         self._init_agent_availability()
 
         logger.info('(2/3) Local AMI socket connection')
-        self.myami = interface_ami.AMI(self)
-        self.commandclass = context.get('ami_18')
-
+        self.myami.init_connection()
         self.ami_sock = self.myami.connect()
+
         if not self.ami_sock:
             self._on_ami_down()
 
