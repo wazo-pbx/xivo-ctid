@@ -42,8 +42,7 @@ class TestUserDAO(unittest.TestCase):
             'users': self._userlist,
             'phones': self._phonelist
         }
-        self.dao = UserDAO()
-        self.dao._innerdata = self._innerdata
+        self.dao = UserDAO(self._innerdata)
 
     @patch('xivo_dao.userfeatures_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
