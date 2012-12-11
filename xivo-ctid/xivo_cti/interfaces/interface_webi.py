@@ -112,7 +112,7 @@ class WEBI(interfaces.Interfaces):
         elif msg == 'xivo[cticonfig,update]':
             self._ctiserver.update_userlist.append(msg)
         elif msg == 'xivo[queuemember,update]':
-            self.queue_member_updater.on_webi_update()
+            self._queue_member_updater.on_webi_update()
         elif sre_obj:
             self._object_request_cmd(sre_obj)
         else:

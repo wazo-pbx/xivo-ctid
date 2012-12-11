@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-# XXX s'occupe de transmettre les evenements au clients CTI lorsque des
-#     evenements se produise au niveau des queue members
 
 class QueueMemberCTISubscriber(object):
 

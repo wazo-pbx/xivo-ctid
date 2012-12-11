@@ -17,16 +17,16 @@ class QueueMemberNotifier(object):
     def subscribe_to_queue_member_remove(self, callback):
         self._callbacks_on_remove.append(callback)
 
+    # package private method
     def _on_queue_member_added(self, queue_member):
-        # XXX package private (appeler par le manager)
         self._call_callbacks(self._callbacks_on_add, queue_member)
 
+    # package private method
     def _on_queue_member_updated(self, queue_member):
-        # XXX package private (appeler par le manager)
         self._call_callbacks(self._callbacks_on_update, queue_member)
 
+    # package private method
     def _on_queue_member_removed(self, queue_member):
-        # XXX package private (appeler par le manager)
         self._call_callbacks(self._callbacks_on_remove, queue_member)
 
     def _call_callbacks(self, callbacks, queue_member):

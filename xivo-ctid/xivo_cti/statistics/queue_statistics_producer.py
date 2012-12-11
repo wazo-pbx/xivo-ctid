@@ -44,23 +44,28 @@ class QueueStatisticsProducer(object):
         self.queues.add(queueid)
         self._notify_change(queueid)
 
+    def on_queue_removed(self, queueid):
+        self.queues.remove(queueid)
+        for queues_of_current_agent in self.queues_of_agent.itervalues():
+            queues_of_current_agent.discard(queueid)
+
     def on_queue_member_added(self, queue_member):
         if queue_member.is_agent():
             queueid = self._innerdata_dao.get_queue_id(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_added(queueid, agentid)
 
-    def on_queue_member_removed(self, queue_member):
-        if queue_member.is_agent():
-            queueid = self._innerdata_dao.get_queue_id(queue_member.queue_name)
-            agentid = queue_member.member_name
-            self._on_agent_removed(queueid, agentid)
-
     def _on_agent_added(self, queueid, agentid):
         if agentid not in self.queues_of_agent:
             self.queues_of_agent[agentid] = set()
         self.queues_of_agent[agentid].add(queueid)
         self._notify_change(queueid)
+
+    def on_queue_member_removed(self, queue_member):
+        if queue_member.is_agent():
+            queueid = self._innerdata_dao.get_queue_id(queue_member.queue_name)
+            agentid = queue_member.member_name
+            self._on_agent_removed(queueid, agentid)
 
     def _on_agent_removed(self, queueid, agentid):
         self.queues_of_agent[agentid].remove(queueid)
@@ -81,11 +86,6 @@ class QueueStatisticsProducer(object):
         if agentid in self.queues_of_agent:
             for queueid in self.queues_of_agent[agentid]:
                 self._notify_change(queueid)
-
-    def on_queue_removed(self, queueid):
-        self.queues.remove(queueid)
-        for queues_of_current_agent in self.queues_of_agent.itervalues():
-            queues_of_current_agent.discard(queueid)
 
     def on_queue_summary(self, queue_id, counters):
         message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT, TALKINGAGENT_STATNAME: counters.Talking}}
