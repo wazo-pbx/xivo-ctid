@@ -435,7 +435,6 @@ class CTIServer(object):
         if not self.ami_sock:
             self._on_ami_down()
 
-        context.get('device_manager').ami = self.myami.amiclass
         context.get('agent_executor').ami = self.myami.amiclass
         context.get('current_call_manager').ami = self.myami.amiclass
 
