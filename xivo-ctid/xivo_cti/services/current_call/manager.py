@@ -142,7 +142,7 @@ class CurrentCallManager(object):
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:
-            self.ami.sendcommand('Hangup', [('Channel', current_call_channel['lines_channel'])])
+            self.ami.sendcommand('Hangup', [('Channel', current_call_channel['channel'])])
 
     def switchboard_hold(self, user_id):
         try:
