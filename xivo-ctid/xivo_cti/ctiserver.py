@@ -435,8 +435,6 @@ class CTIServer(object):
         if not self.ami_sock:
             self._on_ami_down()
 
-        context.get('current_call_manager').ami = self.myami.amiclass
-
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - start_time))
         for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
