@@ -2,8 +2,8 @@
 
 import logging
 from xivo_cti.services.queue_member.member import QueueMember, QueueMemberState
-from xivo_dao import queue_member_dao
 from xivo_cti.services.queue_member.common import format_queue_member_id
+from xivo_dao import queue_member_dao
 
 logger = logging.getLogger('QueueMemberUpdater')
 
@@ -130,12 +130,6 @@ class QueueMemberUpdater(object):
             new_state.paused = paused
             self._queue_member_manager._update_queue_member(queue_member, new_state)
 
-    def on_ami_queue_member_penalty(self, ami_event):
-        logger.debug('on ami queue member penalty')
-        # XXX est-ce que c'est vraiment necessaire ou est-ce qu'on ne va pas déjà recevoir
-        #     un QueueMemberStatus ?
-        pass
-
     def on_webi_update(self):
         # 1. on obtient la liste des queuemembers dans la base (seulement des files, pas des groupes)
         # 2. on obtient la liste des queuemembers dans le manager
@@ -152,4 +146,3 @@ class QueueMemberUpdater(object):
         ami_handler.register_callback('QueueMemberAdded', self.on_ami_queue_member_added)
         ami_handler.register_callback('QueueMemberRemoved', self.on_ami_queue_member_removed)
         ami_handler.register_callback('QueueMemberPaused', self.on_ami_queue_member_paused)
-        ami_handler.register_callback('QueueMemberPenalty', self.on_ami_queue_member_penalty)
