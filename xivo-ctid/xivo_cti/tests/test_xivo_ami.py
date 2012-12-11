@@ -21,12 +21,6 @@ class TestXivoAMI(unittest.TestCase):
         config = Mock(Config)
         config.getconfig.return_value = ipbxconfig
         ami_class = AMIClass(config)
-        ami_class.ipbxid = 'xivo'
-        ami_class.ipaddress = 'localhost'
-        ami_class.ipport = 5038
-        ami_class.loginname = 'uname'
-        ami_class.password = 'password'
-        ami_class.events = True
         ami_class._exec_command = Mock()
         self.ami_class = ami_class
 
