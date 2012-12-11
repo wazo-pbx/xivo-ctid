@@ -111,12 +111,12 @@ class QueueEntryManager(object):
                  queue_entry_notifier,
                  queue_entry_encoder,
                  statistics_notifier,
-                 interface_ami):
+                 ami_class):
         self._queue_entries = {}
         self._notifier = queue_entry_notifier
         self._encoder = queue_entry_encoder
         self._statistics_notifier = statistics_notifier
-        self._ami = interface_ami.amiclass
+        self._ami = ami_class
 
     def join(self, queue_name, pos, count, name, number, unique_id):
         if not queue_features_dao.is_a_queue(queue_name):

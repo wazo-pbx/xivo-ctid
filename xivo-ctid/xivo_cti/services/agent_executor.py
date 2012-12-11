@@ -28,9 +28,9 @@ from xivo_agent.exception import AgentClientError
 
 class AgentExecutor(object):
 
-    def __init__(self, agent_client, interface_ami):
+    def __init__(self, agent_client, ami_class):
         self._agent_client = agent_client
-        self.ami = interface_ami.amiclass
+        self.ami = ami_class
 
     def queue_add(self, queuename, interface, paused=False, skills=''):
         self.ami.queueadd(queuename, interface, paused, skills)

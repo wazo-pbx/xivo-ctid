@@ -9,16 +9,14 @@ from tests.mock import Mock, patch
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.model.queuestatistic import NO_VALUE
-from xivo_cti.interfaces.interface_ami import AMI
 
 
 class TestQueueStatisticsManager(unittest.TestCase):
 
     def setUp(self):
-        interface_ami = Mock(AMI)
-        interface_ami.amiclass = Mock()
-        QueueStatisticsManager._instance = QueueStatisticsManager(interface_ami)
-        self.queue_statistics_manager = QueueStatisticsManager(interface_ami)
+        ami_class = Mock(AMIClass)
+        QueueStatisticsManager._instance = QueueStatisticsManager(ami_class)
+        self.queue_statistics_manager = QueueStatisticsManager(ami_class)
 
     def tearDown(self):
         QueueStatisticsManager._instance = None

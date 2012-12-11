@@ -29,7 +29,6 @@ from mock import patch, Mock
 
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
-from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.xivo_ami import AMIClass
 
 
@@ -37,9 +36,8 @@ class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
         self.aastra_controller = mock.Mock(AastraController)
-        self.interface_ami = Mock(AMI)
-        self.interface_ami.amiclass = Mock(AMIClass)
-        self.manager = DeviceManager(self.interface_ami)
+        ami_class = Mock(AMIClass)
+        self.manager = DeviceManager(ami_class)
         self.manager.aastra_controller = self.aastra_controller
 
     def test_answer(self):

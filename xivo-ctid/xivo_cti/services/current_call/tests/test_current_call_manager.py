@@ -34,9 +34,8 @@ from xivo_cti.dao import channel_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
-from xivo_cti import xivo_ami
 from xivo_cti import dao
-from xivo_cti.interfaces.interface_ami import AMI
+from xivo_cti.xivo_ami import AMIClass
 
 
 class TestCurrentCallManager(unittest.TestCase):
@@ -44,11 +43,10 @@ class TestCurrentCallManager(unittest.TestCase):
     def setUp(self):
         self.notifier = Mock(notifier.CurrentCallNotifier)
         self.formatter = Mock(formatter.CurrentCallFormatter)
-        self.interface_ami = Mock(AMI)
-        self.interface_ami.amiclass = Mock(xivo_ami.AMIClass)
+        ami_class = Mock(AMIClass)
         self.manager = manager.CurrentCallManager(self.notifier,
                                                   self.formatter,
-                                                  self.interface_ami)
+                                                  ami_class)
         self.line_1 = 'sip/tc8nb4'
         self.line_2 = 'sip/6s7foq'
         self.channel_1 = 'SIP/tc8nb4-00000004'

@@ -38,11 +38,11 @@ class CurrentCallManager(object):
     def __init__(self,
                  current_call_notifier,
                  current_call_formatter,
-                 interface_ami):
+                 ami_class):
         self._lines = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
-        self.ami = interface_ami.amiclass
+        self.ami = ami_class
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
