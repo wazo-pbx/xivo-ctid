@@ -22,7 +22,7 @@
 
 import unittest
 
-from xivo_cti.funckey.funckey_manager import FunckeyManager
+from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from mock import patch

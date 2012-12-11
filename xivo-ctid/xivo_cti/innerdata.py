@@ -41,7 +41,6 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.agent_status import AgentStatus
-from xivo_dao.alchemy import dbconnection
 from xivo_dao import userfeatures_dao, trunkfeatures_dao
 
 logger = logging.getLogger('innerdata')

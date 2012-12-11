@@ -68,7 +68,7 @@ from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
 from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
 from xivo_cti.cti.commands.subscribe_current_calls import SubscribeCurrentCalls
-from xivo_cti.funckey import funckey_manager
+from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
