@@ -38,7 +38,6 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
         self.ipbx_id = 'xivo'
         self.innerdata_dao = Mock(InnerdataDAO)
         interface_ami = Mock(AMI)
-        interface_ami.amiclass = Mock()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)
         self.notifier = QueueMemberServiceNotifier(self.innerdata_dao,
                                                    self.queue_statistics_producer,
@@ -160,7 +159,6 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
 
     def test_request_queuemembers_to_ami_empty(self):
         queuemembers_list = []
-        self.notifier.interface_ami = Mock()
         expected_ami_method_calls = []
 
         self.notifier.request_queuemembers_to_ami(queuemembers_list)
@@ -178,7 +176,6 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
                    'amicommand': 'sendcommand',
                    'amiargs': ('queuestatus', [('Member', 'agent2'),
                                                ('Queue', 'queue2')])}
-        self.notifier.interface_ami = Mock()
         expected_ami_method_calls = [call.execute_and_track(ANY, params1),
                                      call.execute_and_track(ANY, params2)]
 
