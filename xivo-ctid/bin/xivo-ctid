@@ -24,6 +24,8 @@ from xivo_cti import cti_config
 
 from xivo_cti import cti_config
 from xivo_cti.innerdata import Safe
+from xivo_cti.amiinterpret import AMI_1_8
+from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.context import context
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.user_dao import UserDAO
@@ -70,6 +72,8 @@ def main():
 
 
 def _register_context(context):
+    context.register('ami', AMI)
+    context.register('ami_18', AMI_1_8)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
     context.register('agent_client', AgentClient)

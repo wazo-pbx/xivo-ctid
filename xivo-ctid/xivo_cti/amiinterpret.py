@@ -48,9 +48,10 @@ class AMI_1_8(object):
                   'Meetme',
                   'Did',)
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.innerdata = self._ctiserver.safe
+    def __init__(self, cti_server, innerdata, user_dao):
+        self._ctiserver = cti_server
+        self.innerdata = innerdata
+        self.user_dao = user_dao
 
     def ami_newchannel(self, event):
         channel = event['Channel']

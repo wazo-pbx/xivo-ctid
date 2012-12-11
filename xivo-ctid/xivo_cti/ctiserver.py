@@ -427,8 +427,7 @@ class CTIServer(object):
 
         logger.info('(2/3) Local AMI socket connection')
         self.myami = interface_ami.AMI(self)
-        self.commandclass = amiinterpret.AMI_1_8(self)
-        self.commandclass.user_dao = self._user_dao
+        self.commandclass = context.get('ami_18')
 
         self.ami_sock = self.myami.connect()
         if not self.ami_sock:
