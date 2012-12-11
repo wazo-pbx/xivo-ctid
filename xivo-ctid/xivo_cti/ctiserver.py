@@ -37,14 +37,11 @@ from sqlalchemy.exc import OperationalError, InvalidRequestError
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
 
-from xivo_cti import amiinterpret
-from xivo_cti import cti_config
+from xivo_cti import amiinterpret, cti_config
 from xivo_cti import dao
-from xivo_cti import innerdata
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.context import context
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
@@ -85,6 +82,7 @@ from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
+from xivo_cti.context import context
 
 logger = logging.getLogger('main')
 
@@ -93,16 +91,17 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self):
+    def __init__(self, config):
         self.mycti = {}
+        self.myipbxid = 'xivo'
         self.myami = None
-        self.safe = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
         self._config = None
-
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
+
+        self._config = config
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -160,7 +159,6 @@ class CTIServer(object):
         self._daemonize()
         self._init_db_connection_pool()
         self._init_db_uri()
-        self._config = context.get('config')
         self._config.update()
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
@@ -174,6 +172,8 @@ class CTIServer(object):
         self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = context.get('queuemember_service_manager')
         self._queuemember_service_notifier = context.get('queuemember_service_notifier')
+        context.get('queuemember_service_notifier').send_cti_event = self.send_cti_event
+        context.get('queuemember_service_notifier').ipbx_id = self.myipbxid
 
         self._innerdata_dao = context.get('innerdata_dao')
         self._user_dao = context.get('user_dao')
@@ -192,6 +192,9 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
+
+        context.get('user_service_notifier').send_cti_event = self.send_cti_event
+        context.get('user_service_notifier').ipbx_id = self.myipbxid
 
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
@@ -395,23 +398,17 @@ class CTIServer(object):
         self.fdlist_udp_cti = {}
         self.ami_sock = None
 
-        self.myipbxid = 'xivo'
-
         ipbxconfig = self._config.getconfig('ipbx')
-        safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
-        safe.user_service_manager = self._user_service_manager
-        safe.user_dao = self._user_dao
-        safe.queuemember_service_manager = self._queuemember_service_manager
-        dao.instanciate_dao(safe)
-        safe.init_status()
-        self.safe = safe
-        self._user_dao._innerdata = safe
-        context.get('user_service_notifier').send_cti_event = self.send_cti_event
-        context.get('user_service_notifier').ipbx_id = self.myipbxid
-        self._innerdata_dao.innerdata = safe
-        self._queuemember_service_notifier.send_cti_event = self.send_cti_event
-        self._queuemember_service_notifier.ipbx_id = self.myipbxid
-        self._user_service_manager.presence_service_executor._innerdata = safe
+        self.safe = context.get('innerdata')
+        self.safe.init_urllist(ipbxconfig.get('urllists'))
+
+        self.safe.queuemember_service_manager = context.get('queuemember_service_manager')
+        self.safe.user_service_manager = context.get('user_service_manager')
+
+        dao.instanciate_dao(self.safe)
+
+        self.safe.init_status()
+
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()

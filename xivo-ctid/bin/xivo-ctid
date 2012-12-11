@@ -23,6 +23,7 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti import cti_config
 
 from xivo_cti import cti_config
+from xivo_cti.innerdata import Safe
 from xivo_cti.context import context
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 from xivo_cti.dao.user_dao import UserDAO
@@ -86,6 +87,7 @@ def _register_context(context):
     context.register('innerdata_dao', InnerdataDAO)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
+    context.register('innerdata', Safe)
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
@@ -98,9 +100,9 @@ def _register_context(context):
     context.register('queuemember_service_notifier', QueueMemberServiceNotifier)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
+    context.register('user_dao', UserDAO)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
-    context.register('user_dao', UserDAO)
 
 
 def _parse_args(args):

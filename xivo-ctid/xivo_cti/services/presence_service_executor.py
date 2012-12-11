@@ -48,10 +48,12 @@ class PresenceServiceExecutor(object):
     def __init__(self,
                  user_service_manager,
                  agent_service_manager,
-                 config):
+                 config,
+                 innerdata):
         self.user_service_manager = user_service_manager
         self.agent_service_manager = agent_service_manager
         self.config = config
+        self._innerdata = innerdata
 
     def execute_actions(self, user_id, presence):
         user_profile = userfeatures_dao.get_profile(user_id)

@@ -31,8 +31,9 @@ logger = logging.getLogger("InnerdataDAO")
 
 
 class InnerdataDAO(object):
-    def __init__(self):
-        pass
+
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
     def get_queuemembers_config(self):
         return self.innerdata.queuemembers_config

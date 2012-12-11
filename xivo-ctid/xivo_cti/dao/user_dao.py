@@ -25,24 +25,23 @@ import logging
 import time
 
 from xivo_dao import userfeatures_dao
-from pprint import pprint
 
 logger = logging.getLogger("UserFeaturesDAO")
 
 
 class UserDAO(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
     def _phone(self, phone_id):
-        return self._innerdata.xod_config['phones'].keeplist[phone_id]
+        return self.innerdata.xod_config['phones'].keeplist[phone_id]
 
     def _user(self, user_id):
-        return self._innerdata.xod_config['users'].keeplist[user_id]
+        return self.innerdata.xod_config['users'].keeplist[user_id]
 
     def _user_status(self, user_id):
-        return self._innerdata.xod_status['users'][user_id]
+        return self.innerdata.xod_status['users'][user_id]
 
     def enable_dnd(self, user_id):
         userfeatures_dao.enable_dnd(user_id)
