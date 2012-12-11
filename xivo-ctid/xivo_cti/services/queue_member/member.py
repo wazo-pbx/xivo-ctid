@@ -78,7 +78,7 @@ class QueueMemberState(object):
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other):
-        return self.__dict__ == other.__dict__
+        return self.__dict__ != other.__dict__
 
     @classmethod
     def from_ami_queue_member(cls, ami_event):

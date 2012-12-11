@@ -109,7 +109,6 @@ class CTIServer(object):
         signal.signal(signal.SIGTERM, self._sighandler)
         signal.signal(signal.SIGHUP, self._sighandler_reload)
 
-    # # \brief Handler for catching signals (in the main thread)
     def _sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
@@ -117,7 +116,6 @@ class CTIServer(object):
             t._Thread__stop()
         self.askedtoquit = True
 
-    # # \brief Handler for catching signals (in the main thread)
     def _sighandler_reload(self, signum, frame):
         logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
                        signum, frame.f_lineno, self.askedtoquit)
