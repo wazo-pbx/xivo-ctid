@@ -438,7 +438,6 @@ class CTIServer(object):
         context.get('device_manager').ami = self.myami.amiclass
         context.get('agent_executor').ami = self.myami.amiclass
         context.get('current_call_manager').ami = self.myami.amiclass
-        self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - start_time))
