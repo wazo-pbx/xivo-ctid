@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 import unittest
+from mock import Mock, NonCallableMock
 from xivo_cti.interfaces.interface_webi import WEBI
 from xivo_cti.ctiserver import CTIServer
-from mock import Mock, NonCallableMock
 from xivo_cti.context import context
 from xivo_cti.cti_config import Config
-from xivo_cti.services.queuemember_service_manager import QueueMemberServiceManager
+from xivo_cti.services.queue_member.updater import QueueMemberUpdater
 
 
 class Test(unittest.TestCase):
@@ -15,7 +15,8 @@ class Test(unittest.TestCase):
         mock_config.getconfig.return_value = {'live_reload_conf': True}
         context.register('config', mock_config)
         self._ctiserver = Mock(CTIServer)
-        self._interface_webi = WEBI(self._ctiserver)
+        self._queue_member_updater = Mock(QueueMemberUpdater)
+        self._interface_webi = WEBI(self._ctiserver, self._queue_member_updater)
 
     def tearDown(self):
         context.reset()
@@ -28,17 +29,6 @@ class Test(unittest.TestCase):
         result = self._interface_webi.manage_connection(raw_msg)
 
         self.assertEqual(self._ctiserver.askedtoquit, True)
-        self.assertEqual(expected_result, result)
-
-    def test_manage_connection_queuemember_update(self):
-        raw_msg = 'xivo[queuemember,update]'
-        expected_result = [{'message': [],
-                            'closemenow': True}]
-        self._interface_webi.queuemember_service_manager = Mock(QueueMemberServiceManager)
-
-        result = self._interface_webi.manage_connection(raw_msg)
-
-        self._interface_webi.queuemember_service_manager.update_config.assert_called_once_with()
         self.assertEqual(expected_result, result)
 
     def test_manage_connection_unknown_msg(self):

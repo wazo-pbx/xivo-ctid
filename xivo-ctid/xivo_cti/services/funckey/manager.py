@@ -21,8 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xivo import xivo_helpers
-from xivo_cti.dao import userfeaturesdao
-from xivo_dao import extensionsdao
+from xivo_dao import extensions_dao, userfeatures_dao, phonefunckey_dao
 
 
 class FunckeyManager(object):
@@ -31,12 +30,12 @@ class FunckeyManager(object):
     INUSE = 'INUSE'
     NOT_INUSE = 'NOT_INUSE'
 
-    def __init__(self, phone_funckey_dao):
-        self.phone_funckey_dao = phone_funckey_dao
+    def __init__(self, ami_class):
+        self.ami = ami_class
 
     def _device(self, user_id, name, destination=''):
-        funckey_prefix = extensionsdao.exten_by_name('phoneprogfunckey')
-        funckey_args = (user_id, extensionsdao.exten_by_name(name), destination)
+        funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')
+        funckey_args = (user_id, extensions_dao.exten_by_name(name), destination)
         funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
 
         hint = self.DEVICE_PATTERN % funckey_pattern
@@ -72,17 +71,17 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def disable_all_unconditional_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_unc(user_id):
+        for destination in phonefunckey_dao.get_dest_unc(user_id):
             if destination:
                 self.unconditional_fwd_in_use(user_id, destination, False)
 
     def disable_all_rna_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_rna(user_id):
+        for destination in phonefunckey_dao.get_dest_rna(user_id):
             if destination:
                 self.rna_fwd_in_use(user_id, destination, False)
 
     def disable_all_busy_fwd(self, user_id):
-        for destination in self.phone_funckey_dao.get_dest_busy(user_id):
+        for destination in phonefunckey_dao.get_dest_busy(user_id):
             if destination:
                 self.busy_fwd_in_use(user_id, destination, False)
 
@@ -102,19 +101,19 @@ def parse_update_user_config(manager, event):
 def _set_fwd_busy_blf(manager, user_id):
     manager.disable_all_busy_fwd(user_id)
     manager.busy_fwd_in_use(user_id,
-                            userfeaturesdao.get_dest_busy(user_id),
-                            userfeaturesdao.get_fwd_busy(user_id))
+                            userfeatures_dao.get_dest_busy(user_id),
+                            userfeatures_dao.get_fwd_busy(user_id))
 
 
 def _set_fwd_rna_blf(manager, user_id):
     manager.disable_all_rna_fwd(user_id)
     manager.rna_fwd_in_use(user_id,
-                           userfeaturesdao.get_dest_rna(user_id),
-                           userfeaturesdao.get_fwd_rna(user_id))
+                           userfeatures_dao.get_dest_rna(user_id),
+                           userfeatures_dao.get_fwd_rna(user_id))
 
 
 def _set_fwd_unc_blf(manager, user_id):
     manager.disable_all_unconditional_fwd(user_id)
     manager.unconditional_fwd_in_use(user_id,
-                                     userfeaturesdao.get_dest_unc(user_id),
-                                     userfeaturesdao.get_fwd_unc(user_id))
+                                     userfeatures_dao.get_dest_unc(user_id),
+                                     userfeatures_dao.get_fwd_unc(user_id))

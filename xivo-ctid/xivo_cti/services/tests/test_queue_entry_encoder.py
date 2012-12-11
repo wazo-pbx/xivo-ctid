@@ -37,21 +37,24 @@ class TestQueueEntryEncoder(unittest.TestCase):
 
     def setUp(self):
         self.now = time.time()
-        self._queue_entries = {'111.11': QueueEntry(1, 'Tester One', '1111', self.now + 10),
-                               '222.22': QueueEntry(2, 'Tester Two', '2222', self.now + 7),
-                               '333.33': QueueEntry(3, 'Tester Three', '3333', self.now + 1)}
+        self._queue_entries = {'111.11': QueueEntry(1, 'Tester One', '1111', self.now + 10, '111.11'),
+                               '222.22': QueueEntry(2, 'Tester Two', '2222', self.now + 7, '222.22'),
+                               '333.33': QueueEntry(3, 'Tester Three', '3333', self.now + 1, '333.33')}
         self._expected_queue_entry_list = [{'position': 1,
                                             'name': 'Tester One',
                                             'number': '1111',
-                                            'join_time': self.now + 10},
+                                            'join_time': self.now + 10,
+                                            'uniqueid': '111.11'},
                                            {'position': 2,
                                             'name': 'Tester Two',
                                             'number': '2222',
-                                            'join_time': self.now + 7},
+                                            'join_time': self.now + 7,
+                                            'uniqueid': '222.22'},
                                            {'position': 3,
                                             'name': 'Tester Three',
                                             'number': '3333',
-                                            'join_time': self.now + 1}]
+                                            'join_time': self.now + 1,
+                                            'uniqueid': '333.33'}]
 
     @patch('xivo_dao.queue_features_dao.id_from_name', return_value=_queue_id)
     def test_encode_queue_entry_update(self, mock_id_from_name):
@@ -68,11 +71,12 @@ class TestQueueEntryEncoder(unittest.TestCase):
 
     def test_encode_queue_entry(self):
         encoder = QueueEntryEncoder()
-        q_entry = QueueEntry(1, 'Tester One', '1111', self.now + 10)
+        q_entry = QueueEntry(1, 'Tester One', '1111', self.now + 10, '111.11')
         expected = {'position': 1,
                     'name': 'Tester One',
                     'number': '1111',
-                    'join_time': self.now + 10}
+                    'join_time': self.now + 10,
+                    'uniqueid': '111.11'}
 
         result = encoder._encode_queue_entry(q_entry)
 

@@ -31,9 +31,9 @@ import time
 from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
-from xivo_dao.celdao import UnsupportedLineProtocolException
-from xivo_dao import extensionsdao
+from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services import call_history_manager
+from xivo_dao import userfeatures_dao, extensions_dao
 
 logger = logging.getLogger('cti_command')
 
@@ -173,7 +173,7 @@ class Command(object):
             logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
 
-        reply = {'capalist': [self._ctiserver._user_features_dao.get_profile(userid)]}
+        reply = {'capalist': [userfeatures_dao.get_profile(userid)]}
         return reply
 
     def regcommand_login_capas(self):
@@ -186,8 +186,6 @@ class Command(object):
             logger.warning('%s - missing args : %s', head, missings)
             return 'missing:%s' % ','.join(missings)
 
-        # settings (in agent mode for instance)
-        # userinfo['agent']['phonenum'] = phonenum
         cdetails = self._connection.connection_details
 
         state = self._commanddict.get('state')
@@ -196,11 +194,6 @@ class Command(object):
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
             logger.warning('%s - wrong capaid : %s %s', head, iserr, capaid)
-            return iserr
-
-        iserr = self.__check_user_connection__()
-        if iserr is not None:
-            logger.warning('%s - user connection : %s', head, iserr)
             return iserr
 
         self.__connect_user__(state, capaid)
@@ -214,8 +207,8 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        profileclient = self.innerdata.xod_config['users'].keeplist[self.userid].get('profileclient')
-        profilespecs = self._config.getconfig('profiles').get(profileclient)
+        cti_profile_id = self.innerdata.xod_config['users'].get_cti_profile_id(self.userid)
+        profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
         summarycapas = {}
@@ -247,17 +240,15 @@ class Command(object):
         self._connection.logintimer.cancel()
         return reply
 
-    def __check_user_connection__(self):
-        return
-
     def __check_capa_connection__(self, capaid):
         cdetails = self._connection.connection_details
         userid = cdetails.get('userid')
+        capaid = int(capaid)
+
         if capaid not in self._config.getconfig('profiles').keys():
-            return 'unknownprofile'
-        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['profileclient']:
-            return 'wrongprofile'
-        # XXX : too much users ?
+            return 'unknown cti_profile_id'
+        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['cti_profile_id']:
+            return 'wrong cti_profile_id'
 
     def __connect_user__(self, availstate, c):
         cdetails = self._connection.connection_details
@@ -428,7 +419,7 @@ class Command(object):
                           'amicommand': z.get('amicommand'),
                           'amiargs': z.get('amiargs')}
                 actionid = '%s-%03d' % (baseactionid, idz)
-                ipbxreply = self._ctiserver.myami.execute_and_track(actionid, params)
+                ipbxreply = self._ctiserver.interface_ami.execute_and_track(actionid, params)
             else:
                 ipbxreply = z.get('error')
             idz += 1
@@ -527,7 +518,7 @@ class Command(object):
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst.get('type') == 'voicemail':
             try:
-                exten = extensionsdao.exten_by_name('vmusermsg')
+                exten = extensions_dao.exten_by_name('vmusermsg')
                 vm = innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 extentodial = exten
                 dst_context = vm['context']
@@ -608,7 +599,7 @@ class Command(object):
             elif dst['type'] == 'voicemail' and dst['id'] in self.innerdata.xod_config['voicemails'].keeplist:
                 voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
-                prefix = extensionsdao.exten_by_name('vmboxslt')
+                prefix = extensions_dao.exten_by_name('vmboxslt')
                 prefix = prefix['exten']
                 prefix = prefix[:len(prefix) - 1]
                 extentodial = prefix + vm_number

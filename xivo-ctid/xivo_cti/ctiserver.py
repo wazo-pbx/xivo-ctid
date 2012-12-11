@@ -37,17 +37,16 @@ from sqlalchemy.exc import OperationalError, InvalidRequestError
 from xivo import daemonize
 from xivo_dao.alchemy import dbconnection
 
-from xivo_cti import amiinterpret
 from xivo_cti import cti_config
 from xivo_cti import dao
-from xivo_cti import innerdata
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti import channel_updater
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.context import context
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
@@ -56,6 +55,8 @@ from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
 from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
+from xivo_cti.cti.commands.hold_switchboard import HoldSwitchboard
+from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
 from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
 from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
 from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
@@ -67,8 +68,7 @@ from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
 from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
 from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
 from xivo_cti.cti.commands.subscribe_current_calls import SubscribeCurrentCalls
-from xivo_cti.funckey import funckey_manager
-from xivo_cti.interfaces import interface_ami
+from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
@@ -82,6 +82,7 @@ from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
+from xivo_cti.context import context
 
 logger = logging.getLogger('main')
 
@@ -90,17 +91,18 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self):
+    def __init__(self, config):
         self.start_time = time.time()
         self.mycti = {}
-        self.myami = None
-        self.safe = None
+        self.myipbxid = 'xivo'
+        self.interface_ami = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
         self._config = None
-
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
+
+        self._config = config
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -151,6 +153,7 @@ class CTIServer(object):
 
     def _init_db_uri(self):
         dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
+        dbconnection.add_connection(cti_config.DB_URI)
         QueueLogger.init()
 
     def setup(self):
@@ -158,10 +161,12 @@ class CTIServer(object):
         self._daemonize()
         self._init_db_connection_pool()
         self._init_db_uri()
-        self._config = context.get('config')
         self._config.update()
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
+
+        self.interface_ami = context.get('interface_ami')
+        self.commandclass = context.get('ami_18')
 
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
@@ -170,28 +175,37 @@ class CTIServer(object):
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
-        self._queuemember_service_manager = context.get('queuemember_service_manager')
-        self._queuemember_service_notifier = context.get('queuemember_service_notifier')
 
-        self._agent_features_dao = context.get('agent_features_dao')
+        self._queue_member_manager = context.get('queue_member_manager')
+        self._queue_member_notifier = context.get('queue_member_notifier')
+        self._queue_member_updater = context.get('queue_member_updater')
+        self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
+        self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
+
         self._innerdata_dao = context.get('innerdata_dao')
-        self._trunk_features_dao = context.get('trunk_features_dao')
-        self._user_features_dao = context.get('user_features_dao')
+        self._user_dao = context.get('user_dao')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
         self._queue_entry_manager = context.get('queue_entry_manager')
-        self._queue_statistic_manager = context.get('queue_statistics_manager')
+        self._queue_statistics_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
 
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
+        self._agent_service_cti_parser = context.get('agent_service_cti_parser')
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
+
+        self.safe = context.get('innerdata')
+        self.safe.user_service_manager = self._user_service_manager
+
+        context.get('user_service_notifier').send_cti_event = self.send_cti_event
+        context.get('user_service_notifier').ipbx_id = self.myipbxid
 
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
@@ -220,7 +234,7 @@ class CTIServer(object):
 
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
-        SubscribeToQueuesStats.register_callback_params(self._queue_statistic_manager.get_all_queue_summary)
+        SubscribeToQueuesStats.register_callback_params(self._queue_statistics_manager.get_all_queue_summary)
         SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_realtime_stats, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
@@ -232,14 +246,22 @@ class CTIServer(object):
 
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
 
-        QueueUnPause.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
-        QueuePause.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
         QueueAdd.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+            self._agent_service_cti_parser.queue_add,
+            ['member', 'queue']
+        )
         QueueRemove.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+            self._agent_service_cti_parser.queue_remove,
+            ['member', 'queue']
+        )
+        QueuePause.register_callback_params(
+            self._agent_service_cti_parser.queue_pause,
+            ['member', 'queue']
+        )
+        QueueUnPause.register_callback_params(
+            self._agent_service_cti_parser.queue_unpause,
+            ['member', 'queue']
+        )
 
         SubscribeMeetmeUpdate.register_callback_params(
             context.get('meetme_service_notifier').subscribe,
@@ -249,14 +271,21 @@ class CTIServer(object):
             context.get('current_call_notifier').subscribe,
             ['cti_connection']
         )
+        Hangup.register_callback_params(
+            context.get('current_call_manager').hangup,
+            ['user_id']
+        )
+        HoldSwitchboard.register_callback_params(
+            context.get('current_call_manager').switchboard_hold,
+            ['user_id']
+        )
+        UnholdSwitchboard.register_callback_params(
+            context.get('current_call_manager').switchboard_unhold,
+            ['user_id', 'unique_id'],
+        )
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        callback_handler.register_callback('QueueMember', self._queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberStatus', self._queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberAdded', self._queuemember_service_manager.add_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberRemoved', self._queuemember_service_manager.remove_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberPaused', self._queuemember_service_manager.toggle_pause)
 
         callback_handler.register_callback('AgentConnect',
                                            lambda event: agent_availability_updater.parse_ami_answered(event,
@@ -276,7 +305,7 @@ class CTIServer(object):
 
         callback_handler.register_userevent_callback(
             'AgentLogin',
-             lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
+            lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
         )
         callback_handler.register_userevent_callback(
             'AgentLogoff',
@@ -285,6 +314,11 @@ class CTIServer(object):
 
         current_call_parser = context.get('current_call_parser')
         current_call_parser.register_ami_events()
+
+        callback_handler.register_callback('NewCallerId',
+                                           channel_updater.parse_new_caller_id)
+
+        self._queue_member_updater.register_ami_events(callback_handler)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
@@ -342,7 +376,7 @@ class CTIServer(object):
             if action == 'ipbxup':
                 data = toload.get('properties').get('data')
                 if data.startswith('asterisk'):
-                    if not self.myami.connected():
+                    if not self.interface_ami.connected():
                         self._on_ami_down()
             elif action == 'ctilogin':
                 connc = toload.get('properties')
@@ -368,7 +402,6 @@ class CTIServer(object):
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
 
-        self.lastrequest_time = time.time()
         self.update_userlist = []
 
         xivoconf_general = self._config.getconfig('main')
@@ -381,105 +414,84 @@ class CTIServer(object):
         self.fdlist_udp_cti = {}
         self.ami_sock = None
 
-        self.myipbxid = 'xivo'
-
         logger.info('(1/3) Retrieving data')
-        safe = innerdata.Safe(self)
-        safe.user_service_manager = self._user_service_manager
-        safe.user_features_dao = self._user_features_dao
-        safe.trunk_features_dao = self._trunk_features_dao
-        safe.queuemember_service_manager = self._queuemember_service_manager
-        dao.instanciate_dao(safe)
+        dao.instanciate_dao(self.safe, self._queue_member_manager)
 
-        safe.init_xod_config()
-        safe.init_xod_status()
+        self.safe.init_xod_config()
+        self.safe.init_xod_status()
 
-        self.safe = safe
-        self._user_features_dao._innerdata = safe
-        context.get('user_service_notifier').send_cti_event = self.send_cti_event
-        context.get('user_service_notifier').ipbx_id = self.myipbxid
-        self._innerdata_dao.innerdata = safe
-        self._queuemember_service_notifier.send_cti_event = self.send_cti_event
-        self._queuemember_service_notifier.ipbx_id = self.myipbxid
-        self._user_service_manager.presence_service_executor._innerdata = safe
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
+
+        self._queue_member_updater.on_initialization()
+        self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
+        self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
+
         self._init_statistics_producers()
         self._init_agent_availability()
 
         logger.info('(2/3) Local AMI socket connection')
-        self.myami = interface_ami.AMI(self)
-        self.commandclass = amiinterpret.AMI_1_8(self)
-        self.commandclass.user_features_dao = self._user_features_dao
+        self.interface_ami.init_connection()
+        self.ami_sock = self.interface_ami.connect()
 
-        self.ami_sock = self.myami.connect()
         if not self.ami_sock:
             self._on_ami_down()
 
-        self._queuemember_service_notifier.interface_ami = self.myami
-        self._queue_entry_manager._ami = self.myami.amiclass
-        self._funckey_manager.ami = self.myami.amiclass
-        context.get('device_manager').ami = self.myami.amiclass
-        context.get('agent_executor').ami = self.myami.amiclass
-        self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
-
-        logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
+        logger.info('(3/3) Listening sockets')
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
-        for kind, bind_and_port in xivoconf_general.get('incoming_tcp', {}).iteritems():
-            allow_kind = True
-            if len(bind_and_port) > 2:
-                allow_kind = bind_and_port[2]
-            if not allow_kind:
-                logger.warning('%s kind listening socket has been explicitly disabled', kind)
-                continue
-            try:
-                (bind, port) = bind_and_port[:2]
-                trueport = int(port) + cti_config.PORTDELTA
-                gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
-                if not gai:
-                    continue
-                (afinet, socktype, proto, dummy, bindtuple) = gai[0]
-                UIsock = socket.socket(afinet, socktype)
-                UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                UIsock.bind(bindtuple)
-                UIsock.listen(10)
-                self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
-            except Exception:
-                logger.exception('tcp %s %d', bind, trueport)
 
-        for kind, bind_and_port in xivoconf_general.get('incoming_udp', {}).iteritems():
-            allow_kind = True
-            if len(bind_and_port) > 2:
-                allow_kind = bind_and_port[2]
-            if not allow_kind:
-                logger.warning('%s kind listening socket has been explicitly disabled', kind)
-                continue
-            try:
-                (bind, port) = bind_and_port[:2]
-                trueport = int(port) + cti_config.PORTDELTA
-                gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
-                if not gai:
-                    continue
-                (afinet, socktype, proto, dummy, bindtuple) = gai[0]
-                UIsock = socket.socket(afinet, socktype)
-                UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                UIsock.bind(bindtuple)
-                self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
-            except Exception:
-                logger.exception('udp %s %d', bind, trueport)
+        kind_list = {}
+        kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
+        kind_list['udp'] = xivoconf_general.get('incoming_udp', {})
 
-        # Main select() loop - Receive messages
-        if not self._config.getconfig():
-            nsecs = 5
-            logger.info('waiting %d seconds in case a config would be available ...', nsecs)
-            try:
-                time.sleep(nsecs)
-            except:
-                sys.exit()
-        else:
-            while not self.askedtoquit:
-                self.select_step()
+        for kind_type, incoming_list in kind_list.iteritems():
+            for kind, bind_and_port in incoming_list.iteritems():
+                allow_kind = True
+                if len(bind_and_port) > 2:
+                    allow_kind = bind_and_port[2]
+                if not allow_kind:
+                    logger.warning('%s kind listening socket has been explicitly disabled', kind)
+                    continue
+                bind, port = bind_and_port[:2]
+                if kind_type == 'tcp':
+                    self._init_tcp_socket(kind, bind, port)
+                elif kind_type == 'udp':
+                    self._init_udp_socket(kind, bind, port)
+
+        while not self.askedtoquit:
+            self.select_step()
+
+    def _init_tcp_socket(self, kind, bind, port):
+        try:
+            trueport = int(port) + cti_config.PORTDELTA
+            gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
+            if not gai:
+                return
+            (afinet, socktype, proto, dummy, bindtuple) = gai[0]
+            UIsock = socket.socket(afinet, socktype)
+            UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            UIsock.bind(bindtuple)
+            UIsock.listen(10)
+            self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
+        except Exception:
+            logger.exception('tcp %s %d', bind, trueport)
+
+    def _init_udp_socket(self, kind, bind, port):
+        try:
+            trueport = int(port) + cti_config.PORTDELTA
+            gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
+            if not gai:
+                return
+            (afinet, socktype, proto, dummy, bindtuple) = gai[0]
+            UIsock = socket.socket(afinet, socktype)
+            UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            UIsock.bind(bindtuple)
+            self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
+        except Exception:
+            logger.exception('udp %s %d', bind, trueport)
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
@@ -597,7 +609,7 @@ class CTIServer(object):
         if not buf:
             self._on_ami_down()
         else:
-            self.myami.handle_event(buf)
+            self.interface_ami.handle_event(buf)
 
     def _socket_udp_cti_read(self, sel_i):
         [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
@@ -649,8 +661,7 @@ class CTIServer(object):
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
             elif kind == 'WEBI':
-                interface = interface_webi.WEBI(self)
-                interface.queuemember_service_manager = self._queuemember_service_manager
+                interface = interface_webi.WEBI(self, self._queue_member_updater)
 
             interface.connected(socketobject)
 
@@ -718,7 +729,7 @@ class CTIServer(object):
                     elif kind == 'innerdata':
                         self.safe.checkqueue()
                     elif kind == 'ami':
-                        self.myami.checkqueue()
+                        self.interface_ami.checkqueue()
                 else:
                     logger.warning('unknown kind for %s', pb)
         # except Exception:
@@ -726,7 +737,6 @@ class CTIServer(object):
 
     def _update_safe_list(self):
         if self.update_userlist:
-            self.lastrequest_time = time.time()
             try:
                 if 'xivo[cticonfig,update]' in self.update_userlist:
                     self._config.update()

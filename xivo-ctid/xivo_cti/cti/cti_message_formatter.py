@@ -25,6 +25,27 @@
 
 class CTIMessageFormatter(object):
 
+    def __init__(self):
+        pass
+
+    def add_queue_members(self, queue_member_ids):
+        return {
+            'class': 'getlist',
+            'listname': 'queuemembers',
+            'function': 'addconfig',
+            'tipbxid': 'xivo',
+            'list': list(queue_member_ids),
+        }
+
+    def delete_queue_members(self, queue_member_ids):
+        return {
+            'class': 'getlist',
+            'listname': 'queuemembers',
+            'function': 'delconfig',
+            'tipbxid': 'xivo',
+            'list': list(queue_member_ids),
+        }
+
     def update_agent_status(self, agent_id, agent_status):
         return {'class': 'getlist',
                 'listname': 'agents',
@@ -32,3 +53,13 @@ class CTIMessageFormatter(object):
                 'tipbxid': 'xivo',
                 'tid': agent_id,
                 'status': agent_status}
+
+    def update_queue_member_config(self, queue_member):
+        return {
+            'class': 'getlist',
+            'listname': 'queuemembers',
+            'function': 'updateconfig',
+            'tipbxid': 'xivo',
+            'tid': queue_member.id,
+            'config': queue_member.to_cti_config(),
+        }

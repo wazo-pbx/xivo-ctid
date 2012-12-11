@@ -31,42 +31,9 @@ logger = logging.getLogger("InnerdataDAO")
 
 
 class InnerdataDAO(object):
-    def __init__(self):
-        pass
 
-    def get_queuemembers_config(self):
-        return self.innerdata.queuemembers_config
-
-    def get_queuemembers_static(self):
-        queuemembers_config = self.innerdata.queuemembers_config
-        ret = {}
-        for queuemember in queuemembers_config:
-            if queuemembers_config[queuemember]['membership'] == 'static':
-                ret[queuemember] = queuemembers_config[queuemember]
-        return ret
-
-    def apply_queuemember_delta(self, delta):
-        if delta.add:
-            self.innerdata.queuemembers_config.update(delta.add)
-        if delta.change:
-            for changed_queuemember in delta.change:
-                if changed_queuemember in self.innerdata.queuemembers_config:
-                    self.innerdata.queuemembers_config[changed_queuemember].update(delta.change[changed_queuemember])
-        if delta.delete:
-            for deleted_key in delta.delete:
-                self._delete_other_queuemembers(deleted_key)
-                self.innerdata.queuemembers_config.pop(deleted_key)
-
-    def _delete_other_queuemembers(self, deleted_key):
-        queuemembers_config = self.innerdata.queuemembers_config
-        if deleted_key in queuemembers_config:
-            queuemember = queuemembers_config[deleted_key]
-            queue_name = queuemember['queue_name']
-            interface = queuemember['interface']
-            self.innerdata.queuememberupdate(queue_name, interface)
-
-    def get_queuemember(self, queuemember_id):
-        return self.innerdata.queuemembers_config[queuemember_id]
+    def __init__(self, innerdata):
+        self.innerdata = innerdata
 
     def get_queue_id(self, queue_name):
         queue_id = self.innerdata.xod_config['queues'].idbyqueuename(queue_name)

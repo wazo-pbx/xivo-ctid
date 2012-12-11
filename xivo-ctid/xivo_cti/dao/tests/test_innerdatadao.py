@@ -23,160 +23,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, call, patch
+from tests.mock import Mock, patch
 from xivo_cti.dao.innerdatadao import InnerdataDAO
-from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.innerdata import Safe
 
 
 class TestInnerdataDAO(unittest.TestCase):
 
     def setUp(self):
-        self.innerdata_dao = InnerdataDAO()
-        self.innerdata = Mock()
-        self.innerdata_dao.innerdata = self.innerdata
-        self.queuemember1 = {'queuemember1_id': {'queue_name': 'queue1',
-                                                 'interface': 'agent1',
-                                                 'membership': 'static'}}
-        self.queuemember2 = {'queuemember2_id': {'queue_name': 'queue2',
-                                                 'interface': 'agent2',
-                                                 'membership': 'dynamic'}}
-        self.queuemember3 = {'queuemember3_id': {'queue_name': 'queue3',
-                                                 'interface': 'agent3',
-                                                 'membership': 'static'}}
-        self.allqueuemembers = {}
-        self.allqueuemembers.update(self.queuemember1)
-        self.allqueuemembers.update(self.queuemember2)
-        self.allqueuemembers.update(self.queuemember3)
-
-    def test_get_queuemembers_config(self):
-        expected_result = self.allqueuemembers
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-
-        result = self.innerdata_dao.get_queuemembers_config()
-
-        self.assertEqual(result, expected_result)
-
-    def test_get_queuemembers_static(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_result = {}
-        expected_result.update(self.queuemember1)
-        expected_result.update(self.queuemember3)
-
-        result = self.innerdata_dao.get_queuemembers_static()
-
-        self.assertEqual(result, expected_result)
-
-    def test_apply_queuemember_delta_add(self):
-        new_queuemembers = {}
-        new_queuemembers.update(self.queuemember2)
-        new_queuemembers.update(self.queuemember3)
-        input_delta = DictDelta(new_queuemembers, {}, [])
-        expected_result = self.allqueuemembers
-        self.innerdata_dao.innerdata.queuemembers_config = {}
-        self.innerdata_dao.innerdata.queuemembers_config.update(self.queuemember1)
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_apply_queuemember_delta_delete(self):
-        removed_queuemembers = ['queuemember1_id', 'queuemember2_id']
-        input_delta = DictDelta({}, {}, removed_queuemembers)
-        expected_result = self.queuemember3
-        self.innerdata_dao.innerdata.queuemembers_config = {}
-        self.innerdata_dao.innerdata.queuemembers_config.update(self.allqueuemembers)
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_apply_queuemember_delta_change(self):
-        changed_queuemembers = self.queuemember2
-        changed_queuemembers['queuemember2_id']['queue_name'] = 'queue2_changed'
-        input_delta = DictDelta({}, changed_queuemembers, [])
-        expected_result = self.allqueuemembers
-        expected_result.update(changed_queuemembers)
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_apply_queuemember_delta_add_and_change(self):
-        new_queuemembers = self.queuemember1
-        changed_queuemembers = self.queuemember2
-        changed_queuemembers['queuemember2_id']['queue_name'] = 'queue2_changed'
-        input_delta = DictDelta(new_queuemembers, changed_queuemembers, [])
-        expected_result = self.allqueuemembers
-        expected_result.update(changed_queuemembers)
-        self.innerdata_dao.innerdata.queuemembers_config = {}
-        self.innerdata_dao.innerdata.queuemembers_config.update(self.queuemember2)
-        self.innerdata_dao.innerdata.queuemembers_config.update(self.queuemember3)
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_apply_queuemember_delta_change_and_delete(self):
-        removed_queuemembers = ['queuemember1_id']
-        changed_queuemembers = self.queuemember2
-        changed_queuemembers['queuemember2_id']['queue_name'] = 'queue2_changed'
-        input_delta = DictDelta({}, changed_queuemembers, removed_queuemembers)
-        expected_result = changed_queuemembers
-        expected_result.update(self.queuemember3)
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_apply_queuemember_delta_add_change_and_delete(self):
-        new_queuemembers = {'queuemember1_id': {'queue_name': 'queue1',
-                                                'interface': 'agent1'}}
-        changed_queuemembers = {'queuemember2_id': {'queue_name': 'queue2_changed',
-                                                    'interface': 'agent2'}}
-        removed_queuemembers = ['queuemember3_id']
-        input_delta = DictDelta(new_queuemembers, changed_queuemembers, removed_queuemembers)
-        expected_result = new_queuemembers
-        expected_result.update(changed_queuemembers)
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-
-        self.innerdata_dao.apply_queuemember_delta(input_delta)
-
-        self.assertEqual(self.innerdata_dao.innerdata.queuemembers_config, expected_result)
-
-    def test_delete_other_queuemembers_inexistant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_method_calls = []
-
-        self.innerdata_dao._delete_other_queuemembers('queuemember0_id')
-
-        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
-        self.assertEqual(innerdata_method_calls, expected_method_calls)
-
-    def test_delete_other_queuemembers_existant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_method_calls = [call.queuememberupdate('queue1', 'agent1')]
-
-        self.innerdata_dao._delete_other_queuemembers('queuemember1_id')
-
-        innerdata_method_calls = self.innerdata_dao.innerdata.method_calls
-        self.assertEqual(innerdata_method_calls, expected_method_calls)
-
-    def test_get_queuemember_inexistant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = {}
-
-        self.assertRaises(KeyError, self.innerdata_dao.get_queuemember, ('queuemember1'))
-
-    def test_get_queuemember_existant(self):
-        self.innerdata_dao.innerdata.queuemembers_config = self.allqueuemembers
-        expected_result = self.queuemember1['queuemember1_id']
-
-        result = self.innerdata_dao.get_queuemember('queuemember1_id')
-
-        self.assertEqual(result, expected_result)
+        self.innerdata = Mock(Safe)
+        self.innerdata_dao = InnerdataDAO(self.innerdata)
 
     def test_get_queue_id(self):
         expected_queue_id = '1'
@@ -223,6 +81,7 @@ class TestInnerdataDAO(unittest.TestCase):
                     'disconnected': {}}
             }
         }
+        self.innerdata_dao.innerdata._config = Mock()
         side_effect = lambda get_config_argument: get_config_return[get_config_argument]
         self.innerdata_dao.innerdata._config.getconfig.side_effect = side_effect
 
@@ -237,7 +96,7 @@ class TestInnerdataDAO(unittest.TestCase):
         expected_agent_availability = AgentStatus.available
         expected_agent_availability_since = time_now
         agent_id = 6573
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.logged_out,
@@ -248,7 +107,7 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent_status = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
 
         self.assertEqual(expected_agent_availability, agent_status['availability'])
         self.assertEqual(expected_agent_availability_since, agent_status['availability_since'])
@@ -260,7 +119,7 @@ class TestInnerdataDAO(unittest.TestCase):
         expected_agent_availability = AgentStatus.unavailable
         expected_agent_availability_since = time_now - 400
         agent_id = 6573
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.unavailable,
@@ -271,7 +130,7 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
 
-        agent = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
 
         self.assertEqual(expected_agent_availability, agent['availability'])
         self.assertEqual(expected_agent_availability_since, agent['availability_since'])
@@ -283,7 +142,7 @@ class TestInnerdataDAO(unittest.TestCase):
             'availability_since': 1234566778,
             'channel': 'Agent/4242',
         }
-        self.innerdata.xod_status = {
+        self.innerdata_dao.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
                     'availability': AgentStatus.logged_out,

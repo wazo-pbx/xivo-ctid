@@ -23,10 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_cti.dao import userfeaturesdao
-from xivo_dao import linefeaturesdao, group_dao, agentfeaturesdao, \
+from xivo_dao import linefeatures_dao, group_dao, agentfeatures_dao, \
     meetme_features_dao, queue_features_dao, voicemail_dao, context_dao, \
-    phonebook_dao, incall_dao, trunkfeaturesdao
+    phonebook_dao, incall_dao, userfeatures_dao, trunkfeatures_dao
 
 logger = logging.getLogger('daolist')
 
@@ -61,14 +60,14 @@ class DaoList(object):
 
     def _get_users(self):
         res = {}
-        users = userfeaturesdao.all_join_line_id()
+        users = userfeatures_dao.all_join_line_id()
         for row in users:
             user, line_id = row
             res.update(self._format_user_data(user, line_id))
         return res
 
     def _get_user(self, id):
-        user, line_id = userfeaturesdao.get_join_line_id_with_user_id(id)
+        user, line_id = userfeatures_dao.get_join_line_id_with_user_id(id)
         return self._format_user_data(user, line_id)
 
     def _format_user_data(self, user, line_id):
@@ -82,10 +81,10 @@ class DaoList(object):
 
     def _get_phones(self):
         full_line = []
-        full_line.extend(linefeaturesdao.all_with_protocol('sip'))
-        full_line.extend(linefeaturesdao.all_with_protocol('iax'))
-        full_line.extend(linefeaturesdao.all_with_protocol('sccp'))
-        full_line.extend(linefeaturesdao.all_with_protocol('custom'))
+        full_line.extend(linefeatures_dao.all_with_protocol('sip'))
+        full_line.extend(linefeatures_dao.all_with_protocol('iax'))
+        full_line.extend(linefeatures_dao.all_with_protocol('sccp'))
+        full_line.extend(linefeatures_dao.all_with_protocol('custom'))
 
         res = {}
         for line in full_line:
@@ -94,7 +93,7 @@ class DaoList(object):
         return res
 
     def _get_phone(self, id):
-        linefeatures, protocol = linefeaturesdao.get_with_line_id(id)
+        linefeatures, protocol = linefeatures_dao.get_with_line_id(id)
         return self._format_line_data(linefeatures, protocol)
 
     def _format_line_data(self, linefeatures, protocol):
@@ -124,13 +123,13 @@ class DaoList(object):
 
     def _get_agents(self):
         res = {}
-        agents = agentfeaturesdao.all()
+        agents = agentfeatures_dao.all()
         for agent in agents:
             res.update(self._format_agent_data(agent))
         return res
 
     def _get_agent(self, id):
-        agent = agentfeaturesdao.get(id)
+        agent = agentfeatures_dao.get(id)
         return self._format_agent_data(agent)
 
     def _format_agent_data(self, agent):
@@ -288,13 +287,13 @@ class DaoList(object):
 
     def _get_trunks(self):
         res = {}
-        trunks = trunkfeaturesdao.all()
+        trunks = trunkfeatures_dao.all()
         for trunk in trunks:
             res.update(self._format_trunk_data(trunk))
         return res
 
     def _get_trunk(self, id):
-        trunk = trunkfeaturesdao.get(id)
+        trunk = trunkfeatures_dao.get(id)
         return self._format_trunk_data(trunk)
 
     def _format_trunk_data(self, trunk):

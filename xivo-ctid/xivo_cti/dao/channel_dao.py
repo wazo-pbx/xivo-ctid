@@ -38,3 +38,10 @@ class ChannelDAO(object):
         caller_id_number = channel.extra_data['xivo'].get('calleridnum', '')
 
         return caller_id_name, caller_id_number
+
+    def get_channel_from_unique_id(self, unique_id):
+        for channel_id, channel in self.innerdata.channels.iteritems():
+            if channel.unique_id != unique_id:
+                continue
+            return channel_id
+        raise LookupError('No channel with unique id %s' % unique_id)

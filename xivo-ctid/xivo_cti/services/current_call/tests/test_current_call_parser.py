@@ -86,20 +86,37 @@ class TestCurrentCallParser(unittest.TestCase):
         self.assertEqual(self.manager.hold_channel.call_count, 0)
         self.manager.unhold_channel.assert_called_once_with(channel)
 
-    def test_parse_unlink(self):
-        channel_1 = 'SIP/xivo-dev-00000002'
-        channel_2 = 'SIP/nkvo55-00000003'
-        unlink_event = {
-            'Event': 'Unlink',
+    def test_parse_hangup(self):
+        channel = 'SIP/tc8nb4-000000000038'
+        hangup_event = {'Event': 'Hangup',
+                        'Privilege': 'call,all',
+                        'Channel': channel,
+                        'Uniqueid': 1354737691.78,
+                        'CallerIDNum': '1003',
+                        'CallerIDName': 'Carlõs',
+                        'ConnectedLineNum': '1002',
+                        'ConnectedLineName': 'Bõb',
+                        'Cause': '16',
+                        'Cause-txt': 'Normal Clearing'}
+
+        self.parser.parse_hangup(hangup_event)
+
+        self.manager.end_call.assert_called_once_with(channel)
+
+    def test_parse_masquerade(self):
+        original_channel = 'Local/1002@pcm-dev-00000001;1',
+        clone_channel = 'SIP/6s7foq-00000005',
+        masquerade_event = {
+            'Event': 'Masquerade',
             'Privilege': 'call,all',
-            'Channel1': channel_1,
-            'Channel2': channel_2,
-            'Uniqueid1': 1354638961.2,
-            'Uniqueid2': 1354638961.3,
-            'CallerID1': '102',
-            'CallerID2': '1001'
+            'Clone': clone_channel,
+            'CloneState': 'Up',
+            'Original': original_channel,
+            'OriginalState': 'Up'
         }
 
-        self.parser.parse_unlink(unlink_event)
+        self.parser.parse_masquerade(masquerade_event)
 
-        self.manager.unbridge_channels.assert_called_once_with(channel_1, channel_2)
+        self.manager.masquerade.assert_caller_once_with(
+            original_channel, clone_channel
+        )

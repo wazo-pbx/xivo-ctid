@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
 logger = logging.getLogger('agentlist')
@@ -46,30 +45,6 @@ class AgentsList(ContextAwareAnyList):
                 self.reverse_index[ag['number']] = idx
             else:
                 logger.warning('2 agents have the same number')
-
-    def queuememberupdate(self, queuename, queueorgroup, agentnumber, event):
-        changed = False
-        qorg = '%s_by_agent' % queueorgroup
-        if agentnumber in self.reverse_index:
-            idx = self.reverse_index[agentnumber]
-            if idx in self.keeplist:
-                if queuename not in self.keeplist[idx][qorg]:
-                    self.keeplist[idx][qorg][queuename] = {}
-                    changed = True
-                thisagentqueueprops = self.keeplist[idx][qorg][queuename]
-                for prop in self.queuelocationprops:
-                    if prop in event:
-                        if prop in thisagentqueueprops:
-                            if thisagentqueueprops[prop] != event.get(prop):
-                                thisagentqueueprops[prop] = event.get(prop)
-                                changed = True
-                        else:
-                            thisagentqueueprops[prop] = event.get(prop)
-                            changed = True
-                if 'Xivo-QueueMember-StateTime' not in thisagentqueueprops:
-                    thisagentqueueprops['Xivo-QueueMember-StateTime'] = time.time()
-                    changed = True
-        return changed
 
     def queuememberadded(self, queuename, queueorgroup, agentnumber, event):
         qorg = '%s_by_agent' % queueorgroup

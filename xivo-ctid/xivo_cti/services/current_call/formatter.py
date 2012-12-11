@@ -37,7 +37,8 @@ class CurrentCallFormatter(object):
     def get_line_current_call(self, line_identity):
         calls = []
 
-        for call in self._current_call_manager.get_line_calls(line_identity):
+        current_calls = self._current_call_manager.get_line_calls(line_identity)
+        for call in current_calls:
             try:
                 formatted_call = self._format_call(call)
             except LookupError:
@@ -50,7 +51,11 @@ class CurrentCallFormatter(object):
 
     def _format_call(self, call):
         caller_id = dao.channel.get_caller_id_name_number(call['channel'])
+        if call['on_hold'] is False:
+            status = 'up'
+        else:
+            status = 'hold'
         return {'cid_name': caller_id[0],
                 'cid_number': caller_id[1],
-                'call_status': 'up',
+                'call_status': status,
                 'call_start': call['bridge_time']}

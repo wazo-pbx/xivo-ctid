@@ -28,7 +28,8 @@ from xivo_dao import device_dao
 
 class DeviceManager(object):
 
-    def __init__(self):
+    def __init__(self, ami_class):
+        self.ami = ami_class
         self.aastra_controller = AastraController()
 
     def answer(self, device_id):

@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -24,27 +24,26 @@
 
 import logging
 
+from xivo_cti.context import context
+
 logger = logging.getLogger(__name__)
 
 
-class QueueMemberDAO(object):
+def parse_new_caller_id(event):
+    updater = context.get('channel_updater')
+    updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
+
+
+class ChannelUpdater(object):
 
     def __init__(self, innerdata):
         self.innerdata = innerdata
 
-    def get_paused_count_for_agent(self, agent_interface):
-        queue_members = self.innerdata.queuemembers_config
-        paused_count = 0
-        for queue_member in queue_members.itervalues():
-            if queue_member['interface'] == agent_interface:
-                if queue_member['paused'] == '1':
-                    paused_count += 1
-        return paused_count
-
-    def get_queue_count_for_agent(self, agent_interface):
-        queue_members = self.innerdata.queuemembers_config
-        queue_count = 0
-        for queue_member in queue_members.itervalues():
-            if queue_member['interface'] == agent_interface:
-                queue_count += 1
-        return queue_count
+    def new_caller_id(self, channel, name, number):
+        try:
+            channel = self.innerdata.channels[channel]
+        except LookupError:
+            logger.info('Tried to update the caller id of an untracked channel')
+        else:
+            channel.set_extra_data('xivo', 'calleridname', name)
+            channel.set_extra_data('xivo', 'calleridnum', number)

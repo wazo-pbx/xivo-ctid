@@ -65,9 +65,6 @@ event_flags['AGENT'] = ['AgentCalled',
                         'AgentComplete',
                         'AgentDump',
                         'AgentRingNoAnswer',
-                        'QueueCallerAbandon', 'QueueMemberAdded',
-                        'QueueMemberPaused', 'QueueMemberPenalty',
-                        'QueueMemberRemoved', 'QueueMemberStatus'
                         ]
 
 event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent' ]
@@ -80,7 +77,7 @@ event_others['replies'] = [
     'ParkedCallsComplete',  # after ParkedCalls
     'MeetmeList', 'MeetmeListComplete',  # after MeetMeList
     'Status' , 'StatusComplete',  # after Status
-    'QueueParams', 'QueueEntry', 'QueueMember', 'QueueStatusComplete',  # after QueueStatus
+    'QueueParams', 'QueueEntry', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary
     'CoreShowChannel', 'CoreShowChannelsComplete',  # after CoreShowChannels
     'RegistryEntry', 'RegistrationsComplete',  # in reply to IAXregistry / SIPshowregistry seems to go elsewhere

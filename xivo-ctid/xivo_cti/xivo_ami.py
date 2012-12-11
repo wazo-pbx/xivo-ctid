@@ -49,13 +49,14 @@ class AMIClass(object):
         def __str__(self):
             return self.msg
 
-    def __init__(self, ipbxid, ipaddress, ipport, loginname, password, events):
-        self.ipbxid = ipbxid
-        self.ipaddress = ipaddress
-        self.ipport = ipport
-        self.loginname = loginname
-        self.password = password
-        self.events = events
+    def __init__(self, config):
+        ipbxconfig = config.getconfig('ipbx').get('ipbx_connection')
+        self.ipbxid = 'xivo'
+        self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
+        self.ipport = int(ipbxconfig.get('ipport', 5038))
+        self.loginname = ipbxconfig.get('username', 'xivouser')
+        self.password = ipbxconfig.get('password', 'xivouser')
+        self.events = True
         self.actionid = None
 
     def connect(self):
@@ -275,6 +276,14 @@ class AMIClass(object):
         if message:
             command_details.append(('Message', message))
         return self._exec_command('QueueLog', command_details)
+
+    def queuestatus(self, queue_name=None, member_name=None):
+        command_details = []
+        if queue_name is not None:
+            command_details.append(('Queue', queue_name))
+        if member_name is not None:
+            command_details.append(('Member', member_name))
+        return self._exec_command('QueueStatus', command_details)
 
     def queuesummary(self, queuename=None):
         if queuename is None:

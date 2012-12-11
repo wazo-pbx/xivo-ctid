@@ -173,7 +173,7 @@ class TestUserServiceManager(unittest.TestCase):
         channel = 'SIP/kjsdfh-12356'
         result = service_manager._build_member_status(1, 'Tester One', '666', channel, True)
         expected = {'join_order': 1,
-                    'join_time': -1,
+                    'join_time':-1,
                     'number': '666',
                     'name': 'Tester One',
                     'channel': channel,
@@ -476,10 +476,10 @@ class TestUserServiceManager(unittest.TestCase):
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
                                        'pin_required': False,
-                                       'start_time': -1,
+                                       'start_time':-1,
                                        'context': 'dev',
                                        'members': {1: {'join_order': 1,
-                                                       'join_time': -1,
+                                                       'join_time':-1,
                                                        'number': number,
                                                        'name': name,
                                                        'channel': channel,
@@ -619,7 +619,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.mock_manager.unmute.assert_called_once_with('800', 1)
 
     @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=False))
-    @patch('xivo_dao.linefeaturesdao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
+    @patch('xivo_dao.linefeatures_dao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
     @patch('time.time')
     def test_join_originate(self, mock_time):
         channel = 'SIP/kljfh-1234'

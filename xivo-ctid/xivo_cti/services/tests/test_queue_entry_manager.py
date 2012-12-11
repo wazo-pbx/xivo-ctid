@@ -65,8 +65,8 @@ JOIN_MESSAGE_2 = {'Event': 'Join',
                   'Count': '2',
                   'Uniqueid': UNIQUE_ID_2}
 
-QUEUE_ENTRY_1 = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1)
-QUEUE_ENTRY_2 = QueueEntry(2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, JOIN_TIME_2)
+QUEUE_ENTRY_1 = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1, UNIQUE_ID_1)
+QUEUE_ENTRY_2 = QueueEntry(2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, JOIN_TIME_2, UNIQUE_ID_2)
 
 LEAVE_MESSAGE_1 = {'Event': 'Leave',
                    'Privilege': 'call,all',
@@ -107,9 +107,11 @@ class TestQueueEntryManager(unittest.TestCase):
         self.encoder = Mock(QueueEntryEncoder)
         self.notifier = Mock(QueueEntryNotifier)
         self.statistics_notifier = Mock(StatisticsNotifier)
+        ami_class = Mock(AMIClass)
         self.manager = QueueEntryManager(self.notifier,
                                          self.encoder,
-                                         self.statistics_notifier)
+                                         self.statistics_notifier,
+                                         ami_class)
 
     def tearDown(self):
         QueueEntryManager._instance = None
@@ -251,10 +253,10 @@ class TestQueueEntryManager(unittest.TestCase):
     def test_decrement_position(self):
         self.manager._queue_entries[QUEUE_NAME] = {}
         entries = self.manager._queue_entries[QUEUE_NAME]
-        entries[1] = QueueEntry(1, 'one', '111', time.time())
-        entries[2] = QueueEntry(2, 'two', '222', time.time())
-        entries[3] = QueueEntry(3, 'three', '333', time.time())
-        entries[4] = QueueEntry(4, 'four', '444', time.time())
+        entries[1] = QueueEntry(1, 'one', '111', time.time(), '111.11')
+        entries[2] = QueueEntry(2, 'two', '222', time.time(), '222.22')
+        entries[3] = QueueEntry(3, 'three', '333', time.time(), '333.33')
+        entries[4] = QueueEntry(4, 'four', '444', time.time(), '444.44')
 
         # 1 leaves the queue (pos 1)
         entries.pop(1)
@@ -275,7 +277,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
     @patch('time.time', Mock(return_value=JOIN_TIME_1))
     def test_update(self):
-        expected = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1 - WAIT_TIME_1)
+        expected = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1 - WAIT_TIME_1, UNIQUE_ID_1)
 
         self.manager.insert(QUEUE_NAME, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1,
                             UNIQUE_ID_1, WAIT_TIME_1)

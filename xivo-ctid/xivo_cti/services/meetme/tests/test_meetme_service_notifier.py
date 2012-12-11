@@ -26,19 +26,15 @@ from mock import Mock, call, patch, NonCallableMock
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.dao.userfeaturesdao import UserFeaturesDAO
 from xivo_cti.cti_config import Config
 from xivo_cti.context import context
-
-get_line_identity = Mock()
 
 
 class TestMeetmeServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.user_dao = Mock(UserFeaturesDAO)
-        self.notifier = MeetmeServiceNotifier(self.user_dao)
+        self.notifier = MeetmeServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
         self.config = NonCallableMock(Config)
@@ -48,20 +44,18 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def tearDown(self):
         context.reset()
 
-    @patch('xivo_cti.dao.userfeaturesdao.get_line_identity', get_line_identity)
-    def test_subscribe_update(self):
+    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.userfeatures_dao.get_reachable_contexts')
+    def test_subscribe_update(self, get_reachable_contexts, get_line_identity):
         user_id = 5
         user_contexts = ['test_ctx']
         channel_pattern = 'SIP/abcde'
-        user_features_dao = Mock(UserFeaturesDAO)
-        user_features_dao.get_reachable_contexts.return_value = user_contexts
+        get_reachable_contexts.return_value = user_contexts
         get_line_identity.return_value = channel_pattern
 
         client_connection = Mock(CTI)
-        client_connection.user_features_dao = user_features_dao
         client_connection.user_id.return_value = user_id
 
-        self.notifier.user_features_dao = user_features_dao
         self.notifier._send_meetme_membership = Mock()
         self.notifier._current_state = {'800': {'number': '800',
                                                  'name': 'test_conf',
@@ -215,8 +209,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         expected = encoder.encode_update(msg)
 
-        user_dao = Mock(UserFeaturesDAO)
-        self.notifier.user_features_dao = user_dao
         self.notifier._current_state = msg
         self.notifier._push_to_client(client_connection)
 

@@ -34,23 +34,27 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config
 from xivo_cti import innerdata
-from tests.mock import Mock
+from mock import Mock, patch
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
+from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
 
 
 class TestSafe(unittest.TestCase):
 
     _ipbx_id = 'xivo'
 
-    def setUp(self):
+    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    def setUp(self, mock_get_ids):
         context.register('config', cti_config.Config())
-        self._ctiserver = CTIServer()
+        config = context.get('config')
+        queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
+        self._ctiserver = CTIServer(config)
         self._ctiserver._init_db_connection_pool()
         self._ctiserver._user_service_manager = Mock(UserServiceManager)
-        config = context.get('config')
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
-        self.safe = Safe(self._ctiserver)
+        self.safe = Safe(config, self._ctiserver, queue_member_cti_adapter)
+        mock_get_ids.get_ids.return_value = []
 
     def test_safe(self):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)
@@ -68,19 +72,6 @@ class TestSafe(unittest.TestCase):
         ret = self.safe.handle_getlist_list_id('not_a_list', '1')
 
         self.assertEqual(ret, None)
-
-    def test_handle_getlist_list_id_queuemembers(self):
-        self.safe.queuemembers_config['1'] = {}
-        self.safe.queuemembers_config['2'] = {}
-        expected_result = ('message', {'function': 'listid',
-                                       'listname': 'queuemembers',
-                                       'tipbxid': self._ipbx_id,
-                                       'list': ['1', '2'],
-                                       'class': 'getlist'})
-
-        ret = self.safe.handle_getlist_list_id('queuemembers', 'someone')
-
-        self.assertEqual(ret, expected_result)
 
     def test_split_channel(self):
         sip_trunk_channel = 'SIP/test-ha-1-03745898564'

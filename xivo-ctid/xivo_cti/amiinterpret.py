@@ -27,8 +27,7 @@ import random
 import string
 import time
 
-from xivo_dao import group_dao
-from xivo_cti.dao import userfeaturesdao
+from xivo_dao import group_dao, userfeatures_dao
 from xivo_dao import queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
@@ -49,9 +48,11 @@ class AMI_1_8(object):
                   'Meetme',
                   'Did',)
 
-    def __init__(self, ctiserver):
-        self._ctiserver = ctiserver
-        self.innerdata = self._ctiserver.safe
+    def __init__(self, cti_server, innerdata, user_dao, interface_ami):
+        self._ctiserver = cti_server
+        self.innerdata = innerdata
+        self.user_dao = user_dao
+        self.interface_ami = interface_ami
 
     def ami_newchannel(self, event):
         channel = event['Channel']
@@ -176,8 +177,8 @@ class AMI_1_8(object):
         # 1 : CLI 'channel request hangup' on the 1st phone's channel
         # 5 : 1st phone rejected the call (reject button or all lines busy)
         # 8 : 1st phone did not answer early enough
-        if actionid in self._ctiserver.myami.originate_actionids:
-            properties = self._ctiserver.myami.originate_actionids.pop(actionid)
+        if actionid in self.interface_ami.originate_actionids:
+            properties = self.interface_ami.originate_actionids.pop(actionid)
             request = properties.get('request')
             cn = request.get('requester')
             try:
@@ -231,35 +232,6 @@ class AMI_1_8(object):
         opts = {'paused': 'on' in event['Status'], }
         return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
-    def ami_queuemember(self, event):
-        self.innerdata.queuememberupdate(event['Queue'],
-                                         event['Location'],
-                                         (event['Status'],
-                                          event['Paused'],
-                                          event['Membership'],
-                                          event['CallsTaken'],
-                                          event['Penalty'],
-                                          event['LastCall']))
-
-    def ami_queuememberstatus(self, event):
-        self.innerdata.queuememberupdate(event['Queue'],
-                                         event['Location'],
-                                         (event['Status'],
-                                          event['Paused'],
-                                          event['Membership'],
-                                          event['CallsTaken'],
-                                          event['Penalty'],
-                                          event['LastCall']))
-
-    def ami_queuememberadded(self, event):
-        self.ami_queuememberstatus(event)
-
-    def ami_queuememberremoved(self, event):
-        self.innerdata.queuememberupdate(event['Queue'], event['Location'])
-
-    def ami_queuememberpaused(self, event):
-        self.innerdata.queuememberupdate(event['Queue'], event['Location'], (event['Paused'],))
-
     def ami_parkedcall(self, event):
         channel = event['Channel']
         exten = event['Exten']
@@ -292,7 +264,7 @@ class AMI_1_8(object):
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
         xivo_srcnum = event.get('XIVO_SRCNUM')
         destination_user_id = int(event['XIVO_DSTID'])
-        destination_name, destination_number = userfeaturesdao.get_name_number(destination_user_id)
+        destination_name, destination_number = userfeatures_dao.get_name_number(destination_user_id)
         if userprops is not None:
             usersummary_src = {'fullname': userprops.get('fullname'),
                                'phonenumber': xivo_srcnum}
@@ -458,7 +430,7 @@ class AMI_1_8(object):
                           'amicommand': 'mailboxcount',
                           'amiargs': full_mailbox.split('@')}
                 actionid = ''.join(random.sample(ALPHANUMS, 10))
-                self._ctiserver.myami.execute_and_track(actionid, params)
+                self.interface_ami.execute_and_track(actionid, params)
         except KeyError:
             logger.warning('ami_messagewaiting Failed to update mailbox')
 
@@ -479,7 +451,7 @@ class AMI_1_8(object):
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
-        unique_id = event['Uniqueid']
+        unique_id = event['UniqueID']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
@@ -510,7 +482,7 @@ class AMI_1_8(object):
             params = {'mode': 'extension',
                       'amicommand': 'sendextensionstate',
                       'amiargs': (extension, event['Context'])}
-            self._ctiserver.myami.execute_and_track(actionid, params)
+            self.interface_ami.execute_and_track(actionid, params)
 
     def ami_voicemailuserentry(self, event):
         fullmailbox = '%s@%s' % (event['VoiceMailbox'], event['VMContext'])

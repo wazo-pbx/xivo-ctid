@@ -2,8 +2,7 @@
 
 import logging
 import time
-from xivo_dao import queue_features_dao
-from xivo_dao.queuestatisticdao import QueueStatisticDAO
+from xivo_dao import queue_features_dao, queue_statistic_dao
 from xivo_cti.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -18,9 +17,6 @@ def register_events():
     callback_handler.register_callback('QueueMemberRemoved', parse_queue_member_status)
     callback_handler.register_callback('QueueMemberPaused', parse_queue_member_status)
 
-    queue_member_callback_handler = context.get('queuemember_service_notifier')
-    queue_member_callback_handler.subscribe(parse_queue_member_update)
-
 
 def parse_queue_member_status(event):
     try:
@@ -30,20 +26,13 @@ def parse_queue_member_status(event):
         logger.warning('Failed to parse QueueSummary event %s', event)
 
 
-def parse_queue_member_update(delta):
-    manager = context.get('queue_statistics_manager')
-    for queue_members in (delta.add, delta.change, delta.delete):
-        for queue_member in queue_members.itervalues():
-            manager.get_queue_summary(queue_member['queue_name'])
-
-
 class QueueStatisticsManager(object):
 
-    def __init__(self):
-        self._queue_statistic_dao = QueueStatisticDAO()
+    def __init__(self, ami_class):
+        self.ami_wrapper = ami_class
 
     def get_statistics(self, queue_name, xqos, window):
-        dao_queue_statistic = self._queue_statistic_dao.get_statistics(queue_name, window, xqos)
+        dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
 
         queue_statistic = QueueStatistic()
         queue_statistic.received_call_count = dao_queue_statistic.received_call_count
@@ -73,6 +62,14 @@ class QueueStatisticsManager(object):
 
     def get_all_queue_summary(self):
         self.ami_wrapper.queuesummary()
+
+    def subscribe_to_queue_member(self, queue_member_notifier):
+        queue_member_notifier.subscribe_to_queue_member_add(self._on_queue_member_event)
+        queue_member_notifier.subscribe_to_queue_member_update(self._on_queue_member_event)
+        queue_member_notifier.subscribe_to_queue_member_remove(self._on_queue_member_event)
+
+    def _on_queue_member_event(self, queue_member):
+        self.get_queue_summary(queue_member.queue_name)
 
 
 class CachingQueueStatisticsManagerDecorator(object):

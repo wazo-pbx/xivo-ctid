@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 class AgentDAO(object):
 
-    def __init__(self, innerdata, queue_member_dao):
+    def __init__(self, innerdata, queue_member_manager):
         self.innerdata = innerdata
-        self.queue_member_dao = queue_member_dao
+        self._queue_member_manager = queue_member_manager
 
     def get_id_from_interface(self, agent_interface):
         _, agent_number = agent_interface.split('/', 1)
@@ -52,11 +52,11 @@ class AgentDAO(object):
     def is_completely_paused(self, agent_id):
         agent_interface = self.get_interface_from_id(agent_id)
 
-        agent_membership_count = self.queue_member_dao.get_queue_count_for_agent(agent_interface)
+        agent_membership_count = self._queue_member_manager.get_queue_count_by_member_name(agent_interface)
         if agent_membership_count == 0:
             return False
 
-        paused_count = self.queue_member_dao.get_paused_count_for_agent(agent_interface)
+        paused_count = self._queue_member_manager.get_paused_count_by_member_name(agent_interface)
         return paused_count == agent_membership_count
 
     def is_logged(self, agent_id):

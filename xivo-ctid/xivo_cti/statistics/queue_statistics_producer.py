@@ -33,8 +33,9 @@ def parse_queue_summary(queuesummary_event):
 
 class QueueStatisticsProducer(object):
 
-    def __init__(self, statistics_notifier):
+    def __init__(self, statistics_notifier, innerdata_dao):
         self.notifier = statistics_notifier
+        self._innerdata_dao = innerdata_dao
         self.queues_of_agent = {}
         self.logged_agents = set()
         self.queues = set()
@@ -43,11 +44,34 @@ class QueueStatisticsProducer(object):
         self.queues.add(queueid)
         self._notify_change(queueid)
 
-    def on_agent_added(self, queueid, agentid):
+    def on_queue_removed(self, queueid):
+        self.queues.remove(queueid)
+        for queues_of_current_agent in self.queues_of_agent.itervalues():
+            queues_of_current_agent.discard(queueid)
+
+    def on_queue_member_added(self, queue_member):
+        if queue_member.is_agent():
+            queueid = self._innerdata_dao.get_queue_id(queue_member.queue_name)
+            agentid = queue_member.member_name
+            self._on_agent_added(queueid, agentid)
+
+    def _on_agent_added(self, queueid, agentid):
         if agentid not in self.queues_of_agent:
             self.queues_of_agent[agentid] = set()
         self.queues_of_agent[agentid].add(queueid)
         self._notify_change(queueid)
+
+    def on_queue_member_removed(self, queue_member):
+        if queue_member.is_agent():
+            queueid = self._innerdata_dao.get_queue_id(queue_member.queue_name)
+            agentid = queue_member.member_name
+            self._on_agent_removed(queueid, agentid)
+
+    def _on_agent_removed(self, queueid, agentid):
+        self.queues_of_agent[agentid].remove(queueid)
+        if agentid in self.logged_agents:
+            self._notify_change(queueid)
+        logger.debug('agent id %s removed from queue id %s', agentid, queueid)
 
     def on_agent_loggedon(self, agentid):
         self.logged_agents.add(agentid)
@@ -62,17 +86,6 @@ class QueueStatisticsProducer(object):
         if agentid in self.queues_of_agent:
             for queueid in self.queues_of_agent[agentid]:
                 self._notify_change(queueid)
-
-    def on_agent_removed(self, queueid, agentid):
-        self.queues_of_agent[agentid].remove(queueid)
-        if agentid in self.logged_agents:
-            self._notify_change(queueid)
-        logger.debug('agent id %s removed from queue id %s', agentid, queueid)
-
-    def on_queue_removed(self, queueid):
-        self.queues.remove(queueid)
-        for queues_of_current_agent in self.queues_of_agent.itervalues():
-            queues_of_current_agent.discard(queueid)
 
     def on_queue_summary(self, queue_id, counters):
         message = {queue_id: {AVAILABLEAGENT_STATNAME: counters.available, EWT_STATNAME: counters.EWT, TALKINGAGENT_STATNAME: counters.Talking}}
@@ -103,3 +116,7 @@ class QueueStatisticsProducer(object):
                         LOGGEDAGENT_STATNAME: self._compute_nb_of_logged_agents(queueid)
                     }
                 }, connection_cti)
+
+    def subscribe_to_queue_member(self, queue_member_notifier):
+        queue_member_notifier.subscribe_to_queue_member_add(self.on_queue_member_added)
+        queue_member_notifier.subscribe_to_queue_member_remove(self.on_queue_member_removed)

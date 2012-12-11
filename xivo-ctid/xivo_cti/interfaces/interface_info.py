@@ -35,15 +35,6 @@ infohelptext = ['',
                 'show_infos               : gives a few informations about the server (version, uptime)',
                 '-- informations about misc lists --',
                 'showlist [listname [id]] : show all lists or the specified list'
-                'show_users               : the users list',
-                'show_phones, show_trunks : phones and trunks lists',
-                'show_queues, show_groups,',
-                'show_agents              : call-center related lists',
-                'show_incalls             : did lists',
-                'show_outcalls            : out calls',
-                'show_meetme              : conference rooms',
-                'show_voicemail           : voicemails',
-                'show_phonebook           : phonebook contents',
                 '-- selective lists --',
                 'show_logged              : only the logged users',
                 'show_logged_ip           : the human-readable IPs of logged users',
@@ -57,7 +48,6 @@ infohelptext = ['',
                 'dumpami disable Dial,Hangup  : enables the line-by-line display of all but these 2 AMI events',
                 'dumpami                      : shows the current settings of this line-by-line display',
                 '-- slightly advanced features --',
-                'kick <user>                  : disconnects the user <user>',
                 'disc <ip> <port>             : closes the socket linked to <ip>:<port> if present',
                 'ami <astid> <command> <args> : executes the CTI-defined AMI function on <astid>',
                 'reverse <dirname> <number>   : lookup the number in the given directory',
@@ -96,11 +86,6 @@ class INFO(interfaces.Interfaces):
                 break
             try:
                 retstr = 'OK'
-                show_command_list = ['show_phones', 'show_trunks',
-                                     'show_queues', 'show_groups', 'show_agents',
-                                     'show_incalls', 'show_outcalls',
-                                     'show_phonebook',
-                                     'show_meetme', 'show_voicemail']
                 if usefulmsg == 'help':
                     clireply.extend(infohelptext)
 
@@ -146,10 +131,12 @@ class INFO(interfaces.Interfaces):
                     if len(command_args) > 2:
                         action = command_args[1]
                         levelname = command_args[2]
-                        levels = { 'debug' : logging.DEBUG,
-                                   'info' : logging.INFO,
-                                   'warning' : logging.WARNING,
-                                   'error' : logging.ERROR}
+                        levels = {
+                            'debug': logging.DEBUG,
+                            'info': logging.INFO,
+                            'warning': logging.WARNING,
+                            'error': logging.ERROR
+                        }
                         if action == 'set':
                             if levelname in levels:
                                 newlevel = levels[levelname]
@@ -177,25 +164,15 @@ class INFO(interfaces.Interfaces):
                         for kk, vv in v.keeplist.iteritems():
                             if len(args) > 2 and not kk in args[2]:
                                 continue
-                            listname, id = k, kk
+                            listname, list_id = k, kk
                             clireply.append('        %s %s' %
-                                            (listname, id))
+                                            (listname, list_id))
                             clireply.append('        config: \n%s' % vv)
                             try:
                                 clireply.append('        status:\n%s' %
-                                                safe.xod_status[listname][id])
+                                                safe.xod_status[listname][list_id])
                             except KeyError:
                                 clireply.append('        status: None')
-
-                elif usefulmsg in show_command_list:
-                    itemname = usefulmsg[5:]
-                    for astid, itm in self._ctiserver.commandclass.getdetails(itemname).iteritems():
-                        try:
-                            clireply.append('%s for %s' % (itemname, astid))
-                            for id, idv in itm.keeplist.iteritems():
-                                clireply.append('%s %s' % (id, idv))
-                        except Exception:
-                            logger.exception('INFO %s', usefulmsg)
 
                 elif usefulmsg.startswith('show_var '):
                     command_args = usefulmsg.split()
@@ -287,7 +264,7 @@ class INFO(interfaces.Interfaces):
 
                 elif usefulmsg.startswith('ami inits '):
                     g = usefulmsg[10:]
-                    self._ctiserver.myami.initrequest(g)
+                    self._ctiserver.interface_ami.initrequest(g)
 
                 elif usefulmsg.startswith('ami '):
                     amicmd = usefulmsg.split()[1:]
@@ -299,45 +276,12 @@ class INFO(interfaces.Interfaces):
                             cmdargs = amicmd[2:]
                             self._ctiserver.amilist.execute(astid, cmd, *cmdargs)
 
-                elif usefulmsg.startswith('webs reload '):
-                    listname = usefulmsg[12:]
+                elif usefulmsg.startswith('reload '):
+                    listname = usefulmsg[7:]
                     self.innerdata.update_config_list(listname)
 
                 elif usefulmsg == 'currentstatus':
                     clireply.extend(self.innerdata.currentstatus())
-
-                elif usefulmsg.startswith('kick '):
-                    command_args = usefulmsg.split()
-                    try:
-                        if len(command_args) > 1:
-                            kickuser = command_args[1]
-                            if kickuser in self._ctiserver.commandclass.connected_users():
-                                uinfo = self._ctiserver.commandclass.connected_users()[kickuser]
-                                if 'login' in uinfo and 'connection' in uinfo.get('login'):
-                                    cid = uinfo.get('login')['connection']
-                                    if cid in self._ctiserver.fdlist_established:
-                                        del self._ctiserver.fdlist_established[cid]
-                                        cid.close()
-                                        self._ctiserver.commandclass.manage_logout(uinfo, 'admin')
-                                        del self._ctiserver.userinfo_by_requester[cid]
-                                        clireply.append('kicked %s' % kickuser)
-                                    else:
-                                        clireply.append('did not kick %s (socket id not in daemon refs)'
-                                                        % kickuser)
-                                else:
-                                    clireply.append('did not kick %s (no connection attributes for the user)'
-                                                    % kickuser)
-                            else:
-                                clireply.append('did not kick %s (user not found)'
-                                                % kickuser)
-                        else:
-                            clireply.append('nobody to kick')
-                    except Exception:
-                        logger.exception('INFO %s', usefulmsg)
-                        clireply.append('(exception when trying to kick - see server log)')
-
-                elif usefulmsg.startswith('%s:' % self._ctiserver.commandset):
-                    self._ctiserver.commandclass.cliaction(self.connid, usefulmsg)
 
                 else:
                     retstr = 'KO'
@@ -347,7 +291,7 @@ class INFO(interfaces.Interfaces):
                 logger.exception('INFO connection [%s] : KO when defining for %s',
                                  usefulmsg, self.requester)
 
-        freply = [ { 'message' : clireply } ]
+        freply = [{'message': clireply}]
         return freply
 
     def reply(self, replylines):
