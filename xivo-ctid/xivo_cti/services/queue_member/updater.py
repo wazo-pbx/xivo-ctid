@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 
 import logging
-from xivo_cti.services.queue_members.member import QueueMember, QueueMemberState
+from xivo_cti.services.queue_member.member import QueueMember, QueueMemberState
 from xivo_dao import queue_member_dao
-from xivo_cti.services.queue_members.common import format_queue_member_id
+from xivo_cti.services.queue_member.common import format_queue_member_id
 
 logger = logging.getLogger('QueueMemberUpdater')
 

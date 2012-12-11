@@ -46,11 +46,11 @@ from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
-from xivo_cti.services.queue_members.manager import QueueMemberManager
-from xivo_cti.services.queue_members.notifier import QueueMemberNotifier
-from xivo_cti.services.queue_members.updater import QueueMemberUpdater
-from xivo_cti.services.queue_members.cti.adapter import QueueMemberCTIAdapter
-from xivo_cti.services.queue_members.cti.subscriber import QueueMemberCTISubscriber
+from xivo_cti.services.queue_member.manager import QueueMemberManager
+from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
+from xivo_cti.services.queue_member.updater import QueueMemberUpdater
+from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
+from xivo_cti.services.queue_member.cti.subscriber import QueueMemberCTISubscriber
 from xivo_cti.services.queue_service_manager import QueueServiceManager
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.services.user_service_notifier import UserServiceNotifier

@@ -3,7 +3,7 @@
 import unittest
 from datetime import datetime
 from mock import Mock
-from xivo_cti.services.queue_members.member import QueueMemberState
+from xivo_cti.services.queue_member.member import QueueMemberState
 
 
 class TestQueueMemberState(unittest.TestCase):

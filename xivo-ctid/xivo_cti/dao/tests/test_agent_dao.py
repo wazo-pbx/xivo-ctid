@@ -27,7 +27,7 @@ import unittest
 from mock import Mock
 from xivo_cti import innerdata
 from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.services.queue_members.manager import QueueMemberManager
+from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent_status import AgentStatus
 
 

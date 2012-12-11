@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from datetime import datetime
-from xivo_cti.services.queue_members import common
+from xivo_cti.services.queue_member import common
 
 
 class QueueMember(object):
