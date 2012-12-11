@@ -435,7 +435,6 @@ class CTIServer(object):
         if not self.ami_sock:
             self._on_ami_down()
 
-        self._queuemember_service_notifier.interface_ami = self.myami
         self._queue_entry_manager._ami = self.myami.amiclass
         self._funckey_manager.ami = self.myami.amiclass
         context.get('device_manager').ami = self.myami.amiclass
