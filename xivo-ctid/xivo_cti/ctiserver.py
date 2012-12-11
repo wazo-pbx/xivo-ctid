@@ -201,7 +201,7 @@ class CTIServer(object):
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
 
-        self.myami = context.get('ami')
+        self.myami = context.get('interface_ami')
         self.commandclass = context.get('ami_18')
 
         queue_entry_manager.register_events()
@@ -424,6 +424,7 @@ class CTIServer(object):
             self.safe.update_config_list_all()
         except Exception:
             logger.exception('commandclass.updates()')
+
         self._init_statistics_producers()
         self._init_agent_availability()
 

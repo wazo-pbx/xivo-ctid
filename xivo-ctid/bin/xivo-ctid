@@ -72,7 +72,7 @@ def main():
 
 
 def _register_context(context):
-    context.register('ami', AMI)
+    context.register('interface_ami', AMI)
     context.register('ami_18', AMI_1_8)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
