@@ -40,7 +40,7 @@ from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
 from xivo_cti.services.current_call.parser import CurrentCallParser
 from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.services.funckey.funckey_manager import FunckeyManager
+from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.presence_service_manager import PresenceServiceManager
