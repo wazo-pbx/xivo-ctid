@@ -187,10 +187,7 @@ class Safe(object):
         self.contexts_mgr = directory.ContextsMgr()
         self.directories_mgr = directory.DirectoriesMgr()
 
-        dbconnection.add_connection(cti_config.DB_URI)
-
     def init_urllist(self, cnf):
-
         self.extenfeatures = {}
 
         if cnf and 'urllist_extenfeatures' in cnf:

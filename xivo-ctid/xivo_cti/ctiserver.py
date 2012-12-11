@@ -153,6 +153,7 @@ class CTIServer(object):
 
     def _init_db_uri(self):
         dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
+        dbconnection.add_connection(cti_config.DB_URI)
         QueueLogger.init()
 
     def setup(self):
@@ -173,8 +174,8 @@ class CTIServer(object):
         self._queue_statistics_producer = context.get('queue_statistics_producer')
         self._queuemember_service_manager = context.get('queuemember_service_manager')
         self._queuemember_service_notifier = context.get('queuemember_service_notifier')
-        context.get('queuemember_service_notifier').send_cti_event = self.send_cti_event
-        context.get('queuemember_service_notifier').ipbx_id = self.myipbxid
+        self._queuemember_service_notifier.send_cti_event = self.send_cti_event
+        self._queuemember_service_notifier.ipbx_id = self.myipbxid
 
         self._innerdata_dao = context.get('innerdata_dao')
         self._user_dao = context.get('user_dao')
@@ -193,6 +194,10 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
+
+        self.safe = context.get('innerdata')
+        self.safe.queuemember_service_manager = self._queuemember_service_manager
+        self.safe.user_service_manager = self._user_service_manager
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
@@ -403,16 +408,11 @@ class CTIServer(object):
         self.ami_sock = None
 
         ipbxconfig = self._config.getconfig('ipbx')
-        self.safe = context.get('innerdata')
         self.safe.init_urllist(ipbxconfig.get('urllists'))
-
-        self.safe.queuemember_service_manager = context.get('queuemember_service_manager')
-        self.safe.user_service_manager = context.get('user_service_manager')
 
         dao.instanciate_dao(self.safe)
 
         self.safe.init_status()
-
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
