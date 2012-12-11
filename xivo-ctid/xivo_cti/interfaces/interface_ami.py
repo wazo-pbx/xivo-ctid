@@ -59,6 +59,7 @@ class AMI(object):
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
+        self.amiclass = None
 
     def init_connection(self):
         config = cti_context.get('config')
