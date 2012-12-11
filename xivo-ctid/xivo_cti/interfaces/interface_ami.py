@@ -52,15 +52,14 @@ class AMI(object):
     FIELD_SEPARATOR = ': '
     ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-    def __init__(self, cti_server, innerdata, config):
+    def __init__(self, cti_server, innerdata, config, ami_class):
         self._ctiserver = cti_server
         self.innerdata = innerdata
         self._input_buffer = ''
         self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
-        ipbxconfig = config.getconfig('ipbx').get('ipbx_connection')
-        self.amiclass = xivo_ami.AMIClass(ipbxconfig)
+        self.amiclass = ami_class
 
     def init_connection(self):
         self.timeout_queue = Queue.Queue()

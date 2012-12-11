@@ -4,6 +4,7 @@ import unittest
 
 from xivo_cti.xivo_ami import AMIClass
 from mock import Mock
+from xivo_cti.cti_config import Config
 
 
 class TestXivoAMI(unittest.TestCase):
@@ -17,7 +18,9 @@ class TestXivoAMI(unittest.TestCase):
                 'password': 'xivouser'
             }
         }
-        ami_class = AMIClass(ipbxconfig)
+        config = Mock(Config)
+        config.getconfig.return_value = ipbxconfig
+        ami_class = AMIClass(config)
         ami_class.ipbxid = 'xivo'
         ami_class.ipaddress = 'localhost'
         ami_class.ipport = 5038

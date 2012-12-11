@@ -49,7 +49,8 @@ class AMIClass(object):
         def __str__(self):
             return self.msg
 
-    def __init__(self, ipbxconfig):
+    def __init__(self, config):
+        ipbxconfig = config.getconfig('ipbx').get('ipbx_connection')
         self.ipbxid = 'xivo'
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
