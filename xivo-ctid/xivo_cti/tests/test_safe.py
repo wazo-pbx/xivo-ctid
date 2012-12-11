@@ -76,19 +76,6 @@ class TestSafe(unittest.TestCase):
 
         self.assertEqual(ret, None)
 
-    def test_handle_getlist_list_id_queuemembers(self):
-        self.safe.queuemembers_config['1'] = {}
-        self.safe.queuemembers_config['2'] = {}
-        expected_result = ('message', {'function': 'listid',
-                                       'listname': 'queuemembers',
-                                       'tipbxid': self._ipbx_id,
-                                       'list': ['1', '2'],
-                                       'class': 'getlist'})
-
-        ret = self.safe.handle_getlist_list_id('queuemembers', 'someone')
-
-        self.assertEqual(ret, expected_result)
-
     def test_split_channel(self):
         sip_trunk_channel = 'SIP/test-ha-1-03745898564'
 

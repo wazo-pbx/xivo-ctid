@@ -170,8 +170,12 @@ class CTIServer(object):
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
-        self._queuemember_service_manager = context.get('queuemember_service_manager')
-        self._queuemember_service_notifier = context.get('queuemember_service_notifier')
+
+        self._queue_member_manager = context.get('queue_member_manager')
+        self._queue_member_notifier = context.get('queue_member_notifier')
+        self._queue_member_updater = context.get('queue_member_updater')
+        self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
+        self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
 
         self._innerdata_dao = context.get('innerdata_dao')
         self._user_dao = context.get('user_dao')
@@ -179,12 +183,13 @@ class CTIServer(object):
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
         self._queue_entry_manager = context.get('queue_entry_manager')
-        self._queue_statistic_manager = context.get('queue_statistics_manager')
+        self._queue_statistics_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
 
         context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
+        self._agent_service_cti_parser = context.get('agent_service_cti_parser')
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
@@ -218,7 +223,7 @@ class CTIServer(object):
 
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
-        SubscribeToQueuesStats.register_callback_params(self._queue_statistic_manager.get_all_queue_summary)
+        SubscribeToQueuesStats.register_callback_params(self._queue_statistics_manager.get_all_queue_summary)
         SubscribeToQueuesStats.register_callback_params(self._queue_entry_manager.publish_all_realtime_stats, ['cti_connection'])
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
@@ -230,14 +235,22 @@ class CTIServer(object):
 
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
 
-        QueueUnPause.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
-        QueuePause.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue', 'dopause'])
         QueueAdd.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+            self._agent_service_cti_parser.queue_add,
+            ['member', 'queue']
+        )
         QueueRemove.register_callback_params(
-            self._queuemember_service_manager.dispach_command, ['command', 'member', 'queue'])
+            self._agent_service_cti_parser.queue_remove,
+            ['member', 'queue']
+        )
+        QueuePause.register_callback_params(
+            self._agent_service_cti_parser.queue_pause,
+            ['member', 'queue']
+        )
+        QueueUnPause.register_callback_params(
+            self._agent_service_cti_parser.queue_unpause,
+            ['member', 'queue']
+        )
 
         SubscribeMeetmeUpdate.register_callback_params(
             context.get('meetme_service_notifier').subscribe,
@@ -254,11 +267,6 @@ class CTIServer(object):
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        callback_handler.register_callback('QueueMember', self._queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberStatus', self._queuemember_service_manager.update_one_queuemember)
-        callback_handler.register_callback('QueueMemberAdded', self._queuemember_service_manager.add_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberRemoved', self._queuemember_service_manager.remove_dynamic_queuemember)
-        callback_handler.register_callback('QueueMemberPaused', self._queuemember_service_manager.toggle_pause)
 
         callback_handler.register_callback('AgentConnect',
                                            lambda event: agent_availability_updater.parse_ami_answered(event,
@@ -287,6 +295,8 @@ class CTIServer(object):
 
         current_call_parser = context.get('current_call_parser')
         current_call_parser.register_ami_events()
+
+        self._queue_member_updater.register_ami_events(callback_handler)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
@@ -389,22 +399,26 @@ class CTIServer(object):
 
         ipbxconfig = self._config.getconfig('ipbx')
         safe = innerdata.Safe(self, ipbxconfig.get('urllists'))
+        safe.queue_member_cti_adapter = self._queue_member_cti_adapter
         safe.user_service_manager = self._user_service_manager
         safe.user_dao = self._user_dao
-        safe.queuemember_service_manager = self._queuemember_service_manager
-        dao.instanciate_dao(safe)
+        dao.instanciate_dao(safe, self._queue_member_manager)
         safe.init_status()
         self.safe = safe
         self._user_dao._innerdata = safe
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
         self._innerdata_dao.innerdata = safe
-        self._queuemember_service_notifier.send_cti_event = self.send_cti_event
-        self._queuemember_service_notifier.ipbx_id = self.myipbxid
         self._user_service_manager.presence_service_executor._innerdata = safe
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
+
+        self._queue_member_updater.on_initialization()
+        self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
+        self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
 
         logger.info('(1/3) Getting configuration')
         try:
@@ -423,13 +437,12 @@ class CTIServer(object):
         if not self.ami_sock:
             self._on_ami_down()
 
-        self._queuemember_service_notifier.interface_ami = self.myami
         self._queue_entry_manager._ami = self.myami.amiclass
         self._funckey_manager.ami = self.myami.amiclass
         context.get('device_manager').ami = self.myami.amiclass
         context.get('agent_executor').ami = self.myami.amiclass
         context.get('current_call_manager').ami = self.myami.amiclass
-        self._queue_statistic_manager.ami_wrapper = self.myami.amiclass
+        self._queue_statistics_manager.ami_wrapper = self.myami.amiclass
 
         logger.info('(3/3) Listening sockets (CTI, WEBI, INFO)')
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - start_time))
@@ -656,8 +669,7 @@ class CTIServer(object):
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
             elif kind == 'WEBI':
-                interface = interface_webi.WEBI(self)
-                interface.queuemember_service_manager = self._queuemember_service_manager
+                interface = interface_webi.WEBI(self, self._queue_member_updater)
 
             interface.connected(socketobject)
 

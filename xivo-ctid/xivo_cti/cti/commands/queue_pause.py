@@ -42,9 +42,7 @@ class QueuePause(CTICommand):
 
     def _init_from_dict(self, msg):
         super(QueuePause, self)._init_from_dict(msg)
-        self.command = self.COMMAND
         self.member = msg.get(self.MEMBER)
         self.queue = msg.get(self.QUEUE)
-        self.dopause = True
 
 CTICommandFactory.register_class(QueuePause)

@@ -25,9 +25,9 @@
 import unittest
 
 from mock import Mock
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.queue_member_dao import QueueMemberDAO
 from xivo_cti import innerdata
+from xivo_cti.dao.agent_dao import AgentDAO
+from xivo_cti.services.queue_members.manager import QueueMemberManager
 from xivo_cti.services.agent_status import AgentStatus
 
 
@@ -76,10 +76,10 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_yes(self):
         expected_result = True
         agent_id = 12
-        mock_queue_member_dao = Mock(QueueMemberDAO)
-        mock_queue_member_dao.get_paused_count_for_agent.return_value = 2
-        mock_queue_member_dao.get_queue_count_for_agent.return_value = 2
-        agent_dao = AgentDAO(self.innerdata, mock_queue_member_dao)
+        queue_member_manager = Mock(QueueMemberManager)
+        queue_member_manager.get_paused_count_by_member_name.return_value = 2
+        queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
         agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = agent_dao.is_completely_paused(agent_id)
@@ -89,10 +89,10 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_no(self):
         expected_result = False
         agent_id = 12
-        mock_queue_member_dao = Mock(QueueMemberDAO)
-        mock_queue_member_dao.get_paused_count_for_agent.return_value = 1
-        mock_queue_member_dao.get_queue_count_for_agent.return_value = 2
-        agent_dao = AgentDAO(self.innerdata, mock_queue_member_dao)
+        queue_member_manager = Mock(QueueMemberManager)
+        queue_member_manager.get_paused_count_by_member_name.return_value = 1
+        queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
         agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = agent_dao.is_completely_paused(agent_id)
@@ -102,10 +102,10 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_no_queues(self):
         expected_result = False
         agent_id = 12
-        mock_queue_member_dao = Mock(QueueMemberDAO)
-        mock_queue_member_dao.get_paused_count_for_agent.return_value = 0
-        mock_queue_member_dao.get_queue_count_for_agent.return_value = 0
-        agent_dao = AgentDAO(self.innerdata, mock_queue_member_dao)
+        queue_member_manager = Mock(QueueMemberManager)
+        queue_member_manager.get_paused_count_by_member_name.return_value = 0
+        queue_member_manager.get_queue_count_by_member_name.return_value = 0
+        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
         agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = agent_dao.is_completely_paused(agent_id)

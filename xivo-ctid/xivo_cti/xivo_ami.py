@@ -276,6 +276,14 @@ class AMIClass(object):
             command_details.append(('Message', message))
         return self._exec_command('QueueLog', command_details)
 
+    def queuestatus(self, queue_name=None, member_name=None):
+        command_details = []
+        if queue_name is not None:
+            command_details.append(('Queue', queue_name))
+        if member_name is not None:
+            command_details.append(('Member', member_name))
+        return self._exec_command('QueueStatus', command_details)
+
     def queuesummary(self, queuename=None):
         if queuename is None:
             return self._exec_command('QueueSummary', [])

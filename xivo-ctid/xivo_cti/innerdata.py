@@ -134,11 +134,6 @@ class Safe(object):
         'outcalls': [],
         'contexts': [],
         'phonebooks': [],
-        'queuemembers': [
-            'queue_name',
-            'interface',
-            'paused'
-        ]
     }
 
     props_status = {'users': {'connection': None,
@@ -182,7 +177,6 @@ class Safe(object):
         self.timeout_queue = Queue.Queue()
 
         self.channels = {}
-        self.queuemembers_config = {}
         self.faxes = {}
 
         self.displays_mgr = directory.DisplaysMgr()
@@ -240,7 +234,7 @@ class Safe(object):
                 user_contexts = self.xod_config['users'].get_contexts(user_id)
                 item_ids = self.xod_config[listname].list_ids_in_contexts(user_contexts)
             elif listname == 'queuemembers':
-                item_ids = self.queuemembers_config.keys()
+                item_ids = self.queue_member_cti_adapter.get_list()
             return 'message', {'function': 'listid',
                                'listname': listname,
                                'tipbxid': self.ipbxid,
@@ -430,8 +424,10 @@ class Safe(object):
                 user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == dest_id
             elif dest_type == 'queue' and dest_id:
+                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
                 domatch = self.queuemember_service_manager.is_queue_member(userid, dest_id)
             elif dest_type == 'group' and dest_id:
+                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
                 domatch = self.queuemember_service_manager.is_group_member(userid, dest_id)
         else:
             # 'all' case
@@ -485,13 +481,10 @@ class Safe(object):
         return zz.get('userstatus')
 
     def get_config(self, listname, item_id, limit=None, user_contexts=None):
-        reply = {}
         if listname == 'queuemembers':
-            if item_id in self.queuemembers_config:
-                reply = self.queuemembers_config[item_id]
-            else:
-                reply = {}
-            return reply
+            return self.queue_member_cti_adapter.get_config(item_id)
+
+        reply = {}
         item_config = self.xod_config[listname].get_item_in_contexts(item_id, user_contexts)
         if not isinstance(item_config, dict):
             logger.warning('get_config : problem with item_id %s in listname %s',
@@ -511,14 +504,12 @@ class Safe(object):
         if channel_id in self.channels:
             return self.channels[channel_id].properties
 
-    def get_status_queuemembers(self, queue_member_id):
-        return self.queuemembers_config.get(queue_member_id)
-
     def get_status(self, listname, item_id, limit=None):
         if listname == 'channels':
             return self.get_status_channel(item_id, limit)
-        if listname == 'queuemembers':
-            return self.get_status_queuemembers(item_id)
+        elif listname == 'queuemembers':
+            return self.queue_member_cti_adapter.get_status(item_id)
+
         reply = {}
         statusdict = self.xod_status.get(listname)
         if not isinstance(statusdict, dict):
@@ -623,8 +614,7 @@ class Safe(object):
             if item_id and item_id in self.channels:
                 return self.channels[item_id].properties
         elif listname == 'queuemembers':
-            if item_id and item_id in self.queuemembers_config:
-                return self.queuemembers_config.get(item_id)
+            return self.queue_member_cti_adapter.get_status(item_id)
         else:
             if item_id and item_id in self.xod_status[listname]:
                 return self.xod_status[listname].get(item_id)

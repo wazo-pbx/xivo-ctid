@@ -42,7 +42,6 @@ class QueueAdd(CTICommand):
 
     def _init_from_dict(self, msg):
         super(QueueAdd, self)._init_from_dict(msg)
-        self.command = self.COMMAND
         self.member = msg.get(self.MEMBER)
         self.queue = msg.get(self.QUEUE)
 

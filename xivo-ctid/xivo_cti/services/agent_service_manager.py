@@ -24,16 +24,19 @@
 
 import logging
 from xivo_cti.tools.idconverter import IdConverter
-from xivo_dao import userfeatures_dao, agentfeatures_dao, linefeatures_dao
+from xivo_dao import agentfeatures_dao
+from xivo_dao import linefeatures_dao
+from xivo_dao import userfeatures_dao
+from xivo_dao import queue_features_dao
 
 logger = logging.getLogger('Agent Manager')
 
 
 class AgentServiceManager(object):
 
-    def __init__(self, agent_executor, innerdata_dao):
+    def __init__(self, agent_executor, queue_member_manager):
         self.agent_executor = agent_executor
-        self.innerdata_dao = innerdata_dao
+        self._queue_member_manager = queue_member_manager
 
     def on_cti_agent_login(self, user_id, agent_xid=None, agent_exten=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
@@ -76,42 +79,67 @@ class AgentServiceManager(object):
         return [linefeatures_dao.number(line_id) for line_id in line_ids]
 
     def login(self, agent_id, exten, context):
+        logger.info('Logging in agent %r', agent_id)
         self.agent_executor.login(agent_id, exten, context)
 
     def logoff(self, agent_id):
+        logger.info('Logging off agent %r', agent_id)
         self.agent_executor.logoff(agent_id)
 
-    def queueadd(self, queuename, agentid, paused=False, skills=''):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queue_add(queuename, interface, paused, skills)
+    def add_agent_to_queue(self, agent_id, queue_id):
+        logger.info('Adding agent %r to queue %r', agent_id, queue_id)
+        self.agent_executor.add_to_queue(agent_id, queue_id)
 
-    def queueremove(self, queuename, agentid):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queue_remove(queuename, interface)
+    def remove_agent_from_queue(self, agent_id, queue_id):
+        logger.info('Removing agent %r from queue %r', agent_id, queue_id)
+        self.agent_executor.remove_from_queue(agent_id, queue_id)
 
-    def queuepause_all(self, agentid):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queues_pause(interface)
+    def pause_agent_on_queue(self, agent_id, queue_id):
+        logger.info('Pausing agent %r on queue %r', agent_id, queue_id)
+        agent_interface = self._get_agent_interface(agent_id)
+        if agent_interface:
+            queue_name = queue_features_dao.queue_name(queue_id)
+            self.agent_executor.pause_on_queue(agent_interface, queue_name)
 
-    def queueunpause_all(self, agentid):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queues_unpause(interface)
+    def pause_agent_on_all_queues(self, agent_id):
+        logger.info('Pausing agent %r on all queues', agent_id)
+        agent_interface = self._get_agent_interface(agent_id)
+        if agent_interface:
+            self.agent_executor.pause_on_all_queues(agent_interface)
 
-    def queuepause(self, queuename, agentid):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queue_pause(queuename, interface)
+    def unpause_agent_on_queue(self, agent_id, queue_id):
+        logger.info('Unpausing agent %r on queue %r', agent_id, queue_id)
+        agent_interface = self._get_agent_interface(agent_id)
+        if agent_interface:
+            queue_name = queue_features_dao.queue_name(queue_id)
+            self.agent_executor.unpause_on_queue(agent_interface, queue_name)
 
-    def queueunpause(self, queuename, agentid):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.queue_unpause(queuename, interface)
+    def unpause_agent_on_all_queues(self, agent_id):
+        logger.info('Unpausing agent %r on all queues', agent_id)
+        agent_interface = self._get_agent_interface(agent_id)
+        if agent_interface:
+            self.agent_executor.unpause_on_all_queues(agent_interface)
 
-    def set_presence(self, agentid, presence):
-        interface = agentfeatures_dao.agent_interface(agentid)
-        if interface is not None:
-            self.agent_executor.log_presence(interface, presence)
+    def set_presence(self, agent_id, presence):
+        agent_member_name = agentfeatures_dao.agent_interface(agent_id)
+        if agent_member_name is not None:
+            self.agent_executor.log_presence(agent_member_name, presence)
+
+    def _get_agent_interface(self, agent_id):
+        # convoluted way to get the agent interface (not the agent member name) of an agent
+        # would be easier if the interface was kept in an "agent state" object instead
+        # of only in the queue member state
+        agent_number = agentfeatures_dao.agent_number(agent_id)
+        queue_members = self._queue_member_manager.get_queue_members_by_agent_number(agent_number)
+        if not queue_members:
+            logger.warning('Could not get interface of agent %r: no queue members found',
+                           agent_id)
+            return None
+
+        interface = queue_members[0].state.interface
+        if not interface:
+            logger.warning('Could not get interface of agent %r: no interface associated',
+                           agent_id)
+            return None
+
+        return interface

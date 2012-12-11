@@ -66,8 +66,9 @@ class BadWebiCommandException(Exception):
 class WEBI(interfaces.Interfaces):
     kind = 'WEBI'
 
-    def __init__(self, ctiserver):
+    def __init__(self, ctiserver, queue_member_updater):
         interfaces.Interfaces.__init__(self, ctiserver)
+        self._queue_member_updater = queue_member_updater
         self._config = context.get('config')
 
     def connected(self, connid):
@@ -111,7 +112,7 @@ class WEBI(interfaces.Interfaces):
         elif msg == 'xivo[cticonfig,update]':
             self._ctiserver.update_userlist.append(msg)
         elif msg == 'xivo[queuemember,update]':
-            self.queuemember_service_manager.update_config()
+            self.queue_member_updater.on_webi_update()
         elif sre_obj:
             self._object_request_cmd(sre_obj)
         else:

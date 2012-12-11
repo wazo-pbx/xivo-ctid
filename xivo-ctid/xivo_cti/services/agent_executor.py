@@ -22,32 +22,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
+
+logger = logging.getLogger(__name__)
 
 
 class AgentExecutor(object):
 
     def __init__(self, agent_client):
         self._agent_client = agent_client
-
-    def queue_add(self, queuename, interface, paused=False, skills=''):
-        self.ami.queueadd(queuename, interface, paused, skills)
-
-    def queue_remove(self, queuename, interface):
-        self.ami.queueremove(queuename, interface)
-
-    def queue_pause(self, queuename, interface):
-        self.ami.queuepause(queuename, interface, 'True')
-
-    def queue_unpause(self, queuename, interface):
-        self.ami.queuepause(queuename, interface, 'False')
-
-    def queues_pause(self, interface):
-        self.ami.queuepauseall(interface, 'True')
-
-    def queues_unpause(self, interface):
-        self.ami.queuepauseall(interface, 'False')
 
     def login(self, agent_id, exten, context):
         self._agent_client.login_agent(agent_id, exten, context)
@@ -59,5 +44,25 @@ class AgentExecutor(object):
             if e.error != error.NOT_LOGGED:
                 raise
 
-    def log_presence(self, agent_interface, presence):
-        self.ami.queuelog('NONE', 'PRESENCE', interface=agent_interface, message=presence)
+    def add_to_queue(self, agent_id, queue_id):
+        # TODO a implementer dans agent_client
+        self._agent_client.add_agent_to_queue(agent_id, queue_id)
+
+    def remove_from_queue(self, agent_id, queue_id):
+        # TODO a implementer dans agent_client
+        self._agent_client.remove_agent_from_queue(agent_id, queue_id)
+
+    def pause_on_queue(self, agent_interface, queue_name):
+        self.ami.queuepause(queue_name, agent_interface, 'True')
+
+    def pause_on_all_queues(self, agent_interface):
+        self.ami.queuepauseall(agent_interface, 'True')
+
+    def unpause_on_queue(self, agent_interface, queue_name):
+        self.ami.queuepause(queue_name, agent_interface, 'False')
+
+    def unpause_on_all_queues(self, agent_interface):
+        self.ami.queuepauseall(agent_interface, 'False')
+
+    def log_presence(self, agent_member_name, presence):
+        self.ami.queuelog('NONE', 'PRESENCE', interface=agent_member_name, message=presence)
