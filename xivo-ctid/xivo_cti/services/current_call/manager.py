@@ -35,14 +35,13 @@ class CurrentCallManager(object):
 
     _SWITCHBOARD_HOLD_QUEUE = '__switchboard_hold'
 
-    def __init__(self,
-                 current_call_notifier,
-                 current_call_formatter,
-                 ami_class):
+    def __init__(self, current_call_notifier, current_call_formatter, ami_class, scheduler, device_manager):
         self._lines = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
         self.ami = ami_class
+        self.scheduler = scheduler
+        self.device_manager = device_manager
 
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
@@ -65,6 +64,10 @@ class CurrentCallManager(object):
                  'on_hold': False}
             ]
             self._current_call_notifier.publish_current_call(line_2)
+
+    def schedule_answer(self, user_id, delay):
+        device_id = userfeatures_dao.get_device_id(user_id)
+        self.scheduler.schedule(delay, self.device_manager.answer, device_id)
 
     def masquerade(self, original, clone):
         line, position = self._find_line_and_position(original)
@@ -166,6 +169,7 @@ class CurrentCallManager(object):
                  ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
                  ('Async', 'true')]
             )
+            self.schedule_answer(user_id, 0.25)
 
     def _get_current_call_channel(self, user_id):
         try:
