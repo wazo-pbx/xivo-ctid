@@ -26,13 +26,16 @@ import unittest
 from tests.mock import Mock, call
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.interfaces.interface_ami import AMI
 
 
 class TestAgentExecutor(unittest.TestCase):
 
     def setUp(self):
         self.agent_client = Mock()
-        self.executor = AgentExecutor(self.agent_client)
+        interface_ami = Mock(AMI)
+        interface_ami.amiclass = Mock()
+        self.executor = AgentExecutor(self.agent_client, interface_ami)
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 

@@ -49,13 +49,13 @@ class AMIClass(object):
         def __str__(self):
             return self.msg
 
-    def __init__(self, ipbxid, ipaddress, ipport, loginname, password, events):
-        self.ipbxid = ipbxid
-        self.ipaddress = ipaddress
-        self.ipport = ipport
-        self.loginname = loginname
-        self.password = password
-        self.events = events
+    def __init__(self, ipbxconfig):
+        self.ipbxid = 'xivo'
+        self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
+        self.ipport = int(ipbxconfig.get('ipport', 5038))
+        self.loginname = ipbxconfig.get('username', 'xivouser')
+        self.password = ipbxconfig.get('password', 'xivouser')
+        self.events = True
         self.actionid = None
 
     def connect(self):

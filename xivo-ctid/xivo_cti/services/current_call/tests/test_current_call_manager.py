@@ -36,6 +36,7 @@ from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
 from xivo_cti import xivo_ami
 from xivo_cti import dao
+from xivo_cti.interfaces.interface_ami import AMI
 
 
 class TestCurrentCallManager(unittest.TestCase):
@@ -43,9 +44,11 @@ class TestCurrentCallManager(unittest.TestCase):
     def setUp(self):
         self.notifier = Mock(notifier.CurrentCallNotifier)
         self.formatter = Mock(formatter.CurrentCallFormatter)
-        self.ami_class = Mock(xivo_ami.AMIClass)
-        self.manager = manager.CurrentCallManager(self.notifier, self.formatter)
-        self.manager.ami = self.ami_class
+        self.interface_ami = Mock(AMI)
+        self.interface_ami.amiclass = Mock(xivo_ami.AMIClass)
+        self.manager = manager.CurrentCallManager(self.notifier,
+                                                  self.formatter,
+                                                  self.interface_ami)
         self.line_1 = 'sip/tc8nb4'
         self.line_2 = 'sip/6s7foq'
         self.channel_1 = 'SIP/tc8nb4-00000004'
@@ -320,7 +323,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.ami_class.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
+        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
@@ -329,7 +332,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.assertEqual(self.ami_class.sendcommand.call_count, 0)
+        self.assertEqual(self.manager.ami.sendcommand.call_count, 0)
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_switchboard_hold(self, mock_get_line_identity):
@@ -355,7 +358,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.switchboard_hold(user_id)
 
-        self.ami_class.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
+        self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_switchboard_unhold(self, mock_get_line_identity):
@@ -372,7 +375,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.switchboard_unhold(user_id, unique_id)
 
-        self.ami_class.sendcommand.assert_called_once_with(
+        self.manager.ami.sendcommand.assert_called_once_with(
             'Originate',
             [('Channel', user_line),
              ('Application', 'Bridge'),

@@ -38,6 +38,7 @@ from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.interfaces.interface_ami import AMI
 
 QUEUE_NAME = 'testqueue'
 QUEUE_ID = 77
@@ -107,9 +108,12 @@ class TestQueueEntryManager(unittest.TestCase):
         self.encoder = Mock(QueueEntryEncoder)
         self.notifier = Mock(QueueEntryNotifier)
         self.statistics_notifier = Mock(StatisticsNotifier)
+        interface_ami = Mock(AMI)
+        interface_ami.amiclass = Mock()
         self.manager = QueueEntryManager(self.notifier,
                                          self.encoder,
-                                         self.statistics_notifier)
+                                         self.statistics_notifier,
+                                         interface_ami)
 
     def tearDown(self):
         QueueEntryManager._instance = None

@@ -164,6 +164,9 @@ class CTIServer(object):
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
 
+        self.myami = context.get('interface_ami')
+        self.commandclass = context.get('ami_18')
+
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
@@ -200,9 +203,6 @@ class CTIServer(object):
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
-
-        self.myami = context.get('interface_ami')
-        self.commandclass = context.get('ami_18')
 
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()

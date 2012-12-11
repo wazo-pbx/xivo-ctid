@@ -27,13 +27,16 @@ from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from mock import patch
 from mock import Mock
+from xivo_cti.interfaces.interface_ami import AMI
 
 
 class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
         self.user_id = 123
-        self.manager = FunckeyManager()
+        interface_ami = Mock(AMI)
+        interface_ami.amiclass = Mock()
+        self.manager = FunckeyManager(interface_ami)
         xivo_helpers.fkey_extension = Mock()
         self.ami = Mock(AMIClass)
         self.manager.ami = self.ami

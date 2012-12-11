@@ -29,6 +29,7 @@ from xivo_cti.services.queuemember_service_notifier import QueueMemberServiceNot
 from xivo_cti.tools.delta_computer import DictDelta
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.services.queue_service_manager import NotAQueueException
+from xivo_cti.interfaces.interface_ami import AMI
 
 
 class TestQueueMemberServiceNotifier(unittest.TestCase):
@@ -36,9 +37,12 @@ class TestQueueMemberServiceNotifier(unittest.TestCase):
     def setUp(self):
         self.ipbx_id = 'xivo'
         self.innerdata_dao = Mock(InnerdataDAO)
+        interface_ami = Mock(AMI)
+        interface_ami.amiclass = Mock()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)
         self.notifier = QueueMemberServiceNotifier(self.innerdata_dao,
-                                                   self.queue_statistics_producer)
+                                                   self.queue_statistics_producer,
+                                                   interface_ami)
         self.notifier.ipbx_id = self.ipbx_id
         self.notifier.send_cti_event = Mock()
         self.callback = Mock()
