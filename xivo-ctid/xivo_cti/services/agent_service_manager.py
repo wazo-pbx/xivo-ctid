@@ -25,7 +25,7 @@
 import logging
 from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agentfeatures_dao
-from xivo_dao import linefeatures_dao
+from xivo_dao import line_dao
 from xivo_dao import userfeatures_dao
 from xivo_dao import queue_features_dao
 
@@ -48,7 +48,7 @@ class AgentServiceManager(object):
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if extens else None
 
-        if not linefeatures_dao.is_phone_exten(agent_exten):
+        if not line_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
@@ -75,8 +75,8 @@ class AgentServiceManager(object):
         user_ids = userfeatures_dao.find_by_agent_id(agent_id)
         line_ids = []
         for user_id in user_ids:
-            line_ids.extend(linefeatures_dao.find_line_id_by_user_id(user_id))
-        return [linefeatures_dao.number(line_id) for line_id in line_ids]
+            line_ids.extend(line_dao.find_line_id_by_user_id(user_id))
+        return [line_dao.number(line_id) for line_id in line_ids]
 
     def login(self, agent_id, exten, context):
         logger.info('Logging in agent %r', agent_id)
