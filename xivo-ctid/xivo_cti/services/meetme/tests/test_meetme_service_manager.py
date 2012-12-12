@@ -619,7 +619,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.mock_manager.unmute.assert_called_once_with('800', 1)
 
     @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=False))
-    @patch('xivo_dao.linefeatures_dao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
+    @patch('xivo_dao.line_dao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
     @patch('time.time')
     def test_join_originate(self, mock_time):
         channel = 'SIP/kljfh-1234'

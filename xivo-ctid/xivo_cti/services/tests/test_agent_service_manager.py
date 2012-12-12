@@ -42,9 +42,9 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager = AgentServiceManager(agent_executor,
                                                  queue_member_manager)
 
-    @patch('xivo_dao.linefeatures_dao.is_phone_exten')
-    @patch('xivo_dao.linefeatures_dao.number')
-    @patch('xivo_dao.linefeatures_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.line_dao.number')
+    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
@@ -84,9 +84,9 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.logoff.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.linefeatures_dao.is_phone_exten')
-    @patch('xivo_dao.linefeatures_dao.number')
-    @patch('xivo_dao.linefeatures_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.line_dao.number')
+    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
@@ -116,9 +116,9 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
-    @patch('xivo_dao.linefeatures_dao.is_phone_exten')
-    @patch('xivo_dao.linefeatures_dao.number')
-    @patch('xivo_dao.linefeatures_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.line_dao.number')
+    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agentfeatures_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
@@ -147,8 +147,8 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
-    @patch('xivo_dao.linefeatures_dao.number')
-    @patch('xivo_dao.linefeatures_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.line_dao.number')
+    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     def test_find_agent_exten(self,
                               mock_find_by_agent_id,
