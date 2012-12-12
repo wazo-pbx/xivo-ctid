@@ -44,8 +44,8 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def tearDown(self):
         context.reset()
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
-    @patch('xivo_dao.userfeatures_dao.get_reachable_contexts')
+    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_reachable_contexts')
     def test_subscribe_update(self, get_reachable_contexts, get_line_identity):
         user_id = 5
         user_contexts = ['test_ctx']

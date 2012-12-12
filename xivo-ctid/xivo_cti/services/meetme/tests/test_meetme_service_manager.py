@@ -46,7 +46,7 @@ class TestUserServiceManager(unittest.TestCase):
     def tearDown(self):
         context.reset()
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_join(self):
         channel = 'SIP/i7vbu0-00000001'
         number = '800'
@@ -74,7 +74,7 @@ class TestUserServiceManager(unittest.TestCase):
                                                        caller_id_name,
                                                        caller_id_number)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_join_paging(self):
         channel = 'SIP/i7vbu0-00000001'
         number = '8834759845'
@@ -98,9 +98,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.mock_manager.join.call_count, 0)
 
-    @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
-    @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=5))
-    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
+    @patch('xivo_dao.meetme_dao.find_by_confno', Mock(return_value=5))
+    @patch('xivo_dao.meetme_dao.muted_on_join_by_number', Mock(return_value=True))
     @patch('time.time')
     def test_join(self, mock_time):
         start = 12345.123
@@ -124,9 +124,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
-    @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'test')))
-    @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=4))
-    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'test')))
+    @patch('xivo_dao.meetme_dao.find_by_confno', Mock(return_value=4))
+    @patch('xivo_dao.meetme_dao.muted_on_join_by_number', Mock(return_value=True))
     @patch('time.time')
     def test_join_second(self, mock_time):
         start_time = 12345678.123
@@ -196,8 +196,8 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'my_context')))
-    @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=2))
+    @patch('xivo_dao.meetme_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'my_context')))
+    @patch('xivo_dao.meetme_dao.find_by_confno', Mock(return_value=2))
     def test_set_room_config(self):
         self.manager._set_room_config(conf_room_number)
 
@@ -212,7 +212,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_leave(self):
         event = {'Event': 'MeetmeLeave',
                  'Privilege': 'call,all',
@@ -230,7 +230,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_manager.leave.assert_called_once_with('800', 1)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_leave_paging(self):
         event = {'Event': 'MeetmeLeave',
                  'Privilege': 'call,all',
@@ -308,9 +308,9 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertTrue(self.manager._has_members('800'))
 
-    @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
-    @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=2))
-    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=False))
+    @patch('xivo_dao.meetme_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, True, 'default')))
+    @patch('xivo_dao.meetme_dao.find_by_confno', Mock(return_value=2))
+    @patch('xivo_dao.meetme_dao.muted_on_join_by_number', Mock(return_value=False))
     @patch('time.time')
     def test_join_when_empty(self, mock_time):
         channel = 'SIP/kljfh-1234'
@@ -339,7 +339,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
-    @patch('xivo_dao.meetme_features_dao.get_configs')
+    @patch('xivo_dao.meetme_dao.get_configs')
     def test_initial_state(self, mock_get_configs):
         mock_get_configs.return_value = [('Conference1', '9000', True, 'default'),
                                          ('Conference2', '9001', False, 'test'),
@@ -380,7 +380,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
-    @patch('xivo_dao.meetme_features_dao.get_configs')
+    @patch('xivo_dao.meetme_dao.get_configs')
     def test_initialize_configs_with_members(self, mock_get_configs):
         mock_get_configs.return_value = [('Conference2', '9001', False, 'test'),
                                          ('Conference3', '9002', False, 'test')]
@@ -422,7 +422,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.manager._cache, expected)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_meetmelist(self):
         channel = 'SIP/pcm_dev-00000003'
         event = {'Event': 'MeetmeList',
@@ -443,7 +443,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_manager.refresh.assert_called_once_with(channel, '800', 1, 'My Name', '666', False)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_meetmelist_paging(self):
         channel = 'SIP/pcm_dev-00000003'
         event = {'Event': 'MeetmeList',
@@ -464,8 +464,8 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEqual(self.mock_manager.refresh.call_count, 0)
 
-    @patch('xivo_dao.meetme_features_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, False, 'dev')))
-    @patch('xivo_dao.meetme_features_dao.find_by_confno', Mock(return_value=1))
+    @patch('xivo_dao.meetme_dao.get_config', Mock(return_value=(conf_room_name, conf_room_number, False, 'dev')))
+    @patch('xivo_dao.meetme_dao.find_by_confno', Mock(return_value=1))
     def test_refresh_empty(self):
         channel = 'DAHDI/i1/5555555555-1'
         name = 'First Testeur'
@@ -576,7 +576,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_mute(self):
         event = {'Event': 'MeetmeMute',
                  'Privilege': 'call,all',
@@ -590,7 +590,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_manager.mute.assert_called_once_with('800', 1)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=False))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=False))
     def test_parse_mute_paging(self):
         event = {'Event': 'MeetmeMute',
                  'Privilege': 'call,all',
@@ -604,7 +604,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.assertEquals(self.mock_manager.mute.call_count, 0)
 
-    @patch('xivo_dao.meetme_features_dao.is_a_meetme', Mock(return_value=True))
+    @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_unmute(self):
         event = {'Event': 'MeetmeMute',
                  'Privilege': 'call,all',
@@ -618,8 +618,8 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.mock_manager.unmute.assert_called_once_with('800', 1)
 
-    @patch('xivo_dao.meetme_features_dao.muted_on_join_by_number', Mock(return_value=False))
-    @patch('xivo_dao.linefeatures_dao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
+    @patch('xivo_dao.meetme_dao.muted_on_join_by_number', Mock(return_value=False))
+    @patch('xivo_dao.line_dao.get_cid_for_channel', Mock(return_value=('"Tester 1" <1002>', 'Tester 1', '1002')))
     @patch('time.time')
     def test_join_originate(self, mock_time):
         channel = 'SIP/kljfh-1234'

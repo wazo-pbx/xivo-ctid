@@ -27,7 +27,9 @@ import random
 import string
 import time
 
-from xivo_dao import group_dao, userfeatures_dao, queue_features_dao
+from xivo_dao import group_dao
+from xivo_dao import user_dao
+from xivo_dao import queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -262,7 +264,7 @@ class AMI_1_8(object):
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
         xivo_srcnum = event.get('XIVO_SRCNUM')
         destination_user_id = int(event['XIVO_DSTID'])
-        destination_name, destination_number = userfeatures_dao.get_name_number(destination_user_id)
+        destination_name, destination_number = user_dao.get_name_number(destination_user_id)
         if userprops is not None:
             usersummary_src = {'fullname': userprops.get('fullname'),
                                'phonenumber': xivo_srcnum}

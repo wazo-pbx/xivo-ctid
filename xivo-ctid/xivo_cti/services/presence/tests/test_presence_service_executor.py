@@ -71,8 +71,8 @@ class TestPresenceServiceExecutor(unittest.TestCase):
                 }
             }
 
-    @patch('xivo_dao.userfeatures_dao.agent_id')
-    @patch('xivo_dao.userfeatures_dao.get_profile')
+    @patch('xivo_dao.user_dao.agent_id')
+    @patch('xivo_dao.user_dao.get_profile')
     def test_execute_actions_with_disconnected(self, mock_get_profile, mock_agent_id):
         user_id = 64
         agent_id = 33
@@ -90,8 +90,8 @@ class TestPresenceServiceExecutor(unittest.TestCase):
 
         self.agent_service_manager.logoff.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.userfeatures_dao.agent_id')
-    @patch('xivo_dao.userfeatures_dao.get_profile')
+    @patch('xivo_dao.user_dao.agent_id')
+    @patch('xivo_dao.user_dao.get_profile')
     def test_execute_actions_with_available(self, mock_get_profile, mock_agent_id):
         user_id = 64
         agent_id = 33
@@ -110,7 +110,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         self.user_service_manager.set_dnd.assert_called_once_with(user_id, False)
         self.agent_service_manager.unpause_agent_on_all_queues.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.userfeatures_dao.get_profile')
+    @patch('xivo_dao.user_dao.get_profile')
     def test_execute_actions_unknown(self, mock_get_profile):
         user_id = 64
         user_profile = 'client'

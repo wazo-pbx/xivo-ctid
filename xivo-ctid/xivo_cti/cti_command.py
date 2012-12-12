@@ -33,7 +33,8 @@ from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services.call_history import manager as call_history_manager
-from xivo_dao import userfeatures_dao, extensions_dao
+from xivo_dao import extensions_dao
+from xivo_dao import user_dao
 
 logger = logging.getLogger('cti_command')
 
@@ -173,7 +174,7 @@ class Command(object):
             logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
 
-        reply = {'capalist': [userfeatures_dao.get_profile(userid)]}
+        reply = {'capalist': [user_dao.get_profile(userid)]}
         return reply
 
     def regcommand_login_capas(self):

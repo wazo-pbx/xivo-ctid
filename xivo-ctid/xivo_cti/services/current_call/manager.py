@@ -24,7 +24,7 @@
 
 import time
 import logging
-from xivo_dao import userfeatures_dao
+from xivo_dao import user_dao
 from xivo_cti import dao
 
 
@@ -66,7 +66,7 @@ class CurrentCallManager(object):
             self._current_call_notifier.publish_current_call(line_2)
 
     def schedule_answer(self, user_id, delay):
-        device_id = userfeatures_dao.get_device_id(user_id)
+        device_id = user_dao.get_device_id(user_id)
         self.scheduler.schedule(delay, self.device_manager.answer, device_id)
 
     def masquerade(self, original, clone):
@@ -149,13 +149,13 @@ class CurrentCallManager(object):
             current_call_channel = self._get_current_call_channel(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(self._SWITCHBOARD_HOLD_QUEUE)
         except LookupError:
-            logger.warning('User %s tried to put his current on switchboard hold but failed' % user_id)
+            logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
         else:
             self.ami.transfer(current_call_channel['channel'], hold_queue_number, hold_queue_ctx)
 
     def switchboard_unhold(self, user_id, action_id):
         try:
-            user_line = userfeatures_dao.get_line_identity(user_id).lower()
+            user_line = user_dao.get_line_identity(user_id).lower()
             channel = dao.channel.get_channel_from_unique_id(action_id)
             cid_name, cid_number = dao.channel.get_caller_id_name_number(channel)
         except LookupError:
@@ -173,14 +173,14 @@ class CurrentCallManager(object):
 
     def _get_current_call_channel(self, user_id):
         try:
-            line = userfeatures_dao.get_line_identity(user_id).lower()
+            line = user_dao.get_line_identity(user_id).lower()
         except LookupError:
-            raise LookupError('User %s tried to hangup but has no line' % user_id)
+            raise LookupError('User %s has no line' % user_id)
         else:
             calls = self._lines.get(line, [])
             ongoing_calls = [call for call in calls if call['on_hold'] is False]
             if not ongoing_calls:
-                raise LookupError('User %s tried to hangup with no tracked calls' % user_id)
+                raise LookupError('User %s has no ongoing calls' % user_id)
             return ongoing_calls[0]
 
     def _change_hold_status(self, channel, new_status):

@@ -24,9 +24,9 @@
 
 import logging
 from xivo_cti.tools.idconverter import IdConverter
-from xivo_dao import agentfeatures_dao
-from xivo_dao import linefeatures_dao
-from xivo_dao import userfeatures_dao
+from xivo_dao import agent_dao
+from xivo_dao import line_dao
+from xivo_dao import user_dao
 from xivo_dao import queue_features_dao
 
 logger = logging.getLogger('Agent Manager')
@@ -48,12 +48,12 @@ class AgentServiceManager(object):
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if extens else None
 
-        if not linefeatures_dao.is_phone_exten(agent_exten):
+        if not line_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'invalid_exten',
                              'class': 'ipbxcommand'}
 
-        self.login(agent_id, agent_exten, agentfeatures_dao.agent_context(agent_id))
+        self.login(agent_id, agent_exten, agent_dao.agent_context(agent_id))
 
     def on_cti_agent_logout(self, user_id, agent_xid=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
@@ -66,17 +66,17 @@ class AgentServiceManager(object):
 
     def _transform_agent_xid(self, user_id, agent_id):
         if not agent_id or agent_id == 'agent:special:me':
-            agent_id = userfeatures_dao.agent_id(user_id)
+            agent_id = user_dao.agent_id(user_id)
         else:
             agent_id = IdConverter.xid_to_id(agent_id)
         return agent_id
 
     def find_agent_exten(self, agent_id):
-        user_ids = userfeatures_dao.find_by_agent_id(agent_id)
+        user_ids = user_dao.find_by_agent_id(agent_id)
         line_ids = []
         for user_id in user_ids:
-            line_ids.extend(linefeatures_dao.find_line_id_by_user_id(user_id))
-        return [linefeatures_dao.number(line_id) for line_id in line_ids]
+            line_ids.extend(line_dao.find_line_id_by_user_id(user_id))
+        return [line_dao.number(line_id) for line_id in line_ids]
 
     def login(self, agent_id, exten, context):
         logger.info('Logging in agent %r', agent_id)
@@ -121,7 +121,7 @@ class AgentServiceManager(object):
             self.agent_executor.unpause_on_all_queues(agent_interface)
 
     def set_presence(self, agent_id, presence):
-        agent_member_name = agentfeatures_dao.agent_interface(agent_id)
+        agent_member_name = agent_dao.agent_interface(agent_id)
         if agent_member_name is not None:
             self.agent_executor.log_presence(agent_member_name, presence)
 
@@ -129,7 +129,7 @@ class AgentServiceManager(object):
         # convoluted way to get the agent interface (not the agent member name) of an agent
         # would be easier if the interface was kept in an "agent state" object instead
         # of only in the queue member state
-        agent_number = agentfeatures_dao.agent_number(agent_id)
+        agent_number = agent_dao.agent_number(agent_id)
         queue_members = self._queue_member_manager.get_queue_members_by_agent_number(agent_number)
         if not queue_members:
             logger.warning('Could not get interface of agent %r: no queue members found',

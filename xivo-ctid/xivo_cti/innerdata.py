@@ -43,8 +43,8 @@ from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list
 from xivo_cti import dao
 from xivo_dao import group_dao
 from xivo_dao import queue_features_dao
-from xivo_dao import trunkfeatures_dao
-from xivo_dao import userfeatures_dao
+from xivo_dao import trunk_dao
+from xivo_dao import user_dao
 
 logger = logging.getLogger('innerdata')
 
@@ -250,7 +250,7 @@ class Safe(object):
             domatch = True
 
         if domatch and 'profileids' in tomatch:
-            user = userfeatures_dao.get(userid)
+            user = user_dao.get(userid)
             if user.cti_profile_id not in tomatch.get('profileids'):
                 domatch = False
 
@@ -287,12 +287,12 @@ class Safe(object):
 
     def user_get_hashed_password(self, userid, sessionid):
         tohash = '%s:%s' % (sessionid,
-                            userfeatures_dao.get(userid).passwdclient)
+                            user_dao.get(userid).passwdclient)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
     def user_get_userstatuskind(self, userid):
-        cti_profile_id = userfeatures_dao.get_profile(userid)
+        cti_profile_id = user_dao.get_profile(userid)
         zz = self._config.getconfig('profiles').get(cti_profile_id)
         return zz.get('userstatus')
 
@@ -516,7 +516,7 @@ class Safe(object):
         if phoneid in self.xod_config['phones'].keeplist:
             phoneprops = self.xod_config['phones'].keeplist[phoneid]
             userid = str(phoneprops['iduserfeatures'])
-            user = userfeatures_dao.get(userid)
+            user = user_dao.get(userid)
             usersummary = {'phonenumber': phoneprops.get('number'),
                            'userid': userid,
                            'context': phoneprops.get('context'),
@@ -582,7 +582,7 @@ class Safe(object):
 
     def ztrunks(self, protocol, name):
         try:
-            return trunkfeatures_dao.find_by_proto_name(protocol, name)
+            return trunk_dao.find_by_proto_name(protocol, name)
         except (LookupError, ValueError):
             return None
 
@@ -591,7 +591,7 @@ class Safe(object):
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
         datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        user = userfeatures_dao.get(userid)
+        user = user_dao.get(userid)
         userstatus = self.xod_status.get('users').get(userid).get('availstate')
         arguments = (datetime,
                      user.loginclient,
