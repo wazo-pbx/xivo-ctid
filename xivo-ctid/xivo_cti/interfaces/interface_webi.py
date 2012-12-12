@@ -88,7 +88,7 @@ class WEBI(interfaces.Interfaces):
                             'state': state,
                             'id': id
                             }
-                self._ctiserver.update_userlist.append(msg_data)
+                self._ctiserver.update_config_list.append(msg_data)
                 if object_name == 'meetme':
                     context.get('meetme_service_manager').initialize()
 
@@ -110,7 +110,7 @@ class WEBI(interfaces.Interfaces):
         if msg == 'xivo[daemon,reload]':
             self._ctiserver.askedtoquit = True
         elif msg == 'xivo[cticonfig,update]':
-            self._ctiserver.update_userlist.append(msg)
+            self._ctiserver.update_config_list.append(msg)
         elif msg == 'xivo[queuemember,update]':
             self._queue_member_updater.on_webi_update()
         elif sre_obj:

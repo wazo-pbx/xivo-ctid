@@ -97,7 +97,7 @@ class CTIServer(object):
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.timeout_queue = None
-        self.update_userlist = []
+        self.update_config_list = []
         self.pipe_queued_threads = os.pipe()
         self._config = config
         self._cti_events = Queue.Queue()
@@ -724,21 +724,21 @@ class CTIServer(object):
         #    logger.exception('[pipe_queued_threads]')
 
     def _update_safe_list(self):
-        if self.update_userlist:
+        if self.update_config_list:
             try:
-                if 'xivo[cticonfig,update]' in self.update_userlist:
+                if 'xivo[cticonfig,update]' in self.update_config_list:
                     self._config.update()
                     self.safe.update_directories()
-                    self.update_userlist.pop(self.update_userlist.index('xivo[cticonfig,update]'))
+                    self.update_config_list.pop(self.update_config_list.index('xivo[cticonfig,update]'))
             except Exception:
                 logger.exception('failed while executing xivo[cticonfig,update]')
             try:
-                while self.update_userlist:
-                    msg = self.update_userlist.pop()
+                while self.update_config_list:
+                    msg = self.update_config_list.pop()
                     self.safe.update_config_list('%ss' % msg['object_name'], msg['state'], msg['id'])
                     self._empty_cti_events_queue()
             except Exception:
-                logger.exception('commandclass.updates() (computed timeout)')
+                logger.exception('Config reload (computed timeout)')
 
     def select_step(self):
         sels_i, sels_o, sels_e = self._init_socket()
