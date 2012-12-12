@@ -45,7 +45,7 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.agentfeatures_dao.agent_context')
+    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
@@ -87,7 +87,7 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.agentfeatures_dao.agent_context')
+    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
@@ -119,7 +119,7 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.agentfeatures_dao.agent_context')
+    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
     @patch('xivo_dao.userfeatures_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
@@ -241,7 +241,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_executor.unpause_on_all_queues.assert_called_once_with(agent_interface)
 
-    @patch('xivo_dao.agentfeatures_dao.agent_interface')
+    @patch('xivo_dao.agent_dao.agent_interface')
     def test_set_presence(self, mock_agent_interface):
         presence = 'disconnected'
         agent_id = 34
