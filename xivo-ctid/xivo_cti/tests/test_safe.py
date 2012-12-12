@@ -117,6 +117,36 @@ class TestSafe(unittest.TestCase):
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
 
+    @patch('xivo_dao.queue_features_dao.is_user_member_of_queue')
+    def test_user_match_with_queue(self, mock_is_user_member_of_queue):
+        user_id = 1
+        queue_id = 42
+        tomatch = {
+            'desttype': 'queue',
+            'destid': queue_id,
+        }
+        mock_is_user_member_of_queue.return_value = True
+
+        domatch = self.safe.user_match(user_id, tomatch)
+
+        mock_is_user_member_of_queue.assert_called_once_with(user_id, queue_id)
+        self.assertTrue(domatch)
+
+    @patch('xivo_dao.group_dao.is_user_member_of_group')
+    def test_user_match_with_group(self, mock_is_user_member_of_group):
+        user_id = 1
+        group_id = 42
+        tomatch = {
+            'desttype': 'group',
+            'destid': group_id,
+        }
+        mock_is_user_member_of_group.return_value = True
+
+        domatch = self.safe.user_match(user_id, tomatch)
+
+        mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
+        self.assertTrue(domatch)
+
     @patch('xivo_dao.trunkfeatures_dao.get_ids')
     def test_init_status(self, mock_get_ids):
         id_list = [1, 2, 3, 4]

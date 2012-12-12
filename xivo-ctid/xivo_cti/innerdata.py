@@ -40,8 +40,11 @@ from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.agent_status import AgentStatus
-from xivo_dao import userfeatures_dao, trunkfeatures_dao
 from xivo_cti import dao
+from xivo_dao import group_dao
+from xivo_dao import queue_features_dao
+from xivo_dao import trunkfeatures_dao
+from xivo_dao import userfeatures_dao
 
 logger = logging.getLogger('innerdata')
 
@@ -417,11 +420,9 @@ class Safe(object):
                 user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == dest_id
             elif dest_type == 'queue' and dest_id:
-                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
-                domatch = self.queuemember_service_manager.is_queue_member(userid, dest_id)
+                domatch = queue_features_dao.is_user_member_of_queue(userid, dest_id)
             elif dest_type == 'group' and dest_id:
-                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
-                domatch = self.queuemember_service_manager.is_group_member(userid, dest_id)
+                domatch = group_dao.is_user_member_of_group(userid, dest_id)
         else:
             # 'all' case
             domatch = True
