@@ -24,6 +24,7 @@ setup(
               'xivo_cti.lists',
               'xivo_cti.model',
               'xivo_cti.services',
+              'xivo_cti.services.call_history',
               'xivo_cti.services.current_call',
               'xivo_cti.services.device',
               'xivo_cti.services.device.controller',
