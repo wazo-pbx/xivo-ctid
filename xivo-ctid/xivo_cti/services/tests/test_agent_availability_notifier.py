@@ -28,7 +28,7 @@ from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotif
 from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 
 class TestAgentAvailabilityNotifier(unittest.TestCase):

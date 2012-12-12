@@ -30,7 +30,7 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.alchemy.linefeatures import LineFeatures
-from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 
 class TestAgentServiceManager(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 from mock import Mock, patch
-from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
