@@ -659,7 +659,6 @@ class CTIServer(object):
 
         if socketobject:
             if kind in ['CTI', 'CTIS']:
-                interface.user_service_manager = self._user_service_manager
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
                 interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
                                                 ({'action': 'ctilogin',

@@ -35,9 +35,9 @@ from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config
 from xivo_cti import innerdata
 from tests.mock import Mock
-from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.cti.commands.availstate import Availstate
 from mock import patch
+from xivo_cti.services.user.manager import UserServiceManager
 
 
 class TestSafe(unittest.TestCase):
@@ -50,9 +50,9 @@ class TestSafe(unittest.TestCase):
         config = context.get('config')
         self._ctiserver = CTIServer(config)
         self._ctiserver._init_db_connection_pool()
-        self._ctiserver._user_service_manager = Mock(UserServiceManager)
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
         self.safe = Safe(config, self._ctiserver)
+        self.safe.user_service_manager = Mock(UserServiceManager)
         mock_get_ids.get_ids.return_value = []
         self.safe.init_status()
 
@@ -66,7 +66,7 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(UpdateConfig, self.safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, self.safe.handle_getlist_update_status)
         self.assert_callback_registered(Directory, self.safe.getcustomers)
-        self.assert_callback_registered(Availstate, self.safe._ctiserver._user_service_manager.set_presence)
+        self.assert_callback_registered(Availstate, self.safe.user_service_manager.set_presence)
 
     def test_handle_getlist_list_id_not_a_list(self):
         ret = self.safe.handle_getlist_list_id('not_a_list', '1')
@@ -120,16 +120,15 @@ class TestSafe(unittest.TestCase):
     @patch('xivo_dao.trunkfeatures_dao.get_ids')
     def test_init_status(self, mock_get_ids):
         id_list = [1, 2, 3, 4]
-        safe = Safe(self._ctiserver, self._ipbx_id)
         mock_get_ids.return_value = id_list
 
-        safe.init_status()
+        self.safe.init_status()
 
-        self.assertTrue('trunks' in safe.xod_status)
+        self.assertTrue('trunks' in self.safe.xod_status)
         for trunk_id in id_list:
-            self.assertTrue(trunk_id in safe.xod_status['trunks'])
-            self.assertEqual(safe.xod_status['trunks'][trunk_id], safe.props_status['trunks'])
-            self.assertFalse(safe.xod_status['trunks'][trunk_id] is safe.props_status['trunks'])
+            self.assertTrue(trunk_id in self.safe.xod_status['trunks'])
+            self.assertEqual(self.safe.xod_status['trunks'][trunk_id], self.safe.props_status['trunks'])
+            self.assertFalse(self.safe.xod_status['trunks'][trunk_id] is self.safe.props_status['trunks'])
 
 
 class TestChannel(unittest.TestCase):

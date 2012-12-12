@@ -33,6 +33,7 @@ setup(
               'xivo_cti.services.presence',
               'xivo_cti.services.queue_member',
               'xivo_cti.services.queue_member.cti',
+              'xivo_cti.services.user',
               'xivo_cti.statistics',
               'xivo_cti.tools'],
     scripts=['bin/xivo-ctid'],

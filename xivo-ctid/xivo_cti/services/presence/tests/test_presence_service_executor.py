@@ -25,7 +25,7 @@
 import unittest
 from tests.mock import Mock
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
-from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.cti_config import Config
 from mock import patch

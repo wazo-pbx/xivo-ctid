@@ -34,7 +34,7 @@ from xivo_cti import lists, cti_config, cti_sheets, db_connection_manager
 from xivo_cti.lists import *
 from xivo_cti.directory import directory
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.context import context
+from xivo_cti.context import context as cti_context
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
@@ -166,7 +166,6 @@ class Safe(object):
     def __init__(self, config, cti_server):
         self._config = config
         self._ctiserver = cti_server
-
         self.ipbxid = 'xivo'
         self.xod_config = {}
         self.xod_status = {}
@@ -207,7 +206,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
-        Availstate.register_callback_params(self._ctiserver._user_service_manager.set_presence, ['user_id', 'availstate'])
+        Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()

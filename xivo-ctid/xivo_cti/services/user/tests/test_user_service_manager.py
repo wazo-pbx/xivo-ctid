@@ -24,8 +24,8 @@ import unittest
 
 from tests.mock import Mock
 from xivo_dao.alchemy import dbconnection
-from xivo_cti.services.user_service_notifier import UserServiceNotifier
-from xivo_cti.services.user_service_manager import UserServiceManager
+from xivo_cti.services.user.notifier import UserServiceNotifier
+from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
@@ -43,7 +43,6 @@ class TestUserServiceManager(unittest.TestCase):
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
         self.device_manager = Mock(DeviceManager)
-
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.user_service_manager = UserServiceManager(self.user_service_notifier,
