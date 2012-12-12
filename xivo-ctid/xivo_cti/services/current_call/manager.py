@@ -149,7 +149,7 @@ class CurrentCallManager(object):
             current_call_channel = self._get_current_call_channel(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(self._SWITCHBOARD_HOLD_QUEUE)
         except LookupError:
-            logger.warning('User %s tried to put his current on switchboard hold but failed' % user_id)
+            logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
         else:
             self.ami.transfer(current_call_channel['channel'], hold_queue_number, hold_queue_ctx)
 
@@ -175,12 +175,12 @@ class CurrentCallManager(object):
         try:
             line = userfeatures_dao.get_line_identity(user_id).lower()
         except LookupError:
-            raise LookupError('User %s tried to hangup but has no line' % user_id)
+            raise LookupError('User %s has no line' % user_id)
         else:
             calls = self._lines.get(line, [])
             ongoing_calls = [call for call in calls if call['on_hold'] is False]
             if not ongoing_calls:
-                raise LookupError('User %s tried to hangup with no tracked calls' % user_id)
+                raise LookupError('User %s has no ongoing calls' % user_id)
             return ongoing_calls[0]
 
     def _change_hold_status(self, channel, new_status):
