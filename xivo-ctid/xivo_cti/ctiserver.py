@@ -177,7 +177,6 @@ class CTIServer(object):
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
 
-        self._user_dao = context.get('user_dao')
         self.safe = context.get('innerdata')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor

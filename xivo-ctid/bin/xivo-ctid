@@ -29,7 +29,6 @@ from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.context import context
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
@@ -116,7 +115,6 @@ def _register_context(context):
     context.register('queue_member_updater', QueueMemberUpdater)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
-    context.register('user_dao', UserDAO)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
 
