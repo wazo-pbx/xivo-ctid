@@ -97,11 +97,9 @@ class CTIServer(object):
         self.interface_ami = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
-        self._config = None
+        self._config = config
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
-
-        self._config = config
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -173,14 +171,14 @@ class CTIServer(object):
         self._statistics_notifier = context.get('statistics_notifier')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
 
-        self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_notifier = context.get('queue_member_notifier')
         self._queue_member_updater = context.get('queue_member_updater')
+        self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
 
-        self._innerdata_dao = context.get('innerdata_dao')
         self._user_dao = context.get('user_dao')
+        self.safe = context.get('innerdata')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
@@ -197,8 +195,6 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
-
-        self.safe = context.get('innerdata')
         self.safe.user_service_manager = self._user_service_manager
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
@@ -331,7 +327,7 @@ class CTIServer(object):
                 agent_status_cti = AgentStatus.available
             else:
                 agent_status_cti = AgentStatus.logged_out
-            self._innerdata_dao.set_agent_availability(agent_status.id, agent_status_cti)
+            dao.innerdata.set_agent_availability(agent_status.id, agent_status_cti)
 
     def run(self):
         while True:

@@ -23,7 +23,6 @@
 import unittest
 
 from tests.mock import Mock
-from xivo_dao.alchemy import dbconnection
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
@@ -32,13 +31,12 @@ from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from mock import patch
-from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.dao import user as user_dao
 
 
 class TestUserServiceManager(unittest.TestCase):
 
     def setUp(self):
-        self.user_dao = Mock(UserDAO)
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
@@ -49,19 +47,16 @@ class TestUserServiceManager(unittest.TestCase):
                                                        self.agent_service_manager,
                                                        self.presence_service_manager,
                                                        self.funckey_manager,
-                                                       self.user_dao,
                                                        self.device_manager)
         self.user_service_manager.presence_service_executor = self.presence_service_executor
-
-    def tearDown(self):
-        dbconnection.unregister_db_connection_pool()
+        self.user_service_manager.user_dao = Mock(user_dao)
 
     def test_enable_dnd(self):
         user_id = 123
 
         self.user_service_manager.enable_dnd(user_id)
 
-        self.user_dao.enable_dnd.assert_called_once_with(user_id)
+        self.user_service_manager.user_dao.enable_dnd.assert_called_once_with(user_id)
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 
@@ -70,7 +65,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.disable_dnd(user_id)
 
-        self.user_dao.disable_dnd.assert_called_once_with(user_id)
+        self.user_service_manager.user_dao.disable_dnd.assert_called_once_with(user_id)
         self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
 
@@ -96,7 +91,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.enable_filter(user_id)
 
-        self.user_dao.enable_filter.assert_called_once_with(user_id)
+        self.user_service_manager.user_dao.enable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_enabled.assert_called_once_with(user_id)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, True)
 
@@ -105,7 +100,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.disable_filter(user_id)
 
-        self.user_dao.disable_filter.assert_called_once_with(user_id)
+        self.user_service_manager.user_dao.disable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
 
@@ -117,7 +112,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.enable_unconditional_fwd(user_id, destination)
 
-        self.user_dao.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.enable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, destination)
 
         expected_calls = sorted([
@@ -137,7 +132,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.disable_unconditional_fwd(user_id, destination)
 
-        self.user_dao.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.disable_unconditional_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.unconditional_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd.assert_called_once_with(user_id)
 
@@ -149,7 +144,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.enable_rna_fwd(user_id, destination)
 
-        self.user_dao.enable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.enable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
         self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, True)
@@ -163,7 +158,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.disable_rna_fwd(user_id, destination)
 
-        self.user_dao.disable_rna_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.disable_rna_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
 
@@ -176,7 +171,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.enable_busy_fwd(user_id, destination)
 
-        self.user_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
         self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, True)
@@ -190,7 +185,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.disable_busy_fwd(user_id, destination)
 
-        self.user_dao.disable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.disable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
 
@@ -203,7 +198,7 @@ class TestUserServiceManager(unittest.TestCase):
 
         self.user_service_manager.enable_busy_fwd(user_id, destination)
 
-        self.user_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
+        self.user_service_manager.user_dao.enable_busy_fwd.assert_called_once_with(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, destination)
 
     def test_disconnect(self):

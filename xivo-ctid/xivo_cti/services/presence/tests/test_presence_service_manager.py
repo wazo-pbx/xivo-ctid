@@ -7,9 +7,10 @@ from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 
 class TestPresenceServiceManager(unittest.TestCase):
+
     def setUp(self):
-        self.innerdata_dao = Mock(InnerdataDAO)
-        self.presence_manager = PresenceServiceManager(self.innerdata_dao)
+        self.presence_manager = PresenceServiceManager()
+        self.presence_manager.dao.innerdata = Mock(InnerdataDAO)
 
     def tearDown(self):
         pass
@@ -18,20 +19,20 @@ class TestPresenceServiceManager(unittest.TestCase):
         profile = 'client'
         presence = 'disconnected'
 
-        self.innerdata_dao.get_presences.return_value = ['available', 'disconnected']
+        self.presence_manager.dao.innerdata.get_presences.return_value = ['available', 'disconnected']
 
         result = self.presence_manager.is_valid_presence(profile, presence)
 
-        self.innerdata_dao.get_presences.assert_called_once_with(profile)
+        self.presence_manager.dao.innerdata.get_presences.assert_called_once_with(profile)
         self.assertTrue(result)
 
     def test_is_valid_presence_no(self):
         profile = 'client'
         presence = 'DnD'
 
-        self.innerdata_dao.get_presences.return_value = ['available', 'disconnected']
+        self.presence_manager.dao.innerdata.get_presences.return_value = ['available', 'disconnected']
 
         result = self.presence_manager.is_valid_presence(profile, presence)
 
-        self.innerdata_dao.get_presences.assert_called_once_with(profile)
+        self.presence_manager.dao.innerdata.get_presences.assert_called_once_with(profile)
         self.assertFalse(result)

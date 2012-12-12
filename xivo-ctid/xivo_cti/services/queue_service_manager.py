@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,17 +22,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xivo_cti import dao
+
 
 class NotAQueueException(Exception):
     pass
 
 
 class QueueServiceManager(object):
-    def __init__(self, innerdata_dao):
-        self.innerdata_dao = innerdata_dao
+
+    def __init__(self):
+        self.dao = dao
 
     def get_queue_id(self, queue_name):
-        return self.innerdata_dao.get_queue_id(queue_name)
+        return self.dao.innerdata.get_queue_id(queue_name)
 
     def get_queue_ids(self):
-        return self.innerdata_dao.get_queue_ids()
+        return self.dao.innerdata.get_queue_ids()

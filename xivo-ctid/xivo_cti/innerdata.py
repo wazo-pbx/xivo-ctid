@@ -34,7 +34,6 @@ from xivo_cti import lists, cti_config, cti_sheets, db_connection_manager
 from xivo_cti.lists import *
 from xivo_cti.directory import directory
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.context import context as cti_context
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus

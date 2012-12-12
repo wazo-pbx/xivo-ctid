@@ -24,18 +24,19 @@
 
 import logging
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti import dao
 
 logger = logging.getLogger(__name__)
 
 
 class AgentAvailabilityNotifier(object):
 
-    def __init__(self, innerdata_dao, cti_server, cti_message_formatter=CTIMessageFormatter()):
-        self.innerdata_dao = innerdata_dao
+    def __init__(self, cti_server, cti_message_formatter=CTIMessageFormatter()):
+        self.dao = dao
         self.cti_message_formatter = cti_message_formatter
         self.cti_server = cti_server
 
     def notify(self, agent_id):
-        agent_status = self.innerdata_dao.agent_status(agent_id)
+        agent_status = self.dao.innerdata.agent_status(agent_id)
         cti_message = self.cti_message_formatter.update_agent_status(agent_id, agent_status)
         self.cti_server.send_cti_event(cti_message)

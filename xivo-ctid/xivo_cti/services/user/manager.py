@@ -22,7 +22,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_dao import userfeatures_dao, linefeatures_dao, phonefunckey_dao
+from xivo_dao import userfeatures_dao, phonefunckey_dao
+from xivo_cti.dao import user as user_dao
 
 
 class UserServiceManager(object):
@@ -32,14 +33,13 @@ class UserServiceManager(object):
                  agent_service_manager,
                  presence_service_manager,
                  funckey_manager,
-                 user_dao,
                  device_manager):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
         self.funckey_manager = funckey_manager
-        self.user_dao = user_dao
         self.device_manager = device_manager
+        self.user_dao = user_dao
 
     def enable_dnd(self, user_id):
         self.user_dao.enable_dnd(user_id)

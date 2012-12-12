@@ -22,24 +22,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti import context
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.dao.channel_dao import ChannelDAO
 from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 agent = None
 channel = None
 queue = None
 user = None
+innerdata = None
 
 
-def instanciate_dao(innerdata, queue_member_manager):
+def instanciate_dao(innerdata_obj, queue_member_manager):
     global agent
-    agent = AgentDAO(innerdata, queue_member_manager)
+    agent = AgentDAO(innerdata_obj, queue_member_manager)
     global channel
-    channel = ChannelDAO(innerdata)
+    channel = ChannelDAO(innerdata_obj)
     global queue
-    queue = QueueDAO(innerdata)
+    queue = QueueDAO(innerdata_obj)
     global user
-    user = UserDAO(innerdata)
+    user = UserDAO(innerdata_obj)
+    global innerdata
+    innerdata = InnerdataDAO(innerdata_obj)

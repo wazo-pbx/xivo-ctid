@@ -29,7 +29,6 @@ from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.context import context
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
@@ -99,7 +98,6 @@ def _register_context(context):
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
     context.register('funckey_manager', FunckeyManager)
-    context.register('innerdata_dao', InnerdataDAO)
     context.register('innerdata', Safe)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
