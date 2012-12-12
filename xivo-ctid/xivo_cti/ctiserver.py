@@ -557,10 +557,8 @@ class CTIServer(object):
 
         except Exception:
             logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
-            logger.warning('(select) self.askedtoquit=%s fdlist_full=%s',
-                           self.askedtoquit, self.fdlist_full)
-            logger.warning('(select) current open TCP connections : (CTI, WEBI, INFO) %s',
-                           self.fdlist_established)
+            logger.warning('(select) self.askedtoquit=%s fdlist_full=%s', self.askedtoquit, self.fdlist_full)
+            logger.warning('(select) current open TCP connections : (CTI, WEBI, INFO) %s', self.fdlist_established)
             logger.warning('(select) current open TCP connections : (AMI) %s', self.ami_sock)
 
             self._socket_close_all()
@@ -603,10 +601,14 @@ class CTIServer(object):
         if kind == 'ANNOUNCE':
             [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
             # scheduling AMI reconnection
-            k = threading.Timer(1, self.cb_timer,
-                                ({'action': 'ipbxup',
-                                  'properties': {'data': data,
-                                                 'sockparams': sockparams}},))
+            args_timer = {
+                'action': 'ipbxup',
+                'properties': {
+                    'data': data,
+                    'sockparams': sockparams
+                }
+            }
+            k = threading.Timer(1, self.cb_timer, (args_timer,))
             k.setName('Thread-ipbxup-%s' % data.strip())
             k.start()
         else:
