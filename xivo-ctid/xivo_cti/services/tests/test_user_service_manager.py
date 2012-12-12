@@ -27,9 +27,9 @@ from xivo_dao.alchemy import dbconnection
 from xivo_cti.services.user_service_notifier import UserServiceNotifier
 from xivo_cti.services.user_service_manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
-from xivo_cti.services.presence_service_executor import PresenceServiceExecutor
+from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.agent_service_manager import AgentServiceManager
-from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from mock import patch
 from xivo_cti.dao.user_dao import UserDAO

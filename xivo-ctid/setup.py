@@ -29,6 +29,7 @@ setup(
               'xivo_cti.services.device.controller',
               'xivo_cti.services.funckey',
               'xivo_cti.services.meetme',
+              'xivo_cti.services.presence',
               'xivo_cti.services.queue_member',
               'xivo_cti.services.queue_member.cti',
               'xivo_cti.statistics',

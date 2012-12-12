@@ -2,7 +2,7 @@
 
 import unittest
 from tests.mock import Mock
-from xivo_cti.services.presence_service_manager import PresenceServiceManager
+from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.dao.innerdatadao import InnerdataDAO
 
 
