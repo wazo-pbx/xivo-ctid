@@ -306,14 +306,6 @@ class TestUserServiceManager(unittest.TestCase):
         mock_is_agent.assert_never_called()
         self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
 
-    @patch('xivo_dao.linefeatures_dao.find_context_by_user_id')
-    def test_get_context(self, mock_find_context_by_user_id):
-        user1_id = 34
-
-        self.user_service_manager.get_context(user1_id)
-
-        mock_find_context_by_user_id.assert_called_once_with(user1_id)
-
     @patch('xivo_dao.userfeatures_dao.get_device_id')
     def test_pickup_the_phone(self, mock_get_device_id):
         user_id = 23

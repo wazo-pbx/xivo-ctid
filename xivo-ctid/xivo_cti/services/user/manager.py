@@ -124,9 +124,6 @@ class UserServiceManager(object):
                 agent_id = userfeatures_dao.agent_id(user_id)
                 self.agent_service_manager.set_presence(agent_id, presence)
 
-    def get_context(self, user_id):
-        return linefeatures_dao.find_context_by_user_id(user_id)
-
     def pickup_the_phone(self, user_id):
         device_id = userfeatures_dao.get_device_id(user_id)
         self.device_manager.answer(device_id)

@@ -214,3 +214,27 @@ class TestUserDAO(unittest.TestCase):
         result = self.dao.get_line_identity(user_id)
 
         self.assertEqual(result, expected)
+
+    def test_get_context(self):
+        self.assertRaises(LookupError, self.dao.get_context, 1234)
+
+        context = 'default'
+        user_id = 206
+        line_id = 607
+        self._phonelist.keeplist[line_id] = {
+            'context': context,
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': user_id,
+            'rules_order': 0,
+            'identity': 'sip/a1b2c3',
+            'initialized': False,
+            'allowtransfer': True,
+        }
+        self._userlist.keeplist[user_id] = {'linelist': [line_id]}
+
+        expected = context
+
+        result = self.dao.get_context(user_id)
+
+        self.assertEqual(result, expected)

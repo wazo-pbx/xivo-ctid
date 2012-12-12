@@ -26,10 +26,12 @@ from xivo_cti import context
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.dao.channel_dao import ChannelDAO
 from xivo_cti.dao.queue_dao import QueueDAO
+from xivo_cti.dao.user_dao import UserDAO
 
 agent = None
 channel = None
 queue = None
+user = None
 
 
 def instanciate_dao(innerdata, queue_member_manager):
@@ -39,3 +41,5 @@ def instanciate_dao(innerdata, queue_member_manager):
     channel = ChannelDAO(innerdata)
     global queue
     queue = QueueDAO(innerdata)
+    global user
+    user = UserDAO(innerdata)

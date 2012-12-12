@@ -42,6 +42,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.agent_status import AgentStatus
 from xivo_dao import userfeatures_dao, trunkfeatures_dao
+from xivo_cti.dao import user as user_dao
 
 logger = logging.getLogger('innerdata')
 
@@ -315,7 +316,7 @@ class Safe(object):
                 self._ctiserver.send_cti_event(message)
             else:
                 if listname == 'users':
-                    item_context = self.user_service_manager.get_context(k)
+                    item_context = user_dao.get_context(k)
                 else:
                     item_context = self.xod_config[listname].keeplist[k].get('context')
                 connection_list = self._ctiserver.get_connected({'contexts': [item_context]})
@@ -436,7 +437,7 @@ class Safe(object):
 
         if domatch and 'contexts' in tomatch:
             domatch = False
-            context = self.user_service_manager.get_context(userid)
+            context = user_dao.get_context(userid)
             if context in tomatch['contexts']:
                 domatch = True
 
@@ -939,7 +940,7 @@ class Safe(object):
 
     def getcustomers(self, user_id, pattern, commandid):
         try:
-            context = self.user_service_manager.get_context(user_id)
+            context = user_dao.get_context(user_id)
             context_obj = self.contexts_mgr.contexts[context]
         except KeyError:
             logger.info('Directory lookup failed in context: %s', context)
