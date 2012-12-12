@@ -98,11 +98,9 @@ class CTIServer(object):
         self.interface_ami = None
         self.timeout_queue = None
         self.pipe_queued_threads = os.pipe()
-        self._config = None
+        self._config = config
         self._cti_events = Queue.Queue()
         self._pg_fallback_retries = 0
-
-        self._config = config
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
