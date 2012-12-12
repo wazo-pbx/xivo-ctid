@@ -177,8 +177,6 @@ class CTIServer(object):
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
 
-        self.safe = context.get('innerdata')
-
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
         self._queue_entry_manager = context.get('queue_entry_manager')
@@ -194,7 +192,6 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
-        self.safe.user_service_manager = self._user_service_manager
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
@@ -410,6 +407,8 @@ class CTIServer(object):
         self.ami_sock = None
 
         ipbxconfig = self._config.getconfig('ipbx')
+        self.safe = context.get('innerdata')
+        self.safe.user_service_manager = self._user_service_manager
         self.safe.init_urllist(ipbxconfig.get('urllists'))
         self.safe.queue_member_cti_adapter = self._queue_member_cti_adapter
 

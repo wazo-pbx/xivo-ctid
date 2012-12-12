@@ -40,7 +40,7 @@ class InnerdataDAO(object):
     def get_queue_id(self, queue_name):
         queue_id = self.innerdata.xod_config['queues'].idbyqueuename(queue_name)
         if queue_id is None:
-            raise NotAQueueException()
+            raise NotAQueueException('Queue name: %s' % queue_name)
         return queue_id
 
     def get_queue_ids(self):
