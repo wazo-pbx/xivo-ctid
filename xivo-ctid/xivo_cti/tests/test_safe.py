@@ -44,7 +44,7 @@ class TestSafe(unittest.TestCase):
 
     _ipbx_id = 'xivo'
 
-    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    @patch('xivo_dao.trunk_dao.get_ids')
     def setUp(self, mock_get_ids):
         context.register('config', cti_config.Config())
         config = context.get('config')
@@ -147,7 +147,7 @@ class TestSafe(unittest.TestCase):
         mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
         self.assertTrue(domatch)
 
-    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    @patch('xivo_dao.trunk_dao.get_ids')
     def test_init_status(self, mock_get_ids):
         id_list = [1, 2, 3, 4]
         mock_get_ids.return_value = id_list
