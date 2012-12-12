@@ -22,7 +22,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, Mock
-from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
+    NoSuchLineException
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.cti_userlist import UserList
 import time
@@ -193,8 +194,6 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(expected_userdata['availstate'], result['availstate'])
 
     def test_get_line_identity(self):
-        self.assertRaises(LookupError, self.dao.get_line_identity, 1234)
-
         user_id = 206
         line_id = 607
         self._phonelist.keeplist[line_id] = {
@@ -205,7 +204,7 @@ class TestUserDAO(unittest.TestCase):
             'rules_order': 0,
             'identity': 'sip/a1b2c3',
             'initialized': False,
-            'allowtransfer': True,
+            'allowtransfer': True
         }
         self._userlist.keeplist[user_id] = {'linelist': [line_id]}
 
@@ -216,8 +215,6 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_get_context(self):
-        self.assertRaises(LookupError, self.dao.get_context, 1234)
-
         context = 'default'
         user_id = 206
         line_id = 607
@@ -229,12 +226,63 @@ class TestUserDAO(unittest.TestCase):
             'rules_order': 0,
             'identity': 'sip/a1b2c3',
             'initialized': False,
-            'allowtransfer': True,
+            'allowtransfer': True
         }
-        self._userlist.keeplist[user_id] = {'linelist': [line_id]}
+        self._userlist.keeplist[user_id] = {
+            'linelist': [line_id]
+        }
 
         expected = context
 
         result = self.dao.get_context(user_id)
 
         self.assertEqual(result, expected)
+
+    def test_get_line(self):
+        context = 'default'
+        user_id = 206
+        line_id = 607
+        self._phonelist.keeplist[line_id] = {
+            'context': context,
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': user_id,
+            'rules_order': 0,
+            'identity': 'sip/a1b2c3',
+            'initialized': False,
+            'allowtransfer': True
+        }
+        self._userlist.keeplist[user_id] = {
+            'linelist': [line_id]
+        }
+
+        result = self.dao.get_line(user_id)
+
+        self.assertEqual(result, self._phonelist.keeplist[line_id])
+
+    def test_get_line_user_not_exist(self):
+        user_id = 206
+        line_id = 607
+        self._phonelist.keeplist[line_id] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': user_id,
+            'rules_order': 0,
+            'identity': 'sip/a1b2c3',
+            'initialized': False,
+            'allowtransfer': True
+        }
+        self._userlist.keeplist = {}
+
+        self.assertRaises(NoSuchUserException, self.dao.get_line, user_id)
+
+    def test_get_line_line_not_exist(self):
+        user_id = 206
+        line_id = 607
+        self._phonelist.keeplist = {}
+        self._userlist.keeplist[user_id] = {
+            'linelist': [line_id]
+        }
+
+        self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)

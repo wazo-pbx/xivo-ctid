@@ -29,6 +29,14 @@ from xivo_dao import user_dao
 logger = logging.getLogger("UserDAO")
 
 
+class NoSuchUserException(Exception):
+    pass
+
+
+class NoSuchLineException(Exception):
+    pass
+
+
 class UserDAO(object):
 
     def __init__(self, innerdata):
@@ -108,14 +116,32 @@ class UserDAO(object):
         user_status = self._user_status(user_id)
         user_status['availstate'] = presence
 
-    def get_line_identity(self, user_id):
-        user = self._user(user_id)
-        line = self._phone(user['linelist'].pop())
+    def get_line(self, user_id):
+        try:
+            user = self._user(user_id)
+        except LookupError:
+            raise NoSuchUserException(user_id)
+        if user['linelist']:
+            line_id = user['linelist'].pop()
+        else:
+            raise NoSuchLineException()
+        try:
+            line = self._phone(line_id)
+        except LookupError:
+            raise NoSuchLineException(line_id)
 
+        return line
+
+    def get_line_identity(self, user_id):
+        try:
+            line = self.get_line(user_id)
+        except (NoSuchUserException, NoSuchLineException):
+            return None
         return line['identity']
 
     def get_context(self, user_id):
-        user = self._user(user_id)
-        line = self._phone(user['linelist'].pop())
-
+        try:
+            line = self.get_line(user_id)
+        except (NoSuchUserException, NoSuchLineException):
+            return None
         return line['context']
