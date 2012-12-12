@@ -97,6 +97,7 @@ class CTIServer(object):
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.timeout_queue = None
+        self.update_userlist = []
         self.pipe_queued_threads = os.pipe()
         self._config = config
         self._cti_events = Queue.Queue()
@@ -394,28 +395,14 @@ class CTIServer(object):
 
     def main_loop(self):
         self.askedtoquit = False
-
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
-
-        self.update_userlist = []
-
-        xivoconf_general = self._config.getconfig('main')
-        socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
-        socket.setdefaulttimeout(socktimeout)
-
-        # sockets management
-        self.fdlist_established = {}
-        self.fdlist_listen_cti = {}
-        self.fdlist_udp_cti = {}
-        self.ami_sock = None
-
         logger.info('(1/3) Retrieving data')
+
         dao.instanciate_dao(self.safe, self._queue_member_manager)
 
         self.safe.init_xod_config()
         self.safe.init_xod_status()
-
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
         self.safe.update_directories()
@@ -425,19 +412,23 @@ class CTIServer(object):
         self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
-
         self._init_statistics_producers()
         self._init_agent_availability()
 
         logger.info('(2/3) Local AMI socket connection')
         self.interface_ami.init_connection()
         self.ami_sock = self.interface_ami.connect()
-
         if not self.ami_sock:
             self._on_ami_down()
 
         logger.info('(3/3) Listening sockets')
-        logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
+        xivoconf_general = self._config.getconfig('main')
+        socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
+        socket.setdefaulttimeout(socktimeout)
+
+        self.fdlist_established = {}
+        self.fdlist_listen_cti = {}
+        self.fdlist_udp_cti = {}
 
         kind_list = {}
         kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
@@ -457,6 +448,7 @@ class CTIServer(object):
                 elif kind_type == 'udp':
                     self._init_udp_socket(kind, bind, port)
 
+        logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
         while not self.askedtoquit:
             self.select_step()
 
