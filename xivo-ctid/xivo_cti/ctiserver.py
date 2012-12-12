@@ -163,7 +163,6 @@ class CTIServer(object):
         self._set_signal_handlers()
 
         self.interface_ami = context.get('interface_ami')
-        self.commandclass = context.get('ami_18')
 
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')

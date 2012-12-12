@@ -26,6 +26,7 @@ from xivo_cti.interfaces import interfaces
 
 import logging
 import time
+from xivo_cti.context import context
 
 logger = logging.getLogger('interface_info')
 
@@ -63,7 +64,8 @@ class INFO(interfaces.Interfaces):
         interfaces.Interfaces.__init__(self, ctiserver)
         self.dumpami_enable = []
         self.dumpami_disable = []
-        self.innerdata = self._ctiserver.safe
+        self.innerdata = context.get('innerdata')
+        self._ami_18 = context.get('ami_18')
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
@@ -179,8 +181,8 @@ class INFO(interfaces.Interfaces):
                     if len(command_args) > 2:
                         astid = command_args[1]
                         varname = command_args[2]
-                        if hasattr(self._ctiserver.commandclass, varname):
-                            tvar = getattr(self._ctiserver.commandclass, varname)
+                        if hasattr(self._ami_18, varname):
+                            tvar = getattr(self._ami_18, varname)
                             if astid in tvar:
                                 clireply.append('%s on %s' % (varname, astid))
                                 for ag, agp in tvar[astid].iteritems():
@@ -191,15 +193,15 @@ class INFO(interfaces.Interfaces):
                             clireply.append('no such variable %s' % varname)
                     else:
                         clireply.append('first argument : astid value')
-                        clireply.append('second argument : one of %s' % self._ctiserver.commandclass.astid_vars)
+                        clireply.append('second argument : one of %s' % self._ami_18.astid_vars)
 
                 elif usefulmsg.startswith('show_varsizes '):
                     command_args = usefulmsg.split()
                     if len(command_args) > 1:
                         astid = command_args[1]
-                        for varname in self._ctiserver.commandclass.astid_vars:
-                            if hasattr(self._ctiserver.commandclass, varname):
-                                tvar = getattr(self._ctiserver.commandclass, varname)
+                        for varname in self._ami_18.astid_vars:
+                            if hasattr(self._ami_18, varname):
+                                tvar = getattr(self._ami_18, varname)
                                 if astid in tvar:
                                     clireply.append('%s on %s: %d' % (varname, astid, len(tvar[astid])))
                                 else:
@@ -210,7 +212,7 @@ class INFO(interfaces.Interfaces):
                         clireply.append('argument : astid value')
 
                 elif usefulmsg == 'show_logged_ip':
-                    for user, info in self._ctiserver.commandclass.connected_users().iteritems():
+                    for user, info in self._ami_18.connected_users().iteritems():
                         if 'connection' in info['login']:
                             try:
                                 [ipaddr, ipport] = info['login']['connection'].getpeername()
@@ -221,7 +223,7 @@ class INFO(interfaces.Interfaces):
                                             % (user.encode('latin1'), ipaddr, ipport))
 
                 elif usefulmsg == 'show_logged':
-                    for user, info in self._ctiserver.commandclass.connected_users().iteritems():
+                    for user, info in self._ami_18.connected_users().iteritems():
                         try:
                             clireply.append('%s %s' % (user.encode('latin1'), info))
                         except Exception:

@@ -223,13 +223,14 @@ class AMI(object):
         Handles the AMI events related to a given function (i.e. containing the Event field).
         It roughly only dispatches them to the relevant commandset's methods.
         """
+        ami_18 = context.get('ami_18')
         functions = []
         if 'Event' in event:
             functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event))
         if evfunction in ami_def.evfunction_to_method_name:
             methodname = ami_def.evfunction_to_method_name.get(evfunction)
-            if hasattr(self._ctiserver.commandclass, methodname):
-                functions.append(getattr(self._ctiserver.commandclass, methodname))
+            if hasattr(ami_18, methodname):
+                functions.append(getattr(ami_18, methodname))
         for function in set(functions):
             try:
                 function(event)
@@ -304,9 +305,10 @@ class AMI(object):
                           'replyid': request.get('commandid')})
 
     def _handle_extension_success(self, event, actionid, properties, mode):
+        ami_18 = context.get('ami_18')
         msg = event.get('Message')
         if msg and msg == 'Extension Status':
-            self._ctiserver.commandclass.amiresponse_extensionstatus(event)
+            ami_18.amiresponse_extensionstatus(event)
 
     def _handle_vmupdate_success(self, event, properties):
         try:
