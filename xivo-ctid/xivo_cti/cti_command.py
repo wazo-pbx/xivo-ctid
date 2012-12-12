@@ -32,7 +32,7 @@ from xivo_cti import cti_fax
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
-from xivo_cti.services import call_history_manager
+from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao import userfeatures_dao, extensions_dao
 
 logger = logging.getLogger('cti_command')
@@ -251,10 +251,11 @@ class Command(object):
             return 'wrong cti_profile_id'
 
     def __connect_user__(self, availstate, c):
+        user_service_manager = cti_context.get('user_service_manager')
         cdetails = self._connection.connection_details
         userid = cdetails.get('userid')
         self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
-        self._ctiserver._user_service_manager.set_presence(userid, availstate)
+        user_service_manager.set_presence(userid, availstate)
 
     # end of login/logout related commands
 

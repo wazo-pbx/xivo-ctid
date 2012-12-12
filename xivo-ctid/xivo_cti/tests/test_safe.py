@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -34,9 +34,10 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config
 from xivo_cti import innerdata
-from mock import Mock, patch
-from xivo_cti.services.user_service_manager import UserServiceManager
+from tests.mock import Mock
 from xivo_cti.cti.commands.availstate import Availstate
+from mock import patch
+from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
 
 
@@ -51,9 +52,9 @@ class TestSafe(unittest.TestCase):
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
         self._ctiserver = CTIServer(config)
         self._ctiserver._init_db_connection_pool()
-        self._ctiserver._user_service_manager = Mock(UserServiceManager)
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
         self.safe = Safe(config, self._ctiserver, queue_member_cti_adapter)
+        self.safe.user_service_manager = Mock(UserServiceManager)
         mock_get_ids.get_ids.return_value = []
 
     def test_safe(self):
@@ -66,7 +67,7 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(UpdateConfig, self.safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, self.safe.handle_getlist_update_status)
         self.assert_callback_registered(Directory, self.safe.getcustomers)
-        self.assert_callback_registered(Availstate, self.safe._ctiserver._user_service_manager.set_presence)
+        self.assert_callback_registered(Availstate, self.safe.user_service_manager.set_presence)
 
     def test_handle_getlist_list_id_not_a_list(self):
         ret = self.safe.handle_getlist_list_id('not_a_list', '1')
@@ -117,6 +118,49 @@ class TestSafe(unittest.TestCase):
 
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
+
+    @patch('xivo_dao.queue_features_dao.is_user_member_of_queue')
+    def test_user_match_with_queue(self, mock_is_user_member_of_queue):
+        user_id = 1
+        queue_id = 42
+        tomatch = {
+            'desttype': 'queue',
+            'destid': queue_id,
+        }
+        mock_is_user_member_of_queue.return_value = True
+
+        domatch = self.safe.user_match(user_id, tomatch)
+
+        mock_is_user_member_of_queue.assert_called_once_with(user_id, queue_id)
+        self.assertTrue(domatch)
+
+    @patch('xivo_dao.group_dao.is_user_member_of_group')
+    def test_user_match_with_group(self, mock_is_user_member_of_group):
+        user_id = 1
+        group_id = 42
+        tomatch = {
+            'desttype': 'group',
+            'destid': group_id,
+        }
+        mock_is_user_member_of_group.return_value = True
+
+        domatch = self.safe.user_match(user_id, tomatch)
+
+        mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
+        self.assertTrue(domatch)
+
+    @patch('xivo_dao.trunkfeatures_dao.get_ids')
+    def test_init_status(self, mock_get_ids):
+        id_list = [1, 2, 3, 4]
+        mock_get_ids.return_value = id_list
+
+        self.safe.init_status()
+
+        self.assertTrue('trunks' in self.safe.xod_status)
+        for trunk_id in id_list:
+            self.assertTrue(trunk_id in self.safe.xod_status['trunks'])
+            self.assertEqual(self.safe.xod_status['trunks'][trunk_id], self.safe.props_status['trunks'])
+            self.assertFalse(self.safe.xod_status['trunks'][trunk_id] is self.safe.props_status['trunks'])
 
 
 class TestChannel(unittest.TestCase):

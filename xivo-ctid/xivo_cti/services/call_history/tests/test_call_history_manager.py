@@ -4,8 +4,8 @@ import unittest
 from mock import Mock
 from mock import patch
 from datetime import datetime
-from xivo_cti.services.call_history_manager import ReceivedCall, SentCall
-from xivo_cti.services import call_history_manager
+from xivo_cti.services.call_history.manager import ReceivedCall, SentCall
+from xivo_cti.services.call_history import manager as call_history_manager
 
 mock_channels_for_phone = Mock()
 mock_caller_id_by_unique_id = Mock()

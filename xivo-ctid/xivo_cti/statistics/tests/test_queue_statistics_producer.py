@@ -1,6 +1,30 @@
+# -*- coding: utf-8 -*-
+
+# XiVO CTI Server
+#
+# Copyright (C) 2007-2012  Avencall
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Alternatively, XiVO CTI Server is available under other licenses directly
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 from mock import Mock, patch
-from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
@@ -32,9 +56,8 @@ class QueueStatBuilder(object):
 class TestQueueStatisticsProducer(unittest.TestCase):
 
     def setUp(self):
-        self.statistics_notifier = Mock(StatisticsNotifier)
-        self.innerdata_dao = Mock(InnerdataDAO)
-        self.queue_statistics_producer = QueueStatisticsProducer(self.statistics_notifier, self.innerdata_dao)
+        self.queue_statistics_producer = QueueStatisticsProducer(Mock(StatisticsNotifier))
+        self.queue_statistics_producer.dao.innerdata = Mock(InnerdataDAO)
         self.queue_service_manager = Mock(QueueServiceManager)
         self.dependencies = {
             'queue_service_manager': self.queue_service_manager,
@@ -54,7 +77,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queueid)
                                                                          .nb_of_logged_agents(1)
                                                                          .build())
@@ -70,13 +93,13 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
 
-        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_with(_aQueueStat()
                                                                     .in_queue(queueid)
                                                                     .nb_of_logged_agents(1)
                                                                     .build())
 
         self.queue_statistics_producer.on_agent_loggedon(agentid2)
-        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_with(_aQueueStat()
                                                                     .in_queue(queueid)
                                                                     .nb_of_logged_agents(2)
                                                                     .build())
@@ -91,7 +114,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
 
-        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_with(_aQueueStat()
                                                                     .in_queue(queue1_id)
                                                                     .nb_of_logged_agents(1)
                                                                     .build())
@@ -107,11 +130,11 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
 
-        self.statistics_notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
                                                                         .in_queue(queue1_id)
                                                                         .nb_of_logged_agents(1)
                                                                         .build())
-        self.statistics_notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_was_called_with(_aQueueStat()
                                                                         .in_queue(queue2_id)
                                                                         .nb_of_logged_agents(1)
                                                                         .build())
@@ -125,7 +148,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedoff(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_with(_aQueueStat()
                                                                     .in_queue(queueid)
                                                                     .nb_of_logged_agents(0)
                                                                     .build())
@@ -139,7 +162,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_removed(queueid, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queueid)
                                                                          .nb_of_logged_agents(0)
                                                                          .build())
@@ -155,7 +178,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_removed(queue1_id, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queue1_id)
                                                                          .nb_of_logged_agents(0)
                                                                          .build())
@@ -168,7 +191,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_removed(queue1_id, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_never_called()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_never_called()
 
     def test_remove_unlogged_agent_from_one_queue_multiple_queues(self):
 
@@ -183,7 +206,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queue2_id)
                                                                          .nb_of_logged_agents(1)
                                                                          .build())
@@ -193,7 +216,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_queue_added(queue_id)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queue_id)
                                                                          .nb_of_logged_agents(0)
                                                                          .build())
@@ -211,7 +234,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queue2_id)
                                                                          .nb_of_logged_agents(1)
                                                                          .build())
@@ -247,7 +270,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_added(queueid, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(queueid)
                                                                          .nb_of_logged_agents(0)
                                                                          .build())
@@ -263,7 +286,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_added(other_queue, agentid)
 
-        self.statistics_notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with(_aQueueStat()
                                                                          .in_queue(other_queue)
                                                                          .nb_of_logged_agents(1)
                                                                          .build())
@@ -280,12 +303,12 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.send_all_stats(connection_cti)
 
-        self.statistics_notifier.send_statistic.assert_was_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.send_statistic.assert_was_called_with(_aQueueStat()
                                                                        .in_queue(queueid1)
                                                                        .nb_of_logged_agents(0)
                                                                        .build(), connection_cti)
 
-        self.statistics_notifier.send_statistic.assert_was_called_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.send_statistic.assert_was_called_with(_aQueueStat()
                                                                        .in_queue(queueid2)
                                                                        .nb_of_logged_agents(0)
                                                                        .build(), connection_cti)
@@ -300,7 +323,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.send_all_stats(connection_cti)
 
-        self.statistics_notifier.send_statistic.assert_called_once_with(_aQueueStat()
+        self.queue_statistics_producer.notifier.send_statistic.assert_called_once_with(_aQueueStat()
                                                                         .in_queue(queue_id)
                                                                         .nb_of_logged_agents(0)
                                                                         .build(), connection_cti)
@@ -351,21 +374,21 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
     def _log_agent(self, agentid):
         self.queue_statistics_producer.on_agent_loggedon(agentid)
-        self.statistics_notifier.reset_mock()
+        self.queue_statistics_producer.notifier.reset_mock()
 
     def _unlog_agent(self, agentid):
         self.queue_statistics_producer.on_agent_loggedoff(agentid)
-        self.statistics_notifier.reset_mock()
+        self.queue_statistics_producer.notifier.reset_mock()
 
     def _add_queue(self, queueid):
         self.queue_statistics_producer.on_queue_added(queueid)
-        self.statistics_notifier.reset_mock()
+        self.queue_statistics_producer.notifier.reset_mock()
 
     def _remove_queue(self, queueid):
         self.queue_statistics_producer.on_queue_removed(queueid)
-        self.statistics_notifier.reset_mock()
+        self.queue_statistics_producer.notifier.reset_mock()
 
     def _add_agent(self, queueid, agentid):
         self.queue_statistics_producer.on_queue_added(queueid)
         self.queue_statistics_producer._on_agent_added(queueid, agentid)
-        self.statistics_notifier.reset_mock()
+        self.queue_statistics_producer.notifier.reset_mock()

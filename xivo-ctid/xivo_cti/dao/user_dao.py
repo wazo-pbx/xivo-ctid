@@ -113,3 +113,9 @@ class UserDAO(object):
         line = self._phone(user['linelist'].pop())
 
         return line['identity']
+
+    def get_context(self, user_id):
+        user = self._user(user_id)
+        line = self._phone(user['linelist'].pop())
+
+        return line['context']

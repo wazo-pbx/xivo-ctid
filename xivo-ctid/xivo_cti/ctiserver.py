@@ -172,14 +172,11 @@ class CTIServer(object):
         self._statistics_notifier = context.get('statistics_notifier')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
 
-        self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_notifier = context.get('queue_member_notifier')
         self._queue_member_updater = context.get('queue_member_updater')
+        self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
-
-        self._innerdata_dao = context.get('innerdata_dao')
-        self._user_dao = context.get('user_dao')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
@@ -196,9 +193,6 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
-
-        self.safe = context.get('innerdata')
-        self.safe.user_service_manager = self._user_service_manager
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
@@ -330,7 +324,7 @@ class CTIServer(object):
                 agent_status_cti = AgentStatus.available
             else:
                 agent_status_cti = AgentStatus.logged_out
-            self._innerdata_dao.set_agent_availability(agent_status.id, agent_status_cti)
+            dao.innerdata.set_agent_availability(agent_status.id, agent_status_cti)
 
     def run(self):
         while True:
@@ -397,6 +391,10 @@ class CTIServer(object):
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
         logger.info('(1/3) Retrieving data')
+
+        self.safe = context.get('innerdata')
+        self.safe.user_service_manager = self._user_service_manager
+        self.safe.queue_member_cti_adapter = self._queue_member_cti_adapter
 
         dao.instanciate_dao(self.safe, self._queue_member_manager)
 
@@ -641,7 +639,6 @@ class CTIServer(object):
 
         if socketobject:
             if kind in ['CTI', 'CTIS']:
-                interface.user_service_manager = self._user_service_manager
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
                 interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
                                                 ({'action': 'ctilogin',

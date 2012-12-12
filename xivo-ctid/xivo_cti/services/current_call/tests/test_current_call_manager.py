@@ -331,7 +331,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_1)])
+        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
 
     @patch('xivo_dao.userfeatures_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):

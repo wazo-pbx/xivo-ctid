@@ -26,15 +26,15 @@ import unittest
 
 from tests.mock import Mock
 from xivo_cti.services.queue_service_manager import QueueServiceManager
-from xivo_cti.services.queue_service_manager import NotAQueueException
-from xivo_cti.dao.innerdatadao import InnerdataDAO
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
+from xivo_cti.services.queue.exception import NotAQueueException
 
 
 class TestQueueServiceManager(unittest.TestCase):
 
     def setUp(self):
-        self.innerdata_dao = Mock(InnerdataDAO)
-        self.queue_service_manager = QueueServiceManager(self.innerdata_dao)
+        self.queue_service_manager = QueueServiceManager()
+        self.queue_service_manager.dao.innerdata = Mock(InnerdataDAO)
 
     def tearDown(self):
         pass
@@ -42,8 +42,8 @@ class TestQueueServiceManager(unittest.TestCase):
     def test_get_queue_id(self):
         expected_queue_id = '1'
         queue_name = 'services'
-        self.innerdata_dao.get_queue_id = Mock()
-        self.innerdata_dao.get_queue_id.return_value = '1'
+        self.queue_service_manager.get_queue_id = Mock()
+        self.queue_service_manager.get_queue_id.return_value = '1'
 
         queue_id = self.queue_service_manager.get_queue_id(queue_name)
 
@@ -51,8 +51,8 @@ class TestQueueServiceManager(unittest.TestCase):
 
     def test_get_queue_id_not_exist(self):
         queue_name = 'services'
-        self.innerdata_dao.get_queue_id = Mock()
-        self.innerdata_dao.get_queue_id.side_effect = NotAQueueException('Not a queue!')
+        self.queue_service_manager.get_queue_id = Mock()
+        self.queue_service_manager.get_queue_id.side_effect = NotAQueueException('Not a queue!')
 
         self.assertRaises(NotAQueueException,
                           self.queue_service_manager.get_queue_id,
@@ -60,7 +60,8 @@ class TestQueueServiceManager(unittest.TestCase):
 
     def test_get_queue_ids(self):
         expected_result = ['12324', '65452']
-        self.innerdata_dao.get_queue_ids.return_value = expected_result
+        self.queue_service_manager.get_queue_ids = Mock()
+        self.queue_service_manager.get_queue_ids.return_value = expected_result
 
         result = self.queue_service_manager.get_queue_ids()
 

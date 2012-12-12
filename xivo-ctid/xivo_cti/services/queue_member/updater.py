@@ -10,8 +10,9 @@ logger = logging.getLogger('QueueMemberUpdater')
 
 class QueueMemberUpdater(object):
 
-    def __init__(self, queue_member_manager):
+    def __init__(self, queue_member_manager, ami_class):
         self._queue_member_manager = queue_member_manager
+        self._ami_class = ami_class
 
     def on_initialization(self):
         self._add_dao_queue_members_on_init()
@@ -34,9 +35,12 @@ class QueueMemberUpdater(object):
             if queue_member_id not in old_queue_member_ids:
                 queue_member = QueueMember.from_dao_queue_member(dao_queue_member)
                 self._queue_member_manager._add_queue_member(queue_member)
-                # TODO need to do an AMI QueueStatus here
+                self._ask_member_queue_status(queue_member)
         obsolete_queue_member_ids = old_queue_member_ids - new_queue_member_ids
         return obsolete_queue_member_ids
+
+    def _ask_member_queue_status(self, queue_member):
+        self._ami_class.queuestatus(queue_member.queue_name, queue_member.member_name)
 
     def on_ami_agent_logoff(self, ami_event):
         agent_number = ami_event['AgentNumber']

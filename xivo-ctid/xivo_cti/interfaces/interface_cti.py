@@ -32,6 +32,7 @@ from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
 from xivo_cti.interfaces import interfaces
+from xivo_cti.context import context
 
 logger = logging.getLogger('interface_cti')
 
@@ -67,7 +68,6 @@ class CTI(interfaces.Interfaces):
         self.transferconnection = {}
         self._cti_command_handler = CTICommandHandler(self)
         self._cti_command_runner = CTICommandRunner()
-        self.user_service_manager = None
         self._register_login_callbacks()
 
     def connected(self, connid):
@@ -93,12 +93,13 @@ class CTI(interfaces.Interfaces):
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         else:
             try:
+                user_service_manager = context.get('user_service_manager')
                 user_id = self.user_id()
                 if (cause == self.DisconnectCause.by_client
                     or cause == self.DisconnectCause.by_server_stop
                     or cause == self.DisconnectCause.by_server_reload
                     or cause == self.DisconnectCause.broken_pipe):
-                    self._ctiserver._user_service_manager.disconnect_no_action(user_id)
+                    user_service_manager.disconnect_no_action(user_id)
                 else:
                     raise TypeError('invalid DisconnectCause %s' % cause)
             except NotLoggedException:

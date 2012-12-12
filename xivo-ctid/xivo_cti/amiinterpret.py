@@ -27,8 +27,7 @@ import random
 import string
 import time
 
-from xivo_dao import group_dao, userfeatures_dao
-from xivo_dao import queue_features_dao
+from xivo_dao import group_dao, userfeatures_dao, queue_features_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -48,10 +47,9 @@ class AMI_1_8(object):
                   'Meetme',
                   'Did',)
 
-    def __init__(self, cti_server, innerdata, user_dao, interface_ami):
+    def __init__(self, cti_server, innerdata, interface_ami):
         self._ctiserver = cti_server
         self.innerdata = innerdata
-        self.user_dao = user_dao
         self.interface_ami = interface_ami
 
     def ami_newchannel(self, event):

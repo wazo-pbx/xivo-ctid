@@ -23,9 +23,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.services.user_service_notifier import UserServiceNotifier
+from xivo_cti.services.user.notifier import UserServiceNotifier
 from mock import Mock
-import Queue
 
 
 class TestUserServiceNotifier(unittest.TestCase):

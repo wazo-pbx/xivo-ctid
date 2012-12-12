@@ -39,6 +39,7 @@ from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 from xivo_cti.context import context
+from xivo_cti import dao
 
 logger = logging.getLogger('interface_ami')
 
@@ -68,7 +69,7 @@ class AMI(object):
         AMIAgentLoginLogoff.register_callbacks()
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
-        ami_agent_login_logoff.innerdata_dao = self._ctiserver._innerdata_dao
+        ami_agent_login_logoff.innerdata_dao = dao.innerdata
         self._ami_initializer = AMIInitializer()
         self._ami_initializer._ami_class = self.amiclass
         self._ami_initializer._ami_callback_handler = AMICallbackHandler.get_instance()

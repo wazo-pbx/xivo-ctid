@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # XiVO CTI Server
-#
-# Copyright (C) 2007-2012  Avencall
+
+# Copyright (C) 2009-2012  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,21 +22,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti import dao
 
-logger = logging.getLogger(__name__)
 
+class PresenceServiceManager(object):
 
-class AgentAvailabilityNotifier(object):
-
-    def __init__(self, cti_server, cti_message_formatter=CTIMessageFormatter()):
+    def __init__(self):
         self.dao = dao
-        self.cti_message_formatter = cti_message_formatter
-        self.cti_server = cti_server
 
-    def notify(self, agent_id):
-        agent_status = self.dao.innerdata.agent_status(agent_id)
-        cti_message = self.cti_message_formatter.update_agent_status(agent_id, agent_status)
-        self.cti_server.send_cti_event(cti_message)
+    def is_valid_presence(self, profile, presence):
+        presences = self.dao.innerdata.get_presences(profile)
+        return presence in presences

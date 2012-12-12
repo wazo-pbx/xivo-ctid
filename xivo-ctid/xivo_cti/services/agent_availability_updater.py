@@ -23,8 +23,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_cti import dao
 from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti import dao
 
 logger = logging.getLogger(__name__)
 
@@ -64,24 +64,24 @@ def parse_ami_paused(ami_event, agent_availability_updater):
 
 class AgentAvailabilityUpdater(object):
 
-    def __init__(self, innerdata_dao, agent_availability_notifier, scheduler):
-        self.innerdata_dao = innerdata_dao
+    def __init__(self, agent_availability_notifier, scheduler):
+        self.dao = dao
         self.scheduler = scheduler
         self.notifier = agent_availability_notifier
 
     def agent_logged_in(self, agent_id):
         if dao.agent.is_completely_paused(agent_id):
-            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)
         else:
-            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
         self.notifier.notify(agent_id)
 
     def agent_logged_out(self, agent_id):
-        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.logged_out)
+        self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.logged_out)
         self.notifier.notify(agent_id)
 
     def agent_answered(self, agent_id):
-        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
+        self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)
         self.notifier.notify(agent_id)
 
     def agent_call_completed(self, agent_id, wrapup_time):
@@ -91,7 +91,7 @@ class AgentAvailabilityUpdater(object):
                                     agent_id)
         else:
             if not dao.agent.is_completely_paused(agent_id):
-                self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+                self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
                 self.notifier.notify(agent_id)
 
     def agent_wrapup_completed(self, agent_id):
@@ -99,15 +99,15 @@ class AgentAvailabilityUpdater(object):
             return
         if not dao.agent.is_logged(agent_id):
             return
-        self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+        self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
         self.notifier.notify(agent_id)
 
     def agent_paused_all(self, agent_id):
         if dao.agent.is_logged(agent_id):
-            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.unavailable)
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)
             self.notifier.notify(agent_id)
 
     def agent_unpaused(self, agent_id):
         if dao.agent.is_logged(agent_id) and not dao.agent.on_call(agent_id):
-            self.innerdata_dao.set_agent_availability(agent_id, AgentStatus.available)
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
             self.notifier.notify(agent_id)

@@ -40,7 +40,11 @@ from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list, \
     meetmes_list, phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
-from xivo_dao import userfeatures_dao, trunkfeatures_dao
+from xivo_cti import dao
+from xivo_dao import group_dao
+from xivo_dao import queue_features_dao
+from xivo_dao import trunkfeatures_dao
+from xivo_dao import userfeatures_dao
 
 logger = logging.getLogger('innerdata')
 
@@ -157,7 +161,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
-        Availstate.register_callback_params(self._ctiserver._user_service_manager.set_presence, ['user_id', 'availstate'])
+        Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -238,11 +242,9 @@ class Safe(object):
                 user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == dest_id
             elif dest_type == 'queue' and dest_id:
-                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
-                domatch = self.queuemember_service_manager.is_queue_member(userid, dest_id)
+                domatch = queue_features_dao.is_user_member_of_queue(userid, dest_id)
             elif dest_type == 'group' and dest_id:
-                # TODO a remplacer par un appel a queue_member_dao (xivo_dao)
-                domatch = self.queuemember_service_manager.is_group_member(userid, dest_id)
+                domatch = group_dao.is_user_member_of_group(userid, dest_id)
         else:
             # 'all' case
             domatch = True
@@ -257,7 +259,7 @@ class Safe(object):
 
         if domatch and 'contexts' in tomatch:
             domatch = False
-            context = self.user_service_manager.get_context(userid)
+            context = dao.user.get_context(userid)
             if context in tomatch['contexts']:
                 domatch = True
 
@@ -709,7 +711,7 @@ class Safe(object):
 
     def getcustomers(self, user_id, pattern, commandid):
         try:
-            context = self.user_service_manager.get_context(user_id)
+            context = dao.user.get_context(user_id)
             context_obj = self.contexts_mgr.contexts[context]
         except KeyError:
             logger.info('Directory lookup failed in context: %s', context)
