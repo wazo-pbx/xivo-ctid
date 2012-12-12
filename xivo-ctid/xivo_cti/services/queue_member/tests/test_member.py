@@ -2,11 +2,80 @@
 
 import unittest
 from datetime import datetime
-from mock import Mock
-from xivo_cti.services.queue_member.member import QueueMemberState
+from mock import Mock, patch
+from xivo_cti.services.queue_member.member import QueueMemberState, QueueMember
+
+
+class TestQueueMember(unittest.TestCase):
+
+    @patch('xivo_cti.services.queue_member.common.format_queue_member_id')
+    def test_id_on_initialisation(self, mock_format_queue_member_id):
+        queue_name = 'queue1'
+        member_name = 'Agent/1234'
+        mock_format_queue_member_id.return_value = 'something'
+
+        queue_member = QueueMember(queue_name, member_name, None)
+
+        mock_format_queue_member_id.assert_called_once_with(queue_name, member_name)
+        self.assertEqual(queue_member.id, 'something')
+
+    @patch('xivo_cti.services.queue_member.common.is_agent_member_name')
+    def test_is_agent(self, mock_is_agent_member_name):
+        queue_name = 'queue1'
+        member_name = 'Agent/1234'
+        mock_is_agent_member_name.return_value = True
+
+        queue_member = QueueMember(queue_name, member_name, None)
+        result = queue_member.is_agent()
+
+        mock_is_agent_member_name.assert_called_once_with(member_name)
+        self.assertEqual(result, True)
+
+    def test_to_cti_config(self):
+        queue_name = 'queue1'
+        member_name = 'Agent/1234'
+        state = Mock()
+
+        queue_member = QueueMember(queue_name, member_name, state)
+        result = queue_member.to_cti_config()
+
+        expected_result = {
+            'queue_name': queue_name,
+            'interface': member_name,
+            'membership': 'static'
+        }
+        self.assertEqual(result, expected_result)
+        state._to_cti.assert_called_once_with(expected_result)
+
+    def test_to_cti_status(self):
+        queue_name = 'queue1'
+        member_name = 'Agent/1234'
+        state = Mock()
+
+        queue_member = QueueMember(queue_name, member_name, state)
+        result = queue_member.to_cti_status()
+
+        expected_result = {
+            'queue_name': queue_name,
+            'interface': member_name,
+            'membership': 'static'
+        }
+        self.assertEqual(result, expected_result)
+        state._to_cti.assert_called_once_with(expected_result)
 
 
 class TestQueueMemberState(unittest.TestCase):
+
+    def test_copy(self):
+        state1 = QueueMemberState()
+        state1.calls_taken = 42
+
+        state2 = state1.copy()
+        state2.interface = 'Local/423232@foobar'
+
+        self.assertEqual(state1.calls_taken, state2.calls_taken)
+        self.assertNotEqual(state1.interface, state2.interface)
+        self.assertTrue(state1.__dict__ is not state2.__dict__)
 
     def test_equal(self):
         state1 = QueueMemberState()
