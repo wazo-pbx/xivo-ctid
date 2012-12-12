@@ -310,7 +310,7 @@ class TestCurrentCallManager(unittest.TestCase):
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
         self.manager._lines = {
@@ -333,7 +333,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
         user_id = 5
         mock_get_line_identity.side_effect = LookupError()
@@ -342,7 +342,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(self.manager.ami.sendcommand.call_count, 0)
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_switchboard_hold(self, mock_get_line_identity):
         dao.queue = Mock(queue_dao.QueueDAO)
         dao.queue.get_number_context_from_name.return_value = '3006', 'ctx'
@@ -368,7 +368,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_switchboard_unhold(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -396,7 +396,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.schedule_answer.assert_called_once_with(user_id, delay)
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_switchboard_unhold_no_line(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -408,7 +408,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
 
-    @patch('xivo_dao.userfeatures_dao.get_line_identity')
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_switchboard_unhold_no_channel(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -420,7 +420,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
 
-    @patch('xivo_dao.userfeatures_dao.get_device_id')
+    @patch('xivo_dao.user_dao.get_device_id')
     def test_schedule_answer(self, mock_get_device_id):
         user_id = 6
         delay = 0.25

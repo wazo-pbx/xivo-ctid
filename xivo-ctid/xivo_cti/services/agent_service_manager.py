@@ -26,7 +26,7 @@ import logging
 from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agent_dao
 from xivo_dao import line_dao
-from xivo_dao import userfeatures_dao
+from xivo_dao import user_dao
 from xivo_dao import queue_features_dao
 
 logger = logging.getLogger('Agent Manager')
@@ -66,13 +66,13 @@ class AgentServiceManager(object):
 
     def _transform_agent_xid(self, user_id, agent_id):
         if not agent_id or agent_id == 'agent:special:me':
-            agent_id = userfeatures_dao.agent_id(user_id)
+            agent_id = user_dao.agent_id(user_id)
         else:
             agent_id = IdConverter.xid_to_id(agent_id)
         return agent_id
 
     def find_agent_exten(self, agent_id):
-        user_ids = userfeatures_dao.find_by_agent_id(agent_id)
+        user_ids = user_dao.find_by_agent_id(agent_id)
         line_ids = []
         for user_id in user_ids:
             line_ids.extend(line_dao.find_line_id_by_user_id(user_id))

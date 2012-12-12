@@ -46,8 +46,8 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
-    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
-    @patch('xivo_dao.userfeatures_dao.agent_id')
+    @patch('xivo_dao.user_dao.find_by_agent_id')
+    @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_on_cti_agent_login(self,
                                 mock_id_converter,
@@ -88,8 +88,8 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
-    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
-    @patch('xivo_dao.userfeatures_dao.agent_id')
+    @patch('xivo_dao.user_dao.find_by_agent_id')
+    @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_on_cti_agent_login_no_number(self,
                                           mock_id_converter,
@@ -120,8 +120,8 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
-    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
-    @patch('xivo_dao.userfeatures_dao.agent_id')
+    @patch('xivo_dao.user_dao.find_by_agent_id')
+    @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_agent_special_me(self,
                               mock_id_converter,
@@ -149,7 +149,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.userfeatures_dao.find_by_agent_id')
+    @patch('xivo_dao.user_dao.find_by_agent_id')
     def test_find_agent_exten(self,
                               mock_find_by_agent_id,
                               mock_find_line_id_by_user_id,

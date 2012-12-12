@@ -44,7 +44,7 @@ class TestUserDAO(unittest.TestCase):
         }
         self.dao = UserDAO(self._innerdata)
 
-    @patch('xivo_dao.userfeatures_dao.enable_dnd')
+    @patch('xivo_dao.user_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
         user_id = 1
         self._userlist.keeplist[user_id] = {'enablednd': False}
@@ -54,7 +54,7 @@ class TestUserDAO(unittest.TestCase):
         enable_dnd.assert_called_once_with(user_id)
         self.assertTrue(self._userlist.keeplist[user_id]['enablednd'])
 
-    @patch('xivo_dao.userfeatures_dao.disable_dnd')
+    @patch('xivo_dao.user_dao.disable_dnd')
     def test_unset_dnd(self, disable_dnd):
         user_id = 1
         self._userlist.keeplist[user_id] = {'enablednd': True}
@@ -64,7 +64,7 @@ class TestUserDAO(unittest.TestCase):
         disable_dnd.assert_called_once_with(user_id)
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
-    @patch('xivo_dao.userfeatures_dao.enable_filter')
+    @patch('xivo_dao.user_dao.enable_filter')
     def test_enable_filter(self, enable_filter):
         user_id = 1
         self._userlist.keeplist[user_id] = {'incallfilter': False}
@@ -74,7 +74,7 @@ class TestUserDAO(unittest.TestCase):
         enable_filter.assert_called_once_with(user_id)
         self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
-    @patch('xivo_dao.userfeatures_dao.disable_filter')
+    @patch('xivo_dao.user_dao.disable_filter')
     def test_disable_filter(self, disable_filter):
         user_id = 1
         self._userlist.keeplist[user_id] = {'incallfilter': True}
@@ -84,7 +84,7 @@ class TestUserDAO(unittest.TestCase):
         disable_filter.assert_called_once_with(user_id)
         self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
-    @patch('xivo_dao.userfeatures_dao.enable_unconditional_fwd')
+    @patch('xivo_dao.user_dao.enable_unconditional_fwd')
     def test_enable_unconditional_fwd(self, enable_unconditional_fwd):
         user_id = 1
         destination = '765'
@@ -97,7 +97,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(self._userlist.keeplist[user_id]['enableunc'], True)
         self.assertEqual(self._userlist.keeplist[user_id]['destunc'], destination, 'inner data not updated for unconditional destination')
 
-    @patch('xivo_dao.userfeatures_dao.disable_unconditional_fwd')
+    @patch('xivo_dao.user_dao.disable_unconditional_fwd')
     def test_unconditional_fwd_disabled(self, disable_unconditional_fwd):
         user_id = 1
         destination = '765'
@@ -110,7 +110,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(self._userlist.keeplist[user_id]['enableunc'], False)
         self.assertEqual(self._userlist.keeplist[user_id]['destunc'], destination, 'inner data not updated for unconditional destination')
 
-    @patch('xivo_dao.userfeatures_dao.enable_rna_fwd')
+    @patch('xivo_dao.user_dao.enable_rna_fwd')
     def test_rna_fwd_enabled(self, enable_rna_fwd):
         user_id = 1
         destination = '4321'
@@ -123,7 +123,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(self._userlist.keeplist[user_id]['enablerna'], True)
         self.assertEqual(self._userlist.keeplist[user_id]['destrna'], destination, 'inner data not updated for rna destination')
 
-    @patch('xivo_dao.userfeatures_dao.disable_rna_fwd')
+    @patch('xivo_dao.user_dao.disable_rna_fwd')
     def test_rna_fwd_disabled(self, disable_rna_fwd):
         user_id = 1
         destination = '4321'
@@ -136,7 +136,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(self._userlist.keeplist[user_id]['enablerna'], False)
         self.assertEqual(self._userlist.keeplist[user_id]['destrna'], destination, 'inner data not updated for rna destination')
 
-    @patch('xivo_dao.userfeatures_dao.enable_busy_fwd')
+    @patch('xivo_dao.user_dao.enable_busy_fwd')
     def test_busy_fwd_enabled(self, enable_busy_fwd):
         user_id = 1
         destination = '435'
@@ -149,7 +149,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(self._userlist.keeplist[user_id]['enablebusy'], True)
         self.assertEqual(self._userlist.keeplist[user_id]['destbusy'], destination, 'inner data not updated for busy destination')
 
-    @patch('xivo_dao.userfeatures_dao.disable_rna_fwd')
+    @patch('xivo_dao.user_dao.disable_rna_fwd')
     def test_busy_fwd_disabled(self, disable_rna_fwd):
         user_id = 1
         destination = '435'
