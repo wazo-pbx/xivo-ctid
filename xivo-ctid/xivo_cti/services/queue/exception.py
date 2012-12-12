@@ -20,18 +20,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from xivo_cti import dao
 
 
-class QueueServiceManager(object):
-
-    def __init__(self):
-        self.dao = dao
-
-    def get_queue_id(self, queue_name):
-        return self.dao.innerdata.get_queue_id(queue_name)
-
-    def get_queue_ids(self):
-        return self.dao.innerdata.get_queue_ids()
+class NotAQueueException(Exception):
+    pass

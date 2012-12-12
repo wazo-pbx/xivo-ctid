@@ -26,8 +26,8 @@ import logging
 from collections import namedtuple
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.context import context
-from xivo_cti.services.queue_service_manager import NotAQueueException
 from xivo_cti import dao
+from xivo_cti.services.queue.exception import NotAQueueException
 
 logger = logging.getLogger("QueueStatisticsProducer")
 QueueCounters = namedtuple('QueueCounters', ['available', 'EWT', 'Talking'])
