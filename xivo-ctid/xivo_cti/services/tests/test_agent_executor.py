@@ -24,10 +24,11 @@
 
 import unittest
 from tests.mock import Mock, call
-from xivo_cti.services.agent_executor import AgentExecutor
-from xivo_cti.xivo_ami import AMIClass
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
+from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.xivo_ami import AMIClass
 
 
 class TestAgentExecutor(unittest.TestCase):
@@ -46,6 +47,14 @@ class TestAgentExecutor(unittest.TestCase):
         self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_LOGGED)
 
         self.executor.login(agent_id, exten, context)
+
+    def test_login_raise_extension_in_use_when_extension_in_use(self):
+        agent_id = 42
+        exten = '1001'
+        context = 'default'
+        self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_IN_USE)
+
+        self.assertRaises(ExtensionInUseError, self.executor.login, agent_id, exten, context)
 
     def test_logoff(self):
         agent_id = 1234
