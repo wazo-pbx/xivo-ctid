@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -28,8 +28,8 @@ import logging
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.ami.actions.originate import Originate
-from xivo_cti.cti.missing_field_exception import MissingFieldException
 from xivo_cti.context import context
+from xivo_cti.exception import MissingFieldException
 
 logger = logging.getLogger('meetmelist')
 

@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -23,11 +23,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, patch
+from mock import Mock, patch
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.innerdata import Safe
-from xivo_cti.services.queue.exception import NotAQueueException
+from xivo_cti.exception import NotAQueueException
 
 
 class TestInnerdataDAO(unittest.TestCase):

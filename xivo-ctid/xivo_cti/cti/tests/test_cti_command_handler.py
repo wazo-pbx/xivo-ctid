@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -24,7 +24,7 @@
 
 import unittest
 
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti_config import CTI_PROTOCOL_VERSION

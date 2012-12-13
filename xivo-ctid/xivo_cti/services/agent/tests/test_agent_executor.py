@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -23,11 +23,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, call
+from mock import Mock, call
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
 from xivo_cti.exception import ExtensionInUseError
-from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
 
 

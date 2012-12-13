@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,21 +22,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-from xivo_cti import dao
 
-logger = logging.getLogger(__name__)
-
-
-class AgentAvailabilityNotifier(object):
-
-    def __init__(self, cti_server, cti_message_formatter=CTIMessageFormatter()):
-        self.dao = dao
-        self.cti_message_formatter = cti_message_formatter
-        self.cti_server = cti_server
-
-    def notify(self, agent_id):
-        agent_status = self.dao.innerdata.agent_status(agent_id)
-        cti_message = self.cti_message_formatter.update_agent_status(agent_id, agent_status)
-        self.cti_server.send_cti_event(cti_message)
+class AgentStatus(object):
+    available = 'available'
+    unavailable = 'unavailable'
+    logged_out = 'logged_out'

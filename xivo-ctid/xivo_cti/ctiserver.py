@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -75,10 +75,10 @@ from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
-from xivo_cti.services import agent_availability_updater
+from xivo_cti.services.agent import availability_updater as agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
 from xivo_cti.services import queue_entry_manager
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer

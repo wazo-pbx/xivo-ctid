@@ -22,15 +22,15 @@
 
 import unittest
 
-from tests.mock import Mock
+from mock import Mock
+from mock import patch
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
-from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
-from mock import patch
 from xivo_cti.dao.user_dao import UserDAO
 
 
@@ -295,11 +295,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.set_presence(user_id, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
-        self.user_service_manager.dao.user.set_presence.assert_never_called()
-        self.user_service_manager.presence_service_executor.assert_never_called()
-        self.user_service_notifier.presence_updated.assert_never_called()
-        mock_is_agent.assert_never_called()
-        self.user_service_manager.agent_service_manager.set_presence.assert_never_called()
+
+        self.assertEquals(self.user_service_manager.dao.user.set_presence.call_count, 0)
+        self.assertEquals(self.user_service_manager.presence_service_executor.call_count, 0)
+        self.assertEquals(self.user_service_notifier.presence_updated.call_count, 0)
+        self.assertEquals(mock_is_agent.call_count, 0)
+        self.assertEquals(self.user_service_manager.agent_service_manager.set_presence.call_count, 0)
 
     @patch('xivo_dao.user_dao.get_device_id')
     def test_pickup_the_phone(self, mock_get_device_id):

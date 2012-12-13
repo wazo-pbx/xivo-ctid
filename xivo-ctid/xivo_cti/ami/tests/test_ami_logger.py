@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -25,10 +25,10 @@
 import unittest
 
 from xivo_cti.ami import ami_logger
-from tests.mock import Mock
+from mock import Mock
 
 
-class Test(unittest.TestCase):
+class TestAMILogger(unittest.TestCase):
 
     def setUp(self):
         self.logger = ami_logger.AMILogger.get_instance()

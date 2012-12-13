@@ -30,12 +30,12 @@ from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.context import context
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
-from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
+from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
+from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
-from xivo_cti.services.agent_service_cti_parser import AgentServiceCTIParser
-from xivo_cti.services.agent_service_manager import AgentServiceManager
-from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.agent.parser import AgentServiceCTIParser
+from xivo_cti.services.agent.manager import AgentServiceManager
+from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier

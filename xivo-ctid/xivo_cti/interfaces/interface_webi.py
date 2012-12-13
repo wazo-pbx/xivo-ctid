@@ -59,10 +59,6 @@ STATES = [
     ]
 
 
-class BadWebiCommandException(Exception):
-    pass
-
-
 class WEBI(interfaces.Interfaces):
     kind = 'WEBI'
 

@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -23,11 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 
 class TestCTIMessageFormatter(unittest.TestCase):
+
     def test_update_agent_status(self):
         agent_id = 42
         agent_status = {'availability': AgentStatus.logged_out,

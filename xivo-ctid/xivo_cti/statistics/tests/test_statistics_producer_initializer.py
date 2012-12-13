@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.services.queue.manager import QueueServiceManager
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer

@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -22,14 +22,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-from tests.mock import Mock
-from mock import patch
-
 import time
-
+import unittest
+from mock import Mock
+from mock import patch
 from xivo_dao import queue_dao
-from xivo_cti.context import context
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager

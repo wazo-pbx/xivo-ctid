@@ -5,7 +5,7 @@ import time
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager, \
     CachingQueueStatisticsManagerDecorator
-from tests.mock import Mock, patch
+from mock import Mock, patch
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.model.queuestatistic import NO_VALUE
 

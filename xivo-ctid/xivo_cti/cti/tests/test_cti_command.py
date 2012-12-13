@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -24,12 +24,12 @@
 import unittest
 
 from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.missing_field_exception import MissingFieldException
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.exception import MissingFieldException
 
 
-class Test(unittest.TestCase):
+class TestCTICommand(unittest.TestCase):
 
     def tearDown(self):
         CTICommand._callbacks_with_params = []
