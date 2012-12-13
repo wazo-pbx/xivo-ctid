@@ -27,7 +27,7 @@ from mock import Mock, call
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
 from xivo_cti.exception import ExtensionInUseError
-from xivo_cti.services.agent_executor import AgentExecutor
+from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
 
 
