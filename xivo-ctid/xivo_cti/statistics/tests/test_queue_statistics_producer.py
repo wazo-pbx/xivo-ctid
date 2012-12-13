@@ -29,7 +29,7 @@ from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
-from xivo_cti.services.queue_service_manager import QueueServiceManager
+from xivo_cti.services.queue.manager import QueueServiceManager
 
 
 def _aQueueStat():
