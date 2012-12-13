@@ -75,7 +75,7 @@ from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
-from xivo_cti.services import agent_availability_updater
+from xivo_cti.services.agent import availability_updater as agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
