@@ -24,7 +24,7 @@
 
 import logging
 import time
-from xivo_cti.services.queue.exception import NotAQueueException
+from xivo_cti.exception import NotAQueueException
 
 logger = logging.getLogger("InnerdataDAO")
 

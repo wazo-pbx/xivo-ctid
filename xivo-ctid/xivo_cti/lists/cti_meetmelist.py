@@ -28,8 +28,8 @@ import logging
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.ami.actions.originate import Originate
-from xivo_cti.cti.missing_field_exception import MissingFieldException
 from xivo_cti.context import context
+from xivo_cti.exception import MissingFieldException
 
 logger = logging.getLogger('meetmelist')
 

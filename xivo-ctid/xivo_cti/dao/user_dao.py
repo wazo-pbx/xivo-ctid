@@ -25,16 +25,9 @@ import logging
 import time
 
 from xivo_dao import user_dao
+from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 
 logger = logging.getLogger("UserDAO")
-
-
-class NoSuchUserException(Exception):
-    pass
-
-
-class NoSuchLineException(Exception):
-    pass
 
 
 class UserDAO(object):

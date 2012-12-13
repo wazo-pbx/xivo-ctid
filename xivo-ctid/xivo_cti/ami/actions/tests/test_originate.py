@@ -27,7 +27,7 @@ import unittest
 from tests.mock import Mock
 
 from xivo_cti.ami.actions.originate import Originate
-from xivo_cti.cti.missing_field_exception import MissingFieldException
+from xivo_cti.exception import MissingFieldException
 
 
 class Test(unittest.TestCase):

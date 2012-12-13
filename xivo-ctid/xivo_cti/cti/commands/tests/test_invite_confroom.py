@@ -23,8 +23,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
-from xivo_cti.cti.missing_field_exception import MissingFieldException
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
+from xivo_cti.exception import MissingFieldException
 
 
 class Test(unittest.TestCase):

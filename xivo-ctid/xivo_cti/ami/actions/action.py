@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.cti.missing_field_exception import MissingFieldException
+from xivo_cti.exception import MissingFieldException
 
 
 class AMIAction(object):

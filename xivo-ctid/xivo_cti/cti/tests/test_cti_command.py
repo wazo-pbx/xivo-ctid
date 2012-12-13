@@ -24,9 +24,9 @@
 import unittest
 
 from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.missing_field_exception import MissingFieldException
 from tests.mock import Mock
 from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.exception import MissingFieldException
 
 
 class Test(unittest.TestCase):
