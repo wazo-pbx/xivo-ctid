@@ -25,7 +25,7 @@
 import unittest
 from mock import Mock, patch
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.innerdata import Safe
 from xivo_cti.exception import NotAQueueException
 

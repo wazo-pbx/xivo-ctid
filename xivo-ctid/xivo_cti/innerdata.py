@@ -39,7 +39,7 @@ from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti import dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao

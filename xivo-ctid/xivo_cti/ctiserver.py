@@ -78,7 +78,7 @@ from xivo_cti.scheduler import Scheduler
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.services import agent_on_call_updater
 from xivo_cti.services import queue_entry_manager
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer

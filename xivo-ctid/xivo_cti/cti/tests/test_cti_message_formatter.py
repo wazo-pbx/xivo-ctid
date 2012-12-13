@@ -23,11 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.services.agent_status import AgentStatus
+from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 
 class TestCTIMessageFormatter(unittest.TestCase):
+
     def test_update_agent_status(self):
         agent_id = 42
         agent_status = {'availability': AgentStatus.logged_out,
