@@ -24,7 +24,7 @@
 
 import unittest
 from mock import Mock
-from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
+from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ctiserver import CTIServer

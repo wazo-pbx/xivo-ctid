@@ -28,7 +28,7 @@ from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
-from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotifier
+from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services import agent_availability_updater
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
