@@ -144,7 +144,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.queue_statistics_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-    @patch('xivo_dao.queue_features_dao.is_a_queue', return_value=True)
+    @patch('xivo_dao.queue_dao.is_a_queue', return_value=True)
     def test_on_queue_member_event(self, mock_is_a_queue):
         queue_member = Mock()
         queue_member.queue_name = 'foobar'
@@ -155,7 +155,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         mock_ami_wrapper.queuesummary.assert_was_called_with(queue_member.queue_name)
 
-    @patch('xivo_dao.queue_features_dao.is_a_queue', return_value=True)
+    @patch('xivo_dao.queue_dao.is_a_queue', return_value=True)
     def test_get_queue_summary(self, mock_is_a_queue):
         queue_name = 'services'
 

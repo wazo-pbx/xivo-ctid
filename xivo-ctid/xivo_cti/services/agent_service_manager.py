@@ -27,7 +27,7 @@ from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agent_dao
 from xivo_dao import line_dao
 from xivo_dao import user_dao
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 
 logger = logging.getLogger('Agent Manager')
 
@@ -98,7 +98,7 @@ class AgentServiceManager(object):
         logger.info('Pausing agent %r on queue %r', agent_id, queue_id)
         agent_interface = self._get_agent_interface(agent_id)
         if agent_interface:
-            queue_name = queue_features_dao.queue_name(queue_id)
+            queue_name = queue_dao.queue_name(queue_id)
             self.agent_executor.pause_on_queue(agent_interface, queue_name)
 
     def pause_agent_on_all_queues(self, agent_id):
@@ -111,7 +111,7 @@ class AgentServiceManager(object):
         logger.info('Unpausing agent %r on queue %r', agent_id, queue_id)
         agent_interface = self._get_agent_interface(agent_id)
         if agent_interface:
-            queue_name = queue_features_dao.queue_name(queue_id)
+            queue_name = queue_dao.queue_name(queue_id)
             self.agent_executor.unpause_on_queue(agent_interface, queue_name)
 
     def unpause_agent_on_all_queues(self, agent_id):

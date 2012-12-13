@@ -193,7 +193,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_executor.remove_from_queue.assert_called_once_with(agent_id, queue_id)
 
-    @patch('xivo_dao.queue_features_dao.queue_name')
+    @patch('xivo_dao.queue_dao.queue_name')
     def test_pause_agent_on_queue(self, mock_queue_name):
         agent_id = 42
         agent_interface = 'SIP/abcdef'
@@ -217,7 +217,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.agent_executor.pause_on_all_queues.assert_called_once_with(agent_interface)
 
-    @patch('xivo_dao.queue_features_dao.queue_name')
+    @patch('xivo_dao.queue_dao.queue_name')
     def test_unpause_agent_on_queue(self, mock_queue_name):
         agent_id = 42
         agent_interface = 'SIP/abcdef'

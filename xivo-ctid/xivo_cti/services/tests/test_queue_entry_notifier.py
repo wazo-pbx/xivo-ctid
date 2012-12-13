@@ -38,7 +38,7 @@ class TestQueueEntryNotifier(unittest.TestCase):
     def setUp(self):
         self.notifier = QueueEntryNotifier()
 
-    @patch('xivo_dao.queue_features_dao.queue_name')
+    @patch('xivo_dao.queue_dao.queue_name')
     def test_subscribe(self, mock_queue_name):
         connection_1 = Mock(CTI)
         connection_2 = Mock(CTI)
@@ -57,7 +57,7 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
         self.assertTrue(connection_2 in subscriptions_2)
 
-    @patch('xivo_dao.queue_features_dao.queue_name', return_value=QUEUE_NAME_1)
+    @patch('xivo_dao.queue_dao.queue_name', return_value=QUEUE_NAME_1)
     def test_publish(self, mock_queue_name):
         new_state = 'queue_1_entries'
         connection_1 = Mock(CTI)
@@ -67,7 +67,7 @@ class TestQueueEntryNotifier(unittest.TestCase):
 
         connection_1.send_message.assert_called_once_with(new_state)
 
-    @patch('xivo_dao.queue_features_dao.queue_name', return_value=QUEUE_NAME_1)
+    @patch('xivo_dao.queue_dao.queue_name', return_value=QUEUE_NAME_1)
     def test_subscribe_after_message(self, mock_queue_name):
         connection_1 = Mock(CTI)
         new_state = 'queue_1_entries'

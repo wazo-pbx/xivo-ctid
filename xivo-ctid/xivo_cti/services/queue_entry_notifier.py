@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 from xivo_cti.client_connection import ClientConnection
 
 
@@ -34,7 +34,7 @@ class QueueEntryNotifier(object):
         self._cache = defaultdict(dict)
 
     def subscribe(self, client_connection, queue_id):
-        queue_name = queue_features_dao.queue_name(queue_id)
+        queue_name = queue_dao.queue_name(queue_id)
         self._subscriptions[queue_name].add(client_connection)
         if queue_name in self._cache:
             client_connection.send_message(self._cache[queue_name])

@@ -2,7 +2,8 @@
 
 import logging
 import time
-from xivo_dao import queue_features_dao, queue_statistic_dao
+from xivo_dao import queue_dao
+from xivo_dao import queue_statistic_dao
 from xivo_cti.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -57,7 +58,7 @@ class QueueStatisticsManager(object):
         return queue_statistic
 
     def get_queue_summary(self, queue_name):
-        if queue_features_dao.is_a_queue(queue_name):
+        if queue_dao.is_a_queue(queue_name):
             self.ami_wrapper.queuesummary(queue_name)
 
     def get_all_queue_summary(self):
