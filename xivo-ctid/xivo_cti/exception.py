@@ -22,13 +22,5 @@
 # You should have received a copy of the GNU General Public License
 
 
-def format_member_name_of_agent(agent_number):
-    return 'Agent/%s' % agent_number
-
-
-def format_queue_member_id(queue_name, member_name):
-    return '%s,%s' % (member_name, queue_name)
-
-
-def is_agent_member_name(member_name):
-    return member_name.startswith('Agent/')
+class ExtensionInUseError(Exception):
+    pass

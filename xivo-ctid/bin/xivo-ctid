@@ -54,7 +54,7 @@ from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
 from xivo_cti.services.queue_member.updater import QueueMemberUpdater
 from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
 from xivo_cti.services.queue_member.cti.subscriber import QueueMemberCTISubscriber
-from xivo_cti.services.queue_service_manager import QueueServiceManager
+from xivo_cti.services.queue.manager import QueueServiceManager
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager

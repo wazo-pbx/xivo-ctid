@@ -10,7 +10,7 @@
 # (at your option) any later version.
 #
 # Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the souce tree
+# contracted with Avencall. See the LICENSE file at top of the source tree
 # or delivered in the installable package in which XiVO CTI Server is
 # distributed for more details.
 #
@@ -27,7 +27,8 @@ from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agent_dao
 from xivo_dao import line_dao
 from xivo_dao import user_dao
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
+from xivo_cti.exception import ExtensionInUseError
 
 logger = logging.getLogger('Agent Manager')
 
@@ -42,7 +43,7 @@ class AgentServiceManager(object):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
         if not agent_id:
             logger.info('%s not an agent (%s)', agent_xid, agent_exten)
-            return 'error', {'error_string': 'invalid_exten',
+            return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
         if not agent_exten:
             extens = self.find_agent_exten(agent_id)
@@ -50,16 +51,23 @@ class AgentServiceManager(object):
 
         if not line_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
-            return 'error', {'error_string': 'invalid_exten',
+            return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
 
-        self.login(agent_id, agent_exten, agent_dao.agent_context(agent_id))
+        agent_context = agent_dao.agent_context(agent_id)
+        try:
+            self.login(agent_id, agent_exten, agent_context)
+        except ExtensionInUseError:
+            logger.warning('could not log agent %s on exten %s@%s: already in use',
+                           agent_id, agent_exten, agent_context)
+            return 'error', {'error_string': 'agent_login_exten_in_use',
+                             'class': 'ipbxcommand'}
 
     def on_cti_agent_logout(self, user_id, agent_xid=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
         if not agent_id:
             logger.info('%s not an agent', agent_xid)
-            return 'error', {'error_string': 'invalid_exten',
+            return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
 
         self.logoff(agent_id)
@@ -98,7 +106,7 @@ class AgentServiceManager(object):
         logger.info('Pausing agent %r on queue %r', agent_id, queue_id)
         agent_interface = self._get_agent_interface(agent_id)
         if agent_interface:
-            queue_name = queue_features_dao.queue_name(queue_id)
+            queue_name = queue_dao.queue_name(queue_id)
             self.agent_executor.pause_on_queue(agent_interface, queue_name)
 
     def pause_agent_on_all_queues(self, agent_id):
@@ -111,7 +119,7 @@ class AgentServiceManager(object):
         logger.info('Unpausing agent %r on queue %r', agent_id, queue_id)
         agent_interface = self._get_agent_interface(agent_id)
         if agent_interface:
-            queue_name = queue_features_dao.queue_name(queue_id)
+            queue_name = queue_dao.queue_name(queue_id)
             self.agent_executor.unpause_on_queue(agent_interface, queue_name)
 
     def unpause_agent_on_all_queues(self, agent_id):

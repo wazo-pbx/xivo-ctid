@@ -39,7 +39,7 @@ class DeviceManager(object):
 
     def is_supported_device(self, device_id):
         vendor, model = device_dao.get_vendor_model(device_id)
-        return vendor == 'Aastra' and model in ['6757i', '6755i']
+        return vendor == 'Aastra' and model in ['6731i', '6757i', '6755i']
 
     def send_sipnotify(self, cmd):
         self.ami.sipnotify(*cmd)

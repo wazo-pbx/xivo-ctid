@@ -56,7 +56,7 @@ class TestQueueEntryEncoder(unittest.TestCase):
                                             'join_time': self.now + 1,
                                             'uniqueid': '333.33'}]
 
-    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=_queue_id)
+    @patch('xivo_dao.queue_dao.id_from_name', return_value=_queue_id)
     def test_encode_queue_entry_update(self, mock_id_from_name):
         encoder = QueueEntryEncoder()
 
@@ -89,7 +89,7 @@ class TestQueueEntryEncoder(unittest.TestCase):
 
         self.assertEqual(result, self._expected_queue_entry_list)
 
-    @patch('xivo_dao.queue_features_dao.id_from_name', return_value=_queue_id)
+    @patch('xivo_dao.queue_dao.id_from_name', return_value=_queue_id)
     def test_build_state(self, mock_id_from_name):
         encoder = QueueEntryEncoder()
 

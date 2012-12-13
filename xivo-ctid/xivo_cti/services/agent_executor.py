@@ -25,6 +25,7 @@
 import logging
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
+from xivo_cti.exception import ExtensionInUseError
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,15 @@ class AgentExecutor(object):
         self.ami = ami_class
 
     def login(self, agent_id, exten, context):
-        self._agent_client.login_agent(agent_id, exten, context)
+        try:
+            self._agent_client.login_agent(agent_id, exten, context)
+        except AgentClientError as e:
+            if e.error == error.ALREADY_IN_USE:
+                raise ExtensionInUseError()
+            elif e.error == error.ALREADY_LOGGED:
+                pass
+            else:
+                raise
 
     def logoff(self, agent_id):
         try:

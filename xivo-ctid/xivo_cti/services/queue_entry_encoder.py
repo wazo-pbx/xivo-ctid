@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 
 
 class QueueEntryEncoder(object):
@@ -69,7 +69,7 @@ class QueueEntryEncoder(object):
         state = dict(self.STATE_TEMPLATE)
 
         state['queue_name'] = queue_name
-        state['queue_id'] = queue_features_dao.id_from_name(queue_name)
+        state['queue_id'] = queue_dao.id_from_name(queue_name)
         state['entries'] = entry_list
 
         return state

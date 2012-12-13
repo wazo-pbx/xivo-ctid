@@ -24,6 +24,9 @@
 
 import unittest
 from tests.mock import Mock, call
+from xivo_agent.ctl import error
+from xivo_agent.exception import AgentClientError
+from xivo_cti.exception import ExtensionInUseError
 from xivo_cti.services.agent_executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
 
@@ -36,6 +39,29 @@ class TestAgentExecutor(unittest.TestCase):
         self.executor = AgentExecutor(self.agent_client, ami_class)
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
+
+    def test_login_does_nothing_when_agent_is_already_logged(self):
+        agent_id = 42
+        exten = '1001'
+        context = 'default'
+        self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_LOGGED)
+
+        self.executor.login(agent_id, exten, context)
+
+    def test_login_raise_extension_in_use_when_extension_in_use(self):
+        agent_id = 42
+        exten = '1001'
+        context = 'default'
+        self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_IN_USE)
+
+        self.assertRaises(ExtensionInUseError, self.executor.login, agent_id, exten, context)
+
+    def test_logoff(self):
+        agent_id = 1234
+
+        self.executor.logoff(agent_id)
+
+        self.agent_client.logoff_agent.assert_called_once_with(agent_id)
 
     def test_add_to_queue(self):
         agent_id = 42
@@ -82,13 +108,6 @@ class TestAgentExecutor(unittest.TestCase):
         self.executor.unpause_on_all_queues(interface)
 
         self.assertEqual(self.ami.method_calls, [call.queuepauseall(interface, 'False')])
-
-    def test_logoff(self):
-        agent_id = 1234
-
-        self.executor.logoff(agent_id)
-
-        self.agent_client.logoff_agent.assert_called_once_with(agent_id)
 
     def test_log_presence(self):
         presence = 'disconnected'

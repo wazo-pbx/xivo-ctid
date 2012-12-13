@@ -29,7 +29,7 @@ import time
 
 from xivo_dao import group_dao
 from xivo_dao import user_dao
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
@@ -287,7 +287,7 @@ class AMI_1_8(object):
         callerid_number = event.get('XIVO_CALLERIDNUMBER')
 
         queue_id = int(event['XIVO_DSTID'])
-        queue_name, queue_number = queue_features_dao.get_display_name_number(queue_id)
+        queue_name, queue_number = queue_dao.get_display_name_number(queue_id)
 
         chanprops.set_extra_data('xivo', 'desttype', 'queue')
         chanprops.set_extra_data('xivo', 'destid', queue_id)

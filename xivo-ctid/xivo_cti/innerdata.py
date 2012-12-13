@@ -42,7 +42,7 @@ from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list
     trunks_list
 from xivo_cti import dao
 from xivo_dao import group_dao
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
 from xivo_dao import user_dao
 
@@ -242,7 +242,7 @@ class Safe(object):
                 user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == dest_id
             elif dest_type == 'queue' and dest_id:
-                domatch = queue_features_dao.is_user_member_of_queue(userid, dest_id)
+                domatch = queue_dao.is_user_member_of_queue(userid, dest_id)
             elif dest_type == 'group' and dest_id:
                 domatch = group_dao.is_user_member_of_group(userid, dest_id)
         else:

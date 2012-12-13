@@ -79,6 +79,18 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
     @patch('xivo_dao.device_dao.get_vendor_model')
+    def test_is_supported_device_6731i(self, mock_get_vendor_model):
+        device_id = 13
+        vendor = 'Aastra'
+        model = '6731i'
+
+        mock_get_vendor_model.return_value = vendor, model
+
+        result = self.manager.is_supported_device(device_id)
+
+        self.assertEqual(result, True)
+
+    @patch('xivo_dao.device_dao.get_vendor_model')
     def test_is_supported_device_6757i(self, mock_get_vendor_model):
         device_id = 13
         vendor = 'Aastra'

@@ -119,7 +119,7 @@ class TestSafe(unittest.TestCase):
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
 
-    @patch('xivo_dao.queue_features_dao.is_user_member_of_queue')
+    @patch('xivo_dao.queue_dao.is_user_member_of_queue')
     def test_user_match_with_queue(self, mock_is_user_member_of_queue):
         user_id = 1
         queue_id = 42

@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
-from xivo_dao import queue_features_dao
+from xivo_dao import queue_dao
 from xivo_cti.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 
@@ -119,7 +119,7 @@ class QueueEntryManager(object):
         self._ami = ami_class
 
     def join(self, queue_name, pos, count, name, number, unique_id):
-        if not queue_features_dao.is_a_queue(queue_name):
+        if not queue_dao.is_a_queue(queue_name):
             return
         try:
             self.insert(queue_name, pos, name, number, unique_id, 0)
@@ -142,7 +142,7 @@ class QueueEntryManager(object):
             logger.exception('Failed to insert queue entry')
 
     def leave(self, queue_name, pos, count, unique_id):
-        if not queue_features_dao.is_a_queue(queue_name):
+        if not queue_dao.is_a_queue(queue_name):
             return
         try:
             assert(self._queue_entries[queue_name][unique_id].position == pos)
@@ -219,7 +219,7 @@ class QueueEntryManager(object):
             self._queue_entries.pop(queue_name)
 
     def _encode_stats(self, queue_name):
-        queue_id = queue_features_dao.id_from_name(queue_name)
+        queue_id = queue_dao.id_from_name(queue_name)
         realtime_stat = {'%s' % queue_id: {u'Xivo-WaitingCalls': len(self._queue_entries[queue_name])}}
         if len(self._queue_entries[queue_name]) >= 1:
             longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
