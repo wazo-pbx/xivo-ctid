@@ -25,10 +25,10 @@
 import unittest
 
 from xivo_cti.ami import ami_logger
-from tests.mock import Mock
+from mock import Mock
 
 
-class Test(unittest.TestCase):
+class TestAMILogger(unittest.TestCase):
 
     def setUp(self):
         self.logger = ami_logger.AMILogger.get_instance()

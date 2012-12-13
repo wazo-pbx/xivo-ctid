@@ -23,8 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.directory.data_sources.ldap import LDAPDirectoryDataSource
+
 
 class TestLDAPDirectoryDataSource(unittest.TestCase):
 

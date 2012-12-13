@@ -23,12 +23,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 
 
 class TestAMIAgentLoginLogoff(unittest.TestCase):
+
     def setUp(self):
         self.ami_agent_login_logoff = AMIAgentLoginLogoff()
         self.queue_statistics_producer = Mock(QueueStatisticsProducer)

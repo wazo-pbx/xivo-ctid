@@ -24,7 +24,7 @@
 
 import unittest
 
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti_config import CTI_PROTOCOL_VERSION

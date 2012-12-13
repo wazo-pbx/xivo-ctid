@@ -24,7 +24,7 @@
 
 import unittest
 
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.services.queue.manager import QueueServiceManager
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.exception import NotAQueueException

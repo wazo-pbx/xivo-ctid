@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, patch
+from mock import Mock, patch
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.services.agent_status import AgentStatus
 from xivo_cti.innerdata import Safe

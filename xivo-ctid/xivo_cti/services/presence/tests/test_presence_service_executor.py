@@ -23,12 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock
+from mock import Mock
+from mock import patch
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.agent_service_manager import AgentServiceManager
 from xivo_cti.cti_config import Config
-from mock import patch
 from xivo_cti.innerdata import Safe
 
 

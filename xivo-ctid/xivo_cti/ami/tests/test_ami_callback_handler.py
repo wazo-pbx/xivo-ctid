@@ -25,10 +25,10 @@
 import unittest
 
 from xivo_cti.ami import ami_callback_handler
-from tests.mock import Mock
+from mock import Mock
 
 
-class Test(unittest.TestCase):
+class TestAMICallbackHandler(unittest.TestCase):
 
     def setUp(self):
         self.handler = ami_callback_handler.AMICallbackHandler.get_instance()

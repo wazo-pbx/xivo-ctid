@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from tests.mock import Mock, call
+from mock import Mock, call
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
 from xivo_cti.exception import ExtensionInUseError

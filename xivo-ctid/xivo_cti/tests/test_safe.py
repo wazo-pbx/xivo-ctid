@@ -24,6 +24,8 @@
 
 import unittest
 
+from mock import Mock
+from mock import patch
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, Channel
 from xivo_cti.context import context
@@ -34,9 +36,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config
 from xivo_cti import innerdata
-from tests.mock import Mock
 from xivo_cti.cti.commands.availstate import Availstate
-from mock import patch
 from xivo_cti.services.user.manager import UserServiceManager
 
 

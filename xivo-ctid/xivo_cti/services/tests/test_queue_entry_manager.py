@@ -22,14 +22,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-from tests.mock import Mock
-from mock import patch
-
 import time
-
+import unittest
+from mock import Mock
+from mock import patch
 from xivo_dao import queue_dao
-from xivo_cti.context import context
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager

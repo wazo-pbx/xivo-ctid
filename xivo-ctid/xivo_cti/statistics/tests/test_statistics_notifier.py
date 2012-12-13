@@ -1,11 +1,30 @@
-'''
-Created on 2012-04-25
+# -*- coding: utf-8 -*-
 
-@author: jylebleu
-'''
+# XiVO CTI Server
+#
+# Copyright (C) 2012  Avencall
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Alternatively, XiVO CTI Server is available under other licenses directly
+# contracted with Avencall. See the LICENSE file at top of the source tree
+# or delivered in the installable package in which XiVO CTI Server is
+# distributed for more details.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
+from mock import Mock
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
-from tests.mock import Mock
 from xivo_cti.client_connection import ClientConnection
 
 
@@ -13,10 +32,6 @@ class TestStatisticsNotifier(unittest.TestCase):
 
     def setUp(self):
         self.notifier = StatisticsNotifier()
-
-
-    def tearDown(self):
-        pass
 
     def test_on_stat_changed_with_one_subscriber(self):
         cti_connection = Mock()
@@ -93,5 +108,5 @@ class TestStatisticsNotifier(unittest.TestCase):
                                                               })
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

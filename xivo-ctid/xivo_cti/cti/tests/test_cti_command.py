@@ -24,12 +24,12 @@
 import unittest
 
 from xivo_cti.cti.cti_command import CTICommand
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.exception import MissingFieldException
 
 
-class Test(unittest.TestCase):
+class TestCTICommand(unittest.TestCase):
 
     def tearDown(self):
         CTICommand._callbacks_with_params = []
