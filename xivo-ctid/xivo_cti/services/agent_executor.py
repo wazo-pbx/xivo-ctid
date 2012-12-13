@@ -36,7 +36,11 @@ class AgentExecutor(object):
         self.ami = ami_class
 
     def login(self, agent_id, exten, context):
-        self._agent_client.login_agent(agent_id, exten, context)
+        try:
+            self._agent_client.login_agent(agent_id, exten, context)
+        except AgentClientError as e:
+            if e.error != error.ALREADY_LOGGED:
+                raise
 
     def logoff(self, agent_id):
         try:
