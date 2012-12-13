@@ -26,7 +26,7 @@ import unittest
 from mock import Mock, patch
 
 from xivo_cti.exception import ExtensionInUseError
-from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.executor import AgentExecutor
 

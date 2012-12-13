@@ -28,7 +28,7 @@ from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
-from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO

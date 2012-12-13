@@ -33,7 +33,7 @@ from xivo_cti.services.agent_availability_notifier import AgentAvailabilityNotif
 from xivo_cti.services.agent_availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
 from xivo_cti.services.agent_service_cti_parser import AgentServiceCTIParser
-from xivo_cti.services.agent_service_manager import AgentServiceManager
+from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
