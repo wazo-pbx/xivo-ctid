@@ -122,7 +122,7 @@ class UserDAO(object):
         except LookupError:
             raise NoSuchUserException(user_id)
         if user['linelist']:
-            line_id = user['linelist'].pop()
+            line_id = user['linelist'][0]
         else:
             raise NoSuchLineException()
         try:
