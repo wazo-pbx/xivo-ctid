@@ -35,7 +35,9 @@ class AgentDAO(object):
         self._queue_member_manager = queue_member_manager
 
     def get_id_from_interface(self, agent_interface):
-        _, agent_number = agent_interface.split('/', 1)
+        first, agent_number = agent_interface.split('/', 1)
+        if first != 'Agent':
+            raise ValueError('%s is not an agent interface' % agent_interface)
         return self.get_id_from_number(agent_number)
 
     def get_id_from_number(self, agent_number):

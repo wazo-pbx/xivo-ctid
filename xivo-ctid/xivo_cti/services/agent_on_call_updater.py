@@ -27,17 +27,26 @@ from xivo_cti import dao
 
 def parse_ami_answered(ami_event, agent_on_call_updater):
     agent_interface = ami_event['MemberName']
-    agent_id = dao.agent.get_id_from_interface(agent_interface)
-    agent_on_call_updater.answered_call(agent_id)
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_interface)
+    except ValueError:
+        pass  # Not an agent interface
+    else:
+        agent_on_call_updater.answered_call(agent_id)
 
 
 def parse_ami_call_completed(ami_event, agent_on_call_updater):
     agent_interface = ami_event['MemberName']
-    agent_id = dao.agent.get_id_from_interface(agent_interface)
-    agent_on_call_updater.call_completed(agent_id)
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_interface)
+    except ValueError:
+        pass  # Not an agent interface
+    else:
+        agent_on_call_updater.call_completed(agent_id)
 
 
 class AgentOnCallUpdater(object):
+
     def __init__(self):
         pass
 
