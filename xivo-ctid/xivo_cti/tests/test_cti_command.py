@@ -22,7 +22,7 @@ class Test(unittest.TestCase):
         self.conn._ctiserver = self._ctiserver
         self._ctiserver.safe = self._innerdata
 
-    @patch('xivo_cti.context.context.get', Mock())
+    @patch('xivo_cti.ioc.context.context.get', Mock())
     def test_regcommand_getqueuesstats_no_result(self):
         message = {}
         cti_command = Command(self.conn, message)
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
                          'Default return an empty dict')
 
     @patch('xivo_cti.dao.queue.get_name_from_id')
-    @patch('xivo_cti.context.context.get', Mock())
+    @patch('xivo_cti.ioc.context.context.get', Mock())
     def test_regcommand_getqueuesstats_one_queue(self, mock_get_name_from_id):
         message = {"class": "getqueuesstats",
                    "commandid": 1234,

@@ -24,7 +24,7 @@
 
 import logging
 
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 
 logger = logging.getLogger(__name__)
 

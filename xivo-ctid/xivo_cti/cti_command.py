@@ -29,7 +29,7 @@ import threading
 import time
 
 from xivo_cti import cti_fax, dao
-from xivo_cti.context import context as cti_context
+from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services.call_history import manager as call_history_manager

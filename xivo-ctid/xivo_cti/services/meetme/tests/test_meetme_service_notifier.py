@@ -27,7 +27,7 @@ from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti_config import Config
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 
 
 class TestMeetmeServiceNotifier(unittest.TestCase):

@@ -21,6 +21,7 @@ setup(
               'xivo_cti.directory',
               'xivo_cti.directory.data_sources',
               'xivo_cti.interfaces',
+              'xivo_cti.ioc',
               'xivo_cti.lists',
               'xivo_cti.model',
               'xivo_cti.services',

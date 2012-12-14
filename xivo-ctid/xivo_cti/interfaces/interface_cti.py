@@ -32,7 +32,7 @@ from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
 from xivo_cti.interfaces import interfaces
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('interface_cti')
 

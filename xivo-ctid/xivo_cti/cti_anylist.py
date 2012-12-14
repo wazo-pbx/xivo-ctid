@@ -25,7 +25,7 @@
 import logging
 import cti_urllist
 from collections import defaultdict
-from xivo_cti.context import context as cti_context
+from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.cti_config import Config
 
 logger = logging.getLogger('anylist')

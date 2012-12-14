@@ -25,7 +25,7 @@ WEBI Interface
 """
 
 import re
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.interfaces import interfaces
 
 import logging

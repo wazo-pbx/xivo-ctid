@@ -131,7 +131,7 @@ class TestQueueEntryManager(unittest.TestCase):
     def _join_3(self):
         self.manager.join(QUEUE_NAME, 3, 3, CALLER_ID_NAME_3, CALLER_ID_NUMBER_3, UNIQUE_ID_3)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_new_entry(self, mock_context):
         self.manager.join = Mock()
         mock_context.return_value = self.manager
@@ -140,7 +140,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager.join.assert_called_once_with(QUEUE_NAME, 1, 1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, UNIQUE_ID_1)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_status_complete(self, mock_context):
         msg = {'Event': 'QueueStatusComplete'}
         self.manager.publish = Mock()
@@ -150,7 +150,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager.publish.assert_called_once_with()
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_entry(self, mock_context):
         self.manager.insert = Mock()
         mock_context.return_value = self.manager
@@ -184,7 +184,7 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEquals(QUEUE_ENTRY_1, self.manager._queue_entries[QUEUE_NAME][UNIQUE_ID_1])
         self.assertEquals(QUEUE_ENTRY_2, self.manager._queue_entries[QUEUE_NAME][UNIQUE_ID_2])
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_handle_leave(self, mock_context):
         self.manager.leave = Mock()
         mock_context.return_value = self.manager
@@ -291,7 +291,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.assertFalse(QUEUE_NAME in self.manager._queue_entries)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_params(self, mock_context):
         msg = {'Event': 'QueueParams',
                'Queue': QUEUE_NAME,

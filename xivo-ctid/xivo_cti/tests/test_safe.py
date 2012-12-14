@@ -28,7 +28,7 @@ from mock import Mock
 from mock import patch
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, Channel
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus

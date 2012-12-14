@@ -22,14 +22,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.main import _register_context
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
+from xivo_cti.ioc import register_class
 
 
 class Test(unittest.TestCase):
 
     def test_get_context(self):
-        _register_context(context)
+        register_class.setup()
 
         config = context.get('config')
         config.xc_json = {

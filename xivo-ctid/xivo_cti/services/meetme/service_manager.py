@@ -23,7 +23,7 @@
 
 from xivo_dao import line_dao
 from xivo_dao import meetme_dao
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
 from copy import deepcopy
 import time

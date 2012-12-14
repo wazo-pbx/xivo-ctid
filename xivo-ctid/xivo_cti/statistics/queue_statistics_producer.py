@@ -25,7 +25,7 @@
 import logging
 from collections import namedtuple
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti import dao
 from xivo_cti.exception import NotAQueueException
 

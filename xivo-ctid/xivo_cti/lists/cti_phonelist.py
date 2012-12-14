@@ -26,7 +26,7 @@ import logging
 import time
 from collections import defaultdict
 from xivo_cti.cti_anylist import ContextAwareAnyList
-from xivo_cti.context import context as cti_context
+from xivo_cti.ioc.context import context as cti_context
 
 logger = logging.getLogger('phonelist')
 

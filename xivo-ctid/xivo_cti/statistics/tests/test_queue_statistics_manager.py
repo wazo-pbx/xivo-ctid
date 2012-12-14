@@ -131,7 +131,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.assertEqual(queue_statistics.qos, 86)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_member_status(self, mock_context):
         self.queue_statistics_manager.get_queue_summary = Mock()
         mock_context.return_value = self.queue_statistics_manager
