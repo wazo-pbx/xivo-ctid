@@ -42,3 +42,7 @@ class NoSuchUserException(Exception):
 
 class NoSuchLineException(Exception):
     pass
+
+
+class NoSuchQueueException(Exception):
+    pass

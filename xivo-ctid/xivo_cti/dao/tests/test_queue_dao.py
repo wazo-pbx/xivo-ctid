@@ -26,13 +26,37 @@ import unittest
 
 from mock import Mock
 from xivo_cti.dao.queue_dao import QueueDAO
-from xivo_cti import innerdata
+from xivo_cti.lists.cti_queuelist import QueueList
+from xivo_cti.innerdata import Safe
+from xivo_cti.exception import NoSuchQueueException
 
 
 class TestQueueDAO(unittest.TestCase):
 
     def setUp(self):
-        self.innerdata = Mock(innerdata.Safe)
+        self._innerdata = Mock(Safe)
+        self._queuelist = Mock(QueueList)
+        self._queuelist.keeplist = {}
+        self._innerdata.xod_config = {
+            'queues': self._queuelist
+        }
+        self.dao = QueueDAO(self._innerdata)
+
+    def test__queue(self):
+        queue_id = 206
+        self._queuelist.keeplist[queue_id] = {
+            'number': '3006',
+            'context': 'ctx',
+            'name': 'toto',
+            'displayname': 'Call on hold',
+        }
+
+        result = self.dao._queue(queue_id)
+
+        self.assertTrue(result, self._queuelist.keeplist[queue_id])
+
+    def test__user_no_user(self):
+        self.assertRaises(NoSuchQueueException, self.dao._queue, 206)
 
     def test_get_number_context_from_name(self):
         queue_number = '3001'
@@ -54,12 +78,11 @@ class TestQueueDAO(unittest.TestCase):
                 'displayname': 'Incoming calls',
             }
         }
-        self.innerdata.xod_config = {
+        self.dao.innerdata.xod_config = {
             'queues': queues_config
         }
-        queue_dao = QueueDAO(self.innerdata)
 
-        result = queue_dao.get_number_context_from_name(queue_name)
+        result = self.dao.get_number_context_from_name(queue_name)
         expected = queue_number, queue_context
 
         self.assertEqual(result, expected)
@@ -75,9 +98,28 @@ class TestQueueDAO(unittest.TestCase):
                 'displayname': 'Call on hold',
             },
         }
-        self.innerdata.xod_config = {
+        self.dao.innerdata.xod_config = {
             'queues': queues_config
         }
-        queue_dao = QueueDAO(self.innerdata)
 
-        self.assertRaises(LookupError, queue_dao.get_number_context_from_name, queue_name)
+        self.assertRaises(LookupError, self.dao.get_number_context_from_name, queue_name)
+
+    def test_get_name_from_id(self):
+        queue_id = '6'
+        queue_name = 'test_name_queue'
+        self._queuelist.keeplist[queue_id] = {
+            'number': '3006',
+            'context': 'ctx',
+            'name': queue_name,
+            'displayname': 'Call on hold',
+        }
+        result = self.dao.get_name_from_id(queue_id)
+
+        self.assertEqual(result, queue_name)
+
+    def test_get_name_from_id_no_queue(self):
+        queue_id = '6'
+
+        result = self.dao.get_name_from_id(queue_id)
+
+        self.assertEqual(result, None)

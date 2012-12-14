@@ -21,7 +21,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import logging
+from xivo_cti.exception import NoSuchQueueException
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,12 @@ class QueueDAO(object):
     def __init__(self, innerdata):
         self.innerdata = innerdata
 
+    def _queue(self, queue_id):
+        try:
+            return self.innerdata.xod_config['queues'].keeplist[queue_id]
+        except LookupError:
+            raise NoSuchQueueException(queue_id)
+
     def get_number_context_from_name(self, queue_name):
         queues = self.innerdata.xod_config['queues'].keeplist
         for queue in queues.itervalues():
@@ -38,3 +46,10 @@ class QueueDAO(object):
                 continue
             return queue['number'], queue['context']
         raise LookupError('No such queue %s' % queue_name)
+
+    def get_name_from_id(self, queue_id):
+        try:
+            queue = self._queue(queue_id)
+        except NoSuchQueueException:
+            return None
+        return queue['name']

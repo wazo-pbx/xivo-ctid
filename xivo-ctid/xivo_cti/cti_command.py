@@ -344,7 +344,7 @@ class Command(object):
             return {}
         statistic_results = {}
         for queue_id, params in self._commanddict['on'].iteritems():
-            queue_name = self.innerdata.xod_config['queues'].keeplist[queue_id]['name']
+            queue_name = dao.queue.get_name_from_id(queue_id)
             statistic_results[queue_id] = self._queue_statistics_manager.get_statistics(queue_name,
                                                                                         int(params['xqos']),
                                                                                         int(params['window']))
