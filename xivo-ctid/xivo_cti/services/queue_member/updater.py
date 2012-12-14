@@ -81,6 +81,11 @@ class QueueMemberUpdater(object):
         self._queue_member_manager._add_queue_member(queue_member)
         self._ask_member_queue_status(queue_member)
 
+    def on_ami_agent_removed_from_queue(self, ami_event):
+        queue_name = ami_event['QueueName']
+        agent_number = ami_event['AgentNumber']
+        self._queue_member_manager._remove_queue_member_by_agent_number(queue_name, agent_number)
+
     def on_ami_queue_member(self, ami_event):
         queue_name = ami_event['Queue']
         member_name = ami_event['Name']
@@ -153,6 +158,7 @@ class QueueMemberUpdater(object):
     def register_ami_events(self, ami_handler):
         ami_handler.register_userevent_callback('AgentLogoff', self.on_ami_agent_logoff)
         ami_handler.register_userevent_callback('AgentAddedToQueue', self.on_ami_agent_added_to_queue)
+        ami_handler.register_userevent_callback('AgentRemovedFromQueue', self.on_ami_agent_removed_from_queue)
         ami_handler.register_callback('QueueMember', self.on_ami_queue_member)
         ami_handler.register_callback('QueueMemberStatus', self.on_ami_queue_member_status)
         ami_handler.register_callback('QueueMemberAdded', self.on_ami_queue_member_added)
