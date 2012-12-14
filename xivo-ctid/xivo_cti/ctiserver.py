@@ -183,7 +183,9 @@ class CTIServer(object):
         self._queue_statistics_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
 
-        context.register('scheduler', Scheduler, self.pipe_queued_threads[1])
+        scheduler = context.get('scheduler')
+        scheduler.setup(self.pipe_queued_threads[1])
+
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_on_call_updater = context.get('agent_on_call_updater')
         self._agent_service_cti_parser = context.get('agent_service_cti_parser')

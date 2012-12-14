@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from xivo_cti.bin.xivo_ctid import main
+from xivo_cti.main import main
 main()

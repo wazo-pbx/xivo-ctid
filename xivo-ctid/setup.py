@@ -13,7 +13,6 @@ setup(
     packages=['xivo_cti',
               'xivo_cti.ami',
               'xivo_cti.ami.actions',
-              'xivo_cti.bin',
               'xivo_cti.cti',
               'xivo_cti.cti.commands',
               'xivo_cti.cti.commands.getlists',

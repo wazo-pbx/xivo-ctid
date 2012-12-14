@@ -29,18 +29,22 @@ from xivo_cti.scheduler import Scheduler
 
 class TestScheduler(unittest.TestCase):
 
+    def setUp(self):
+        self.scheduler = Scheduler()
+        self.mock_pipe = Mock()
+        self.scheduler.setup(self.mock_pipe)
+
     @patch('threading.Timer')
     def test_schedule(self, mock_timer):
         mock_timer_instance = Mock()
         mock_timer.return_value = mock_timer_instance
         mock_callback = Mock()
         timeout = 5
-        scheduler = Scheduler(Mock())
 
-        scheduler.schedule(timeout, mock_callback)
+        self.scheduler.schedule(timeout, mock_callback)
 
         mock_timer.assert_called_once_with(timeout,
-                                           scheduler.execute_callback,
+                                           self.scheduler.execute_callback,
                                            [mock_callback])
         mock_timer_instance.start.assert_called_once_with()
 
@@ -50,26 +54,23 @@ class TestScheduler(unittest.TestCase):
         mock_timer.return_value = mock_timer_instance
         mock_callback = Mock()
         timeout = 5
-        scheduler = Scheduler(Mock())
         arguments = (1, 2, 'three')
         expected_timer_arguments = [mock_callback]
         expected_timer_arguments.extend(arguments)
 
-        scheduler.schedule(timeout, mock_callback, 1, 2, 'three')
+        self.scheduler.schedule(timeout, mock_callback, 1, 2, 'three')
 
         mock_timer.assert_called_once_with(timeout,
-                                           scheduler.execute_callback,
+                                           self.scheduler.execute_callback,
                                            expected_timer_arguments)
         mock_timer_instance.start.assert_called_once_with()
 
     @patch('os.write')
     def test_execute_callback(self, mock_os_write):
-        mock_pipe = Mock()
-        scheduler = Scheduler(mock_pipe)
         callback_function = Mock()
         callback_args = ('arg1', 'arg2')
 
-        scheduler.execute_callback(callback_function, *callback_args)
+        self.scheduler.execute_callback(callback_function, *callback_args)
 
         callback_function.assert_called_once_with(*callback_args)
-        mock_os_write.assert_called_once_with(mock_pipe, 'scheduler:callback\n')
+        mock_os_write.assert_called_once_with(self.mock_pipe, 'scheduler:callback\n')

@@ -60,6 +60,7 @@ from xivo_cti.statistics.statistics_producer_initializer import StatisticsProduc
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.xivo_ami import AMIClass
 from xivo_agent.ctl.client import AgentClient
+from xivo_cti.scheduler import Scheduler
 
 
 def main():
@@ -111,6 +112,7 @@ def _register_context(context):
     context.register('queue_member_notifier', QueueMemberNotifier)
     context.register('queue_member_updater', QueueMemberUpdater)
     context.register('statistics_notifier', StatisticsNotifier)
+    context.register('scheduler', Scheduler)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)

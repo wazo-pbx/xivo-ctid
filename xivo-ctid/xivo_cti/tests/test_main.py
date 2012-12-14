@@ -22,11 +22,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from xivo_cti.bin.xivo_ctid import _register_context
+from xivo_cti.main import _register_context
 from xivo_cti.context import context
 
 
 class Test(unittest.TestCase):
 
-    def test_register_context(self):
+    def test_get_context(self):
         _register_context(context)
+
+        config = context.get('config')
+        config.xc_json = {
+            'main': {
+                'live_reload_conf': True
+            },
+            'ipbx': {
+                'ipbx_connection': {
+                    'ipaddress': '127.0.0.1',
+                    'ipport': 5038,
+                    'loginname': 'xivouser',
+                    'password': 'xivouser'
+                }
+            }
+        }
+
+        context.get_all()
