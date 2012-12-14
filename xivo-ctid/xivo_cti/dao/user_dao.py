@@ -149,3 +149,10 @@ class UserDAO(object):
         except (NoSuchUserException, NoSuchLineException):
             return None
         return line['context']
+
+    def get_cti_profile_id(self, user_id):
+        try:
+            user = self._user(user_id)
+        except NoSuchUserException:
+            return None
+        return int(user['cti_profile_id'])

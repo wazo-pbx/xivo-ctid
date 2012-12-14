@@ -319,3 +319,14 @@ class TestUserDAO(unittest.TestCase):
         result = self.dao.get_line(user_id)
 
         self.assertEqual(result, None)
+
+    def test_get_cti_profile_id(self):
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+            'firstname': 'toto',
+            'cti_profile_id': 4
+        }
+
+        result = self.dao.get_cti_profile_id(user_id)
+
+        self.assertEqual(result, 4)

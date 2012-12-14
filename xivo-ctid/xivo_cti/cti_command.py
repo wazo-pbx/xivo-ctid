@@ -207,7 +207,7 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        cti_profile_id = self.innerdata.xod_config['users'].get_cti_profile_id(self.userid)
+        cti_profile_id = dao.user.get_cti_profile_id(self.userid)
         profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
