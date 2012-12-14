@@ -28,7 +28,7 @@ import string
 import threading
 import time
 
-from xivo_cti import cti_fax
+from xivo_cti import cti_fax, dao
 from xivo_cti.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
@@ -278,19 +278,13 @@ class Command(object):
         return reply
 
     def regcommand_history(self):
-        phone = self._get_phone_from_user_id(self.ruserid, self.rinnerdata)
+        phone = dao.user.get_line(self.ruserid)
         if phone is None:
             reply = self._format_history_reply(None)
         else:
             history = self._get_history_for_phone(phone)
             reply = self._format_history_reply(history)
         return reply
-
-    def _get_phone_from_user_id(self, user_id, innerdata):
-        for phone in innerdata.xod_config['phones'].keeplist.itervalues():
-            if str(phone['iduserfeatures']) == user_id:
-                return phone
-        return None
 
     def _get_history_for_phone(self, phone):
         mode = int(self._commanddict['mode'])

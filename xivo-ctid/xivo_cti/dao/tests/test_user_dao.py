@@ -45,6 +45,35 @@ class TestUserDAO(unittest.TestCase):
         }
         self.dao = UserDAO(self._innerdata)
 
+    def test__phone(self):
+        line_id = 206
+        self._phonelist.keeplist[line_id] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': 5,
+        }
+
+        result = self.dao._phone(line_id)
+
+        self.assertTrue(result, self._phonelist.keeplist[line_id])
+
+    def test__phone_no_line(self):
+        self.assertRaises(NoSuchLineException, self.dao._phone, 206)
+
+    def test__user(self):
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+            'firstname': 'toto'
+        }
+
+        result = self.dao._user(user_id)
+
+        self.assertTrue(result, self._userlist.keeplist[user_id])
+
+    def test__user_no_user(self):
+        self.assertRaises(NoSuchUserException, self.dao._user, 206)
+
     @patch('xivo_dao.user_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
         user_id = 1
@@ -275,7 +304,9 @@ class TestUserDAO(unittest.TestCase):
         }
         self._userlist.keeplist = {}
 
-        self.assertRaises(NoSuchUserException, self.dao.get_line, user_id)
+        result = self.dao.get_line(user_id)
+
+        self.assertEqual(result, None)
 
     def test_get_line_line_not_exist(self):
         user_id = 206
@@ -285,4 +316,6 @@ class TestUserDAO(unittest.TestCase):
             'linelist': [line_id]
         }
 
-        self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
+        result = self.dao.get_line(user_id)
+
+        self.assertEqual(result, None)

@@ -36,13 +36,22 @@ class UserDAO(object):
         self.innerdata = innerdata
 
     def _phone(self, phone_id):
-        return self.innerdata.xod_config['phones'].keeplist[phone_id]
+        try:
+            return self.innerdata.xod_config['phones'].keeplist[phone_id]
+        except LookupError:
+            raise NoSuchLineException(phone_id)
 
     def _user(self, user_id):
-        return self.innerdata.xod_config['users'].keeplist[user_id]
+        try:
+            return self.innerdata.xod_config['users'].keeplist[user_id]
+        except LookupError:
+            raise NoSuchUserException(user_id)
 
     def _user_status(self, user_id):
-        return self.innerdata.xod_status['users'][user_id]
+        try:
+            return self.innerdata.xod_status['users'][user_id]
+        except LookupError:
+            raise NoSuchUserException(user_id)
 
     def enable_dnd(self, user_id):
         user_dao.enable_dnd(user_id)
@@ -112,16 +121,18 @@ class UserDAO(object):
     def get_line(self, user_id):
         try:
             user = self._user(user_id)
-        except LookupError:
-            raise NoSuchUserException(user_id)
+        except NoSuchUserException:
+            return None
+
         if user['linelist']:
             line_id = user['linelist'][0]
         else:
-            raise NoSuchLineException()
+            return None
+
         try:
             line = self._phone(line_id)
-        except LookupError:
-            raise NoSuchLineException(line_id)
+        except NoSuchLineException:
+            return None
 
         return line
 
