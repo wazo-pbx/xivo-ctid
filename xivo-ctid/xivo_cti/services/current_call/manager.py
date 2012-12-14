@@ -36,7 +36,7 @@ class CurrentCallManager(object):
     _SWITCHBOARD_HOLD_QUEUE = '__switchboard_hold'
 
     def __init__(self, current_call_notifier, current_call_formatter, ami_class, scheduler, device_manager):
-        self._lines = {}
+        self._calls_per_line = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
         self.ami = ami_class
@@ -47,8 +47,8 @@ class CurrentCallManager(object):
         line_1 = self._identity_from_channel(channel_1)
         line_2 = self._identity_from_channel(channel_2)
 
-        if line_1 not in self._lines:
-            self._lines[line_1] = [
+        if line_1 not in self._calls_per_line:
+            self._calls_per_line[line_1] = [
                 {'channel': channel_2,
                  'lines_channel': channel_1,
                  'bridge_time': time.time(),
@@ -56,8 +56,8 @@ class CurrentCallManager(object):
             ]
             self._current_call_notifier.publish_current_call(line_1)
 
-        if line_2 not in self._lines:
-            self._lines[line_2] = [
+        if line_2 not in self._calls_per_line:
+            self._calls_per_line[line_2] = [
                 {'channel': channel_1,
                  'lines_channel': channel_2,
                  'bridge_time': time.time(),
@@ -73,9 +73,9 @@ class CurrentCallManager(object):
         line, position = self._find_line_and_position(original)
         if not line:
             return
-        cloned_call = self._lines[line][position]
+        cloned_call = self._calls_per_line[line][position]
         cloned_call['channel'] = clone
-        self._lines[line][position] = cloned_call
+        self._calls_per_line[line][position] = cloned_call
         peers_call = {
             'channel': cloned_call['lines_channel'],
             'lines_channel': clone,
@@ -83,10 +83,10 @@ class CurrentCallManager(object):
             'on_hold': cloned_call['on_hold']
         }
         peers_line = self._identity_from_channel(clone)
-        if peers_line in self._lines:
-            self._lines[peers_line].append(peers_call)
+        if peers_line in self._calls_per_line:
+            self._calls_per_line[peers_line].append(peers_call)
         else:
-            self._lines[peers_line] = [peers_call]
+            self._calls_per_line[peers_line] = [peers_call]
 
         self.end_call(original)
 
@@ -94,7 +94,7 @@ class CurrentCallManager(object):
         self._current_call_notifier.publish_current_call(peers_line)
 
     def _find_line_and_position(self, channel):
-        for line, calls in self._lines.iteritems():
+        for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):
                 if call['channel'] == channel:
                     return line, index
@@ -102,7 +102,7 @@ class CurrentCallManager(object):
 
     def end_call(self, channel):
         to_remove = []
-        for line, calls in self._lines.iteritems():
+        for line, calls in self._calls_per_line.iteritems():
             for call in calls:
                 if call['channel'] == channel or call['lines_channel'] == channel:
                     to_remove.append((line, call['channel']))
@@ -116,16 +116,16 @@ class CurrentCallManager(object):
     def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
 
-        for position, call_status in enumerate(self._lines[line]):
+        for position, call_status in enumerate(self._calls_per_line[line]):
             if call_status['channel'] != peer_channel:
                 continue
             to_be_removed.append(position)
 
         for position in to_be_removed:
-            self._lines[line].pop(position)
+            self._calls_per_line[line].pop(position)
 
-        if not self._lines[line]:
-            self._lines.pop(line)
+        if not self._calls_per_line[line]:
+            self._calls_per_line.pop(line)
 
     def hold_channel(self, holded_channel):
         self._change_hold_status(holded_channel, True)
@@ -134,7 +134,7 @@ class CurrentCallManager(object):
         self._change_hold_status(unholded_channel, False)
 
     def get_line_calls(self, line_identity):
-        return self._lines.get(line_identity, [])
+        return self._calls_per_line.get(line_identity, [])
 
     def hangup(self, user_id):
         try:
@@ -177,7 +177,7 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('User %s has no line' % user_id)
         else:
-            calls = self._lines.get(line, [])
+            calls = self._calls_per_line.get(line, [])
             ongoing_calls = [call for call in calls if call['on_hold'] is False]
             if not ongoing_calls:
                 raise LookupError('User %s has no ongoing calls' % user_id)
@@ -185,9 +185,9 @@ class CurrentCallManager(object):
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)
-        peer_lines = [self._identity_from_channel(c['channel']) for c in self._lines[line]]
+        peer_lines = [self._identity_from_channel(c['channel']) for c in self._calls_per_line[line]]
         for peer_line in peer_lines:
-            for call in self._lines[peer_line]:
+            for call in self._calls_per_line[peer_line]:
                 if line not in call['channel'].lower():
                     continue
                 call['on_hold'] = new_status
