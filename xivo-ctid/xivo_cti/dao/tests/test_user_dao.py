@@ -304,9 +304,7 @@ class TestUserDAO(unittest.TestCase):
         }
         self._userlist.keeplist = {}
 
-        result = self.dao.get_line(user_id)
-
-        self.assertEqual(result, None)
+        self.assertRaises(NoSuchUserException, self.dao.get_line, user_id)
 
     def test_get_line_line_not_exist(self):
         user_id = 206
@@ -316,9 +314,7 @@ class TestUserDAO(unittest.TestCase):
             'linelist': [line_id]
         }
 
-        result = self.dao.get_line(user_id)
-
-        self.assertEqual(result, None)
+        self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
 
     def test_get_cti_profile_id(self):
         user_id = 206

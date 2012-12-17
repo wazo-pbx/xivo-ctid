@@ -122,17 +122,17 @@ class UserDAO(object):
         try:
             user = self._user(user_id)
         except NoSuchUserException:
-            return None
+            raise
 
         if user['linelist']:
             line_id = user['linelist'][0]
         else:
-            return None
+            raise NoSuchLineException()
 
         try:
             line = self._phone(line_id)
         except NoSuchLineException:
-            return None
+            raise
 
         return line
 

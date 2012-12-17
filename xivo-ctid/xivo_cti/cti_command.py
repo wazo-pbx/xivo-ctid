@@ -30,6 +30,7 @@ import time
 
 from xivo_cti import cti_fax, dao
 from xivo_cti.ioc.context import context as cti_context
+from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services.call_history import manager as call_history_manager
@@ -278,8 +279,9 @@ class Command(object):
         return reply
 
     def regcommand_history(self):
-        phone = dao.user.get_line(self.ruserid)
-        if phone is None:
+        try:
+            phone = dao.user.get_line(self.ruserid)
+        except (NoSuchUserException, NoSuchLineException):
             reply = self._format_history_reply(None)
         else:
             history = self._get_history_for_phone(phone)
