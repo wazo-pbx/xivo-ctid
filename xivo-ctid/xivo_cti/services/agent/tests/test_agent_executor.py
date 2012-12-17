@@ -26,7 +26,7 @@ import unittest
 from mock import Mock, call
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
-from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
 
@@ -55,6 +55,14 @@ class TestAgentExecutor(unittest.TestCase):
         self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_IN_USE)
 
         self.assertRaises(ExtensionInUseError, self.executor.login, agent_id, exten, context)
+
+    def test_login_raise_no_such_extension_when_no_such_extension(self):
+        agent_id = 42
+        exten = '1001'
+        context = 'default'
+        self.agent_client.login_agent.side_effect = AgentClientError(error.NO_SUCH_EXTEN)
+
+        self.assertRaises(NoSuchExtensionError, self.executor.login, agent_id, exten, context)
 
     def test_logoff(self):
         agent_id = 1234

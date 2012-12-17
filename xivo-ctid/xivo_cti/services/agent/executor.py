@@ -25,7 +25,7 @@
 import logging
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
-from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,9 @@ class AgentExecutor(object):
             if e.error == error.ALREADY_IN_USE:
                 raise ExtensionInUseError()
             elif e.error == error.ALREADY_LOGGED:
-                pass
+                logger.info('Agent with ID %s already logged', agent_id)
+            elif e.error == error.NO_SUCH_EXTEN:
+                raise NoSuchExtensionError()
             else:
                 raise
 

@@ -25,7 +25,7 @@
 import unittest
 from mock import Mock, patch
 
-from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.executor import AgentExecutor
@@ -81,6 +81,25 @@ class TestAgentServiceManager(unittest.TestCase):
         result = self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id, self.agent_1_exten)
 
         self.assertEqual(result, ('error', {'error_string': 'agent_login_exten_in_use', 'class': 'ipbxcommand'}))
+        self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
+
+    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.agent_dao.agent_context')
+    @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    def test_on_cti_agent_login_when_no_such_extension(self,
+                                                       mock_id_converter,
+                                                       mock_agent_context,
+                                                       mock_is_phone_exten):
+        agent_id = 11
+        agent_context = 'foobar'
+        mock_id_converter.return_value = agent_id
+        mock_agent_context.return_value = agent_context
+        mock_is_phone_exten.return_value = True
+        self.agent_executor.login.side_effect = NoSuchExtensionError()
+
+        result = self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id, self.agent_1_exten)
+
+        self.assertEqual(result, ('error', {'error_string': 'agent_login_invalid_exten', 'class': 'ipbxcommand'}))
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
