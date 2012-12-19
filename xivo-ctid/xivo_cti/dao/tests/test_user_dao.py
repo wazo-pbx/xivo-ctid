@@ -267,7 +267,8 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_get_line(self):
+    def test_get_line_no_linelist_field(self):
+        # Happens when the CTI server is starting
         context = 'default'
         user_id = 206
         line_id = 607
@@ -282,12 +283,9 @@ class TestUserDAO(unittest.TestCase):
             'allowtransfer': True
         }
         self._userlist.keeplist[user_id] = {
-            'linelist': [line_id]
         }
 
-        result = self.dao.get_line(user_id)
-
-        self.assertEqual(result, self._phonelist.keeplist[line_id])
+        self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
 
     def test_get_line_user_not_exist(self):
         user_id = 206

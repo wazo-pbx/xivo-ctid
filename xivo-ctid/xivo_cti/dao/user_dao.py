@@ -124,7 +124,7 @@ class UserDAO(object):
         except NoSuchUserException:
             raise
 
-        if user['linelist']:
+        if 'linelist' in user and user['linelist']:
             line_id = user['linelist'][0]
         else:
             raise NoSuchLineException()
