@@ -267,6 +267,20 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    @patch('xivo_dao.user_dao.get_context')
+    def test_get_context_no_line(self, mock_get_context):
+        context = 'default'
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+        }
+        mock_get_context.return_value = context
+
+        self.dao.get_line = Mock(side_effect=NoSuchLineException())
+
+        result = self.dao.get_context(user_id)
+
+        self.assertEqual(result, context)
+
     def test_get_line_no_linelist_field(self):
         # Happens when the CTI server is starting
         context = 'default'
