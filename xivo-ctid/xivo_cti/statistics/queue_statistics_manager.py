@@ -4,7 +4,7 @@ import logging
 import time
 from xivo_dao import queue_dao
 from xivo_dao import queue_statistic_dao
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 

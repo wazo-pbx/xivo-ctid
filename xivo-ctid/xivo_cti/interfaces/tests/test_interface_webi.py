@@ -4,7 +4,7 @@ import unittest
 from mock import Mock, NonCallableMock
 from xivo_cti.interfaces.interface_webi import WEBI
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.cti_config import Config
 from xivo_cti.services.queue_member.updater import QueueMemberUpdater
 

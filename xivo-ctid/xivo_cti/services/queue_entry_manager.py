@@ -24,7 +24,7 @@
 
 from collections import namedtuple
 from xivo_dao import queue_dao
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 
 import time

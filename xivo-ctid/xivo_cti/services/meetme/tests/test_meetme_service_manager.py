@@ -25,7 +25,7 @@ import unittest
 import copy
 from mock import Mock, NonCallableMock
 from mock import patch
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti.services.meetme import service_manager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier

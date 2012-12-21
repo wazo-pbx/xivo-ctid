@@ -328,7 +328,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                                                                         .nb_of_logged_agents(0)
                                                                         .build(), connection_cti)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_summary(self, mock_context):
         self.queue_statistics_producer.on_queue_summary = Mock()
         queue_name = 'services'
@@ -346,7 +346,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 
-    @patch('xivo_cti.context.context.get')
+    @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_summary_not_a_queue(self, mock_context):
         self.queue_statistics_producer.on_queue_summary = Mock()
 

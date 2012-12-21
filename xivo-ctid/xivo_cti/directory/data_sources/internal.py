@@ -26,7 +26,7 @@ import logging
 
 from itertools import izip
 from xivo_cti import db_connection_manager, cti_config
-from xivo_cti.context import context as cti_context
+from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
 
 

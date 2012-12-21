@@ -25,7 +25,7 @@ import logging
 from copy import deepcopy
 from xivo_cti.services.meetme import encoder
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_dao import user_dao
 
 logger = logging.getLogger('meetme_service_notifier')

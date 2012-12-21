@@ -26,7 +26,7 @@ from xivo_cti.interfaces import interfaces
 
 import logging
 import time
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('interface_info')
 

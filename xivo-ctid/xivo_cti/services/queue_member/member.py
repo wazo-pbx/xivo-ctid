@@ -60,6 +60,13 @@ class QueueMember(object):
             state.update_as_unlogged_agent()
         return cls(queue_name, member_name, state)
 
+    @classmethod
+    def from_ami_agent_added_to_queue(cls, queue_name, agent_number):
+        member_name = common.format_member_name_of_agent(agent_number)
+        state = QueueMemberState()
+        state.update_as_unlogged_agent()
+        return cls(queue_name, member_name, state)
+
 
 class QueueMemberState(object):
 

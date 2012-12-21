@@ -28,7 +28,7 @@ from xivo_dao import agent_dao
 from xivo_dao import line_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
-from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
 logger = logging.getLogger('Agent Manager')
 
@@ -61,6 +61,10 @@ class AgentServiceManager(object):
             logger.warning('could not log agent %s on exten %s@%s: already in use',
                            agent_id, agent_exten, agent_context)
             return 'error', {'error_string': 'agent_login_exten_in_use',
+                             'class': 'ipbxcommand'}
+        except NoSuchExtensionError:
+            logger.warning('could not log agent %s on exten %s@%s: no such extension')
+            return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
 
     def on_cti_agent_logout(self, user_id, agent_xid=None):

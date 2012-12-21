@@ -84,7 +84,7 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
@@ -93,7 +93,7 @@ class TestCurrentCallManager(unittest.TestCase):
         local_channel_iface = 'Local/1002@pcm-dev'
         bridge_time = 12345.65
 
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': local_channel,
                  'lines_channel': self.channel_1,
@@ -125,14 +125,14 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2, local_channel_iface))
 
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
 
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'bridge_time': bridge_time,
@@ -160,13 +160,13 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         self.assertEqual(self.notifier.publish_current_call.call_count, 0)
 
     def test_end_call(self):
         bridge_time = 123456.44
 
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': 'SIP/mytrunk-12345',
                  'lines_channel': 'SIP/tc8nb4-000002',
@@ -196,12 +196,12 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
     def test_hold_channel(self):
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'bridge_time': 1234,
@@ -229,11 +229,11 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         self.notifier.publish_current_call.assert_called_once_with(self.line_1)
 
     def test_unhold_channel(self):
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'bridge_time': 1234,
@@ -261,11 +261,11 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(self.manager._lines, expected)
+        self.assertEqual(self.manager._calls_per_line, expected)
         self.notifier.publish_current_call.assert_called_once_with(self.line_1)
 
     def test_get_line_calls(self):
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'bridge_time': 1234,
@@ -280,12 +280,12 @@ class TestCurrentCallManager(unittest.TestCase):
 
         calls = self.manager.get_line_calls(self.line_1)
 
-        self.assertEquals(calls, self.manager._lines[self.line_1])
+        self.assertEquals(calls, self.manager._calls_per_line[self.line_1])
 
     def test_get_line_calls_no_line(self):
         channel_1 = 'SIP/tc8nb4-00000004'
         channel_2 = 'SIP/6s7foq-00000005'
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': channel_2,
                  'bridge_time': 1234,
@@ -313,7 +313,7 @@ class TestCurrentCallManager(unittest.TestCase):
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'lines_channel': self.channel_1,
@@ -349,7 +349,7 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 7
         mock_get_line_identity.return_value = self.line_2
 
-        self.manager._lines = {
+        self.manager._calls_per_line = {
             self.line_1: [
                 {'channel': self.channel_2,
                  'lines_channel': self.channel_1,

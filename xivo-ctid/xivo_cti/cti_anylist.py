@@ -26,9 +26,9 @@ import time
 import copy
 import logging
 from collections import defaultdict
-from xivo_cti.context import context as cti_context
 from xivo_cti import cti_daolist
 from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.ioc.context import context as cti_context
 
 logger = logging.getLogger('anylist')
 

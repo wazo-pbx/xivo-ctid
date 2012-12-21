@@ -45,6 +45,35 @@ class TestUserDAO(unittest.TestCase):
         }
         self.dao = UserDAO(self._innerdata)
 
+    def test__phone(self):
+        line_id = 206
+        self._phonelist.keeplist[line_id] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '1234',
+            'iduserfeatures': 5,
+        }
+
+        result = self.dao._phone(line_id)
+
+        self.assertTrue(result, self._phonelist.keeplist[line_id])
+
+    def test__phone_no_line(self):
+        self.assertRaises(NoSuchLineException, self.dao._phone, 206)
+
+    def test__user(self):
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+            'firstname': 'toto'
+        }
+
+        result = self.dao._user(user_id)
+
+        self.assertTrue(result, self._userlist.keeplist[user_id])
+
+    def test__user_no_user(self):
+        self.assertRaises(NoSuchUserException, self.dao._user, 206)
+
     @patch('xivo_dao.user_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
         user_id = 1
@@ -238,7 +267,22 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_get_line(self):
+    @patch('xivo_dao.user_dao.get_context')
+    def test_get_context_no_line(self, mock_get_context):
+        context = 'default'
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+        }
+        mock_get_context.return_value = context
+
+        self.dao.get_line = Mock(side_effect=NoSuchLineException())
+
+        result = self.dao.get_context(user_id)
+
+        self.assertEqual(result, context)
+
+    def test_get_line_no_linelist_field(self):
+        # Happens when the CTI server is starting
         context = 'default'
         user_id = 206
         line_id = 607
@@ -253,12 +297,9 @@ class TestUserDAO(unittest.TestCase):
             'allowtransfer': True
         }
         self._userlist.keeplist[user_id] = {
-            'linelist': [line_id]
         }
 
-        result = self.dao.get_line(user_id)
-
-        self.assertEqual(result, self._phonelist.keeplist[line_id])
+        self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
 
     def test_get_line_user_not_exist(self):
         user_id = 206
@@ -286,3 +327,14 @@ class TestUserDAO(unittest.TestCase):
         }
 
         self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
+
+    def test_get_cti_profile_id(self):
+        user_id = 206
+        self._userlist.keeplist[user_id] = {
+            'firstname': 'toto',
+            'cti_profile_id': 4
+        }
+
+        result = self.dao.get_cti_profile_id(user_id)
+
+        self.assertEqual(result, 4)

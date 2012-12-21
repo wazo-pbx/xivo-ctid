@@ -25,7 +25,7 @@
 import logging
 from xivo_agent.ctl import error
 from xivo_agent.exception import AgentClientError
-from xivo_cti.exception import ExtensionInUseError
+from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,9 @@ class AgentExecutor(object):
             if e.error == error.ALREADY_IN_USE:
                 raise ExtensionInUseError()
             elif e.error == error.ALREADY_LOGGED:
-                pass
+                logger.info('Agent with ID %s already logged', agent_id)
+            elif e.error == error.NO_SUCH_EXTEN:
+                raise NoSuchExtensionError()
             else:
                 raise
 
@@ -55,11 +57,9 @@ class AgentExecutor(object):
                 raise
 
     def add_to_queue(self, agent_id, queue_id):
-        # TODO to implement in xivo-agent
         self._agent_client.add_agent_to_queue(agent_id, queue_id)
 
     def remove_from_queue(self, agent_id, queue_id):
-        # TODO to implement in xivo-agent
         self._agent_client.remove_agent_from_queue(agent_id, queue_id)
 
     def pause_on_queue(self, agent_interface, queue_name):

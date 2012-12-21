@@ -28,8 +28,9 @@ import string
 import threading
 import time
 
-from xivo_cti import cti_fax
-from xivo_cti.context import context as cti_context
+from xivo_cti import cti_fax, dao
+from xivo_cti.ioc.context import context as cti_context
+from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services.call_history import manager as call_history_manager
@@ -208,7 +209,7 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        cti_profile_id = self.innerdata.xod_config['users'].get_cti_profile_id(self.userid)
+        cti_profile_id = dao.user.get_cti_profile_id(self.userid)
         profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
@@ -279,19 +280,14 @@ class Command(object):
         return reply
 
     def regcommand_history(self):
-        phone = self._get_phone_from_user_id(self.ruserid, self.rinnerdata)
-        if phone is None:
+        try:
+            phone = dao.user.get_line(self.ruserid)
+        except (NoSuchUserException, NoSuchLineException):
             reply = self._format_history_reply(None)
         else:
             history = self._get_history_for_phone(phone)
             reply = self._format_history_reply(history)
         return reply
-
-    def _get_phone_from_user_id(self, user_id, innerdata):
-        for phone in innerdata.xod_config['phones'].keeplist.itervalues():
-            if str(phone['iduserfeatures']) == user_id:
-                return phone
-        return None
 
     def _get_history_for_phone(self, phone):
         mode = int(self._commanddict['mode'])
@@ -351,7 +347,7 @@ class Command(object):
             return {}
         statistic_results = {}
         for queue_id, params in self._commanddict['on'].iteritems():
-            queue_name = self.innerdata.xod_config['queues'].keeplist[queue_id]['name']
+            queue_name = dao.queue.get_name_from_id(queue_id)
             statistic_results[queue_id] = self._queue_statistics_manager.get_statistics(queue_name,
                                                                                         int(params['xqos']),
                                                                                         int(params['window']))

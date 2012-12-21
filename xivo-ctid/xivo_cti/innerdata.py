@@ -165,8 +165,45 @@ class Safe(object):
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
+        ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
         ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
+
+    def _channel_extra_vars_agent_linked_unlinked(self, event):
+        try:
+            channel_name = event['Channel']
+            if channel_name in self.channels:
+                channel = self.channels[channel_name]
+                proto, agent_number = event['Member'].split('/', 1)
+                if proto == 'Agent':
+                    data_type = 'agent'
+                    data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+                else:
+                    data_type = 'user'
+                    phone_id = self.zphones(proto, agent_number)
+                    data_id = str(user_dao.find_by_line_id(phone_id))
+                channel.set_extra_data('xivo', 'desttype', data_type)
+                channel.set_extra_data('xivo', 'destid', data_id)
+        except (AttributeError, LookupError):
+            logger.warning('Failed to set agent channel variables for event: %s', event)
+
+    def handle_agent_linked(self, event):
+        # Will be called when joining a group/queue with an agent or user member
+        self._channel_extra_vars_agent_linked_unlinked(event)
+        try:
+            channel = event['Channel']
+            proto, agent_number = channel.split('/', 1)
+            if proto == 'Agent' and channel in self.channels:
+                self.sheetsend('agentlinked', event['Channel'])
+        except KeyError:
+            logger.warning('Could not split channel %s', channel)
+
+    def handle_agent_unlinked(self, event):
+        # Will be called when leaving a group/queue with an agent or user member
+        self._channel_extra_vars_agent_linked_unlinked(event)
+        if 'Channel' in event and event['Channel'] in self.channels:
+            self.sheetsend('agentunlinked', event['Channel'])
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']

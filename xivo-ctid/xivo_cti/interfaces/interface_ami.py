@@ -38,7 +38,7 @@ from xivo_cti.ami import ami_status_request_logger
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
-from xivo_cti.context import context
+from xivo_cti.ioc.context import context
 from xivo_cti import dao
 
 logger = logging.getLogger('interface_ami')

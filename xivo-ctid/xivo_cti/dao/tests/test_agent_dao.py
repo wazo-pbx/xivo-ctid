@@ -55,6 +55,12 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertEqual(result, agent_id)
 
+    def test_get_id_from_interface_not_an_agent(self):
+        agent_interface = 'SIP/abcdef'
+        agent_dao = AgentDAO(self.innerdata, Mock())
+
+        self.assertRaises(ValueError, agent_dao.get_id_from_interface, agent_interface)
+
     def test_get_id_from_number(self):
         agent_number = '1234'
         agent_id = 6

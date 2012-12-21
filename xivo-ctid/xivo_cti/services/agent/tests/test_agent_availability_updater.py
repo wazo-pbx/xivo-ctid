@@ -76,6 +76,16 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         mock_agent_availability_updater.agent_answered.assert_called_with(agent_id)
 
+    def test_parse_ami_answered_not_an_agent(self):
+        ami_event = {'MemberName': 'SIP/abcdef',
+                     'Event': 'AgentConnect'}
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_answered(ami_event, mock_agent_availability_updater)
+
+        self.assertFalse(mock_agent_availability_updater.agent_answered.called)
+
     def test_parse_ami_call_completed(self):
         agent_id = 12
         wrapup_time = 15
@@ -89,6 +99,17 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         agent_availability_updater.parse_ami_call_completed(ami_event, mock_agent_availability_updater)
 
         mock_agent_availability_updater.agent_call_completed.assert_called_with(agent_id, wrapup_time)
+
+    def test_parse_ami_call_completed_not_an_agent(self):
+        ami_event = {'MemberName': 'SIP/abcdef',
+                     'Event': 'AgentComplete',
+                     'WrapupTime': '15'}
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_call_completed(ami_event, mock_agent_availability_updater)
+
+        self.assertFalse(mock_agent_availability_updater.agent_call_completed.called)
 
     def test_parse_ami_paused_partially(self):
         agent_id = 12
@@ -117,6 +138,19 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)
 
         mock_agent_availability_updater.agent_paused_all.assert_called_once_with(agent_id)
+
+    def test_parse_ami_paused_not_an_agent(self):
+        ami_event = {'MemberName': 'SIP/abcdef',
+                     'Event': 'QueueMemberPaused',
+                     'Queue': 'q01',
+                     'Paused': '1'}
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+        mock_agent_availability_updater = Mock(AgentAvailabilityUpdater)
+
+        agent_availability_updater.parse_ami_paused(ami_event, mock_agent_availability_updater)
+
+        self.assertFalse(mock_agent_availability_updater.agent_paused_all.called)
+        self.assertFalse(mock_agent_availability_updater.agent_unpaused.called)
 
     def test_parse_ami_unpaused(self):
         agent_id = 12

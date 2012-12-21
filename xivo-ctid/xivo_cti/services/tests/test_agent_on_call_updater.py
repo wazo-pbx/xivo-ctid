@@ -36,12 +36,24 @@ class TestAgentOnCallUpdater(unittest.TestCase):
         agent_id = 12
         ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'AgentConnect'}
+        dao.agent = Mock(AgentDAO)
         dao.agent.get_id_from_interface.return_value = agent_id
         mock_agent_on_call_updater = Mock(AgentOnCallUpdater)
 
         agent_on_call_updater.parse_ami_answered(ami_event, mock_agent_on_call_updater)
 
         mock_agent_on_call_updater.answered_call.assert_called_with(agent_id)
+
+    def test_parse_ami_answered_not_an_agent(self):
+        ami_event = {'MemberName': 'SIP/gcdef',
+                     'Event': 'AgentConnect'}
+        dao.agent = Mock(AgentDAO)
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+        mock_agent_on_call_updater = Mock(AgentOnCallUpdater)
+
+        agent_on_call_updater.parse_ami_answered(ami_event, mock_agent_on_call_updater)
+
+        self.assertEqual(mock_agent_on_call_updater.answered_call.call_count, 0)
 
     def test_parse_ami_call_completed(self):
         agent_id = 12
@@ -50,12 +62,27 @@ class TestAgentOnCallUpdater(unittest.TestCase):
         ami_event = {'MemberName': 'Agent/1234',
                      'Event': 'AgentComplete',
                      'WrapupTime': str(wrapup_time)}
+        dao.agent = Mock(AgentDAO)
         dao.agent.get_id_from_interface.return_value = agent_id
         mock_agent_on_call_updater = Mock(AgentOnCallUpdater)
 
         agent_on_call_updater.parse_ami_call_completed(ami_event, mock_agent_on_call_updater)
 
         mock_agent_on_call_updater.call_completed.assert_called_with(agent_id)
+
+    def test_parse_ami_call_completed_not_an_agent(self):
+        wrapup_time = 15
+
+        ami_event = {'MemberName': 'SIP/abcdef',
+                     'Event': 'AgentComplete',
+                     'WrapupTime': str(wrapup_time)}
+        dao.agent = Mock(AgentDAO)
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+        mock_agent_on_call_updater = Mock(AgentOnCallUpdater)
+
+        agent_on_call_updater.parse_ami_call_completed(ami_event, mock_agent_on_call_updater)
+
+        self.assertEqual(mock_agent_on_call_updater.call_completed.call_count, 0)
 
     def test_answered_call(self):
         agent_id = 12

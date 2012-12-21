@@ -36,9 +36,17 @@ class MissingFieldException(Exception):
         super(MissingFieldException, self).__init__(msg)
 
 
-class NoSuchUserException(Exception):
+class NoSuchExtensionError(Exception):
     pass
 
 
 class NoSuchLineException(Exception):
+    pass
+
+
+class NoSuchQueueException(Exception):
+    pass
+
+
+class NoSuchUserException(Exception):
     pass

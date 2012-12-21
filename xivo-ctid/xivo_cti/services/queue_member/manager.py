@@ -95,6 +95,12 @@ class QueueMemberManager(object):
             self._queue_member_notifier._on_queue_member_removed(queue_member)
 
     # package private method
+    def _remove_queue_member_by_agent_number(self, queue_name, agent_number):
+        member_name = common.format_member_name_of_agent(agent_number)
+        queue_member_id = common.format_queue_member_id(queue_name, member_name)
+        return self._remove_queue_member_by_id(queue_member_id)
+
+    # package private method
     def _remove_queue_member_by_id(self, queue_member_id):
         queue_member = self._queue_members_by_id.get(queue_member_id)
         if queue_member is None:
