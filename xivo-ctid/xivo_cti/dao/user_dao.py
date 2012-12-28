@@ -138,10 +138,12 @@ class UserDAO(object):
 
     def get_line_identity(self, user_id):
         try:
-            line = self.get_line(user_id)
+            line_interface = self.get_line(user_id)['identity']
+            if '\/' in line_interface:
+                line_interface = line_interface.replace('\/', '/')
         except (NoSuchUserException, NoSuchLineException):
             return None
-        return line['identity']
+        return line_interface
 
     def get_context(self, user_id):
         try:

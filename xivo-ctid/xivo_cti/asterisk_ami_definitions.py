@@ -35,13 +35,7 @@ event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          'ChannelReload', 'ChannelUpdate', 'LogChannel'
                          ]
 
-event_flags['CALL'] = ['MeetmeJoin',
-                       'MeetmeLeave',
-                       'MeetmeMute',
-                       'MeetmeTalking',
-                       'MeetmeTalkRequest',
-                       'MeetmeEnd',
-                       'Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
+event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
                        'Bridge', 'BridgeExec', 'BridgeAction',
                        'Transfer',  # only in chan_sip
                        'Hold',  # only in chan_sip and chan_iax2
@@ -75,7 +69,6 @@ event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
 event_others['replies'] = [
     'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
     'ParkedCallsComplete',  # after ParkedCalls
-    'MeetmeList', 'MeetmeListComplete',  # after MeetMeList
     'Status' , 'StatusComplete',  # after Status
     'QueueParams', 'QueueEntry', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary
@@ -94,8 +87,6 @@ event_others['replies'] = [
     ]
 
 event_others['extra'] = [
-    'MeetmeNoAuthed',  # (xivo) when a member was accepted or not by an admin
-    'MeetmePause',  # (xivo) when a meetme room is put in pause or activated
     'Atxfer',  # (patch to fetch ?)
     'ActionRequest',  # (xivo)
 
@@ -142,7 +133,6 @@ manager_commands['other'] = [
     'JabberSend',
     'LocalOptimizeAway',
     'MailboxCount', 'MailboxStatus',
-    'MeetmeMute', 'MeetmeUnmute',
     'ModuleCheck', 'ModuleLoad',
     'Ping', 'PlayDTMF',
     'QueueAdd', 'QueueLog', 'QueuePause', 'QueuePenalty', 'QueueReload',

@@ -26,11 +26,6 @@ from xivo_cti.cti_anylist import ContextAwareAnyList
 
 import logging
 
-from xivo_cti.cti.commands.invite_confroom import InviteConfroom
-from xivo_cti.ami.actions.originate import Originate
-from xivo_cti.ioc.context import context
-from xivo_cti.exception import MissingFieldException
-
 logger = logging.getLogger('meetmelist')
 
 
@@ -40,7 +35,6 @@ class MeetmeList(ContextAwareAnyList):
         self.anylist_properties = {'name': 'meetme',
                                    'urloptions': (1, 5, True)}
         ContextAwareAnyList.__init__(self, newurls)
-        InviteConfroom.register_callback_params(self.invite, ['invitee', 'cti_connection'])
 
     def update(self):
         ret = ContextAwareAnyList.update(self)
@@ -55,47 +49,3 @@ class MeetmeList(ContextAwareAnyList):
     def update_computed_fields(self, newlist):
         for item in newlist.itervalues():
             item['pin_needed'] = bool(item.get('pin'))
-
-    def idbyroomnumber(self, roomnumber):
-        idx = self.reverse_index.get(roomnumber)
-        if idx in self.keeplist:
-            return idx
-
-    def find_phone_member(self, protocol, name):
-        protocol = protocol.upper()
-        channel_start = '%s/%s' % (protocol, name)
-        statuses = self.commandclass.xod_status['meetmes']
-        for meetme_id, status in statuses.iteritems():
-            channels = [channel.split('-', 1)[0] for channel in status['channels'].iterkeys()]
-            if channel_start in channels:
-                return meetme_id
-
-    def invite(self, invitee, connection):
-        ami = context.get('ami_class')
-
-        try:
-            (_, invitee_id) = invitee.split('/', 1)
-
-            originate = Originate()
-
-            phones = self.commandclass.xod_config['phones'].keeplist
-            user_id = int(connection.connection_details['userid'])
-            for phone in phones.itervalues():
-                if phone['iduserfeatures'] == int(invitee_id):
-                    originate.channel = '%s/%s' % (phone['protocol'], phone['name'])
-                if phone['iduserfeatures'] == user_id:
-                    meetme_id = self.find_phone_member(phone['protocol'], phone['name'])
-
-            if meetme_id:
-                meetme = self.keeplist[meetme_id]
-                originate.exten = meetme['confno']
-                originate.context = meetme['context']
-                originate.priority = '1'
-                originate.callerid = 'Conference %s <%s>' % (meetme['name'], meetme['confno'])
-        except (KeyError, MissingFieldException):
-            return 'warning', {'message': 'Cannot complete command, missing info'}
-
-        if originate.send(ami):
-            return 'message', {'message': 'Command sent succesfully'}
-        else:
-            return 'warning', {'message': 'Failed to send the AMI command'}

@@ -201,7 +201,7 @@ class CTIServer(object):
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
-        meetme_service_manager_module.register_ami_events()
+        meetme_service_manager_module.register_callbacks()
 
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()

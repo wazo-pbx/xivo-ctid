@@ -46,7 +46,6 @@ class AMI_1_8(object):
                   'User',
                   'Queue',
                   'Group',
-                  'Meetme',
                   'Did',)
 
     def __init__(self, cti_server, innerdata, interface_ami):
@@ -193,44 +192,6 @@ class AMI_1_8(object):
         else:
             logger.warning('ami_originateresponse %s %s %s %s (not in list)',
                            actionid, channel, reason, event)
-
-    def ami_meetmejoin(self, event):
-        opts = {'usernum': event['Usernum'],
-                'pseudochan': event['PseudoChan'],
-                'admin': 'Yes' in event['Admin'],
-                'authed': 'No' in event['NoAuthed'],
-                'displayname': event['CallerIDname'],
-                'phonenumber': event['CallerIDnum'], }
-        return self.innerdata.meetmeupdate(event['Meetme'],
-                                           event['Channel'],
-                                           opts)
-
-    def ami_meetmeleave(self, event):
-        opts = {'usernum': event['Usernum'], 'leave': True, }
-        return self.innerdata.meetmeupdate(event['Meetme'],
-                                           event['Channel'],
-                                           opts)
-
-    def ami_meetmeend(self, event):
-        return self.innerdata.meetmeupdate(event['Meetme'])
-
-    def ami_meetmemute(self, event):
-        opts = {'muted': 'on' in event['Status'],
-                'usernum': event['Usernum'], }
-        return self.innerdata.meetmeupdate(event['Meetme'],
-                                           event['Channel'],
-                                           opts)
-
-    def ami_meetmenoauthed(self, event):
-        opts = {'usernum': event['Usernum'],
-                'authed': 'off' in event['Status'], }
-        return self.innerdata.meetmeupdate(event['Meetme'],
-                                           event['Channel'],
-                                           opts)
-
-    def ami_meetmepause(self, event):
-        opts = {'paused': 'on' in event['Status'], }
-        return self.innerdata.meetmeupdate(event['Meetme'], opts=opts)
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
@@ -433,15 +394,6 @@ class AMI_1_8(object):
                 self.interface_ami.execute_and_track(actionid, params)
         except KeyError:
             logger.warning('ami_messagewaiting Failed to update mailbox')
-
-    def ami_meetmelist(self, event):
-        opts = {'usernum': event['UserNumber'],
-                'admin': 'Yes' in event['Admin'],
-                'muted': 'No' not in event['Muted'],
-                'displayname': event['CallerIDName'],
-                'phonenumber': event['CallerIDNum']}
-        return self.innerdata.meetmeupdate(event['Conference'],
-                                           event['Channel'], opts)
 
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
