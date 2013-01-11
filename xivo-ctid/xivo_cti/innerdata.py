@@ -760,8 +760,6 @@ class Safe(object):
             for k in self.channels.get(peerchannel).relations:
                 if k.startswith('phone'):
                     usersummary = self.usersummary_from_phoneid(k[6:])
-                    chanprops.properties['peerdisplay'] = '%s (%s)' % (usersummary.get('fullname'),
-                                                                       usersummary.get('phonenumber'))
 
     def currentstatus(self):
         rep = []
@@ -982,7 +980,6 @@ class Channel(object):
             'direction': None,
             'commstatus': 'ready',
             'timestamp': time.time(),
-            'peerdisplay': None,
             'talkingto_kind': None,
             'talkingto_id': None,
             'state': 'Unknown',
@@ -991,13 +988,11 @@ class Channel(object):
         self.extra_data = {}
 
     def setparking(self, exten, parkinglot):
-        self.properties['peerdisplay'] = 'Parking (%s in %s)' % (exten, parkinglot)
         self.properties['parked'] = True
         self.properties['talkingto_kind'] = 'parking'
         self.properties['talkingto_id'] = '%s@%s' % (exten, parkinglot)
 
     def unsetparking(self):
-        self.properties['peerdisplay'] = None
         self.properties['parked'] = False
         self.properties['talkingto_kind'] = None
         self.properties['talkingto_id'] = None
