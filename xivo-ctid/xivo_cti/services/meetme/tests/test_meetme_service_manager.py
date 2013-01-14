@@ -33,6 +33,7 @@ from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti import xivo_ami
 from xivo_cti import dao
 from xivo_cti.dao import user_dao
+from xivo_cti.dao import meetme_dao
 
 conf_room_number = '800'
 conf_room_name = 'test_conf'
@@ -63,7 +64,9 @@ class TestMeetmeServiceManager(unittest.TestCase):
         meetme_caller_id = '"Conference My conf" <4003>'
 
         dao.user = Mock(user_dao.UserDAO)
+        dao.meetme = Mock(meetme_dao.MeetmeDAO)
         dao.user.get_line_identity.return_value = invitee_interface
+        dao.meetme.get_caller_id_from_context_number.return_value = meetme_caller_id
         self.manager._find_meetme_by_line = Mock(return_value=(meetme_context, meetme_number))
 
         response = self.manager.invite(inviter_id, invitee_xid)
