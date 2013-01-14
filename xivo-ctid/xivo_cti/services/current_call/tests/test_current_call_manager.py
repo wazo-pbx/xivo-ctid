@@ -446,6 +446,8 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
+        transfer_option = ',T'
+        bridge_options = channel_to_intercept + transfer_option
         cid_name, cid_number = 'Alice', '5565'
         delay = 0.25
 
@@ -461,7 +463,7 @@ class TestCurrentCallManager(unittest.TestCase):
             'Originate',
             [('Channel', user_line),
              ('Application', 'Bridge'),
-             ('Data', channel_to_intercept),
+             ('Data', bridge_options),
              ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
              ('Async', 'true')]
         )

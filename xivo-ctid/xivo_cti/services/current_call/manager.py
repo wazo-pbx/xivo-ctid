@@ -197,7 +197,7 @@ class CurrentCallManager(object):
         except LookupError:
             logger.warning('User %s tried to transfer but has no line or no context', user_id)
         else:
-            logger.debug('%s %s %s', current_call_channel['lines_channel'], number, user_context)
+            logger.debug('Sending atxfer: %s %s %s', current_call_channel['lines_channel'], number, user_context)
             self.ami.sendcommand(
                 'Atxfer', [
                     ('Channel', current_call_channel['lines_channel']),
@@ -224,11 +224,12 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
+            bridge_option = '%s,T' % channel
             self.ami.sendcommand(
                 'Originate',
                 [('Channel', user_line),
                  ('Application', 'Bridge'),
-                 ('Data', channel),
+                 ('Data', bridge_option),
                  ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
                  ('Async', 'true')]
             )
