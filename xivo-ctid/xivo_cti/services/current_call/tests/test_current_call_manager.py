@@ -335,6 +335,43 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
 
     @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {'channel': self.channel_2,
+                 'lines_channel': self.channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+            self.line_2: [
+                {'channel': self.channel_1,
+                 'lines_channel': self.channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Hangup',
+            [('Channel', self.channel_1)]
+        )
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer_no_call(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_attended_transfer(self, mock_get_line_identity):
         user_id = 5
         number = '1234'
