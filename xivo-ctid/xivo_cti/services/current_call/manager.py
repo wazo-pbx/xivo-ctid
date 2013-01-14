@@ -179,6 +179,16 @@ class CurrentCallManager(object):
         else:
             self._hangup_channel(current_call_channel['lines_channel'])
 
+    def cancel_transfer(self, user_id):
+        try:
+            current_call_channel = self._get_current_call_channel(user_id)
+        except LookupError:
+            logger.warning('User %s tried to cancel a transfer but has no line', user_id)
+        else:
+            transfer_channel = current_call_channel['transfer_channel']
+            transfered_channel = self._local_channel_peer(transfer_channel)
+            self._hangup_channel(transfered_channel)
+
     def attended_transfer(self, user_id, number):
         logger.debug('Transfering %s peer to %s', user_id, number)
         try:
@@ -248,6 +258,11 @@ class CurrentCallManager(object):
 
     def _hangup_channel(self, channel):
         self.ami.sendcommand('Hangup', [('Channel', channel)])
+
+    def _local_channel_peer(self, local_channel):
+        channel_order = local_channel[-1]
+        peer_channel_order = u'1' if channel_order == u'2' else u'2'
+        return local_channel[:-1] + peer_channel_order
 
     @staticmethod
     def _identity_from_channel(channel):

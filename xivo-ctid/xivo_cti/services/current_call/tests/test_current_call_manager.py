@@ -532,3 +532,46 @@ class TestCurrentCallManager(unittest.TestCase):
         transfer_channel = u'Local/1003@pcm-dev-00000021;1'
 
         self.manager.set_transfer_channel(channel, transfer_channel)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_cancel_transfer(self, mock_get_line_identity):
+        local_transfer_channel = u'Local/1003@pcm-dev-00000032;'
+        transfer_channel = local_transfer_channel + u'1'
+        transfered_channel = local_transfer_channel + u'2'
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {'channel': self.channel_2,
+                 'lines_channel': self.channel_1,
+                 'bridge_time': 1234,
+                 'transfer_channel': transfer_channel,
+                 'on_hold': False}
+            ],
+            self.line_2: [
+                {'channel': self.channel_1,
+                 'lines_channel': self.channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.cancel_transfer(user_id)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Hangup',
+            [('Channel', transfered_channel)]
+        )
+
+    def test_local_channel_peer(self):
+        local_channel = u'Local/1003@pcm-dev-00000032;'
+        mine = local_channel + u'1'
+        peer = local_channel + u'2'
+
+        result = self.manager._local_channel_peer(mine)
+
+        self.assertEqual(result, peer)
+
+        result = self.manager._local_channel_peer(peer)
+
+        self.assertEqual(result, mine)
