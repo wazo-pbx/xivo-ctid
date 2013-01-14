@@ -26,13 +26,13 @@ from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-class CompleteTransfer(CTICommand):
+class CancelTransfer(CTICommand):
 
-    COMMAND_CLASS = 'complete_transfer'
+    COMMAND_CLASS = 'cancel_transfer'
 
     required_fields = [CTICommand.CLASS]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
     _callbacks = []
     _callbacks_with_params = []
 
-CTICommandFactory.register_class(CompleteTransfer)
+CTICommandFactory.register_class(CancelTransfer)

@@ -22,17 +22,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+import unittest
+
+from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 
 
-class CompleteTransfer(CTICommand):
+class TestCancelTransfer(unittest.TestCase):
 
-    COMMAND_CLASS = 'complete_transfer'
+    def setUp(self):
+        self.commandid = 678324
+        self.cancel_transfer_message = {
+            'class': 'cancel_transfer',
+            'commandid': self.commandid,
+        }
 
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
+    def test_cancel_transfer(self):
+        self.assertEqual(CancelTransfer.COMMAND_CLASS, 'cancel_transfer')
 
-CTICommandFactory.register_class(CompleteTransfer)
+    def test_from_dict(self):
+        cancel_transfer = CancelTransfer.from_dict(self.cancel_transfer_message)
+
+        self.assertEqual(cancel_transfer.commandid, self.commandid)
