@@ -224,7 +224,7 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
-            bridge_option = '%s,T' % channel
+            bridge_option = '%s,Tx' % channel
             self.ami.sendcommand(
                 'Originate',
                 [('Channel', user_line),

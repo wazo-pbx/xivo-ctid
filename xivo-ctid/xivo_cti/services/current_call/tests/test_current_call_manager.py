@@ -446,7 +446,7 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
-        transfer_option = ',T'
+        transfer_option = ',Tx'
         bridge_options = channel_to_intercept + transfer_option
         cid_name, cid_number = 'Alice', '5565'
         delay = 0.25
