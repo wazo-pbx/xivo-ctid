@@ -59,6 +59,15 @@ class CurrentCallParser(object):
             event['Clone']
         )
 
+    def parse_varset_transfername(self, event):
+        if 'Variable' not in event or event['Variable'] != 'TRANSFERERNAME':
+            return
+
+        self._current_call_manager.set_transfer_channel(
+            event['Value'],
+            event['Channel'],
+        )
+
     def register_ami_events(self):
         logger.debug('Registering to AMI events')
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -66,3 +75,4 @@ class CurrentCallParser(object):
         ami_handler.register_callback('Hold', self.parse_hold)
         ami_handler.register_callback('Hangup', self.parse_hangup)
         ami_handler.register_callback('Masquerade', self.parse_masquerade)
+        ami_handler.register_callback('VarSet', self.parse_varset_transfername)

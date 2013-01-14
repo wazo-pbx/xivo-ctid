@@ -467,3 +467,31 @@ class TestCurrentCallManager(unittest.TestCase):
         self.scheduler.schedule.assert_called_once_with(
             delay, self.device_manager.answer, device_id
         )
+
+    def test_set_transfer_channel(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager._calls_per_line = {
+            line: [
+                {'channel': self.channel_2,
+                 'lines_channel': channel,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+
+        self.manager.set_transfer_channel(channel, transfer_channel)
+
+        calls = self.manager._calls_per_line[line]
+        call = filter(lambda c: c['lines_channel'] == channel, calls)[0]
+
+        self.assertEqual(call['transfer_channel'], transfer_channel)
+
+    def test_set_transfer_channel_not_tracked(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager.set_transfer_channel(channel, transfer_channel)

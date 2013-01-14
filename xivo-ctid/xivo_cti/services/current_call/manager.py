@@ -126,6 +126,18 @@ class CurrentCallManager(object):
         for line in set([line for line, _ in to_remove]):
             self._current_call_notifier.publish_current_call(line)
 
+    @state_debug
+    def set_transfer_channel(self, channel, transfer_channel):
+        line = self._identity_from_channel(channel)
+
+        if line not in self._calls_per_line:
+            return
+
+        for call in self._calls_per_line[line]:
+            if call['lines_channel'] != channel:
+                continue
+            call['transfer_channel'] = transfer_channel
+
     def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
 
