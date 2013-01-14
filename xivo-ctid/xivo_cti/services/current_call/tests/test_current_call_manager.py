@@ -32,6 +32,7 @@ from hamcrest import *
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.dao import queue_dao
 from xivo_cti.dao import channel_dao
+from xivo_cti.dao import user_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
@@ -332,6 +333,40 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.hangup(user_id)
 
         self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_attended_transfer(self, mock_get_line_identity):
+        user_id = 5
+        number = '1234'
+        line_context = 'ctx'
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {'channel': self.channel_2,
+                 'lines_channel': self.channel_1,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+            self.line_2: [
+                {'channel': self.channel_1,
+                 'lines_channel': self.channel_2,
+                 'bridge_time': 1234,
+                 'on_hold': False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+        dao.user = Mock(user_dao.UserDAO)
+        dao.user.get_context.return_value = line_context
+
+        self.manager.attended_transfer(user_id, number)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Atxfer', [
+                ('Channel', self.channel_1),
+                ('Exten', number),
+                ('Context', line_context),
+                ('Priority', '1')
+            ]
+        )
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):

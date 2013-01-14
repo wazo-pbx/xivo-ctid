@@ -159,6 +159,24 @@ class CurrentCallManager(object):
         else:
             self.ami.sendcommand('Hangup', [('Channel', current_call_channel['channel'])])
 
+    def attended_transfer(self, user_id, number):
+        logger.debug('Transfering %s peer to %s', user_id, number)
+        try:
+            current_call_channel = self._get_current_call_channel(user_id)
+            user_context = dao.user.get_context(user_id)
+        except LookupError:
+            logger.warning('User %s tried to transfer but has no line or no context', user_id)
+        else:
+            logger.debug('%s %s %s', current_call_channel['lines_channel'], number, user_context)
+            self.ami.sendcommand(
+                'Atxfer', [
+                    ('Channel', current_call_channel['lines_channel']),
+                    ('Exten', number),
+                    ('Context', user_context),
+                    ('Priority', '1')
+                ]
+            )
+
     def switchboard_hold(self, user_id):
         try:
             current_call_channel = self._get_current_call_channel(user_id)
