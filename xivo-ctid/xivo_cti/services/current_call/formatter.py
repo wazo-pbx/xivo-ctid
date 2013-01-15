@@ -25,6 +25,9 @@
 import logging
 
 from xivo_cti import dao
+from xivo_cti.services.current_call.manager import PEER_CHANNEL
+from xivo_cti.services.current_call.manager import BRIDGE_TIME
+from xivo_cti.services.current_call.manager import ON_HOLD
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +53,12 @@ class CurrentCallFormatter(object):
                 'current_calls': calls}
 
     def _format_call(self, call):
-        caller_id = dao.channel.get_caller_id_name_number(call['channel'])
-        if call['on_hold'] is False:
+        caller_id = dao.channel.get_caller_id_name_number(call[PEER_CHANNEL])
+        if call[ON_HOLD] is False:
             status = 'up'
         else:
             status = 'hold'
         return {'cid_name': caller_id[0],
                 'cid_number': caller_id[1],
                 'call_status': status,
-                'call_start': call['bridge_time']}
+                'call_start': call[BRIDGE_TIME]}
