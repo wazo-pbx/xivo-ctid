@@ -69,8 +69,7 @@ class QueueMemberUpdater(object):
 
     def _update_agent_queue_members_as_unlogged(self, agent_number):
         for queue_member in self._queue_member_manager.get_queue_members_by_agent_number(agent_number):
-            old_state = queue_member.state
-            new_state = old_state.copy()
+            new_state = queue_member.state.copy()
             new_state.update_as_unlogged_agent()
             self._queue_member_manager._update_queue_member(queue_member, new_state)
 
