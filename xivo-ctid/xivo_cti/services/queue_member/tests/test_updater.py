@@ -54,7 +54,6 @@ class TestQueueMemberUpdater(unittest.TestCase):
 
         from_ami_agent_added_to_queue.assert_called_once_with('queue1', '123')
         self.queue_member_manager._add_queue_member.assert_called_once_with(queue_member)
-        self.queue_member_updater._ask_member_queue_status.assert_called_once_with(queue_member)
 
     def test_on_ami_removed_from_queue(self):
         ami_event = {'QueueName': 'queue1', 'AgentNumber': '123'}
