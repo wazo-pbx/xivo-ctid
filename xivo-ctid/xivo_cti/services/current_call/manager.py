@@ -80,35 +80,45 @@ class CurrentCallManager(object):
         device_id = user_dao.get_device_id(user_id)
         self.scheduler.schedule(delay, self.device_manager.answer, device_id)
 
-    @state_debug
     def masquerade(self, original, clone):
-        line, position = self._find_line_and_position(original)
-        if not line:
-            return
-        cloned_call = self._calls_per_line[line][position]
-        cloned_call['channel'] = clone
-        self._calls_per_line[line][position] = cloned_call
-        peers_call = {
-            'channel': cloned_call['lines_channel'],
-            'lines_channel': clone,
-            'bridge_time': cloned_call['bridge_time'],
-            'on_hold': cloned_call['on_hold']
-        }
-        peers_line = self._identity_from_channel(clone)
-        if peers_line in self._calls_per_line:
-            self._calls_per_line[peers_line].append(peers_call)
-        else:
-            self._calls_per_line[peers_line] = [peers_call]
+        local_2 = self._local_channel_peer(original)
+        local_line_1 = self._identity_from_channel(original)
+        clone_2 = self._calls_per_line[local_line_1][0]['channel']
 
-        self.end_call(original)
+        self._execute_masquerade(original, clone)
+        self._execute_masquerade(local_2, clone_2)
 
-        self._current_call_notifier.publish_current_call(line)
-        self._current_call_notifier.publish_current_call(peers_line)
+        line_1 = self._identity_from_channel(clone)
+        self._current_call_notifier.publish_current_call(line_1)
 
-    def _find_line_and_position(self, channel):
+        line_2 = self._identity_from_channel(clone_2)
+        self._current_call_notifier.publish_current_call(line_2)
+
+    def _execute_masquerade(self, original, clone):
+        self._remove_calls_with_line_channel(original)
+        self._substitute_calls_channel(original, clone)
+
+    def _substitute_calls_channel(self, old, new):
+        while True:
+            line, position = self._find_line_and_position(old, 'channel')
+            if not line:
+                break
+            self._calls_per_line[line][position]['channel'] = new
+
+    def _remove_calls_with_line_channel(self, channel):
+        while True:
+            line, position = self._find_line_and_position(channel, 'lines_channel')
+            if not line:
+                break
+            self._calls_per_line[line].pop(position)
+
+            if not self._calls_per_line[line]:
+                self._calls_per_line.pop(line)
+
+    def _find_line_and_position(self, channel, field='channel'):
         for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):
-                if call['channel'] == channel:
+                if call[field] == channel:
                     return line, index
         return None, None
 
@@ -268,4 +278,8 @@ class CurrentCallManager(object):
     @staticmethod
     def _identity_from_channel(channel):
         last_dash = channel.rfind('-')
-        return channel[:last_dash].lower()
+        if channel.startswith('Local/'):
+            end = channel[-2:]
+        else:
+            end = ''
+        return channel[:last_dash].lower() + end

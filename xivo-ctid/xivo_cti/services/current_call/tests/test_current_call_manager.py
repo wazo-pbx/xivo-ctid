@@ -89,46 +89,48 @@ class TestCurrentCallManager(unittest.TestCase):
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
-    def test_masquerade_channel(self):
-        local_channel = 'Local/1002@pcm-dev-00000001;2'
-        local_channel_iface = 'Local/1002@pcm-dev'
-        bridge_time = 12345.65
+    def test_masquerade_agent_call(self):
+        line_1 = u'sip/6s7foq'
+        line_2 = u'sip/pcm_dev'
+        local_line_1 = u'local/id-292@agentcallback;1'
+        local_line_2 = u'local/id-292@agentcallback;2'
+
+        line_1_channel = u'SIP/6s7foq-00000023'
+        line_2_channel = u'SIP/pcm_dev-00000022'
+        local_line_1_channel = u'Local/id-292@agentcallback-00000013;1'
 
         self.manager._calls_per_line = {
-            self.line_1: [
-                {'channel': local_channel,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False},
-            ],
-            local_channel_iface: [
-                {'channel': self.channel_1,
-                 'lines_channel': local_channel,
-                 'bridge_time': bridge_time,
-                 'on_hold': False},
-            ]
-        }
+            local_line_1: [{'bridge_time': 1358197027.3219039,
+                            'channel': line_2_channel,
+                            'lines_channel': local_line_1_channel,
+                            'on_hold': False}],
+            local_line_2: [{'bridge_time': 1358197027.242239,
+                            'channel': line_1_channel,
+                            'lines_channel': u'Local/id-292@agentcallback-00000013;2',
+                            'on_hold': False}],
+            line_1: [{'bridge_time': 1358197027.2422481,
+                      'channel': u'Local/id-292@agentcallback-00000013;2',
+                      'lines_channel': line_1_channel,
+                      'on_hold': False}],
+            line_2: [{'bridge_time': 1358197027.3218949,
+                      'channel': local_line_1_channel,
+                      'lines_channel': line_2_channel,
+                      'on_hold': False}]}
 
-        self.manager.masquerade(local_channel, self.channel_2)
+        self.manager.masquerade(local_line_1_channel, line_1_channel)
 
         expected = {
-            self.line_1: [
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
-            ],
-            self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
-            ],
+            line_1: [{'bridge_time': 1358197027.2422481,
+                      'channel': line_2_channel,
+                      'lines_channel': line_1_channel,
+                      'on_hold': False}],
+            line_2: [{'bridge_time': 1358197027.3218949,
+                      'channel': line_1_channel,
+                      'lines_channel': u'SIP/pcm_dev-00000022',
+                      'on_hold': False}]
         }
 
         self.assertEqual(self.manager._calls_per_line, expected)
-        calls = self._get_notifier_calls()
-        assert_that(calls, only_contains(self.line_1, self.line_2, local_channel_iface))
 
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
@@ -307,6 +309,14 @@ class TestCurrentCallManager(unittest.TestCase):
         result = self.manager._identity_from_channel(self.channel_1)
 
         self.assertEqual(result, self.line_1)
+
+    def test_line_identity_from_channel_local_channels(self):
+        local_chan = u'Local/id-292@agentcallback-0000000f;1'
+        expected = u'Local/id-292@agentcallback;1'.lower()
+
+        result = self.manager._identity_from_channel(local_chan)
+
+        self.assertEqual(result, expected)
 
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
