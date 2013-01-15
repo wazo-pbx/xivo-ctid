@@ -69,8 +69,7 @@ class QueueMemberUpdater(object):
 
     def _update_agent_queue_members_as_unlogged(self, agent_number):
         for queue_member in self._queue_member_manager.get_queue_members_by_agent_number(agent_number):
-            old_state = queue_member.state
-            new_state = old_state.copy()
+            new_state = queue_member.state.copy()
             new_state.update_as_unlogged_agent()
             self._queue_member_manager._update_queue_member(queue_member, new_state)
 
@@ -79,7 +78,6 @@ class QueueMemberUpdater(object):
         agent_number = ami_event['AgentNumber']
         queue_member = QueueMember.from_ami_agent_added_to_queue(queue_name, agent_number)
         self._queue_member_manager._add_queue_member(queue_member)
-        self._ask_member_queue_status(queue_member)
 
     def on_ami_agent_removed_from_queue(self, ami_event):
         queue_name = ami_event['QueueName']
@@ -119,20 +117,6 @@ class QueueMemberUpdater(object):
                 new_state = QueueMemberState.from_ami_queue_member_added(ami_event)
                 self._queue_member_manager._update_queue_member(queue_member, new_state)
 
-    def on_ami_queue_member_removed(self, ami_event):
-        queue_name = ami_event['Queue']
-        member_name = ami_event['MemberName']
-        queue_member = self._queue_member_manager.get_queue_member_by_name(queue_name, member_name)
-        if queue_member is None:
-            self._log_unknown_queue_member('removed', queue_name, member_name)
-        else:
-            if not queue_member.is_agent():
-                logger.info('ignoring queue member removed event for %r: not an agent', queue_member.id)
-            else:
-                new_state = queue_member.state.copy()
-                new_state.update_as_unlogged_agent()
-                self._queue_member_manager._update_queue_member(queue_member, new_state)
-
     def on_ami_queue_member_paused(self, ami_event):
         queue_name = ami_event['Queue']
         member_name = ami_event['MemberName']
@@ -162,5 +146,4 @@ class QueueMemberUpdater(object):
         ami_handler.register_callback('QueueMember', self.on_ami_queue_member)
         ami_handler.register_callback('QueueMemberStatus', self.on_ami_queue_member_status)
         ami_handler.register_callback('QueueMemberAdded', self.on_ami_queue_member_added)
-        ami_handler.register_callback('QueueMemberRemoved', self.on_ami_queue_member_removed)
         ami_handler.register_callback('QueueMemberPaused', self.on_ami_queue_member_paused)

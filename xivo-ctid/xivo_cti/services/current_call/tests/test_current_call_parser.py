@@ -117,6 +117,24 @@ class TestCurrentCallParser(unittest.TestCase):
 
         self.parser.parse_masquerade(masquerade_event)
 
-        self.manager.masquerade.assert_caller_once_with(
+        self.manager.masquerade.assert_called_once_with(
             original_channel, clone_channel
+        )
+
+    def test_parse_varset_transfername(self):
+        channel = u'SIP/6s7foq-0000007b'
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+        varset_transfername_event = {
+            'Event': 'VarSet',
+            'Privilege': 'dialplan,all',
+            'Channel': 'Local/1003@pcm-dev-00000021;1',
+            'Variable': 'TRANSFERERNAME',
+            'Value': 'SIP/6s7foq-0000007b',
+            'Uniqueid': '1357921621.212',
+        }
+
+        self.parser.parse_varset_transfername(varset_transfername_event)
+
+        self.manager.set_transfer_channel.assert_called_once_with(
+            channel, transfer_channel
         )

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 
-# Copyright (C) 2012  Avencall
+# Copyright (C) 2012-2013  Avencall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,28 +23,91 @@
 
 import unittest
 import copy
+import time
 from mock import Mock, NonCallableMock
 from mock import patch
 from xivo_cti.ioc.context import context
 from xivo_cti.services.meetme import service_manager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
+from xivo_cti import xivo_ami
+from xivo_cti import dao
+from xivo_cti.dao import user_dao
+from xivo_cti.dao import meetme_dao
 
 conf_room_number = '800'
 conf_room_name = 'test_conf'
 
 
-class TestUserServiceManager(unittest.TestCase):
+class TestMeetmeServiceManager(unittest.TestCase):
 
     def setUp(self):
         self.mock_notifier = NonCallableMock(MeetmeServiceNotifier)
-        self.manager = service_manager.MeetmeServiceManager(self.mock_notifier)
+        self.ami_class = Mock(xivo_ami.AMIClass)
+        self.manager = service_manager.MeetmeServiceManager(
+            self.mock_notifier,
+            self.ami_class,
+        )
         self.mock_manager = NonCallableMock(MeetmeServiceManager)
         context.register('meetme_service_notifier', self.mock_notifier)
         context.register('meetme_service_manager', self.mock_manager)
 
     def tearDown(self):
         context.reset()
+
+    def test_invite(self):
+        inviter_id = 5
+        invitee_xid = 'user:xivo/3'
+        invitee_interface = 'SIP/abcdef'
+        meetme_context = 'myctx'
+        meetme_number = '4003'
+        meetme_caller_id = '"Conference My conf" <4003>'
+
+        dao.user = Mock(user_dao.UserDAO)
+        dao.meetme = Mock(meetme_dao.MeetmeDAO)
+        dao.user.get_line_identity.return_value = invitee_interface
+        dao.meetme.get_caller_id_from_context_number.return_value = meetme_caller_id
+        self.manager._find_meetme_by_line = Mock(return_value=(meetme_context, meetme_number))
+
+        response = self.manager.invite(inviter_id, invitee_xid)
+
+        expected_return = 'message', {'message': 'Command sent succesfully'}
+
+        self.assertEqual(response, expected_return)
+        self.ami_class.sendcommand.assert_called_once_with(
+            'Originate',
+            [('Channel', invitee_interface),
+             ('Context', meetme_context),
+             ('Exten', meetme_number),
+             ('Priority', '1'),
+             ('Async', 'true'),
+             ('CallerID', meetme_caller_id)]
+        )
+
+    def test_find_meetme_by_line(self):
+        number = '4000'
+        context = 'myctx'
+        line_interface = 'SCCP/1234'
+        channel = '%s-24734893' % line_interface
+
+        self.manager._cache = {number: {'number': number,
+                                        'name': 'my-conf-name',
+                                        'pin_required': False,
+                                        'start_time': time.time(),
+                                        'context': context,
+                                        'members': {1: {'join_order': 1,
+                                                        'join_time': time.time() - 5,
+                                                        'number': '1002',
+                                                        'name': 'Tester 1',
+                                                        'channel': channel,
+                                                        'muted': False}}}}
+
+        self.assertRaises(LookupError, self.manager._find_meetme_by_line, 'SIP/not-there')
+
+        result_context, result_number = self.manager._find_meetme_by_line(line_interface)
+
+        self.assertEqual(result_context, context)
+        self.assertEqual(result_number, number)
 
     @patch('xivo_dao.meetme_dao.is_a_meetme', Mock(return_value=True))
     def test_parse_join(self):

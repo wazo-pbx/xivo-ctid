@@ -46,6 +46,9 @@ from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
+from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
+from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
 from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_add import QueueAdd
@@ -202,7 +205,7 @@ class CTIServer(object):
         queue_entry_manager.register_events()
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
-        meetme_service_manager_module.register_ami_events()
+        meetme_service_manager_module.register_callbacks()
 
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()
@@ -265,6 +268,18 @@ class CTIServer(object):
         )
         Hangup.register_callback_params(
             context.get('current_call_manager').hangup,
+            ['user_id']
+        )
+        AttendedTransfer.register_callback_params(
+            context.get('current_call_manager').attended_transfer,
+            ['user_id', 'number']
+        )
+        CancelTransfer.register_callback_params(
+            context.get('current_call_manager').cancel_transfer,
+            ['user_id']
+        )
+        CompleteTransfer.register_callback_params(
+            context.get('current_call_manager').complete_transfer,
             ['user_id']
         )
         HoldSwitchboard.register_callback_params(

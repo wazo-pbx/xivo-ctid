@@ -22,31 +22,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_dao import QueueDAO
-from xivo_cti.dao.meetme_dao import MeetmeDAO
-from xivo_cti.dao.user_dao import UserDAO
-from xivo_cti.dao.innerdata_dao import InnerdataDAO
+import unittest
 
-agent = None
-channel = None
-queue = None
-meetme = None
-user = None
-innerdata = None
+from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 
 
-def instanciate_dao(innerdata_obj, queue_member_manager):
-    global agent
-    agent = AgentDAO(innerdata_obj, queue_member_manager)
-    global channel
-    channel = ChannelDAO(innerdata_obj)
-    global queue
-    queue = QueueDAO(innerdata_obj)
-    global meetme
-    meetme = MeetmeDAO(innerdata_obj)
-    global user
-    user = UserDAO(innerdata_obj)
-    global innerdata
-    innerdata = InnerdataDAO(innerdata_obj)
+class TestAttendedTransfer(unittest.TestCase):
+
+    def setUp(self):
+        self.commandid = 5664346
+        self.number = '1234'
+        self.attended_transfer_message = {
+            'class': 'attended_transfer',
+            'commandid': self.commandid,
+            'number': self.number,
+        }
+
+    def test_attended_transfer(self):
+        self.assertEqual(AttendedTransfer.COMMAND_CLASS, 'attended_transfer')
+
+    def test_from_dict(self):
+        attended_transfer = AttendedTransfer.from_dict(self.attended_transfer_message)
+
+        self.assertEqual(attended_transfer.commandid, self.commandid)
+        self.assertEqual(attended_transfer.number, self.number)

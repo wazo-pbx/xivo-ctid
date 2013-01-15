@@ -22,31 +22,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.dao.channel_dao import ChannelDAO
-from xivo_cti.dao.queue_dao import QueueDAO
-from xivo_cti.dao.meetme_dao import MeetmeDAO
-from xivo_cti.dao.user_dao import UserDAO
-from xivo_cti.dao.innerdata_dao import InnerdataDAO
-
-agent = None
-channel = None
-queue = None
-meetme = None
-user = None
-innerdata = None
+from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-def instanciate_dao(innerdata_obj, queue_member_manager):
-    global agent
-    agent = AgentDAO(innerdata_obj, queue_member_manager)
-    global channel
-    channel = ChannelDAO(innerdata_obj)
-    global queue
-    queue = QueueDAO(innerdata_obj)
-    global meetme
-    meetme = MeetmeDAO(innerdata_obj)
-    global user
-    user = UserDAO(innerdata_obj)
-    global innerdata
-    innerdata = InnerdataDAO(innerdata_obj)
+class AttendedTransfer(CTICommand):
+
+    COMMAND_CLASS = 'attended_transfer'
+    NUMBER = 'number'
+
+    required_fields = [CTICommand.CLASS, NUMBER]
+    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
+    _callbacks = []
+    _callbacks_with_params = []
+
+    def __init__(self):
+        super(AttendedTransfer, self).__init__()
+
+    def _init_from_dict(self, msg):
+        super(AttendedTransfer, self)._init_from_dict(msg)
+        self.number = msg['number']
+
+CTICommandFactory.register_class(AttendedTransfer)

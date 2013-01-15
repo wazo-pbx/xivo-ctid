@@ -352,43 +352,6 @@ class Safe(object):
         self.channels[channel_name].update_state(state, state_description)
         self.handle_cti_stack('empty_stack')
 
-    def meetmeupdate(self, confno, channel=None, opts={}):
-        mid = self.xod_config['meetmes'].idbyroomnumber(confno)
-        if mid is None:
-            return None
-        status = self.xod_status['meetmes'][mid]
-        self.handle_cti_stack('set', ('meetmes', 'updatestatus', mid))
-        if channel:
-            if channel not in status['channels']:
-                keys = ('isadmin', 'usernum', 'ismuted', 'isauthed')
-                status['channels'][channel] = dict.fromkeys(keys)
-            status['pseudochan'] = (opts.get('pseudochan')
-                                    or status['pseudochan'])
-            chan = status['channels'][channel]
-            if 'admin' in opts:
-                chan['isadmin'] = opts['admin']
-            if 'muted' in opts:
-                chan['ismuted'] = opts['muted']
-            chan['usernum'] = opts.get('usernum') or chan['usernum']
-            if 'authed' in opts:
-                chan['isauthed'] = opts['authed']
-            if 'leave' in opts:
-                status['channels'].pop(channel)
-            else:
-                if channel in self.channels:
-                    self.handle_cti_stack('set', ('channels', 'updatestatus', channel))
-                    self.channels[channel].properties['talkingto_kind'] = '<meetme>'
-                    self.channels[channel].properties['talkingto_id'] = mid
-                    self.handle_cti_stack('empty_stack')
-        elif opts and 'paused' in opts:
-            # (pause)
-            status['paused'] = opts['paused']
-        else:
-            # (end)
-            status['pseudochan'] = None
-            status['channels'] = {}
-        self.handle_cti_stack('empty_stack')
-
     def voicemailupdate(self, mailbox, new, old=None, waiting=None):
         for k, v in self.xod_config['voicemails'].keeplist.iteritems():
             if mailbox == v.get('fullmailbox'):
@@ -568,8 +531,6 @@ class Safe(object):
             for k in self.channels.get(peerchannel).relations:
                 if k.startswith('phone'):
                     usersummary = self.usersummary_from_phoneid(k[6:])
-                    chanprops.properties['peerdisplay'] = '%s (%s)' % (usersummary.get('fullname'),
-                                                                       usersummary.get('phonenumber'))
 
     def currentstatus(self):
         rep = []
@@ -790,7 +751,6 @@ class Channel(object):
             'direction': None,
             'commstatus': 'ready',
             'timestamp': time.time(),
-            'peerdisplay': None,
             'talkingto_kind': None,
             'talkingto_id': None,
             'state': 'Unknown',
@@ -799,13 +759,11 @@ class Channel(object):
         self.extra_data = {}
 
     def setparking(self, exten, parkinglot):
-        self.properties['peerdisplay'] = 'Parking (%s in %s)' % (exten, parkinglot)
         self.properties['parked'] = True
         self.properties['talkingto_kind'] = 'parking'
         self.properties['talkingto_id'] = '%s@%s' % (exten, parkinglot)
 
     def unsetparking(self):
-        self.properties['peerdisplay'] = None
         self.properties['parked'] = False
         self.properties['talkingto_kind'] = None
         self.properties['talkingto_id'] = None

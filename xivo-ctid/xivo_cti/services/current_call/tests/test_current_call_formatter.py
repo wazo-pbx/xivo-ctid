@@ -29,6 +29,9 @@ from mock import Mock
 
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
+from xivo_cti.services.current_call.manager import PEER_CHANNEL
+from xivo_cti.services.current_call.manager import BRIDGE_TIME
+from xivo_cti.services.current_call.manager import ON_HOLD
 from xivo_cti import dao
 from xivo_cti.dao.channel_dao import ChannelDAO
 
@@ -55,17 +58,16 @@ class TestCurrentCallFormatter(unittest.TestCase):
 
         self._state = {
             self.line_identity_1: [
-                {'channel': self.channel_1['id'],
-                 'bridge_time': self.channel_1['start'],
-                 'on_hold': self.channel_1['holded']}
+                {PEER_CHANNEL: self.channel_1['id'],
+                 BRIDGE_TIME: self.channel_1['start'],
+                 ON_HOLD: self.channel_1['holded']}
             ],
             self.line_identity_2: [
-                {'channel': 'SCCP/7890-123556',
-                 'brigde_time': now,
-                 'on_hold': False},
-                {'channel': 'DAHDI/i1/543543-343545',
-                 'bridge_time': now - 20,
-                 'on_hold': True}
+                {PEER_CHANNEL: 'SCCP/7890-123556',
+                 ON_HOLD: False},
+                {PEER_CHANNEL: 'DAHDI/i1/543543-343545',
+                 BRIDGE_TIME: now - 20,
+                 ON_HOLD: True}
             ]
         }
         dao.channel = Mock(ChannelDAO)
@@ -116,9 +118,9 @@ class TestCurrentCallFormatter(unittest.TestCase):
         self.assertEqual(formatted_current_call, expected_current_call)
 
     def test_format_call(self):
-        call = {'channel': self.channel_1['id'],
-                'bridge_time': self.channel_1['start'],
-                'on_hold': self.channel_1['holded']}
+        call = {PEER_CHANNEL: self.channel_1['id'],
+                BRIDGE_TIME: self.channel_1['start'],
+                ON_HOLD: self.channel_1['holded']}
 
         dao.channel = Mock(ChannelDAO)
         dao.channel.get_caller_id_name_number.return_value = self.channel_1['cid_name'], self.channel_1['cid_number']
@@ -133,9 +135,9 @@ class TestCurrentCallFormatter(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_format_call_on_hold(self):
-        call = {'channel': self.channel_2['id'],
-                'bridge_time': self.channel_2['start'],
-                'on_hold': self.channel_2['holded']}
+        call = {PEER_CHANNEL: self.channel_2['id'],
+                BRIDGE_TIME: self.channel_2['start'],
+                ON_HOLD: self.channel_2['holded']}
 
         dao.channel = Mock(ChannelDAO)
         dao.channel.get_caller_id_name_number.return_value = self.channel_2['cid_name'], self.channel_2['cid_number']

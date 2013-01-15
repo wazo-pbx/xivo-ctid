@@ -231,7 +231,7 @@ class TestUserDAO(unittest.TestCase):
             'number': '1234',
             'iduserfeatures': user_id,
             'rules_order': 0,
-            'identity': 'sip/a1b2c3',
+            'identity': 'sip\/a1b2c3',
             'initialized': False,
             'allowtransfer': True
         }

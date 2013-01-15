@@ -32,9 +32,15 @@ from hamcrest import *
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.dao import queue_dao
 from xivo_cti.dao import channel_dao
+from xivo_cti.dao import user_dao
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
+from xivo_cti.services.current_call.manager import PEER_CHANNEL
+from xivo_cti.services.current_call.manager import LINE_CHANNEL
+from xivo_cti.services.current_call.manager import BRIDGE_TIME
+from xivo_cti.services.current_call.manager import ON_HOLD
+from xivo_cti.services.current_call.manager import TRANSFER_CHANNEL
 from xivo_cti import dao
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti import xivo_ami
@@ -71,16 +77,16 @@ class TestCurrentCallManager(unittest.TestCase):
 
         expected = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
             ],
         }
 
@@ -88,60 +94,62 @@ class TestCurrentCallManager(unittest.TestCase):
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
-    def test_masquerade_channel(self):
-        local_channel = 'Local/1002@pcm-dev-00000001;2'
-        local_channel_iface = 'Local/1002@pcm-dev'
-        bridge_time = 12345.65
+    def test_masquerade_agent_call(self):
+        line_1 = u'sip/6s7foq'
+        line_2 = u'sip/pcm_dev'
+        local_line_1 = u'local/id-292@agentcallback;1'
+        local_line_2 = u'local/id-292@agentcallback;2'
+
+        line_1_channel = u'SIP/6s7foq-00000023'
+        line_2_channel = u'SIP/pcm_dev-00000022'
+        local_line_1_channel = u'Local/id-292@agentcallback-00000013;1'
 
         self.manager._calls_per_line = {
-            self.line_1: [
-                {'channel': local_channel,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False},
-            ],
-            local_channel_iface: [
-                {'channel': self.channel_1,
-                 'lines_channel': local_channel,
-                 'bridge_time': bridge_time,
-                 'on_hold': False},
-            ]
-        }
+            local_line_1: [{BRIDGE_TIME: 1358197027.3219039,
+                            PEER_CHANNEL: line_2_channel,
+                            LINE_CHANNEL: local_line_1_channel,
+                            ON_HOLD: False}],
+            local_line_2: [{BRIDGE_TIME: 1358197027.242239,
+                            PEER_CHANNEL: line_1_channel,
+                            LINE_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
+                            ON_HOLD: False}],
+            line_1: [{BRIDGE_TIME: 1358197027.2422481,
+                      PEER_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
+                      LINE_CHANNEL: line_1_channel,
+                      ON_HOLD: False}],
+            line_2: [{BRIDGE_TIME: 1358197027.3218949,
+                      PEER_CHANNEL: local_line_1_channel,
+                      LINE_CHANNEL: line_2_channel,
+                      ON_HOLD: False}]}
 
-        self.manager.masquerade(local_channel, self.channel_2)
+        self.manager.masquerade(local_line_1_channel, line_1_channel)
 
         expected = {
-            self.line_1: [
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
-            ],
-            self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
-            ],
+            line_1: [{BRIDGE_TIME: 1358197027.2422481,
+                      PEER_CHANNEL: line_2_channel,
+                      LINE_CHANNEL: line_1_channel,
+                      ON_HOLD: False}],
+            line_2: [{BRIDGE_TIME: 1358197027.3218949,
+                      PEER_CHANNEL: line_1_channel,
+                      LINE_CHANNEL: u'SIP/pcm_dev-00000022',
+                      ON_HOLD: False}]
         }
 
         self.assertEqual(self.manager._calls_per_line, expected)
-        calls = self._get_notifier_calls()
-        assert_that(calls, only_contains(self.line_1, self.line_2, local_channel_iface))
 
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
 
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': True}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
             ],
         }
 
@@ -149,14 +157,14 @@ class TestCurrentCallManager(unittest.TestCase):
 
         expected = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': True}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
             ],
         }
 
@@ -168,20 +176,20 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': 'SIP/mytrunk-12345',
-                 'lines_channel': 'SIP/tc8nb4-000002',
-                 'bridge_time': bridge_time,
-                 'on_hold': True},
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': bridge_time,
-                 'on_hold': False},
+                {PEER_CHANNEL: 'SIP/mytrunk-12345',
+                 LINE_CHANNEL: 'SIP/tc8nb4-000002',
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: True},
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False},
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': bridge_time,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
             ],
         }
 
@@ -189,10 +197,10 @@ class TestCurrentCallManager(unittest.TestCase):
 
         expected = {
             self.line_1: [
-                {'channel': 'SIP/mytrunk-12345',
-                 'lines_channel': 'SIP/tc8nb4-000002',
-                 'bridge_time': bridge_time,
-                 'on_hold': True}
+                {PEER_CHANNEL: 'SIP/mytrunk-12345',
+                 LINE_CHANNEL: 'SIP/tc8nb4-000002',
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: True}
             ],
         }
 
@@ -203,14 +211,14 @@ class TestCurrentCallManager(unittest.TestCase):
     def test_hold_channel(self):
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -218,14 +226,14 @@ class TestCurrentCallManager(unittest.TestCase):
 
         expected = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': True}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -235,14 +243,14 @@ class TestCurrentCallManager(unittest.TestCase):
     def test_unhold_channel(self):
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': True}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -250,14 +258,14 @@ class TestCurrentCallManager(unittest.TestCase):
 
         expected = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -267,14 +275,14 @@ class TestCurrentCallManager(unittest.TestCase):
     def test_get_line_calls(self):
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': True}
+                {PEER_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -287,14 +295,14 @@ class TestCurrentCallManager(unittest.TestCase):
         channel_2 = 'SIP/6s7foq-00000005'
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': True}
+                {PEER_CHANNEL: channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: True}
             ],
             self.line_2: [
-                {'channel': channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -307,6 +315,14 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(result, self.line_1)
 
+    def test_line_identity_from_channel_local_channels(self):
+        local_chan = u'Local/id-292@agentcallback-0000000f;1'
+        expected = u'Local/id-292@agentcallback;1'.lower()
+
+        result = self.manager._identity_from_channel(local_chan)
+
+        self.assertEqual(result, expected)
+
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
 
@@ -315,16 +331,16 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
         mock_get_line_identity.return_value = self.line_1
@@ -332,6 +348,77 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.hangup(user_id)
 
         self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Hangup',
+            [('Channel', self.channel_1)]
+        )
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer_no_call(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_attended_transfer(self, mock_get_line_identity):
+        user_id = 5
+        number = '1234'
+        line_context = 'ctx'
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+        dao.user = Mock(user_dao.UserDAO)
+        dao.user.get_context.return_value = line_context
+
+        self.manager.attended_transfer(user_id, number)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Atxfer', [
+                ('Channel', self.channel_1),
+                ('Exten', number),
+                ('Context', line_context),
+                ('Priority', '1')
+            ]
+        )
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
@@ -351,16 +438,16 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager._calls_per_line = {
             self.line_1: [
-                {'channel': self.channel_2,
-                 'lines_channel': self.channel_1,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
             self.line_2: [
-                {'channel': self.channel_1,
-                 'lines_channel': self.channel_2,
-                 'bridge_time': 1234,
-                 'on_hold': False}
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
             ],
         }
 
@@ -374,6 +461,8 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
+        transfer_option = ',Tx'
+        bridge_options = channel_to_intercept + transfer_option
         cid_name, cid_number = 'Alice', '5565'
         delay = 0.25
 
@@ -389,7 +478,7 @@ class TestCurrentCallManager(unittest.TestCase):
             'Originate',
             [('Channel', user_line),
              ('Application', 'Bridge'),
-             ('Data', channel_to_intercept),
+             ('Data', bridge_options),
              ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
              ('Async', 'true')]
         )
@@ -432,3 +521,74 @@ class TestCurrentCallManager(unittest.TestCase):
         self.scheduler.schedule.assert_called_once_with(
             delay, self.device_manager.answer, device_id
         )
+
+    def test_set_transfer_channel(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager._calls_per_line = {
+            line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+
+        self.manager.set_transfer_channel(channel, transfer_channel)
+
+        calls = self.manager._calls_per_line[line]
+        call = filter(lambda c: c[LINE_CHANNEL] == channel, calls)[0]
+
+        self.assertEqual(call[TRANSFER_CHANNEL], transfer_channel)
+
+    def test_set_transfer_channel_not_tracked(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager.set_transfer_channel(channel, transfer_channel)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_cancel_transfer(self, mock_get_line_identity):
+        local_transfer_channel = u'Local/1003@pcm-dev-00000032;'
+        transfer_channel = local_transfer_channel + u'1'
+        transfered_channel = local_transfer_channel + u'2'
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 TRANSFER_CHANNEL: transfer_channel,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.cancel_transfer(user_id)
+
+        self.manager.ami.sendcommand.assert_called_once_with(
+            'Hangup',
+            [('Channel', transfered_channel)]
+        )
+
+    def test_local_channel_peer(self):
+        local_channel = u'Local/1003@pcm-dev-00000032;'
+        mine = local_channel + u'1'
+        peer = local_channel + u'2'
+
+        result = self.manager._local_channel_peer(mine)
+
+        self.assertEqual(result, peer)
+
+        result = self.manager._local_channel_peer(peer)
+
+        self.assertEqual(result, mine)
