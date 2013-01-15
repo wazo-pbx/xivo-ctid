@@ -125,7 +125,7 @@ class CurrentCallManager(object):
     def _find_line_and_position(self, channel, field=PEER_CHANNEL):
         for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):
-                if call[field] == channel:
+                if field in call and call[field] == channel:
                     return line, index
         return None, None
 
@@ -141,6 +141,14 @@ class CurrentCallManager(object):
             self._remove_peer_channel(line, channel)
 
         for line in set([line for line, _ in to_remove]):
+            self._current_call_notifier.publish_current_call(line)
+
+    @state_debug
+    def remove_transfer_channel(self, channel):
+        line, position = self._find_line_and_position(channel, TRANSFER_CHANNEL)
+        if line:
+            self._calls_per_line[line][position].pop(TRANSFER_CHANNEL)
+
             self._current_call_notifier.publish_current_call(line)
 
     @state_debug
