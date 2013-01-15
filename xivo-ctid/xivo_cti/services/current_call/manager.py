@@ -80,23 +80,23 @@ class CurrentCallManager(object):
         device_id = user_dao.get_device_id(user_id)
         self.scheduler.schedule(delay, self.device_manager.answer, device_id)
 
-    def masquerade(self, original, clone):
-        local_2 = self._local_channel_peer(original)
-        local_line_1 = self._identity_from_channel(original)
-        clone_2 = self._calls_per_line[local_line_1][0]['channel']
+    def masquerade(self, old, new):
+        old_2 = self._local_channel_peer(old)
+        line_from_old = self._identity_from_channel(old)
+        new_2 = self._calls_per_line[line_from_old][0]['channel']
 
-        self._execute_masquerade(original, clone)
-        self._execute_masquerade(local_2, clone_2)
+        self._execute_masquerade(old, new)
+        self._execute_masquerade(old_2, new_2)
 
-        line_1 = self._identity_from_channel(clone)
-        self._current_call_notifier.publish_current_call(line_1)
+        line_from_new = self._identity_from_channel(new)
+        self._current_call_notifier.publish_current_call(line_from_new)
 
-        line_2 = self._identity_from_channel(clone_2)
-        self._current_call_notifier.publish_current_call(line_2)
+        line_from_new_2 = self._identity_from_channel(new_2)
+        self._current_call_notifier.publish_current_call(line_from_new_2)
 
-    def _execute_masquerade(self, original, clone):
-        self._remove_calls_with_line_channel(original)
-        self._substitute_calls_channel(original, clone)
+    def _execute_masquerade(self, old, new):
+        self._remove_calls_with_line_channel(old)
+        self._substitute_calls_channel(old, new)
 
     def _substitute_calls_channel(self, old, new):
         while True:
