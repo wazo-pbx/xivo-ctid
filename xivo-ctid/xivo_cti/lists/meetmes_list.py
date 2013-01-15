@@ -25,7 +25,6 @@
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
 import logging
-from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 
 logger = logging.getLogger('meetmelist')
 
@@ -35,7 +34,6 @@ class MeetmesList(ContextAwareAnyList):
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'meetmes')
-        InviteConfroom.register_callback_params(self.invite, ['invitee', 'cti_connection'])
 
     def init_data(self):
         ContextAwareAnyList.init_data(self)
