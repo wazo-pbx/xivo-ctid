@@ -52,6 +52,7 @@ class CurrentCallParser(object):
 
     def parse_hangup(self, event):
         self._current_call_manager.end_call(event['Channel'])
+        self._current_call_manager.remove_transfer_channel(event['Channel'])
 
     def parse_masquerade(self, event):
         self._current_call_manager.masquerade(

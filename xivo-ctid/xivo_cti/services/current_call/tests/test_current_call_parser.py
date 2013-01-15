@@ -103,6 +103,23 @@ class TestCurrentCallParser(unittest.TestCase):
 
         self.manager.end_call.assert_called_once_with(channel)
 
+    def test_parse_hangup_transfer(self):
+        channel = 'Local/102@default-00000028;1'
+        hangup_event = {'Event': 'Hangup',
+                        'Privilege': 'call,all',
+                        'Channel': 'Local/102@default-00000028;1',
+                        'Uniqueid': '1358264807.166',
+                        'CallerIDNum': '102',
+                        'CallerIDName': 'Bob',
+                        'ConnectedLineNum': '101',
+                        'ConnectedLineName': 'Alice Wunderland',
+                        'Cause': '16',
+                        'Cause-txt': 'Normal Clearing'}
+
+        self.parser.parse_hangup(hangup_event)
+
+        self.manager.remove_transfer_channel.assert_called_once_with(channel)
+
     def test_parse_masquerade(self):
         original_channel = 'Local/1002@pcm-dev-00000001;1',
         clone_channel = 'SIP/6s7foq-00000005',
