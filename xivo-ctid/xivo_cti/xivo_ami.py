@@ -50,7 +50,7 @@ class AMIClass(object):
             return self.msg
 
     def __init__(self, config):
-        ipbxconfig = config.getconfig('ipbx').get('ipbx_connection')
+        ipbxconfig = config.getconfig('ipbx_connection')
         self.ipbxid = 'xivo'
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
