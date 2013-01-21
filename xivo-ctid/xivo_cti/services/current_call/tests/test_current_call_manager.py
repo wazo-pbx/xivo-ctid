@@ -208,6 +208,51 @@ class TestCurrentCallManager(unittest.TestCase):
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
+    def test_remove_transfer_channel(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager._calls_per_line = {
+            line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False,
+                 TRANSFER_CHANNEL: transfer_channel}
+            ],
+        }
+        expected_calls_per_line = {
+            line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+
+        self.manager.remove_transfer_channel(transfer_channel)
+        calls_per_line = self.manager._calls_per_line
+
+        self.assertEqual(expected_calls_per_line, calls_per_line)
+        self.notifier.publish_current_call.assert_called_once_with(line)
+
+    def test_remove_transfer_channel_not_tracked(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager._calls_per_line = {
+            line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+
+        self.manager.remove_transfer_channel(transfer_channel)
+
     def test_hold_channel(self):
         self.manager._calls_per_line = {
             self.line_1: [

@@ -175,7 +175,7 @@ class Safe(object):
             channel_name = event['Channel']
             if channel_name in self.channels:
                 channel = self.channels[channel_name]
-                proto, agent_number = event['Member'].split('/', 1)
+                proto, agent_number = event['MemberName'].split('/', 1)
                 if proto == 'Agent':
                     data_type = 'agent'
                     data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
@@ -602,6 +602,8 @@ class Safe(object):
             connection['conn'].commit()
 
     def sheetsend(self, where, channel, outdest=None):
+        if '@agentcallback' in channel:
+            return
         if 'sheets' not in self._config.getconfig():
             return
         bsheets = self._config.getconfig('sheets')
