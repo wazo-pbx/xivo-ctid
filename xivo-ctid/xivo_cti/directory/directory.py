@@ -78,7 +78,7 @@ class Context(object):
             else:
                 directory_results.append(directory_result)
         combined_results = chain.from_iterable(directory_results)
-        resultlist = list(self._display.format(combined_results))
+        resultlist = list(set(self._display.format(combined_results)))
         return self._display.display_header, resultlist
 
     def lookup_reverse(self, did_number, number):

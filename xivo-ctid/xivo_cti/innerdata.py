@@ -951,25 +951,31 @@ class Safe(object):
                                  self.directories_mgr.directories,
                                  contexts_contents)
 
-    # directory lookups entry points - START
-
     def getcustomers(self, user_id, pattern, commandid):
         try:
             context = dao.user.get_context(user_id)
-            context_obj = self.contexts_mgr.contexts[context]
-        except KeyError:
-            logger.info('Directory lookup failed in context: %s', context)
+            headers, resultlist = self._search_directory_in_context(pattern, context)
+        except (LookupError, KeyError):
+            logger.warning('Failed to retrieve user context for user %s')
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
         else:
-            headers, resultlist = context_obj.lookup_direct(pattern, contexts=[context])
-            resultlist = list(set(resultlist))
             return 'message', {'class': 'directory',
                                'headers': headers,
                                'replyid': commandid,
                                'resultlist': resultlist,
                                'status': 'ok'}
 
-    # directory lookups entry points - STOP
+    def switchboard_directory_search(self, pattern):
+        try:
+            headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
+        except (LookupError, KeyError):
+            logger.warning('Error during switchboard directory lookup')
+        else:
+            logger.debug('Directory search header: %s results: %s', headers, results)
+
+    def _search_directory_in_context(self, pattern, context):
+        context_obj = self.contexts_mgr.contexts[context]
+        return context_obj.lookup_direct(pattern, contexts=[context])
 
 
 class Channel(object):
