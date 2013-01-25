@@ -47,11 +47,8 @@ import ssl
 import sys
 import time
 import threading
-from sqlalchemy.exc import OperationalError, InvalidRequestError
 
 from xivo import daemonize
-from xivo_dao.alchemy import dbconnection
-
 from xivo_cti import cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
@@ -117,7 +114,6 @@ class CTIServer(object):
         self.pipe_queued_threads = os.pipe()
         self._config = config
         self._cti_events = Queue.Queue()
-        self._pg_fallback_retries = 0
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -157,23 +153,10 @@ class CTIServer(object):
             daemonize.daemonize()
         daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
 
-    def _init_db_connection_pool(self):
-        dbconnection.unregister_db_connection_pool()
-        dbconnection.register_db_connection_pool(self._new_db_connection_pool())
-
-    def _new_db_connection_pool(self):
-        return dbconnection.DBConnectionPool(dbconnection.DBConnection)
-
-    def _init_db_uri(self):
-        dbconnection.add_connection_as(cti_config.DB_URI, 'asterisk')
-        dbconnection.add_connection(cti_config.DB_URI)
-        QueueLogger.init()
-
     def setup(self):
         self._set_logger()
         self._daemonize()
-        self._init_db_connection_pool()
-        self._init_db_uri()
+        QueueLogger.init()
         self._config.update()
         self.timeout_queue = Queue.Queue()
         self._set_signal_handlers()
@@ -725,8 +708,6 @@ class CTIServer(object):
                 if msg:
                     try:
                         closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
-                    except (OperationalError, InvalidRequestError):
-                        self._on_pg_down()
                     except Exception:
                         logger.exception('handling %s (%s)', requester, interface_obj)
                 else:
@@ -736,8 +717,6 @@ class CTIServer(object):
                 interface_obj.disconnected(DisconnectCause.by_client)
                 sel_i.close()
                 del self.fdlist_established[sel_i]
-        except (OperationalError, InvalidRequestError):
-            self._on_pg_down()
         except Exception:
             logger.exception('[%s] %s', interface_obj, sel_i)
             logger.warning('unexpected socket breakup')
@@ -797,8 +776,6 @@ class CTIServer(object):
                         kind.disconnected(DisconnectCause.broken_pipe)
                         sel_o.close()
                         del self.fdlist_established[sel_o]
-        except (OperationalError, InvalidRequestError):
-            self._on_pg_down()
         except Exception:
             logger.exception('Socket writer')
 
@@ -822,16 +799,5 @@ class CTIServer(object):
 
                 self._update_safe_list()
                 self._empty_cti_events_queue()
-        except (OperationalError, InvalidRequestError):
-            self._on_pg_down()
         except Exception:
             logger.exception('Socket Reader')
-
-    def _on_pg_down(self):
-        self._pg_fallback_retries += 1
-        logger.warning('Problem communicating with PostgreSQL. Re-initializing db connection...')
-        self._init_db_connection_pool()
-        self._init_db_uri()
-        if self._pg_fallback_retries > 10:
-            logger.warning('Could not communicate with PostgreSQL. Closing CTId')
-            sys.exit(1)
