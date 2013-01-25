@@ -53,6 +53,7 @@ from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
+from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti import dao
@@ -224,6 +225,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
+        SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['user_id', 'pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
@@ -965,13 +967,13 @@ class Safe(object):
                                'resultlist': resultlist,
                                'status': 'ok'}
 
-    def switchboard_directory_search(self, pattern):
+    def switchboard_directory_search(self, user_id, pattern):
         try:
             headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
-            logger.debug('Directory search header: %s results: %s', headers, results)
+            logger.debug('Directory search header: %s results: %s', headers, resultlist)
 
     def _search_directory_in_context(self, pattern, context):
         context_obj = self.contexts_mgr.contexts[context]
