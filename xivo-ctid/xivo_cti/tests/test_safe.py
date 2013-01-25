@@ -42,7 +42,6 @@ class TestSafe(unittest.TestCase):
         context.register('config', cti_config.Config())
         config = context.get('config')
         self._ctiserver = CTIServer(config)
-        self._ctiserver._init_db_connection_pool()
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
         self.safe = Safe(config, self._ctiserver)
         self.safe.user_service_manager = Mock(UserServiceManager)
