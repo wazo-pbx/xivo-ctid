@@ -17,6 +17,8 @@
 
 import logging
 
+from itertools import ifilter
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,12 +67,15 @@ class DirectoryResultFormatter(object):
 
     @classmethod
     def _append_entries(cls, assembled_results, decomposed_result):
-        number_fields = [field_name for field_name in decomposed_result
-                         if field_name.startswith('number_')]
+        def field_filter(field_name):
+            return field_name.startswith('number_') and decomposed_result[field_name]
+
+        number_fields = ifilter(field_filter, decomposed_result)
+
         for number_field in number_fields:
             assembled_results.append(
                 {
                     'name': decomposed_result['name'],
-                    'number': decomposed_result.pop(number_field),
+                    'number': decomposed_result[number_field],
                     'number_type': DirectoryNumberType.from_field_name(number_field),
                 })

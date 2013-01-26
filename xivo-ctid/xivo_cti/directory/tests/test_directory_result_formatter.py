@@ -82,3 +82,20 @@ class TestDirectoryResultFormatter(unittest.TestCase):
         expected_result = []
 
         self.assertEqual(formatted_result, expected_result)
+
+    def test_format_directory_result_empty_number(self):
+        headers = [u'name', u'email', u'number_office', u'number_mobile', u'number_on_the_road']
+        results = [u'Dave ;dave@dave.com;4185555555;;98734']
+
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+
+        expected_result = [
+            {'name': 'Dave',
+             'number': '4185555555',
+             'number_type': formatter.DirectoryNumberType.office},
+            {'name': 'Dave',
+             'number': '98734',
+             'number_type': formatter.DirectoryNumberType.other},
+        ]
+
+        self.assertEqual(sorted(formatted_result), sorted(expected_result))
