@@ -48,6 +48,7 @@ import cti_urllist
 from xivo_cti import lists, cti_config, cti_sheets, db_connection_manager
 from xivo_cti.lists import *
 from xivo_cti.directory import directory
+from xivo_cti.directory.formatter import DirectoryResultFormatter
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
@@ -225,7 +226,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
-        SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['user_id', 'pattern'])
+        SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
@@ -967,13 +968,16 @@ class Safe(object):
                                'resultlist': resultlist,
                                'status': 'ok'}
 
-    def switchboard_directory_search(self, user_id, pattern):
+    def switchboard_directory_search(self, pattern):
         try:
             headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
-            logger.debug('Directory search header: %s results: %s', headers, resultlist)
+            formatted_result = DirectoryResultFormatter.format(headers, resultlist)
+            return 'message', {'class': 'directory_search_result',
+                               'pattern': pattern,
+                               'results': formatted_result}
 
     def _search_directory_in_context(self, pattern, context):
         context_obj = self.contexts_mgr.contexts[context]
