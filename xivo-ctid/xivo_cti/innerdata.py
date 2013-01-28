@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# XiVO CTI Server
-
-# Copyright (C) 2007-2012  Avencall'
+# Copyright (C) 2013 Avencall
 #
-# This program is free software; you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the source tree
-# or delivered in the installable package in which XiVO CTI Server is
-# distributed for more details.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import copy
 import hashlib
@@ -36,6 +29,7 @@ from xivo_cti.cti.commands.getlists.list_id import ListID
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
+from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list, \
     meetmes_list, phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
@@ -45,6 +39,7 @@ from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
 from xivo_dao import user_dao
+from xivo_cti.directory.formatter import DirectoryResultFormatter
 
 logger = logging.getLogger('innerdata')
 
@@ -161,6 +156,7 @@ class Safe(object):
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
+        SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
@@ -707,25 +703,34 @@ class Safe(object):
                                  self.directories_mgr.directories,
                                  contexts_contents)
 
-    # directory lookups entry points - START
-
     def getcustomers(self, user_id, pattern, commandid):
         try:
             context = dao.user.get_context(user_id)
-            context_obj = self.contexts_mgr.contexts[context]
-        except KeyError:
-            logger.info('Directory lookup failed in context: %s', context)
+            headers, resultlist = self._search_directory_in_context(pattern, context)
+        except (LookupError, KeyError):
+            logger.warning('Failed to retrieve user context for user %s')
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
         else:
-            headers, resultlist = context_obj.lookup_direct(pattern, contexts=[context])
-            resultlist = list(set(resultlist))
             return 'message', {'class': 'directory',
                                'headers': headers,
                                'replyid': commandid,
                                'resultlist': resultlist,
                                'status': 'ok'}
 
-    # directory lookups entry points - STOP
+    def switchboard_directory_search(self, pattern):
+        try:
+            headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
+        except (LookupError, KeyError):
+            logger.warning('Error during switchboard directory lookup')
+        else:
+            formatted_result = DirectoryResultFormatter.format(headers, resultlist)
+            return 'message', {'class': 'directory_search_result',
+                               'pattern': pattern,
+                               'results': formatted_result}
+
+    def _search_directory_in_context(self, pattern, context):
+        context_obj = self.contexts_mgr.contexts[context]
+        return context_obj.lookup_direct(pattern, contexts=[context])
 
 
 class Channel(object):
