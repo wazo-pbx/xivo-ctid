@@ -471,6 +471,7 @@ class TestCurrentCallManager(unittest.TestCase):
     def test_switchboard_hold(self, mock_get_line_identity):
         dao.queue = Mock(queue_dao.QueueDAO)
         dao.queue.get_number_context_from_name.return_value = '3006', 'ctx'
+        queue_name = 'queue_on_hold'
         user_id = 7
         mock_get_line_identity.return_value = self.line_2
 
@@ -489,7 +490,7 @@ class TestCurrentCallManager(unittest.TestCase):
             ],
         }
 
-        self.manager.switchboard_hold(user_id)
+        self.manager.switchboard_hold(user_id, queue_name)
 
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 

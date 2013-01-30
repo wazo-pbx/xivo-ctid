@@ -281,7 +281,7 @@ class CTIServer(object):
         )
         HoldSwitchboard.register_callback_params(
             context.get('current_call_manager').switchboard_hold,
-            ['user_id']
+            ['user_id', 'queue_name']
         )
         UnholdSwitchboard.register_callback_params(
             context.get('current_call_manager').switchboard_unhold,
