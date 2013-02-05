@@ -257,19 +257,10 @@ class Safe(object):
     def handle_agent_linked(self, event):
         # Will be called when joining a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        try:
-            channel = event['Channel']
-            proto, agent_number = channel.split('/', 1)
-            if proto == 'Agent' and channel in self.channels:
-                self.sheetsend('agentlinked', event['Channel'])
-        except KeyError:
-            logger.warning('Could not split channel %s', channel)
 
     def handle_agent_unlinked(self, event):
         # Will be called when leaving a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        if 'Channel' in event and event['Channel'] in self.channels:
-            self.sheetsend('agentunlinked', event['Channel'])
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
