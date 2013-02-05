@@ -62,6 +62,7 @@ from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
 from xivo_cti.cti.commands.hangup import Hangup
+from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
@@ -231,10 +232,18 @@ class CTIServer(object):
         SubscribeQueueEntryUpdate.register_callback_params(
             self._queue_entry_notifier.subscribe, ['cti_connection', 'queue_id'])
 
-        AgentLogin.register_callback_params(self._agent_service_manager.on_cti_agent_login,
-                                            ['user_id', 'agent_id', 'agent_phone_number'])
-        AgentLogout.register_callback_params(self._agent_service_manager.on_cti_agent_logout,
-                                             ['user_id', 'agent_id'])
+        AgentLogin.register_callback_params(
+            self._agent_service_manager.on_cti_agent_login,
+            ['user_id', 'agent_id', 'agent_phone_number']
+        )
+        AgentLogout.register_callback_params(
+            self._agent_service_manager.on_cti_agent_logout,
+            ['user_id', 'agent_id']
+        )
+        Listen.register_callback_params(
+            self._agent_service_manager.on_cti_listen,
+            ['user_id', 'destination']
+        )
 
         Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
 

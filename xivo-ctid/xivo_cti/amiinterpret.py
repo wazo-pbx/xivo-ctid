@@ -182,9 +182,6 @@ class AMI_1_8(object):
             except Exception:
                 # when requester is not connected any more ...
                 pass
-        else:
-            logger.warning('ami_originateresponse %s %s %s %s (not in list)',
-                           actionid, channel, reason, event)
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
