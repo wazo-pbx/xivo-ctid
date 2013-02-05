@@ -243,6 +243,7 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'desttype', 'queue')
         chanprops.set_extra_data('xivo', 'destid', queue_id)
         chanprops.set_extra_data('xivo', 'calledidname', queue_name)
+        chanprops.set_extra_data('xivo', 'queuename', queue_name)
         chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
         if not chanprops.has_extra_data('xivo', 'calleridname'):
             chanprops.set_extra_data('xivo', 'calleridname', callerid_name)
