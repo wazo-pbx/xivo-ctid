@@ -473,20 +473,6 @@ class Safe(object):
             # 'all' case
             domatch = True
 
-        if domatch and 'profileids' in tomatch:
-            user = user_dao.get(userid)
-            if user.cti_profile_id not in tomatch.get('profileids'):
-                domatch = False
-
-        if domatch and 'entities' in tomatch:
-            pass
-
-        if domatch and 'contexts' in tomatch:
-            domatch = False
-            context = dao.user.get_context(userid)
-            if context in tomatch['contexts']:
-                domatch = True
-
         return domatch
 
     def find_users_channels_with_peer(self, user_id):
