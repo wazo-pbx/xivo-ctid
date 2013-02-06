@@ -32,7 +32,6 @@ logger = logging.getLogger('AMI_1.8')
 class AMI_1_8(object):
 
     userevents = ('Feature',
-                  'OutCall',
                   'dialplan2cti',
                   'LookupDirectory',
                   'User',
@@ -261,15 +260,6 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calledidnum', group_number)
 
         self.innerdata.sheetsend('dial', chanprops.channel)
-
-    def userevent_outcall(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-        chanprops.set_extra_data('xivo', 'origin', 'outcall')
-        chanprops.set_extra_data('xivo', 'direction', 'outgoing')
-        chanprops.set_extra_data('xivo', 'desttype', 'user')
-        chanprops.set_extra_data('xivo', 'destid', xivo_userid)
-        self.innerdata.sheetsend('outcall', chanprops.channel)
 
     def userevent_did(self, chanprops, event):
         calleridnum = event.get('XIVO_SRCNUM')
