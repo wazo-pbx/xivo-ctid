@@ -33,7 +33,6 @@ class AMI_1_8(object):
 
     userevents = ('Feature',
                   'OutCall',
-                  'Custom',
                   'dialplan2cti',
                   'LookupDirectory',
                   'User',

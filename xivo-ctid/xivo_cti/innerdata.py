@@ -839,7 +839,7 @@ class Safe(object):
             connection['cur'].query(request, columns, arguments)
             connection['conn'].commit()
 
-    def sheetsend(self, where, channel, outdest=None):
+    def sheetsend(self, where, channel):
         if '@agentcallback' in channel:
             return
         if 'sheets' not in self._config.getconfig():
