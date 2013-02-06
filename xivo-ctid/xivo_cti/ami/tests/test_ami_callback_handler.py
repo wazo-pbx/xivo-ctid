@@ -147,9 +147,12 @@ class TestAMICallbackHandler(unittest.TestCase):
         self.handler.register_callback('UserEvent', callback1)
         self.handler.register_userevent_callback(userevent_name, callback2)
 
-        callbacks = self.handler.get_callbacks(self._new_userevent(userevent_name))
+        # call get_callbacks twice to make sure there is no side effect
+        callbacks1 = self.handler.get_callbacks(self._new_userevent(userevent_name))
+        callbacks2 = self.handler.get_callbacks(self._new_userevent(userevent_name))
 
-        self.assertEqual(sorted([callback1, callback2]), sorted(callbacks))
+        self.assertEqual(sorted([callback1, callback2]), sorted(callbacks1))
+        self.assertEqual(sorted([callback1, callback2]), sorted(callbacks2))
 
     def _new_event(self, event_name):
         return {'Event': event_name}

@@ -47,6 +47,7 @@ class AMICallbackHandler(object):
 
         if event_name == 'userevent':
             key = event['UserEvent'].lower()
+            callbacks = list(callbacks)
             callbacks.extend(self._userevent_callbacks.get(key, []))
 
         return callbacks
