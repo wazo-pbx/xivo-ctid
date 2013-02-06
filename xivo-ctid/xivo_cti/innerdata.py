@@ -849,7 +849,7 @@ class Safe(object):
             if not self.sheetdisplays.get(display_id):
                 continue
 
-            channelprops = self.channels.get(channel)
+            channelprops = self.channels[channel]
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
             channelprops.set_extra_data('xivo', 'where', where)
