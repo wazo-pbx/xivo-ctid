@@ -218,8 +218,8 @@ class AMI_1_8(object):
             # chanprops is the ";2" channel of a "Local channel", but we need
             # to set the extra_data information on the ";1" channel
             semicolon1_channel = chanprops.channel[:-1] + '1'
-            semicolon1_chanpropos = self.innerdata.channels[semicolon1_channel]
-            semicolon1_chanpropos.set_extra_data('xivo', 'agentnumber', agent_number)
+            semicolon1_chanprops = self.innerdata.channels[semicolon1_channel]
+            semicolon1_chanprops.set_extra_data('xivo', 'agentnumber', agent_number)
         except Exception:
             logger.warning('Could not set extra data in userevent agent', exc_info=True)
 
