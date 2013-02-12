@@ -24,78 +24,88 @@ from xivo_cti.directory import formatter
 class TestDirectoryResultFormatter(unittest.TestCase):
 
     def test_format_directory_result(self):
-        headers = [u'name', u'number_office', u'number_mobile', u'number_on_the_road']
+        headers = [u'Name', u'Number', u'Number', u'Number']
+        types = [u'', u'number_office', u'number_mobile', u'number_on_the_road']
         results = [u'Dave ;4185555555;7893;98734;543']
 
-        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, types, results)
 
         expected_result = [
-            {'name': 'Dave',
-             'number': '4185555555',
-             'number_type': formatter.DirectoryNumberType.office},
-            {'name': 'Dave',
-             'number': '7893',
-             'number_type': formatter.DirectoryNumberType.mobile},
-            {'name': 'Dave',
-             'number': '98734',
-             'number_type': formatter.DirectoryNumberType.other},
+            {u'Name': u'Dave',
+             u'number': u'4185555555',
+             u'number_type': formatter.DirectoryNumberType.office},
+            {u'Name': u'Dave',
+             u'number': u'7893',
+             u'number_type': formatter.DirectoryNumberType.mobile},
+            {u'Name': u'Dave',
+             u'number': u'98734',
+             u'number_type': formatter.DirectoryNumberType.other},
         ]
 
         self.assertEqual(sorted(formatted_result), sorted(expected_result))
 
     def test_format_directory_result_no_office_number(self):
-        headers = [u'name']
+        headers = [u'Name']
+        types = [u'']
         results = [u'Dave ']
 
-        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, types, results)
 
         expected_result = []
 
         self.assertEqual(formatted_result, expected_result)
 
     def test_format_directory_result_extra_fields(self):
-        headers = [u'name', u'email', u'number_office', u'number_mobile', u'number_on_the_road']
+        headers = [u'Name', u'Email', u'Number', u'Number', u'Number']
+        types = [u'', u'', u'number_office', u'number_mobile', u'number_on_the_road']
         results = [u'Dave ;dave@dave.com;4185555555;7893;98734;543']
 
-        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, types, results)
 
         expected_result = [
-            {'name': 'Dave',
-             'number': '4185555555',
+            {u'Name': u'Dave',
+             u'Email': u'dave@dave.com',
+             u'number': u'4185555555',
              'number_type': formatter.DirectoryNumberType.office},
-            {'name': 'Dave',
-             'number': '7893',
+            {u'Name': u'Dave',
+             u'Email': u'dave@dave.com',
+             u'number': u'7893',
              'number_type': formatter.DirectoryNumberType.mobile},
-            {'name': 'Dave',
-             'number': '98734',
-             'number_type': formatter.DirectoryNumberType.other},
+            {u'Name': u'Dave',
+             u'Email': u'dave@dave.com',
+             u'number': u'98734',
+             u'number_type': formatter.DirectoryNumberType.other},
         ]
 
         self.assertEqual(sorted(formatted_result), sorted(expected_result))
 
     def test_format_directory_result_no_name(self):
-        headers = ['number_mobile']
-        results = ['555']
+        headers = [u'Number']
+        types = [u'number_mobile']
+        results = [u'555']
 
-        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, types, results)
 
         expected_result = []
 
         self.assertEqual(formatted_result, expected_result)
 
     def test_format_directory_result_empty_number(self):
-        headers = [u'name', u'email', u'number_office', u'number_mobile', u'number_on_the_road']
+        headers = [u'Name', u'Email', u'Number', u'Number', u'Number']
+        types = [u'', u'',  u'number_office', u'number_mobile', u'number_on_the_road']
         results = [u'Dave ;dave@dave.com;4185555555;;98734']
 
-        formatted_result = formatter.DirectoryResultFormatter.format(headers, results)
+        formatted_result = formatter.DirectoryResultFormatter.format(headers, types, results)
 
         expected_result = [
-            {'name': 'Dave',
-             'number': '4185555555',
-             'number_type': formatter.DirectoryNumberType.office},
-            {'name': 'Dave',
-             'number': '98734',
-             'number_type': formatter.DirectoryNumberType.other},
+            {u'Name': u'Dave',
+             u'Email': u'dave@dave.com',
+             u'number': u'4185555555',
+             u'number_type': formatter.DirectoryNumberType.office},
+            {u'Name': u'Dave',
+             u'Email': u'dave@dave.com',
+             u'number': u'98734',
+             u'number_type': formatter.DirectoryNumberType.other},
         ]
 
         self.assertEqual(sorted(formatted_result), sorted(expected_result))

@@ -934,7 +934,7 @@ class Safe(object):
     def getcustomers(self, user_id, pattern, commandid):
         try:
             context = dao.user.get_context(user_id)
-            headers, resultlist = self._search_directory_in_context(pattern, context)
+            headers, _, resultlist = self._search_directory_in_context(pattern, context)
         except (LookupError, KeyError):
             logger.warning('Failed to retrieve user context for user %s')
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
@@ -947,11 +947,11 @@ class Safe(object):
 
     def switchboard_directory_search(self, pattern):
         try:
-            headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
+            headers, types, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
-            formatted_result = DirectoryResultFormatter.format(headers, resultlist)
+            formatted_result = DirectoryResultFormatter.format(headers, types, resultlist)
             return 'message', {'class': 'directory_search_result',
                                'pattern': pattern,
                                'results': formatted_result}

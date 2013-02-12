@@ -41,41 +41,67 @@ class DirectoryNumberType:
 class DirectoryResultFormatter(object):
 
     @classmethod
-    def format(cls, headers, results):
-        decomposed_results = cls._decompose_results(headers, results)
-        assembled_results = cls._assemble_results(decomposed_results)
-        return assembled_results
+    def format(cls, header, types, results):
+        return cls(header, types).format_results(results)
 
-    @classmethod
-    def _decompose_results(cls, headers, results):
-        if 'name' not in headers:
+    def __init__(self, header, types):
+        self._header = header
+        self._types = types
+
+    def format_results(self, results):
+        if not self._is_name_available():
             logger.warning('name field is expected for switchboard directory lookup')
             return []
-        decomposed_results = []
+
+        formatted_results = []
         for result in results:
-            values = result.split(';')
-            values_trimmed = [value.strip() for value in values]
-            decomposed_results.append(dict(zip(headers, values_trimmed)))
-        return decomposed_results
+            formatted_results.extend(self._format_result(result))
+        return formatted_results
 
-    @classmethod
-    def _assemble_results(cls, decomposed_results):
-        assembled_results = []
-        for decomposed_result in decomposed_results:
-            cls._append_entries(assembled_results, decomposed_result)
-        return assembled_results
+    def _is_name_available(self):
+        return 'name' in [x.lower() for x in self._header]
 
-    @classmethod
-    def _append_entries(cls, assembled_results, decomposed_result):
-        def field_filter(field_name):
-            return field_name.startswith('number_') and decomposed_result[field_name]
+    def _format_result(self, result):
+        values = self._parse_result(result)
+        title_fields = self._fields_with_title(values)
+        type_fields = self._fields_with_type(values)
 
-        number_fields = ifilter(field_filter, decomposed_result)
+        formatted_results = self._combine_title_with_types(title_fields, type_fields)
+        return formatted_results
 
-        for number_field in number_fields:
-            assembled_results.append(
-                {
-                    'name': decomposed_result['name'],
-                    'number': decomposed_result[number_field],
-                    'number_type': DirectoryNumberType.from_field_name(number_field),
-                })
+    def _parse_result(self, result):
+        return [value.strip() for value in result.split(';')]
+
+    def _fields_with_title(self, values):
+        title_positions = self._positions_without_type()
+        fields = dict((self._header[pos], values[pos]) for pos in title_positions)
+        return fields
+
+    def _fields_with_type(self, values):
+        type_positions = self._positions_with_type()
+
+        fields = {}
+        for position in type_positions:
+            value = values[position]
+            if value:
+                fieldtype = self._types[position]
+                number_type = DirectoryNumberType.from_field_name(fieldtype)
+                fields[number_type] = value
+
+        return fields
+
+    def _positions_without_type(self):
+        return [pos for pos, value in enumerate(self._types) if value.strip() == '']
+
+    def _positions_with_type(self):
+        return [pos for pos, value in enumerate(self._types) if value.strip() != '']
+
+    def _combine_title_with_types(self, title_fields, type_fields):
+        entries = []
+        for number_type, number in type_fields.iteritems():
+            entry = dict(title_fields)
+            entry[u'number_type'] = number_type
+            entry[u'number'] = number
+            entries.append(entry)
+
+        return entries
