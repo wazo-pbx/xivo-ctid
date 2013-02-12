@@ -22,11 +22,12 @@ from itertools import ifilter
 logger = logging.getLogger(__name__)
 
 
-class DirectoryNumberType:
+class DirectoryFieldType:
 
     office = u'office'
     mobile = u'mobile'
     other = u'other'
+    name = u'name'
 
     @classmethod
     def from_field_name(cls, field_name):
@@ -34,11 +35,17 @@ class DirectoryNumberType:
             return cls.office
         elif field_name == 'number_mobile':
             return cls.mobile
+        elif field_name == 'name':
+            return cls.name
         else:
             return cls.other
 
 
 class DirectoryResultFormatter(object):
+
+    NAME_FIELD = u'name'
+    NUMBER_TYPE_FIELD = u'number_type'
+    NUMBER_FIELD = u'number'
 
     @classmethod
     def format(cls, header, types, results):
@@ -50,7 +57,7 @@ class DirectoryResultFormatter(object):
 
     def format_results(self, results):
         if not self._is_name_available():
-            logger.warning('name field is expected for switchboard directory lookup')
+            logger.warning('name field type is expected for switchboard directory lookup')
             return []
 
         formatted_results = []
@@ -59,7 +66,8 @@ class DirectoryResultFormatter(object):
         return formatted_results
 
     def _is_name_available(self):
-        return 'name' in [x.lower() for x in self._header]
+        print self._types
+        return self.NAME_FIELD in self._types
 
     def _format_result(self, result):
         values = self._parse_result(result)
@@ -85,8 +93,8 @@ class DirectoryResultFormatter(object):
             value = values[position]
             if value:
                 fieldtype = self._types[position]
-                number_type = DirectoryNumberType.from_field_name(fieldtype)
-                fields[number_type] = value
+                converted_type = DirectoryFieldType.from_field_name(fieldtype)
+                fields[converted_type] = value
 
         return fields
 
@@ -98,10 +106,14 @@ class DirectoryResultFormatter(object):
 
     def _combine_title_with_types(self, title_fields, type_fields):
         entries = []
+
+        name_field = type_fields.pop(self.NAME_FIELD)
+
         for number_type, number in type_fields.iteritems():
             entry = dict(title_fields)
-            entry[u'number_type'] = number_type
-            entry[u'number'] = number
+            entry[self.NAME_FIELD] = name_field
+            entry[self.NUMBER_TYPE_FIELD] = number_type
+            entry[self.NUMBER_FIELD] = number
             entries.append(entry)
 
         return entries
