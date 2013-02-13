@@ -202,10 +202,13 @@ class CurrentCallManager(object):
             current_call_channel = self._get_current_call_channel(user_id)
         except LookupError:
             logger.warning('User %s tried to cancel a transfer but has no line', user_id)
-        else:
-            transfer_channel = current_call_channel[TRANSFER_CHANNEL]
-            transfered_channel = self._local_channel_peer(transfer_channel)
-            self._hangup_channel(transfered_channel)
+            return
+
+        if TRANSFER_CHANNEL not in current_call_channel:
+            return
+        transfer_channel = current_call_channel[TRANSFER_CHANNEL]
+        transfered_channel = self._local_channel_peer(transfer_channel)
+        self._hangup_channel(transfered_channel)
 
     def attended_transfer(self, user_id, number):
         logger.debug('Transfering %s peer to %s', user_id, number)

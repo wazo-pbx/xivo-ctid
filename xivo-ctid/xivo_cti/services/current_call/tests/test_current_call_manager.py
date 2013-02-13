@@ -619,6 +619,29 @@ class TestCurrentCallManager(unittest.TestCase):
             [('Channel', transfered_channel)]
         )
 
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.cancel_transfer(user_id)
+
+        # Only test that it does not crash at the moment
+
     def test_local_channel_peer(self):
         local_channel = u'Local/1003@pcm-dev-00000032;'
         mine = local_channel + u'1'
