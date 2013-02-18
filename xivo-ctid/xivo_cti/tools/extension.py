@@ -41,7 +41,7 @@
 
 import re
 import logging
-from xivo_cti.tools import caller_id
+from xivo import caller_id
 
 logger = logging.getLogger('extension')
 

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.tools import caller_id
+from xivo.caller_id import build_caller_id
 
 
 class MeetmeDAO(object):
@@ -29,4 +29,4 @@ class MeetmeDAO(object):
             if meetme['confno'] == number and meetme['context'] == context:
                 name = 'Conference %s' % meetme['name']
                 break
-        return caller_id.build_caller_id('', name, number)[0]
+        return build_caller_id('', name, number)[0]
