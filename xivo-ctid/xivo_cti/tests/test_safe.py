@@ -141,19 +141,6 @@ class TestSafe(unittest.TestCase):
         mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
         self.assertTrue(domatch)
 
-    @patch('xivo_dao.trunk_dao.get_ids')
-    def test_init_status(self, mock_get_ids):
-        id_list = [1, 2, 3, 4]
-        mock_get_ids.return_value = id_list
-
-        self.safe.init_status()
-
-        self.assertTrue('trunks' in self.safe.xod_status)
-        for trunk_id in id_list:
-            self.assertTrue(trunk_id in self.safe.xod_status['trunks'])
-            self.assertEqual(self.safe.xod_status['trunks'][trunk_id], self.safe.props_status['trunks'])
-            self.assertFalse(self.safe.xod_status['trunks'][trunk_id] is self.safe.props_status['trunks'])
-
 
 class TestChannel(unittest.TestCase):
 

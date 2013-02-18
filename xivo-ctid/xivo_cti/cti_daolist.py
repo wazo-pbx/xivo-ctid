@@ -157,7 +157,7 @@ class DaoList(object):
 
     def _get_queues(self):
         res = {}
-        queues = queue_dao.all()
+        queues = queue_dao.all_queues()
         for queue in queues:
             res.update(self._format_queue_data(queue))
         return res

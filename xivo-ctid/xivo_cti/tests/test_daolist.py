@@ -24,7 +24,7 @@
 
 import unittest
 from xivo_cti.cti_daolist import DaoList, UnknownListName
-from tests.mock import Mock
+from mock import Mock
 
 
 class TestDaoList(unittest.TestCase):

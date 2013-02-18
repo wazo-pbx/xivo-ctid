@@ -19,16 +19,16 @@ import unittest
 
 from mock import Mock
 from xivo_cti.dao.queue_dao import QueueDAO
-from xivo_cti.lists.cti_queuelist import QueueList
 from xivo_cti.innerdata import Safe
 from xivo_cti.exception import NoSuchQueueException
+from xivo_cti.lists.queues_list import QueuesList
 
 
 class TestQueueDAO(unittest.TestCase):
 
     def setUp(self):
         self._innerdata = Mock(Safe)
-        self._queuelist = Mock(QueueList)
+        self._queuelist = Mock(QueuesList)
         self._queuelist.keeplist = {}
         self._innerdata.xod_config = {
             'queues': self._queuelist

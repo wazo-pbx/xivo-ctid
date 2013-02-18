@@ -17,7 +17,7 @@
 
 import unittest
 from xivo_cti.lists.phones_list import PhonesList
-from tests.mock import Mock
+from mock import Mock
 from xivo_cti.innerdata import Safe
 from xivo_cti.ctiserver import CTIServer
 
