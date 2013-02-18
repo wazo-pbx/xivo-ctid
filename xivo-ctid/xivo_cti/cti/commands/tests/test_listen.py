@@ -15,22 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+import unittest
+
+from xivo_cti.cti.commands.listen import Listen
 
 
-class HoldSwitchboard(CTICommand):
+class TestListen(unittest.TestCase):
 
-    COMMAND_CLASS = 'hold_switchboard'
-    QUEUE_NAME = 'queue_name'
+    def setUp(self):
+        self.commandid = 125731893
+        self.destination = 'xivo/42'
+        self.message = {
+            'class': 'ipbxcommand',
+            'command': 'listen',
+            'subcommand': 'start',
+            'destination': self.destination,
+        }
 
-    required_fields = [CTICommand.CLASS, QUEUE_NAME]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
+    def test_from_dict(self):
+        listen = Listen.from_dict(self.message)
 
-    def _init_from_dict(self, msg):
-        super(HoldSwitchboard, self)._init_from_dict(msg)
-        self.queue_name = msg['queue_name']
-
-CTICommandFactory.register_class(HoldSwitchboard)
+        self.assertEqual(listen.destination, self.destination)

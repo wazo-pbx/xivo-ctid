@@ -20,6 +20,7 @@ import random
 import string
 import time
 
+from xivo_dao import agent_dao
 from xivo_dao import group_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
@@ -32,10 +33,9 @@ logger = logging.getLogger('AMI_1.8')
 class AMI_1_8(object):
 
     userevents = ('Feature',
-                  'OutCall',
-                  'Custom',
                   'dialplan2cti',
                   'LookupDirectory',
+                  'Agent',
                   'User',
                   'Queue',
                   'Group',
@@ -182,9 +182,6 @@ class AMI_1_8(object):
             except Exception:
                 # when requester is not connected any more ...
                 pass
-        else:
-            logger.warning('ami_originateresponse %s %s %s %s (not in list)',
-                           actionid, channel, reason, event)
 
     def ami_parkedcall(self, event):
         channel = event['Channel']
@@ -212,6 +209,19 @@ class AMI_1_8(object):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
+
+    def userevent_agent(self, chanprops, event):
+        agent_id = int(event['XIVO_AGENT_ID'])
+        try:
+            agent_number = agent_dao.agent_number(agent_id)
+
+            # chanprops is the ";2" channel of a "Local channel", but we need
+            # to set the extra_data information on the ";1" channel
+            semicolon1_channel = chanprops.channel[:-1] + '1'
+            semicolon1_chanprops = self.innerdata.channels[semicolon1_channel]
+            semicolon1_chanprops.set_extra_data('xivo', 'agentnumber', agent_number)
+        except Exception:
+            logger.warning('Could not set extra data in userevent agent', exc_info=True)
 
     def userevent_user(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
@@ -246,6 +256,7 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'desttype', 'queue')
         chanprops.set_extra_data('xivo', 'destid', queue_id)
         chanprops.set_extra_data('xivo', 'calledidname', queue_name)
+        chanprops.set_extra_data('xivo', 'queuename', queue_name)
         chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
         if not chanprops.has_extra_data('xivo', 'calleridname'):
             chanprops.set_extra_data('xivo', 'calleridname', callerid_name)
@@ -264,15 +275,6 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calledidnum', group_number)
 
         self.innerdata.sheetsend('dial', chanprops.channel)
-
-    def userevent_outcall(self, chanprops, event):
-        xivo_userid = event.get('XIVO_USERID')
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-        chanprops.set_extra_data('xivo', 'origin', 'outcall')
-        chanprops.set_extra_data('xivo', 'direction', 'outgoing')
-        chanprops.set_extra_data('xivo', 'desttype', 'user')
-        chanprops.set_extra_data('xivo', 'destid', xivo_userid)
-        self.innerdata.sheetsend('outcall', chanprops.channel)
 
     def userevent_did(self, chanprops, event):
         calleridnum = event.get('XIVO_SRCNUM')

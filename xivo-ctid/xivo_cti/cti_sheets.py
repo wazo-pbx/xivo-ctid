@@ -163,21 +163,11 @@ class Sheet(object):
     def checkdest(self, channelprops):
         self.channelprops = channelprops
         whom = self.conditions.get('whom')
-        entities = self.conditions.get('entities')
-        contexts = self.conditions.get('contexts')
-        profileids = self.conditions.get('profileids')
 
         tomatch = {}
-        if profileids:
-            tomatch['profileids'] = profileids
-        if contexts:
-            tomatch['contexts'] = contexts
-        if entities:
-            tomatch['entities'] = entities
-
         if whom == 'dest':
-            tomatch['desttype'] = channelprops.extra_data.get('xivo').get('desttype')
-            tomatch['destid'] = channelprops.extra_data.get('xivo').get('destid')
+            tomatch['desttype'] = channelprops.extra_data['xivo'].get('desttype')
+            tomatch['destid'] = channelprops.extra_data['xivo'].get('destid')
 
         return tomatch
 

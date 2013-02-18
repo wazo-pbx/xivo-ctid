@@ -187,19 +187,10 @@ class Safe(object):
     def handle_agent_linked(self, event):
         # Will be called when joining a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        try:
-            channel = event['Channel']
-            proto, agent_number = channel.split('/', 1)
-            if proto == 'Agent' and channel in self.channels:
-                self.sheetsend('agentlinked', event['Channel'])
-        except KeyError:
-            logger.warning('Could not split channel %s', channel)
 
     def handle_agent_unlinked(self, event):
         # Will be called when leaving a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        if 'Channel' in event and event['Channel'] in self.channels:
-            self.sheetsend('agentunlinked', event['Channel'])
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
@@ -281,20 +272,6 @@ class Safe(object):
         else:
             # 'all' case
             domatch = True
-
-        if domatch and 'profileids' in tomatch:
-            user = user_dao.get(userid)
-            if user.cti_profile_id not in tomatch.get('profileids'):
-                domatch = False
-
-        if domatch and 'entities' in tomatch:
-            pass
-
-        if domatch and 'contexts' in tomatch:
-            domatch = False
-            context = dao.user.get_context(userid)
-            if context in tomatch['contexts']:
-                domatch = True
 
         return domatch
 
@@ -597,7 +574,7 @@ class Safe(object):
             connection['cur'].query(request, columns, arguments)
             connection['conn'].commit()
 
-    def sheetsend(self, where, channel, outdest=None):
+    def sheetsend(self, where, channel):
         if '@agentcallback' in channel:
             return
         if 'sheets' not in self._config.getconfig():
@@ -621,7 +598,7 @@ class Safe(object):
             if not self.sheetdisplays.get(display_id):
                 continue
 
-            channelprops = self.channels.get(channel)
+            channelprops = self.channels[channel]
             channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
             channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
             channelprops.set_extra_data('xivo', 'where', where)
@@ -706,7 +683,7 @@ class Safe(object):
     def getcustomers(self, user_id, pattern, commandid):
         try:
             context = dao.user.get_context(user_id)
-            headers, resultlist = self._search_directory_in_context(pattern, context)
+            headers, _, resultlist = self._search_directory_in_context(pattern, context)
         except (LookupError, KeyError):
             logger.warning('Failed to retrieve user context for user %s')
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
@@ -719,11 +696,11 @@ class Safe(object):
 
     def switchboard_directory_search(self, pattern):
         try:
-            headers, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
+            headers, types, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
-            formatted_result = DirectoryResultFormatter.format(headers, resultlist)
+            formatted_result = DirectoryResultFormatter.format(headers, types, resultlist)
             return 'message', {'class': 'directory_search_result',
                                'pattern': pattern,
                                'results': formatted_result}

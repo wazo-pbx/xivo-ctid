@@ -327,7 +327,6 @@ class AMI(object):
 
         if 'amicommand' in properties:
             if properties['amicommand'] in ['originate',
-                                            'origapplication',
                                             'txfax']:
                 self.originate_actionids[actionid] = properties
             elif ('mailboxcount' in properties['amicommand']

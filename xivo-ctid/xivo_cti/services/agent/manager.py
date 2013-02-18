@@ -18,6 +18,7 @@
 import logging
 from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agent_dao
+from xivo_dao import agent_status_dao
 from xivo_dao import line_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
@@ -28,9 +29,9 @@ logger = logging.getLogger('Agent Manager')
 
 class AgentServiceManager(object):
 
-    def __init__(self, agent_executor, queue_member_manager):
+    def __init__(self, agent_executor, ami_class):
         self.agent_executor = agent_executor
-        self._queue_member_manager = queue_member_manager
+        self.ami = ami_class
 
     def on_cti_agent_login(self, user_id, agent_xid=None, agent_exten=None):
         agent_id = self._transform_agent_xid(user_id, agent_xid)
@@ -69,11 +70,29 @@ class AgentServiceManager(object):
 
         self.logoff(agent_id)
 
-    def _transform_agent_xid(self, user_id, agent_id):
-        if not agent_id or agent_id == 'agent:special:me':
+    def on_cti_listen(self, user_id, agent_xid):
+        agent_id = self._transform_agent_xid(user_id, agent_xid)
+        agent_state_interface = self._get_agent_state_interface(agent_id)
+        if agent_state_interface:
+            try:
+                user_line = user_dao.get_line_identity(user_id)
+            except LookupError:
+                logger.warning('Could not listen to agent: user %s has no line', user_id)
+            else:
+                self.ami.sendcommand(
+                    'Originate',
+                    [('Channel', user_line),
+                     ('Application', 'ChanSpy'),
+                     ('Data', '%s,bds' % agent_state_interface),
+                     ('CallerID', u'Listen/Écouter'),
+                     ('Async', 'true')]
+                )
+
+    def _transform_agent_xid(self, user_id, agent_xid):
+        if not agent_xid or agent_xid == 'agent:special:me':
             agent_id = user_dao.agent_id(user_id)
         else:
-            agent_id = IdConverter.xid_to_id(agent_id)
+            agent_id = IdConverter.xid_to_id(agent_xid)
         return agent_id
 
     def find_agent_exten(self, agent_id):
@@ -131,20 +150,23 @@ class AgentServiceManager(object):
             self.agent_executor.log_presence(agent_member_name, presence)
 
     def _get_agent_interface(self, agent_id):
-        # convoluted way to get the agent interface (not the agent member name) of an agent
-        # would be easier if the interface was kept in an "agent state" object instead
-        # of only in the queue member state
-        agent_number = agent_dao.agent_number(agent_id)
-        queue_members = self._queue_member_manager.get_queue_members_by_agent_number(agent_number)
-        if not queue_members:
-            logger.warning('Could not get interface of agent %r: no queue members found',
-                           agent_id)
+        agent_status = self._get_agent_status(agent_id)
+        if agent_status:
+            return agent_status.interface
+        else:
             return None
 
-        interface = queue_members[0].state.interface
-        if not interface:
-            logger.warning('Could not get interface of agent %r: no interface associated',
-                           agent_id)
+    def _get_agent_state_interface(self, agent_id):
+        agent_status = self._get_agent_status(agent_id)
+        if agent_status:
+            return agent_status.state_interface
+        else:
             return None
 
-        return interface
+    def _get_agent_status(self, agent_id):
+        agent_status = agent_status_dao.get_status(agent_id)
+        if agent_status:
+            return agent_status
+        else:
+            logger.warning('Could not get status of agent %r: not logged/no such agent', agent_id)
+            return None

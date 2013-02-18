@@ -19,18 +19,17 @@ from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
-class HoldSwitchboard(CTICommand):
+class Listen(CTICommand):
 
-    COMMAND_CLASS = 'hold_switchboard'
-    QUEUE_NAME = 'queue_name'
+    COMMAND_CLASS = 'ipbxcommand'
 
-    required_fields = [CTICommand.CLASS, QUEUE_NAME]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
+    required_fields = [CTICommand.CLASS, 'command']
+    conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'listen')]
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
-        super(HoldSwitchboard, self)._init_from_dict(msg)
-        self.queue_name = msg['queue_name']
+        super(Listen, self)._init_from_dict(msg)
+        self.destination = msg['destination']
 
-CTICommandFactory.register_class(HoldSwitchboard)
+
+CTICommandFactory.register_class(Listen)

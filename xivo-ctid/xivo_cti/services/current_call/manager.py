@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013 Avencall
+# Copyright (C) 2007-2013 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,28 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-# XiVO CTI Server
-
-# Copyright (C) 2007-2012  Avencall'
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the source tree
-# or delivered in the installable package in which XiVO CTI Server is
-# distributed for more details.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import logging
@@ -224,10 +202,13 @@ class CurrentCallManager(object):
             current_call_channel = self._get_current_call_channel(user_id)
         except LookupError:
             logger.warning('User %s tried to cancel a transfer but has no line', user_id)
-        else:
-            transfer_channel = current_call_channel[TRANSFER_CHANNEL]
-            transfered_channel = self._local_channel_peer(transfer_channel)
-            self._hangup_channel(transfered_channel)
+            return
+
+        if TRANSFER_CHANNEL not in current_call_channel:
+            return
+        transfer_channel = current_call_channel[TRANSFER_CHANNEL]
+        transfered_channel = self._local_channel_peer(transfer_channel)
+        self._hangup_channel(transfered_channel)
 
     def attended_transfer(self, user_id, number):
         logger.debug('Transfering %s peer to %s', user_id, number)
@@ -247,10 +228,10 @@ class CurrentCallManager(object):
                 ]
             )
 
-    def switchboard_hold(self, user_id):
+    def switchboard_hold(self, user_id, on_hold_queue):
         try:
             current_call_channel = self._get_current_call_channel(user_id)
-            hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(self._SWITCHBOARD_HOLD_QUEUE)
+            hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError:
             logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
         else:

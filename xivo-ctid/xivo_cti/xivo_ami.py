@@ -170,15 +170,6 @@ class AMIClass(object):
                                                  ('Variable', var),
                                                  ('Value', val)])
 
-    def origapplication(self, application, data, phoneproto, phonesrcname, phonesrcnum, context):
-        return self._exec_command('Originate', [('Channel', '%s/%s' % (phoneproto, phonesrcname)),
-                                                ('Context', context),
-                                                ('Priority', '1'),
-                                                ('Application', application),
-                                                ('Data', data),
-                                                ('Variable', 'XIVO_ORIGAPPLI=%s' % application),
-                                                ('Async', 'true')])
-
     # \brief Originates a call from a phone towards another.
     def originate(self, phoneproto, phonesrcname, phonesrcnum, cidnamesrc,
                   phonedst, cidnamedst,

@@ -32,9 +32,9 @@ class TestAgentServiceManager(unittest.TestCase):
     def setUp(self):
         self.agent_1_exten = '1000'
         self.agent_executor = Mock(AgentExecutor)
-        queue_member_manager = Mock(QueueMemberManager)
+        self.ami = Mock()
         self.agent_manager = AgentServiceManager(self.agent_executor,
-                                                 queue_member_manager)
+                                                 self.ami)
 
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.agent_dao.agent_context')
@@ -95,16 +95,6 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(result, ('error', {'error_string': 'agent_login_invalid_exten', 'class': 'ipbxcommand'}))
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
-    @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
-    def test_on_cti_agent_logout(self, mock_id_converter):
-        agent_id = 11
-        mock_id_converter.return_value = agent_id
-        self.agent_manager.logoff = Mock()
-
-        self.agent_manager.on_cti_agent_logout(self.connected_user_id, agent_id)
-
-        self.agent_manager.logoff.assert_called_once_with(agent_id)
-
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.line_dao.number')
     @patch('xivo_dao.line_dao.find_line_id_by_user_id')
@@ -136,6 +126,39 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id)
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
+
+    @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    def test_on_cti_agent_logout(self, mock_id_converter):
+        agent_id = 11
+        mock_id_converter.return_value = agent_id
+        self.agent_manager.logoff = Mock()
+
+        self.agent_manager.on_cti_agent_logout(self.connected_user_id, agent_id)
+
+        self.agent_manager.logoff.assert_called_once_with(agent_id)
+
+    @patch('xivo_dao.agent_status_dao.get_status')
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_on_cti_listen(self, mock_get_line_identity, mock_get_status):
+        agent_id = '42'
+        agent_xid = 'xivo/%s' % agent_id
+        user_device = 'SIP/abcd'
+        agent_device = 'SIP/fghi'
+        agent_status = Mock()
+        agent_status.state_interface = agent_device
+        mock_get_line_identity.return_value = user_device
+        mock_get_status.return_value = agent_status
+
+        self.agent_manager.on_cti_listen(self.connected_user_id, agent_xid)
+
+        mock_get_line_identity.assert_called_once_with(self.connected_user_id)
+        mock_get_status.assert_called_once_with(agent_id)
+        self.ami.sendcommand.assert_called_once_with('Originate',
+                                                     [('Channel', user_device),
+                                                      ('Application', 'ChanSpy'),
+                                                      ('Data', '%s,bds' % agent_device),
+                                                      ('CallerID', u'Listen/Écouter'),
+                                                      ('Async', 'true')])
 
     @patch('xivo_dao.line_dao.is_phone_exten')
     @patch('xivo_dao.line_dao.number')

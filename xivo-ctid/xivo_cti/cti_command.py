@@ -25,10 +25,10 @@ from xivo_cti import cti_fax, dao
 from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
-from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao import extensions_dao
 from xivo_dao import user_dao
+from xivo_dao.cel_dao import UnsupportedLineProtocolException
 
 logger = logging.getLogger('cti_command')
 
@@ -68,12 +68,6 @@ IPBXCOMMANDS = [
     'mailboxcount',
     'meetme',
     'record',
-    'listen',
-
-    'queueadd', 'queueremove',
-    'queuepause', 'queueunpause',
-    'queueremove_all',
-    'queuepause_all', 'queueunpause_all',
     ]
 
 XIVOVERSION_NAME = 'skaro'
@@ -674,27 +668,4 @@ class Command(object):
         elif subcommand == 'stop':
             rep = {'amicommand': 'stopmonitor',
                    'amiargs': (channel,)}
-        return [rep]
-
-    def ipbxcommand_listen(self):
-        start = self._commanddict['subcommand'] == 'start'
-        listeners_line = self.innerdata.xod_config['phones'].get_main_line(self.userid)
-        listener_protocol = listeners_line['protocol']
-        listener_name = listeners_line['name']
-        agent_id = '/'.join(self._commanddict['destination'].split('/')[1:])
-        agent_config = self.innerdata.xod_config['agents'].keeplist[agent_id]
-        agent_number = agent_config['number']
-        channel = 'Agent/%s' % agent_number
-
-        rep = {}
-
-        if start:
-            rep = {'amicommand': 'origapplication',
-                   'amiargs': ['ChanSpy',
-                               '%s,d' % channel,
-                               listener_protocol,
-                               listener_name,
-                               '000',
-                               'mamaop']}
-
         return [rep]

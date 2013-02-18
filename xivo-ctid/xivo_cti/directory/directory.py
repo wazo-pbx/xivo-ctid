@@ -65,7 +65,7 @@ class Context(object):
         self._didextens = didextens
 
     def lookup_direct(self, string, contexts=None):
-        """Return a tuple (<headers>, <resultlist>)."""
+        """Return a tuple (<headers>, <types>, <resultlist>)."""
         if self._display is None:
             raise Exception('No display defined for this context')
         directory_results = []
@@ -79,7 +79,7 @@ class Context(object):
                 directory_results.append(directory_result)
         combined_results = chain.from_iterable(directory_results)
         resultlist = list(set(self._display.format(combined_results)))
-        return self._display.display_header, resultlist
+        return self._display.display_header, self._display.display_types, resultlist
 
     def lookup_reverse(self, did_number, number):
         """Return a list of directory entries."""
@@ -170,6 +170,7 @@ class Display(object):
         """
         self._display_elems = display_elems
         self.display_header = [e['title'] for e in display_elems]
+        self.display_types = [e['type'] for e in display_elems]
         self._map_fun = self._new_map_function()
 
     def format(self, results):
@@ -184,7 +185,7 @@ class Display(object):
 
     @classmethod
     def new_from_contents(cls, contents):
-        contents = list({'title': v[0], 'default': v[2], 'fmt': v[3]} for
+        contents = list({'title': v[0], 'type': v[1], 'default': v[2], 'fmt': v[3]} for
                         (_, v) in
                         sorted(contents.iteritems(), key=itemgetter(0)))
         return cls(contents)
