@@ -19,15 +19,11 @@
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
-from xivo_dao.tests.test_dao import DAOTestCase
-from xivo_dao.alchemy.phonefunckey import PhoneFunckey
-from xivo_dao.alchemy.extension import Extension
 from mock import patch, Mock
+import unittest
 
 
-class TestFunckeyManager(DAOTestCase):
-
-    tables = [PhoneFunckey, Extension]
+class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
         self.user_id = 123
