@@ -30,11 +30,13 @@ from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
+from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list, \
     meetmes_list, phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
 from xivo_cti import dao
+from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
@@ -44,6 +46,7 @@ from xivo_cti.directory.formatter import DirectoryResultFormatter
 logger = logging.getLogger('innerdata')
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
+SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 
 class Safe(object):
@@ -158,6 +161,7 @@ class Safe(object):
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
         SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
+        GetSwitchboardDirectoryHeaders.register_callback_params(self.get_switchboard_directory_headers)
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -696,7 +700,7 @@ class Safe(object):
 
     def switchboard_directory_search(self, pattern):
         try:
-            headers, types, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
+            headers, types, resultlist = self._search_directory_in_context(pattern, SWITCHBOARD_DIRECTORY_CONTEXT)
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
@@ -708,6 +712,11 @@ class Safe(object):
     def _search_directory_in_context(self, pattern, context):
         context_obj = self.contexts_mgr.contexts[context]
         return context_obj.lookup_direct(pattern, contexts=[context])
+
+    def get_switchboard_directory_headers(self):
+        headers = directory_dao.get_directory_headers(SWITCHBOARD_DIRECTORY_CONTEXT)
+        return 'message', {'class': 'directory_headers',
+                           'headers': headers}
 
 
 class Channel(object):
