@@ -25,7 +25,7 @@
 import logging
 from xivo_dao import line_dao, group_dao, agent_dao, \
     meetme_dao, queue_dao, voicemail_dao, context_dao, \
-    phonebook_dao, incall_dao, user_dao, trunk_dao
+    phonebook_dao, user_dao, trunk_dao
 
 logger = logging.getLogger('daolist')
 
@@ -230,57 +230,6 @@ class DaoList(object):
         res['phonebook'] = phonebook.todict()
         res['phonebookaddress'] = phonebookaddress.todict()
         res['phonebooknumber'] = phonebooknumber.todict() if phonebooknumber else False
-        return res
-
-    def _get_incalls(self):
-        res = {}
-        incalls = incall_dao.all()
-        for row in incalls:
-            incall, dialaction, user, group, queue, meetme, voicemail = row
-            res.update(self._format_incall_data(incall, dialaction, user, group, queue, meetme, voicemail))
-        return res
-
-    def _get_incall(self, id):
-        incall, dialaction, user, group, queue, meetme, voicemail = incall_dao.get_join_elements(id)
-        return self._format_incall_data(incall, dialaction, user, group, queue, meetme, voicemail)
-
-    def _format_incall_data(self, incall, dialaction, user, group, queue, meetme, voicemail):
-        res = {}
-        key = str(incall.id)
-        res[key] = {}
-        res[key]['exten'] = incall.exten
-        res[key]['context'] = incall.context
-        res[key]['preprocess_subroutine'] = incall.preprocess_subroutine
-        res[key]['commented'] = incall.commented
-        res[key]['description'] = incall.description
-
-        res[key]['linked'] = dialaction.linked
-        res[key]['action'] = dialaction.action
-        res[key]['actionarg1'] = dialaction.actionarg1
-        res[key]['actionarg2'] = dialaction.actionarg2
-
-        res[key]['userfirstname'] = user.firstname if user else None
-        res[key]['userlastname'] = user.lastname if user else None
-
-        res[key]['groupname'] = group.name if group else None
-        res[key]['groupnumber'] = group.number if group else None
-        res[key]['groupcontext'] = group.context if group else None
-
-        res[key]['queuename'] = queue.name if queue else None
-        res[key]['queuenumber'] = queue.number if queue else None
-        res[key]['queuecontext'] = queue.context if queue else None
-
-        res[key]['meetmename'] = meetme.name if meetme else None
-        res[key]['meetmenumber'] = meetme.confno if meetme else None
-        res[key]['meetmecontext'] = meetme.context if meetme else None
-
-        res[key]['voicemailfullname'] = voicemail.fullname if voicemail else None
-        res[key]['voicemailmailbox'] = voicemail.mailbox if voicemail else None
-        res[key]['voicemailcontext'] = voicemail.context if voicemail else None
-
-        res[key]['destination'] = res[key]['action']
-        res[key]['identity'] = '%s (%s)' % (res[key]['exten'], res[key]['context'])
-        res[key]['destidentity'] = '-'
         return res
 
     def _get_trunks(self):

@@ -63,7 +63,6 @@ _OBJECTS = [
     'group',
     'meetme',
     'voicemail',
-    'incall',
     'phonebook'
     ]
 STATES = [

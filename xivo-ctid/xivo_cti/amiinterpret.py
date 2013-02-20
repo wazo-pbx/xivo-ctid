@@ -22,6 +22,7 @@ import time
 
 from xivo_dao import agent_dao
 from xivo_dao import group_dao
+from xivo_dao import incall_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
 
@@ -34,7 +35,6 @@ class AMI_1_8(object):
 
     userevents = ('Feature',
                   'dialplan2cti',
-                  'LookupDirectory',
                   'Agent',
                   'User',
                   'Queue',
@@ -290,29 +290,11 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'calleridname', calleridname)
         chanprops.set_extra_data('xivo', 'calleridrdnis', calleridrdnis)
         chanprops.set_extra_data('xivo', 'calleridton', calleridton)
-        for incall_config in self.innerdata.xod_config.get('incalls').keeplist.itervalues():
-            if incall_config.get('exten') == didnumber:
-                chanprops.set_extra_data('xivo', 'desttype', incall_config['destination'])
-                chanprops.set_extra_data('xivo', 'destid', incall_config['actionarg1'])
-                for incall_property, incall_value in incall_config.iteritems():
-                    if incall_property != 'context' and incall_property.endswith('context') and incall_value:
-                        chanprops.set_extra_data('xivo', 'context', incall_value)
+        incall = incall_dao.get_by_exten(didnumber)
+        if incall:
+            chanprops.set_extra_data('xivo', 'desttype', incall.action)
+            chanprops.set_extra_data('xivo', 'destid', incall.actionarg1)
         self.innerdata.sheetsend('incomingdid', chanprops.channel)
-
-    def userevent_lookupdirectory(self, chanprops, event):
-        calleridnum = event.get('XIVO_SRCNUM')
-        calleridname = event.get('XIVO_SRCNAME')
-        calleridton = event.get('XIVO_SRCTON')
-        calleridrdnis = event.get('XIVO_SRCRDNIS')
-        context = event.get('XIVO_CONTEXT')
-
-        chanprops.set_extra_data('xivo', 'origin', 'forcelookup')
-        chanprops.set_extra_data('xivo', 'context', context)
-        chanprops.set_extra_data('xivo', 'calleridnum', calleridnum)
-        chanprops.set_extra_data('xivo', 'calleridname', calleridname)
-        chanprops.set_extra_data('xivo', 'calleridrdnis', calleridrdnis)
-        chanprops.set_extra_data('xivo', 'calleridton', calleridton)
-        # directory lookup : update chanprops
 
     def userevent_feature(self, chanprops, ev):
         reply = {}

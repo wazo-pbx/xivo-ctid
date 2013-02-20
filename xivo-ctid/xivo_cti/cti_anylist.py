@@ -85,12 +85,6 @@ class AnyList(object):
             'name',
             'admin_moderationmode'
         ],
-        'incalls': [
-            'context',
-            'exten',
-            'destidentity',
-            'action'
-        ],
         'outcalls': [],
         'contexts': [],
         'phonebooks': [],
@@ -129,12 +123,10 @@ class AnyList(object):
         'queues': {
             'agentmembers': [],
             'phonemembers': [],
-            'incalls': []
         },
         'groups': {
             'agentmembers': [],
             'phonemembers': [],
-            'incalls': []
         },
         'meetmes': {
             'pseudochan': None,
@@ -146,7 +138,6 @@ class AnyList(object):
             'old': 0,
             'new': 0
         },
-        'incalls': {},
         'contexts': {},
         'phonebooks': {}
     }

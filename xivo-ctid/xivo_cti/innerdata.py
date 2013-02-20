@@ -32,8 +32,8 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.lists import agents_list, contexts_list, groups_list, incalls_list, \
-    meetmes_list, phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
+from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
+    phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
 from xivo_cti import dao
 from xivo_dao import directory_dao
@@ -74,7 +74,6 @@ class Safe(object):
         self.xod_config['agents'] = agents_list.AgentsList(self)
         self.xod_config['contexts'] = contexts_list.ContextsList(self)
         self.xod_config['groups'] = groups_list.GroupsList(self)
-        self.xod_config['incalls'] = incalls_list.IncallsList(self)
         self.xod_config['meetmes'] = meetmes_list.MeetmesList(self)
         self.xod_config['phonebooks'] = phonebooks_list.PhonebooksList(self)
         self.xod_config['phones'] = phones_list.PhonesList(self)
@@ -90,7 +89,6 @@ class Safe(object):
         self.xod_status['agents'] = self.xod_config['agents'].init_status()
         self.xod_status['contexts'] = self.xod_config['contexts'].init_status()
         self.xod_status['groups'] = self.xod_config['groups'].init_status()
-        self.xod_status['incalls'] = self.xod_config['incalls'].init_status()
         self.xod_status['meetmes'] = self.xod_config['meetmes'].init_status()
         self.xod_status['phonebooks'] = self.xod_config['phonebooks'].init_status()
         self.xod_status['phones'] = self.xod_config['phones'].init_status()
