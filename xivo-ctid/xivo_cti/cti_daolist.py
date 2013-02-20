@@ -214,11 +214,11 @@ class DaoList(object):
         return res
 
     def _get_phonebooks(self):
-        res = {}
+        res = []
         phonebooks = phonebook_dao.all()
         for row in phonebooks:
             phonebook, phonebookaddress, phonebooknumber = row
-            res.update(self._format_phonebook_data(phonebook, phonebookaddress, phonebooknumber))
+            res.append(self._format_phonebook_data(phonebook, phonebookaddress, phonebooknumber))
         return res
 
     def _get_phonebook(self, id):
@@ -227,11 +227,9 @@ class DaoList(object):
 
     def _format_phonebook_data(self, phonebook, phonebookaddress, phonebooknumber):
         res = {}
-        key = str(phonebook.id)
-        res[key] = {}
-        res[key]['phonebook'] = phonebook.todict()
-        res[key]['phonebookaddress'] = phonebookaddress.todict()
-        res[key]['phonebooknumber'] = phonebooknumber.todict() if phonebooknumber else False
+        res['phonebook'] = phonebook.todict()
+        res['phonebookaddress'] = phonebookaddress.todict()
+        res['phonebooknumber'] = phonebooknumber.todict() if phonebooknumber else False
         return res
 
     def _get_incalls(self):
