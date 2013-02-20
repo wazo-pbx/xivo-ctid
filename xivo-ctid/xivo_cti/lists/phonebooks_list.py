@@ -27,6 +27,10 @@ class PhonebooksList(AnyList):
         self._innerdata = innerdata
         AnyList.__init__(self, 'phonebooks')
 
+    def init_data(self):
+        AnyList.init_data(self)
+        self.keeplist = self._getphonebook(self.keeplist)
+
     def _getphonebook(self, jsonreply):
         pblist = {}
         for pitem in jsonreply:
