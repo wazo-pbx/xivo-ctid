@@ -31,9 +31,9 @@ class PhonebooksList(AnyList):
         AnyList.init_data(self)
         self.keeplist = self._getphonebook(self.keeplist)
 
-    def _getphonebook(self, jsonreply):
-        pblist = {}
-        for phonebook_id, pitem in jsonreply.iteritems():
+    def _getphonebook(self, raw_data_dict):
+        phonebook_dict = {}
+        for phonebook_id, pitem in raw_data_dict.iteritems():
             pbitem = {}
             for i1, v1 in pitem.iteritems():
                 if isinstance(v1, dict):
@@ -47,6 +47,5 @@ class PhonebooksList(AnyList):
                             pbitem[idx] = v2
                 else:
                     pbitem[i1] = v1
-            myid = pbitem.get('phonebook.id')
-            pblist[myid] = pbitem
-        return pblist
+            phonebook_dict[phonebook_id] = pbitem
+        return phonebook_dict
