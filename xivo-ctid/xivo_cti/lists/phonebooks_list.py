@@ -33,7 +33,7 @@ class PhonebooksList(AnyList):
 
     def _getphonebook(self, jsonreply):
         pblist = {}
-        for pitem in jsonreply:
+        for phonebook_id, pitem in jsonreply.iteritems():
             pbitem = {}
             for i1, v1 in pitem.iteritems():
                 if isinstance(v1, dict):
