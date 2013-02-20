@@ -21,7 +21,8 @@ import json
 import ssl
 import string
 import time
-from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao
+from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
+    cti_main_dao
 from StringIO import StringIO
 
 logger = logging.getLogger('cti_config')
@@ -69,6 +70,7 @@ class Config(object):
         logger.info('Config successfully updated in %.6f seconds', (time.time() - start_time))
 
     def fill_conf(self):
+        self.xc_json.update(cti_main_dao.get_config())
         self.xc_json['profiles'] = self._get_profiles()
         self.xc_json['services'] = self._get_services()
         self.xc_json['preferences'] = self._get_preferences()
