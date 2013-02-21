@@ -163,7 +163,9 @@ class AnyList(object):
 
     def add(self, id):
         self.keeplist.update(self.listname_obj.get(id))
+        self.add_notifier(id)
 
+    def add_notifier(self, id):
         message = {'class': 'getlist',
                    'listname': self.listname,
                    'function': 'addconfig',
@@ -184,6 +186,9 @@ class AnyList(object):
 
     def edit(self, id):
         self.keeplist.update(self.listname_obj.get(id))
+        self.edit_notifier(id)
+
+    def edit_notifier(self, id):
         props = self.keeplist[id]
         newc = {}
         for p in props:
