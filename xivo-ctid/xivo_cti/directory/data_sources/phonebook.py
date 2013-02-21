@@ -33,12 +33,14 @@ class PhonebookDirectoryDataSource(DirectoryDataSource):
 
     def _new_filter_function(self, string, fields):
         lowered_string = string.lower()
+
         def aux(phonebook_entry):
             for field in fields:
                 if field in phonebook_entry:
                     if lowered_string in phonebook_entry[field].lower():
                         return True
             return False
+
         return aux
 
     def _new_map_function(self):
