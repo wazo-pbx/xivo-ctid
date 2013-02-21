@@ -31,16 +31,7 @@ class LoginID(CTICommand):
 
     required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY, XIVO_VERSION]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
-
-    def __init__(self):
-        super(LoginID, self).__init__()
-        self.command_class = self.COMMAND_CLASS
-        self.company = None
-        self.ident = None
-        self.userlogin = None
-        self.xivo_version = None
 
     def _init_from_dict(self, msg):
         super(LoginID, self)._init_from_dict(msg)

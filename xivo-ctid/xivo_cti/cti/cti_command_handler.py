@@ -22,8 +22,8 @@ from xivo_cti.cti.cti_command_runner import CTICommandRunner
 class CTICommandHandler(object):
 
     def __init__(self, cti_connection):
-        self._command_factory = CTICommandFactory()
         self._cti_connection = cti_connection
+        self._command_factory = CTICommandFactory()
         self._commands_to_run = []
         self._command_runner = CTICommandRunner()
 

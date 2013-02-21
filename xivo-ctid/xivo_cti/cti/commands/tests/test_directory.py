@@ -29,15 +29,6 @@ class TestDirectory(unittest.TestCase):
                  CTICommand.COMMANDID: _command_id,
                  Directory.PATTERN: _pattern}
 
-    def test_directory(self):
-        self.assertEqual(Directory.COMMAND_CLASS, 'directory')
-
-        directory = Directory()
-
-        self.assertEqual(directory.command_class, Directory.COMMAND_CLASS)
-        self.assertEqual(directory.commandid, None)
-        self.assertEqual(directory.pattern, None)
-
     def test_from_dict(self):
         directory = Directory.from_dict(self._msg_dict)
 

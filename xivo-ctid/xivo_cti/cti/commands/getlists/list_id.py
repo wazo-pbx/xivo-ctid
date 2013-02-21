@@ -23,12 +23,12 @@ from xivo_cti.cti.cti_command_factory import CTICommandFactory
 class ListID(GetList):
 
     COMMAND_CLASS = 'getlist'
+
     FUNCTION_NAME = 'listid'
 
     required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def __init__(self):
@@ -42,5 +42,6 @@ class ListID(GetList):
                 GetList.LIST_NAME: self.list_name,
                 'replyid': self.commandid,
                 GetList.IPBX_ID: self.ipbx_id}
+
 
 CTICommandFactory.register_class(ListID)

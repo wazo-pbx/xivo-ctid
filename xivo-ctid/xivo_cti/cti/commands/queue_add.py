@@ -29,12 +29,12 @@ class QueueAdd(CTICommand):
 
     required_fields = [CTICommand.CLASS, 'command']
     conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', COMMAND)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(QueueAdd, self)._init_from_dict(msg)
         self.member = msg.get(self.MEMBER)
         self.queue = msg.get(self.QUEUE)
+
 
 CTICommandFactory.register_class(QueueAdd)

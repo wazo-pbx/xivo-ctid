@@ -39,12 +39,6 @@ class TestListID(unittest.TestCase):
                  GetList.ITEM_ID: _item_id,
                  GetList.IPBX_ID: _ipbx_id}
 
-    def test_list_id(self):
-        list_id = ListID()
-
-        self.assertEqual(list_id.command_class, GetList.COMMAND_CLASS)
-        self.assertEqual(list_id.function, ListID.FUNCTION_NAME)
-
     def test_from_dict(self):
         list_id = ListID.from_dict(self._msg_dict)
 

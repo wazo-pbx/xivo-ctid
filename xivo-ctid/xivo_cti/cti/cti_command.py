@@ -26,7 +26,6 @@ class CTICommand(object):
     REPLYID = 'replyid'
 
     required_fields = [CLASS]
-    conditions = None
     _callbacks_with_params = []
 
     def __init__(self):
@@ -70,9 +69,7 @@ class CTICommand(object):
 
     @classmethod
     def match_message(cls, message):
-        if not cls.conditions:
-            return False
-        for (field, value) in cls.conditions:
+        for field, value in cls.conditions:
             try:
                 if isinstance(field, tuple):
                     (field1, subfield) = field

@@ -28,10 +28,11 @@ class SubscribeQueueEntryUpdate(Subscribe):
     required_fields = [CTICommand.CLASS, Subscribe.MESSAGE, QUEUE_ID]
     conditions = [(CTICommand.CLASS, Subscribe.COMMAND_CLASS),
                   (Subscribe.MESSAGE, MESSAGE_NAME)]
-    _callbacks, _callbacks_with_params = [], []
+    _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(SubscribeQueueEntryUpdate, self)._init_from_dict(msg)
         self.queue_id = int(msg[self.QUEUE_ID])
+
 
 CTICommandFactory.register_class(SubscribeQueueEntryUpdate)

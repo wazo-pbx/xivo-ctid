@@ -28,12 +28,12 @@ class AgentLogin(CTICommand):
 
     required_fields = [CTICommand.CLASS, 'command']
     conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'agentlogin')]
-    _callbacks = []
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(AgentLogin, self)._init_from_dict(msg)
         self.agent_phone_number = msg.get(self.AGENT_PHONE_NUMBER)
         self.agent_id = msg.get(self.AGENT_IDS)
+
 
 CTICommandFactory.register_class(AgentLogin)

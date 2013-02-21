@@ -27,11 +27,11 @@ class AgentLogout(CTICommand):
 
     required_fields = [CTICommand.CLASS, 'command']
     conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'agentlogout')]
-    _callbacks = []
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(AgentLogout, self)._init_from_dict(msg)
         self.agent_id = msg.get(self.AGENT_IDS)
+
 
 CTICommandFactory.register_class(AgentLogout)

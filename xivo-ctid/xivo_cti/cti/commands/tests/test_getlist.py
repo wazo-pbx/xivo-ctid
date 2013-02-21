@@ -38,17 +38,6 @@ class TestGetList(unittest.TestCase):
                  GetList.ITEM_ID: _item_id,
                  GetList.IPBX_ID: _ipbx_id}
 
-    def test_get_list(self):
-        self.assertEqual(GetList.COMMAND_CLASS, 'getlist')
-
-        getlist = GetList()
-
-        self.assertEqual(getlist.commandid, None)
-        self.assertEqual(getlist.function, None)
-        self.assertEqual(getlist.list_name, None)
-        self.assertEqual(getlist.item_id, None)
-        self.assertEqual(getlist.ipbx_id, None)
-
     def test_from_dict(self):
         getlist = GetList.from_dict(self._dict_msg)
 

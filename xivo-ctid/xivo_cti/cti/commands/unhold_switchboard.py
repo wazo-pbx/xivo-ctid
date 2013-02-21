@@ -22,16 +22,16 @@ from xivo_cti.cti.cti_command_factory import CTICommandFactory
 class UnholdSwitchboard(CTICommand):
 
     COMMAND_CLASS = 'unhold_switchboard'
+
     UNIQUE_ID = 'unique_id'
 
     required_fields = [CTICommand.CLASS, UNIQUE_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(UnholdSwitchboard, self)._init_from_dict(msg)
-        self.unique_id = msg.get(self.UNIQUE_ID)
+        self.unique_id = msg[self.UNIQUE_ID]
 
 
 CTICommandFactory.register_class(UnholdSwitchboard)

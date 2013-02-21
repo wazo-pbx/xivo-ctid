@@ -22,18 +22,16 @@ from xivo_cti.cti.cti_command_factory import CTICommandFactory
 class AttendedTransfer(CTICommand):
 
     COMMAND_CLASS = 'attended_transfer'
+
     NUMBER = 'number'
 
     required_fields = [CTICommand.CLASS, NUMBER]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
-
-    def __init__(self):
-        super(AttendedTransfer, self).__init__()
 
     def _init_from_dict(self, msg):
         super(AttendedTransfer, self)._init_from_dict(msg)
-        self.number = msg['number']
+        self.number = msg[self.NUMBER]
+
 
 CTICommandFactory.register_class(AttendedTransfer)

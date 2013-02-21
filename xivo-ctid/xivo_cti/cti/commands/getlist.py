@@ -30,16 +30,7 @@ class GetList(CTICommand):
 
     required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, IPBX_ID]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
-
-    def __init__(self):
-        super(GetList, self).__init__()
-        self.command_class = self.COMMAND_CLASS
-        self.function = None
-        self.list_name = None
-        self.item_id = None
-        self.ipbx_id = None
 
     def _init_from_dict(self, msg):
         super(GetList, self)._init_from_dict(msg)
@@ -47,5 +38,6 @@ class GetList(CTICommand):
         self.list_name = msg[self.LIST_NAME]
         self.item_id = msg.get(self.ITEM_ID)
         self.ipbx_id = msg[self.IPBX_ID]
+
 
 CTICommandFactory.register_class(GetList)

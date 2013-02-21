@@ -38,12 +38,6 @@ class TestUpdateConfig(unittest.TestCase):
                  GetList.ITEM_ID: _item_id,
                  GetList.IPBX_ID: _ipbx_id}
 
-    def test_update_config(self):
-        update_config = UpdateConfig()
-
-        self.assertEqual(update_config.command_class, GetList.COMMAND_CLASS)
-        self.assertEqual(update_config.function, UpdateConfig.FUNCTION_NAME)
-
     def test_from_dict(self):
         update_config = UpdateConfig.from_dict(self._msg_dict)
 

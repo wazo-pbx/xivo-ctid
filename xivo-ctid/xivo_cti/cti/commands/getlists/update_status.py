@@ -30,7 +30,6 @@ class UpdateStatus(GetList):
                        GetList.ITEM_ID, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def __init__(self):
@@ -45,5 +44,6 @@ class UpdateStatus(GetList):
                 self.STATUS: item_dict,
                 self.ITEM_ID: self.item_id,
                 self.IPBX_ID: self.ipbx_id}
+
 
 CTICommandFactory.register_class(UpdateStatus)

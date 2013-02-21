@@ -38,11 +38,6 @@ class TestUpdateStatus(unittest.TestCase):
                  GetList.ITEM_ID: _item_id,
                  GetList.IPBX_ID: _ipbx_id}
 
-    def test_update_status(self):
-        update_status = UpdateStatus()
-        self.assertEqual(update_status.command_class, GetList.COMMAND_CLASS)
-        self.assertEqual(update_status.function, UpdateStatus.FUNCTION_NAME)
-
     def test_from_dict(self):
         update_status = UpdateStatus.from_dict(self._msg_dict)
 

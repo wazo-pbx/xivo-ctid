@@ -23,13 +23,15 @@ class Listen(CTICommand):
 
     COMMAND_CLASS = 'ipbxcommand'
 
-    required_fields = [CTICommand.CLASS, 'command']
+    DESTINATION = 'destination'
+
+    required_fields = [CTICommand.CLASS, 'command', DESTINATION]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'listen')]
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(Listen, self)._init_from_dict(msg)
-        self.destination = msg['destination']
+        self.destination = msg[self.DESTINATION]
 
 
 CTICommandFactory.register_class(Listen)

@@ -25,7 +25,7 @@ class CompleteTransfer(CTICommand):
 
     required_fields = [CTICommand.CLASS]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
+
 
 CTICommandFactory.register_class(CompleteTransfer)

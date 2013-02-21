@@ -29,15 +29,6 @@ class TestSwitchboardDirectorySearch(unittest.TestCase):
                  CTICommand.COMMANDID: _command_id,
                  SwitchboardDirectorySearch.PATTERN: _pattern}
 
-    def test_switchboard_directory_search(self):
-        self.assertEqual(SwitchboardDirectorySearch.COMMAND_CLASS, 'switchboard_directory_search')
-
-        switchboard_directory_search = SwitchboardDirectorySearch()
-
-        self.assertEqual(switchboard_directory_search.command_class, SwitchboardDirectorySearch.COMMAND_CLASS)
-        self.assertEqual(switchboard_directory_search.commandid, None)
-        self.assertEqual(switchboard_directory_search.pattern, None)
-
     def test_from_dict(self):
         switchboard_directory_search = SwitchboardDirectorySearch.from_dict(self._msg_dict)
 

@@ -22,15 +22,16 @@ from xivo_cti.cti.cti_command_factory import CTICommandFactory
 class HoldSwitchboard(CTICommand):
 
     COMMAND_CLASS = 'hold_switchboard'
+
     QUEUE_NAME = 'queue_name'
 
     required_fields = [CTICommand.CLASS, QUEUE_NAME]
     conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def _init_from_dict(self, msg):
         super(HoldSwitchboard, self)._init_from_dict(msg)
-        self.queue_name = msg['queue_name']
+        self.queue_name = msg[self.QUEUE_NAME]
+
 
 CTICommandFactory.register_class(HoldSwitchboard)

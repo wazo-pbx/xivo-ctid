@@ -29,6 +29,7 @@ class TestCTIReplyGenerator(unittest.TestCase):
         xivo_version = CTI_PROTOCOL_VERSION
         login_id = LoginID()
         login_id.commandid = command_id
+        login_id.command_class = LoginID.COMMAND_CLASS
         login_id.xivo_version = xivo_version
         message = {'sessionid': session_id, 'version': '9999', 'replyid': command_id, 'class': 'login_id', 'xivoversion': xivo_version}
         expected = {'message': message, 'replyid': command_id, 'class': 'login_id'}

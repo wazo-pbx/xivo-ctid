@@ -30,7 +30,6 @@ class UpdateConfig(GetList):
                        GetList.ITEM_ID, GetList.IPBX_ID]
     conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
                   (GetList.FUNCTION, FUNCTION_NAME)]
-    _callbacks = []
     _callbacks_with_params = []
 
     def __init__(self):

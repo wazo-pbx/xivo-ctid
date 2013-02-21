@@ -26,7 +26,6 @@ class SubscribeMeetmeUpdate(Subscribe):
 
     conditions = [(CTICommand.CLASS, Subscribe.COMMAND_CLASS),
                   (Subscribe.MESSAGE, MESSAGE_NAME)]
-
     _callbacks_with_params = []
 
 
