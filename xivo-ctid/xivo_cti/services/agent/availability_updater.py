@@ -94,10 +94,9 @@ class AgentAvailabilityUpdater(object):
             self.scheduler.schedule(wrapup_time,
                                     self.agent_wrapup_completed,
                                     agent_id)
-        else:
-            if not dao.agent.is_completely_paused(agent_id):
-                self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
-                self.notifier.notify(agent_id)
+        elif dao.agent.is_logged(agent_id) and not dao.agent.is_completely_paused(agent_id):
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
+            self.notifier.notify(agent_id)
 
     def agent_wrapup_completed(self, agent_id):
         if dao.agent.is_completely_paused(agent_id):
