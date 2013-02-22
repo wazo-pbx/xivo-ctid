@@ -100,6 +100,12 @@ class CTI(interfaces.Interfaces):
                 logger.warning('Called disconnected with no user_id')
 
     def manage_connection(self, msg):
+        if not self.connection_details.get('authenticated', False) and 'login_':
+            if 'class' in msg and 'login_' in msg:
+                pass
+            else:
+                return 'error', {'closemenow': True,
+                                 'error_string': 'Not authenticated'}
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')

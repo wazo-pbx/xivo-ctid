@@ -158,6 +158,8 @@ class Command(object):
             if ref_hashed_password != this_hashed_password:
                 logger.warning('%s - wrong hashed password', head)
                 return 'login_password'
+            else:
+                cdetails['authenticated'] = True
         else:
             logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
