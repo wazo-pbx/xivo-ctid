@@ -166,8 +166,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_logged_in(agent_id)
 
-        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id,
-                                                                               AgentStatus.available)
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(
+            agent_id,
+            AgentStatus.available
+        )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_logged_in_paused(self):
@@ -178,8 +180,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_logged_in(agent_id)
 
-        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id,
-                                                                               AgentStatus.unavailable)
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(
+            agent_id,
+            AgentStatus.unavailable
+        )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_logged_out(self):
@@ -187,8 +191,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_logged_out(agent_id)
 
-        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id,
-                                                                               AgentStatus.logged_out)
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(
+            agent_id,
+            AgentStatus.logged_out
+        )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_answered(self):
@@ -196,8 +202,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_answered(agent_id)
 
-        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id,
-                                                                               AgentStatus.unavailable)
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(
+            agent_id,
+            AgentStatus.unavailable
+        )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_call_completed(self):
@@ -209,9 +217,11 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_call_completed(agent_id, wrapup_time)
 
-        self.agent_availability_updater.scheduler.schedule.assert_called_once_with(wrapup_time,
-                                                             self.agent_availability_updater.agent_wrapup_completed,
-                                                             agent_id)
+        self.agent_availability_updater.scheduler.schedule.assert_called_once_with(
+            wrapup_time,
+            self.agent_availability_updater.agent_wrapup_completed,
+            agent_id
+        )
         self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 
