@@ -100,7 +100,7 @@ class CTI(interfaces.Interfaces):
                 logger.warning('Called disconnected with no user_id')
 
     def manage_connection(self, msg):
-        if not self.connection_details.get('authenticated', False) and 'login_':
+        if not self.connection_details.get('authenticated'):
             if 'class' in msg and 'login_' in msg:
                 pass
             else:
