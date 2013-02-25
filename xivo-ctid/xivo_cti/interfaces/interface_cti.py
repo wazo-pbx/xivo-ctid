@@ -100,13 +100,9 @@ class CTI(interfaces.Interfaces):
                 logger.warning('Called disconnected with no user_id')
 
     def manage_connection(self, msg):
-        if not self.connection_details.get('authenticated'):
-            if 'class' in msg and 'login_' in msg:
-                pass
-            else:
-                return 'error', {'closemenow': True,
-                                 'error_string': 'Not authenticated'}
         if self.transferconnection:
+            if not self._is_authenticated():
+                return
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
                 self.logintimer.cancel()
@@ -120,7 +116,14 @@ class CTI(interfaces.Interfaces):
                 return self._run_functions(cmd)
         return []
 
+    def _is_authenticated(self):
+        return self.connection_details.get('authenticated', False)
+
     def _run_functions(self, decoded_command):
+        if not self._is_authenticated():
+            if not decoded_command['class'].startswith('login_'):
+                return 'error', {'closemenow': True,
+                                 'error_string': 'Not authenticated'}
         replies = []
 
         # Commands from the CTICommandHandler
