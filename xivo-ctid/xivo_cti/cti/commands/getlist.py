@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
 class GetList(CTICommand):
@@ -38,6 +37,3 @@ class GetList(CTICommand):
         self.list_name = msg[self.LIST_NAME]
         self.item_id = msg.get(self.ITEM_ID)
         self.ipbx_id = msg[self.IPBX_ID]
-
-
-CTICommandFactory.register_class(GetList)

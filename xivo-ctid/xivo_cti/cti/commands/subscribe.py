@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
 class Subscribe(CTICommand):
@@ -32,6 +31,3 @@ class Subscribe(CTICommand):
     def _init_from_dict(self, msg):
         super(Subscribe, self)._init_from_dict(msg)
         self.message = msg[self.MESSAGE]
-
-
-CTICommandFactory.register_class(Subscribe)
