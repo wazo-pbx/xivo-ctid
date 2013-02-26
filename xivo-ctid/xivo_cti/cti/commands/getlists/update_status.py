@@ -36,14 +36,5 @@ class UpdateStatus(GetList):
         super(UpdateStatus, self).__init__()
         self.function = self.FUNCTION_NAME
 
-    def get_reply_item(self, item_dict):
-        return {self.CLASS: self.COMMAND_CLASS,
-                self.FUNCTION: self.FUNCTION_NAME,
-                self.LIST_NAME: self.list_name,
-                self.REPLYID: self.commandid,
-                self.STATUS: item_dict,
-                self.ITEM_ID: self.item_id,
-                self.IPBX_ID: self.ipbx_id}
-
 
 CTICommandFactory.register_class(UpdateStatus)

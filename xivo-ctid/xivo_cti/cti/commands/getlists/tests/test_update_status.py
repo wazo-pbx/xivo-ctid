@@ -48,20 +48,6 @@ class TestUpdateStatus(unittest.TestCase):
         self.assertEqual(update_status.item_id, self._item_id)
         self.assertEqual(update_status.ipbx_id, self._ipbx_id)
 
-    def test_get_reply_item(self):
-        update_status = UpdateStatus.from_dict(self._msg_dict)
-        item_list = {'key': 'value'}
-
-        reply = update_status.get_reply_item(item_list)
-
-        self.assertTrue(CTICommand.CLASS in reply and reply[CTICommand.CLASS] == GetList.COMMAND_CLASS)
-        self.assertTrue(GetList.FUNCTION in reply and reply[GetList.FUNCTION] == UpdateStatus.FUNCTION_NAME)
-        self.assertTrue(GetList.LIST_NAME in reply and reply[GetList.LIST_NAME] == self._list_name)
-        self.assertTrue(CTICommand.REPLYID in reply and reply[CTICommand.REPLYID] == self._commandid)
-        self.assertTrue(UpdateStatus.STATUS in reply and reply[UpdateStatus.STATUS] == item_list)
-        self.assertTrue(GetList.ITEM_ID in reply and reply[GetList.ITEM_ID] == self._item_id)
-        self.assertTrue(GetList.IPBX_ID in reply and reply[GetList.IPBX_ID] == self._ipbx_id)
-
     def test_handler_registration(self):
         connection = Mock(CTI)
         cti_handler = CTICommandHandler(connection)

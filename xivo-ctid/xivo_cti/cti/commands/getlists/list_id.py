@@ -35,13 +35,5 @@ class ListID(GetList):
         super(ListID, self).__init__()
         self.function = self.FUNCTION_NAME
 
-    def get_reply_list(self, item_list):
-        return {CTICommand.CLASS: GetList.COMMAND_CLASS,
-                GetList.FUNCTION: ListID.FUNCTION_NAME,
-                'list': item_list,
-                GetList.LIST_NAME: self.list_name,
-                'replyid': self.commandid,
-                GetList.IPBX_ID: self.ipbx_id}
-
 
 CTICommandFactory.register_class(ListID)

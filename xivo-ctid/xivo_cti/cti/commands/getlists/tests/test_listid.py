@@ -67,19 +67,6 @@ class TestListID(unittest.TestCase):
 
         self.assertTrue(found)
 
-    def test_get_reply_list(self):
-        list_id = ListID.from_dict(self._msg_dict)
-        replied_list = ['1', '2', '7']
-
-        ret = list_id.get_reply_list(replied_list)
-
-        self.assertTrue(CTICommand.CLASS in ret and ret[CTICommand.CLASS] == GetList.COMMAND_CLASS)
-        self.assertTrue(GetList.FUNCTION in ret and ret[GetList.FUNCTION] == ListID.FUNCTION_NAME)
-        self.assertTrue('list' in ret and ret['list'] == replied_list)
-        self.assertTrue(GetList.LIST_NAME in ret and ret[GetList.LIST_NAME] == self._list_name)
-        self.assertTrue('replyid' in ret and ret['replyid'] == self._commandid)
-        self.assertTrue(GetList.IPBX_ID in ret and ret[GetList.IPBX_ID] == self._ipbx_id)
-
     def test_get_callbacks(self):
         def func1(param):
             pass

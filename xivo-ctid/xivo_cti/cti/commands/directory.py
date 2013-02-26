@@ -37,12 +37,5 @@ class Directory(CTICommand):
         super(Directory, self)._init_from_dict(msg)
         self.pattern = msg.get(self.PATTERN)
 
-    def get_reply_list(self, headers, results):
-        return {self.CLASS: self.COMMAND_CLASS,
-                self.HEADERS: headers,
-                self.REPLYID: self.commandid,
-                self.RESULT_LIST: results,
-                self.STATUS: self.STATUS_OK}
-
 
 CTICommandFactory.register_class(Directory)
