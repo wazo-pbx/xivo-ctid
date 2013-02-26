@@ -133,27 +133,6 @@ class TestCTICommand(unittest.TestCase):
         self.assertTrue('closemenow' in reply)
         self.assertEqual(reply['replyid'], commandid)
 
-    def test_get_warning(self):
-        command_class = 'warning_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_warning({'message': 'Unknown command'})
-
-        self.assertTrue('warning' in reply)
-        self.assertEqual(reply['warning']['message'], 'Unknown command')
-
-    def test_get_message(self):
-        command_class = 'message_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_message({'message': 'Test completed successfully'}, True)
-
-        self.assertTrue('closemenow' in reply, 'closemenow should be present when passing close_connection -> True')
-        self.assertTrue('message' in reply)
-        self.assertEqual(reply['message']['message'], 'Test completed successfully')
-
     def test_user_id(self):
         command = CTICommand()
 

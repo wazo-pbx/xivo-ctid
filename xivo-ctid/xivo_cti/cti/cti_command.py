@@ -23,13 +23,11 @@ class CTICommand(object):
 
     CLASS = 'class'
     COMMANDID = 'commandid'
-    REPLYID = 'replyid'
 
     required_fields = [CLASS]
     _callbacks_with_params = []
 
     def __init__(self):
-        self._msg = None
         self.cti_connection = None
         self.command_class = None
         self.commandid = None
@@ -38,30 +36,14 @@ class CTICommand(object):
         return [callback for callback in self._callbacks_with_params if not callback[0].dead()]
 
     def _init_from_dict(self, msg):
-        self._msg = msg
-        self._check_required_fields()
-        self.commandid = self._msg.get(self.COMMANDID)
-        self.command_class = self._msg[self.CLASS]
+        self._check_required_fields(msg)
+        self.commandid = msg.get(self.COMMANDID)
+        self.command_class = msg[self.CLASS]
 
-    def _check_required_fields(self):
+    def _check_required_fields(self, msg):
         for field in self.required_fields:
-            if field not in self._msg:
+            if field not in msg:
                 raise MissingFieldException(u'Missing %s in CTI command' % field)
-
-    def get_reply(self, message_type, message, close_connection=False):
-        rep = {'class': self.command_class,
-               message_type: message}
-        if self.commandid:
-            rep['replyid'] = self.commandid
-        if close_connection:
-            rep['closemenow'] = True
-        return rep
-
-    def get_warning(self, message, close_connection=False):
-        return self.get_reply('warning', message, close_connection)
-
-    def get_message(self, message, close_connection=False):
-        return self.get_reply('message', message, close_connection)
 
     def user_id(self):
         if self.cti_connection and 'userid' in self.cti_connection.connection_details:
