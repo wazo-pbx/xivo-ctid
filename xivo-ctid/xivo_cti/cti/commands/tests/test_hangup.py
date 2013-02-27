@@ -31,9 +31,6 @@ class TestHangup(unittest.TestCase):
             'userid': '1'
         }
 
-    def test_answer(self):
-        self.assertEqual(Hangup.COMMAND_CLASS, 'hangup')
-
     def test_from_dict(self):
         hangup = Hangup.from_dict(self.hangup_message)
 

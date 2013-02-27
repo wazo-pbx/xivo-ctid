@@ -17,11 +17,9 @@
 
 import unittest
 
-from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.commands.getlist import GetList
 from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
 from mock import Mock
-from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 
 
@@ -31,25 +29,20 @@ class TestUpdateConfig(unittest.TestCase):
     _list_name = 'users'
     _item_id = '1'
     _ipbx_id = 'xivo'
-    _msg_dict = {CTICommand.CLASS: GetList.COMMAND_CLASS,
-                 CTICommand.COMMANDID: _commandid,
-                 GetList.FUNCTION: UpdateConfig.FUNCTION_NAME,
-                 GetList.LIST_NAME: _list_name,
-                 GetList.ITEM_ID: _item_id,
-                 GetList.IPBX_ID: _ipbx_id}
+    _msg_dict = {'class': GetList.class_name,
+                 'commandid': _commandid,
+                 'function': UpdateConfig.function_name,
+                 'listname': _list_name,
+                 'tid': _item_id}
 
     def test_from_dict(self):
         update_config = UpdateConfig.from_dict(self._msg_dict)
 
-        self.assertEqual(update_config.command_class, GetList.COMMAND_CLASS)
-        self.assertEqual(update_config.function, UpdateConfig.FUNCTION_NAME)
-        self.assertEqual(update_config.commandid, self._commandid)
         self.assertEqual(update_config.list_name, self._list_name)
         self.assertEqual(update_config.item_id, self._item_id)
-        self.assertEqual(update_config.ipbx_id, self._ipbx_id)
 
     def test_handler_registration(self):
-        connection = Mock(CTI)
+        connection = Mock()
         cti_handler = CTICommandHandler(connection)
 
         self.assertEqual(len(cti_handler._commands_to_run), 0)
@@ -60,7 +53,7 @@ class TestUpdateConfig(unittest.TestCase):
 
         found = False
         for command in cti_handler._commands_to_run:
-            if isinstance(command, UpdateConfig) and command.commandid == self._commandid:
+            if command.commandid == self._commandid:
                 found = True
 
         self.assertTrue(found)

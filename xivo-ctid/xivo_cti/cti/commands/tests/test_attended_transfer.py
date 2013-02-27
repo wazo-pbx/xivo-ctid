@@ -31,9 +31,6 @@ class TestAttendedTransfer(unittest.TestCase):
             'number': self.number,
         }
 
-    def test_attended_transfer(self):
-        self.assertEqual(AttendedTransfer.COMMAND_CLASS, 'attended_transfer')
-
     def test_from_dict(self):
         attended_transfer = AttendedTransfer.from_dict(self.attended_transfer_message)
 

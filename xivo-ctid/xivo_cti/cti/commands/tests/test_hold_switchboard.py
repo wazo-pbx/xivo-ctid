@@ -31,9 +31,6 @@ class TestHoldSwitchboard(unittest.TestCase):
             'queue_name': self.queue_name,
         }
 
-    def test_hold_switchboard(self):
-        self.assertEqual(HoldSwitchboard.COMMAND_CLASS, 'hold_switchboard')
-
     def test_from_dict(self):
         hold_switchboard = HoldSwitchboard.from_dict(self.hold_switchboard_message)
 

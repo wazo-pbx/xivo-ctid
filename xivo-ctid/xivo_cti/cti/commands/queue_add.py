@@ -15,26 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class QueueAdd(CTICommand):
+class QueueAdd(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'ipbxcommand'
+    class_name = 'ipbxcommand'
 
-    COMMAND = 'queueadd'
-    MEMBER = 'member'
-    QUEUE = 'queue'
+    def _match(self, msg):
+        return msg['command'] == 'queueadd'
 
-    required_fields = [CTICommand.CLASS, 'command']
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', COMMAND)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(QueueAdd, self)._init_from_dict(msg)
-        self.member = msg.get(self.MEMBER)
-        self.queue = msg.get(self.QUEUE)
+    def _parse(self, msg, command):
+        command.member = msg.get('member')
+        command.queue = msg.get('queue')
 
 
-CTICommandFactory.register_class(QueueAdd)
+QueueAdd = QueueAdd()
+cti_command_registry.register_class(QueueAdd)

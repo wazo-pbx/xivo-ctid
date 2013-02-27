@@ -15,27 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class Directory(CTICommand):
+class Directory(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'directory'
+    class_name = 'directory'
 
-    PATTERN = 'pattern'
-    HEADERS = 'headers'
-    RESULT_LIST = 'resultlist'
-    STATUS = 'status'
-    STATUS_OK = 'ok'
-
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(Directory, self)._init_from_dict(msg)
-        self.pattern = msg.get(self.PATTERN)
+    def _parse(self, msg, command):
+        command.pattern = msg.get('pattern')
 
 
-CTICommandFactory.register_class(Directory)
+Directory = Directory()
+cti_command_registry.register_class(Directory)

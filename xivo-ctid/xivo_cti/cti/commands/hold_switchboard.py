@@ -15,23 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class HoldSwitchboard(CTICommand):
+class HoldSwitchboard(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'hold_switchboard'
+    class_name = 'hold_switchboard'
 
-    QUEUE_NAME = 'queue_name'
-
-    required_fields = [CTICommand.CLASS, QUEUE_NAME]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(HoldSwitchboard, self)._init_from_dict(msg)
-        self.queue_name = msg[self.QUEUE_NAME]
+    def _parse(self, msg, command):
+        command.queue_name = msg['queue_name']
 
 
-CTICommandFactory.register_class(HoldSwitchboard)
+HoldSwitchboard = HoldSwitchboard()
+cti_command_registry.register_class(HoldSwitchboard)

@@ -15,16 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.commands.set_user_service import SetUserService
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class SetForward(SetUserService):
+class SetForward(AbstractCTICommandClass):
 
-    FUNCTION_NAME = 'fwd'
-    ENABLE_NAME = 'enablename'
-    DESTINATION_NAME = 'destname'
+    class_name = 'featuresput'
 
-    def _init_from_dict(self, msg):
-        super(SetForward, self)._init_from_dict(msg)
-        self.destination = msg[SetUserService.VALUE][self.DESTINATION_NAME]
-        self.enable = msg[SetUserService.VALUE][self.ENABLE_NAME]
+    def _match(self, msg):
+        return (
+            msg['function'] == 'fwd' and
+            self.enable_name in msg['value'] and
+            msg['value'][self.enable_name] == self.enable_value
+        )
+
+    def _parse(self, msg, command):
+        command.destination = msg['value'][self.destination_name]

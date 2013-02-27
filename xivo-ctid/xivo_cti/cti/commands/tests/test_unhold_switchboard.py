@@ -30,9 +30,6 @@ class TestUnholdSwitchboard(unittest.TestCase):
             'commandid': self.commandid,
         }
 
-    def test_unhold_switchboard(self):
-        self.assertEqual(UnholdSwitchboard.COMMAND_CLASS, 'unhold_switchboard')
-
     def test_from_dict(self):
         unhold_switchboard = UnholdSwitchboard.from_dict(self.unhold_switchboard_message)
 

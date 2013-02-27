@@ -18,20 +18,16 @@
 import unittest
 
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
-from xivo_cti.cti.cti_command import CTICommand
 
 
 class TestSwitchboardDirectorySearch(unittest.TestCase):
 
     _command_id = 1171069123
     _pattern = 'dkfj'
-    _msg_dict = {CTICommand.CLASS: SwitchboardDirectorySearch.COMMAND_CLASS,
-                 CTICommand.COMMANDID: _command_id,
-                 SwitchboardDirectorySearch.PATTERN: _pattern}
+    _msg_dict = {'class': SwitchboardDirectorySearch.class_name,
+                 'pattern': _pattern}
 
     def test_from_dict(self):
         switchboard_directory_search = SwitchboardDirectorySearch.from_dict(self._msg_dict)
 
-        self.assertEqual(switchboard_directory_search.command_class, SwitchboardDirectorySearch.COMMAND_CLASS)
-        self.assertEqual(switchboard_directory_search.commandid, self._command_id)
         self.assertEqual(switchboard_directory_search.pattern, self._pattern)

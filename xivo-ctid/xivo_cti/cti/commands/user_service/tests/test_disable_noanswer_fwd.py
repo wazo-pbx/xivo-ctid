@@ -30,7 +30,4 @@ class TestDisableNoAnswerForward(unittest.TestCase):
 
         disable_noanswer_forward = DisableNoAnswerForward.from_dict(msg)
 
-        self.assertTrue(isinstance(disable_noanswer_forward, DisableNoAnswerForward))
-
         self.assertEquals(disable_noanswer_forward.destination, '27654')
-        self.assertEquals(disable_noanswer_forward.enable, False)

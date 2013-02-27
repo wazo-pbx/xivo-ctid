@@ -29,9 +29,6 @@ class TestGetSwitchboardDirectoryHeader(unittest.TestCase):
             'commandid': self.commandid,
         }
 
-    def test_GetSwitchboardDirectoryHeaders(self):
-        self.assertEqual(GetSwitchboardDirectoryHeaders.COMMAND_CLASS, 'get_switchboard_directory_headers')
-
     def test_from_dict(self):
         msg = GetSwitchboardDirectoryHeaders.from_dict(self.message)
 

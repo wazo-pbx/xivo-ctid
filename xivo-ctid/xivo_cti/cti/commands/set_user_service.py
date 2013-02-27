@@ -15,21 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class SetUserService(CTICommand):
+class SetUserService(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'featuresput'
+    class_name = 'featuresput'
 
-    FUNCTION = 'function'
-    VALUE = 'value'
-
-    required_fields = [CTICommand.CLASS, FUNCTION, VALUE]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(SetUserService, self)._init_from_dict(msg)
-        self.function = msg[self.FUNCTION]
-        self.value = msg[self.VALUE]
+    def _match(self, msg):
+        return msg['function'] == self.function_name and msg['value'] == self.value

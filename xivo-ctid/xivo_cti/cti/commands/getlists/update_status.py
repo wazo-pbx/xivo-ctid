@@ -15,26 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_cti.cti import cti_command_registry
 from xivo_cti.cti.commands.getlist import GetList
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
 class UpdateStatus(GetList):
 
-    FUNCTION_NAME = 'updatestatus'
-
-    STATUS = 'status'
-
-    required_fields = [CTICommand.CLASS, GetList.FUNCTION, GetList.LIST_NAME,
-                       GetList.ITEM_ID, GetList.IPBX_ID]
-    conditions = [(CTICommand.CLASS, GetList.COMMAND_CLASS),
-                  (GetList.FUNCTION, FUNCTION_NAME)]
-    _callbacks_with_params = []
-
-    def __init__(self):
-        super(UpdateStatus, self).__init__()
-        self.function = self.FUNCTION_NAME
+    function_name = 'updatestatus'
 
 
-CTICommandFactory.register_class(UpdateStatus)
+UpdateStatus = UpdateStatus()
+cti_command_registry.register_getlist_class(UpdateStatus, UpdateStatus.function_name)

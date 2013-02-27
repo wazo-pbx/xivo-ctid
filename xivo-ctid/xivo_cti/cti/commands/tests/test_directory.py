@@ -18,20 +18,15 @@
 import unittest
 
 from xivo_cti.cti.commands.directory import Directory
-from xivo_cti.cti.cti_command import CTICommand
 
 
 class TestDirectory(unittest.TestCase):
 
     _command_id = 1171069123
     _pattern = 'Test'
-    _msg_dict = {CTICommand.CLASS: Directory.COMMAND_CLASS,
-                 CTICommand.COMMANDID: _command_id,
-                 Directory.PATTERN: _pattern}
+    _msg_dict = {'class': Directory.class_name, 'pattern': _pattern}
 
     def test_from_dict(self):
         directory = Directory.from_dict(self._msg_dict)
 
-        self.assertEqual(directory.command_class, Directory.COMMAND_CLASS)
-        self.assertEqual(directory.commandid, self._command_id)
         self.assertEqual(directory.pattern, self._pattern)

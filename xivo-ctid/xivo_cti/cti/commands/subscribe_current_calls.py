@@ -15,18 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_cti.cti import cti_command_registry
 from xivo_cti.cti.commands.subscribe import Subscribe
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
 class SubscribeCurrentCalls(Subscribe):
 
-    MESSAGE_NAME = 'current_calls'
-
-    conditions = [(CTICommand.CLASS, Subscribe.COMMAND_CLASS),
-                  (Subscribe.MESSAGE, MESSAGE_NAME)]
-    _callbacks_with_params = []
+    message_name = 'current_calls'
 
 
-CTICommandFactory.register_class(SubscribeCurrentCalls)
+SubscribeCurrentCalls = SubscribeCurrentCalls()
+cti_command_registry.register_class(SubscribeCurrentCalls)

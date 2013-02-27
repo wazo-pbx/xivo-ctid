@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class CancelTransfer(CTICommand):
+class CancelTransfer(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'cancel_transfer'
-
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
+    class_name = 'cancel_transfer'
 
 
-CTICommandFactory.register_class(CancelTransfer)
+CancelTransfer = CancelTransfer()
+cti_command_registry.register_class(CancelTransfer)

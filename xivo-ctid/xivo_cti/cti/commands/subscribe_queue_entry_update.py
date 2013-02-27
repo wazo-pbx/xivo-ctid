@@ -15,24 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti import cti_command_registry
 from xivo_cti.cti.commands.subscribe import Subscribe
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
 
 
 class SubscribeQueueEntryUpdate(Subscribe):
 
-    QUEUE_ID = 'queueid'
-    MESSAGE_NAME = 'queueentryupdate'
+    message_name = 'queueentryupdate'
 
-    required_fields = [CTICommand.CLASS, Subscribe.MESSAGE, QUEUE_ID]
-    conditions = [(CTICommand.CLASS, Subscribe.COMMAND_CLASS),
-                  (Subscribe.MESSAGE, MESSAGE_NAME)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(SubscribeQueueEntryUpdate, self)._init_from_dict(msg)
-        self.queue_id = int(msg[self.QUEUE_ID])
+    def _parse(self, msg, command):
+        Subscribe._parse(self, msg, command)
+        command.queue_id = int(msg['queueid'])
 
 
-CTICommandFactory.register_class(SubscribeQueueEntryUpdate)
+SubscribeQueueEntryUpdate = SubscribeQueueEntryUpdate()
+cti_command_registry.register_class(SubscribeQueueEntryUpdate)

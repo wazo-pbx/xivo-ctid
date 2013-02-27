@@ -30,7 +30,4 @@ class TestDisableUnconditionalForward(unittest.TestCase):
 
         disable_unconditional_forward = DisableUnconditionalForward.from_dict(msg)
 
-        self.assertTrue(isinstance(disable_unconditional_forward, DisableUnconditionalForward))
-        
         self.assertEquals(disable_unconditional_forward.destination, '56897')
-        self.assertEquals(disable_unconditional_forward.enable, False)

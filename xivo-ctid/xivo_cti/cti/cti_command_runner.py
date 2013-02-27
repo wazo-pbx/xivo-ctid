@@ -27,7 +27,7 @@ class CTICommandRunner(object):
         self._reply_generator = CTIReplyGenerator()
 
     def _get_arguments(self, command, args):
-        return [getattr(command, arg) if not callable(getattr(command, arg)) else getattr(command, arg)() for arg in args]
+        return [getattr(command, arg) for arg in args]
 
     def run(self, command):
         for callback in command.callbacks_with_params():

@@ -33,7 +33,6 @@ class TestCTICommand(unittest.TestCase):
 
         self.assertEqual(cti_command.commandid, None)
         self.assertEqual(cti_command.command_class, None)
-        self.assertEqual(cti_command._msg, None)
 
     def test_from_dict(self):
         command_class = u'test_command'
@@ -111,27 +110,6 @@ class TestCTICommand(unittest.TestCase):
         run_test()
 
         self.assertEqual(len(command.callbacks_with_params()), 0)
-
-    def test_get_reply(self):
-        command_class = 'return_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_reply('message', {'message': 'This is the test message'}, close_connection=False)
-
-        self.assertFalse('closemenow' in reply)
-        self.assertTrue('message' in reply)
-        self.assertEqual(reply['message']['message'], 'This is the test message')
-        self.assertEqual(reply['class'], command_class)
-        self.assertFalse('replyid' in reply)
-
-        commandid = '12345'
-        command.commandid = commandid
-
-        reply = command.get_reply('message', 'Test 2', True)
-
-        self.assertTrue('closemenow' in reply)
-        self.assertEqual(reply['replyid'], commandid)
 
     def test_user_id(self):
         command = CTICommand()

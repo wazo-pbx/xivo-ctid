@@ -16,62 +16,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.tools import weak_method
-from xivo_cti.exception import MissingFieldException
 
 
-class CTICommand(object):
-
-    CLASS = 'class'
-    COMMANDID = 'commandid'
-
-    required_fields = [CLASS]
-    _callbacks_with_params = []
+class AbstractCTICommandClass(object):
+    # XXX name is bad
 
     def __init__(self):
-        self.cti_connection = None
-        self.command_class = None
-        self.commandid = None
+        self._callbacks_with_params = []
+
+    def match_message(self, msg):
+        return self._match(msg)
+
+    def _match(self, msg):
+        # should be overridden in derived class
+        return True
+
+    def from_dict(self, msg):
+        command = CTICommandInstance()
+        command.command_class = msg['class']
+        command.commandid = msg.get('commandid')
+        command.callbacks_with_params = self.callbacks_with_params
+        self._parse(msg, command)
+        return command
+
+    def _parse(self, msg, command):
+        # should be overriden in derived class
+        pass
 
     def callbacks_with_params(self):
         return [callback for callback in self._callbacks_with_params if not callback[0].dead()]
 
-    def _init_from_dict(self, msg):
-        self._check_required_fields(msg)
-        self.commandid = msg.get(self.COMMANDID)
-        self.command_class = msg[self.CLASS]
-
-    def _check_required_fields(self, msg):
-        for field in self.required_fields:
-            if field not in msg:
-                raise MissingFieldException(u'Missing %s in CTI command' % field)
-
-    def user_id(self):
-        if self.cti_connection and 'userid' in self.cti_connection.connection_details:
-            return self.cti_connection.connection_details['userid']
-
-    @classmethod
-    def match_message(cls, message):
-        for field, value in cls.conditions:
-            try:
-                if isinstance(field, tuple):
-                    (field1, subfield) = field
-                    message_field = message[field1][subfield]
-                else:
-                    message_field = message[field]
-                if not message_field == value:
-                    return False
-            except KeyError:
-                return False
-        return True
-
-    @classmethod
-    def register_callback_params(cls, function, params=None):
+    def register_callback_params(self, function, params=None):
         if not params:
             params = []
-        cls._callbacks_with_params.append((weak_method.WeakCallable(function), params))
+        self._callbacks_with_params.append((weak_method.WeakCallable(function), params))
 
-    @classmethod
-    def from_dict(cls, msg):
-        instance = cls()
-        instance._init_from_dict(msg)
-        return instance
+
+class CTICommandInstance(object):
+    # XXX name is bad
+
+    pass

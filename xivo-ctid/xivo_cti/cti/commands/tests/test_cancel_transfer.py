@@ -29,9 +29,6 @@ class TestCancelTransfer(unittest.TestCase):
             'commandid': self.commandid,
         }
 
-    def test_cancel_transfer(self):
-        self.assertEqual(CancelTransfer.COMMAND_CLASS, 'cancel_transfer')
-
     def test_from_dict(self):
         cancel_transfer = CancelTransfer.from_dict(self.cancel_transfer_message)
 

@@ -19,9 +19,7 @@ import unittest
 
 from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
 from xivo_cti.cti.commands.getlist import GetList
-from xivo_cti.cti.cti_command import CTICommand
 from mock import Mock
-from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 
 
@@ -31,25 +29,20 @@ class TestUpdateStatus(unittest.TestCase):
     _list_name = 'users'
     _item_id = '1'
     _ipbx_id = 'xivo'
-    _msg_dict = {CTICommand.CLASS: GetList.COMMAND_CLASS,
-                 CTICommand.COMMANDID: _commandid,
-                 GetList.FUNCTION: UpdateStatus.FUNCTION_NAME,
-                 GetList.LIST_NAME: _list_name,
-                 GetList.ITEM_ID: _item_id,
-                 GetList.IPBX_ID: _ipbx_id}
+    _msg_dict = {'class': GetList.class_name,
+                 'function': UpdateStatus.function_name,
+                 'commandid': _commandid,
+                 'listname': _list_name,
+                 'tid': _item_id}
 
     def test_from_dict(self):
         update_status = UpdateStatus.from_dict(self._msg_dict)
 
-        self.assertEqual(update_status.commandid, self._commandid)
-        self.assertEqual(update_status.command_class, GetList.COMMAND_CLASS)
-        self.assertEqual(update_status.function, UpdateStatus.FUNCTION_NAME)
         self.assertEqual(update_status.list_name, self._list_name)
         self.assertEqual(update_status.item_id, self._item_id)
-        self.assertEqual(update_status.ipbx_id, self._ipbx_id)
 
     def test_handler_registration(self):
-        connection = Mock(CTI)
+        connection = Mock()
         cti_handler = CTICommandHandler(connection)
 
         self.assertEqual(len(cti_handler._commands_to_run), 0)
@@ -60,7 +53,7 @@ class TestUpdateStatus(unittest.TestCase):
 
         found = False
         for command in cti_handler._commands_to_run:
-            if isinstance(command, UpdateStatus) and command.commandid == self._commandid:
+            if command.commandid == self._commandid:
                 found = True
 
         self.assertTrue(found)

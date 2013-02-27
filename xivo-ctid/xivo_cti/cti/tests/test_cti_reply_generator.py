@@ -17,8 +17,8 @@
 
 import unittest
 from xivo_cti.cti_config import CTI_PROTOCOL_VERSION
-from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_reply_generator import CTIReplyGenerator
+from xivo_cti.cti.cti_command import CTICommandInstance
 
 
 class TestCTIReplyGenerator(unittest.TestCase):
@@ -27,12 +27,12 @@ class TestCTIReplyGenerator(unittest.TestCase):
         command_id = 926248379
         session_id = "DgUW9T0PYw"
         xivo_version = CTI_PROTOCOL_VERSION
-        login_id = LoginID()
+        login_id = CTICommandInstance()
         login_id.commandid = command_id
-        login_id.command_class = LoginID.COMMAND_CLASS
+        login_id.command_class = 'foobar'
         login_id.xivo_version = xivo_version
-        message = {'sessionid': session_id, 'version': '9999', 'replyid': command_id, 'class': 'login_id', 'xivoversion': xivo_version}
-        expected = {'message': message, 'replyid': command_id, 'class': 'login_id'}
+        message = {'sessionid': session_id, 'version': '9999', 'replyid': command_id, 'class': 'foobar', 'xivoversion': xivo_version}
+        expected = {'message': message, 'replyid': command_id, 'class': 'foobar'}
 
         generator = CTIReplyGenerator()
 

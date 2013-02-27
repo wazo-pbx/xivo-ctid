@@ -15,25 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class GetList(CTICommand):
+class GetList(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'getlist'
+    class_name = 'getlist'
 
-    FUNCTION = 'function'
-    LIST_NAME = 'listname'
-    ITEM_ID = 'tid'
-    IPBX_ID = 'tipbxid'
+    def _match(self, msg):
+        return msg['function'] == self.function_name
 
-    required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, IPBX_ID]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(GetList, self)._init_from_dict(msg)
-        self.function = msg[self.FUNCTION]
-        self.list_name = msg[self.LIST_NAME]
-        self.item_id = msg.get(self.ITEM_ID)
-        self.ipbx_id = msg[self.IPBX_ID]
+    def _parse(self, msg, command):
+        command.list_name = msg['listname']
+        command.item_id = msg.get('tid')

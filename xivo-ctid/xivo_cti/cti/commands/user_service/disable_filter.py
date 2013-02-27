@@ -15,20 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
 from xivo_cti.cti.commands.set_user_service import SetUserService
 
 
 class DisableFilter(SetUserService):
 
-    FUNCTION_NAME = 'incallfilter'
+    function_name = 'incallfilter'
+    value = False
 
-    required_fields = [CTICommand.CLASS, SetUserService.FUNCTION, SetUserService.VALUE]
-    conditions = [(CTICommand.CLASS, SetUserService.COMMAND_CLASS),
-                  (SetUserService.FUNCTION, FUNCTION_NAME),
-                  (SetUserService.VALUE, False)]
-    _callbacks = []
-    _callbacks_with_params = []
 
-CTICommandFactory.register_class(DisableFilter)
+DisableFilter = DisableFilter()
+cti_command_registry.register_class(DisableFilter)

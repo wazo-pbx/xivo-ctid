@@ -29,9 +29,6 @@ class TestCompleteTransfer(unittest.TestCase):
             'commandid': self.commandid,
         }
 
-    def test_complete_transfer(self):
-        self.assertEqual(CompleteTransfer.COMMAND_CLASS, 'complete_transfer')
-
     def test_from_dict(self):
         complete_transfer = CompleteTransfer.from_dict(self.complete_transfer_message)
 

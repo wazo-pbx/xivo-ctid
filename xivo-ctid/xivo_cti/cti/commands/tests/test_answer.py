@@ -31,12 +31,6 @@ class TestAnswer(unittest.TestCase):
             'userid': '1'
         }
 
-    def tearDown(self):
-        pass
-
-    def test_answer(self):
-        self.assertEqual(Answer.COMMAND_CLASS, 'answer')
-
     def test_from_dict(self):
         answer = Answer.from_dict(self.answer_message)
 

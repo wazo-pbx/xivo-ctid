@@ -30,7 +30,4 @@ class TestEnableBusyForward(unittest.TestCase):
 
         enable_busy_forward = EnableBusyForward.from_dict(msg)
 
-        self.assertTrue(isinstance(enable_busy_forward, EnableBusyForward))
-
         self.assertEquals(enable_busy_forward.destination, '1984')
-        self.assertEquals(enable_busy_forward.enable, True)

@@ -15,30 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class LoginID(CTICommand):
+class LoginID(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'login_id'
+    class_name = 'login_id'
 
-    COMPANY = 'company'
-    IDENT = 'ident'
-    USERLOGIN = 'userlogin'
-    XIVO_VERSION = 'xivoversion'
-    SESSIONID = 'sessionid'
-
-    required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY, XIVO_VERSION]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(LoginID, self)._init_from_dict(msg)
-        self.company = msg[self.COMPANY]
-        self.ident = msg[self.IDENT]
-        self.userlogin = msg[self.USERLOGIN]
-        self.xivo_version = msg[self.XIVO_VERSION]
+    def _parse(self, msg, command):
+        command.company = msg['company']
+        command.ident = msg['ident']
+        command.userlogin = msg['userlogin']
+        command.xivo_version = msg['xivoversion']
 
 
-CTICommandFactory.register_class(LoginID)
+LoginID = LoginID()
+cti_command_registry.register_class(LoginID)

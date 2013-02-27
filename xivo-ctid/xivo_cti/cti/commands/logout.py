@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class Logout(CTICommand):
+class Logout(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'logout'
-
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
+    class_name = 'logout'
 
 
-CTICommandFactory.register_class(Logout)
+Logout = Logout()
+cti_command_registry.register_class(Logout)

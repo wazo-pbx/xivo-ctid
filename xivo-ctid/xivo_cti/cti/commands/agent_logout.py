@@ -15,23 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class AgentLogout(CTICommand):
+class AgentLogout(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'ipbxcommand'
+    class_name = 'ipbxcommand'
 
-    AGENT_IDS = 'agentids'
+    def _match(self, msg):
+        return msg['command'] == 'agentlogout'
 
-    required_fields = [CTICommand.CLASS, 'command']
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'agentlogout')]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(AgentLogout, self)._init_from_dict(msg)
-        self.agent_id = msg.get(self.AGENT_IDS)
+    def _parse(self, msg, command):
+        command.agent_id = msg.get('agentids')
 
 
-CTICommandFactory.register_class(AgentLogout)
+AgentLogout = AgentLogout()
+cti_command_registry.register_class(AgentLogout)

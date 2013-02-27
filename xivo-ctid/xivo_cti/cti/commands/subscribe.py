@@ -15,19 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command import AbstractCTICommandClass
 
 
-class Subscribe(CTICommand):
+class Subscribe(AbstractCTICommandClass):
 
-    COMMAND_CLASS = 'subscribe'
+    class_name = 'subscribe'
 
-    MESSAGE = 'message'
+    def _match(self, msg):
+        return msg['message'] == self.message_name
 
-    required_fields = [CTICommand.CLASS, MESSAGE]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(Subscribe, self)._init_from_dict(msg)
-        self.message = msg[self.MESSAGE]
+    def _parse(self, msg, command):
+        command.message = msg['message']
