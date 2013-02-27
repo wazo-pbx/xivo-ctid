@@ -43,9 +43,9 @@ class AMIInitializer(object):
                                                      ['DAHDIShowChannelsComplete'],
                                                      ['QueueSummary'])
     QUEUE_SUMMARY_COMPLETE = InitializingEntry('QueueSummaryComplete',
-                                              ['QueueStatusComplete'],
-                                              ['QueueSummaryComplete'],
-                                              ['QueueStatus'])
+                                               ['QueueStatusComplete'],
+                                               ['QueueSummaryComplete'],
+                                               ['QueueStatus'])
     QUEUE_STATUS_COMPLETE = InitializingEntry('QueueStatusComplete',
                                               ['ParkedCallsComplete'],
                                               ['QueueStatusComplete'],
