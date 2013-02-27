@@ -37,6 +37,10 @@ class PhonesList(ContextAwareAnyList):
         super(PhonesList, self).add(phone_id)
         self._add_to_reverse_dictionaries(phone_id)
 
+    def delete(self, phone_id):
+        self._remove_from_reverse_dictionaries(phone_id)
+        super(PhonesList, self).delete(phone_id)
+
     def init_data(self):
         ContextAwareAnyList.init_data(self)
         self._update_lookup_dictionaries()
@@ -78,6 +82,18 @@ class PhonesList(ContextAwareAnyList):
         context = phone['context']
         self._add_user_to_context(user_id, context)
 
+    def _remove_from_reverse_dictionaries(self, phone_id):
+        phone = self.keeplist[phone_id]
+        proto_and_name = phone['protocol'] + phone['name']
+        del self._phone_id_by_proto_and_name[proto_and_name]
+
+        raw_user_id = phone['iduserfeatures']
+        if not raw_user_id:
+            return
+        user_id = str(raw_user_id)
+        context = phone['context']
+        self._remove_user_from_context(user_id, context)
+
     def _add_user_to_context(self, user_id, context):
         new_contexts = set(self._contexts_by_user_id.get(user_id, set()))
         new_contexts.add(context)
@@ -86,6 +102,17 @@ class PhonesList(ContextAwareAnyList):
         new_user_ids = set(self._user_ids_by_context.get(context, set()))
         new_user_ids.add(user_id)
         self._user_ids_by_context[context] = list(new_user_ids)
+
+    def _remove_user_from_context(self, user_id, context):
+        new_contexts = self._contexts_by_user_id.get(user_id, list())
+        if context in new_contexts:
+            new_contexts.remove(context)
+            self._contexts_by_user_id[user_id] = new_contexts
+
+        new_user_ids = self._user_ids_by_context.get(context, list())
+        if user_id in new_user_ids:
+            new_user_ids.remove(user_id)
+            self._user_ids_by_context[context] = new_user_ids
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
