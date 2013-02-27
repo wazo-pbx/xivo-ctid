@@ -15,19 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class InviteConfroom(AbstractCTICommandClass):
-
-    class_name = 'invite_confroom'
-
-    INVITEE = 'invitee'
-
-    def _parse(self, msg, command):
-        command.invitee = msg['invitee']
+def _parse(msg, command):
+    command.invitee = msg['invitee']
 
 
-InviteConfroom = InviteConfroom()
-cti_command_registry.register_class(InviteConfroom)
+InviteConfroom = CTICommandClass('invite_confroom', None, _parse)
+InviteConfroom.add_to_registry()

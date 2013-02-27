@@ -15,11 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-# TODO décider comment on gère les messages malformés, quel exception
-#      est-ce que get_class peut soulever
-# TODO et comment est-ce qu'on gère le cas d'un message pas géré par le serveur ?
-# XXX est-ce qu'on retourne une classe ou une liste de classe dans get_class ?
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,7 +53,9 @@ def _get_class_getlist(msg):
     try:
         return _getlist_classes_by_fun_name[function_name]
     except KeyError:
-        logger.warning('No getlist class register to handle function %r', function_name)
+        # since there is two "registry" system in parallel, this one and the
+        # one in xivo_cti.cti_command (old), this may be a normal case
+        logger.debug('No getlist class in registry for function %r', function_name)
         return []
 
 
@@ -66,9 +63,9 @@ def _get_class_generic(class_name, msg):
     try:
         classes = _classes_by_class_name[class_name]
     except KeyError:
-        logger.warning('No class registered to handle class %r', class_name)
-        # FIXME cas normal car on a encore des commandes qui sont handler dans
-        #       le vieux cti_command.py
+        # since there is two "registry" system in parallel, this one and the
+        # one in xivo_cti.cti_command (old), this may be a normal case
+        logger.debug('No class in registry for class %r', class_name)
         return []
     else:
         return [klass for klass in classes if klass.match_message(msg)]

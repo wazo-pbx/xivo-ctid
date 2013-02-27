@@ -15,16 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class GetList(AbstractCTICommandClass):
+def _parse(msg, command):
+    command.list_name = msg['listname']
+    command.item_id = msg.get('tid')
 
-    class_name = 'getlist'
 
-    def _match(self, msg):
-        return msg['function'] == self.function_name
+def _new_class(function_name):
+    def match(msg):
+        return msg['function'] == function_name
 
-    def _parse(self, msg, command):
-        command.list_name = msg['listname']
-        command.item_id = msg.get('tid')
+    return CTICommandClass('getlist', match, _parse)
+
+
+ListID = _new_class('listid')
+ListID.add_to_getlist_registry('listid')
+
+UpdateConfig = _new_class('updateconfig')
+UpdateConfig.add_to_getlist_registry('updateconfig')
+
+UpdateStatus = _new_class('updatestatus')
+UpdateStatus.add_to_getlist_registry('updatestatus')

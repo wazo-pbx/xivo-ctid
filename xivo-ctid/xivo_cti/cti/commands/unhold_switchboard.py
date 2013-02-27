@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class UnholdSwitchboard(AbstractCTICommandClass):
-
-    class_name = 'unhold_switchboard'
-
-    def _parse(self, msg, command):
-        command.unique_id = msg['unique_id']
+def _parse(msg, command):
+    command.unique_id = msg['unique_id']
 
 
-UnholdSwitchboard = UnholdSwitchboard()
-cti_command_registry.register_class(UnholdSwitchboard)
+UnholdSwitchboard = CTICommandClass('unhold_switchboard', None, _parse)
+UnholdSwitchboard.add_to_registry()

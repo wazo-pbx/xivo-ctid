@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Availstate(AbstractCTICommandClass):
-
-    class_name = 'availstate'
-
-    def _parse(self, msg, command):
-        command.availstate = msg['availstate']
+def _parse(msg, command):
+    command.availstate = msg['availstate']
 
 
-Availstate = Availstate()
-cti_command_registry.register_class(Availstate)
+Availstate = CTICommandClass('availstate', None, _parse)
+Availstate.add_to_registry()

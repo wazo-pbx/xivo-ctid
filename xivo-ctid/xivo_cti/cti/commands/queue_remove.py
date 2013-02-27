@@ -15,21 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class QueueRemove(AbstractCTICommandClass):
-
-    class_name = 'ipbxcommand'
-
-    def _match(self, msg):
-        return msg['command'] == 'queueremove'
-
-    def _parse(self, msg, command):
-        command.member = msg.get('member')
-        command.queue = msg.get('queue')
+def _match(msg):
+    return msg['command'] == 'queueremove'
 
 
-QueueRemove = QueueRemove()
-cti_command_registry.register_class(QueueRemove)
+def _parse(msg, command):
+    command.member = msg.get('member')
+    command.queue = msg.get('queue')
+
+
+QueueRemove = CTICommandClass('ipbxcommand', _match, _parse)
+QueueRemove.add_to_registry()

@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Directory(AbstractCTICommandClass):
-
-    class_name = 'directory'
-
-    def _parse(self, msg, command):
-        command.pattern = msg.get('pattern')
+def _parse(msg, command):
+    command.pattern = msg.get('pattern')
 
 
-Directory = Directory()
-cti_command_registry.register_class(Directory)
+Directory = CTICommandClass('directory', None, _parse)
+Directory.add_to_registry()

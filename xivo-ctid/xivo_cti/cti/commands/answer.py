@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Answer(AbstractCTICommandClass):
-
-    class_name = 'answer'
-
-
-Answer = Answer()
-cti_command_registry.register_class(Answer)
+Answer = CTICommandClass('answer', None, None)
+Answer.add_to_registry()

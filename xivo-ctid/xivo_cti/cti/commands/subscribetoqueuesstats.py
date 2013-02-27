@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class SubscribeToQueuesStats(AbstractCTICommandClass):
-
-    class_name = 'subscribetoqueuesstats'
-
-
-SubscribeToQueuesStats = SubscribeToQueuesStats()
-cti_command_registry.register_class(SubscribeToQueuesStats)
+SubscribeToQueuesStats = CTICommandClass('subscribetoqueuesstats', None, None)
+SubscribeToQueuesStats.add_to_registry()

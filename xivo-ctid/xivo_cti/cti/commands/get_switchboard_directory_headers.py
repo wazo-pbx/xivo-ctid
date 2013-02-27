@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class GetSwitchboardDirectoryHeaders(AbstractCTICommandClass):
-
-    class_name = 'get_switchboard_directory_headers'
-
-
-GetSwitchboardDirectoryHeaders = GetSwitchboardDirectoryHeaders()
-cti_command_registry.register_class(GetSwitchboardDirectoryHeaders)
+GetSwitchboardDirectoryHeaders = CTICommandClass('get_switchboard_directory_headers', None, None)
+GetSwitchboardDirectoryHeaders.add_to_registry()

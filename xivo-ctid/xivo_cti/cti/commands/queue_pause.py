@@ -15,21 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class QueuePause(AbstractCTICommandClass):
-
-    class_name = 'ipbxcommand'
-
-    def _match(self, msg):
-        return msg['command'] == 'queuepause'
-
-    def _parse(self, msg, command):
-        command.member = msg.get('member')
-        command.queue = msg.get('queue')
+def _match(msg):
+    return msg['command'] == 'queuepause'
 
 
-QueuePause = QueuePause()
-cti_command_registry.register_class(QueuePause)
+def _parse(msg, command):
+    command.member = msg.get('member')
+    command.queue = msg.get('queue')
+
+
+QueuePause = CTICommandClass('ipbxcommand', _match, _parse)
+QueuePause.add_to_registry()

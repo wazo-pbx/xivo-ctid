@@ -22,9 +22,7 @@ from mock import patch
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, Channel
 from xivo_cti.ioc.context import context
-from xivo_cti.cti.commands.getlists.list_id import ListID
-from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
-from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
+from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config

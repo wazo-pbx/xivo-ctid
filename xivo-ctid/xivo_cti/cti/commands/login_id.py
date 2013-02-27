@@ -15,20 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class LoginID(AbstractCTICommandClass):
-
-    class_name = 'login_id'
-
-    def _parse(self, msg, command):
-        command.company = msg['company']
-        command.ident = msg['ident']
-        command.userlogin = msg['userlogin']
-        command.xivo_version = msg['xivoversion']
+def _parse(msg, command):
+    command.company = msg['company']
+    command.ident = msg['ident']
+    command.userlogin = msg['userlogin']
+    command.xivo_version = msg['xivoversion']
 
 
-LoginID = LoginID()
-cti_command_registry.register_class(LoginID)
+LoginID = CTICommandClass('login_id', None, _parse)
+LoginID.add_to_registry()

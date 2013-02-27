@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Logout(AbstractCTICommandClass):
-
-    class_name = 'logout'
-
-
-Logout = Logout()
-cti_command_registry.register_class(Logout)
+Logout = CTICommandClass('logout', None, None)
+Logout.add_to_registry()

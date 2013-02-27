@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class SwitchboardDirectorySearch(AbstractCTICommandClass):
-
-    class_name = 'switchboard_directory_search'
-
-    def _parse(self, msg, command):
-        command.pattern = msg.get('pattern')
+def _parse(msg, command):
+    command.pattern = msg.get('pattern')
 
 
-SwitchboardDirectorySearch = SwitchboardDirectorySearch()
-cti_command_registry.register_class(SwitchboardDirectorySearch)
+SwitchboardDirectorySearch = CTICommandClass('switchboard_directory_search', None, _parse)
+SwitchboardDirectorySearch.add_to_registry()

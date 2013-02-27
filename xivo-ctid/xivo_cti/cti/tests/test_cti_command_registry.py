@@ -22,9 +22,15 @@ from xivo_cti.cti import cti_command_registry
 
 class TestRegistry(unittest.TestCase):
 
-    def tearDown(self):
+    def setUp(self):
+        self._old_classes_by_class_name = cti_command_registry._classes_by_class_name
+        self._old_getlist_classes_by_fun_name = cti_command_registry._getlist_classes_by_fun_name
         cti_command_registry._classes_by_class_name = {}
         cti_command_registry._getlist_classes_by_fun_name = {}
+
+    def tearDown(self):
+        cti_command_registry._classes_by_class_name = self._old_classes_by_class_name
+        cti_command_registry._getlist_classes_by_fun_name = self._old_getlist_classes_by_fun_name
 
     def test_get_class_with_registered_class_that_match(self):
         klass = self._new_class('foo')

@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class HoldSwitchboard(AbstractCTICommandClass):
-
-    class_name = 'hold_switchboard'
-
-    def _parse(self, msg, command):
-        command.queue_name = msg['queue_name']
+def _parse(msg, command):
+    command.queue_name = msg['queue_name']
 
 
-HoldSwitchboard = HoldSwitchboard()
-cti_command_registry.register_class(HoldSwitchboard)
+HoldSwitchboard = CTICommandClass('hold_switchboard', None, _parse)
+HoldSwitchboard.add_to_registry()

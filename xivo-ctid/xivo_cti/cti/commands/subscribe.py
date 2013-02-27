@@ -15,15 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Subscribe(AbstractCTICommandClass):
+def _parse(msg, command):
+    command.message = msg['message']
 
-    class_name = 'subscribe'
 
-    def _match(self, msg):
-        return msg['message'] == self.message_name
+def _parse_queue_entry_update(msg, command):
+    _parse(msg, command)
+    command.queue_id = int(msg['queueid'])
 
-    def _parse(self, msg, command):
-        command.message = msg['message']
+
+def _new_class(message_name, parse_fun):
+    def match(msg):
+        return msg['message'] == message_name
+
+    return CTICommandClass('subscribe', match, parse_fun)
+
+
+SubscribeCurrentCalls = _new_class('current_calls', _parse)
+SubscribeCurrentCalls.add_to_registry()
+
+SubscribeMeetmeUpdate = _new_class('meetme_update', _parse)
+SubscribeMeetmeUpdate.add_to_registry()
+
+SubscribeQueueEntryUpdate = _new_class('queueentryupdate', _parse_queue_entry_update)
+SubscribeQueueEntryUpdate.add_to_registry()

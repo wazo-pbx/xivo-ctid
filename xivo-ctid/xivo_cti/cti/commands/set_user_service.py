@@ -15,12 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import AbstractCTICommandClass
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class SetUserService(AbstractCTICommandClass):
+def _new_class(function_name, value):
+    def match(msg):
+        return msg['function'] == function_name and msg['value'] == value
 
-    class_name = 'featuresput'
+    return CTICommandClass('featuresput', match, None)
 
-    def _match(self, msg):
-        return msg['function'] == self.function_name and msg['value'] == self.value
+
+DisableDND = _new_class('enablednd', False)
+DisableDND.add_to_registry()
+
+DisableFilter = _new_class('incallfilter', False)
+DisableFilter.add_to_registry()
+
+EnableDND = _new_class('enablednd', True)
+EnableDND.add_to_registry()
+
+EnableFilter = _new_class('incallfilter', True)
+EnableFilter.add_to_registry()
