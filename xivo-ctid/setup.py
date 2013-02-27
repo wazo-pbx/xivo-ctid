@@ -15,8 +15,6 @@ setup(
               'xivo_cti.ami.actions',
               'xivo_cti.cti',
               'xivo_cti.cti.commands',
-              'xivo_cti.cti.commands.getlists',
-              'xivo_cti.cti.commands.user_service',
               'xivo_cti.dao',
               'xivo_cti.directory',
               'xivo_cti.directory.data_sources',
