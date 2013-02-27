@@ -266,7 +266,7 @@ class Safe(object):
                 domatch = True
             elif dest_type == 'agent':
                 user = self.xod_config['users'].keeplist[userid]
-                domatch = user['agentid'] == dest_id
+                domatch = user['agentid'] == int(dest_id)
             elif dest_type == 'queue' and dest_id:
                 domatch = queue_dao.is_user_member_of_queue(userid, dest_id)
             elif dest_type == 'group' and dest_id:
