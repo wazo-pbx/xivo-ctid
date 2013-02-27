@@ -429,8 +429,9 @@ class AMI_1_8(object):
             logger.exception('Failed to copy parents variable to child channel')
 
     def amiresponse_extensionstatus(self, event):
-        if 'Hint' in event:
-            self.innerdata.updatehint(event['Hint'], event['Status'])
+        hint = event.get('Hint')
+        if hint:
+            self.innerdata.updatehint(hint, event['Status'])
 
     @staticmethod
     def timeconvert(duration):

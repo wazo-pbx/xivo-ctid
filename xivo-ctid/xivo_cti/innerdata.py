@@ -437,6 +437,8 @@ class Safe(object):
                                                 'tipbxid': self.ipbxid,
                                                 'tid': p,
                                                 'status': {'hintstatus': status}})
+        else:
+            logger.warning('Failed to update phone status for %s', hint)
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []

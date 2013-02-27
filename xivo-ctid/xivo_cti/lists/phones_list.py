@@ -33,6 +33,10 @@ class PhonesList(ContextAwareAnyList):
         self._user_ids_by_context = {}
         self._phone_id_by_proto_and_name = {}
 
+    def add(self, phone_id):
+        super(PhonesList, self).add(phone_id)
+        self._add_to_reverse_dictionaries(phone_id)
+
     def init_data(self):
         ContextAwareAnyList.init_data(self)
         self._update_lookup_dictionaries()
@@ -61,6 +65,27 @@ class PhonesList(ContextAwareAnyList):
                                          context, user_ids in
                                          user_ids_by_context.iteritems())
         self._phone_id_by_proto_and_name = phone_id_by_proto_and_name
+
+    def _add_to_reverse_dictionaries(self, phone_id):
+        phone = self.keeplist[phone_id]
+        proto_and_name = phone['protocol'] + phone['name']
+        self._phone_id_by_proto_and_name[proto_and_name] = phone_id
+
+        raw_user_id = phone['iduserfeatures']
+        if not raw_user_id:
+            return
+        user_id = str(raw_user_id)
+        context = phone['context']
+        self._add_user_to_context(user_id, context)
+
+    def _add_user_to_context(self, user_id, context):
+        new_contexts = set(self._contexts_by_user_id.get(user_id, set()))
+        new_contexts.add(context)
+        self._contexts_by_user_id[user_id] = list(new_contexts)
+
+        new_user_ids = set(self._user_ids_by_context.get(context, set()))
+        new_user_ids.add(user_id)
+        self._user_ids_by_context[context] = list(new_user_ids)
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
