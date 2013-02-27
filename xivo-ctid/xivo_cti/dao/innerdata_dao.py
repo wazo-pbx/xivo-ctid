@@ -41,7 +41,11 @@ class InnerdataDAO(object):
         return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
 
     def set_agent_availability(self, agent_id, availability):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent_id = str(agent_id)
+        if agent_id not in self.innerdata.xod_status['agents']:
+            logger.warning('Trying to set status %s to unknown agent %s', availability, agent_id)
+            return
+        agent_status = self.innerdata.xod_status['agents'][agent_id]
         if availability != agent_status['availability']:
             agent_status['availability_since'] = time.time()
             agent_status['availability'] = availability

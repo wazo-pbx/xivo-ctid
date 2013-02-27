@@ -149,6 +149,14 @@ class TestInnerdataDAO(unittest.TestCase):
 
         self.assertEqual(agent_status, expected_status)
 
+    def test_set_agent_availability_on_a_removed_agent(self):
+        agent_id = 42
+        agent_availability = AgentStatus.unavailable
+        self.innerdata_dao.innerdata.xod_status = {
+            'agents': {}
+        }
+        self.innerdata_dao.set_agent_availability(agent_id, agent_availability)
+
     def _assert_contains_same_elements(self, list, expected_list):
         self.assertEquals(len(list), len(expected_list))
         for element in list:
