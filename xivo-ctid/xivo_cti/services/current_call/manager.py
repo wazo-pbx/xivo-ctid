@@ -19,19 +19,9 @@ import time
 import logging
 from xivo_dao import user_dao
 from xivo_cti import dao
-from pprint import pprint
 
 
 logger = logging.getLogger(__name__)
-
-
-def state_debug(method):
-    def wrapper(self, *args, **kwargs):
-        res = method(self, *args, **kwargs)
-        logger.debug('---- Internal state ----')
-        pprint(self._calls_per_line)
-        return res
-    return wrapper
 
 
 PEER_CHANNEL = 'peer_channel'
@@ -53,7 +43,6 @@ class CurrentCallManager(object):
         self.scheduler = scheduler
         self.device_manager = device_manager
 
-    @state_debug
     def bridge_channels(self, channel_1, channel_2):
         line_1 = self._identity_from_channel(channel_1)
         line_2 = self._identity_from_channel(channel_2)
@@ -122,7 +111,6 @@ class CurrentCallManager(object):
                     return line, index
         return None, None
 
-    @state_debug
     def end_call(self, channel):
         to_remove = []
         for line, calls in self._calls_per_line.iteritems():
@@ -136,7 +124,6 @@ class CurrentCallManager(object):
         for line in set([line for line, _ in to_remove]):
             self._current_call_notifier.publish_current_call(line)
 
-    @state_debug
     def remove_transfer_channel(self, channel):
         line, position = self._find_line_and_position(channel, TRANSFER_CHANNEL)
         if line:
@@ -144,7 +131,6 @@ class CurrentCallManager(object):
 
             self._current_call_notifier.publish_current_call(line)
 
-    @state_debug
     def set_transfer_channel(self, channel, transfer_channel):
         line = self._identity_from_channel(channel)
 
@@ -170,11 +156,9 @@ class CurrentCallManager(object):
         if not self._calls_per_line[line]:
             self._calls_per_line.pop(line)
 
-    @state_debug
     def hold_channel(self, holded_channel):
         self._change_hold_status(holded_channel, True)
 
-    @state_debug
     def unhold_channel(self, unholded_channel):
         self._change_hold_status(unholded_channel, False)
 
