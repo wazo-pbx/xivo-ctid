@@ -15,25 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class AgentLogin(CTICommand):
+def _match(msg):
+    return msg['command'] == 'agentlogin'
 
-    COMMAND_CLASS = 'ipbxcommand'
 
-    AGENT_PHONE_NUMBER = 'agentphonenumber'
-    AGENT_IDS = 'agentids'
+def _parse(msg, command):
+    command.agent_phone_number = msg.get('agentphonenumber')
+    command.agent_id = msg.get('agentids')
 
-    required_fields = [CTICommand.CLASS, 'command']
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'agentlogin')]
-    _callbacks = []
-    _callbacks_with_params = []
 
-    def _init_from_dict(self, msg):
-        super(AgentLogin, self)._init_from_dict(msg)
-        self.agent_phone_number = msg.get(self.AGENT_PHONE_NUMBER)
-        self.agent_id = msg.get(self.AGENT_IDS)
-
-CTICommandFactory.register_class(AgentLogin)
+AgentLogin = CTICommandClass('ipbxcommand', _match, _parse)
+AgentLogin.add_to_registry()

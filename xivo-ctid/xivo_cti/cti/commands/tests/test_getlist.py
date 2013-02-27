@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2013 Avencall
+# Copyright (C) 2013  Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,61 +16,61 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-
-from xivo_cti.cti.commands.getlist import GetList
-from xivo_cti.cti.cti_command import CTICommand
-from mock import Mock
-from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.cti.cti_command_handler import CTICommandHandler
+from xivo_cti.cti import cti_command_registry
+from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 
 
-class TestGetList(unittest.TestCase):
+class TestGetlist(unittest.TestCase):
 
-    _commandid = 1446226295
-    _function = 'updateconfig'
     _list_name = 'users'
     _item_id = '1'
-    _ipbx_id = 'xivo'
-    _dict_msg = {CTICommand.CLASS: GetList.COMMAND_CLASS,
-                 CTICommand.COMMANDID: _commandid,
-                 GetList.FUNCTION: _function,
-                 GetList.LIST_NAME: _list_name,
-                 GetList.ITEM_ID: _item_id,
-                 GetList.IPBX_ID: _ipbx_id}
 
-    def test_get_list(self):
-        self.assertEqual(GetList.COMMAND_CLASS, 'getlist')
+    _listid_msg = {
+        'class': 'getlist',
+        'function': 'listid',
+        'listname': _list_name,
+    }
+    _updateconfig_msg = {
+        'class': 'getlist',
+        'function': 'updateconfig',
+        'listname': _list_name,
+        'tid': _item_id,
+    }
+    _updatestatus_msg = {
+        'class': 'getlist',
+        'function': 'updatestatus',
+        'listname': _list_name,
+        'tid': _item_id,
+    }
 
-        getlist = GetList()
+    def test_list_id_msg(self):
+        command = ListID.from_dict(self._listid_msg)
 
-        self.assertEqual(getlist.commandid, None)
-        self.assertEqual(getlist.function, None)
-        self.assertEqual(getlist.list_name, None)
-        self.assertEqual(getlist.item_id, None)
-        self.assertEqual(getlist.ipbx_id, None)
+        self.assertEqual(command.list_name, self._list_name)
 
-    def test_from_dict(self):
-        getlist = GetList.from_dict(self._dict_msg)
+    def test_list_id_registration(self):
+        klass = cti_command_registry.get_class(self._listid_msg)
 
-        self.assertEqual(getlist.commandid, self._commandid)
-        self.assertEqual(getlist.function, self._function)
-        self.assertEqual(getlist.list_name, self._list_name)
-        self.assertEqual(getlist.item_id, self._item_id)
-        self.assertEqual(getlist.ipbx_id, self._ipbx_id)
+        self.assertEqual(klass, [ListID])
 
-    def test_handler_registration(self):
-        connection = Mock(CTI)
-        cti_handler = CTICommandHandler(connection)
+    def test_update_config_msg(self):
+        command = UpdateConfig.from_dict(self._updateconfig_msg)
 
-        self.assertEqual(len(cti_handler._commands_to_run), 0)
+        self.assertEqual(command.list_name, self._list_name)
+        self.assertEqual(command.item_id, self._item_id)
 
-        cti_handler.parse_message(self._dict_msg)
+    def test_update_config_registration(self):
+        klass = cti_command_registry.get_class(self._updateconfig_msg)
 
-        self.assertTrue(len(cti_handler._commands_to_run) > 0)
+        self.assertEqual(klass, [UpdateConfig])
 
-        found = False
-        for command in cti_handler._commands_to_run:
-            if isinstance(command, GetList) and command.commandid == self._commandid:
-                found = True
+    def test_update_status_msg(self):
+        command = UpdateStatus.from_dict(self._updatestatus_msg)
 
-        self.assertTrue(found)
+        self.assertEqual(command.list_name, self._list_name)
+        self.assertEqual(command.item_id, self._item_id)
+
+    def test_update_status_registration(self):
+        klass = cti_command_registry.get_class(self._updatestatus_msg)
+
+        self.assertEqual(klass, [UpdateStatus])

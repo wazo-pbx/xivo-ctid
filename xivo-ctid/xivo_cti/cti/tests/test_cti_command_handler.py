@@ -20,11 +20,9 @@ import unittest
 from mock import Mock
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.cti_config import CTI_PROTOCOL_VERSION
-from xivo_cti.cti.cti_command import CTICommand
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
-from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti.cti_command import CTICommandInstance
 
 
 class TestCTICommandHandler(unittest.TestCase):
@@ -36,12 +34,6 @@ class TestCTICommandHandler(unittest.TestCase):
         self._ctiserver = Mock(CTIServer)
         self._cti_connection = CTI(self._ctiserver)
 
-    def test_cti_command_handler(self):
-        cti_handler = CTICommandHandler(self._cti_connection)
-
-        self.assertTrue(cti_handler is not None)
-        self.assertTrue(cti_handler._command_factory is not None)
-
     def test_parse_message(self):
         cti_handler = CTICommandHandler(self._cti_connection)
 
@@ -51,32 +43,7 @@ class TestCTICommandHandler(unittest.TestCase):
 
         self.assertEqual(len(cti_handler._commands_to_run), 1)
         command = cti_handler._commands_to_run[0]
-        self.assertTrue(isinstance(command, InviteConfroom))
-
-    def test_parse_login_id(self):
-        cti_handler = CTICommandHandler(self._cti_connection)
-
-        self.assertEqual(len(cti_handler._commands_to_run), 0)
-
-        login_id_msg = {"class": "login_id",
-                        "commandid": 1215825599,
-                        "company": "default",
-                        "git_date": "1326300351",
-                        "git_hash": "17484c6",
-                        "ident": "X11-LE-28863",
-                        "lastlogout-datetime": "2012-01-16T07:43:34",
-                        "lastlogout-stopper": "connection_lost",
-                        "userlogin": "pascal",
-                        "version": "9999",
-                        "xivoversion": CTI_PROTOCOL_VERSION}
-
-        cti_handler.parse_message(login_id_msg)
-
-        self.assertEqual(len(cti_handler._commands_to_run), 1)
-
-        command = cti_handler._commands_to_run[0]
-
-        self.assertTrue(isinstance(command, LoginID))
+        self.assertTrue(command.command_class, InviteConfroom.class_name)
 
     def test_run_command(self):
         self.called = False
@@ -84,10 +51,10 @@ class TestCTICommandHandler(unittest.TestCase):
         def func(x, y):
             self.called = x == 'test name' and y == 25
 
-        CTICommand.register_callback_params(func, ['name', 'age'])
-        command = CTICommand()
+        command = CTICommandInstance()
         command.name = 'test name'
-        command.age = lambda: 25
+        command.age = 25
+        command.callbacks_with_params = lambda: [(func, ['name', 'age'])]
         handler = CTICommandHandler(self._cti_connection)
         handler._commands_to_run.append(command)
 

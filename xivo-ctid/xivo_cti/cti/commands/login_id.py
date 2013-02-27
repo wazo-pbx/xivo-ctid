@@ -15,39 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class LoginID(CTICommand):
-
-    COMMAND_CLASS = 'login_id'
-
-    COMPANY = 'company'
-    IDENT = 'ident'
-    USERLOGIN = 'userlogin'
-    XIVO_VERSION = 'xivoversion'
-    SESSIONID = 'sessionid'
-
-    required_fields = [CTICommand.CLASS, USERLOGIN, IDENT, COMPANY, XIVO_VERSION]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
-
-    def __init__(self):
-        super(LoginID, self).__init__()
-        self.command_class = self.COMMAND_CLASS
-        self.company = None
-        self.ident = None
-        self.userlogin = None
-        self.xivo_version = None
-
-    def _init_from_dict(self, msg):
-        super(LoginID, self)._init_from_dict(msg)
-        self.company = msg[self.COMPANY]
-        self.ident = msg[self.IDENT]
-        self.userlogin = msg[self.USERLOGIN]
-        self.xivo_version = msg[self.XIVO_VERSION]
+def _parse(msg, command):
+    command.company = msg['company']
+    command.ident = msg['ident']
+    command.userlogin = msg['userlogin']
+    command.xivo_version = msg['xivoversion']
 
 
-CTICommandFactory.register_class(LoginID)
+LoginID = CTICommandClass('login_id', None, _parse)
+LoginID.add_to_registry()

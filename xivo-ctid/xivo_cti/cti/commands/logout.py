@@ -15,25 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Logout(CTICommand):
-
-    COMMAND_CLASS = 'logout'
-
-    required_fields = [CTICommand.CLASS]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
-
-    def __init__(self):
-        super(Logout, self).__init__()
-        self.command_class = self.COMMAND_CLASS
-
-    def _init_from_dict(self, msg):
-        super(Logout, self)._init_from_dict(msg)
-
-
-CTICommandFactory.register_class(Logout)
+Logout = CTICommandClass('logout', None, None)
+Logout.add_to_registry()

@@ -15,28 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Subscribe(CTICommand):
-
-    COMMAND_CLASS = 'subscribe'
-    MESSAGE = 'message'
-
-    required_fields = [CTICommand.CLASS, MESSAGE]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-
-    _callbacks = []
-    _callbacks_with_params = []
-
-    def __init__(self):
-        super(Subscribe, self).__init__()
-        self.message = None
-
-    def _init_from_dict(self, msg):
-        super(Subscribe, self)._init_from_dict(msg)
-        self.message = msg[self.MESSAGE]
+def _parse(msg, command):
+    command.message = msg['message']
 
 
-CTICommandFactory.register_class(Subscribe)
+def _parse_queue_entry_update(msg, command):
+    _parse(msg, command)
+    command.queue_id = int(msg['queueid'])
+
+
+def _new_class(message_name, parse_fun):
+    def match(msg):
+        return msg['message'] == message_name
+
+    return CTICommandClass('subscribe', match, parse_fun)
+
+
+SubscribeCurrentCalls = _new_class('current_calls', _parse)
+SubscribeCurrentCalls.add_to_registry()
+
+SubscribeMeetmeUpdate = _new_class('meetme_update', _parse)
+SubscribeMeetmeUpdate.add_to_registry()
+
+SubscribeQueueEntryUpdate = _new_class('queueentryupdate', _parse_queue_entry_update)
+SubscribeQueueEntryUpdate.add_to_registry()

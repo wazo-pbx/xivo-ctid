@@ -15,25 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class AttendedTransfer(CTICommand):
+def _parse(msg, command):
+    command.number = msg['number']
 
-    COMMAND_CLASS = 'attended_transfer'
-    NUMBER = 'number'
 
-    required_fields = [CTICommand.CLASS, NUMBER]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
-
-    def __init__(self):
-        super(AttendedTransfer, self).__init__()
-
-    def _init_from_dict(self, msg):
-        super(AttendedTransfer, self)._init_from_dict(msg)
-        self.number = msg['number']
-
-CTICommandFactory.register_class(AttendedTransfer)
+AttendedTransfer = CTICommandClass('attended_transfer', None, _parse)
+AttendedTransfer.add_to_registry()

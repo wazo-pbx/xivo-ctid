@@ -15,21 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class Listen(CTICommand):
-
-    COMMAND_CLASS = 'ipbxcommand'
-
-    required_fields = [CTICommand.CLASS, 'command']
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS), ('command', 'listen')]
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(Listen, self)._init_from_dict(msg)
-        self.destination = msg['destination']
+def _match(msg):
+    return msg['command'] == 'listen'
 
 
-CTICommandFactory.register_class(Listen)
+def _parse(msg, command):
+    command.destination = msg['destination']
+
+
+Listen = CTICommandClass('ipbxcommand', _match, _parse)
+Listen.add_to_registry()

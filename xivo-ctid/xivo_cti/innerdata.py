@@ -25,9 +25,7 @@ import Queue
 from xivo_cti import cti_config, cti_sheets, db_connection_manager
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.directory import directory
-from xivo_cti.cti.commands.getlists.list_id import ListID
-from xivo_cti.cti.commands.getlists.update_config import UpdateConfig
-from xivo_cti.cti.commands.getlists.update_status import UpdateStatus
+from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders

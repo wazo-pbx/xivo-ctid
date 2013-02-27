@@ -15,22 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class SetUserService(CTICommand):
+def _new_class(function_name, value):
+    def match(msg):
+        return msg['function'] == function_name and msg['value'] == value
 
-    COMMAND_CLASS = 'featuresput'
+    return CTICommandClass('featuresput', match, None)
 
-    FUNCTION = 'function'
-    VALUE = 'value'
 
-    required_fields = [CTICommand.CLASS, FUNCTION, VALUE]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
+DisableDND = _new_class('enablednd', False)
+DisableDND.add_to_registry()
 
-    def _init_from_dict(self, msg):
-        super(SetUserService, self)._init_from_dict(msg)
-        self.function = msg[self.FUNCTION]
-        self.value = msg[self.VALUE]
+DisableFilter = _new_class('incallfilter', False)
+DisableFilter.add_to_registry()
+
+EnableDND = _new_class('enablednd', True)
+EnableDND.add_to_registry()
+
+EnableFilter = _new_class('incallfilter', True)
+EnableFilter.add_to_registry()

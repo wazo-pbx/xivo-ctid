@@ -16,91 +16,63 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-
-from xivo_cti.cti.cti_command import CTICommand
 from mock import Mock
-from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.exception import MissingFieldException
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
 class TestCTICommand(unittest.TestCase):
 
-    def tearDown(self):
-        CTICommand._callbacks_with_params = []
-
-    def test_cti_command(self):
-        cti_command = CTICommand()
-
-        self.assertEqual(cti_command.commandid, None)
-        self.assertEqual(cti_command.command_class, None)
-        self.assertEqual(cti_command._msg, None)
+    def setUp(self):
+        self.class_name = 'foo'
+        self.commandid = '12345'
+        self.msg = {'class': self.class_name, 'commandid': self.commandid}
 
     def test_from_dict(self):
-        command_class = u'test_command'
-        commandid = '12345'
-        cti_command = CTICommand.from_dict({'class': command_class, 'commandid': commandid})
+        command_class = CTICommandClass(self.class_name, None, None)
 
-        self.assertEqual(cti_command.commandid, commandid)
-        self.assertEqual(cti_command.command_class, command_class)
-        self.assertEqual(cti_command.cti_connection, None)
+        command = command_class.from_dict(self.msg)
 
-        self.assertEqual(len(CTICommand.required_fields), 1)
+        self.assertEqual(command.commandid, self.commandid)
+        self.assertEqual(command.command_class, self.class_name)
 
-    def test_required_fields(self):
-        try:
-            cti_command = CTICommand()
-            cti_command._init_from_dict({})
-            self.assertTrue(False, u'Should raise an exception')
-        except MissingFieldException:
-            self.assertTrue(True, u'Should raise an exception')
+    def test_match_message_when_match_fun_true(self):
+        match_fun = Mock()
+        match_fun.return_value = True
+        command_class = CTICommandClass(self.class_name, match_fun, None)
 
-        try:
-            command_class = u'test_command'
-            CTICommand.from_dict({'class': command_class})
-            self.assertTrue(True, u'Should not raise an exception')
-        except MissingFieldException:
-            self.assertTrue(False, u'Should raise an exception')
+        self.assertTrue(command_class.match_message({}))
+        self.assertTrue(command_class.match_message({'class': self.class_name}))
 
-    def test_match_message(self):
+    def test_match_message_when_match_fun_false(self):
+        match_fun = Mock()
+        match_fun.return_value = False
+        command_class = CTICommandClass(self.class_name, match_fun, None)
 
-        CTICommand.conditions = [('class', 'test_command'), ('value', 'to_match')]
-        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match'}))
-        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': 'to_match', 'other': 'not_checked'}))
-        self.assertFalse(CTICommand.match_message({'class': 'test_command'}))
-
-    def test_match_message_invalid_key(self):
-        self.assertFalse(CTICommand.match_message({}))
-
-    def test_match_message_with_dict_inside(self):
-        self.assertFalse(CTICommand.match_message({}))
-
-        CTICommand.conditions = [('class', 'test_command'), (('value', 'subvalue'), 'to_match')]
-        self.assertTrue(CTICommand.match_message({'class': 'test_command', 'value': {'subvalue': 'to_match'}}))
-
-    def test_match_message_with_dict_invalid_key(self):
-        CTICommand.conditions = [('class', 'test_command'), (('value', 'moult'), 'to_match')]
-        self.assertFalse(CTICommand.match_message({'class': 'test_command', 'value': {'subvalue': 'to_match'}}))
+        self.assertFalse(command_class.match_message({}))
+        self.assertFalse(command_class.match_message({'class': self.class_name}))
 
     def test_register_callback(self):
-        command = CTICommand().from_dict({'class': 'callback_test'})
+        command_class = CTICommandClass(self.class_name, None, None)
+        command = command_class.from_dict({'class': 'callback_test'})
 
         self.assertEqual(command.callbacks_with_params(), [])
 
         function = Mock()
-        CTICommand.register_callback_params(function)
+        command_class.register_callback_params(function)
 
-        command = CTICommand.from_dict({'class': 'callback_test'})
+        command = command_class.from_dict({'class': 'callback_test'})
         self.assertEqual(len(command.callbacks_with_params()), 1)
 
     def test_callback_memory_usage(self):
+        command_class = CTICommandClass(self.class_name, None, None)
         class Test(object):
             def __init__(self):
-                CTICommand.register_callback_params(self.parse)
+                command_class.register_callback_params(self.parse)
 
             def parse(self):
                 pass
 
-        command = CTICommand.from_dict({CTICommand.CLASS: 'callback_test'})
+        command = command_class.from_dict({'class': 'callback_test'})
 
         def run_test():
             self.assertEqual(len(command.callbacks_with_params()), 0)
@@ -111,55 +83,3 @@ class TestCTICommand(unittest.TestCase):
         run_test()
 
         self.assertEqual(len(command.callbacks_with_params()), 0)
-
-    def test_get_reply(self):
-        command_class = 'return_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_reply('message', {'message': 'This is the test message'}, close_connection=False)
-
-        self.assertFalse('closemenow' in reply)
-        self.assertTrue('message' in reply)
-        self.assertEqual(reply['message']['message'], 'This is the test message')
-        self.assertEqual(reply['class'], command_class)
-        self.assertFalse('replyid' in reply)
-
-        commandid = '12345'
-        command.commandid = commandid
-
-        reply = command.get_reply('message', 'Test 2', True)
-
-        self.assertTrue('closemenow' in reply)
-        self.assertEqual(reply['replyid'], commandid)
-
-    def test_get_warning(self):
-        command_class = 'warning_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_warning({'message': 'Unknown command'})
-
-        self.assertTrue('warning' in reply)
-        self.assertEqual(reply['warning']['message'], 'Unknown command')
-
-    def test_get_message(self):
-        command_class = 'message_test'
-        command = CTICommand.from_dict({'class': command_class})
-        command.command_class = command_class
-
-        reply = command.get_message({'message': 'Test completed successfully'}, True)
-
-        self.assertTrue('closemenow' in reply, 'closemenow should be present when passing close_connection -> True')
-        self.assertTrue('message' in reply)
-        self.assertEqual(reply['message']['message'], 'Test completed successfully')
-
-    def test_user_id(self):
-        command = CTICommand()
-
-        self.assertEqual(command.user_id(), None)
-
-        command.cti_connection = Mock(CTI)
-        command.cti_connection.connection_details = {'userid': 42}
-
-        self.assertEqual(command.user_id(), 42)

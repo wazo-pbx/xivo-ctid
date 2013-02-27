@@ -15,23 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class InviteConfroom(CTICommand):
+def _parse(msg, command):
+    command.invitee = msg['invitee']
 
-    COMMAND_CLASS = 'invite_confroom'
 
-    INVITEE = 'invitee'
-
-    required_fields = [CTICommand.CLASS, INVITEE]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
-
-    def _init_from_dict(self, msg):
-        super(InviteConfroom, self)._init_from_dict(msg)
-        self.invitee = msg[self.INVITEE]
-
-CTICommandFactory.register_class(InviteConfroom)
+InviteConfroom = CTICommandClass('invite_confroom', None, _parse)
+InviteConfroom.add_to_registry()

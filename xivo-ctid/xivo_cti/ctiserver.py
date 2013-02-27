@@ -47,22 +47,15 @@ from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_remove import QueueRemove
 from xivo_cti.cti.commands.queue_unpause import QueueUnPause
-from xivo_cti.cti.commands.subscribe_meetme_update import SubscribeMeetmeUpdate
-from xivo_cti.cti.commands.subscribe_queue_entry_update import SubscribeQueueEntryUpdate
+from xivo_cti.cti.commands.subscribe import SubscribeCurrentCalls, \
+    SubscribeMeetmeUpdate, SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.cti.commands.hold_switchboard import HoldSwitchboard
 from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
-from xivo_cti.cti.commands.user_service.disable_busy_forward import DisableBusyForward
-from xivo_cti.cti.commands.user_service.disable_dnd import DisableDND
-from xivo_cti.cti.commands.user_service.disable_filter import DisableFilter
-from xivo_cti.cti.commands.user_service.disable_noanswer_forward import DisableNoAnswerForward
-from xivo_cti.cti.commands.user_service.disable_unconditional_forward import DisableUnconditionalForward
-from xivo_cti.cti.commands.user_service.enable_busy_forward import EnableBusyForward
-from xivo_cti.cti.commands.user_service.enable_dnd import EnableDND
-from xivo_cti.cti.commands.user_service.enable_filter import EnableFilter
-from xivo_cti.cti.commands.user_service.enable_noanswer_forward import EnableNoAnswerForward
-from xivo_cti.cti.commands.user_service.enable_unconditional_forward import EnableUnconditionalForward
-from xivo_cti.cti.commands.subscribe_current_calls import SubscribeCurrentCalls
+from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
+    DisableNoAnswerForward, DisableUnconditionalForward, EnableBusyForward, \
+    EnableNoAnswerForward, EnableUnconditionalForward
+from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter
 from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info

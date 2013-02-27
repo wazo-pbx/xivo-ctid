@@ -15,37 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.cti_command import CTICommand
-from xivo_cti.cti.cti_command_factory import CTICommandFactory
+from xivo_cti.cti.cti_command import CTICommandClass
 
 
-class GetList(CTICommand):
+def _parse(msg, command):
+    command.list_name = msg['listname']
+    command.item_id = msg.get('tid')
 
-    COMMAND_CLASS = 'getlist'
 
-    FUNCTION = 'function'
-    LIST_NAME = 'listname'
-    ITEM_ID = 'tid'
-    IPBX_ID = 'tipbxid'
+def _new_class(function_name):
+    def match(msg):
+        return msg['function'] == function_name
 
-    required_fields = [CTICommand.CLASS, FUNCTION, LIST_NAME, IPBX_ID]
-    conditions = [(CTICommand.CLASS, COMMAND_CLASS)]
-    _callbacks = []
-    _callbacks_with_params = []
+    return CTICommandClass('getlist', match, _parse)
 
-    def __init__(self):
-        super(GetList, self).__init__()
-        self.command_class = self.COMMAND_CLASS
-        self.function = None
-        self.list_name = None
-        self.item_id = None
-        self.ipbx_id = None
 
-    def _init_from_dict(self, msg):
-        super(GetList, self)._init_from_dict(msg)
-        self.function = msg[self.FUNCTION]
-        self.list_name = msg[self.LIST_NAME]
-        self.item_id = msg.get(self.ITEM_ID)
-        self.ipbx_id = msg[self.IPBX_ID]
+ListID = _new_class('listid')
+ListID.add_to_getlist_registry('listid')
 
-CTICommandFactory.register_class(GetList)
+UpdateConfig = _new_class('updateconfig')
+UpdateConfig.add_to_getlist_registry('updateconfig')
+
+UpdateStatus = _new_class('updatestatus')
+UpdateStatus.add_to_getlist_registry('updatestatus')

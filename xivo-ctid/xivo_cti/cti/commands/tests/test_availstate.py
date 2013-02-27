@@ -29,12 +29,6 @@ class TestAvailstate(unittest.TestCase):
                            'ipbxid': 'xivo',
                            'userid': '1'}
 
-    def tearDown(self):
-        pass
-
-    def test_availstate(self):
-        self.assertEqual(Availstate.COMMAND_CLASS, 'availstate')
-
     def test_from_dict(self):
         availstate = Availstate.from_dict(self.outtolunch)
 
