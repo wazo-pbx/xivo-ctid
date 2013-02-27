@@ -18,6 +18,7 @@
 import logging
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti import dao
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +83,12 @@ class AgentAvailabilityUpdater(object):
         self.notifier.notify(agent_id)
 
     def agent_logged_out(self, agent_id):
-        self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.logged_out)
-        self.notifier.notify(agent_id)
+        try:
+            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.logged_out)
+        except NoSuchAgentException:
+            logger.info('Tried to logout an unknown agent')
+        else:
+            self.notifier.notify(agent_id)
 
     def agent_answered(self, agent_id):
         self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)

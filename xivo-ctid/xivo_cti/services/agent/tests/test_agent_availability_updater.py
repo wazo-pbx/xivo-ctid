@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
+from hamcrest import *
 from mock import Mock
 from xivo_cti import dao
 from xivo_cti.scheduler import Scheduler
@@ -25,6 +27,7 @@ from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotif
 from xivo_cti.services.agent import availability_updater as agent_availability_updater
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
+from xivo_cti.exception import NoSuchAgentException
 
 
 class TestAgentAvailabilityUpdater(unittest.TestCase):
@@ -196,6 +199,15 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
             AgentStatus.logged_out
         )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
+
+    def test_agent_logged_out_no_such_agent(self):
+        agent_id = 12
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.side_effect = NoSuchAgentException()
+
+        self.agent_availability_updater.agent_logged_out(agent_id)
+
+        assert_that(self.agent_availability_updater.notifier.notify.call_count, equal_to(0), 'Notifier call count')
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 
     def test_agent_answered(self):
         agent_id = 12

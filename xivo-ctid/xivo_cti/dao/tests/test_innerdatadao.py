@@ -21,6 +21,7 @@ from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.innerdata import Safe
 from xivo_cti.exception import NotAQueueException
+from xivo_cti.exception import NoSuchAgentException
 
 
 class TestInnerdataDAO(unittest.TestCase):
@@ -155,7 +156,7 @@ class TestInnerdataDAO(unittest.TestCase):
         self.innerdata_dao.innerdata.xod_status = {
             'agents': {}
         }
-        self.innerdata_dao.set_agent_availability(agent_id, agent_availability)
+        self.assertRaises(NoSuchAgentException, self.innerdata_dao.set_agent_availability, agent_id, agent_availability)
 
     def _assert_contains_same_elements(self, list, expected_list):
         self.assertEquals(len(list), len(expected_list))

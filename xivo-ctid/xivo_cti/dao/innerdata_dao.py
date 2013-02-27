@@ -18,6 +18,7 @@
 import logging
 import time
 from xivo_cti.exception import NotAQueueException
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger("InnerdataDAO")
 
@@ -43,8 +44,7 @@ class InnerdataDAO(object):
     def set_agent_availability(self, agent_id, availability):
         agent_id = str(agent_id)
         if agent_id not in self.innerdata.xod_status['agents']:
-            logger.warning('Trying to set status %s to unknown agent %s', availability, agent_id)
-            return
+            raise NoSuchAgentException('Unknown agent %s' % agent_id)
         agent_status = self.innerdata.xod_status['agents'][agent_id]
         if availability != agent_status['availability']:
             agent_status['availability_since'] = time.time()
