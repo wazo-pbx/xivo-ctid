@@ -486,26 +486,10 @@ class Safe(object):
         except KeyError:
             logger.warning('Trying to do as masquerade on an unexistant channel')
 
-    def usersummary_from_phoneid(self, phoneid):
-        usersummary = {}
-        if phoneid in self.xod_config['phones'].keeplist:
-            phoneprops = self.xod_config['phones'].keeplist[phoneid]
-            userid = str(phoneprops['iduserfeatures'])
-            user = user_dao.get(userid)
-            usersummary = {'phonenumber': phoneprops.get('number'),
-                           'userid': userid,
-                           'context': phoneprops.get('context'),
-                           'fullname': user.fullname}
-        return usersummary
-
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel
         chanprops.properties['talkingto_id'] = peerchannel
-        if peerchannel and self.channels.get(peerchannel).relations:
-            for k in self.channels.get(peerchannel).relations:
-                if k.startswith('phone'):
-                    usersummary = self.usersummary_from_phoneid(k[6:])
 
     def currentstatus(self):
         rep = []
