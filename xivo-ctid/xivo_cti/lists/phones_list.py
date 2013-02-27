@@ -58,8 +58,8 @@ class PhonesList(ContextAwareAnyList):
                                          user_id, contexts in
                                          contexts_by_user_id.iteritems())
         self._user_ids_by_context = dict((context, list(user_ids)) for
-                                          context, user_ids in
-                                          user_ids_by_context.iteritems())
+                                         context, user_ids in
+                                         user_ids_by_context.iteritems())
         self._phone_id_by_proto_and_name = phone_id_by_proto_and_name
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
@@ -67,7 +67,7 @@ class PhonesList(ContextAwareAnyList):
         if commid in self.keeplist[phoneid]['comms']:
             if 'calleridnum' in infos and comms[commid].get('calleridnum') != infos['calleridnum']:
                 logger.debug('  __createorupdate_comm__ changed calleridnum[%s %s] %s => %s',
-                          commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos['calleridnum'])
+                             commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos['calleridnum'])
             self.keeplist[phoneid]['comms'][commid].update(infos)
         elif 'calleridnum' in infos:
             logger.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s',

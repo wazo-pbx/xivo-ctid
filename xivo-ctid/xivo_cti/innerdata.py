@@ -95,32 +95,32 @@ class Safe(object):
         self.xod_status['users'] = self.xod_config['users'].init_status()
         self.xod_status['voicemails'] = self.xod_config['voicemails'].init_status()
 
-    def update_config_list(self, listname, state, id):
+    def update_config_list(self, listname, state, item_id):
         start_time = time.time()
         try:
             if state == 'add':
-                self._update_config_list_add(listname, id)
+                self._update_config_list_add(listname, item_id)
             elif state in ['edit', 'enable', 'disable']:
-                self._update_config_list_change(listname, id)
+                self._update_config_list_change(listname, item_id)
             elif state == 'delete':
-                self._update_config_list_del(listname, id)
+                self._update_config_list_del(listname, item_id)
         except KeyError:
-            logger.warning('id "%s" not exist for object %s', id, listname)
+            logger.warning('id "%s" not exist for object %s', item_id, listname)
         except TypeError:
-            logger.warning('id "%s" not set for object %s', id, listname)
+            logger.warning('id "%s" not set for object %s', item_id, listname)
         end_time = time.time()
         logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
 
-    def _update_config_list_add(self, listname, id):
-        self.xod_config[listname].add(id)
-        self.xod_status[listname][id] = self.xod_config[listname].get_status()
+    def _update_config_list_add(self, listname, item_id):
+        self.xod_config[listname].add(item_id)
+        self.xod_status[listname][item_id] = self.xod_config[listname].get_status()
 
-    def _update_config_list_del(self, listname, id):
-        self.xod_config[listname].delete(id)
-        del self.xod_status[listname][id]
+    def _update_config_list_del(self, listname, item_id):
+        self.xod_config[listname].delete(item_id)
+        del self.xod_status[listname][item_id]
 
-    def _update_config_list_change(self, listname, id):
-        self.xod_config[listname].edit(id)
+    def _update_config_list_change(self, listname, item_id):
+        self.xod_config[listname].edit(item_id)
 
     def get_config(self, listname, item_id, user_contexts=None):
         if listname == 'queuemembers':
