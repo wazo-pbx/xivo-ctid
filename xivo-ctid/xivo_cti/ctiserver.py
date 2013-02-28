@@ -617,19 +617,21 @@ class CTIServer(object):
             socketobject = ClientConnection(socketobject, address, ctiseparator)
             interface = interface_cti.CTI(self)
         elif kind == 'CTIS':
+            certfile = self._config.getconfig('main')['certfile']
+            keyfile = self._config.getconfig('main')['keyfile']
             try:
                 connstream = ssl.wrap_socket(socketobject,
                                              server_side=True,
-                                             certfile=self._config.getconfig('certfile'),
-                                             keyfile=self._config.getconfig('keyfile'),
+                                             certfile=certfile,
+                                             keyfile=keyfile,
                                              ssl_version=cti_config.SSLPROTO)
                 socketobject = ClientConnection(connstream, address, ctiseparator)
                 interface = interface_cti.CTIS(self)
             except ssl.SSLError:
                 logger.exception('%s:%s:%d cert=%s key=%s)',
                                  kind, address[0], address[1],
-                                 self._config.getconfig('certfile'),
-                                 self._config.getconfig('keyfile'))
+                                 certfile,
+                                 keyfile)
                 socketobject.close()
                 socketobject = None
 
