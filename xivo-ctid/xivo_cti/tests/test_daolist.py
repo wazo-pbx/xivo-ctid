@@ -117,22 +117,29 @@ class TestDaoList(unittest.TestCase):
         protocol_id = 12
         user_id = 76
         protocol_name = 'iuds98f'
+        firstname, lastname = 'Lord', 'Sanderson'
+        proto = 'sip'
         linefeatures = self._generic_object(id=line_id,
                                             protocolid=protocol_id,
                                             iduserfeatures=user_id)
         protocol = self._generic_object(id=protocol_id,
-                                        name=protocol_name)
+                                        name=protocol_name,
+                                        protocol=proto)
 
         expected_result = {
             str(line_id): {
                 'id': line_id,
                 'protocolid': protocol_id,
                 'iduserfeatures': user_id,
-                'name': protocol_name
+                'name': protocol_name,
+                'iduserfeatures': user_id,
+                'protocol': proto,
+                'useridentity': '%s %s' % (firstname, lastname),
+                'identity': '%s/%s' % (proto.upper(), protocol_name)
             }
         }
 
-        result = self.daolist._format_line_data(linefeatures, protocol)
+        result = self.daolist._format_line_data(linefeatures, protocol, firstname, lastname)
 
         self.assertEquals(result, expected_result)
 

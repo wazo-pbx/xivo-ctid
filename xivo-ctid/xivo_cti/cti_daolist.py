@@ -88,18 +88,22 @@ class DaoList(object):
 
         res = {}
         for line in full_line:
-            line, protocol = line
-            res.update(self._format_line_data(line, protocol))
+            line, protocol, firstname, lastname = line
+            res.update(self._format_line_data(line, protocol, firstname, lastname))
         return res
 
     def _get_phone(self, id):
-        line, protocol = line_dao.get_with_line_id(id)
+        line, protocol, firstname, lastname = line_dao.get_with_line_id(id)
         return self._format_line_data(line, protocol)
 
-    def _format_line_data(self, line, protocol):
+    def _format_line_data(self, line, protocol, firstname, lastname):
         res = {}
         merged_line = protocol.__dict__
         merged_line.update(line.__dict__)
+        merged_line['useridentity'] = '%s %s' % (firstname, lastname)
+        protocol = merged_line['protocol'].upper()
+        iface_name = merged_line['name']
+        merged_line['identity'] = '%s/%s' % (protocol, iface_name)
         res[str(line.id)] = merged_line
         return res
 
