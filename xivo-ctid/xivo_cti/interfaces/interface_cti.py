@@ -101,8 +101,6 @@ class CTI(interfaces.Interfaces):
 
     def manage_connection(self, msg):
         if self.transferconnection:
-            if not self._is_authenticated():
-                return
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
                 self.logintimer.cancel()
