@@ -33,6 +33,10 @@ class PhonesList(ContextAwareAnyList):
         self._user_ids_by_context = {}
         self._phone_id_by_proto_and_name = {}
 
+    def init_data(self):
+        super(PhonesList, self).init_data()
+        self._init_reverse_dictionaries()
+
     def add(self, phone_id):
         super(PhonesList, self).add(phone_id)
         self._add_to_reverse_dictionaries(phone_id)
@@ -41,11 +45,7 @@ class PhonesList(ContextAwareAnyList):
         self._remove_from_reverse_dictionaries(phone_id)
         super(PhonesList, self).delete(phone_id)
 
-    def init_data(self):
-        ContextAwareAnyList.init_data(self)
-        self._update_lookup_dictionaries()
-
-    def _update_lookup_dictionaries(self):
+    def _init_reverse_dictionaries(self):
         contexts_by_user_id = defaultdict(set)
         user_ids_by_context = defaultdict(set)
         phone_id_by_proto_and_name = {}
