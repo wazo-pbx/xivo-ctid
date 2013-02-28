@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import logging
 from xivo_cti.cti_anylist import ContextAwareAnyList
-
-logger = logging.getLogger('grouplist')
 
 
 class GroupsList(ContextAwareAnyList):
@@ -26,21 +23,3 @@ class GroupsList(ContextAwareAnyList):
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'groups')
-
-    def init_data(self):
-        ContextAwareAnyList.init_data(self)
-        self.reverse_index = {}
-        for idx, ag in self.keeplist.iteritems():
-            if ag['name'] not in self.reverse_index:
-                self.reverse_index[ag['name']] = idx
-            else:
-                logger.warning('2 groups have the same name')
-
-    def idbyqueuename(self, queuename):
-        if queuename in self.reverse_index:
-            idx = self.reverse_index[queuename]
-            if idx in self.keeplist:
-                return idx
-
-    def get_queues(self):
-        return self.keeplist.keys()

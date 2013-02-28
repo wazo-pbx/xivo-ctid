@@ -17,22 +17,9 @@
 
 from xivo_cti.cti_anylist import ContextAwareAnyList
 
-import logging
-
-logger = logging.getLogger('meetmelist')
-
 
 class MeetmesList(ContextAwareAnyList):
 
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'meetmes')
-
-    def init_data(self):
-        ContextAwareAnyList.init_data(self)
-        self.reverse_index = {}
-        for idx, ag in self.keeplist.iteritems():
-            if ag['confno'] not in self.reverse_index:
-                self.reverse_index[ag['confno']] = idx
-            else:
-                logger.warning('2 meetme have the same room number')
