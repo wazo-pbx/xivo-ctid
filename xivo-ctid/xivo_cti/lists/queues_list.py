@@ -23,9 +23,6 @@ logger = logging.getLogger('queuelist')
 
 class QueuesList(ContextAwareAnyList):
 
-    queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty',
-                          'LastCall', 'CallsTaken', 'Xivo-QueueMember-StateTime']
-
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'queues')
@@ -51,46 +48,5 @@ class QueuesList(ContextAwareAnyList):
     def getcontext(self, queueid):
         return self.keeplist[queueid]['context']
 
-    def queueentry_rename(self, queueid, oldchan, newchan):
-        if queueid in self.keeplist:
-            if oldchan in self.keeplist[queueid]['channels']:
-                self.keeplist[queueid]['channels'][newchan] = self.keeplist[queueid]['channels'][oldchan]
-                del self.keeplist[queueid]['channels'][oldchan]
-            else:
-                logger.warning('queueentry_rename : channel %s is not in queueid %s',
-                               oldchan, queueid)
-        else:
-            logger.warning('queueentry_rename : no such queueid %s', queueid)
-
-    def queueentry_update(self, queueid, channel, position, entrytime, calleridnum, calleridname):
-        if queueid in self.keeplist:
-            self.keeplist[queueid]['channels'][channel] = {'position': position,
-                                                           'entrytime': entrytime,
-                                                           'calleridnum': calleridnum,
-                                                           'calleridname': calleridname}
-
-    def queueentry_remove(self, queueid, channel):
-        if queueid in self.keeplist:
-            if channel in self.keeplist[queueid]['channels']:
-                del self.keeplist[queueid]['channels'][channel]
-            else:
-                logger.warning('queueentry_remove : channel %s is not in queueid %s',
-                               channel, queueid)
-        else:
-            logger.warning('queueentry_remove : no such queueid %s', queueid)
-
-    def queuememberremove(self, queueid, location):
-        changed = False
-        if queueid in self.keeplist:
-            if location in self.keeplist[queueid]['agents_in_queue']:
-                del self.keeplist[queueid]['agents_in_queue'][location]
-                changed = True
-        else:
-            logger.warning('queuememberremove : no such queueid %s', queueid)
-        return changed
-
     def get_queues(self):
         return self.keeplist.keys()
-
-    def get_all_queues(self):
-        return self.keeplist

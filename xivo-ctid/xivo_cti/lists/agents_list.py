@@ -23,9 +23,6 @@ logger = logging.getLogger('agentlist')
 
 class AgentsList(ContextAwareAnyList):
 
-    queuelocationprops = ['Paused', 'Status', 'Membership', 'Penalty', 'LastCall', 'CallsTaken',
-                          'Xivo-QueueMember-StateTime']
-
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'agents')
