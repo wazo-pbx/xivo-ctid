@@ -55,17 +55,11 @@ class QueuesList(ContextAwareAnyList):
         queue_name = queue['name']
         del self.reverse_index[queue_name]
 
-    def hasqueue(self, queuename):
-        return queuename in self.reverse_index
-
     def idbyqueuename(self, queuename):
         if queuename in self.reverse_index:
             idx = self.reverse_index[queuename]
             if idx in self.keeplist:
                 return idx
-
-    def getcontext(self, queueid):
-        return self.keeplist[queueid]['context']
 
     def get_queues(self):
         return self.keeplist.keys()
