@@ -358,7 +358,7 @@ class Test(unittest.TestCase):
         innerdata.ipbxid = 'xivo'
         self.phone_list = PhonesList(innerdata)
         self.phone_list.keeplist = self.keeplist
-        self.phone_list._update_lookup_dictionaries()
+        self.phone_list._init_reverse_dictionaries()
 
     def test_find_phone_by_channel_no_result(self):
         channel = 'SIP/k8fh45-000000023'
