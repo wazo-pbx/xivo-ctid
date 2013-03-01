@@ -671,7 +671,7 @@ class Safe(object):
             context = dao.user.get_context(user_id)
             headers, _, resultlist = self._search_directory_in_context(pattern, context)
         except (LookupError, KeyError):
-            logger.warning('Failed to retrieve user context for user %s')
+            logger.warning('Failed to retrieve user context for user %s', user_id)
             return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
         else:
             return 'message', {'class': 'directory',
