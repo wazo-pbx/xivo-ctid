@@ -38,8 +38,16 @@ class PhonesList(ContextAwareAnyList):
         self._init_reverse_dictionaries()
 
     def add(self, phone_id):
-        super(PhonesList, self).add(phone_id)
+        raw_data = self.listname_obj.get(phone_id)
+        self.keeplist.update(raw_data)
         self._add_to_reverse_dictionaries(phone_id)
+        super(PhonesList, self).add_notifier(phone_id)
+
+    def edit(self, phone_id):
+        raw_data = self.listname_obj.get(phone_id)
+        self.keeplist.update(raw_data)
+        self._add_to_reverse_dictionaries(phone_id)
+        super(PhonesList, self).edit_notifier(phone_id)
 
     def delete(self, phone_id):
         self._remove_from_reverse_dictionaries(phone_id)

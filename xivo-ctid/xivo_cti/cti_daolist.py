@@ -94,7 +94,7 @@ class DaoList(object):
 
     def _get_phone(self, id):
         line, protocol, firstname, lastname = line_dao.get_with_line_id(id)
-        return self._format_line_data(line, protocol)
+        return self._format_line_data(line, protocol, firstname, lastname)
 
     def _format_line_data(self, line, protocol, firstname, lastname):
         res = {}
