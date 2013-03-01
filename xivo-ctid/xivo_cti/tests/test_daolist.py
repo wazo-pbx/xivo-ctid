@@ -86,6 +86,10 @@ class TestDaoList(unittest.TestCase):
             def __init__(self):
                 for key, var in vars.iteritems():
                     setattr(self, key, var)
+
+            def todict(self):
+                return self.__dict__
+
         return generic()
 
     def test_format_user_data(self):
