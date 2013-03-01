@@ -41,6 +41,8 @@ from xivo_dao import trunk_dao
 from xivo_dao import user_dao
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
+from collections import defaultdict
+
 logger = logging.getLogger('innerdata')
 
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
@@ -67,6 +69,8 @@ class Safe(object):
         self.displays_mgr = directory.DisplaysMgr()
         self.contexts_mgr = directory.ContextsMgr()
         self.directories_mgr = directory.DirectoriesMgr()
+
+        self._sent_sheets = defaultdict(list)
 
     def init_xod_config(self):
         self.xod_config['agents'] = agents_list.AgentsList(self)
@@ -402,6 +406,7 @@ class Safe(object):
                     self.appendcti(* oldevent_list)
 
     def hangup(self, channel):
+        self._schedule_sent_sheets_cleanup(channel)
         if channel in self.channels:
             self._remove_channel_relations(channel)
             del self.channels[channel]
@@ -614,12 +619,26 @@ class Safe(object):
             # print sheet.internaldata
 
             # 7. send the payload
-            self._ctiserver.sendsheettolist(tosendlist,
-                                      {'class': 'sheet',
-                                       'channel': channel,
-                                       'serial': sheet.serial,
-                                       'compressed': sheet.compressed,
-                                       'payload': sheet.payload})
+            sheet_info = (tosendlist, where, sheet.payload)
+            if sheet_info not in self._sent_sheets[channel]:
+                self._sent_sheets[channel].append(sheet_info)
+                self._ctiserver.sendsheettolist(tosendlist,
+                                                {'class': 'sheet',
+                                                 'channel': channel,
+                                                 'serial': sheet.serial,
+                                                 'compressed': sheet.compressed,
+                                                 'payload': sheet.payload})
+            else:
+                logger.debug('Almost sent a sheet twice')
+
+    def _schedule_sent_sheets_cleanup(self, channel):
+        self.cb_timer({'action': 'sheet_cleanup',
+                       'properties': {'channel': channel}})
+
+    def _remove_sent_sheet(self, channel):
+        if channel in self._sent_sheets:
+            logger.debug('Removing %s from sent sheets', channel)
+            del self._sent_sheets[channel]
 
     # Timers/Synchro stuff - begin
 
@@ -640,6 +659,9 @@ class Safe(object):
                     actionid = fileid
                     self._ctiserver.interface_ami.execute_and_track(actionid, params)
                     del self.faxes[fileid]
+            elif action == 'sheet_cleanup':
+                channel = toload['properties']['channel']
+                self._remove_sent_sheet(channel)
 
             # other cases to handle : login, agentlogoff (would that still be true ?)
         return ncount
