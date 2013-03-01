@@ -118,10 +118,8 @@ class CTI(interfaces.Interfaces):
         return self.connection_details.get('authenticated', False)
 
     def _run_functions(self, decoded_command):
-        if not self._is_authenticated():
-            if not decoded_command['class'].startswith('login_'):
-                return 'error', {'closemenow': True,
-                                 'error_string': 'Not authenticated'}
+        if not self._is_authenticated() and not decoded_command['class'].startswith('login_'):
+            return []
         replies = []
 
         # Commands from the CTICommandHandler
