@@ -73,7 +73,7 @@ class DaoList(object):
     def _format_user_data(self, user, line_id):
         res = {}
         key = str(user.id)
-        res[key] = user.__dict__
+        res[key] = user.todict()
         res[key]['fullname'] = '%s %s' % (user.firstname, user.lastname)
         res[key]['identity'] = res[str(user.id)]['fullname']
         res[key]['linelist'] = [str(line_id)]
@@ -98,8 +98,8 @@ class DaoList(object):
 
     def _format_line_data(self, line, protocol, firstname, lastname):
         res = {}
-        merged_line = protocol.__dict__
-        merged_line.update(line.__dict__)
+        merged_line = protocol.todict()
+        merged_line.update(line.todict())
         merged_line['useridentity'] = '%s %s' % (firstname, lastname)
         protocol = merged_line['protocol'].upper()
         iface_name = merged_line['name']
@@ -121,7 +121,7 @@ class DaoList(object):
     def _format_group_data(self, group):
         res = {}
         key = str(group.id)
-        res[key] = group.__dict__
+        res[key] = group.todict()
         res[key]['fullname'] = '%s (%s)' % (group.name, group.context)
         return res
 
@@ -139,7 +139,7 @@ class DaoList(object):
     def _format_agent_data(self, agent):
         res = {}
         key = str(agent.id)
-        res[key] = agent.__dict__
+        res[key] = agent.todict()
         return res
 
     def _get_meetmes(self):
@@ -156,7 +156,7 @@ class DaoList(object):
     def _format_meetme_data(self, meetme):
         res = {}
         key = str(meetme.id)
-        res[key] = meetme.__dict__
+        res[key] = meetme.todict()
         return res
 
     def _get_queues(self):
@@ -173,7 +173,7 @@ class DaoList(object):
     def _format_queue_data(self, queue):
         res = {}
         key = str(queue.id)
-        res[key] = queue.__dict__
+        res[key] = queue.todict()
         res[key]['identity'] = '%s (%s@%s)' % (queue.displayname, queue.number, queue.context)
         return res
 
@@ -191,7 +191,7 @@ class DaoList(object):
     def _format_voicemail_data(self, voicemail):
         res = {}
         key = str(voicemail.uniqueid)
-        res[key] = voicemail.__dict__
+        res[key] = voicemail.todict()
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
         return res
@@ -266,5 +266,5 @@ class DaoList(object):
     def _format_trunk_data(self, trunk):
         res = {}
         key = str(trunk.id)
-        res[key] = trunk.__dict__
+        res[key] = trunk.todict()
         return res
