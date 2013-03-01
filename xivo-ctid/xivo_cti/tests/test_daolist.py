@@ -88,7 +88,7 @@ class TestDaoList(unittest.TestCase):
                     setattr(self, key, var)
 
             def todict(self):
-                return self.__dict__
+                return dict(self.__dict__)
 
         return generic()
 
