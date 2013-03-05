@@ -40,12 +40,12 @@ class DaoList(object):
         self.listname = listname
 
     def get(self, id):
-            name = '_get_%s' % self.listname[0:-1]
-            return self._get(name, id)
+        name = '_get_%s' % self.listname[0:-1]
+        return self._get(name, id)
 
     def get_list(self):
-            name = '_get_%s' % self.listname
-            return self._get(name)
+        name = '_get_%s' % self.listname
+        return self._get(name)
 
     def _get(self, name, id=None):
         try:
