@@ -24,7 +24,7 @@
 
 import unittest
 from xivo_cti.cti_daolist import DaoList, UnknownListName
-from mock import Mock
+from mock import Mock, patch, sentinel
 
 
 class TestDaoList(unittest.TestCase):
@@ -48,6 +48,24 @@ class TestDaoList(unittest.TestCase):
 
         self.daolist._get_user.assert_called_once_with(user_id)
         self.assertEquals(result, expected_result)
+
+    @patch('xivo_dao.user_dao.get_users_config')
+    def test_get_users(self, mock_get_users_config):
+        mock_get_users_config.return_value = sentinel.value
+
+        result = self.daolist._get_users()
+
+        mock_get_users_config.assert_called_once_with()
+        self.assertEqual(result, sentinel.value)
+
+    @patch('xivo_dao.user_dao.get_user_config')
+    def test_get_user(self, mock_get_user_config):
+        mock_get_user_config.return_value = sentinel.value
+
+        result = self.daolist._get_user(sentinel.user_id)
+
+        mock_get_user_config.assert_called_once_with(sentinel.user_id)
+        self.assertEqual(result, sentinel.value)
 
     def test_get_with_agents(self):
         agent_id = 1
@@ -91,30 +109,6 @@ class TestDaoList(unittest.TestCase):
                 return dict(self.__dict__)
 
         return generic()
-
-    def test_format_user_data(self):
-        line_id = 5
-        user_id = 1
-        user_firstname = 'bob'
-        user_lastname = 'marley'
-        user = self._generic_object(id=1,
-                                    firstname=user_firstname,
-                                    lastname=user_lastname)
-
-        expected_result = {
-            str(user_id): {
-                'id': user_id,
-                'firstname': user_firstname,
-                'lastname': user_lastname,
-                'fullname': '%s %s' % (user_firstname, user_lastname),
-                'identity': '%s %s' % (user_firstname, user_lastname),
-                'linelist': [str(line_id)]
-            }
-        }
-
-        result = self.daolist._format_user_data(user, line_id)
-
-        self.assertEquals(result, expected_result)
 
     def test_format_line_data(self):
         line_id = 7

@@ -17,9 +17,7 @@
 
 import logging
 import time
-from collections import defaultdict
 from xivo_cti.cti_anylist import ContextAwareAnyList
-from xivo_cti.ioc.context import context as cti_context
 
 logger = logging.getLogger('phonelist')
 
@@ -29,8 +27,6 @@ class PhonesList(ContextAwareAnyList):
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'phones')
-        self._contexts_by_user_id = {}
-        self._user_ids_by_context = {}
         self._phone_id_by_proto_and_name = {}
 
     def init_data(self):
@@ -38,44 +34,18 @@ class PhonesList(ContextAwareAnyList):
         self._init_reverse_dictionaries()
 
     def add(self, phone_id):
-        raw_data = self.listname_obj.get(phone_id)
-        self.keeplist.update(raw_data)
+        super(PhonesList, self).add(phone_id)
         self._add_to_reverse_dictionaries(phone_id)
-        super(PhonesList, self).add_notifier(phone_id)
-
-    def edit(self, phone_id):
-        raw_data = self.listname_obj.get(phone_id)
-        self.keeplist.update(raw_data)
-        self._add_to_reverse_dictionaries(phone_id)
-        super(PhonesList, self).edit_notifier(phone_id)
 
     def delete(self, phone_id):
         self._remove_from_reverse_dictionaries(phone_id)
         super(PhonesList, self).delete(phone_id)
 
     def _init_reverse_dictionaries(self):
-        contexts_by_user_id = defaultdict(set)
-        user_ids_by_context = defaultdict(set)
         phone_id_by_proto_and_name = {}
-
         for phone_id, phone in self.keeplist.iteritems():
             proto_and_name = phone['protocol'] + phone['name']
             phone_id_by_proto_and_name[proto_and_name] = phone_id
-
-            raw_user_id = phone['iduserfeatures']
-            if not raw_user_id:
-                continue
-            user_id = str(raw_user_id)
-            context = phone['context']
-            contexts_by_user_id[user_id].add(context)
-            user_ids_by_context[context].add(user_id)
-
-        self._contexts_by_user_id = dict((user_id, list(contexts)) for
-                                         user_id, contexts in
-                                         contexts_by_user_id.iteritems())
-        self._user_ids_by_context = dict((context, list(user_ids)) for
-                                         context, user_ids in
-                                         user_ids_by_context.iteritems())
         self._phone_id_by_proto_and_name = phone_id_by_proto_and_name
 
     def _add_to_reverse_dictionaries(self, phone_id):
@@ -83,44 +53,10 @@ class PhonesList(ContextAwareAnyList):
         proto_and_name = phone['protocol'] + phone['name']
         self._phone_id_by_proto_and_name[proto_and_name] = phone_id
 
-        raw_user_id = phone['iduserfeatures']
-        if not raw_user_id:
-            return
-        user_id = str(raw_user_id)
-        context = phone['context']
-        self._add_user_to_context(user_id, context)
-
     def _remove_from_reverse_dictionaries(self, phone_id):
         phone = self.keeplist[phone_id]
         proto_and_name = phone['protocol'] + phone['name']
         del self._phone_id_by_proto_and_name[proto_and_name]
-
-        raw_user_id = phone['iduserfeatures']
-        if not raw_user_id:
-            return
-        user_id = str(raw_user_id)
-        context = phone['context']
-        self._remove_user_from_context(user_id, context)
-
-    def _add_user_to_context(self, user_id, context):
-        new_contexts = set(self._contexts_by_user_id.get(user_id, set()))
-        new_contexts.add(context)
-        self._contexts_by_user_id[user_id] = list(new_contexts)
-
-        new_user_ids = set(self._user_ids_by_context.get(context, set()))
-        new_user_ids.add(user_id)
-        self._user_ids_by_context[context] = list(new_user_ids)
-
-    def _remove_user_from_context(self, user_id, context):
-        new_contexts = self._contexts_by_user_id.get(user_id, list())
-        if context in new_contexts:
-            new_contexts.remove(context)
-            self._contexts_by_user_id[user_id] = new_contexts
-
-        new_user_ids = self._user_ids_by_context.get(context, list())
-        if user_id in new_user_ids:
-            new_user_ids.remove(user_id)
-            self._user_ids_by_context[context] = new_user_ids
 
     def __createorupdate_comm__(self, phoneid, commid, infos):
         comms = self.keeplist[phoneid]['comms']
@@ -432,34 +368,3 @@ class PhonesList(ContextAwareAnyList):
 
     def _compute_callerid_for_sccp_phone(self, phone):
         return '"%s" <%s>' % (phone['cid_name'], phone['cid_num'])
-
-    def get_contexts_for_user(self, user_id):
-        user_id = str(user_id)
-        return self._contexts_by_user_id.get(user_id, [])
-
-    def list_user_ids_in_contexts(self, contexts):
-        if not cti_context.get('config').part_context():
-            userlist = self._innerdata.xod_config['users']
-            return userlist.keeplist.keys()
-        elif not contexts:
-            return []
-        elif len(contexts) == 1:
-            return self._user_ids_by_context.get(contexts[0], [])
-        else:
-            user_ids = set()
-            for context in contexts:
-                user_ids.update(self._user_ids_by_context.get(context, []))
-            return list(user_ids)
-
-    def is_user_id_in_contexts(self, user_id, contexts):
-        if not cti_context.get('config').part_context():
-            return True
-        elif not contexts:
-            return False
-        else:
-            user_id = str(user_id)
-            user_contexts = self._contexts_by_user_id.get(user_id, [])
-            for user_context in user_contexts:
-                if user_context in contexts:
-                    return True
-            return False

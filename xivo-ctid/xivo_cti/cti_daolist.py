@@ -59,25 +59,10 @@ class DaoList(object):
             raise UnknownListName()
 
     def _get_users(self):
-        res = {}
-        users = user_dao.all_join_line_id()
-        for row in users:
-            user, line_id = row
-            res.update(self._format_user_data(user, line_id))
-        return res
+        return user_dao.get_users_config()
 
-    def _get_user(self, id):
-        user, line_id = user_dao.get_join_line_id_with_user_id(id)
-        return self._format_user_data(user, line_id)
-
-    def _format_user_data(self, user, line_id):
-        res = {}
-        key = str(user.id)
-        res[key] = user.todict()
-        res[key]['fullname'] = '%s %s' % (user.firstname, user.lastname)
-        res[key]['identity'] = res[str(user.id)]['fullname']
-        res[key]['linelist'] = [str(line_id)]
-        return res
+    def _get_user(self, user_id):
+        return user_dao.get_user_config(user_id)
 
     def _get_phones(self):
         full_line = []

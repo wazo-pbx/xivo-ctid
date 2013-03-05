@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti_anylist import AnyList
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 
-class UsersList(AnyList):
+class UsersList(ContextAwareAnyList):
 
     def __init__(self, innerdata):
         self._innerdata = innerdata
-        AnyList.__init__(self, 'users')
+        ContextAwareAnyList.__init__(self, 'users')
 
     def finduser(self, userid):
         for userinfo in self.keeplist.itervalues():
@@ -40,19 +40,13 @@ class UsersList(AnyList):
         return lst
 
     def get_contexts(self, user_id):
-        return self._innerdata.xod_config['phones'].get_contexts_for_user(user_id)
-
-    def list_ids_in_contexts(self, contexts):
-        phonelist = self._innerdata.xod_config['phones']
-        return phonelist.list_user_ids_in_contexts(contexts)
-
-    def get_item_in_contexts(self, item_id, contexts):
         try:
-            item = self.keeplist[item_id]
+            user = self.keeplist[user_id]
         except KeyError:
-            return None
+            return []
         else:
-            phonelist = self._innerdata.xod_config['phones']
-            if phonelist.is_user_id_in_contexts(item_id, contexts):
-                return item
-            return None
+            user_context = user['context']
+            if user_context is None:
+                return []
+            else:
+                return [user_context]
