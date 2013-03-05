@@ -243,18 +243,39 @@ class ContextAwareAnyList(AnyList):
 
     def __init__(self, listname):
         AnyList.__init__(self, listname)
-        self._item_ids_by_context = {}
+        self._item_ids_by_context = defaultdict(list)
 
     def init_data(self):
         AnyList.init_data(self)
-        self._update_item_ids_by_context()
+        self._init_by_context_reverse_dict()
 
-    def _update_item_ids_by_context(self):
-        item_ids_by_context = defaultdict(list)
+    def add(self, item_id):
+        super(ContextAwareAnyList, self).add(item_id)
+        self._add_to_by_context_dict(item_id)
+
+    def delete(self, item_id):
+        self._remove_from_by_context_dict(item_id)
+        super(ContextAwareAnyList, self).delete(item_id)
+
+    def _init_by_context_reverse_dict(self):
+        item_ids_by_context = self._item_ids_by_context
+        item_ids_by_context.clear()
         for item_id, item in self.keeplist.iteritems():
             context = item['context']
             item_ids_by_context[context].append(item_id)
-        self._item_ids_by_context = dict(item_ids_by_context)
+
+    def _add_to_by_context_dict(self, item_id):
+        item_context = self.keeplist[item_id]['context']
+        item_ids = self._item_ids_by_context[item_context]
+        if item_id not in item_ids:
+            item_ids.append(item_id)
+
+    def _remove_from_by_context_dict(self, item_id):
+        item_context = self.keeplist[item_id]['context']
+        item_ids = self._item_ids_by_context[item_context]
+        item_ids.remove(item_id)
+        if not item_ids:
+            del self._item_ids_by_context[item_context]
 
     def list_ids_in_contexts(self, contexts):
         if not cti_context.get('config').part_context():
