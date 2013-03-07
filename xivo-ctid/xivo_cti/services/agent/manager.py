@@ -57,7 +57,8 @@ class AgentServiceManager(object):
             return 'error', {'error_string': 'agent_login_exten_in_use',
                              'class': 'ipbxcommand'}
         except NoSuchExtensionError:
-            logger.warning('could not log agent %s on exten %s@%s: no such extension')
+            logger.warning('could not log agent %s on exten %s@%s: no such extension',
+                           agent_id, agent_exten, agent_context)
             return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
 
