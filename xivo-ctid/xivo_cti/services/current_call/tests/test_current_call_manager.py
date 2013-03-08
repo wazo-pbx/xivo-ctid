@@ -15,26 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import unittest
 import time
+import unittest
 
-from mock import patch
-from mock import Mock
 from hamcrest import *
+from mock import Mock
+from mock import patch
 
-from xivo_cti.scheduler import Scheduler
-from xivo_cti.dao import queue_dao
+from xivo_cti import dao
 from xivo_cti.dao import channel_dao
+from xivo_cti.dao import queue_dao
 from xivo_cti.dao import user_dao
+from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
-from xivo_cti.services.current_call.manager import PEER_CHANNEL
-from xivo_cti.services.current_call.manager import LINE_CHANNEL
 from xivo_cti.services.current_call.manager import BRIDGE_TIME
+from xivo_cti.services.current_call.manager import LINE_CHANNEL
 from xivo_cti.services.current_call.manager import ON_HOLD
+from xivo_cti.services.current_call.manager import PEER_CHANNEL
 from xivo_cti.services.current_call.manager import TRANSFER_CHANNEL
-from xivo_cti import dao
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti import xivo_ami
 
