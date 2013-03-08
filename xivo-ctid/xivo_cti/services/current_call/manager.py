@@ -33,8 +33,6 @@ TRANSFER_CHANNEL = 'transfer_channel'
 
 class CurrentCallManager(object):
 
-    _SWITCHBOARD_HOLD_QUEUE = '__switchboard_hold'
-
     def __init__(self, current_call_notifier, current_call_formatter, ami_class, scheduler, device_manager):
         self._calls_per_line = {}
         self._current_call_notifier = current_call_notifier
