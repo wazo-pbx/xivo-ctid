@@ -224,15 +224,8 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
-            bridge_option = '%s,Tx' % channel
-            self.ami.sendcommand(
-                'Originate',
-                [('Channel', user_line),
-                 ('Application', 'Bridge'),
-                 ('Data', bridge_option),
-                 ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
-                 ('Async', 'true')]
-            )
+            caller_id = '"%s" <%s>' % (cid_name, cid_number)
+            self.ami.bridge_originate(user_line, channel, caller_id, True, False)
             self.schedule_answer(user_id, 0.25)
 
     def _get_current_call(self, user_id):

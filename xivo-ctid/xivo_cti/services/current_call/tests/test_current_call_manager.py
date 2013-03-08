@@ -517,10 +517,11 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
-        transfer_option = ',Tx'
-        bridge_options = channel_to_intercept + transfer_option
         cid_name, cid_number = 'Alice', '5565'
+        caller_id = '"Alice" <5565>'
         delay = 0.25
+        allow_calling_party_transfer = True
+        continue_dialplan = False
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
@@ -530,15 +531,9 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.switchboard_unhold(user_id, unique_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Originate',
-            [('Channel', user_line),
-             ('Application', 'Bridge'),
-             ('Data', bridge_options),
-             ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
-             ('Async', 'true')]
-        )
-
+        self.manager.ami.bridge_originate.assert_called_once_with(
+            user_line, channel_to_intercept, caller_id,
+            allow_calling_party_transfer, continue_dialplan)
         self.manager.schedule_answer.assert_called_once_with(user_id, delay)
 
     @patch('xivo_dao.user_dao.get_line_identity')
