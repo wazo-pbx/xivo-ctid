@@ -165,45 +165,45 @@ class CurrentCallManager(object):
 
     def hangup(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:
-            self._hangup_channel(current_call_channel[PEER_CHANNEL])
+            self._hangup_channel(current_call[PEER_CHANNEL])
 
     def complete_transfer(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to complete a transfer but has no line', user_id)
         else:
-            self._hangup_channel(current_call_channel[LINE_CHANNEL])
+            self._hangup_channel(current_call[LINE_CHANNEL])
 
     def cancel_transfer(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to cancel a transfer but has no line', user_id)
             return
 
-        if TRANSFER_CHANNEL not in current_call_channel:
+        if TRANSFER_CHANNEL not in current_call:
             return
-        transfer_channel = current_call_channel[TRANSFER_CHANNEL]
+        transfer_channel = current_call[TRANSFER_CHANNEL]
         transfered_channel = self._local_channel_peer(transfer_channel)
         self._hangup_channel(transfered_channel)
 
     def attended_transfer(self, user_id, number):
         logger.debug('Transfering %s peer to %s', user_id, number)
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
             user_context = dao.user.get_context(user_id)
         except LookupError:
             logger.warning('User %s tried to transfer but has no line or no context', user_id)
         else:
-            logger.debug('Sending atxfer: %s %s %s', current_call_channel[LINE_CHANNEL], number, user_context)
+            logger.debug('Sending atxfer: %s %s %s', current_call[LINE_CHANNEL], number, user_context)
             self.ami.sendcommand(
                 'Atxfer', [
-                    ('Channel', current_call_channel[LINE_CHANNEL]),
+                    ('Channel', current_call[LINE_CHANNEL]),
                     ('Exten', number),
                     ('Context', user_context),
                     ('Priority', '1')
@@ -212,12 +212,12 @@ class CurrentCallManager(object):
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError:
             logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
         else:
-            self.ami.transfer(current_call_channel[PEER_CHANNEL], hold_queue_number, hold_queue_ctx)
+            self.ami.transfer(current_call[PEER_CHANNEL], hold_queue_number, hold_queue_ctx)
 
     def switchboard_unhold(self, user_id, action_id):
         try:
@@ -238,7 +238,7 @@ class CurrentCallManager(object):
             )
             self.schedule_answer(user_id, 0.25)
 
-    def _get_current_call_channel(self, user_id):
+    def _get_current_call(self, user_id):
         try:
             line = user_dao.get_line_identity(user_id).lower()
         except LookupError:
