@@ -203,15 +203,9 @@ class CurrentCallManager(object):
         except LookupError:
             logger.warning('User %s tried to transfer but has no line or no context', user_id)
         else:
-            logger.debug('Sending atxfer: %s %s %s', current_call[LINE_CHANNEL], number, user_context)
-            self.ami.sendcommand(
-                'Atxfer', [
-                    ('Channel', current_call[LINE_CHANNEL]),
-                    ('Exten', number),
-                    ('Context', user_context),
-                    ('Priority', '1')
-                ]
-            )
+            current_channel = current_call[LINE_CHANNEL]
+            logger.debug('Sending atxfer: %s %s %s', current_channel, number, user_context)
+            self.ami.atxfer(current_channel, number, user_context)
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:

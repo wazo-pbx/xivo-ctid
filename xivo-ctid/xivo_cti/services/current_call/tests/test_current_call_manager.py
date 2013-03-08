@@ -472,14 +472,8 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.attended_transfer(user_id, number)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Atxfer', [
-                ('Channel', self.channel_1),
-                ('Exten', number),
-                ('Context', line_context),
-                ('Priority', '1')
-            ]
-        )
+        self.manager.ami.atxfer.assert_called_once_with(
+            self.channel_1, number, line_context)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
