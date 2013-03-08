@@ -172,7 +172,7 @@ class CurrentCallManager(object):
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:
-            self._hangup_channel(current_call[PEER_CHANNEL])
+            self.ami.hangup(current_call[PEER_CHANNEL])
 
     def complete_transfer(self, user_id):
         try:
@@ -180,7 +180,7 @@ class CurrentCallManager(object):
         except LookupError:
             logger.warning('User %s tried to complete a transfer but has no line', user_id)
         else:
-            self._hangup_channel(current_call[LINE_CHANNEL])
+            self.ami.hangup(current_call[LINE_CHANNEL])
 
     def cancel_transfer(self, user_id):
         try:
@@ -193,7 +193,7 @@ class CurrentCallManager(object):
             return
         transfer_channel = current_call[TRANSFER_CHANNEL]
         transfered_channel = self._local_channel_peer(transfer_channel)
-        self._hangup_channel(transfered_channel)
+        self.ami.hangup(transfered_channel)
 
     def attended_transfer(self, user_id, number):
         logger.debug('Transfering %s peer to %s', user_id, number)
@@ -262,9 +262,6 @@ class CurrentCallManager(object):
                     continue
                 call[ON_HOLD] = new_status
                 self._current_call_notifier.publish_current_call(peer_line)
-
-    def _hangup_channel(self, channel):
-        self.ami.sendcommand('Hangup', [('Channel', channel)])
 
     def _local_channel_peer(self, local_channel):
         channel_order = local_channel[-1]

@@ -19,6 +19,7 @@ import unittest
 
 from xivo_cti.xivo_ami import AMIClass
 from mock import Mock
+from mock import sentinel
 from xivo_cti.cti_config import Config
 
 
@@ -58,3 +59,10 @@ class TestXivoAMI(unittest.TestCase):
     def testSIPNotify_missing_fields(self):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
         self.assertRaises(ValueError, self.ami_class.sipnotify, None, {'Event': 'aastra-xml'})
+
+    def test_hangup(self):
+        channel = sentinel.channel_to_hangup
+        self.ami_class.hangup(channel)
+
+        self.ami_class._exec_command.assert_called_once_with(
+            'Hangup', [('Channel', channel)])

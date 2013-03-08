@@ -388,7 +388,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
+        self.manager.ami.hangup.assert_called_once_with(self.channel_2)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_complete_transfer(self, mock_get_line_identity):
@@ -411,10 +411,30 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.complete_transfer(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Hangup',
-            [('Channel', self.channel_1)]
-        )
+        self.manager.ami.hangup.assert_called_once_with(self.channel_1)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer_no_transfer_target_channel(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+        # No exception
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_complete_transfer_no_call(self, mock_get_line_identity):
@@ -617,10 +637,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.cancel_transfer(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Hangup',
-            [('Channel', transfered_channel)]
-        )
+        self.manager.ami.hangup.assert_called_once_with(transfered_channel)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
