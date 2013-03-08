@@ -70,6 +70,9 @@ class CurrentCallManager(object):
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)
         line_from_old = self._identity_from_channel(old)
+        if line_from_old not in self._calls_per_line:
+            logger.debug('No masquerade done for channel %s %s', old, new)
+            return
         new_2 = self._calls_per_line[line_from_old][0][PEER_CHANNEL]
 
         self._execute_masquerade(old, new)

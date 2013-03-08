@@ -130,6 +130,12 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(self.manager._calls_per_line, expected)
 
+    def test_masquerade_bridged_channels(self):
+        bridged_line_1_channel = u'bridge/SIP/6s7foq-00000023'
+        line_1_channel = u'SIP/6s7foq-00000023'
+
+        self.manager.masquerade(bridged_line_1_channel, line_1_channel)
+
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
 
