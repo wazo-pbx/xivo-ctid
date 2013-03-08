@@ -361,9 +361,6 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def _get_notifier_calls(self):
-        return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
-
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
@@ -654,3 +651,6 @@ class TestCurrentCallManager(unittest.TestCase):
         result = self.manager._local_channel_peer(peer)
 
         self.assertEqual(result, mine)
+
+    def _get_notifier_calls(self):
+        return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
