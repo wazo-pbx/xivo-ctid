@@ -40,6 +40,24 @@ class TestXivoAMI(unittest.TestCase):
         ami_class._exec_command = Mock()
         self.ami_class = ami_class
 
+    def test_bridge_originate(self):
+        line_interface = sentinel.line_interface
+        channel = 'SIP/abcd-1234'
+        continue_dialplan = False  # x option
+        allow_calling_party_transfer = True  # T option
+        expected_options = '%s,Tx' % channel
+        caller_id = sentinel.caller_id
+
+        self.ami_class.bridge_originate(line_interface, channel, caller_id, allow_calling_party_transfer, continue_dialplan)
+
+        self.ami_class._exec_command.assert_called_once_with(
+            'Originate',
+            [('Channel', line_interface),
+             ('Application', 'Bridge'),
+             ('Data', expected_options),
+             ('CallerID', caller_id),
+             ('Async', 'true')])
+
     def testSIPNotify_with_variables(self):
         channel = 'SIP/1234'
         variables = {'Event': 'val',
