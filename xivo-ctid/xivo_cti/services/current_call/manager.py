@@ -56,6 +56,18 @@ class CurrentCallManager(object):
             ]
             self._current_call_notifier.publish_current_call(line)
 
+        line_calls = self._calls_per_line[line]
+        if self._attended_transfer_from_line_is_answered(line_calls, other_channel):
+            self._current_call_notifier.attended_transfer_answered(line)
+
+    def _attended_transfer_from_line_is_answered(self, line_calls, channel_transferee):
+        for line_call in line_calls:
+            if TRANSFER_CHANNEL not in line_call:
+                continue
+            if line_call[TRANSFER_CHANNEL] == channel_transferee:
+                return True
+        return False
+
     def schedule_answer(self, user_id, delay):
         device_id = user_dao.get_device_id(user_id)
         self.scheduler.schedule(delay, self.device_manager.answer, device_id)

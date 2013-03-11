@@ -54,3 +54,6 @@ class CurrentCallNotifier(object):
         except ClientConnection.CloseException:
             logger.info('Unsubscribing %s from current call updates' % line_identity)
             self._subscriptions.pop(line_identity, None)
+
+    def attended_transfer_answered(self, line_identity):
+        pass

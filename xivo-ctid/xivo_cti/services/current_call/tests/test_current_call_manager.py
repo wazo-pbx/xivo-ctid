@@ -87,6 +87,100 @@ class TestCurrentCallManager(unittest.TestCase):
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_reverse_order(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferee_channel, transferer_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_when_line_has_multiple_calls(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: 'SIP/sdkfjh-00000000012',
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time},
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_not_tracked(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        call_count = self.notifier.attended_transfer_answered.call_count
+        self.assertEqual(call_count, 0)
+
     def test_masquerade_agent_call(self):
         line_1 = u'sip/6s7foq'
         line_2 = u'sip/pcm_dev'
