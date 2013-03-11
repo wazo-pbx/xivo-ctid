@@ -42,26 +42,19 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
 
     def bridge_channels(self, channel_1, channel_2):
-        line_1 = self._identity_from_channel(channel_1)
-        line_2 = self._identity_from_channel(channel_2)
+        self._bridge_channels_oriented(channel_1, channel_2)
+        self._bridge_channels_oriented(channel_2, channel_1)
 
-        if line_1 not in self._calls_per_line:
-            self._calls_per_line[line_1] = [
-                {PEER_CHANNEL: channel_2,
-                 LINE_CHANNEL: channel_1,
+    def _bridge_channels_oriented(self, channel, other_channel):
+        line = self._identity_from_channel(channel)
+        if line not in self._calls_per_line:
+            self._calls_per_line[line] = [
+                {PEER_CHANNEL: other_channel,
+                 LINE_CHANNEL: channel,
                  BRIDGE_TIME: time.time(),
                  ON_HOLD: False}
             ]
-            self._current_call_notifier.publish_current_call(line_1)
-
-        if line_2 not in self._calls_per_line:
-            self._calls_per_line[line_2] = [
-                {PEER_CHANNEL: channel_1,
-                 LINE_CHANNEL: channel_2,
-                 BRIDGE_TIME: time.time(),
-                 ON_HOLD: False}
-            ]
-            self._current_call_notifier.publish_current_call(line_2)
+            self._current_call_notifier.publish_current_call(line)
 
     def schedule_answer(self, user_id, delay):
         device_id = user_dao.get_device_id(user_id)
