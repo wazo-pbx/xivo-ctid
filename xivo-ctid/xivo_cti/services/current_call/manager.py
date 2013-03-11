@@ -207,6 +207,18 @@ class CurrentCallManager(object):
             logger.debug('Sending atxfer: %s %s %s', current_channel, number, user_context)
             self.ami.atxfer(current_channel, number, user_context)
 
+    def direct_transfer(self, user_id, number):
+        logger.debug('Transfering %s peer to %s', user_id, number)
+        try:
+            current_call = self._get_current_call(user_id)
+            user_context = dao.user.get_context(user_id)
+        except LookupError:
+            logger.warning('User %s tried to transfer but has no line or no context', user_id)
+        else:
+            peer_channel = current_call[PEER_CHANNEL]
+            logger.debug('Sending transfer: %s %s %s', peer_channel, number, user_context)
+            self.ami.transfer(peer_channel, number, user_context)
+
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
             current_call = self._get_current_call(user_id)

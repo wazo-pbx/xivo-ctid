@@ -476,6 +476,34 @@ class TestCurrentCallManager(unittest.TestCase):
             self.channel_1, number, line_context)
 
     @patch('xivo_dao.user_dao.get_line_identity')
+    def test_direct_transfer(self, mock_get_line_identity):
+        user_id = 5
+        number = '9876'
+        line_context = 'mycontext'
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+        dao.user = Mock(user_dao.UserDAO)
+        dao.user.get_context.return_value = line_context
+
+        self.manager.direct_transfer(user_id, number)
+
+        self.manager.ami.transfer.assert_called_once_with(
+            self.channel_2, number, line_context)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
         user_id = 5
         mock_get_line_identity.side_effect = LookupError()
