@@ -57,4 +57,5 @@ class CurrentCallFormatter(object):
                 'call_start': call[BRIDGE_TIME]}
 
     def attended_transfer_answered(self, line_identity):
-        return {}
+        return {'class': 'current_call_attended_transfer_answered',
+                'line': line_identity}
