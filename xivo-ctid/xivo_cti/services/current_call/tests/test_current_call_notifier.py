@@ -54,6 +54,24 @@ class TestCurrentCallNotifier(unittest.TestCase):
         self.assertEqual(subscriptions, expected_subscriptions)
         self.notifier._report_current_call.assert_called_once_with(self.line_identity_1.lower())
 
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_subscribe_without_line(self, mock_get_line_identity):
+        user_id = 5
+        mock_get_line_identity.side_effect = LookupError()
+
+        self.client_connection_1.user_id.return_value = user_id
+
+        self.notifier.subscriptions = {}
+        self.notifier._report_current_call = Mock()
+
+        self.notifier.subscribe(self.client_connection_1)
+
+        expected_subscriptions = {}
+        subscriptions = self.notifier._subscriptions
+
+        self.assertEqual(subscriptions, expected_subscriptions)
+        self.assertEqual(self.notifier._report_current_call.call_count, 0)
+
     def test_publish_current_call(self):
         self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
         self.notifier._report_current_call = Mock()
