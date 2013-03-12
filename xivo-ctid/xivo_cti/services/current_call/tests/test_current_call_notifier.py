@@ -96,3 +96,28 @@ class TestCurrentCallNotifier(unittest.TestCase):
 
         self.assertEqual(self.client_connection_2.call_count, 0)
         self.assertTrue(self.line_identity_1.lower() not in self.notifier._subscriptions, 'Subscriber not removed')
+
+    def test_attended_transfer_answered(self):
+        formatted_message = {'class': 'current_call_attended_transfer_answered',
+                             'line': self.line_identity_1}
+        self.current_call_formatter.attended_transfer_answered.return_value = formatted_message
+        self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
+        self.notifier._subscriptions[self.line_identity_2.lower()] = self.client_connection_2
+
+        self.notifier.attended_transfer_answered(self.line_identity_1)
+
+        self.client_connection_1.send_message.assert_called_once_with(formatted_message)
+        self.assertEqual(self.client_connection_2.send_message.call_count, 0)
+
+    def test_attended_transfer_answered_connection_closed(self):
+        formatted_message = {'class': 'current_call_attended_transfer_answered',
+                             'line': self.line_identity_1}
+        self.current_call_formatter.attended_transfer_answered.return_value = formatted_message
+        self.notifier._subscriptions[self.line_identity_1.lower()] = self.client_connection_1
+        self.notifier._subscriptions[self.line_identity_2.lower()] = self.client_connection_2
+        self.client_connection_1.send_message.side_effect = ClientConnection.CloseException()
+
+        self.notifier.attended_transfer_answered(self.line_identity_1)
+
+        self.assertEqual(self.client_connection_2.send_message.call_count, 0)
+        self.assertTrue(self.line_identity_1.lower() not in self.notifier._subscriptions, 'Subscriber not removed')

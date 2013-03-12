@@ -55,3 +55,6 @@ class CurrentCallFormatter(object):
                 'cid_number': caller_id[1],
                 'call_status': status,
                 'call_start': call[BRIDGE_TIME]}
+
+    def attended_transfer_answered(self, line_identity):
+        return {}
