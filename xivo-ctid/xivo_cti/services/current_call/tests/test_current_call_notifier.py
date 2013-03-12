@@ -98,7 +98,7 @@ class TestCurrentCallNotifier(unittest.TestCase):
         self.notifier._report_current_call(self.line_identity_1)
 
         self.client_connection_1.send_message.assert_called_once_with(formatted_current_call)
-        self.assertEqual(self.client_connection_2.call_count, 0)
+        self.assertEqual(self.client_connection_2.send_message.call_count, 0)
 
     def test_report_current_call_connection_closed(self):
         formatted_current_call = {'class': 'current_call',
@@ -112,5 +112,5 @@ class TestCurrentCallNotifier(unittest.TestCase):
 
         self.notifier._report_current_call(self.line_identity_1)
 
-        self.assertEqual(self.client_connection_2.call_count, 0)
+        self.assertEqual(self.client_connection_2.send_message.call_count, 0)
         self.assertTrue(self.line_identity_1.lower() not in self.notifier._subscriptions, 'Subscriber not removed')
