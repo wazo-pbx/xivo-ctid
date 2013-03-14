@@ -16,15 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import urllib2
-import json
 import ssl
 import string
 import time
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
-    cti_userstatus_dao, cti_sheets_dao
-from StringIO import StringIO
+    cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
 
 logger = logging.getLogger('cti_config')
 
@@ -37,7 +34,6 @@ PIDFILE = '/var/run/%s.pid' % DAEMONNAME
 PORTDELTA = 0
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
-XIVO_CONF_URI = 'http://localhost/cti/json.php/private/configuration'
 CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
@@ -50,24 +46,7 @@ class Config(object):
 
     def update(self):
         start_time = time.time()
-        got_webi_answer = False
-        while not got_webi_answer:
-            try:
-                response = urllib2.urlopen(XIVO_CONF_URI)
-            except Exception:
-                logger.warning('Waiting for XiVO web services')
-                time.sleep(5)
-            else:
-                try:
-                    io = StringIO(response.read())
-                    self.xc_json = json.load(io)
-                    got_webi_answer = True
-                except ValueError:
-                    logger.error("No JSON object could be decoded")
-                    exit()
-
         self.fill_conf()
-
         logger.info('Config successfully updated in %.6f seconds', (time.time() - start_time))
 
     def fill_conf(self):
