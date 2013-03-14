@@ -80,6 +80,7 @@ class Config(object):
         self.xc_json['phonestatus'] = cti_phonehints_dao.get_config()
         self.xc_json['userstatus'] = cti_userstatus_dao.get_config()
         self.xc_json['sheets'] = cti_sheets_dao.get_config()
+        self.xc_json['directories'] = cti_directories_dao.get_config()
 
     def _get_profiles(self):
         profiles = cti_profile_dao.get_profiles()
