@@ -23,7 +23,7 @@ import string
 import time
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
-    cti_userstatus_dao
+    cti_userstatus_dao, cti_sheets_dao
 from StringIO import StringIO
 
 logger = logging.getLogger('cti_config')
@@ -79,6 +79,7 @@ class Config(object):
         self.xc_json['preferences'] = self._get_preferences()
         self.xc_json['phonestatus'] = cti_phonehints_dao.get_config()
         self.xc_json['userstatus'] = cti_userstatus_dao.get_config()
+        self.xc_json['sheets'] = cti_sheets_dao.get_config()
 
     def _get_profiles(self):
         profiles = cti_profile_dao.get_profiles()
