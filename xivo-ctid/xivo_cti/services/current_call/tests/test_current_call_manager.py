@@ -15,26 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import unittest
 import time
+import unittest
 
-from mock import patch
-from mock import Mock
 from hamcrest import *
+from mock import Mock
+from mock import patch
 
-from xivo_cti.scheduler import Scheduler
-from xivo_cti.dao import queue_dao
+from xivo_cti import dao
 from xivo_cti.dao import channel_dao
+from xivo_cti.dao import queue_dao
 from xivo_cti.dao import user_dao
+from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
 from xivo_cti.services.current_call import notifier
-from xivo_cti.services.current_call.manager import PEER_CHANNEL
-from xivo_cti.services.current_call.manager import LINE_CHANNEL
 from xivo_cti.services.current_call.manager import BRIDGE_TIME
+from xivo_cti.services.current_call.manager import LINE_CHANNEL
 from xivo_cti.services.current_call.manager import ON_HOLD
+from xivo_cti.services.current_call.manager import PEER_CHANNEL
 from xivo_cti.services.current_call.manager import TRANSFER_CHANNEL
-from xivo_cti import dao
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti import xivo_ami
 
@@ -87,6 +87,100 @@ class TestCurrentCallManager(unittest.TestCase):
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_reverse_order(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferee_channel, transferer_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_when_line_has_multiple_calls(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: 'SIP/sdkfjh-00000000012',
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time},
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 TRANSFER_CHANNEL: transferee_channel}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    @patch('time.time')
+    def test_bridge_channels_transfer_answered_not_tracked(self, mock_time):
+        bridge_time = time.time()
+        mock_time.return_value = bridge_time
+
+        transferer_channel = self.channel_1
+        transferee_channel = 'Local/123@default-00000009;1'
+
+        calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: bridge_time,
+                 ON_HOLD: False}
+            ],
+        }
+        self.manager._calls_per_line = calls_per_line
+
+        self.manager.bridge_channels(transferer_channel, transferee_channel)
+
+        call_count = self.notifier.attended_transfer_answered.call_count
+        self.assertEqual(call_count, 0)
+
     def test_masquerade_agent_call(self):
         line_1 = u'sip/6s7foq'
         line_2 = u'sip/pcm_dev'
@@ -129,6 +223,12 @@ class TestCurrentCallManager(unittest.TestCase):
         }
 
         self.assertEqual(self.manager._calls_per_line, expected)
+
+    def test_masquerade_bridged_channels(self):
+        bridged_line_1_channel = u'bridge/SIP/6s7foq-00000023'
+        line_1_channel = u'SIP/6s7foq-00000023'
+
+        self.manager.masquerade(bridged_line_1_channel, line_1_channel)
 
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
@@ -361,9 +461,6 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def _get_notifier_calls(self):
-        return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
-
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
@@ -385,7 +482,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.hangup(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with('Hangup', [('Channel', self.channel_2)])
+        self.manager.ami.hangup.assert_called_once_with(self.channel_2)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_complete_transfer(self, mock_get_line_identity):
@@ -408,10 +505,30 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.complete_transfer(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Hangup',
-            [('Channel', self.channel_1)]
-        )
+        self.manager.ami.hangup.assert_called_once_with(self.channel_1)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_complete_transfer_no_transfer_target_channel(self, mock_get_line_identity):
+        user_id = 5
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+
+        self.manager.complete_transfer(user_id)
+
+        # No exception
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_complete_transfer_no_call(self, mock_get_line_identity):
@@ -449,14 +566,36 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.attended_transfer(user_id, number)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Atxfer', [
-                ('Channel', self.channel_1),
-                ('Exten', number),
-                ('Context', line_context),
-                ('Priority', '1')
-            ]
-        )
+        self.manager.ami.atxfer.assert_called_once_with(
+            self.channel_1, number, line_context)
+
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_direct_transfer(self, mock_get_line_identity):
+        user_id = 5
+        number = '9876'
+        line_context = 'mycontext'
+        self.manager._calls_per_line = {
+            self.line_1: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: self.channel_1,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+        mock_get_line_identity.return_value = self.line_1
+        dao.user = Mock(user_dao.UserDAO)
+        dao.user.get_context.return_value = line_context
+
+        self.manager.direct_transfer(user_id, number)
+
+        self.manager.ami.transfer.assert_called_once_with(
+            self.channel_2, number, line_context)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_hangup_no_line(self, mock_get_line_identity):
@@ -500,10 +639,11 @@ class TestCurrentCallManager(unittest.TestCase):
         user_id = 5
         user_line = 'sccp/12345'
         channel_to_intercept = 'SIP/acbdf-348734'
-        transfer_option = ',Tx'
-        bridge_options = channel_to_intercept + transfer_option
         cid_name, cid_number = 'Alice', '5565'
+        caller_id = '"Alice" <5565>'
         delay = 0.25
+        allow_calling_party_transfer = True
+        continue_dialplan = False
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
@@ -513,15 +653,9 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.switchboard_unhold(user_id, unique_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Originate',
-            [('Channel', user_line),
-             ('Application', 'Bridge'),
-             ('Data', bridge_options),
-             ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
-             ('Async', 'true')]
-        )
-
+        self.manager.ami.bridge_originate.assert_called_once_with(
+            user_line, channel_to_intercept, caller_id,
+            allow_calling_party_transfer, continue_dialplan)
         self.manager.schedule_answer.assert_called_once_with(user_id, delay)
 
     @patch('xivo_dao.user_dao.get_line_identity')
@@ -614,10 +748,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.cancel_transfer(user_id)
 
-        self.manager.ami.sendcommand.assert_called_once_with(
-            'Hangup',
-            [('Channel', transfered_channel)]
-        )
+        self.manager.ami.hangup.assert_called_once_with(transfered_channel)
 
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
@@ -654,3 +785,6 @@ class TestCurrentCallManager(unittest.TestCase):
         result = self.manager._local_channel_peer(peer)
 
         self.assertEqual(result, mine)
+
+    def _get_notifier_calls(self):
+        return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]

@@ -49,36 +49,6 @@ class TestCurrentCallParser(unittest.TestCase):
 
         self.manager.bridge_channels.assert_called_once_with(channel_1, channel_2)
 
-    def test_parse_hold_on(self):
-        channel = 'SIP/nkvo55-00000003'
-        hold_event = {
-            'Event': 'Hold',
-            'Privilege': 'call,all',
-            'Status': 'On',
-            'Channel': channel,
-            'Uniqueid': 1354638961.3
-        }
-
-        self.parser.parse_hold(hold_event)
-
-        self.manager.hold_channel.assert_called_once_with(channel)
-        self.assertEqual(self.manager.unhold_channel.call_count, 0)
-
-    def test_parse_hold_off(self):
-        channel = 'SIP/nkvo55-00000003'
-        hold_event = {
-            'Event': 'Hold',
-            'Privilege': 'call,all',
-            'Status': 'Off',
-            'Channel': channel,
-            'Uniqueid': 1354638961.3
-        }
-
-        self.parser.parse_hold(hold_event)
-
-        self.assertEqual(self.manager.hold_channel.call_count, 0)
-        self.manager.unhold_channel.assert_called_once_with(channel)
-
     def test_parse_hangup(self):
         channel = 'SIP/tc8nb4-000000000038'
         hangup_event = {'Event': 'Hangup',
@@ -95,6 +65,36 @@ class TestCurrentCallParser(unittest.TestCase):
         self.parser.parse_hangup(hangup_event)
 
         self.manager.end_call.assert_called_once_with(channel)
+
+    def test_parse_hold_off(self):
+        channel = 'SIP/nkvo55-00000003'
+        hold_event = {
+            'Event': 'Hold',
+            'Privilege': 'call,all',
+            'Status': 'Off',
+            'Channel': channel,
+            'Uniqueid': 1354638961.3
+        }
+
+        self.parser.parse_hold(hold_event)
+
+        self.assertEqual(self.manager.hold_channel.call_count, 0)
+        self.manager.unhold_channel.assert_called_once_with(channel)
+
+    def test_parse_hold_on(self):
+        channel = 'SIP/nkvo55-00000003'
+        hold_event = {
+            'Event': 'Hold',
+            'Privilege': 'call,all',
+            'Status': 'On',
+            'Channel': channel,
+            'Uniqueid': 1354638961.3
+        }
+
+        self.parser.parse_hold(hold_event)
+
+        self.manager.hold_channel.assert_called_once_with(channel)
+        self.assertEqual(self.manager.unhold_channel.call_count, 0)
 
     def test_parse_hangup_transfer(self):
         channel = 'Local/102@default-00000028;1'

@@ -38,6 +38,7 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
+from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
 from xivo_cti.cti.commands.hangup import Hangup
@@ -251,6 +252,10 @@ class CTIServer(object):
         )
         AttendedTransfer.register_callback_params(
             context.get('current_call_manager').attended_transfer,
+            ['user_id', 'number']
+        )
+        DirectTransfer.register_callback_params(
+            context.get('current_call_manager').direct_transfer,
             ['user_id', 'number']
         )
         CancelTransfer.register_callback_params(

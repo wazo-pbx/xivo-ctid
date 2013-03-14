@@ -138,6 +138,26 @@ class AMIClass(object):
     def sendmeetmelist(self):
         return self._exec_command('MeetMeList', [])
 
+    def bridge_originate(self, line_interface, channel, caller_id,
+                         allow_calling_party_transfer, continue_dialplan):
+        options = ''
+        if allow_calling_party_transfer:
+            options += 'T'
+        if not continue_dialplan:
+            options += 'x'
+
+        if not options:
+            application_data = channel
+        else:
+            application_data = '%s,%s' % (channel, options)
+
+        self._exec_command('Originate',
+                           [('Channel', line_interface),
+                            ('Application', 'Bridge'),
+                            ('Data', application_data),
+                            ('CallerID', caller_id),
+                            ('Async', 'true')])
+
     # \brief Logins to the AMI.
     def login(self):
         if self.events:
@@ -324,6 +344,7 @@ class AMIClass(object):
             logger.warning('Transfer failed: %s', e.message)
             return False
         else:
+            self.setvar('BLINDTRANSFER', 'true', channel)
             command_details = [('Channel', channel),
                                ('Exten', extension),
                                ('Context', context),
