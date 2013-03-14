@@ -344,6 +344,7 @@ class AMIClass(object):
             logger.warning('Transfer failed: %s', e.message)
             return False
         else:
+            self.setvar('BLINDTRANSFER', 'true', channel)
             command_details = [('Channel', channel),
                                ('Exten', extension),
                                ('Context', context),
