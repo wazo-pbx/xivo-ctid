@@ -92,6 +92,11 @@ class UserServiceNotifier(object):
         filter_status_msg.update(status_update)
         return filter_status_msg
 
+    def _prepare_recording_message(self, recording_status, user_id):
+        recording_enabled_msg = self._prepare_message(user_id)
+        recording_enabled_msg['config'] = {'enablerecording': recording_status}
+        return recording_enabled_msg
+
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
 
@@ -124,3 +129,6 @@ class UserServiceNotifier(object):
 
     def presence_updated(self, user_id, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
+
+    def recording_enabled(self, user_id):
+        self.send_cti_event(self._prepare_recording_message(True, user_id))

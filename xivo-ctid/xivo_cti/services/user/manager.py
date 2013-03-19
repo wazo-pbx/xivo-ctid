@@ -143,3 +143,7 @@ class UserServiceManager(object):
     def pickup_the_phone(self, user_id):
         device_id = user_dao.get_device_id(user_id)
         self.device_manager.answer(device_id)
+
+    def enable_recording(self, target):
+        user_dao.enable_recording(target)
+        self.user_service_notifier.recording_enabled(target)

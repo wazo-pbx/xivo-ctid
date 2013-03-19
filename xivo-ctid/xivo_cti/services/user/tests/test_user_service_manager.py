@@ -307,3 +307,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.pickup_the_phone(user_id)
 
         self.device_manager.answer.assert_called_once_with(device_id)
+
+    @patch('xivo_dao.user_dao.enable_recording')
+    def test_enable_recording(self, mock_enable_recording):
+        target = 37
+
+        self.user_service_manager.enable_recording(target)
+
+        mock_enable_recording.assert_called_once_with(target)
+        self.user_service_notifier.recording_enabled.assert_called_once_with(target)
