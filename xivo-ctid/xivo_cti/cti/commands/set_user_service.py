@@ -19,10 +19,14 @@ from xivo_cti.cti.cti_command import CTICommandClass
 
 
 def _new_class(function_name, value):
+
     def match(msg):
         return msg['function'] == function_name and msg['value'] == value
 
-    return CTICommandClass('featuresput', match, None)
+    def parse(msg, command):
+        command.target = msg['target']
+
+    return CTICommandClass('featuresput', match, parse)
 
 
 DisableDND = _new_class('enablednd', False)
@@ -36,3 +40,9 @@ EnableDND.add_to_registry()
 
 EnableFilter = _new_class('incallfilter', True)
 EnableFilter.add_to_registry()
+
+EnableRecording = _new_class('enablerecording', True)
+EnableRecording.add_to_registry()
+
+DisableRecording = _new_class('enablerecording', False)
+DisableRecording.add_to_registry()
