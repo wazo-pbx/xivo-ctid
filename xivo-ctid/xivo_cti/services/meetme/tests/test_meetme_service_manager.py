@@ -350,6 +350,23 @@ class TestMeetmeServiceManager(unittest.TestCase):
 
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
+    def test_leave_after_restart(self):
+        start_time = 1234556.123
+
+        self.manager._cache = {
+            conf_room_number: {
+                'number': conf_room_number,
+                'name': conf_room_name,
+                'pin_required': True,
+                'start_time': start_time,
+                'members': {},
+            }
+        }
+
+        self.manager.leave('800', 1)
+
+        self.assertEqual(self.mock_notifier.publish_meetme_update.call_count, 0)
+
     def test_has_members(self):
         self.manager._cache = {'800': {'members': {}}}
 
