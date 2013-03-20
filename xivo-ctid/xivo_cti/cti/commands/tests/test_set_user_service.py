@@ -17,17 +17,31 @@
 
 import unittest
 from xivo_cti.cti import cti_command_registry
-from xivo_cti.cti.commands.set_user_service import EnableRecording, \
-    DisableRecording
+from xivo_cti.cti.commands.set_user_service import DisableDND, \
+    EnableDND, EnableRecording, DisableRecording, EnableFilter, DisableFilter
 
 
 class TestSetUserService(unittest.TestCase):
 
-    _disable_recording_msg = {
+    _enable_dnd_msg = {
         'class': 'featuresput',
-        'function': 'enablerecording',
+        'function': 'enablednd',
+        'value': True,
+    }
+    _disable_dnd_msg = {
+        'class': 'featuresput',
+        'function': 'enablednd',
         'value': False,
-        'target': '54'
+    }
+    _enable_filter_msg = {
+        'class': 'featuresput',
+        'function': 'incallfilter',
+        'value': True,
+    }
+    _disable_filter_msg = {
+        'class': 'featuresput',
+        'function': 'incallfilter',
+        'value': False,
     }
     _enable_recording_msg = {
         'class': 'featuresput',
@@ -35,16 +49,52 @@ class TestSetUserService(unittest.TestCase):
         'value': True,
         'target': '45'
     }
+    _disable_recording_msg = {
+        'class': 'featuresput',
+        'function': 'enablerecording',
+        'value': False,
+        'target': '54'
+    }
 
-    def test_disable_recording_msg(self):
-        command = DisableRecording.from_dict(self._disable_recording_msg)
+    def test_enable_dnd_msg(self):
+        command = EnableDND.from_dict(self._enable_dnd_msg)
 
-        self.assertEqual(command.target, '54')
+        self.assertTrue(command is not None)
 
-    def test_disable_recording_registration(self):
-        klass = cti_command_registry.get_class(self._disable_recording_msg)
+    def test_enable_dnd_registration(self):
+        klass = cti_command_registry.get_class(self._enable_dnd_msg)
 
-        self.assertEqual(klass, [DisableRecording])
+        self.assertEqual(klass, [EnableDND])
+
+    def test_disable_dnd_msg(self):
+        command = DisableDND.from_dict(self._disable_dnd_msg)
+
+        self.assertTrue(command is not None)
+
+    def test_disable_dnd_registration(self):
+        klass = cti_command_registry.get_class(self._disable_dnd_msg)
+
+        self.assertEqual(klass, [DisableDND])
+
+    def test_enable_filter_msg(self):
+        command = EnableFilter.from_dict(self._enable_filter_msg)
+
+        self.assertTrue(command is not None)
+
+    def test_enable_filter_registration(self):
+        klass = cti_command_registry.get_class(self._enable_filter_msg)
+
+        self.assertEqual(klass, [EnableFilter])
+
+    def test_disable_filter_msg(self):
+        command = DisableFilter.from_dict(self._disable_filter_msg)
+
+        self.assertTrue(command is not None)
+
+    def test_disable_filter_registration(self):
+        klass = cti_command_registry.get_class(self._disable_filter_msg)
+
+        self.assertEqual(klass, [DisableFilter])
 
     def test_enable_recording_msg(self):
         command = EnableRecording.from_dict(self._enable_recording_msg)
@@ -55,3 +105,13 @@ class TestSetUserService(unittest.TestCase):
         klass = cti_command_registry.get_class(self._enable_recording_msg)
 
         self.assertEqual(klass, [EnableRecording])
+
+    def test_disable_recording_msg(self):
+        command = DisableRecording.from_dict(self._disable_recording_msg)
+
+        self.assertEqual(command.target, '54')
+
+    def test_disable_recording_registration(self):
+        klass = cti_command_registry.get_class(self._disable_recording_msg)
+
+        self.assertEqual(klass, [DisableRecording])
