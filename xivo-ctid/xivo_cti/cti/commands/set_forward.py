@@ -19,6 +19,7 @@ from xivo_cti.cti.cti_command import CTICommandClass
 
 
 def _new_class(enable_name, enable_value, destination_name):
+
     def match(msg):
         return (
             msg['function'] == 'fwd' and
@@ -32,20 +33,20 @@ def _new_class(enable_name, enable_value, destination_name):
     return CTICommandClass('featuresput', match, parse)
 
 
-DisableBusyForward = _new_class('enablebusy', False, 'destbusy')
-DisableBusyForward.add_to_registry()
-
-DisableNoAnswerForward = _new_class('enablerna', False, 'destrna')
-DisableNoAnswerForward.add_to_registry()
-
-DisableUnconditionalForward = _new_class('enableunc', False, 'destunc')
-DisableUnconditionalForward.add_to_registry()
-
 EnableBusyForward = _new_class('enablebusy', True, 'destbusy')
 EnableBusyForward.add_to_registry()
+
+DisableBusyForward = _new_class('enablebusy', False, 'destbusy')
+DisableBusyForward.add_to_registry()
 
 EnableNoAnswerForward = _new_class('enablerna', True, 'destrna')
 EnableNoAnswerForward.add_to_registry()
 
+DisableNoAnswerForward = _new_class('enablerna', False, 'destrna')
+DisableNoAnswerForward.add_to_registry()
+
 EnableUnconditionalForward = _new_class('enableunc', True, 'destunc')
 EnableUnconditionalForward.add_to_registry()
+
+DisableUnconditionalForward = _new_class('enableunc', False, 'destunc')
+DisableUnconditionalForward.add_to_registry()
