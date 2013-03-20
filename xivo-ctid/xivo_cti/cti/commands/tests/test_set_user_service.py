@@ -56,40 +56,32 @@ class TestSetUserService(unittest.TestCase):
         'target': '54'
     }
 
-    def test_enable_dnd_msg(self):
-        command = EnableDND.from_dict(self._enable_dnd_msg)
-
-        self.assertTrue(command is not None)
+    def test_enable_dnd_msg_no_exception(self):
+        EnableDND.from_dict(self._enable_dnd_msg)
 
     def test_enable_dnd_registration(self):
         klass = cti_command_registry.get_class(self._enable_dnd_msg)
 
         self.assertEqual(klass, [EnableDND])
 
-    def test_disable_dnd_msg(self):
-        command = DisableDND.from_dict(self._disable_dnd_msg)
-
-        self.assertTrue(command is not None)
+    def test_disable_dnd_msg_no_exception(self):
+        DisableDND.from_dict(self._disable_dnd_msg)
 
     def test_disable_dnd_registration(self):
         klass = cti_command_registry.get_class(self._disable_dnd_msg)
 
         self.assertEqual(klass, [DisableDND])
 
-    def test_enable_filter_msg(self):
-        command = EnableFilter.from_dict(self._enable_filter_msg)
-
-        self.assertTrue(command is not None)
+    def test_enable_filter_msg_no_exception(self):
+        EnableFilter.from_dict(self._enable_filter_msg)
 
     def test_enable_filter_registration(self):
         klass = cti_command_registry.get_class(self._enable_filter_msg)
 
         self.assertEqual(klass, [EnableFilter])
 
-    def test_disable_filter_msg(self):
-        command = DisableFilter.from_dict(self._disable_filter_msg)
-
-        self.assertTrue(command is not None)
+    def test_disable_filter_msg_no_exception(self):
+        DisableFilter.from_dict(self._disable_filter_msg)
 
     def test_disable_filter_registration(self):
         klass = cti_command_registry.get_class(self._disable_filter_msg)
