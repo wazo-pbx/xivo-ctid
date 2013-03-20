@@ -16,52 +16,42 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+from xivo_cti.cti import cti_command_registry
 from xivo_cti.cti.commands.set_user_service import EnableRecording, \
     DisableRecording
-from xivo_cti.ctiserver import CTIServer
-from xivo_cti.interfaces.interface_cti import CTI
-from mock import Mock
-from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.cti import cti_command_registry
 
 
 class TestSetUserService(unittest.TestCase):
 
-    def setUp(self):
-        pass
+    _disable_recording_msg = {
+        'class': 'featuresput',
+        'function': 'enablerecording',
+        'value': False,
+        'target': '54'
+    }
+    _enable_recording_msg = {
+        'class': 'featuresput',
+        'function': 'enablerecording',
+        'value': True,
+        'target': '45'
+    }
 
-    def test_enable_recording(self):
+    def test_disable_recording_msg(self):
+        command = DisableRecording.from_dict(self._disable_recording_msg)
 
-        enable_recording_message = {
-            'commandid': 312133,
-            'class': 'featuresput',
-            'function': 'enablerecording',
-            'value': True,
-            'target': '45'
-        }
+        self.assertEqual(command.target, '54')
 
-        command_classes = cti_command_registry.get_class(enable_recording_message)
-        self.assertEqual(len(command_classes), 1, 'class not registered')
-        self.assertEqual(EnableRecording, command_classes[0], 'invalid class registered')
+    def test_disable_recording_registration(self):
+        klass = cti_command_registry.get_class(self._disable_recording_msg)
 
-        enable_recording = command_classes[0].from_dict(enable_recording_message)
+        self.assertEqual(klass, [DisableRecording])
 
-        self.assertEqual(enable_recording.target, '45')
+    def test_enable_recording_msg(self):
+        command = EnableRecording.from_dict(self._enable_recording_msg)
 
-    def test_disable_recording(self):
+        self.assertEqual(command.target, '45')
 
-        disable_recording_message = {
-            'commandid': 312133,
-            'class': 'featuresput',
-            'function': 'enablerecording',
-            'value': False,
-            'target': '54'
-        }
+    def test_enable_recording_registration(self):
+        klass = cti_command_registry.get_class(self._enable_recording_msg)
 
-        command_classes = cti_command_registry.get_class(disable_recording_message)
-        self.assertEqual(len(command_classes), 1, 'class not registered')
-        self.assertEqual(DisableRecording, command_classes[0], 'invalid class registered')
-
-        disable_recording = command_classes[0].from_dict(disable_recording_message)
-
-        self.assertEqual(disable_recording.target, '54')
+        self.assertEqual(klass, [EnableRecording])
