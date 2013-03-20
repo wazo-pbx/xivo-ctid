@@ -132,3 +132,6 @@ class UserServiceNotifier(object):
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))
+
+    def recording_disabled(self, user_id):
+        self.send_cti_event(self._prepare_recording_message(False, user_id))

@@ -147,3 +147,7 @@ class UserServiceManager(object):
     def enable_recording(self, target):
         user_dao.enable_recording(target)
         self.user_service_notifier.recording_enabled(target)
+
+    def disable_recording(self, target):
+        user_dao.disable_recording(target)
+        self.user_service_notifier.recording_disabled(target)

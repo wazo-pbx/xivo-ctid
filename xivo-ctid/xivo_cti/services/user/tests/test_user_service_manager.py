@@ -316,3 +316,12 @@ class TestUserServiceManager(unittest.TestCase):
 
         mock_enable_recording.assert_called_once_with(target)
         self.user_service_notifier.recording_enabled.assert_called_once_with(target)
+
+    @patch('xivo_dao.user_dao.disable_recording')
+    def test_disable_recording(self, mock_disable_recording):
+        target = 35
+
+        self.user_service_manager.disable_recording(target)
+
+        mock_disable_recording.assert_called_once_with(target)
+        self.user_service_notifier.recording_disabled.assert_called_once_with(target)

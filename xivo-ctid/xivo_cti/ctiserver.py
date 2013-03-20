@@ -56,7 +56,8 @@ from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
 from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     DisableNoAnswerForward, DisableUnconditionalForward, EnableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
-from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter
+from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
+    EnableRecording, DisableRecording
 from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
@@ -190,6 +191,8 @@ class CTIServer(object):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
+        EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
+        DisableRecording.register_callback_params(self._user_service_manager.disable_recording, ['target'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
         DisableFilter.register_callback_params(self._user_service_manager.disable_filter, ['user_id'])
         EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd, ['user_id', 'destination'])
