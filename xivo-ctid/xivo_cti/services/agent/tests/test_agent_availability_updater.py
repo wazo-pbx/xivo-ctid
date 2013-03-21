@@ -70,7 +70,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         agent_availability_updater.parse_ami_answered(ami_event, mock_agent_availability_updater)
 
-        mock_agent_availability_updater.agent_answered.assert_called_with(agent_id)
+        mock_agent_availability_updater.agent_in_use.assert_called_with(agent_id)
 
     def test_parse_ami_answered_not_an_agent(self):
         ami_event = {'MemberName': 'SIP/abcdef',
@@ -80,7 +80,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         agent_availability_updater.parse_ami_answered(ami_event, mock_agent_availability_updater)
 
-        self.assertFalse(mock_agent_availability_updater.agent_answered.called)
+        self.assertFalse(mock_agent_availability_updater.agent_in_use.called)
 
     def test_parse_ami_call_completed(self):
         agent_id = 12
@@ -209,10 +209,10 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         assert_that(self.agent_availability_updater.notifier.notify.call_count, equal_to(0), 'Notifier call count')
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 
-    def test_agent_answered(self):
+    def test_agent_in_use(self):
         agent_id = 12
 
-        self.agent_availability_updater.agent_answered(agent_id)
+        self.agent_availability_updater.agent_in_use(agent_id)
 
         self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(
             agent_id,

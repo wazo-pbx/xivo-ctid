@@ -40,7 +40,7 @@ def parse_ami_answered(ami_event, agent_availability_updater):
     except ValueError:
         pass  # Not an agent member name
     else:
-        agent_availability_updater.agent_answered(agent_id)
+        agent_availability_updater.agent_in_use(agent_id)
 
 
 def parse_ami_call_completed(ami_event, agent_availability_updater):
@@ -90,7 +90,7 @@ class AgentAvailabilityUpdater(object):
         else:
             self.notifier.notify(agent_id)
 
-    def agent_answered(self, agent_id):
+    def agent_in_use(self, agent_id):
         self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)
         self.notifier.notify(agent_id)
 
