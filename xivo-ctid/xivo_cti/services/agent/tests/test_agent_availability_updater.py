@@ -280,6 +280,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         dao.agent = Mock(AgentDAO)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.is_logged.return_value = True
+        dao.agent.on_call.return_value = False
 
         agent_id = 12
 
@@ -292,6 +293,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         dao.agent = Mock(AgentDAO)
         dao.agent.is_completely_paused.return_value = True
         dao.agent.is_logged.return_value = True
+        dao.agent.on_call.return_value = False
 
         agent_id = 12
 
@@ -304,6 +306,20 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         dao.agent = Mock(AgentDAO)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.is_logged.return_value = False
+        dao.agent.on_call.return_value = False
+
+        agent_id = 12
+
+        self.agent_availability_updater.agent_wrapup_completed(agent_id)
+
+        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
+
+    def test_agent_wrapup_completed_in_conversation(self):
+        dao.agent = Mock(AgentDAO)
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call.return_value = True
 
         agent_id = 12
 

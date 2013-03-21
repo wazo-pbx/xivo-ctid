@@ -108,6 +108,8 @@ class AgentAvailabilityUpdater(object):
             return
         if not dao.agent.is_logged(agent_id):
             return
+        if dao.agent.on_call(agent_id):
+            return
         self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
         self.notifier.notify(agent_id)
 
