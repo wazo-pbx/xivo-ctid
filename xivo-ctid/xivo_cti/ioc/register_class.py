@@ -32,7 +32,6 @@ from xivo_cti.services.agent.availability_updater import \
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
-from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -73,7 +72,6 @@ def setup():
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
     context.register('agent_client', AgentClient)
     context.register('agent_executor', AgentExecutor)
-    context.register('agent_on_call_updater', AgentOnCallUpdater)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
     context.register('channel_updater', ChannelUpdater)
