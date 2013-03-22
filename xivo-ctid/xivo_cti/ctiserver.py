@@ -66,13 +66,15 @@ from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent import availability_updater as agent_availability_updater
-from xivo_cti.services import agent_on_call_updater
+from xivo_cti.services.agent import status_manager as agent_status_manager
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.ioc.context import context
+from xivo_cti.services.agent.status_manager import AgentStatusManager, \
+    QueueEventReceiver
 
 logger = logging.getLogger('main')
 
@@ -164,10 +166,12 @@ class CTIServer(object):
         scheduler.setup(self.pipe_queued_threads[1])
 
         self._agent_availability_updater = context.get('agent_availability_updater')
-        self._agent_on_call_updater = context.get('agent_on_call_updater')
         self._agent_service_cti_parser = context.get('agent_service_cti_parser')
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
+
+        self._agent_status_manager = AgentStatusManager(self._agent_availability_updater)
+        self._queue_event_receiver = QueueEventReceiver(self._queue_member_notifier, self._agent_status_manager)
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
@@ -180,12 +184,14 @@ class CTIServer(object):
         queue_statistics_producer.register_events()
         meetme_service_manager_module.register_callbacks()
 
+
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()
 
         self._register_cti_callbacks()
         self._register_ami_callbacks()
         self._register_message_hooks()
+        self._queue_event_receiver.subscribe()
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
@@ -281,21 +287,15 @@ class CTIServer(object):
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
 
-        callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_availability_updater.parse_ami_answered(event,
-                                                                                                       self._agent_availability_updater))
-        callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_availability_updater.parse_ami_call_completed(event,
-                                                                                                             self._agent_availability_updater))
         callback_handler.register_callback('QueueMemberPaused',
                                            lambda event: agent_availability_updater.parse_ami_paused(event,
                                                                                                      self._agent_availability_updater))
         callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_on_call_updater.parse_ami_answered(event,
-                                                                                                  self._agent_on_call_updater))
+                                           lambda event: agent_status_manager.parse_ami_answered(event,
+                                                                                                 self._agent_status_manager))
         callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_on_call_updater.parse_ami_call_completed(event,
-                                                                                                             self._agent_on_call_updater))
+                                           lambda event: agent_status_manager.parse_ami_call_completed(event,
+                                                                                                       self._agent_status_manager))
 
         callback_handler.register_userevent_callback(
             'AgentLogin',
