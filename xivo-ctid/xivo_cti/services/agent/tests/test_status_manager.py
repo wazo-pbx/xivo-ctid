@@ -18,43 +18,39 @@
 import unittest
 from mock import Mock, ANY
 
-from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.queue_member.member import QueueMemberState, QueueMember
-from xivo_cti.services.agent.status_manager import AgentStatusManager
+from xivo_cti.services.agent.status_manager import AgentStatusManager, \
+    QueueEventReceiver, parse_ami_answered, parse_ami_call_completed
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
 
 
-class TestAgentStatusManager(unittest.TestCase):
+class TestQueueEventReceiver(unittest.TestCase):
 
     def setUp(self):
         dao.agent = Mock(AgentDAO)
         self.notifier = Mock(QueueMemberNotifier)
-        self.call_updater = Mock(AgentOnCallUpdater)
-        self.availability_updater = Mock(AgentAvailabilityUpdater)
+        self.status_manager = Mock(AgentStatusManager)
 
-    def test_manager_subscription(self):
-        manager = AgentStatusManager(self.notifier, self.call_updater,
-                                     self.availability_updater)
-        manager.subscribe_to_queue_member()
+    def test_subscription(self):
+        receiver = QueueEventReceiver(self.notifier, self.status_manager)
+        receiver.subscribe()
 
         self.notifier.subscribe_to_queue_member_update.assert_called_once_with(ANY)
 
-    def test_manager_when_agent_does_not_exist(self):
+    def test_receiver_when_agent_does_not_exist(self):
         member_state = QueueMemberState()
         member_state.status = 0
         member = QueueMember('queue1', 'Agent/12', member_state)
 
         dao.agent.get_id_from_interface.side_effect = [ValueError()]
 
-        manager = AgentStatusManager(self.notifier, self.call_updater,
-                                     self.availability_updater)
-        manager.on_queue_member_update(member)
+        receiver = QueueEventReceiver(self.notifier, self.status_manager)
+        receiver.on_queue_member_update(member)
 
-        self.assertEqual(self.availability_updater.agent_in_use.call_count, 0)
-        self.assertEqual(self.call_updater.answered_call.call_count, 0)
+        self.assertEqual(self.status_manager.agent_in_use.call_count, 0)
 
     def test_manager_puts_agent_in_use(self):
         queue_name = 'queue1'
@@ -67,12 +63,10 @@ class TestAgentStatusManager(unittest.TestCase):
         member = QueueMember(queue_name, member_name, member_state)
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        manager = AgentStatusManager(self.notifier, self.call_updater,
-                                     self.availability_updater)
-        manager.on_queue_member_update(member)
+        receiver = QueueEventReceiver(self.notifier, self.status_manager)
+        receiver.on_queue_member_update(member)
 
-        self.availability_updater.agent_in_use.assert_called_once_with(agent_id)
-        self.call_updater.answered_call.assert_called_once_with(agent_id)
+        self.status_manager.agent_in_use.assert_called_once_with(agent_id)
 
     def test_manager_completes_call(self):
         queue_name = 'queue1'
@@ -86,9 +80,61 @@ class TestAgentStatusManager(unittest.TestCase):
 
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        manager = AgentStatusManager(self.notifier, self.call_updater,
-                                     self.availability_updater)
-        manager.on_queue_member_update(member)
+        receiver = QueueEventReceiver(self.notifier, self.status_manager)
+        receiver.on_queue_member_update(member)
 
-        self.availability_updater.agent_call_completed.assert_called_once_with(agent_id, 0)
-        self.call_updater.call_completed.assert_called_once_with(agent_id)
+        self.status_manager.agent_not_in_use.assert_called_once_with(agent_id)
+
+
+class TestAgentStatusManager(unittest.TestCase):
+
+    def setUp(self):
+        dao.agent = Mock(AgentDAO)
+        self.availability_updater = Mock(AgentAvailabilityUpdater)
+
+    def test_agent_in_use_updates_availability(self):
+        dao.agent.on_call.return_value = False
+        agent_id = 12
+
+        manager = AgentStatusManager(self.availability_updater)
+        manager.agent_in_use(agent_id)
+
+        dao.agent.on_call.assert_called_once_with(agent_id)
+        dao.agent.set_on_call.assert_called_once_with(agent_id, True)
+        self.availability_updater.agent_in_use.assert_called_once_with(agent_id)
+
+    def test_agent_in_use_does_not_update_if_already_in_use(self):
+        dao.agent.on_call.return_value = True
+        agent_id = 12
+
+        manager = AgentStatusManager(self.availability_updater)
+        manager.agent_in_use(agent_id)
+
+        dao.agent.on_call.assert_called_once_with(agent_id)
+        self.assertEquals(self.availability_updater.agent_in_use.call_count, 0)
+        self.assertEquals(dao.agent.set_on_call.call_count, 0)
+
+    def test_agent_not_in_use_updates_availability(self):
+        dao.agent.on_call.return_value = True
+        agent_id = 12
+        wrapup = 10
+
+        manager = AgentStatusManager(self.availability_updater)
+        manager.agent_not_in_use(agent_id, wrapup)
+
+        dao.agent.on_call.assert_called_once_with(agent_id)
+        dao.agent.set_on_call.assert_called_once_with(agent_id, False)
+        self.availability_updater.agent_call_completed.assert_called_once_with(agent_id, wrapup)
+
+    def test_agent_not_in_use_does_not_update_if_already_not_in_use(self):
+        dao.agent.on_call.return_value = False
+        agent_id = 12
+        wrapup = 10
+
+        manager = AgentStatusManager(self.availability_updater)
+        manager.agent_not_in_use(agent_id, wrapup)
+
+        dao.agent.on_call.assert_called_once_with(agent_id)
+        self.assertEquals(self.availability_updater.agent_call_completed.call_count, 0)
+        self.assertEquals(dao.agent.set_on_call.call_count, 0)
+

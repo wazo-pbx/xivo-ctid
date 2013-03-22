@@ -15,37 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
 from xivo_cti import dao
 
+logger = logging.getLogger(__name__)
 
-class AgentStatusManager(object):
+class QueueEventReceiver(object):
 
     STATUS_DEVICE_NOT_INUSE = 1
     STATUS_DEVICE_INUSE = 2
 
-    def __init__(self, queue_member_notifier, call_updater,
-                 agent_availability_updater):
-
+    def __init__(self, queue_member_notifier, agent_status_manager):
         self._queue_member_notifier = queue_member_notifier
-        self._call_updater = call_updater
-        self._agent_availability_updater = agent_availability_updater
+        self._agent_status_manager = agent_status_manager
 
-    def subscribe_to_queue_member(self):
+    def subscribe(self):
         self._queue_member_notifier.subscribe_to_queue_member_update(self.on_queue_member_update)
 
     def on_queue_member_update(self, queue_member):
-        self.update_agent_status(queue_member.member_name,
-                                 queue_member.state.status)
+        member_name = queue_member.member_name
+        status = int(queue_member.state.status)
+        self._update_status(member_name, status)
 
-    def update_agent_status(self, member_name, status):
+    def _update_status(self, member_name, status):
         agent_id = self._get_agent_id(member_name)
         if not agent_id:
             return
 
         if status == self.STATUS_DEVICE_INUSE:
-            self._agent_in_use(agent_id)
+            self._agent_status_manager.agent_in_use(agent_id)
         elif status == self.STATUS_DEVICE_NOT_INUSE:
-            self._agent_not_in_use(agent_id)
+            self._agent_status_manager.agent_not_in_use(agent_id)
 
     def _get_agent_id(self, member_name):
         try:
@@ -53,10 +54,22 @@ class AgentStatusManager(object):
         except ValueError:
             return None  # Not an agent member name
 
-    def _agent_in_use(self, agent_id):
-        self._call_updater.answered_call(agent_id)
+
+class AgentStatusManager(object):
+
+    def __init__(self, agent_availability_updater):
+        self._agent_availability_updater = agent_availability_updater
+
+    def agent_in_use(self, agent_id):
+        if dao.agent.on_call(agent_id):
+            return
+
+        dao.agent.set_on_call(agent_id, True)
         self._agent_availability_updater.agent_in_use(agent_id)
 
-    def _agent_not_in_use(self, agent_id):
-        self._call_updater.call_completed(agent_id)
-        self._agent_availability_updater.agent_call_completed(agent_id, 0)
+    def agent_not_in_use(self, agent_id, wrapup=0):
+        if not dao.agent.on_call(agent_id):
+            return
+
+        dao.agent.set_on_call(agent_id, False)
+        self._agent_availability_updater.agent_call_completed(agent_id, wrapup)
