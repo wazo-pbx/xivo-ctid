@@ -21,6 +21,29 @@ from xivo_cti import dao
 
 logger = logging.getLogger(__name__)
 
+
+def parse_ami_answered(ami_event, agent_status_manager):
+    agent_member_name = ami_event['MemberName']
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_member_name)
+    except ValueError:
+        pass  # Not an agent member name
+    else:
+        agent_status_manager.agent_in_use(agent_id)
+
+
+def parse_ami_call_completed(ami_event, agent_status_manager):
+    agent_member_name = ami_event['MemberName']
+    wrapup = int(ami_event['WrapupTime'])
+
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_member_name)
+    except ValueError:
+        pass  # Not an agent member name
+    else:
+        agent_status_manager.agent_not_in_use(agent_id, wrapup)
+
+
 class QueueEventReceiver(object):
 
     STATUS_DEVICE_NOT_INUSE = 1

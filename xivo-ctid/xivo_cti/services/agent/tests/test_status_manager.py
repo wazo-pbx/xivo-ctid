@@ -27,6 +27,47 @@ from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
 
 
+class TestAmiEventCallbackes(unittest.TestCase):
+
+    def setUp(self):
+        dao.agent = Mock(AgentDAO)
+        self.manager = Mock(AgentStatusManager)
+
+    def test_parse_ami_answered(self):
+        agent_id = 12
+        ami_event = {'MemberName': 'Agent/1000'}
+
+        dao.agent.get_id_from_interface.return_value = agent_id
+
+        parse_ami_answered(ami_event, self.manager)
+        self.manager.agent_in_use.assert_called_once_with(agent_id)
+
+    def test_parse_ami_answered_no_agent(self):
+        ami_event = {'MemberName': 'Agent/1000'}
+
+        dao.agent.get_id_from_interface.side_effect = [ValueError()]
+
+        parse_ami_answered(ami_event, self.manager)
+        self.assertEquals(self.manager.agent_in_use.call_count, 0)
+
+    def test_parse_ami_call_completed(self):
+        agent_id = 12
+        ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '10'}
+
+        dao.agent.get_id_from_interface.return_value = agent_id
+
+        parse_ami_call_completed(ami_event, self.manager)
+        self.manager.agent_not_in_use.assert_called_once_with(agent_id, 10)
+
+    def test_parse_ami_call_completed_no_agent(self):
+        ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '10'}
+
+        dao.agent.get_id_from_interface.side_effect = [ValueError()]
+
+        parse_ami_call_completed(ami_event, self.manager)
+        self.assertEquals(self.manager.agent_not_in_use.call_count, 0)
+
+
 class TestQueueEventReceiver(unittest.TestCase):
 
     def setUp(self):
