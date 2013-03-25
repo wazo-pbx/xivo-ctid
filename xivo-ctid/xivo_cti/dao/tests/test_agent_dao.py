@@ -178,3 +178,33 @@ class TestAgentDAO(unittest.TestCase):
         result = agent_dao.on_call(agent_id)
 
         self.assertEqual(result, True)
+
+    def test_set_on_wrapup(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_wrapup': False
+                }
+            }
+        }
+
+        agent_dao.set_on_wrapup(agent_id, True)
+
+        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_wrapup'])
+
+    def test_on_wrapup(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_wrapup': True
+                }
+            }
+        }
+
+        result = agent_dao.on_wrapup(agent_id)
+
+        self.assertTrue(result, True)

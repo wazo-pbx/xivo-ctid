@@ -287,9 +287,6 @@ class CTIServer(object):
         callback_handler.register_callback('QueueMemberPaused',
                                            lambda event: agent_availability_updater.parse_ami_paused(event,
                                                                                                      self._agent_availability_updater))
-        callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_status_manager.parse_ami_answered(event,
-                                                                                                 self._agent_status_manager))
         callback_handler.register_callback('AgentComplete',
                                            lambda event: agent_status_manager.parse_ami_call_completed(event,
                                                                                                        self._agent_status_manager))

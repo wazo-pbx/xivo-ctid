@@ -73,16 +73,23 @@ class AgentAvailabilityUpdater(object):
         self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.unavailable)
         self.notifier.notify(agent_id)
 
-    def agent_call_completed(self, agent_id, wrapup_time):
-        if wrapup_time != 0:
-            self.scheduler.schedule(wrapup_time,
-                                    self.agent_wrapup_completed,
-                                    agent_id)
-        elif dao.agent.is_logged(agent_id) and not dao.agent.is_completely_paused(agent_id):
-            self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
-            self.notifier.notify(agent_id)
+    def agent_not_in_use(self, agent_id):
+        if dao.agent.is_completely_paused(agent_id):
+            return
+        if not dao.agent.is_logged(agent_id):
+            return
+        if dao.agent.on_wrapup(agent_id):
+            return
+        self.dao.innerdata.set_agent_availability(agent_id, AgentStatus.available)
+        self.notifier.notify(agent_id)
+
+    def agent_in_wrapup(self, agent_id, wrapup_time):
+        self.scheduler.schedule(wrapup_time,
+                                self.agent_wrapup_completed,
+                                agent_id)
 
     def agent_wrapup_completed(self, agent_id):
+        dao.agent.set_on_wrapup(agent_id, False)
         if dao.agent.is_completely_paused(agent_id):
             return
         if not dao.agent.is_logged(agent_id):

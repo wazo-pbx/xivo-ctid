@@ -172,13 +172,62 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         )
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
-    def test_agent_call_completed(self):
+    def test_agent_not_in_use(self):
         dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_wrapup.return_value = False
 
+        agent_id = 12
+
+        self.agent_availability_updater.agent_not_in_use(agent_id)
+
+        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
+        self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
+
+    def test_agent_not_in_use_logged_out(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_wrapup.return_value = False
+
+        agent_id = 12
+
+        self.agent_availability_updater.agent_not_in_use(agent_id)
+
+        self.assertEqual(self.agent_availability_updater.scheduler.schedule.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
+
+    def test_agent_not_in_use_paused(self):
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_wrapup.return_value = False
+
+        agent_id = 12
+
+        self.agent_availability_updater.agent_not_in_use(agent_id)
+
+        self.assertEqual(self.agent_availability_updater.scheduler.schedule.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
+
+    def test_agent_not_in_use_on_wrapup(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_wrapup.return_value = True
+
+        agent_id = 12
+
+        self.agent_availability_updater.agent_not_in_use(agent_id)
+
+        self.assertEqual(self.agent_availability_updater.scheduler.schedule.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
+
+    def test_agent_in_wrapup(self):
         agent_id = 12
         wrapup_time = 25
 
-        self.agent_availability_updater.agent_call_completed(agent_id, wrapup_time)
+        self.agent_availability_updater.agent_in_wrapup(agent_id, wrapup_time)
 
         self.agent_availability_updater.scheduler.schedule.assert_called_once_with(
             wrapup_time,
@@ -187,42 +236,6 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
         )
         self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
-
-    def test_agent_call_completed_logged_out(self):
-        dao.agent.is_completely_paused.return_value = False
-        dao.agent.is_logged.return_value = False
-
-        agent_id = 12
-
-        self.agent_availability_updater.agent_call_completed(agent_id, 0)
-
-        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
-        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
-
-    def test_agent_call_completed_no_wrapup_paused(self):
-        dao.agent.is_completely_paused.return_value = True
-
-        agent_id = 12
-        wrapup_time = 0
-
-        self.agent_availability_updater.agent_call_completed(agent_id, wrapup_time)
-
-        self.assertEqual(self.agent_availability_updater.scheduler.schedule.call_count, 0)
-        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
-        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
-
-    def test_agent_call_completed_no_wrapup(self):
-        dao.agent.is_completely_paused.return_value = False
-        agent_availability_updater.scheduler = Mock(Scheduler)
-
-        agent_id = 12
-        wrapup_time = 0
-
-        self.agent_availability_updater.agent_call_completed(agent_id, wrapup_time)
-
-        self.assertEqual(self.agent_availability_updater.scheduler.schedule.call_count, 0)
-        self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
-        self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
     def test_agent_wrapup_completed(self):
         dao.agent.is_completely_paused.return_value = False
@@ -233,6 +246,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_wrapup_completed(agent_id)
 
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.agent_availability_updater.dao.innerdata.set_agent_availability.assert_called_once_with(agent_id, AgentStatus.available)
         self.agent_availability_updater.notifier.notify.assert_called_once_with(agent_id)
 
@@ -245,6 +259,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_wrapup_completed(agent_id)
 
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 
@@ -257,6 +272,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_wrapup_completed(agent_id)
 
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 
@@ -269,6 +285,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
         self.agent_availability_updater.agent_wrapup_completed(agent_id)
 
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
         self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
 

@@ -22,26 +22,16 @@ from xivo_cti import dao
 logger = logging.getLogger(__name__)
 
 
-def parse_ami_answered(ami_event, agent_status_manager):
-    agent_member_name = ami_event['MemberName']
-    try:
-        agent_id = dao.agent.get_id_from_interface(agent_member_name)
-    except ValueError:
-        pass  # Not an agent member name
-    else:
-        agent_status_manager.agent_in_use(agent_id)
-
-
 def parse_ami_call_completed(ami_event, agent_status_manager):
-    agent_member_name = ami_event['MemberName']
     wrapup = int(ami_event['WrapupTime'])
-
-    try:
-        agent_id = dao.agent.get_id_from_interface(agent_member_name)
-    except ValueError:
-        pass  # Not an agent member name
-    else:
-        agent_status_manager.agent_not_in_use(agent_id, wrapup)
+    if wrapup > 0:
+        agent_member_name = ami_event['MemberName']
+        try:
+            agent_id = dao.agent.get_id_from_interface(agent_member_name)
+        except ValueError:
+            pass  # Not an agent member name
+        else:
+            agent_status_manager.agent_in_wrapup(agent_id, wrapup)
 
 
 class QueueEventReceiver(object):
@@ -90,9 +80,13 @@ class AgentStatusManager(object):
         dao.agent.set_on_call(agent_id, True)
         self._agent_availability_updater.agent_in_use(agent_id)
 
-    def agent_not_in_use(self, agent_id, wrapup=0):
+    def agent_not_in_use(self, agent_id):
         if not dao.agent.on_call(agent_id):
             return
 
         dao.agent.set_on_call(agent_id, False)
-        self._agent_availability_updater.agent_call_completed(agent_id, wrapup)
+        self._agent_availability_updater.agent_not_in_use(agent_id)
+
+    def agent_in_wrapup(self, agent_id, wrapup):
+        dao.agent.set_on_wrapup(agent_id, True)
+        self._agent_availability_updater.agent_in_wrapup(agent_id, wrapup)

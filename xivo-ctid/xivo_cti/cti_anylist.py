@@ -117,6 +117,7 @@ class AnyList(object):
             'availability': AgentStatus.logged_out,
             'availability_since': time.time(),
             'on_call': False,
+            'on_wrapup': False,
             'queues': [],
             'groups': []
         },
