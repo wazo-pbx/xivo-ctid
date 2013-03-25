@@ -33,27 +33,6 @@ def parse_ami_logout(ami_event, agent_availability_updater):
     agent_availability_updater.agent_logged_out(agent_id)
 
 
-def parse_ami_answered(ami_event, agent_availability_updater):
-    agent_member_name = ami_event['MemberName']
-    try:
-        agent_id = dao.agent.get_id_from_interface(agent_member_name)
-    except ValueError:
-        pass  # Not an agent member name
-    else:
-        agent_availability_updater.agent_in_use(agent_id)
-
-
-def parse_ami_call_completed(ami_event, agent_availability_updater):
-    agent_member_name = ami_event['MemberName']
-    agent_wrapup = int(ami_event['WrapupTime'])
-    try:
-        agent_id = dao.agent.get_id_from_interface(agent_member_name)
-    except ValueError:
-        pass  # Not an agent member name
-    else:
-        agent_availability_updater.agent_call_completed(agent_id, agent_wrapup)
-
-
 def parse_ami_paused(ami_event, agent_availability_updater):
     agent_member_name = ami_event['MemberName']
     paused = ami_event['Paused'] == '1'
