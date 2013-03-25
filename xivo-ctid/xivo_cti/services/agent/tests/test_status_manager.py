@@ -43,7 +43,7 @@ class TestAmiEventCallbackes(unittest.TestCase):
         self.manager.agent_in_use.assert_called_once_with(agent_id)
 
     def test_parse_ami_answered_no_agent(self):
-        ami_event = {'MemberName': 'Agent/1000'}
+        ami_event = {'MemberName': 'SIP/abc'}
 
         dao.agent.get_id_from_interface.side_effect = [ValueError()]
 
@@ -60,7 +60,7 @@ class TestAmiEventCallbackes(unittest.TestCase):
         self.manager.agent_not_in_use.assert_called_once_with(agent_id, 10)
 
     def test_parse_ami_call_completed_no_agent(self):
-        ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '10'}
+        ami_event = {'MemberName': 'SIP/abc', 'WrapupTime': '10'}
 
         dao.agent.get_id_from_interface.side_effect = [ValueError()]
 
@@ -178,4 +178,3 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.on_call.assert_called_once_with(agent_id)
         self.assertEquals(self.availability_updater.agent_call_completed.call_count, 0)
         self.assertEquals(dao.agent.set_on_call.call_count, 0)
-
