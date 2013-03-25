@@ -312,6 +312,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
     def test_agent_unpaused(self):
         dao.agent.is_logged.return_value = True
         dao.agent.on_call.return_value = False
+        dao.agent.on_wrapup.return_value = False
 
         agent_id = 12
 
@@ -323,6 +324,7 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
     def test_agent_unpaused_calling(self):
         dao.agent.is_logged.return_value = True
         dao.agent.on_call.return_value = True
+        dao.agent.on_wrapup.return_value = False
 
         agent_id = 12
 
@@ -333,6 +335,20 @@ class TestAgentAvailabilityUpdater(unittest.TestCase):
 
     def test_agent_unpaused_while_unlogged(self):
         dao.agent.is_logged.return_value = False
+        dao.agent.on_call.return_value = False
+        dao.agent.on_wrapup.return_value = False
+
+        agent_id = 12
+
+        self.agent_availability_updater.agent_unpaused(agent_id)
+
+        self.assertEqual(self.agent_availability_updater.dao.innerdata.set_agent_availability.call_count, 0)
+        self.assertEqual(self.agent_availability_updater.notifier.notify.call_count, 0)
+
+    def test_agent_unpaused_on_wrapup(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call.return_value = False
+        dao.agent.on_wrapup.return_value = True
 
         agent_id = 12
 
