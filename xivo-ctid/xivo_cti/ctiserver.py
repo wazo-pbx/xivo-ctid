@@ -73,8 +73,6 @@ from xivo_cti.services.meetme import service_manager as meetme_service_manager_m
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.ioc.context import context
-from xivo_cti.services.agent.status_manager import AgentStatusManager, \
-    QueueEventReceiver
 
 logger = logging.getLogger('main')
 
@@ -170,8 +168,8 @@ class CTIServer(object):
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
-        self._agent_status_manager = AgentStatusManager(self._agent_availability_updater)
-        self._queue_event_receiver = QueueEventReceiver(self._queue_member_notifier, self._agent_status_manager)
+        self._agent_status_manager = context.get('agent_status_manager')
+        self._queue_event_receiver = context.get('queue_event_receiver')
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
@@ -183,7 +181,6 @@ class CTIServer(object):
         queue_statistics_manager.register_events()
         queue_statistics_producer.register_events()
         meetme_service_manager_module.register_callbacks()
-
 
         meetme_service_manager = context.get('meetme_service_manager')
         meetme_service_manager.initialize()
