@@ -37,9 +37,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from xivo_dao import user_dao
 from xivo_dao import phonefunckey_dao
 from xivo_cti import dao
+
+logger = logging.getLogger(__name__)
 
 
 class UserServiceManager(object):
@@ -142,6 +146,7 @@ class UserServiceManager(object):
 
     def pickup_the_phone(self, user_id):
         device_id = user_dao.get_device_id(user_id)
+        logger.info('User %s is answering his phone', user_id)
         self.device_manager.answer(device_id)
 
     def enable_recording(self, target):
