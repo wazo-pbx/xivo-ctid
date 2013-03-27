@@ -175,6 +175,8 @@ class AgentServiceManager(object):
     def _get_user_state_interface(self, user_id):
         user_line = user_dao.get_line_identity(user_id)
         connected_agent_id = user_dao.agent_id(user_id)
+        if connected_agent_id is None:
+            return user_line
         loggedon_state_interface = self._get_agent_state_interface(connected_agent_id)
         if loggedon_state_interface is None:
             loggedon_state_interface = user_line

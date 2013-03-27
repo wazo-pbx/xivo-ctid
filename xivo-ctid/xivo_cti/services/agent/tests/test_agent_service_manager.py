@@ -169,6 +169,33 @@ class TestAgentServiceManager(unittest.TestCase):
                                                       ('CallerID', u'Listen/Écouter'),
                                                       ('Async', 'true')])
 
+    @patch('xivo_dao.user_dao.agent_id')
+    @patch('xivo_dao.agent_status_dao.get_status')
+    @patch('xivo_dao.user_dao.get_line_identity')
+    def test_on_cti_listen_supervisor_not_agent(self, mock_get_line_identity, mock_get_status, mock_agent_id):
+        agent_id = '42'
+        connected_agent_id = None
+        agent_xid = 'xivo/%s' % agent_id
+        user_device = 'SIP/abcd'
+        agent_device = 'SIP/fghi'
+        agent_status = Mock()
+        agent_status.state_interface = agent_device
+        mock_get_line_identity.return_value = user_device
+        mock_agent_id.return_value = connected_agent_id
+        mock_get_status.return_value = agent_status
+
+        self.agent_manager.on_cti_listen(self.connected_user_id, agent_xid)
+
+        mock_get_line_identity.assert_called_once_with(self.connected_user_id)
+        mock_agent_id.assert_called_once_with(self.connected_user_id)
+        mock_get_status.assert_any_call(agent_id)
+        self.ami.sendcommand.assert_called_once_with('Originate',
+                                                     [('Channel', user_device),
+                                                      ('Application', 'ChanSpy'),
+                                                      ('Data', '%s,bds' % agent_device),
+                                                      ('CallerID', u'Listen/Écouter'),
+                                                      ('Async', 'true')])
+
     @patch('xivo_dao.agent_status_dao.get_status')
     @patch('xivo_dao.user_dao.get_line_identity')
     def test_on_cti_listen_no_associated_line(self, mock_get_line_identity, mock_get_status):
