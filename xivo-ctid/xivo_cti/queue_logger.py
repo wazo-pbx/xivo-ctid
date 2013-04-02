@@ -104,9 +104,9 @@ class QueueLogger(object):
         ev[CALLTIME] = time.time()
 
         sql = '''INSERT INTO queue_info (call_time_t, queue_name, ''' \
-                          '''caller, caller_uniqueid) ''' \
-              '''VALUES (%d, '%s', '%s', '%s');''' % \
-              (ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
+              '''caller, caller_uniqueid) ''' \
+              '''VALUES (%d, '%s', '%s', '%s');''' % (
+                  ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -120,8 +120,8 @@ class QueueLogger(object):
 
         sql = '''UPDATE queue_info '''\
               '''SET call_picker = '%s', hold_time = %s '''\
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev[MEMBER], ev[HOLDTIME], ct, ev[UNIQUEID])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[MEMBER], ev[HOLDTIME], ct, ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -135,8 +135,8 @@ class QueueLogger(object):
 
         sql = '''UPDATE queue_info ''' \
               '''SET talk_time = %s ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev[TALKTIME], ct, ev[UNIQUEID])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[TALKTIME], ct, ev[UNIQUEID])
 
         del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
 
@@ -152,8 +152,8 @@ class QueueLogger(object):
 
         sql = '''UPDATE queue_info ''' \
               '''SET hold_time = %d ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev[HOLDTIME], ct, ev[UNIQUEID])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[HOLDTIME], ct, ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
