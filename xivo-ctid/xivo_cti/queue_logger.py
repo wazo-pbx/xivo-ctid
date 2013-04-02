@@ -83,9 +83,9 @@ class QueueLogger(object):
         to_delete = []
         for queue, events in cls.cache.iteritems():
             for event, values in events.iteritems():
-                if 'Holdtime' not in values:
+                if 'HoldTime' not in values:
                     continue
-                leave_time = values['call_time_t'] + int(values['Holdtime'])
+                leave_time = values['call_time_t'] + int(values['HoldTime'])
                 if 'Member' not in values and leave_time < max_time:
                     to_delete.append((queue, event))
         for queue, event in to_delete:
@@ -113,7 +113,7 @@ class QueueLogger(object):
         sql = '''UPDATE queue_info '''\
               '''SET call_picker = '%s', hold_time = %s '''\
               '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev["Member"], ev["Holdtime"], ct, ev["Uniqueid"])
+              (ev["Member"], ev["HoldTime"], ct, ev["Uniqueid"])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -139,13 +139,13 @@ class QueueLogger(object):
         if not cls._is_traced_event(ev):
             return ""
 
-        ev['Holdtime'] = time.time() - cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
+        ev['HoldTime'] = time.time() - cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
         ct = cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
 
         sql = '''UPDATE queue_info ''' \
               '''SET hold_time = %d ''' \
               '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev['Holdtime'], ct, ev['Uniqueid'])
+              (ev['HoldTime'], ct, ev['Uniqueid'])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
