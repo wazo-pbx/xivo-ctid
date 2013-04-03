@@ -17,11 +17,35 @@
 
 import unittest
 
-from mock import Mock, call
+from mock import Mock, call, sentinel
 from hamcrest import *
 
 from xivo_cti import innerdata
 from xivo_cti import channel_updater
+from xivo_cti.channel_updater import assert_has_channel
+
+
+class TestAssertHasChannelDecorator(unittest.TestCase):
+
+    def setUp(self):
+        self.original = Mock()
+        self.decorated = assert_has_channel(self.original)
+        self.channel_name = 'SIP/abc-123'
+        self.updater = Mock()
+
+    def test_assert_has_channel(self):
+        self.updater.innerdata.channels = {self.channel_name: 1}
+
+        self.decorated(self.updater, self.channel_name, sentinel.arg)
+
+        self.original.assert_called_once_with(self.updater, self.channel_name, sentinel.arg)
+
+    def test_assert_has_channel_not_found(self):
+        self.updater.innerdata.channels = {}
+
+        self.decorated(self.updater, self.channel_name, sentinel.arg)
+
+        self.assertFalse(self.original.called)
 
 
 class TestChannelUpdater(unittest.TestCase):

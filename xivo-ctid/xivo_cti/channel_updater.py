@@ -34,20 +34,18 @@ def parse_hold(event):
 
 
 def assert_has_channel(func):
-    def _fn(self, *args, **kwargs):
-        channel_name = args[0]
+    def _fn(self, channel_name, *args, **kwargs):
         if channel_name not in self.innerdata.channels:
             logger.warning('Trying to update an untracked channel %s', channel_name)
         else:
-            func(self, *args, **kwargs)
+            func(self, channel_name, *args, **kwargs)
     return _fn
 
 
 def notify_clients(func):
-    def _fn(self, *args, **kwargs):
-        channel_name = args[0]
+    def _fn(self, channel_name, *args, **kwargs):
         self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
-        func(self, *args, **kwargs)
+        func(self, channel_name, *args, **kwargs)
         self.innerdata.handle_cti_stack('empty_stack')
     return _fn
 
