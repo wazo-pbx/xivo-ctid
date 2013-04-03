@@ -40,3 +40,13 @@ class ChannelUpdater(object):
         else:
             channel.set_extra_data('xivo', 'calleridname', name)
             channel.set_extra_data('xivo', 'calleridnum', number)
+
+    def set_hold(self, channel_name, status):
+        try:
+            channel = self.innerdata.channels[channel_name]
+        except LookupError:
+            logger.warning('Tried to change the hold status on an unknown channel')
+        else:
+            self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+            channel.properties['holded'] = status
+            self.innerdata.handle_cti_stack('empty_stack')

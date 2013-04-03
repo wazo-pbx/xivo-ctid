@@ -17,7 +17,8 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, call
+from hamcrest import *
 
 from xivo_cti import innerdata
 from xivo_cti import channel_updater
@@ -64,3 +65,24 @@ class TestChannelUpdater(unittest.TestCase):
                                        '1234')
         except:
             self.fail('Should not raise')
+
+    def test_hold_channel(self):
+        name = 'SIP/1234'
+        status = True
+        self.innerdata.channels = {
+            name: innerdata.Channel(name, 'default', '123456.66'),
+        }
+
+        self.updater.set_hold(name, status)
+
+        channel = self.innerdata.channels[name]
+
+        assert_that(channel.properties['holded'], equal_to(status), 'holded status')
+        self._assert_channel_updated(name)
+
+    def _assert_channel_updated(self, channel):
+        calls = list(self.innerdata.handle_cti_stack.call_args_list)
+        expected = [call('setforce', ('channels', 'updatestatus', channel)),
+                    call('empty_stack')]
+
+        assert_that(calls, equal_to(expected), 'handle_cti_stack calls')
