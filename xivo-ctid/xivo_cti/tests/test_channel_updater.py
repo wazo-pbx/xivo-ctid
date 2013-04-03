@@ -17,16 +17,42 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, call, sentinel
+from hamcrest import *
 
 from xivo_cti import innerdata
 from xivo_cti import channel_updater
+from xivo_cti.channel_updater import assert_has_channel
+
+
+class TestAssertHasChannelDecorator(unittest.TestCase):
+
+    def setUp(self):
+        self.original = Mock()
+        self.decorated = assert_has_channel(self.original)
+        self.channel_name = 'SIP/abc-123'
+        self.updater = Mock()
+
+    def test_assert_has_channel(self):
+        self.updater.innerdata.channels = {self.channel_name: 1}
+
+        self.decorated(self.updater, self.channel_name, sentinel.arg)
+
+        self.original.assert_called_once_with(self.updater, self.channel_name, sentinel.arg)
+
+    def test_assert_has_channel_not_found(self):
+        self.updater.innerdata.channels = {}
+
+        self.decorated(self.updater, self.channel_name, sentinel.arg)
+
+        self.assertFalse(self.original.called)
 
 
 class TestChannelUpdater(unittest.TestCase):
 
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
+        self.innerdata.channels = {}
         self.updater = channel_updater.ChannelUpdater(self.innerdata)
 
     def test_new_caller_id(self):
@@ -50,17 +76,22 @@ class TestChannelUpdater(unittest.TestCase):
         self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
 
     def test_new_caller_id_unknown_channel(self):
-        channel_1 = {
-            'name': 'SIP/abc-124',
-            'context': 'test',
-            'unique_id': 12798734.33
-        }
-        self.innerdata.channels = {
-        }
+        self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
 
-        try:
-            self.updater.new_caller_id(channel_1['name'],
-                                       'Alice',
-                                       '1234')
-        except:
-            self.fail('Should not raise')
+    def test_hold_channel(self):
+        name, status = 'SIP/1234', True
+        channel = innerdata.Channel(name, 'default', '123456.66')
+        self.innerdata.channels[name] = channel
+
+        self.updater.set_hold(name, status)
+
+        channel = self.innerdata.channels[name]
+        assert_that(channel.properties['holded'], equal_to(status), 'holded status')
+        self._assert_channel_updated(name)
+
+    def _assert_channel_updated(self, channel):
+        calls = list(self.innerdata.handle_cti_stack.call_args_list)
+        expected = [call('setforce', ('channels', 'updatestatus', channel)),
+                    call('empty_stack')]
+
+        assert_that(calls, equal_to(expected), 'handle_cti_stack calls')

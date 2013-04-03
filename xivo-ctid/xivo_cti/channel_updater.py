@@ -27,16 +27,41 @@ def parse_new_caller_id(event):
     updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
 
 
+def parse_hold(event):
+    logger.debug('Parse hold %s', event)
+    updater = context.get('channel_updater')
+    updater.set_hold(event['Channel'], event['Status'] == 'On')
+
+
+def assert_has_channel(func):
+    def _fn(self, channel_name, *args, **kwargs):
+        if channel_name not in self.innerdata.channels:
+            logger.warning('Trying to update an untracked channel %s', channel_name)
+        else:
+            func(self, channel_name, *args, **kwargs)
+    return _fn
+
+
+def notify_clients(func):
+    def _fn(self, channel_name, *args, **kwargs):
+        self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+        func(self, channel_name, *args, **kwargs)
+        self.innerdata.handle_cti_stack('empty_stack')
+    return _fn
+
+
 class ChannelUpdater(object):
 
     def __init__(self, innerdata):
         self.innerdata = innerdata
 
-    def new_caller_id(self, channel, name, number):
-        try:
-            channel = self.innerdata.channels[channel]
-        except LookupError:
-            logger.info('Tried to update the caller id of an untracked channel')
-        else:
-            channel.set_extra_data('xivo', 'calleridname', name)
-            channel.set_extra_data('xivo', 'calleridnum', number)
+    @assert_has_channel
+    def new_caller_id(self, channel_name, name, number):
+        channel = self.innerdata.channels[channel_name]
+        channel.set_extra_data('xivo', 'calleridname', name)
+        channel.set_extra_data('xivo', 'calleridnum', number)
+
+    @assert_has_channel
+    @notify_clients
+    def set_hold(self, channel_name, status):
+        self.innerdata.channels[channel_name].properties['holded'] = status
