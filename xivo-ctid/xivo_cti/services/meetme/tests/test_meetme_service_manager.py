@@ -325,7 +325,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                                                                   'name': '4181235555',
                                                                   'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.manager.leave('800', 1)
+        self.manager.leave(conf_room_number, 1)
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -340,7 +340,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
         self.mock_notifier.reset_mock()
 
-        self.manager.leave('800', 2)
+        self.manager.leave(conf_room_number, 2)
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -363,7 +363,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
             }
         }
 
-        self.manager.leave('800', 1)
+        self.manager.leave(conf_room_number, 1)
 
         self.assertEqual(self.mock_notifier.publish_meetme_update.call_count, 0)
 
