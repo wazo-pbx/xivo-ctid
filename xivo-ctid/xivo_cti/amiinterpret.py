@@ -127,28 +127,6 @@ class AMI_1_8(object):
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
 
-    def ami_hold(self, event):
-        channel_name = event['Channel']
-        status = event['Status'] == 'On'
-        if channel_name in self.innerdata.channels:
-            self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
-            channel = self.innerdata.channels[channel_name]
-            channel.properties['holded'] = status
-            logger.debug('%s on hold(%s)', channel_name, status)
-            if not channel.peerchannel:
-                '''Usualy means that we are an agent which uses 3 channels'''
-                try:
-                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(channel_name)
-                    agent = self.innerdata.xod_config['agents'].get_agent_by_user(phone['iduserfeatures'])
-                    chan_start = 'Agent/%s' % agent['number']
-                    for chan in self.innerdata.channels:
-                        if chan_start in chan:
-                            self.innerdata.channels[chan].properties['holded'] = status
-                            logger.debug('%s on hold(%s)', chan, status)
-                except LookupError:
-                    logger.warning('Could not find %s peer channel to put it on hold', channel_name)
-            self.innerdata.handle_cti_stack('empty_stack')
-
     def ami_channelupdate(self, event):
         # could be especially useful when there is a trunk : links callno-remote and callno-local
         # when the call is outgoing, one never receives the callno-remote

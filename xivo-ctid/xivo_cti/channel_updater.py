@@ -27,6 +27,12 @@ def parse_new_caller_id(event):
     updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
 
 
+def parse_hold(event):
+    logger.debug('Parse hold %s', event)
+    updater = context.get('channel_updater')
+    updater.set_hold(event['Channel'], event['Status'] == 'On')
+
+
 class ChannelUpdater(object):
 
     def __init__(self, innerdata):
