@@ -28,6 +28,7 @@ class TestChannelUpdater(unittest.TestCase):
 
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
+        self.innerdata.channels = {}
         self.updater = channel_updater.ChannelUpdater(self.innerdata)
 
     def test_new_caller_id(self):
@@ -51,26 +52,16 @@ class TestChannelUpdater(unittest.TestCase):
         self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
 
     def test_new_caller_id_unknown_channel(self):
-        channel_1 = {
-            'name': 'SIP/abc-124',
-            'context': 'test',
-            'unique_id': 12798734.33
-        }
-        self.innerdata.channels = {}
-
-        self.updater.new_caller_id(channel_1['name'], 'Alice', '1234')
+        self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
 
     def test_hold_channel(self):
-        name = 'SIP/1234'
-        status = True
-        self.innerdata.channels = {
-            name: innerdata.Channel(name, 'default', '123456.66'),
-        }
+        name, status = 'SIP/1234', True
+        channel = innerdata.Channel(name, 'default', '123456.66')
+        self.innerdata.channels[name] = channel
 
         self.updater.set_hold(name, status)
 
         channel = self.innerdata.channels[name]
-
         assert_that(channel.properties['holded'], equal_to(status), 'holded status')
         self._assert_channel_updated(name)
 
