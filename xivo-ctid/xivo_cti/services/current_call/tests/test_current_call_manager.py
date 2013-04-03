@@ -378,6 +378,9 @@ class TestCurrentCallManager(unittest.TestCase):
         self.assertEqual(self.manager._calls_per_line, expected)
         self.notifier.publish_current_call.assert_called_once_with(self.line_1)
 
+    def test_hold_channel_no_error_after_restart(self):
+        self.manager.hold_channel(self.channel_2)
+
     def test_unhold_channel(self):
         self.manager._calls_per_line = {
             self.line_1: [
@@ -409,6 +412,9 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(self.manager._calls_per_line, expected)
         self.notifier.publish_current_call.assert_called_once_with(self.line_1)
+
+    def test_unhold_channel_no_error_after_restart(self):
+        self.manager.unhold_channel(self.channel_2)
 
     def test_get_line_calls(self):
         self.manager._calls_per_line = {

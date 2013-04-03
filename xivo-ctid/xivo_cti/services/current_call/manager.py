@@ -265,6 +265,10 @@ class CurrentCallManager(object):
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)
+        if line not in self._calls_per_line:
+            logger.warning('No line associated to channel %s to set hold to %s',
+                           channel, new_status)
+            return
         peer_lines = [self._identity_from_channel(c[PEER_CHANNEL]) for c in self._calls_per_line[line]]
         for peer_line in peer_lines:
             for call in self._calls_per_line[peer_line]:
