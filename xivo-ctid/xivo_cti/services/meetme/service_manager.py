@@ -142,6 +142,9 @@ class MeetmeServiceManager(object):
 
     def leave(self, conf_number, join_seq_number):
         logger.debug('Leave %s %s', conf_number, join_seq_number)
+        if join_seq_number not in self._cache[conf_number]['members']:
+            logger.warning('Untracked user leaving conference %s', conf_number)
+            return
         self._cache[conf_number]['members'].pop(join_seq_number)
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = 0
