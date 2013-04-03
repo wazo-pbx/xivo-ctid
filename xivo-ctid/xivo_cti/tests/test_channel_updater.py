@@ -56,15 +56,9 @@ class TestChannelUpdater(unittest.TestCase):
             'context': 'test',
             'unique_id': 12798734.33
         }
-        self.innerdata.channels = {
-        }
+        self.innerdata.channels = {}
 
-        try:
-            self.updater.new_caller_id(channel_1['name'],
-                                       'Alice',
-                                       '1234')
-        except:
-            self.fail('Should not raise')
+        self.updater.new_caller_id(channel_1['name'], 'Alice', '1234')
 
     def test_hold_channel(self):
         name = 'SIP/1234'

@@ -33,26 +33,30 @@ def parse_hold(event):
     updater.set_hold(event['Channel'], event['Status'] == 'On')
 
 
+def assert_has_channel(func):
+    def _fn(self, *args, **kwargs):
+        channel_name = args[0]
+        if channel_name not in self.innerdata.channels:
+            logger.warning('Trying to update an untracked channel %s', channel_name)
+        else:
+            func(self, *args, **kwargs)
+    return _fn
+
+
 class ChannelUpdater(object):
 
     def __init__(self, innerdata):
         self.innerdata = innerdata
 
-    def new_caller_id(self, channel, name, number):
-        try:
-            channel = self.innerdata.channels[channel]
-        except LookupError:
-            logger.info('Tried to update the caller id of an untracked channel')
-        else:
-            channel.set_extra_data('xivo', 'calleridname', name)
-            channel.set_extra_data('xivo', 'calleridnum', number)
+    @assert_has_channel
+    def new_caller_id(self, channel_name, name, number):
+        channel = self.innerdata.channels[channel_name]
+        channel.set_extra_data('xivo', 'calleridname', name)
+        channel.set_extra_data('xivo', 'calleridnum', number)
 
+    @assert_has_channel
     def set_hold(self, channel_name, status):
-        try:
-            channel = self.innerdata.channels[channel_name]
-        except LookupError:
-            logger.warning('Tried to change the hold status on an unknown channel')
-        else:
-            self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
-            channel.properties['holded'] = status
-            self.innerdata.handle_cti_stack('empty_stack')
+        channel = self.innerdata.channels[channel_name]
+        self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+        channel.properties['holded'] = status
+        self.innerdata.handle_cti_stack('empty_stack')
