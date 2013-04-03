@@ -43,6 +43,15 @@ def assert_has_channel(func):
     return _fn
 
 
+def notify_clients(func):
+    def _fn(self, *args, **kwargs):
+        channel_name = args[0]
+        self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
+        func(self, *args, **kwargs)
+        self.innerdata.handle_cti_stack('empty_stack')
+    return _fn
+
+
 class ChannelUpdater(object):
 
     def __init__(self, innerdata):
@@ -55,8 +64,6 @@ class ChannelUpdater(object):
         channel.set_extra_data('xivo', 'calleridnum', number)
 
     @assert_has_channel
+    @notify_clients
     def set_hold(self, channel_name, status):
-        channel = self.innerdata.channels[channel_name]
-        self.innerdata.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
-        channel.properties['holded'] = status
-        self.innerdata.handle_cti_stack('empty_stack')
+        self.innerdata.channels[channel_name].properties['holded'] = status
