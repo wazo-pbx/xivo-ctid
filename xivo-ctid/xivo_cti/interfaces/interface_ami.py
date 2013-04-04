@@ -122,6 +122,9 @@ class AMI(object):
             replyto.replytimer.setName('Thread-ami-%s' % actionid)
             replyto.replytimer.start()
 
+    def decode_raw_event(self, raw_event):
+        return raw_event.decode('utf8', 'replace')
+
     def handle_event(self, input_data):
         """
         Handles the AMI events occuring on Asterisk.
@@ -133,7 +136,7 @@ class AMI(object):
 
         for raw_event in events:
             try:
-                decoded_event = raw_event.decode('utf8')
+                decoded_event = self.decode_raw_event(raw_event)
             except UnicodeError:
                 logger.exception('could not decode event %r', raw_event)
                 continue
