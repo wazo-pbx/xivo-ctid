@@ -135,11 +135,7 @@ class AMI(object):
         self._input_buffer = events.pop()
 
         for raw_event in events:
-            try:
-                decoded_event = self.decode_raw_event(raw_event)
-            except UnicodeError:
-                logger.exception('could not decode event %r', raw_event)
-                continue
+            decoded_event = self.decode_raw_event(raw_event)
             event = {}
             nocolon = []
             for line in decoded_event.split(self.LINE_SEPARATOR):
