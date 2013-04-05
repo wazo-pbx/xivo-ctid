@@ -66,7 +66,6 @@ class DirectoryResultFormatter(object):
         return formatted_results
 
     def _is_name_available(self):
-        print self._types
         return self.NAME_FIELD in self._types
 
     def _format_result(self, result):
