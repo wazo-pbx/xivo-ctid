@@ -307,6 +307,7 @@ class CTIServer(object):
                                            channel_updater.parse_new_caller_id)
 
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
+        callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
 
         self._queue_member_updater.register_ami_events(callback_handler)
 

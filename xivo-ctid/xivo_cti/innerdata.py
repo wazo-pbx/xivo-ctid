@@ -812,6 +812,11 @@ class Channel(object):
     def has_extra_data(self, family, varname):
         return family in self.extra_data and varname in self.extra_data[family]
 
+    def inherit(self, parent_channel):
+        for (parent_key, parent_value) in parent_channel.extra_data.iteritems():
+            for parent_subkey, parent_subvalue in parent_value.iteritems():
+                self.set_extra_data(parent_key, parent_subkey, parent_subvalue)
+
 
 def split_channel(channel):
     protocol, end = channel.split('/', 1)

@@ -397,15 +397,6 @@ class AMI_1_8(object):
         # relation to Old/New/Waiting in MessageWaiting UserEvent ?
         self.innerdata.voicemailupdate(fullmailbox, event['NewMessageCount'])
 
-    def ami_inherit(self, event):
-        try:
-            parent = event['Parent']
-            child = event['Child']
-            if parent in self.innerdata.channels and child in self.innerdata.channels:
-                self.innerdata.channels[child].extra_data.update(self.innerdata.channels[parent].extra_data)
-        except LookupError:
-            logger.exception('Failed to copy parents variable to child channel')
-
     def amiresponse_extensionstatus(self, event):
         hint = event.get('Hint')
         if hint:
