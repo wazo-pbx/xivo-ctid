@@ -33,6 +33,11 @@ def parse_hold(event):
     updater.set_hold(event['Channel'], event['Status'] == 'On')
 
 
+def parse_inherit(event):
+    updater = context.get('channel_updater')
+    updater.inherit_channels(event['Parent'], event['Child'])
+
+
 def assert_has_channel(func):
     def _fn(self, channel_name, *args, **kwargs):
         if channel_name not in self.innerdata.channels:
@@ -65,3 +70,16 @@ class ChannelUpdater(object):
     @notify_clients
     def set_hold(self, channel_name, status):
         self.innerdata.channels[channel_name].properties['holded'] = status
+
+    def inherit_channels(self, parent_name, child_name):
+        if parent_name not in self.innerdata.channels:
+            logger.warning('Received inherit event on untracked parent channel')
+            return
+        if child_name not in self.innerdata.channels:
+            logger.warning('Received inherit event on untracked child channel')
+            return
+
+        parent = self.innerdata.channels[parent_name]
+        child = self.innerdata.channels[child_name]
+
+        child.inherit(parent)

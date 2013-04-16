@@ -95,3 +95,16 @@ class TestChannelUpdater(unittest.TestCase):
                     call('empty_stack')]
 
         assert_that(calls, equal_to(expected), 'handle_cti_stack calls')
+
+    def test_inherit_channels(self):
+        parent_name = 'SIP/parent_channel-0'
+        parent = Mock(innerdata.Channel)
+        self.innerdata.channels[parent_name] = parent
+        child_name = 'SIP/child_channel-0'
+        child = Mock(innerdata.Channel)
+        self.innerdata.channels[child_name] = child
+
+        self.updater.inherit_channels(parent_name, child_name)
+
+        new_child = self.innerdata.channels[child_name]
+        new_child.inherit.assert_called_once_with(parent)
