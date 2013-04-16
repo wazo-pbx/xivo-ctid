@@ -22,6 +22,7 @@ from hamcrest import *
 
 from xivo_cti import innerdata
 from xivo_cti import channel_updater
+from xivo_cti.channel import Channel
 from xivo_cti.channel_updater import assert_has_channel
 
 
@@ -62,9 +63,9 @@ class TestChannelUpdater(unittest.TestCase):
             'unique_id': 12798734.33
         }
         self.innerdata.channels = {
-            channel_1['name']: innerdata.Channel(channel_1['name'],
-                                                 channel_1['context'],
-                                                 channel_1['unique_id'])
+            channel_1['name']: Channel(channel_1['name'],
+                                       channel_1['context'],
+                                       channel_1['unique_id'])
         }
 
         self.updater.new_caller_id(channel_1['name'],
@@ -80,7 +81,7 @@ class TestChannelUpdater(unittest.TestCase):
 
     def test_hold_channel(self):
         name, status = 'SIP/1234', True
-        channel = innerdata.Channel(name, 'default', '123456.66')
+        channel = Channel(name, 'default', '123456.66')
         self.innerdata.channels[name] = channel
 
         self.updater.set_hold(name, status)
@@ -98,10 +99,10 @@ class TestChannelUpdater(unittest.TestCase):
 
     def test_inherit_channels(self):
         parent_name = 'SIP/parent_channel-0'
-        parent = Mock(innerdata.Channel)
+        parent = Mock(Channel)
         self.innerdata.channels[parent_name] = parent
         child_name = 'SIP/child_channel-0'
-        child = Mock(innerdata.Channel)
+        child = Mock(Channel)
         self.innerdata.channels[child_name] = child
 
         self.updater.inherit_channels(parent_name, child_name)
