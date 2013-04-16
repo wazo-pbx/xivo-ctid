@@ -19,7 +19,7 @@ import unittest
 
 from mock import Mock
 from xivo_cti import cti_sheets
-from xivo_cti.innerdata import Channel
+from xivo_cti.channel import Channel
 
 
 class TestSheets(unittest.TestCase):
