@@ -117,7 +117,7 @@ class AMI_1_8(object):
             self.innerdata.channels[channel2].properties['commstatus'] = 'linked-called'
             self.innerdata.setpeerchannel(channel2, channel1)
             self.innerdata.update(channel2)
-            self.innerdata.sheetsend('link', channel1)
+            self.innerdata.sheetsend('link', channel2)
 
     def ami_unlink(self, event):
         self.innerdata.sheetsend('unlink', event['Channel1'])
