@@ -101,6 +101,8 @@ class AMI_1_8(object):
         self.innerdata.updatehint(event['Hint'], event['Status'])
 
     def ami_bridge(self, event):
+        if event['Bridgestate'] != 'Link':
+            return
         channel1 = event['Channel1']
         channel2 = event['Channel2']
         if channel1 in self.innerdata.channels:
