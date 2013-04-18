@@ -18,8 +18,34 @@
 import logging
 
 from xivo_cti import dao
+from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
+
+
+def parse_ami_login(ami_event, agent_availability_updater):
+    agent_id = int(ami_event['AgentID'])
+    agent_availability_updater.agent_logged_in(agent_id)
+
+
+def parse_ami_logout(ami_event, agent_availability_updater):
+    agent_id = int(ami_event['AgentID'])
+    agent_availability_updater.agent_logged_out(agent_id)
+
+
+def parse_ami_paused(ami_event, agent_availability_updater):
+    agent_member_name = ami_event['MemberName']
+    paused = ami_event['Paused'] == '1'
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_member_name)
+    except ValueError:
+        pass  # Not an agent member name
+    else:
+        if paused and dao.agent.is_completely_paused(agent_id):
+            agent_availability_updater.agent_paused_all(agent_id)
+        else:
+            agent_availability_updater.agent_unpaused(agent_id)
 
 
 def parse_ami_call_completed(ami_event, agent_status_manager):
@@ -70,23 +96,71 @@ class QueueEventReceiver(object):
 
 class AgentStatusManager(object):
 
-    def __init__(self, agent_availability_updater):
+    def __init__(self, agent_availability_updater, scheduler):
         self._agent_availability_updater = agent_availability_updater
+        self.scheduler = scheduler
+
+    def agent_logged_in(self, agent_id):
+        if dao.agent.is_completely_paused(agent_id):
+            agent_status = AgentStatus.unavailable
+        else:
+            agent_status = AgentStatus.available
+
+        self._agent_availability_updater.update(agent_id, agent_status)
+
+    def agent_logged_out(self, agent_id):
+        agent_status = AgentStatus.logged_out
+        try:
+            self._agent_availability_updater.update(agent_id, agent_status)
+        except NoSuchAgentException:
+            logger.info('Tried to logout an unknown agent')
 
     def agent_in_use(self, agent_id):
         if dao.agent.on_call(agent_id):
             return
 
         dao.agent.set_on_call(agent_id, True)
-        self._agent_availability_updater.agent_in_use(agent_id)
+        self._agent_availability_updater.update(agent_id, AgentStatus.unavailable)
 
     def agent_not_in_use(self, agent_id):
         if not dao.agent.on_call(agent_id):
             return
 
         dao.agent.set_on_call(agent_id, False)
-        self._agent_availability_updater.agent_not_in_use(agent_id)
+        if dao.agent.is_completely_paused(agent_id):
+            return
+        if not dao.agent.is_logged(agent_id):
+            return
+        if dao.agent.on_wrapup(agent_id):
+            return
+        self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
-    def agent_in_wrapup(self, agent_id, wrapup):
+    def agent_in_wrapup(self, agent_id, wrapup_time):
         dao.agent.set_on_wrapup(agent_id, True)
-        self._agent_availability_updater.agent_in_wrapup(agent_id, wrapup)
+        self.scheduler.schedule(wrapup_time,
+                                self.agent_wrapup_completed,
+                                agent_id)
+
+    def agent_wrapup_completed(self, agent_id):
+        dao.agent.set_on_wrapup(agent_id, False)
+        if dao.agent.is_completely_paused(agent_id):
+            return
+        if not dao.agent.is_logged(agent_id):
+            return
+        if dao.agent.on_call(agent_id):
+            return
+        self._agent_availability_updater.update(agent_id, AgentStatus.available)
+
+    def agent_paused_all(self, agent_id):
+        if not dao.agent.is_logged(agent_id):
+            return
+        self._agent_availability_updater.update(agent_id, AgentStatus.unavailable)
+
+    def agent_unpaused(self, agent_id):
+        if not dao.agent.is_logged(agent_id):
+            return
+        if dao.agent.on_call(agent_id):
+            return
+        if dao.agent.on_wrapup(agent_id):
+            return
+        self._agent_availability_updater.update(agent_id, AgentStatus.available)
