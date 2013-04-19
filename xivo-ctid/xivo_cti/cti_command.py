@@ -587,9 +587,7 @@ class Command(object):
                 voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
                 prefix = extensions_dao.exten_by_name('vmboxslt')
-                prefix = prefix['exten']
-                prefix = prefix[:len(prefix) - 1]
-                extentodial = prefix + vm_number
+                extentodial = prefix[:-1] + vm_number
                 dst_context = voicemail['context']
             elif dst['type'] == 'meetme' and dst['id'] in self.innerdata.xod_config['meetmes'].keeplist:
                 extentodial = self.innerdata.xod_config['meetmes'].keeplist[dst['id']]['confno']
