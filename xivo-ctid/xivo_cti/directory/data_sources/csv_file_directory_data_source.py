@@ -39,7 +39,7 @@ class UnicodeDictReader(csv.DictReader):
     def next(self):
         return dict((key, val.decode('utf-8'))
                     for (key, val) in csv.DictReader.next(self).iteritems())
-    
+
 class CSVFileDirectoryDataSource(DirectoryDataSource):
 
     def __init__(self, csv_file, delimiter, key_mapping):
