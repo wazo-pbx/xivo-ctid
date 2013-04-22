@@ -149,6 +149,68 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertEqual(result, True)
 
+    def test_set_on_call_acd(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': False
+                }
+            }
+        }
+
+        agent_dao.set_on_call_acd(agent_id, True)
+
+        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_call_acd'])
+
+    def test_on_call_acd(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': True
+                }
+            }
+        }
+        expected_result = True
+
+        result = agent_dao.on_call_acd(agent_id)
+
+        self.assertEqual(result, expected_result)
+
+    def test_set_on_call_nonacd(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_nonacd': False
+                }
+            }
+        }
+
+        agent_dao.set_on_call_nonacd(agent_id, True)
+
+        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_call_nonacd'])
+
+    def test_on_call_nonacd(self):
+        agent_id = 12
+        agent_dao = AgentDAO(self.innerdata, Mock())
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_nonacd': True
+                }
+            }
+        }
+        expected_result = True
+
+        result = agent_dao.on_call_nonacd(agent_id)
+
+        self.assertEqual(result, expected_result)
+
     def test_set_on_wrapup(self):
         agent_id = 12
         agent_dao = AgentDAO(self.innerdata, Mock())
