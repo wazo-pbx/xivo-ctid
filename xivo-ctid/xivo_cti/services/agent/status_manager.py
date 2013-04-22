@@ -24,17 +24,17 @@ from xivo_cti.exception import NoSuchAgentException
 logger = logging.getLogger(__name__)
 
 
-def parse_ami_login(ami_event, agent_availability_updater):
+def parse_ami_login(ami_event, agent_status_manager):
     agent_id = int(ami_event['AgentID'])
-    agent_availability_updater.agent_logged_in(agent_id)
+    agent_status_manager.agent_logged_in(agent_id)
 
 
-def parse_ami_logout(ami_event, agent_availability_updater):
+def parse_ami_logout(ami_event, agent_status_manager):
     agent_id = int(ami_event['AgentID'])
-    agent_availability_updater.agent_logged_out(agent_id)
+    agent_status_manager.agent_logged_out(agent_id)
 
 
-def parse_ami_paused(ami_event, agent_availability_updater):
+def parse_ami_paused(ami_event, agent_status_manager):
     agent_member_name = ami_event['MemberName']
     paused = ami_event['Paused'] == '1'
     try:
@@ -43,9 +43,9 @@ def parse_ami_paused(ami_event, agent_availability_updater):
         pass  # Not an agent member name
     else:
         if paused and dao.agent.is_completely_paused(agent_id):
-            agent_availability_updater.agent_paused_all(agent_id)
+            agent_status_manager.agent_paused_all(agent_id)
         else:
-            agent_availability_updater.agent_unpaused(agent_id)
+            agent_status_manager.agent_unpaused(agent_id)
 
 
 def parse_ami_call_completed(ami_event, agent_status_manager):
