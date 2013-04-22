@@ -128,6 +128,7 @@ class AgentStatusManager(object):
             logger.info('Tried to logout an unknown agent')
 
     def device_in_use(self, agent_id):
+        dao.agent.set_on_call_nonacd(agent_id, True)
         if not dao.agent.is_logged(agent_id):
             return
         if dao.agent.on_wrapup(agent_id):
@@ -141,6 +142,7 @@ class AgentStatusManager(object):
         self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd)
 
     def device_not_in_use(self, agent_id):
+        dao.agent.set_on_call_nonacd(agent_id, False)
         if not dao.agent.is_logged(agent_id):
             return
         if dao.agent.on_wrapup(agent_id):
@@ -153,28 +155,12 @@ class AgentStatusManager(object):
             self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
     def acd_call_start(self, agent_id):
-        pass
-
-    def acd_call_end(self, agent_id):
-        pass
-
-    def agent_in_use(self, agent_id):
-        if dao.agent.on_call(agent_id):
-            return
-
-        dao.agent.set_on_call(agent_id, True)
+        dao.agent.set_on_call_acd(agent_id, True)
         self._agent_availability_updater.update(agent_id, AgentStatus.unavailable)
 
-    def agent_not_in_use(self, agent_id):
-        if not dao.agent.on_call(agent_id):
-            return
-
-        dao.agent.set_on_call(agent_id, False)
+    def acd_call_end(self, agent_id):
+        dao.agent.set_on_call_acd(agent_id, False)
         if dao.agent.is_completely_paused(agent_id):
-            return
-        if not dao.agent.is_logged(agent_id):
-            return
-        if dao.agent.on_wrapup(agent_id):
             return
         self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
@@ -190,9 +176,10 @@ class AgentStatusManager(object):
             return
         if not dao.agent.is_logged(agent_id):
             return
-        if dao.agent.on_call(agent_id):
-            return
-        self._agent_availability_updater.update(agent_id, AgentStatus.available)
+        if dao.agent.on_call_nonacd(agent_id):
+            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd)
+        else:
+            self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
     def agent_paused_all(self, agent_id):
         if not dao.agent.is_logged(agent_id):
@@ -202,8 +189,11 @@ class AgentStatusManager(object):
     def agent_unpaused(self, agent_id):
         if not dao.agent.is_logged(agent_id):
             return
-        if dao.agent.on_call(agent_id):
-            return
         if dao.agent.on_wrapup(agent_id):
             return
-        self._agent_availability_updater.update(agent_id, AgentStatus.available)
+        if dao.agent.on_call_acd(agent_id):
+            return
+        if dao.agent.on_call_nonacd(agent_id):
+            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd)
+        else:
+            self._agent_availability_updater.update(agent_id, AgentStatus.available)
