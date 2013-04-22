@@ -141,7 +141,16 @@ class AgentStatusManager(object):
         self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd)
 
     def device_not_in_use(self, agent_id):
-        pass
+        if not dao.agent.is_logged(agent_id):
+            return
+        if dao.agent.on_wrapup(agent_id):
+            return
+        if dao.agent.is_completely_paused(agent_id):
+            return
+        if dao.agent.on_call_acd(agent_id):
+            return
+        if dao.agent.on_call_nonacd(agent_id):
+            self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
     def acd_call_start(self, agent_id):
         pass
