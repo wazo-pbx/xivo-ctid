@@ -128,6 +128,8 @@ class AgentStatusManager(object):
             logger.info('Tried to logout an unknown agent')
 
     def device_in_use(self, agent_id):
+        if dao.agent.on_call_nonacd(agent_id):
+            return
         dao.agent.set_on_call_nonacd(agent_id, True)
         if not dao.agent.is_logged(agent_id):
             return
@@ -137,11 +139,11 @@ class AgentStatusManager(object):
             return
         if dao.agent.on_call_acd(agent_id):
             return
-        if dao.agent.on_call_nonacd(agent_id):
-            return
         self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd)
 
     def device_not_in_use(self, agent_id):
+        if not dao.agent.on_call_nonacd(agent_id):
+            return
         dao.agent.set_on_call_nonacd(agent_id, False)
         if not dao.agent.is_logged(agent_id):
             return
@@ -151,8 +153,7 @@ class AgentStatusManager(object):
             return
         if dao.agent.on_call_acd(agent_id):
             return
-        if dao.agent.on_call_nonacd(agent_id):
-            self._agent_availability_updater.update(agent_id, AgentStatus.available)
+        self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
     def acd_call_start(self, agent_id):
         dao.agent.set_on_call_acd(agent_id, True)

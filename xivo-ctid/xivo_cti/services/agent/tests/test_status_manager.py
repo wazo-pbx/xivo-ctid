@@ -295,7 +295,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+        self.assertEquals(dao.agent.set_on_call_nonacd.call_count, 0)
 
     def test_device_in_use_when_on_call_acd(self):
         agent_id = 12
@@ -329,7 +329,7 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.is_completely_paused.return_value = False
         dao.agent.is_logged.return_value = True
         dao.agent.on_call_acd.return_value = True
-        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
 
         self.agent_status_manager.device_not_in_use(agent_id)
 
@@ -347,7 +347,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        self.assertEquals(dao.agent.set_on_call_nonacd.call_count, 0)
 
     def test_device_not_in_use_when_wrapup(self):
         agent_id = 12
@@ -355,7 +355,7 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.is_completely_paused.return_value = False
         dao.agent.is_logged.return_value = True
         dao.agent.on_call_acd.return_value = False
-        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
 
         self.agent_status_manager.device_not_in_use(agent_id)
 
@@ -368,7 +368,7 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.is_completely_paused.return_value = True
         dao.agent.is_logged.return_value = True
         dao.agent.on_call_acd.return_value = False
-        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
 
         self.agent_status_manager.device_not_in_use(agent_id)
 
