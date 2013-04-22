@@ -289,8 +289,12 @@ class CTIServer(object):
             lambda event: agent_status_manager.parse_ami_paused(event, self._agent_status_manager)
         )
         callback_handler.register_callback(
+            'AgentConnect',
+            lambda event: agent_status_manager.parse_ami_acd_call_start(event, self._agent_status_manager)
+        )
+        callback_handler.register_callback(
             'AgentComplete',
-            lambda event: agent_status_manager.parse_ami_call_completed(event, self._agent_status_manager)
+            lambda event: agent_status_manager.parse_ami_acd_call_end(event, self._agent_status_manager)
         )
         callback_handler.register_userevent_callback(
             'AgentLogin',

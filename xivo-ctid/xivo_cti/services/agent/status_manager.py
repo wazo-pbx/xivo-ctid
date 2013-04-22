@@ -48,16 +48,28 @@ def parse_ami_paused(ami_event, agent_status_manager):
             agent_status_manager.agent_unpaused(agent_id)
 
 
-def parse_ami_call_completed(ami_event, agent_status_manager):
+def parse_ami_acd_call_start(ami_event, agent_status_manager):
+    agent_member_name = ami_event['MemberName']
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_member_name)
+    except ValueError:
+        pass  # Not an agent member name
+    else:
+        agent_status_manager.acd_call_start(agent_id)
+
+
+def parse_ami_acd_call_end(ami_event, agent_status_manager):
     wrapup = int(ami_event['WrapupTime'])
-    if wrapup > 0:
-        agent_member_name = ami_event['MemberName']
-        try:
-            agent_id = dao.agent.get_id_from_interface(agent_member_name)
-        except ValueError:
-            pass  # Not an agent member name
-        else:
+    agent_member_name = ami_event['MemberName']
+    try:
+        agent_id = dao.agent.get_id_from_interface(agent_member_name)
+    except ValueError:
+        pass  # Not an agent member name
+    else:
+        if wrapup > 0:
             agent_status_manager.agent_in_wrapup(agent_id, wrapup)
+        else:
+            agent_status_manager.acd_call_end(agent_id)
 
 
 class QueueEventReceiver(object):
@@ -83,9 +95,9 @@ class QueueEventReceiver(object):
             return
 
         if status == self.STATUS_DEVICE_INUSE:
-            self._agent_status_manager.agent_in_use(agent_id)
+            self._agent_status_manager.device_in_use(agent_id)
         elif status == self.STATUS_DEVICE_NOT_INUSE:
-            self._agent_status_manager.agent_not_in_use(agent_id)
+            self._agent_status_manager.device_not_in_use(agent_id)
 
     def _get_agent_id(self, member_name):
         try:
@@ -114,6 +126,18 @@ class AgentStatusManager(object):
             self._agent_availability_updater.update(agent_id, agent_status)
         except NoSuchAgentException:
             logger.info('Tried to logout an unknown agent')
+
+    def device_in_use(self, agent_id):
+        pass
+
+    def device_not_in_use(self, agent_id):
+        pass
+
+    def acd_call_start(self, agent_id):
+        pass
+
+    def acd_call_end(self, agent_id):
+        pass
 
     def agent_in_use(self, agent_id):
         if dao.agent.on_call(agent_id):
