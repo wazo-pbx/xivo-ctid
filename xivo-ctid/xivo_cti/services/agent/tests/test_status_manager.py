@@ -232,6 +232,78 @@ class TestAgentStatusManager(unittest.TestCase):
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.logged_out)
 
+    def test_device_in_use_when_available(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
+
+    def test_device_in_use_when_wrapup(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = True
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_device_in_use_when_paused(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_device_in_use_when_unlogged(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_device_in_use_when_on_call_nonacd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = True
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_device_in_use_when_on_call_acd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = True
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
     def test_agent_in_use(self):
         dao.agent.on_call.return_value = False
         agent_id = 12

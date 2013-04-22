@@ -67,6 +67,12 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_call']
 
+    def on_call_acd(self, agent_id):
+        pass
+
+    def on_call_nonacd(self, agent_id):
+        pass
+
     def set_on_wrapup(self, agent_id, on_wrapup):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         agent_status['on_wrapup'] = on_wrapup
