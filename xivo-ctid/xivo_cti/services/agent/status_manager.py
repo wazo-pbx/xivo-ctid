@@ -19,7 +19,6 @@ import logging
 
 from xivo_cti import dao
 from xivo_cti.services.agent.status import AgentStatus
-from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
 
@@ -124,10 +123,7 @@ class AgentStatusManager(object):
 
     def agent_logged_out(self, agent_id):
         agent_status = AgentStatus.logged_out
-        try:
-            self._agent_availability_updater.update(agent_id, agent_status)
-        except NoSuchAgentException:
-            logger.info('Tried to logout an unknown agent')
+        self._agent_availability_updater.update(agent_id, agent_status)
 
     def device_in_use(self, agent_id):
         if dao.agent.on_call_nonacd(agent_id):

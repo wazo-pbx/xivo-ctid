@@ -17,8 +17,10 @@
 
 import logging
 from xivo_cti import dao
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
+
 
 class AgentAvailabilityUpdater(object):
 
@@ -26,6 +28,9 @@ class AgentAvailabilityUpdater(object):
         self.notifier = agent_availability_notifier
 
     def update(self, agent_id, agent_status):
-        dao.innerdata.set_agent_availability(agent_id, agent_status)
-        self.notifier.notify(agent_id)
-
+        try:
+            dao.innerdata.set_agent_availability(agent_id, agent_status)
+        except NoSuchAgentException:
+            logger.info('Tried to update status of an unknown agent')
+        else:
+            self.notifier.notify(agent_id)
