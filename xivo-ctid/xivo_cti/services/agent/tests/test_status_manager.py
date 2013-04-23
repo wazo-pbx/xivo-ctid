@@ -428,6 +428,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.agent_in_wrapup(agent_id, wrapup_time)
 
         dao.agent.set_on_wrapup.assert_called_once_with(agent_id, True)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
         self.agent_status_manager.scheduler.schedule.assert_called_once_with(
             wrapup_time,
             self.agent_status_manager.agent_wrapup_completed,

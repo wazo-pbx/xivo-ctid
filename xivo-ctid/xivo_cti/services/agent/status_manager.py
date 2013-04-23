@@ -166,6 +166,7 @@ class AgentStatusManager(object):
         self._agent_availability_updater.update(agent_id, AgentStatus.available)
 
     def agent_in_wrapup(self, agent_id, wrapup_time):
+        dao.agent.set_on_call_acd(agent_id, False)
         dao.agent.set_on_wrapup(agent_id, True)
         self.scheduler.schedule(wrapup_time,
                                 self.agent_wrapup_completed,
