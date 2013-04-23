@@ -67,6 +67,7 @@ from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent import availability_updater as agent_availability_updater
 from xivo_cti.services.agent import status_manager as agent_status_manager
+from xivo_cti.services.agent import status_parser as agent_status_parser
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
@@ -286,23 +287,23 @@ class CTIServer(object):
 
         callback_handler.register_callback(
             'QueueMemberPaused',
-            lambda event: agent_status_manager.parse_ami_paused(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_paused(event, self._agent_status_manager)
         )
         callback_handler.register_callback(
             'AgentConnect',
-            lambda event: agent_status_manager.parse_ami_acd_call_start(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_acd_call_start(event, self._agent_status_manager)
         )
         callback_handler.register_callback(
             'AgentComplete',
-            lambda event: agent_status_manager.parse_ami_acd_call_end(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_acd_call_end(event, self._agent_status_manager)
         )
         callback_handler.register_userevent_callback(
             'AgentLogin',
-            lambda event: agent_status_manager.parse_ami_login(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_login(event, self._agent_status_manager)
         )
         callback_handler.register_userevent_callback(
             'AgentLogoff',
-            lambda event: agent_status_manager.parse_ami_logout(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_logout(event, self._agent_status_manager)
         )
 
         current_call_parser = context.get('current_call_parser')
