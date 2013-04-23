@@ -209,6 +209,7 @@ class TestAgentStatusManager(unittest.TestCase):
 
     def test_agent_logged_in(self):
         dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
 
         agent_id = 12
 
@@ -218,12 +219,23 @@ class TestAgentStatusManager(unittest.TestCase):
 
     def test_agent_logged_in_paused(self):
         dao.agent.is_completely_paused.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
 
         agent_id = 12
 
         self.agent_status_manager.agent_logged_in(agent_id)
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.unavailable)
+
+    def test_agent_logged_in_call(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
+        agent_id = 12
+
+        self.agent_status_manager.agent_logged_in(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
 
     def test_agent_logged_out(self):
         agent_id = 12
