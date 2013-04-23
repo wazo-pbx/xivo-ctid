@@ -110,6 +110,23 @@ class TestParseAmi(unittest.TestCase):
 
         self.manager.agent_unpaused.assert_called_once_with(agent_id)
 
+    def test_parse_ami_acd_call_start(self):
+        agent_id = 12
+        ami_event = {'MemberName': 'Agent/1000'}
+        dao.agent.get_id_from_interface.return_value = agent_id
+
+        status_manager.parse_ami_acd_call_start(ami_event, self.manager)
+
+        self.manager.acd_call_start.called_once_with(agent_id)
+
+    def test_parse_ami_acd_call_start_no_agent(self):
+        ami_event = {'MemberName': 'SIP/abc'}
+        dao.agent.get_id_from_interface.side_effect = ValueError()
+
+        status_manager.parse_ami_acd_call_start(ami_event, self.manager)
+
+        self.assertEqual(self.manager.acd_call_start.call_count, 0)
+
     def test_parse_ami_acd_call_end_no_wrapup(self):
         agent_id = 12
         ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '0'}
