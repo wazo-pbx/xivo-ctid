@@ -28,7 +28,8 @@ class TestAgentDAO(unittest.TestCase):
 
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
-        self.agent_dao = AgentDAO(self.innerdata, Mock())
+        self.queue_member_manager = Mock(QueueMemberManager)
+        self.agent_dao = AgentDAO(self.innerdata, self.queue_member_manager)
 
     def test_get_id_from_interface(self):
         agent_number = '1234'
@@ -73,9 +74,8 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_yes(self):
         expected_result = True
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 2
-        queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 2
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 2
         self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = self.agent_dao.is_completely_paused(agent_id)
@@ -85,9 +85,8 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_no(self):
         expected_result = False
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 1
-        queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 1
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 2
         self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = self.agent_dao.is_completely_paused(agent_id)
@@ -97,9 +96,8 @@ class TestAgentDAO(unittest.TestCase):
     def test_is_completely_paused_no_queues(self):
         expected_result = False
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 0
-        queue_member_manager.get_queue_count_by_member_name.return_value = 0
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 0
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 0
         self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
         result = self.agent_dao.is_completely_paused(agent_id)
