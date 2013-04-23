@@ -67,7 +67,6 @@ from xivo_cti.queue_logger import QueueLogger
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent import availability_updater as agent_availability_updater
 from xivo_cti.services.agent import status_manager as agent_status_manager
-from xivo_cti.services.agent import status_parser as agent_status_parser
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
@@ -284,6 +283,7 @@ class CTIServer(object):
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        agent_status_parser = context.get('agent_status_parser')
 
         callback_handler.register_callback(
             'QueueMemberPaused',

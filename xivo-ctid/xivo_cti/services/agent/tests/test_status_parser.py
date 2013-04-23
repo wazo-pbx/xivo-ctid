@@ -20,7 +20,7 @@ from mock import Mock
 
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO
-from xivo_cti.services.agent import status_parser
+from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 
 
@@ -29,6 +29,7 @@ class TestAgentStatusParser(unittest.TestCase):
     def setUp(self):
         dao.agent = Mock(AgentDAO)
         self.manager = Mock(AgentStatusManager)
+        self.parser = AgentStatusParser()
 
     def test_parse_ami_login(self):
         agent_id = 12
@@ -37,7 +38,7 @@ class TestAgentStatusParser(unittest.TestCase):
                      'UserEvent': 'AgentLogin'}
         dao.agent.get_id_from_number.return_value = agent_id
 
-        status_parser.parse_ami_login(ami_event, self.manager)
+        self.parser.parse_ami_login(ami_event, self.manager)
 
         self.manager.agent_logged_in.assert_called_once_with(agent_id)
 
@@ -48,7 +49,7 @@ class TestAgentStatusParser(unittest.TestCase):
                      'UserEvent': 'AgentLogoff'}
         dao.agent.get_id_from_number.return_value = agent_id
 
-        status_parser.parse_ami_logout(ami_event, self.manager)
+        self.parser.parse_ami_logout(ami_event, self.manager)
 
         self.manager.agent_logged_out.assert_called_once_with(agent_id)
 
@@ -61,7 +62,7 @@ class TestAgentStatusParser(unittest.TestCase):
         dao.agent.get_id_from_interface.return_value = agent_id
         dao.agent.is_completely_paused.return_value = False
 
-        status_parser.parse_ami_paused(ami_event, self.manager)
+        self.parser.parse_ami_paused(ami_event, self.manager)
 
         self.assertEqual(self.manager.agent_paused_all.call_count, 0)
 
@@ -74,7 +75,7 @@ class TestAgentStatusParser(unittest.TestCase):
         dao.agent.get_id_from_interface.return_value = agent_id
         dao.agent.is_completely_paused.return_value = True
 
-        status_parser.parse_ami_paused(ami_event, self.manager)
+        self.parser.parse_ami_paused(ami_event, self.manager)
 
         self.manager.agent_paused_all.assert_called_once_with(agent_id)
 
@@ -85,7 +86,7 @@ class TestAgentStatusParser(unittest.TestCase):
                      'Paused': '1'}
         dao.agent.get_id_from_interface.side_effect = ValueError()
 
-        status_parser.parse_ami_paused(ami_event, self.manager)
+        self.parser.parse_ami_paused(ami_event, self.manager)
 
         self.assertFalse(self.manager.agent_paused_all.called)
         self.assertFalse(self.manager.agent_unpaused.called)
@@ -98,7 +99,7 @@ class TestAgentStatusParser(unittest.TestCase):
                      'Paused': '0'}
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        status_parser.parse_ami_paused(ami_event, self.manager)
+        self.parser.parse_ami_paused(ami_event, self.manager)
 
         self.manager.agent_unpaused.assert_called_once_with(agent_id)
 
@@ -107,7 +108,7 @@ class TestAgentStatusParser(unittest.TestCase):
         ami_event = {'MemberName': 'Agent/1000'}
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        status_parser.parse_ami_acd_call_start(ami_event, self.manager)
+        self.parser.parse_ami_acd_call_start(ami_event, self.manager)
 
         self.manager.acd_call_start.called_once_with(agent_id)
 
@@ -115,7 +116,7 @@ class TestAgentStatusParser(unittest.TestCase):
         ami_event = {'MemberName': 'SIP/abc'}
         dao.agent.get_id_from_interface.side_effect = ValueError()
 
-        status_parser.parse_ami_acd_call_start(ami_event, self.manager)
+        self.parser.parse_ami_acd_call_start(ami_event, self.manager)
 
         self.assertEqual(self.manager.acd_call_start.call_count, 0)
 
@@ -124,7 +125,7 @@ class TestAgentStatusParser(unittest.TestCase):
         ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '0'}
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        status_parser.parse_ami_acd_call_end(ami_event, self.manager)
+        self.parser.parse_ami_acd_call_end(ami_event, self.manager)
 
         self.assertEquals(self.manager.agent_in_wrapup.call_count, 0)
         self.manager.acd_call_end.called_once_with(agent_id)
@@ -134,7 +135,7 @@ class TestAgentStatusParser(unittest.TestCase):
         ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '10'}
         dao.agent.get_id_from_interface.return_value = agent_id
 
-        status_parser.parse_ami_acd_call_end(ami_event, self.manager)
+        self.parser.parse_ami_acd_call_end(ami_event, self.manager)
 
         self.manager.agent_in_wrapup.assert_called_once_with(agent_id, 10)
         self.assertEqual(self.manager.acd_call_end.call_count, 0)
@@ -143,7 +144,7 @@ class TestAgentStatusParser(unittest.TestCase):
         ami_event = {'MemberName': 'SIP/abc', 'WrapupTime': '10'}
         dao.agent.get_id_from_interface.side_effect = ValueError()
 
-        status_parser.parse_ami_acd_call_end(ami_event, self.manager)
+        self.parser.parse_ami_acd_call_end(ami_event, self.manager)
 
         self.assertEquals(self.manager.agent_in_wrapup.call_count, 0)
         self.assertEqual(self.manager.acd_call_end.call_count, 0)
