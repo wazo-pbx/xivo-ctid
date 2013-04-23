@@ -287,23 +287,23 @@ class CTIServer(object):
 
         callback_handler.register_callback(
             'QueueMemberPaused',
-            lambda event: agent_status_parser.parse_ami_paused(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_paused(event)
         )
         callback_handler.register_callback(
             'AgentConnect',
-            lambda event: agent_status_parser.parse_ami_acd_call_start(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_acd_call_start(event)
         )
         callback_handler.register_callback(
             'AgentComplete',
-            lambda event: agent_status_parser.parse_ami_acd_call_end(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_acd_call_end(event)
         )
         callback_handler.register_userevent_callback(
             'AgentLogin',
-            lambda event: agent_status_parser.parse_ami_login(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_login(event)
         )
         callback_handler.register_userevent_callback(
             'AgentLogoff',
-            lambda event: agent_status_parser.parse_ami_logout(event, self._agent_status_manager)
+            lambda event: agent_status_parser.parse_ami_logout(event)
         )
 
         current_call_parser = context.get('current_call_parser')

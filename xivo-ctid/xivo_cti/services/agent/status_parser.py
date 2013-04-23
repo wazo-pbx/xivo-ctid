@@ -24,18 +24,18 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusParser(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, agent_status_manager):
+        self._agent_status_manager = agent_status_manager
 
-    def parse_ami_login(self, ami_event, agent_status_manager):
+    def parse_ami_login(self, ami_event):
         agent_id = int(ami_event['AgentID'])
-        agent_status_manager.agent_logged_in(agent_id)
+        self._agent_status_manager.agent_logged_in(agent_id)
 
-    def parse_ami_logout(self, ami_event, agent_status_manager):
+    def parse_ami_logout(self, ami_event):
         agent_id = int(ami_event['AgentID'])
-        agent_status_manager.agent_logged_out(agent_id)
+        self._agent_status_manager.agent_logged_out(agent_id)
 
-    def parse_ami_paused(self, ami_event, agent_status_manager):
+    def parse_ami_paused(self, ami_event):
         agent_member_name = ami_event['MemberName']
         paused = ami_event['Paused'] == '1'
         try:
@@ -44,20 +44,20 @@ class AgentStatusParser(object):
             pass  # Not an agent member name
         else:
             if paused and dao.agent.is_completely_paused(agent_id):
-                agent_status_manager.agent_paused_all(agent_id)
+                self._agent_status_manager.agent_paused_all(agent_id)
             else:
-                agent_status_manager.agent_unpaused(agent_id)
+                self._agent_status_manager.agent_unpaused(agent_id)
 
-    def parse_ami_acd_call_start(self, ami_event, agent_status_manager):
+    def parse_ami_acd_call_start(self, ami_event):
         agent_member_name = ami_event['MemberName']
         try:
             agent_id = dao.agent.get_id_from_interface(agent_member_name)
         except ValueError:
             pass  # Not an agent member name
         else:
-            agent_status_manager.acd_call_start(agent_id)
+            self._agent_status_manager.acd_call_start(agent_id)
 
-    def parse_ami_acd_call_end(self, ami_event, agent_status_manager):
+    def parse_ami_acd_call_end(self, ami_event):
         wrapup = int(ami_event['WrapupTime'])
         agent_member_name = ami_event['MemberName']
         try:
@@ -66,6 +66,6 @@ class AgentStatusParser(object):
             pass  # Not an agent member name
         else:
             if wrapup > 0:
-                agent_status_manager.agent_in_wrapup(agent_id, wrapup)
+                self._agent_status_manager.agent_in_wrapup(agent_id, wrapup)
             else:
-                agent_status_manager.acd_call_end(agent_id)
+                self._agent_status_manager.acd_call_end(agent_id)
