@@ -17,47 +17,18 @@
 
 import unittest
 from mock import Mock, ANY
+from hamcrest import *
 
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.queue_member.member import QueueMemberState, QueueMember
 from xivo_cti.services.agent.status_manager import AgentStatusManager, \
-    QueueEventReceiver, parse_ami_call_completed
+    QueueEventReceiver
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO
+from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.scheduler import Scheduler
+from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
-
-
-class TestAmiEventCallbackes(unittest.TestCase):
-
-    def setUp(self):
-        dao.agent = Mock(AgentDAO)
-        self.manager = Mock(AgentStatusManager)
-
-    def test_parse_ami_call_completed_no_wrapup(self):
-        agent_id = 12
-        ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '0'}
-
-        dao.agent.get_id_from_interface.return_value = agent_id
-
-        parse_ami_call_completed(ami_event, self.manager)
-        self.assertEquals(self.manager.agent_in_wrapup.call_count, 0)
-
-    def test_parse_ami_call_completed_with_wrapup(self):
-        agent_id = 12
-        ami_event = {'MemberName': 'Agent/1000', 'WrapupTime': '10'}
-
-        dao.agent.get_id_from_interface.return_value = agent_id
-
-        parse_ami_call_completed(ami_event, self.manager)
-        self.manager.agent_in_wrapup.assert_called_once_with(agent_id, 10)
-
-    def test_parse_ami_call_completed_no_agent(self):
-        ami_event = {'MemberName': 'SIP/abc', 'WrapupTime': '10'}
-
-        dao.agent.get_id_from_interface.side_effect = [ValueError()]
-
-        parse_ami_call_completed(ami_event, self.manager)
-        self.assertEquals(self.manager.agent_in_wrapup.call_count, 0)
 
 
 class TestQueueEventReceiver(unittest.TestCase):
@@ -83,7 +54,7 @@ class TestQueueEventReceiver(unittest.TestCase):
         receiver = QueueEventReceiver(self.notifier, self.status_manager)
         receiver.on_queue_member_update(member)
 
-        self.assertEqual(self.status_manager.agent_in_use.call_count, 0)
+        self.assertEquals(self.status_manager.device_in_use.call_count, 0)
 
     def test_manager_puts_agent_in_use(self):
         queue_name = 'queue1'
@@ -99,7 +70,7 @@ class TestQueueEventReceiver(unittest.TestCase):
         receiver = QueueEventReceiver(self.notifier, self.status_manager)
         receiver.on_queue_member_update(member)
 
-        self.status_manager.agent_in_use.assert_called_once_with(agent_id)
+        self.status_manager.device_in_use.assert_called_once_with(agent_id)
 
     def test_manager_completes_call(self):
         queue_name = 'queue1'
@@ -116,65 +87,369 @@ class TestQueueEventReceiver(unittest.TestCase):
         receiver = QueueEventReceiver(self.notifier, self.status_manager)
         receiver.on_queue_member_update(member)
 
-        self.status_manager.agent_not_in_use.assert_called_once_with(agent_id)
+        self.status_manager.device_not_in_use.assert_called_once_with(agent_id)
 
 
 class TestAgentStatusManager(unittest.TestCase):
 
     def setUp(self):
         dao.agent = Mock(AgentDAO)
-        self.availability_updater = Mock(AgentAvailabilityUpdater)
+        self.agent_availability_updater = Mock(AgentAvailabilityUpdater)
+        dao.innerdata = Mock(InnerdataDAO)
+        self.agent_status_manager = AgentStatusManager(self.agent_availability_updater, Mock(Scheduler))
 
-    def test_agent_in_use_updates_availability(self):
-        dao.agent.on_call.return_value = False
+    def test_agent_logged_in(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+
         agent_id = 12
 
-        manager = AgentStatusManager(self.availability_updater)
-        manager.agent_in_use(agent_id)
+        self.agent_status_manager.agent_logged_in(agent_id)
 
-        dao.agent.on_call.assert_called_once_with(agent_id)
-        dao.agent.set_on_call.assert_called_once_with(agent_id, True)
-        self.availability_updater.agent_in_use.assert_called_once_with(agent_id)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
 
-    def test_agent_in_use_does_not_update_if_already_in_use(self):
-        dao.agent.on_call.return_value = True
+    def test_agent_logged_in_paused(self):
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+
         agent_id = 12
 
-        manager = AgentStatusManager(self.availability_updater)
-        manager.agent_in_use(agent_id)
+        self.agent_status_manager.agent_logged_in(agent_id)
 
-        dao.agent.on_call.assert_called_once_with(agent_id)
-        self.assertEquals(self.availability_updater.agent_in_use.call_count, 0)
-        self.assertEquals(dao.agent.set_on_call.call_count, 0)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.unavailable)
 
-    def test_agent_not_in_use_updates_availability(self):
-        dao.agent.on_call.return_value = True
+    def test_agent_logged_in_call(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
         agent_id = 12
 
-        manager = AgentStatusManager(self.availability_updater)
-        manager.agent_not_in_use(agent_id)
+        self.agent_status_manager.agent_logged_in(agent_id)
 
-        dao.agent.on_call.assert_called_once_with(agent_id)
-        dao.agent.set_on_call.assert_called_once_with(agent_id, False)
-        self.availability_updater.agent_not_in_use.assert_called_once_with(agent_id)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
 
-    def test_agent_not_in_use_does_not_update_if_already_not_in_use(self):
-        dao.agent.on_call.return_value = False
+    def test_agent_logged_out(self):
         agent_id = 12
 
-        manager = AgentStatusManager(self.availability_updater)
-        manager.agent_not_in_use(agent_id)
+        self.agent_status_manager.agent_logged_out(agent_id)
 
-        dao.agent.on_call.assert_called_once_with(agent_id)
-        self.assertEquals(self.availability_updater.agent_not_in_use.call_count, 0)
-        self.assertEquals(dao.agent.set_on_call.call_count, 0)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.logged_out)
 
-    def test_agent_in_wrapup_updates_availability(self):
+    def test_device_in_use_when_available(self):
         agent_id = 12
-        wrapup = 10
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
 
-        manager = AgentStatusManager(self.availability_updater)
-        manager.agent_in_wrapup(agent_id, wrapup)
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+
+    def test_device_in_use_when_wrapup(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = True
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+
+    def test_device_in_use_when_paused(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+
+    def test_device_in_use_when_unlogged(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+
+    def test_device_in_use_when_on_call_nonacd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = True
+        dao.agent.on_call_acd.return_value = False
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        self.assertEquals(dao.agent.set_on_call_nonacd.call_count, 0)
+
+    def test_device_in_use_when_on_call_acd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = True
+
+        self.agent_status_manager.device_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, True)
+
+    def test_device_not_in_use_when_on_call_nonacd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+
+    def test_device_not_in_use_when_on_call_acd(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = True
+        dao.agent.on_call_nonacd.return_value = True
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+
+    def test_device_not_in_use_when_available(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        self.assertEquals(dao.agent.set_on_call_nonacd.call_count, 0)
+
+    def test_device_not_in_use_when_wrapup(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = True
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+
+    def test_device_not_in_use_when_paused(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+
+    def test_device_not_in_use_when_unlogged(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = True
+
+        self.agent_status_manager.device_not_in_use(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+
+    def test_acd_call_start_when_available(self):
+        agent_id = 12
+        dao.agent.on_wrapup.return_value = False
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+
+        self.agent_status_manager.acd_call_start(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.unavailable)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, True)
+
+    def test_acd_call_end_when_on_call_acd(self):
+        agent_id = 12
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_call_acd.return_value = True
+
+        self.agent_status_manager.acd_call_end(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
+
+    def test_acd_call_end_when_on_call_acd_and_paused(self):
+        agent_id = 12
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.on_call_acd.return_value = True
+
+        self.agent_status_manager.acd_call_end(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
+
+    def test_agent_in_wrapup(self):
+        agent_id = 12
+        wrapup_time = 25
+
+        self.agent_status_manager.agent_in_wrapup(agent_id, wrapup_time)
 
         dao.agent.set_on_wrapup.assert_called_once_with(agent_id, True)
-        self.availability_updater.agent_in_wrapup.assert_called_once_with(agent_id, wrapup)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
+        self.agent_status_manager.scheduler.schedule.assert_called_once_with(
+            wrapup_time,
+            self.agent_status_manager.agent_wrapup_completed,
+            agent_id
+        )
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_wrapup_completed(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_wrapup_completed(agent_id)
+
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
+
+    def test_agent_wrapup_completed_in_pause(self):
+        dao.agent.is_completely_paused.return_value = True
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_wrapup_completed(agent_id)
+
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_wrapup_completed_logged_out(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_wrapup_completed(agent_id)
+
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_wrapup_completed_on_call_nonacd(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = True
+        agent_id = 12
+
+        self.agent_status_manager.agent_wrapup_completed(agent_id)
+
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
+
+    def test_agent_paused_all(self):
+        dao.agent.is_logged.return_value = True
+        agent_id = 12
+
+        self.agent_status_manager.agent_paused_all(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.unavailable)
+
+    def test_agent_paused_all_while_unlogged(self):
+        dao.agent.is_logged.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_paused_all(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_unpaused(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_wrapup.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
+
+    def test_agent_unpaused_on_call_nonacd(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = True
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_wrapup.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd)
+
+    def test_agent_unpaused_on_call_acd(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = True
+        dao.agent.on_wrapup.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_unpaused_while_unlogged(self):
+        dao.agent.is_logged.return_value = False
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_wrapup.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+
+    def test_agent_unpaused_on_wrapup(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.on_call_nonacd.return_value = False
+        dao.agent.on_call_acd.return_value = False
+        dao.agent.on_wrapup.return_value = True
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)

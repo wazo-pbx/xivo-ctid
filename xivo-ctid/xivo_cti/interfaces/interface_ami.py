@@ -224,7 +224,7 @@ class AMI(object):
             methodname = ami_def.evfunction_to_method_name.get(evfunction)
             if hasattr(ami_18, methodname):
                 functions.append(getattr(ami_18, methodname))
-        for function in set(functions):
+        for function in functions:
             try:
                 function(event)
             except KeyError:

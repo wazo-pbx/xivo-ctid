@@ -28,6 +28,8 @@ class TestAgentDAO(unittest.TestCase):
 
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
+        self.queue_member_manager = Mock(QueueMemberManager)
+        self.agent_dao = AgentDAO(self.innerdata, self.queue_member_manager)
 
     def test_get_id_from_interface(self):
         agent_number = '1234'
@@ -42,17 +44,15 @@ class TestAgentDAO(unittest.TestCase):
         self.innerdata.xod_config = {
             'agents': agents_config
         }
-        agent_dao = AgentDAO(self.innerdata, Mock())
 
-        result = agent_dao.get_id_from_interface(agent_interface)
+        result = self.agent_dao.get_id_from_interface(agent_interface)
 
         self.assertEqual(result, agent_id)
 
     def test_get_id_from_interface_not_an_agent(self):
         agent_interface = 'SIP/abcdef'
-        agent_dao = AgentDAO(self.innerdata, Mock())
 
-        self.assertRaises(ValueError, agent_dao.get_id_from_interface, agent_interface)
+        self.assertRaises(ValueError, self.agent_dao.get_id_from_interface, agent_interface)
 
     def test_get_id_from_number(self):
         agent_number = '1234'
@@ -66,48 +66,41 @@ class TestAgentDAO(unittest.TestCase):
         self.innerdata.xod_config = {
             'agents': agents_config
         }
-        agent_dao = AgentDAO(self.innerdata, Mock())
 
-        result = agent_dao.get_id_from_number(agent_number)
+        result = self.agent_dao.get_id_from_number(agent_number)
 
         self.assertEqual(result, agent_id)
 
     def test_is_completely_paused_yes(self):
         expected_result = True
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 2
-        queue_member_manager.get_queue_count_by_member_name.return_value = 2
-        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
-        agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 2
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
-        result = agent_dao.is_completely_paused(agent_id)
+        result = self.agent_dao.is_completely_paused(agent_id)
 
         self.assertEqual(result, expected_result)
 
     def test_is_completely_paused_no(self):
         expected_result = False
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 1
-        queue_member_manager.get_queue_count_by_member_name.return_value = 2
-        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
-        agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 1
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 2
+        self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
-        result = agent_dao.is_completely_paused(agent_id)
+        result = self.agent_dao.is_completely_paused(agent_id)
 
         self.assertEqual(result, expected_result)
 
     def test_is_completely_paused_no_queues(self):
         expected_result = False
         agent_id = 12
-        queue_member_manager = Mock(QueueMemberManager)
-        queue_member_manager.get_paused_count_by_member_name.return_value = 0
-        queue_member_manager.get_queue_count_by_member_name.return_value = 0
-        agent_dao = AgentDAO(self.innerdata, queue_member_manager)
-        agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
+        self.queue_member_manager.get_paused_count_by_member_name.return_value = 0
+        self.queue_member_manager.get_queue_count_by_member_name.return_value = 0
+        self.agent_dao.get_interface_from_id = Mock(return_value='Agent/1234')
 
-        result = agent_dao.is_completely_paused(agent_id)
+        result = self.agent_dao.is_completely_paused(agent_id)
 
         self.assertEqual(result, expected_result)
 
@@ -120,8 +113,7 @@ class TestAgentDAO(unittest.TestCase):
         agent_configs.keeplist = {str(agent_id): {'number': agent_number}}
         self.innerdata.xod_config = {'agents': agent_configs}
 
-        agent_dao = AgentDAO(self.innerdata, Mock())
-        result = agent_dao.get_interface_from_id(agent_id)
+        result = self.agent_dao.get_interface_from_id(agent_id)
 
         self.assertEqual(result, expected_interface)
 
@@ -131,9 +123,7 @@ class TestAgentDAO(unittest.TestCase):
         agent_status = {str(agent_id): {'availability': AgentStatus.logged_out}}
         self.innerdata.xod_status = {'agents': agent_status}
 
-        agent_dao = AgentDAO(self.innerdata, Mock())
-
-        result = agent_dao.is_logged(agent_id)
+        result = self.agent_dao.is_logged(agent_id)
 
         self.assertEqual(result, False)
 
@@ -143,45 +133,70 @@ class TestAgentDAO(unittest.TestCase):
         agent_status = {str(agent_id): {'availability': AgentStatus.available}}
         self.innerdata.xod_status = {'agents': agent_status}
 
-        agent_dao = AgentDAO(self.innerdata, Mock())
-
-        result = agent_dao.is_logged(agent_id)
+        result = self.agent_dao.is_logged(agent_id)
 
         self.assertEqual(result, True)
 
-    def test_set_on_call(self):
+    def test_set_on_call_acd(self):
         agent_id = 12
-        agent_dao = AgentDAO(self.innerdata, Mock())
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'on_call': False
+                    'on_call_acd': False
                 }
             }
         }
 
-        agent_dao.set_on_call(agent_id, True)
+        self.agent_dao.set_on_call_acd(agent_id, True)
 
-        self.assertEqual(self.innerdata.xod_status['agents'][str(agent_id)]['on_call'], True)
+        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_call_acd'])
 
-    def test_on_call(self):
+    def test_on_call_acd(self):
         agent_id = 12
-        agent_dao = AgentDAO(self.innerdata, Mock())
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'on_call': True
+                    'on_call_acd': True
+                }
+            }
+        }
+        expected_result = True
+
+        result = self.agent_dao.on_call_acd(agent_id)
+
+        self.assertEqual(result, expected_result)
+
+    def test_set_on_call_nonacd(self):
+        agent_id = 12
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_nonacd': False
                 }
             }
         }
 
-        result = agent_dao.on_call(agent_id)
+        self.agent_dao.set_on_call_nonacd(agent_id, True)
 
-        self.assertEqual(result, True)
+        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_call_nonacd'])
+
+    def test_on_call_nonacd(self):
+        agent_id = 12
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_nonacd': True
+                }
+            }
+        }
+        expected_result = True
+
+        result = self.agent_dao.on_call_nonacd(agent_id)
+
+        self.assertEqual(result, expected_result)
 
     def test_set_on_wrapup(self):
         agent_id = 12
-        agent_dao = AgentDAO(self.innerdata, Mock())
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
@@ -190,13 +205,12 @@ class TestAgentDAO(unittest.TestCase):
             }
         }
 
-        agent_dao.set_on_wrapup(agent_id, True)
+        self.agent_dao.set_on_wrapup(agent_id, True)
 
         self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_wrapup'])
 
     def test_on_wrapup(self):
         agent_id = 12
-        agent_dao = AgentDAO(self.innerdata, Mock())
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
@@ -205,6 +219,6 @@ class TestAgentDAO(unittest.TestCase):
             }
         }
 
-        result = agent_dao.on_wrapup(agent_id)
+        result = self.agent_dao.on_wrapup(agent_id)
 
         self.assertTrue(result, True)

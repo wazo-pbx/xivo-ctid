@@ -59,13 +59,21 @@ class AgentDAO(object):
         availability = self.innerdata.xod_status['agents'][str(agent_id)]['availability']
         return availability != AgentStatus.logged_out
 
-    def set_on_call(self, agent_id, on_call):
+    def set_on_call_acd(self, agent_id, on_call_acd):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        agent_status['on_call'] = on_call
+        agent_status['on_call_acd'] = on_call_acd
 
-    def on_call(self, agent_id):
+    def on_call_acd(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status['on_call']
+        return agent_status['on_call_acd']
+
+    def set_on_call_nonacd(self, agent_id, on_call_nonacd):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent_status['on_call_nonacd'] = on_call_nonacd
+
+    def on_call_nonacd(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['on_call_nonacd']
 
     def set_on_wrapup(self, agent_id, on_wrapup):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]

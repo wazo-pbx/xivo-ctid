@@ -283,22 +283,15 @@ class CTIServer(object):
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        agent_status_parser = context.get('agent_status_parser')
 
-        callback_handler.register_callback('QueueMemberPaused',
-                                           lambda event: agent_availability_updater.parse_ami_paused(event,
-                                                                                                     self._agent_availability_updater))
-        callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_status_manager.parse_ami_call_completed(event,
-                                                                                                       self._agent_status_manager))
+        self._queue_member_updater.register_ami_events(callback_handler)
 
-        callback_handler.register_userevent_callback(
-            'AgentLogin',
-            lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
-        )
-        callback_handler.register_userevent_callback(
-            'AgentLogoff',
-            lambda event: agent_availability_updater.parse_ami_logout(event, self._agent_availability_updater)
-        )
+        callback_handler.register_callback('QueueMemberPaused', agent_status_parser.parse_ami_paused)
+        callback_handler.register_callback('AgentConnect', agent_status_parser.parse_ami_acd_call_start)
+        callback_handler.register_callback('AgentComplete', agent_status_parser.parse_ami_acd_call_end)
+        callback_handler.register_userevent_callback('AgentLogin', agent_status_parser.parse_ami_login)
+        callback_handler.register_userevent_callback('AgentLogoff', agent_status_parser.parse_ami_logout)
 
         current_call_parser = context.get('current_call_parser')
         current_call_parser.register_ami_events()
@@ -308,8 +301,6 @@ class CTIServer(object):
 
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
         callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
-
-        self._queue_member_updater.register_ami_events(callback_handler)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
