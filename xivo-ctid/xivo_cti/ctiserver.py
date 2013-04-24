@@ -285,6 +285,8 @@ class CTIServer(object):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         agent_status_parser = context.get('agent_status_parser')
 
+        self._queue_member_updater.register_ami_events(callback_handler)
+
         callback_handler.register_callback('QueueMemberPaused', agent_status_parser.parse_ami_paused)
         callback_handler.register_callback('AgentConnect', agent_status_parser.parse_ami_acd_call_start)
         callback_handler.register_callback('AgentComplete', agent_status_parser.parse_ami_acd_call_end)
@@ -299,8 +301,6 @@ class CTIServer(object):
 
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
         callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
-
-        self._queue_member_updater.register_ami_events(callback_handler)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),

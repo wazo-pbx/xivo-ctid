@@ -28,11 +28,13 @@ class AMICallbackHandler(object):
 
     def register_callback(self, event_name, function):
         key = event_name.lower()
-        self._callbacks[key].append(function)
+        if function not in self._callbacks[key]:
+            self._callbacks[key].append(function)
 
     def register_userevent_callback(self, userevent_name, function):
         key = userevent_name.lower()
-        self._userevent_callbacks[key].append(function)
+        if function not in self._userevent_callbacks[key]:
+            self._userevent_callbacks[key].append(function)
 
     def unregister_callback(self, event_name, function):
         callback_key = event_name.lower()
