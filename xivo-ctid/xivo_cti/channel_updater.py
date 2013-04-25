@@ -75,11 +75,18 @@ class ChannelUpdater(object):
         if parent_name not in self.innerdata.channels:
             logger.warning('Received inherit event on untracked parent channel')
             return
-        if child_name not in self.innerdata.channels:
-            logger.warning('Received inherit event on untracked child channel')
-            return
+
+        child_names = [child_name]
+        if child_name.startswith('Local'):
+            end = child_name[-1]
+            other_end = '1' if end == '2' else '2'
+            other_channel = child_name[:-1] + other_end
+            child_names.append(other_channel)
 
         parent = self.innerdata.channels[parent_name]
-        child = self.innerdata.channels[child_name]
-
-        child.inherit(parent)
+        for child_name in child_names:
+            if child_name not in self.innerdata.channels:
+                logger.warning('Received inherit event on untracked child channel')
+                continue
+            child = self.innerdata.channels[child_name]
+            child.inherit(parent)
