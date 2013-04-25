@@ -109,3 +109,22 @@ class TestChannelUpdater(unittest.TestCase):
 
         new_child = self.innerdata.channels[child_name]
         new_child.inherit.assert_called_once_with(parent)
+
+    def test_inherit_channels_local_channel_child(self):
+        parent_name = 'SIP/parent_channel-0'
+        parent = Mock(Channel)
+        self.innerdata.channels[parent_name] = parent
+        child_name_1 = 'Local-abc@324545;1'
+        child_name_2 = 'Local-abc@324545;2'
+        child_1 = Mock(Channel)
+        child_2 = Mock(Channel)
+        self.innerdata.channels[child_name_1] = child_1
+        self.innerdata.channels[child_name_2] = child_2
+
+        self.updater.inherit_channels(parent_name, child_name_1)
+
+        new_child_1 = self.innerdata.channels[child_name_1]
+        new_child_1.inherit.assert_called_once_with(parent)
+
+        new_child_2 = self.innerdata.channels[child_name_2]
+        new_child_2.inherit.assert_called_once_with(parent)
