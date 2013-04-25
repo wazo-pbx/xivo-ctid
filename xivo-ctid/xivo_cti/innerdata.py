@@ -192,14 +192,10 @@ class Safe(object):
     def handle_agent_linked(self, event):
         # Will be called when joining a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        if 'Agent' in event['MemberName']:
-            self.sheetsend('link', event['Channel'])
 
     def handle_agent_unlinked(self, event):
         # Will be called when leaving a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
-        if 'Agent' in event['MemberName']:
-            self.sheetsend('unlink', event['Channel'])
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
@@ -585,7 +581,7 @@ class Safe(object):
             connection['conn'].commit()
 
     def sheetsend(self, where, channel):
-        if '@agentcallback' in channel and where != 'link':
+        if '@agentcallback' in channel:
             return
         if 'sheets' not in self._config.getconfig():
             return
