@@ -265,7 +265,7 @@ class Safe(object):
         # does the user fullfil the destination criteria ?
         if 'desttype' in tomatch and 'destid' in tomatch:
             dest_type, dest_id = tomatch['desttype'], tomatch['destid']
-            if dest_type == 'user' and userid == dest_id:
+            if dest_type == 'user'and userid == str(dest_id):
                 domatch = True
             elif dest_type == 'agent':
                 user = self.xod_config['users'].keeplist[userid]
@@ -291,7 +291,6 @@ class Safe(object):
             context = dao.user.get_context(userid)
             if context in tomatch['contexts']:
                 domatch = True
-
         return domatch
 
     def find_users_channels_with_peer(self, user_id):
