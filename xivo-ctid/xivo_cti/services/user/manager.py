@@ -31,13 +31,32 @@ class UserServiceManager(object):
                  agent_service_manager,
                  presence_service_manager,
                  funckey_manager,
-                 device_manager):
+                 device_manager,
+                 ami_class):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
         self.funckey_manager = funckey_manager
         self.device_manager = device_manager
         self.dao = dao
+        self.ami_class = ami_class
+
+    def dial(self, user_id, exten):
+        try:
+            line = self.dao.user.get_line(user_id)
+            fullname = self.dao.user.get_fullname(user_id)
+        except LookupError:
+            logger.warning('Failed to dial %s for user %s', exten, user_id)
+        else:
+            self.ami_class.originate(
+                line['protocol'],
+                line['name'],
+                line['number'],
+                fullname,
+                exten,
+                exten,
+                line['context'],
+            )
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)

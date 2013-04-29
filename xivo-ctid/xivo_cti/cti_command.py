@@ -56,8 +56,6 @@ REGCOMMANDS = [
     ]
 
 IPBXCOMMANDS = [
-    # originate-like commands
-    'dial', 'originate',
     # transfer-like commands
     'intercept', 'parking',
     'transfer', 'atxfer',
@@ -412,28 +410,6 @@ class Command(object):
             idz += 1
 
         reply['ipbxreply'] = ipbxreply
-        return reply
-
-    # "any number" :
-    # - an explicit number
-    # - a phone line given by line:xivo/45
-    # - a user given by user:xivo/45 : attempted line will be the first one
-
-    # dial : the requester dials "any number" (originate with source = me)
-    # originate : the source will call destination
-
-    # intercept
-    # transfer
-    # atxfer
-    # park
-
-    # hangup : any channel is hanged up
-
-    # for transfers, hangups, ...
-
-    def ipbxcommand_dial(self):
-        self._commanddict['source'] = 'user:%s/%s' % (self.ripbxid, self.ruserid)
-        reply = self.ipbxcommand_originate()
         return reply
 
     def parseid(self, item):

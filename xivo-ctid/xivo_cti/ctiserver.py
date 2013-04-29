@@ -37,6 +37,7 @@ from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
@@ -192,6 +193,7 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
+        Dial.register_callback_params(self._user_service_manager.dial, ['user_id', 'exten'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])

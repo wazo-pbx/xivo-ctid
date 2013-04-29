@@ -135,6 +135,10 @@ class UserDAO(object):
         user_status = self._user_status(user_id)
         user_status['availstate'] = presence
 
+    def get_fullname(self, user_id):
+        user = self._user(user_id)
+        return user['fullname']
+
     def get_line(self, user_id):
         try:
             user = self._user(user_id)
