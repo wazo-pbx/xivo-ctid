@@ -23,11 +23,7 @@ def _match(msg):
 
 
 def _parse(msg, command):
-    destination = msg.get('destination')
-    if 'exten:xivo/' in destination:
-        command.exten = destination.split('/', 1)[1]
-    else:
-        command.exten = destination
+    command.destination = msg.get('destination')
 
 
 Dial = CTICommandClass('ipbxcommand', _match, _parse)
