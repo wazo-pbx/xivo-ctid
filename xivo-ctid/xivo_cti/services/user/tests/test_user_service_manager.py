@@ -18,7 +18,9 @@
 import unittest
 
 from mock import Mock
+from mock import sentinel
 from mock import patch
+from xivo_cti.services.destination import Destination
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
@@ -52,6 +54,25 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
 
+    def test_call_destination_url(self):
+        user_id = sentinel
+        number = '1234'
+        url = 'exten:xivo/{}'.format(number)
+        self.user_service_manager._dial = Mock()
+
+        self.user_service_manager.call_destination(user_id, url)
+
+        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+
+    def test_call_destination_exten(self):
+        user_id = sentinel
+        number = '1234'
+        self.user_service_manager._dial = Mock()
+
+        self.user_service_manager.call_destination(user_id, number)
+
+        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+
     def test_dial(self):
         user_id = 654
         exten = '1234'
@@ -60,7 +81,6 @@ class TestUserServiceManager(unittest.TestCase):
         user_line_number = '1001'
         user_fullname = 'Bob'
         user_line_context = 'default'
-        user_line_caller_id = '"Bob" <1001>'
         self.user_service_manager.dao.user.get_fullname.return_value = user_fullname
         self.user_service_manager.dao.user.get_line.return_value = {
             'protocol': user_line_proto,
@@ -69,13 +89,13 @@ class TestUserServiceManager(unittest.TestCase):
             'context': user_line_context,
         }
 
-        self.user_service_manager.dial(user_id, exten)
+        self.user_service_manager._dial(user_id, exten)
 
         self.ami_class.originate.assert_called_once_with(
             user_line_proto,
             user_line_name,
             user_line_number,
-            user_line_caller_id,
+            user_fullname,
             exten,
             exten,
             user_line_context,
@@ -86,7 +106,7 @@ class TestUserServiceManager(unittest.TestCase):
         exten = '1234'
         self.user_service_manager.dao.user.get_line.side_effect = LookupError()
 
-        self.user_service_manager.dial(user_id, exten)
+        self.user_service_manager._dial(user_id, exten)
 
     def test_enable_dnd(self):
         user_id = 123

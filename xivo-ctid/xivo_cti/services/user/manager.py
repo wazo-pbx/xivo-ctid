@@ -20,6 +20,7 @@ import logging
 from xivo_dao import user_dao
 from xivo_dao import phonefunckey_dao
 from xivo_cti import dao
+from xivo_cti.services.pseudo_url import PseudoURL
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,15 @@ class UserServiceManager(object):
         self.dao = dao
         self.ami_class = ami_class
 
-    def dial(self, user_id, exten):
+    def call_destination(self, user_id, url_or_exten):
+        try:
+            destination = PseudoURL.parse(url_or_exten)
+        except ValueError:
+            self._dial(user_id, url_or_exten)
+        else:
+            self._dial(user_id, destination.to_exten())
+
+    def _dial(self, user_id, exten):
         try:
             line = self.dao.user.get_line(user_id)
             fullname = self.dao.user.get_fullname(user_id)
