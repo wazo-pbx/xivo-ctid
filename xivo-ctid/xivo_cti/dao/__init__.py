@@ -20,6 +20,7 @@ from xivo_cti.dao.channel_dao import ChannelDAO
 from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.dao.meetme_dao import MeetmeDAO
 from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.dao.voicemail_dao import VoicemailDAO
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 agent = None
@@ -27,6 +28,7 @@ channel = None
 queue = None
 meetme = None
 user = None
+voicemail = None
 innerdata = None
 
 
@@ -41,5 +43,7 @@ def instanciate_dao(innerdata_obj, queue_member_manager):
     meetme = MeetmeDAO(innerdata_obj)
     global user
     user = UserDAO(innerdata_obj)
+    global voicemail
+    voicemail = VoicemailDAO(innerdata_obj)
     global innerdata
     innerdata = InnerdataDAO(innerdata_obj)
