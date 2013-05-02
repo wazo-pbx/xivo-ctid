@@ -16,6 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.model.destination import Destination
+from xivo_dao import extensions_dao
+
 
 class ConsultVoicemailDestination(Destination):
-    pass
+
+    def to_exten(self):
+        return extensions_dao.exten_by_name('vmusermsg')

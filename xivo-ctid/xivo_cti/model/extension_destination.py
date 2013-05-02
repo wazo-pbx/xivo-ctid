@@ -19,4 +19,6 @@ from xivo_cti.model.destination import Destination
 
 
 class ExtensionDestination(Destination):
-    pass
+
+    def to_exten(self):
+        return self.value

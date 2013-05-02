@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.model.destination import Destination
-from xivo_dao import extensions_dao
-from xivo_cti import dao
+import unittest
+
+from hamcrest import *
+
+from xivo_cti.model.extension_destination import ExtensionDestination
 
 
-class VoicemailDestination(Destination):
+class TestExtensionDestination(unittest.TestCase):
 
-    def to_exten(self):
-        call_vm_exten = extensions_dao.exten_by_name('vmboxslt')
-        vm_number = dao.voicemail.get_number(self.value)
-        return call_vm_exten.replace('.', vm_number)
+    def test_to_exten(self):
+        number = '1234'
+        d = ExtensionDestination('exten', None, number)
+
+        assert_that(d.to_exten(), equal_to(number), 'Called number')

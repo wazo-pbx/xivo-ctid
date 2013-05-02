@@ -17,9 +17,6 @@
 
 import logging
 
-from xivo_dao import extensions_dao
-from xivo_cti import dao
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,22 +33,4 @@ class Destination(object):
                 and self.value == other.value)
 
     def to_exten(self):
-        if self.dest_type == 'exten':
-            return self._to_exten_from_exten()
-        elif self.dest_type == 'voicemail':
-            return self._to_exten_from_voicemail()
-        elif self.dest_type == 'vm_consult':
-            return self._to_exten_from_vm_consult()
-        else:
-            logger.warning('Unimplemented to exten method for type %s', self.dest_type)
-
-    def _to_exten_from_exten(self):
-        return self.value
-
-    def _to_exten_from_voicemail(self):
-        call_vm_exten = extensions_dao.exten_by_name('vmboxslt')
-        vm_number = dao.voicemail.get_number(self.value)
-        return call_vm_exten.replace('.', vm_number)
-
-    def _to_exten_from_vm_consult(self):
-        return extensions_dao.exten_by_name('vmusermsg')
+        logger.warning('Unimplemented to exten method for type %s', self.dest_type)
