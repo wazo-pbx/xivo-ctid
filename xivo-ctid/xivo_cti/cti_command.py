@@ -56,6 +56,7 @@ REGCOMMANDS = [
     ]
 
 IPBXCOMMANDS = [
+    'originate',
     # transfer-like commands
     'intercept', 'parking',
     'transfer', 'atxfer',
