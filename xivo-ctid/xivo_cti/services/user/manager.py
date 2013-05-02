@@ -25,6 +25,8 @@ from xivo_cti.services.pseudo_url import PseudoURL
 
 logger = logging.getLogger(__name__)
 
+ORIGINATE_AUTO_ANSWER_DELAY = 0.25
+
 
 class UserServiceManager(object):
 
@@ -50,7 +52,7 @@ class UserServiceManager(object):
             exten = url_or_exten
 
         self._dial(user_id, exten)
-        context.get('current_call_manager').schedule_answer(user_id, 0.25)
+        context.get('current_call_manager').schedule_answer(user_id, ORIGINATE_AUTO_ANSWER_DELAY)
 
     def _dial(self, user_id, exten):
         try:

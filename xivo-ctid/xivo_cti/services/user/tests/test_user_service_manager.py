@@ -20,6 +20,9 @@ import unittest
 from mock import Mock
 from mock import sentinel
 from mock import patch
+import xivo_cti.services.user.manager as user_service_manager
+from xivo_cti.ioc.context import context
+from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.destination import Destination
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
@@ -53,25 +56,32 @@ class TestUserServiceManager(unittest.TestCase):
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
+        context.reset()
 
     def test_call_destination_url(self):
         user_id = sentinel
         number = '1234'
-        url = 'exten:xivo/{}'.format(number)
+        url = 'exten:xivo/{0}'.format(number)
         self.user_service_manager._dial = Mock()
+        context.register('current_call_manager', Mock, CurrentCallManager)
+        mock_current_call_manager = context.get('current_call_manager')
 
         self.user_service_manager.call_destination(user_id, url)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        mock_current_call_manager.schedule_answer.assert_called_once_with(user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
 
     def test_call_destination_exten(self):
         user_id = sentinel
         number = '1234'
         self.user_service_manager._dial = Mock()
+        context.register('current_call_manager', Mock, CurrentCallManager)
+        mock_current_call_manager = context.get('current_call_manager')
 
         self.user_service_manager.call_destination(user_id, number)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        mock_current_call_manager.schedule_answer.assert_called_once_with(user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
 
     def test_dial(self):
         user_id = 654
