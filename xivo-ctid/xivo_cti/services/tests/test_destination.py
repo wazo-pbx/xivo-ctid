@@ -64,3 +64,10 @@ class TestDestination(unittest.TestCase):
         assert_that(exten, equal_to(consult_vm_exten), 'Call voicemail extension')
 
         extensions_dao.exten_by_name.assert_called_once_with('vmusermsg')
+
+    def test_equality(self):
+        d1 = Destination('one', 'two', 'three')
+        self.assertTrue(d1 == Destination('one', 'two', 'three'))
+        self.assertFalse(d1 == Destination('one', 'two', None))
+        self.assertFalse(d1 == Destination('one', None, 'three'))
+        self.assertFalse(d1 == Destination(None, 'two', 'three'))
