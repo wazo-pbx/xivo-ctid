@@ -20,7 +20,7 @@ import unittest
 from hamcrest import *
 from mock import Mock
 
-from xivo_cti.services.destination import Destination
+from xivo_cti.model.destination import Destination
 from xivo_dao import extensions_dao
 from xivo_cti import dao
 

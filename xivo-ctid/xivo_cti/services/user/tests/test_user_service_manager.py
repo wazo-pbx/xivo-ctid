@@ -23,7 +23,6 @@ from mock import patch
 import xivo_cti.services.user.manager as user_service_manager
 from xivo_cti.ioc.context import context
 from xivo_cti.services.current_call.manager import CurrentCallManager
-from xivo_cti.services.destination import Destination
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
@@ -33,7 +32,6 @@ from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.xivo_ami import AMIClass
-import xivo_cti
 
 
 class TestUserServiceManager(unittest.TestCase):

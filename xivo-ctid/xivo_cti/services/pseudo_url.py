@@ -17,7 +17,7 @@
 
 import re
 
-from xivo_cti.services.destination import Destination
+from xivo_cti.model.destination import Destination
 
 
 class PseudoURL(object):

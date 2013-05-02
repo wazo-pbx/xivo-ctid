@@ -20,7 +20,7 @@ import unittest
 
 from hamcrest import *
 
-from xivo_cti.services.pseudo_url import Destination
+from xivo_cti.model.destination import Destination
 from xivo_cti.services.pseudo_url import PseudoURL
 
 
