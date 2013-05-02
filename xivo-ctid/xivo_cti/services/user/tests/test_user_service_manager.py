@@ -67,7 +67,8 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.call_destination(user_id, url)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
-        mock_current_call_manager.schedule_answer.assert_called_once_with(user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+        mock_current_call_manager.schedule_answer.assert_called_once_with(
+            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
 
     def test_call_destination_exten(self):
         user_id = sentinel
@@ -79,7 +80,8 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.call_destination(user_id, number)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
-        mock_current_call_manager.schedule_answer.assert_called_once_with(user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+        mock_current_call_manager.schedule_answer.assert_called_once_with(
+            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
 
     def test_dial(self):
         user_id = 654

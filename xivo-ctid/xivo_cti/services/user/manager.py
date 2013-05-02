@@ -21,6 +21,7 @@ from xivo_dao import user_dao
 from xivo_dao import phonefunckey_dao
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
+from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.services.pseudo_url import PseudoURL
 
 logger = logging.getLogger(__name__)
@@ -46,9 +47,9 @@ class UserServiceManager(object):
         self.ami_class = ami_class
 
     def call_destination(self, user_id, url_or_exten):
-        try:
-            exten = PseudoURL.parse(url_or_exten).to_exten()
-        except ValueError:
+        if DestinationFactory.is_destination_url(url_or_exten):
+            exten = DestinationFactory.make_from(url_or_exten).to_exten()
+        else:
             exten = url_or_exten
 
         self._dial(user_id, exten)
