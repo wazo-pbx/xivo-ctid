@@ -25,12 +25,10 @@ class TestDial(unittest.TestCase):
 
     def setUp(self):
         self._commandid = 125708937534
-        self._destination = '1234'
         self.dial_message = {
             'class': 'ipbxcommand',
             'command': 'dial',
             'commandid': self._commandid,
-            'destination': self._destination,
         }
 
     def test_from_dict_url_style_destination(self):
@@ -43,7 +41,9 @@ class TestDial(unittest.TestCase):
         assert_that(dial.destination, equal_to(dest), 'Dialed destination')
 
     def test_from_dict_other_destination(self):
+        dest = '1234'
+        self.dial_message['destination'] = dest
         dial = Dial.from_dict(self.dial_message)
 
         assert_that(dial.commandid, equal_to(self._commandid), 'Command ID')
-        assert_that(dial.destination, equal_to(self._destination), 'Dialed extension')
+        assert_that(dial.destination, equal_to(dest), 'Dialed extension')
