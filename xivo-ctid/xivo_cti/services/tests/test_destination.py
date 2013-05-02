@@ -42,7 +42,7 @@ class TestDestination(unittest.TestCase):
         vm_id = 2
         vm_number = '4444'
         call_vm_exten = '*97.'
-        expected = '{0}{1}'.format(call_vm_exten[:-1], vm_number)
+        expected = '*974444'
         extensions_dao.exten_by_name = Mock(return_value=call_vm_exten)
         dao.voicemail = Mock(dao.voicemail_dao.VoicemailDAO)
         dao.voicemail.get_number.return_value = vm_number
