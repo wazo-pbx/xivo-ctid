@@ -136,16 +136,30 @@ class Command(object):
         return z
 
     def regcommand_login_pass(self):
-        head = 'LOGINFAIL - login_pass'
+        self.head = 'LOGINFAIL - login_pass'
         # user authentication
         missings = []
         for argum in ['hashedpassword']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
-            logger.warning('%s - missing args : %s', head, missings)
+            logger.warning('%s - missing args : %s', self.head, missings)
             return 'missing:%s' % ','.join(missings)
 
+        if self._is_user_authenticated():
+            self._connection.connection_details['authenticated'] = True
+        else:
+            return 'login_password'
+
+        userid = self._connection.connection_details.get('userid')
+        cti_profile_id = user_dao.get_profile(userid)
+        if cti_profile_id is None:
+            logger.warning("%s - No CTI profile defined for the user", self.head)
+            return 'capaid_undefined'
+        else:
+            return  {'capalist': [user_dao.get_profile(userid)]}
+
+    def _is_user_authenticated(self):
         this_hashed_password = self._commanddict.get('hashedpassword')
         cdetails = self._connection.connection_details
 
@@ -156,29 +170,22 @@ class Command(object):
         if ipbxid and userid:
             ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(userid, sessionid)
             if ref_hashed_password != this_hashed_password:
-                logger.warning('%s - wrong hashed password', head)
-                return 'login_password'
+                logger.warning('%s - wrong hashed password', self.head)
+                return False
             else:
-                cdetails['authenticated'] = True
+                return True
         else:
-            logger.warning('%s - undefined user : probably the login_id step failed', head)
-            return 'login_password'
-
-        cti_profile_id = user_dao.get_profile(userid)
-        if cti_profile_id is None:
-            logger.warning("%s - No CTI profile defined for the user", head)
-            return 'capaid_undefined'
-        else:
-            return  {'capalist': [user_dao.get_profile(userid)]}
+            logger.warning('%s - undefined user : probably the login_id step failed', self.head)
+            return False
 
     def regcommand_login_capas(self):
-        head = 'LOGINFAIL - login_capas'
+        self.head = 'LOGINFAIL - login_capas'
         missings = []
         for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
-            logger.warning('%s - missing args : %s', head, missings)
+            logger.warning('%s - missing args : %s', self.head, missings)
             return 'missing:%s' % ','.join(missings)
 
         cdetails = self._connection.connection_details
@@ -188,12 +195,12 @@ class Command(object):
 
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
-            logger.warning('%s - wrong capaid : %s %s', head, iserr, capaid)
+            logger.warning('%s - wrong capaid : %s %s', self.head, iserr, capaid)
             return iserr
 
         self.__connect_user__(state, capaid)
-        head = 'LOGIN SUCCESSFUL'
-        logger.info('%s for %s', head, cdetails)
+        self.head = 'LOGIN SUCCESSFUL'
+        logger.info('%s for %s', self.head, cdetails)
 
         if self.userid.startswith('cs:'):
             notifyremotelogin = threading.Timer(2, self._ctiserver.cb_timer,
