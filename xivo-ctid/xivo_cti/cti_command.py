@@ -164,8 +164,12 @@ class Command(object):
             logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
 
-        reply = {'capalist': [user_dao.get_profile(userid)]}
-        return reply
+        cti_profile_id = user_dao.get_profile(userid)
+        if cti_profile_id is None:
+            logger.warning("%s - No CTI profile defined for the user", head)
+            return 'capaid_undefined'
+        else:
+            return  {'capalist': [user_dao.get_profile(userid)]}
 
     def regcommand_login_capas(self):
         head = 'LOGINFAIL - login_capas'

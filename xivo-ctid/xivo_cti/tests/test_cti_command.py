@@ -67,3 +67,47 @@ class Test(unittest.TestCase):
 
         queueStatistics.get_statistics.assert_called_with('service', 60, 3600)
         encoder.encode.assert_called_with(statisticsToEncode)
+
+    @patch('xivo_cti.ioc.context.context.get', Mock())
+    def test_regcommand_login_pass_no_session(self):
+        message = {"class": "login_pass",
+                   "hashedpassword": "abcd"}
+        cti_command = Command(self.conn, message)
+        self.assertEquals("login_password", cti_command.regcommand_login_pass())
+
+    @patch('xivo_cti.ioc.context.context.get', Mock())
+    def test_regcommand_login_pass_wrong_password(self):
+        message = {"class": "login_pass",
+                   "hashedpassword": "abcd"}
+        self.conn.connection_details = {'ipbxid': 1,
+                                        'userid': 2,
+                                        'prelogin': {'sessionid': '1234'}}
+        cti_command = Command(self.conn, message)
+        self._ctiserver.safe.user_get_hashed_password.return_value = "efgh"
+        self.assertEquals("login_password", cti_command.regcommand_login_pass())
+
+    @patch('xivo_cti.ioc.context.context.get', Mock())
+    @patch('xivo_dao.user_dao.get_profile')
+    def test_regcommand_login_pass_no_profile(self, mock_get_profile):
+        message = {"class": "login_pass",
+                   "hashedpassword": "abcd"}
+        self.conn.connection_details = {'ipbxid': 1,
+                                        'userid': 2,
+                                        'prelogin': {'sessionid': '1234'}}
+        cti_command = Command(self.conn, message)
+        self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
+        mock_get_profile.return_value = None
+        self.assertEquals("capaid_undefined", cti_command.regcommand_login_pass())
+
+    @patch('xivo_cti.ioc.context.context.get', Mock())
+    @patch('xivo_dao.user_dao.get_profile')
+    def test_regcommand_login_pass_success(self, mock_get_profile):
+        message = {"class": "login_pass",
+                   "hashedpassword": "abcd"}
+        self.conn.connection_details = {'ipbxid': 1,
+                                        'userid': 2,
+                                        'prelogin': {'sessionid': '1234'}}
+        cti_command = Command(self.conn, message)
+        self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
+        mock_get_profile.return_value = 3
+        self.assertEquals({'capalist': [3]}, cti_command.regcommand_login_pass())
