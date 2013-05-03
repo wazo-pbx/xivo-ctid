@@ -110,7 +110,7 @@ class Command(object):
             messagebase['error_string'] = 'notloggedyet'
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
             methodname = 'regcommand_%s' % self.command
-            if hasattr(self, methodname) and 'warning_string' not in messagebase:
+            if hasattr(self, methodname):
                 method_result = getattr(self, methodname)()
                 if not method_result:
                     messagebase['warning_string'] = 'return_is_none'
