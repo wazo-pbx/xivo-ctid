@@ -151,24 +151,20 @@ class Command(object):
         else:
             return 'login_password'
 
-        userid = self._connection.connection_details.get('userid')
-        cti_profile_id = user_dao.get_profile(userid)
+        cti_profile_id = user_dao.get_profile(self.userid)
         if cti_profile_id is None:
             logger.warning("%s - No CTI profile defined for the user", self.head)
             return 'capaid_undefined'
         else:
-            return  {'capalist': [user_dao.get_profile(userid)]}
+            return  {'capalist': [user_dao.get_profile(self.userid)]}
 
     def _is_user_authenticated(self):
         this_hashed_password = self._commanddict.get('hashedpassword')
         cdetails = self._connection.connection_details
-
-        ipbxid = cdetails.get('ipbxid')
-        userid = cdetails.get('userid')
         sessionid = cdetails.get('prelogin').get('sessionid')
 
-        if ipbxid and userid:
-            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(userid, sessionid)
+        if self.ipbxid and self.userid:
+            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(self.userid, sessionid)
             if ref_hashed_password != this_hashed_password:
                 logger.warning('%s - wrong hashed password', self.head)
                 return False
