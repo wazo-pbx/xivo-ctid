@@ -647,7 +647,7 @@ class Command(object):
         if 'agentids' not in command_dict or command_dict['agentids'] == 'agent:special:me':
             command_dict['agentids'] = self.innerdata.xod_config['users'].keeplist[self.userid]['agentid']
         if '/' in command_dict['agentids']:
-            ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
+            _, agent_id = command_dict['agentids'].split('/', 1)
         else:
             agent_id = command_dict['agentids']
         innerdata = self._ctiserver.safe
