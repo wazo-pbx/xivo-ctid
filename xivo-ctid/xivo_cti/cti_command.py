@@ -97,10 +97,6 @@ class Command(object):
         self.ruserid = self._commanddict.get('userid', self.userid)
         self.rinnerdata = self._ctiserver.safe
 
-        # identifiers for the requested
-        self.tipbxid = self._commanddict.get('tipbxid', self.ipbxid)
-        self.tinnerdata = self._ctiserver.safe
-
         messagebase = {'class': self.command}
 
         if self.commandid:
