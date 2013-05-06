@@ -49,7 +49,7 @@ class DestinationFactory(object):
 
     @classmethod
     def is_destination_url(cls, url):
-        return cls._url_pattern.match(url) != None
+        return cls._url_pattern.match(url) is not None
 
     @classmethod
     def _parse(cls, url):
