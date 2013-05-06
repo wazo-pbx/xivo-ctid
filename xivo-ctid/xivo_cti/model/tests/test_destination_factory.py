@@ -17,7 +17,7 @@
 
 import unittest
 
-from xivo_cti.model.destination_factory import DestinationFactory
+from xivo_cti.model.destination_factory import DestinationFactory, UnimplementedDestinationException
 from xivo_cti.model.consult_voicemail_destination import ConsultVoicemailDestination
 from xivo_cti.model.extension_destination import ExtensionDestination
 from xivo_cti.model.voicemail_destination import VoicemailDestination
@@ -44,6 +44,11 @@ class TestDestinationFactory(unittest.TestCase):
         d = DestinationFactory.make_from(url)
 
         assert_that(isinstance(d, ConsultVoicemailDestination), 'Instance type is ConsultVoicemailDestination')
+
+    def test_make_unknown(self):
+        url = 'invalid_destination_url:xivo/132'
+
+        self.assertRaises(UnimplementedDestinationException, DestinationFactory.make_from, url)
 
     def test_parse_url_exten(self):
         exten = '1234'
