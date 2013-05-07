@@ -26,6 +26,7 @@ from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.services.pseudo_url import PseudoURL
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -190,8 +191,5 @@ class UserServiceManager(object):
 
     def _on_originate_error(self, client_connection, user_id, exten, message):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
-        formatted_msg = 'unreachable_extension:%s' % exten
-        client_connection.send_message({
-            'class': 'ipbxcommand',
-            'error_string': formatted_msg,
-        })
+        formatted_msg = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
+        client_connection.send_message(formatted_msg)

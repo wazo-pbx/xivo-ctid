@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+CLASS = 'class'
+
+
 class CTIMessageFormatter(object):
 
     def __init__(self):
@@ -22,7 +25,7 @@ class CTIMessageFormatter(object):
 
     def add_queue_members(self, queue_member_ids):
         return {
-            'class': 'getlist',
+            CLASS: 'getlist',
             'listname': 'queuemembers',
             'function': 'addconfig',
             'tipbxid': 'xivo',
@@ -31,7 +34,7 @@ class CTIMessageFormatter(object):
 
     def delete_queue_members(self, queue_member_ids):
         return {
-            'class': 'getlist',
+            CLASS: 'getlist',
             'listname': 'queuemembers',
             'function': 'delconfig',
             'tipbxid': 'xivo',
@@ -39,7 +42,7 @@ class CTIMessageFormatter(object):
         }
 
     def update_agent_status(self, agent_id, agent_status):
-        return {'class': 'getlist',
+        return {CLASS: 'getlist',
                 'listname': 'agents',
                 'function': 'updatestatus',
                 'tipbxid': 'xivo',
@@ -48,10 +51,17 @@ class CTIMessageFormatter(object):
 
     def update_queue_member_config(self, queue_member):
         return {
-            'class': 'getlist',
+            CLASS: 'getlist',
             'listname': 'queuemembers',
             'function': 'updateconfig',
             'tipbxid': 'xivo',
             'tid': queue_member.id,
             'config': queue_member.to_cti_config(),
+        }
+
+    @staticmethod
+    def ipbxcommand_error(msg):
+        return {
+            CLASS: 'ipbxcommand',
+            'error_string': msg,
         }

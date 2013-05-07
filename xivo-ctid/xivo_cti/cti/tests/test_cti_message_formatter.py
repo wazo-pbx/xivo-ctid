@@ -16,8 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
+from hamcrest import *
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+
+CLASS = 'class'
 
 
 class TestCTIMessageFormatter(unittest.TestCase):
@@ -37,3 +41,14 @@ class TestCTIMessageFormatter(unittest.TestCase):
         result = cti_message_formatter.update_agent_status(agent_id, agent_status)
 
         self.assertEqual(result, expected_result)
+
+    def test_report_ipbxcommand_error(self):
+        msg = 'Ad libitum'
+        expected = {
+            CLASS: 'ipbxcommand',
+            'error_string': msg,
+        }
+
+        result = CTIMessageFormatter.ipbxcommand_error(msg)
+
+        assert_that(result, equal_to(expected), 'Error message')
