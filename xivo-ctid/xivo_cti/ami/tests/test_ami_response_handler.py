@@ -54,3 +54,9 @@ class TestAMIResponseHandler(unittest.TestCase):
         cb_1.assert_called_once_with(response)
 
         assert_that(action_id_1 in self.handler._callbacks, equal_to(False), 'Key is removed from dict')
+
+    def test_handle_response_no_action_id_no_error(self):
+        self.handler.handle_response({
+            'Response': 'Success',
+            'Message': 'Originate successfully queued',
+        })

@@ -29,7 +29,7 @@ class AMIResponseHandler(object):
         self._callbacks[action_id] = callback
 
     def handle_response(self, response):
-        action_id = response[ACTION_ID]
+        action_id = response.get(ACTION_ID)
         fn = self._callbacks.pop(action_id, None)
         if fn:
             fn(response)
