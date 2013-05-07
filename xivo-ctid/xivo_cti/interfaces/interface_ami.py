@@ -28,6 +28,7 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
 from xivo_cti.ami import ami_event_complete_logger
 from xivo_cti.ami import ami_status_request_logger
+from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
@@ -165,6 +166,7 @@ class AMI(object):
                                             event))
                 self.handle_ami_function(event_name, event)
             elif 'Response' in event and event['Response'] is not None:
+                AMIResponseHandler.get_instance().handle_response(event)
                 response = event['Response']
                 if (response == 'Follows' and 'Privilege' in event
                         and event['Privilege'] == 'Command'):
@@ -232,7 +234,7 @@ class AMI(object):
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
-        if actionid:
+        if actionid and actionid in self.actionids:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
             if mode == 'newchannel':

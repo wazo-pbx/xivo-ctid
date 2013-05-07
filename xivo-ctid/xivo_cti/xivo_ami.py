@@ -25,7 +25,10 @@ import string
 import time
 import errno
 
+from copy import copy
+
 from xivo_cti.tools.extension import normalize_exten
+from xivo_cti.interfaces.interface_ami import AMI
 
 logger = logging.getLogger('xivo_ami')
 
@@ -220,11 +223,12 @@ class AMIClass(object):
         for var, val in extravars.iteritems():
             command_details.append(('Variable', '%s=%s' % (var, val)))
 
-        self.actionid = AMI.make_actionid()
+        action_id = AMI.make_actionid()
+        self.actionid = copy(action_id)
 
         self._exec_command('Originate', command_details)
 
-        return self.actionid
+        return action_id
 
     # \brief Requests the Extension Statuses
     def extensionstate(self, extension, context):
