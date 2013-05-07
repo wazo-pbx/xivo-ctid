@@ -22,6 +22,9 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
+    def __init__(self):
+        pass
+
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
 
