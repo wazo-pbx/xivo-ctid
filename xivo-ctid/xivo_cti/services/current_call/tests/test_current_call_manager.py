@@ -613,9 +613,9 @@ class TestCurrentCallManager(unittest.TestCase):
         self.assertEqual(self.manager.ami.sendcommand.call_count, 0)
 
     @patch('xivo_dao.user_dao.get_line_identity')
-    def test_switchboard_hold(self, mock_get_line_identity):
-        dao.queue = Mock(queue_dao.QueueDAO)
-        dao.queue.get_number_context_from_name.return_value = '3006', 'ctx'
+    @patch('xivo_cti.dao.queue')
+    def test_switchboard_hold(self, mock_queue_dao, mock_get_line_identity):
+        mock_queue_dao.get_number_context_from_name.return_value = '3006', 'ctx'
         queue_name = 'queue_on_hold'
         user_id = 7
         mock_get_line_identity.return_value = self.line_2
