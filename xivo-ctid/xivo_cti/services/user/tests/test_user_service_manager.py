@@ -36,6 +36,7 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.interfaces import interface_ami
+from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -64,29 +65,40 @@ class TestUserServiceManager(unittest.TestCase):
         user_id = sentinel
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
-        self.user_service_manager._dial = Mock()
-        context.register('current_call_manager', Mock, CurrentCallManager)
-        mock_current_call_manager = context.get('current_call_manager')
+        action_id = 'abcdef'
+        self.user_service_manager._dial = Mock(return_value=action_id)
+        self.user_service_manager._register_originate_response_callback = Mock()
 
         self.user_service_manager.call_destination(user_id, url)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
-        mock_current_call_manager.schedule_answer.assert_called_once_with(
-            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
+            action_id, user_id, number)
 
     def test_call_destination_exten(self):
         user_id = sentinel
         number = '1234'
-        self.user_service_manager._dial = Mock()
-        context.register('current_call_manager', Mock, CurrentCallManager)
-        mock_current_call_manager = context.get('current_call_manager')
+        action_id = '34897345'
+        self.user_service_manager._dial = Mock(return_value=action_id)
+        self.user_service_manager._register_originate_response_callback = Mock()
 
         self.user_service_manager.call_destination(user_id, number)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
 
-        mock_current_call_manager.schedule_answer.assert_called_once_with(
-            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
+            action_id, user_id, number)
+
+    def test_register_originate_response_callback(self):
+        action_id, user_id, exten = '8734534', '12', '324564'
+        cb = Mock()
+        self.user_service_manager._on_originate_response_cb = cb
+        response = {'ActionID': action_id}
+
+        self.user_service_manager._register_originate_response_callback(action_id, user_id, exten)
+
+        AMIResponseHandler.get_instance().handle_response(response)
+        cb.assert_called_once_with(user_id, exten, response)
 
     def test_on_originate_response_cb_success(self):
         user_id = 1

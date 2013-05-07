@@ -17,6 +17,9 @@
 
 import logging
 
+from functools import partial
+
+from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_dao import user_dao
 from xivo_dao import phonefunckey_dao
 from xivo_cti import dao
@@ -55,8 +58,8 @@ class UserServiceManager(object):
         else:
             exten = url_or_exten
 
-        self._dial(user_id, exten)
-        context.get('current_call_manager').schedule_answer(user_id, ORIGINATE_AUTO_ANSWER_DELAY)
+        action_id = self._dial(user_id, exten)
+        self._register_originate_response_callback(action_id, user_id, exten)
 
     def _dial(self, user_id, exten):
         try:
@@ -74,6 +77,10 @@ class UserServiceManager(object):
                 exten,
                 line['context'],
             )
+
+    def _register_originate_response_callback(self, action_id, user_id, exten):
+        cb = partial(self._on_originate_response_cb, user_id, exten)
+        AMIResponseHandler.get_instance().register_callback(action_id, cb)
 
     def _on_originate_response_cb(self, user_id, exten, result):
         response = result.get(RESPONSE)
