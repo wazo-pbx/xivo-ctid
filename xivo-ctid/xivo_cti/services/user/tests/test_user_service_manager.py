@@ -84,8 +84,49 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager.call_destination(user_id, number)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
+
         mock_current_call_manager.schedule_answer.assert_called_once_with(
             user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+
+    def test_on_originate_response_cb_success(self):
+        user_id = 1
+        exten = '543'
+        response = {
+            'Response': 'Success',
+            'ActionID': '123423847',
+            'Message': 'Originate successfully queued',
+        }
+        self.user_service_manager._on_originate_success = Mock()
+
+        self.user_service_manager._on_originate_response_cb(user_id, exten, response)
+
+        self.user_service_manager._on_originate_success.assert_called_once_with(user_id)
+
+    def test_on_originate_response_cb_error(self):
+        user_id = 1
+        exten = '543'
+        msg = 'Extension does not exist.'
+        response = {
+            'Response': 'Error',
+            'ActionID': '123456',
+            'Message': msg,
+        }
+        self.user_service_manager._on_originate_error = Mock()
+
+        self.user_service_manager._on_originate_response_cb(user_id, exten, response)
+
+        self.user_service_manager._on_originate_error.assert_called_once_with(user_id, exten, msg)
+
+    def test_on_originate_success(self):
+        context.register('current_call_manager', Mock, CurrentCallManager)
+        mock_current_call_manager = context.get('current_call_manager')
+        user_id = sentinel
+
+        self.user_service_manager._on_originate_success(user_id)
+
+        mock_current_call_manager.schedule_answer.assert_called_once_with(
+            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+
 
     def test_dial(self):
         user_id = 654

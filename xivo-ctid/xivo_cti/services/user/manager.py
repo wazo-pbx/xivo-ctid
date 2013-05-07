@@ -27,6 +27,9 @@ from xivo_cti.services.pseudo_url import PseudoURL
 logger = logging.getLogger(__name__)
 
 ORIGINATE_AUTO_ANSWER_DELAY = 0.25
+RESPONSE = 'Response'
+SUCCESS = 'Success'
+MESSAGE = 'Message'
 
 
 class UserServiceManager(object):
@@ -71,6 +74,19 @@ class UserServiceManager(object):
                 exten,
                 line['context'],
             )
+
+    def _on_originate_response_cb(self, user_id, exten, result):
+        response = result.get(RESPONSE)
+        if response == SUCCESS:
+            self._on_originate_success(user_id)
+        else:
+            self._on_originate_error(user_id, exten, result.get(MESSAGE))
+
+    def _on_originate_success(self, user_id):
+        context.get('current_call_manager').schedule_answer(user_id, ORIGINATE_AUTO_ANSWER_DELAY)
+
+    def _on_originate_error(self, user_id, exten, message):
+        logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)
