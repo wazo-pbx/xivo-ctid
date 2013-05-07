@@ -1,7 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013 Avencall
+# Copyright (C) 2007-2013 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,28 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-# vim: set fileencoding=utf-8 :
-
-# Copyright (C) 2007-2012  Avencall
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the source tree
-# or delivered in the installable package in which XiVO CTI Server is
-# distributed for more details.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import logging
 
 logger = logging.getLogger('user_service_notifier')
@@ -45,8 +22,44 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
-    def __init__(self):
-        pass
+    def dnd_enabled(self, user_id):
+        self.send_cti_event(self._prepare_dnd_message(True, user_id))
+
+    def dnd_disabled(self, user_id):
+        self.send_cti_event(self._prepare_dnd_message(False, user_id))
+
+    def filter_enabled(self, user_id):
+        self.send_cti_event(self._prepare_filter_message(True, user_id))
+
+    def filter_disabled(self, user_id):
+        self.send_cti_event(self._prepare_filter_message(False, user_id))
+
+    def unconditional_fwd_enabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_unconditional_fwd_message(True, destination, user_id))
+
+    def unconditional_fwd_disabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_unconditional_fwd_message(False, destination, user_id))
+
+    def rna_fwd_enabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_rna_fwd_message(True, destination, user_id))
+
+    def rna_fwd_disabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_rna_fwd_message(False, destination, user_id))
+
+    def busy_fwd_enabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_busy_fwd_message(True, destination, user_id))
+
+    def busy_fwd_disabled(self, user_id, destination):
+        self.send_cti_event(self._prepare_busy_fwd_message(False, destination, user_id))
+
+    def presence_updated(self, user_id, presence):
+        self.send_cti_event(self._prepare_presence_updated(user_id, presence))
+
+    def recording_enabled(self, user_id):
+        self.send_cti_event(self._prepare_recording_message(True, user_id))
+
+    def recording_disabled(self, user_id):
+        self.send_cti_event(self._prepare_recording_message(False, user_id))
 
     def _prepare_message(self, user_id):
         return {
@@ -96,42 +109,3 @@ class UserServiceNotifier(object):
         recording_enabled_msg = self._prepare_message(user_id)
         recording_enabled_msg['config'] = {'enablerecording': recording_status}
         return recording_enabled_msg
-
-    def dnd_enabled(self, user_id):
-        self.send_cti_event(self._prepare_dnd_message(True, user_id))
-
-    def dnd_disabled(self, user_id):
-        self.send_cti_event(self._prepare_dnd_message(False, user_id))
-
-    def filter_enabled(self, user_id):
-        self.send_cti_event(self._prepare_filter_message(True, user_id))
-
-    def filter_disabled(self, user_id):
-        self.send_cti_event(self._prepare_filter_message(False, user_id))
-
-    def unconditional_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_unconditional_fwd_message(True, destination, user_id))
-
-    def unconditional_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_unconditional_fwd_message(False, destination, user_id))
-
-    def rna_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_rna_fwd_message(True, destination, user_id))
-
-    def rna_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_rna_fwd_message(False, destination, user_id))
-
-    def busy_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_busy_fwd_message(True, destination, user_id))
-
-    def busy_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_busy_fwd_message(False, destination, user_id))
-
-    def presence_updated(self, user_id, presence):
-        self.send_cti_event(self._prepare_presence_updated(user_id, presence))
-
-    def recording_enabled(self, user_id):
-        self.send_cti_event(self._prepare_recording_message(True, user_id))
-
-    def recording_disabled(self, user_id):
-        self.send_cti_event(self._prepare_recording_message(False, user_id))
