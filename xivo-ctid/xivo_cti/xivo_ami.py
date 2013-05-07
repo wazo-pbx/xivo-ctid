@@ -219,7 +219,12 @@ class AMIClass(object):
             command_details.append(('CallerID', '"%s"' % cidnamesrc))
         for var, val in extravars.iteritems():
             command_details.append(('Variable', '%s=%s' % (var, val)))
-        return self._exec_command('Originate', command_details)
+
+        self.actionid = AMI.make_actionid()
+
+        self._exec_command('Originate', command_details)
+
+        return self.actionid
 
     # \brief Requests the Extension Statuses
     def extensionstate(self, extension, context):

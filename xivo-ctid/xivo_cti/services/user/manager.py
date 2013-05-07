@@ -62,7 +62,7 @@ class UserServiceManager(object):
         except LookupError:
             logger.warning('Failed to dial %s for user %s', exten, user_id)
         else:
-            self.ami_class.originate(
+            return self.ami_class.originate(
                 line['protocol'],
                 line['name'],
                 line['number'],

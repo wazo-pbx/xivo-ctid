@@ -20,6 +20,9 @@ import unittest
 from mock import Mock
 from mock import sentinel
 from mock import patch
+
+from hamcrest import *
+
 import xivo_cti.services.user.manager as user_service_manager
 from xivo_cti.ioc.context import context
 from xivo_cti.services.current_call.manager import CurrentCallManager
@@ -32,6 +35,7 @@ from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.interfaces import interface_ami
 
 
 class TestUserServiceManager(unittest.TestCase):
@@ -91,6 +95,8 @@ class TestUserServiceManager(unittest.TestCase):
         user_line_number = '1001'
         user_fullname = 'Bob'
         user_line_context = 'default'
+        action_id = '12345'
+        self.ami_class.originate.return_value = action_id
         self.user_service_manager.dao.user.get_fullname.return_value = user_fullname
         self.user_service_manager.dao.user.get_line.return_value = {
             'protocol': user_line_proto,
@@ -99,7 +105,7 @@ class TestUserServiceManager(unittest.TestCase):
             'context': user_line_context,
         }
 
-        self.user_service_manager._dial(user_id, exten)
+        return_value = self.user_service_manager._dial(user_id, exten)
 
         self.ami_class.originate.assert_called_once_with(
             user_line_proto,
@@ -110,6 +116,8 @@ class TestUserServiceManager(unittest.TestCase):
             exten,
             user_line_context,
         )
+
+        assert_that(return_value, equal_to(action_id), 'Returned action id')
 
     def test_dial_no_line_no_stack_trace(self):
         user_id = 654
