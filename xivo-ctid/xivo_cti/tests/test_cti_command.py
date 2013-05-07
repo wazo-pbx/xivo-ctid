@@ -44,9 +44,9 @@ class Test(unittest.TestCase):
         self.assertEqual(cti_command.regcommand_getqueuesstats(), {},
                          'Default return an empty dict')
 
-    @patch('xivo_cti.dao.queue.get_name_from_id')
+    @patch('xivo_cti.dao.queue')
     @patch('xivo_cti.ioc.context.context.get', Mock())
-    def test_regcommand_getqueuesstats_one_queue(self, mock_get_name_from_id):
+    def test_regcommand_getqueuesstats_one_queue(self, mock_queue):
         message = {"class": "getqueuesstats",
                    "commandid": 1234,
                    "on": {"3": {"window": "3600", "xqos": "60"}}}
@@ -55,7 +55,7 @@ class Test(unittest.TestCase):
         cti_command = Command(self.conn, message)
         cti_command._queue_statistics_manager = queueStatistics
         cti_command._queue_statistics_encoder = encoder
-        mock_get_name_from_id.return_value = 'service'
+        mock_queue.get_name_from_id.return_value = 'service'
 
         queueStatistics.get_statistics.return_value = queueStatistics
         statisticsToEncode = {'3': queueStatistics}
