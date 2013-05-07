@@ -52,14 +52,14 @@ class UserServiceManager(object):
         self.dao = dao
         self.ami_class = ami_class
 
-    def call_destination(self, user_id, url_or_exten):
+    def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
         else:
             exten = url_or_exten
 
         action_id = self._dial(user_id, exten)
-        self._register_originate_response_callback(action_id, user_id, exten)
+        self._register_originate_response_callback(action_id, client_connection, user_id, exten)
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)
@@ -174,19 +174,24 @@ class UserServiceManager(object):
                 line['context'],
             )
 
-    def _register_originate_response_callback(self, action_id, user_id, exten):
-        cb = partial(self._on_originate_response_cb, user_id, exten)
+    def _register_originate_response_callback(self, action_id, client_connection, user_id, exten):
+        cb = partial(self._on_originate_response_cb, client_connection, user_id, exten)
         AMIResponseHandler.get_instance().register_callback(action_id, cb)
 
-    def _on_originate_response_cb(self, user_id, exten, result):
+    def _on_originate_response_cb(self, client_connection, user_id, exten, result):
         response = result.get(RESPONSE)
         if response == SUCCESS:
             self._on_originate_success(user_id)
         else:
-            self._on_originate_error(user_id, exten, result.get(MESSAGE))
+            self._on_originate_error(client_connection, user_id, exten, result.get(MESSAGE))
 
     def _on_originate_success(self, user_id):
         context.get('current_call_manager').schedule_answer(user_id, ORIGINATE_AUTO_ANSWER_DELAY)
 
-    def _on_originate_error(self, user_id, exten, message):
+    def _on_originate_error(self, client_connection, user_id, exten, message):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
+        formatted_msg = 'unreachable_extension:%s' % exten
+        client_connection.send_message({
+            'class': 'ipbxcommand',
+            'error_string': formatted_msg,
+        })

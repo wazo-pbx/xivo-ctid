@@ -36,6 +36,7 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.interfaces import interface_ami
+from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 
 
@@ -66,43 +67,47 @@ class TestUserServiceManager(unittest.TestCase):
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
         action_id = 'abcdef'
+        connection = Mock(CTI)
         self.user_service_manager._dial = Mock(return_value=action_id)
         self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(user_id, url)
+        self.user_service_manager.call_destination(connection, user_id, url)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            action_id, user_id, number)
+            action_id, connection, user_id, number)
 
     def test_call_destination_exten(self):
         user_id = sentinel
         number = '1234'
         action_id = '34897345'
+        connection = Mock(CTI)
         self.user_service_manager._dial = Mock(return_value=action_id)
         self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(user_id, number)
+        self.user_service_manager.call_destination(connection, user_id, number)
 
         self.user_service_manager._dial.assert_called_once_with(user_id, number)
 
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            action_id, user_id, number)
+            action_id, connection, user_id, number)
 
     def test_register_originate_response_callback(self):
         action_id, user_id, exten = '8734534', '12', '324564'
         cb = Mock()
         self.user_service_manager._on_originate_response_cb = cb
         response = {'ActionID': action_id}
+        connection = sentinel
 
-        self.user_service_manager._register_originate_response_callback(action_id, user_id, exten)
+        self.user_service_manager._register_originate_response_callback(action_id, connection, user_id, exten)
 
         AMIResponseHandler.get_instance().handle_response(response)
-        cb.assert_called_once_with(user_id, exten, response)
+        cb.assert_called_once_with(connection, user_id, exten, response)
 
     def test_on_originate_response_cb_success(self):
         user_id = 1
         exten = '543'
+        connection = sentinel
         response = {
             'Response': 'Success',
             'ActionID': '123423847',
@@ -110,7 +115,7 @@ class TestUserServiceManager(unittest.TestCase):
         }
         self.user_service_manager._on_originate_success = Mock()
 
-        self.user_service_manager._on_originate_response_cb(user_id, exten, response)
+        self.user_service_manager._on_originate_response_cb(connection, user_id, exten, response)
 
         self.user_service_manager._on_originate_success.assert_called_once_with(user_id)
 
@@ -118,6 +123,7 @@ class TestUserServiceManager(unittest.TestCase):
         user_id = 1
         exten = '543'
         msg = 'Extension does not exist.'
+        connection = Mock(CTI)
         response = {
             'Response': 'Error',
             'ActionID': '123456',
@@ -125,9 +131,9 @@ class TestUserServiceManager(unittest.TestCase):
         }
         self.user_service_manager._on_originate_error = Mock()
 
-        self.user_service_manager._on_originate_response_cb(user_id, exten, response)
+        self.user_service_manager._on_originate_response_cb(connection, user_id, exten, response)
 
-        self.user_service_manager._on_originate_error.assert_called_once_with(user_id, exten, msg)
+        self.user_service_manager._on_originate_error.assert_called_once_with(connection, user_id, exten, msg)
 
     def test_on_originate_success(self):
         context.register('current_call_manager', Mock, CurrentCallManager)
@@ -139,6 +145,20 @@ class TestUserServiceManager(unittest.TestCase):
         mock_current_call_manager.schedule_answer.assert_called_once_with(
             user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
 
+    def test_on_originate_error(self):
+        user_id, exten = '42', '1234'
+        msg = 'Extension does not exist.'
+        formatted_error = 'unreachable_extension:%s' % exten
+        formatted_msg = {
+            'class': 'ipbxcommand',
+            'error_string': formatted_error,
+        }
+        connection = Mock(CTI)
+        self.user_service_notifier.report_error = Mock()
+
+        self.user_service_manager._on_originate_error(connection, user_id, exten, msg)
+
+        connection.send_message.assert_called_once_with(formatted_msg)
 
     def test_dial(self):
         user_id = 654

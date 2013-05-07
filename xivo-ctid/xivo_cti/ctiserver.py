@@ -193,7 +193,8 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
-        Dial.register_callback_params(self._user_service_manager.call_destination, ['user_id', 'destination'])
+        Dial.register_callback_params(self._user_service_manager.call_destination,
+            ['cti_connection', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
