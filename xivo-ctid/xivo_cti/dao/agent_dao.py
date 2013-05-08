@@ -104,5 +104,5 @@ class AgentDAO(object):
     @notify_clients
     def remove_from_queue(self, agent_id, queue_id):
         queues_before = self.innerdata.xod_status['agents'][str(agent_id)]['queues']
-        queues_after = filter(lambda q: q != queue_id, queues_before)
+        queues_after = filter(lambda q: q != str(queue_id), queues_before)
         self.innerdata.xod_status['agents'][str(agent_id)]['queues'] = queues_after
