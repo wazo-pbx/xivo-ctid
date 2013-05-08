@@ -94,17 +94,17 @@ class TestUserServiceManager(unittest.TestCase):
 
     def test_register_originate_response_callback(self):
         action_id, user_id, exten = '8734534', '12', '324564'
-        cb = Mock()
-        self.user_service_manager._on_originate_response_cb = cb
+        callback = Mock()
+        self.user_service_manager._on_originate_response_callback = callback
         response = {'ActionID': action_id}
         connection = sentinel
 
         self.user_service_manager._register_originate_response_callback(action_id, connection, user_id, exten)
 
         AMIResponseHandler.get_instance().handle_response(response)
-        cb.assert_called_once_with(connection, user_id, exten, response)
+        callback.assert_called_once_with(connection, user_id, exten, response)
 
-    def test_on_originate_response_cb_success(self):
+    def test_on_originate_response_callback_success(self):
         user_id = 1
         exten = '543'
         connection = sentinel
@@ -115,11 +115,11 @@ class TestUserServiceManager(unittest.TestCase):
         }
         self.user_service_manager._on_originate_success = Mock()
 
-        self.user_service_manager._on_originate_response_cb(connection, user_id, exten, response)
+        self.user_service_manager._on_originate_response_callback(connection, user_id, exten, response)
 
         self.user_service_manager._on_originate_success.assert_called_once_with(user_id)
 
-    def test_on_originate_response_cb_error(self):
+    def test_on_originate_response_callback_error(self):
         user_id = 1
         exten = '543'
         msg = 'Extension does not exist.'
@@ -131,7 +131,7 @@ class TestUserServiceManager(unittest.TestCase):
         }
         self.user_service_manager._on_originate_error = Mock()
 
-        self.user_service_manager._on_originate_response_cb(connection, user_id, exten, response)
+        self.user_service_manager._on_originate_response_callback(connection, user_id, exten, response)
 
         self.user_service_manager._on_originate_error.assert_called_once_with(connection, user_id, exten, msg)
 

@@ -176,10 +176,10 @@ class UserServiceManager(object):
             )
 
     def _register_originate_response_callback(self, action_id, client_connection, user_id, exten):
-        cb = partial(self._on_originate_response_cb, client_connection, user_id, exten)
-        AMIResponseHandler.get_instance().register_callback(action_id, cb)
+        callback = partial(self._on_originate_response_callback, client_connection, user_id, exten)
+        AMIResponseHandler.get_instance().register_callback(action_id, callback)
 
-    def _on_originate_response_cb(self, client_connection, user_id, exten, result):
+    def _on_originate_response_callback(self, client_connection, user_id, exten, result):
         response = result.get(RESPONSE)
         if response == SUCCESS:
             self._on_originate_success(user_id)
