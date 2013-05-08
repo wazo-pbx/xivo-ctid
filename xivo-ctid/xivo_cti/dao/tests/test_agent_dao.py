@@ -17,12 +17,41 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, call
 from xivo_cti import innerdata
-from xivo_cti.dao.agent_dao import AgentDAO
+from xivo_cti.dao.agent_dao import notify_clients, AgentDAO
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.status import AgentStatus
 
+class TestNotifyClients(unittest.TestCase):
+
+    def setUp(self):
+        self.innerdata = Mock(innerdata.Safe)
+        self.queue_member_manager = Mock(QueueMemberManager)
+        self.agent_dao = AgentDAO(self.innerdata, self.queue_member_manager)
+
+    def test_notify_clients(self):
+        class DecorateMe(object):
+            def __init__(self, innerdata):
+                self.innerdata = innerdata
+                self.count = 0
+                self.agent_id = None
+
+            @notify_clients
+            def decorate_me(self, agent_id):
+                self.count += 1
+                self.agent_id = agent_id
+
+        agent_id = '42'
+
+        d = DecorateMe(self.innerdata)
+        d.decorate_me(agent_id)
+
+        self.assertEqual(d.count,1)
+        self.assertEqual(d.agent_id,agent_id)
+        expected = [call('setforce', ('agents', 'updatestatus', agent_id)), call('empty_stack')]
+        arg_list = self.innerdata.handle_cti_stack.call_args_list
+        self.assertEqual(arg_list,expected)
 
 class TestAgentDAO(unittest.TestCase):
 
@@ -222,3 +251,76 @@ class TestAgentDAO(unittest.TestCase):
         result = self.agent_dao.on_wrapup(agent_id)
 
         self.assertTrue(result, True)
+
+    def test_add_to_queue(self):
+        queue_id = 13
+        agent_id = 42
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'queues': [
+                        "3"
+                    ]
+                }
+            }
+        }
+
+        self.agent_dao.add_to_queue(agent_id, queue_id)
+
+        self.assertIn(str(queue_id), self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+
+    def test_add_to_queue_already_added(self):
+        queue_id = 13
+        agent_id = 42
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'queues': [
+                        "3",
+                        "13"
+                    ]
+                }
+            }
+        }
+        expected_result = ["3", "13"]
+
+        self.agent_dao.add_to_queue(agent_id, queue_id)
+
+        self.assertEqual(expected_result, self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+
+    def test_remove_from_queue(self):
+        queue_id = 13
+        agent_id = 42
+
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'queues': [
+                        "3",
+                        str(queue_id)
+                    ]
+                }
+            }
+        }
+
+        self.agent_dao.remove_from_queue(agent_id, queue_id)
+
+        self.assertNotIn(queue_id, self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+
+    def test_remove_from_queue_already_removed(self):
+        queue_id = 13
+        agent_id = 42
+
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'queues': [
+                        "3",
+                    ]
+                }
+            }
+        }
+
+        self.agent_dao.remove_from_queue(agent_id, queue_id)
+
+        self.assertNotIn(queue_id, self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
