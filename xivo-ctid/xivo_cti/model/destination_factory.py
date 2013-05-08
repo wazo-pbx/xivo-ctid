@@ -26,6 +26,10 @@ from collections import namedtuple
 ParsedURL = namedtuple('ParsedURL', ['destination_type', 'ipbxid', 'value'])
 
 
+class UnimplementedDestinationException(NotImplementedError):
+    pass
+
+
 class DestinationFactory(object):
 
     _type_to_class = {
@@ -39,13 +43,13 @@ class DestinationFactory(object):
     def make_from(cls, url):
         parsed_url = cls._parse(url)
         if parsed_url.destination_type not in cls._type_to_class:
-            msg = 'Unimplemented type {0}'.format(parsed_url.parsed_url.destination_type)
+            msg = 'Unimplemented type {0}'.format(parsed_url.destination_type)
             raise UnimplementedDestinationException(msg)
         return cls._type_to_class[parsed_url.destination_type](*parsed_url)
 
     @classmethod
     def is_destination_url(cls, url):
-        return cls._url_pattern.match(url) != None
+        return cls._url_pattern.match(url) is not None
 
     @classmethod
     def _parse(cls, url):
