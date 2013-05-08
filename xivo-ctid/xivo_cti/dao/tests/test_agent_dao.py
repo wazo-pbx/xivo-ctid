@@ -267,7 +267,7 @@ class TestAgentDAO(unittest.TestCase):
 
         self.agent_dao.add_to_queue(agent_id, queue_id)
 
-        self.assertIn(str(queue_id), self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+        self.assertTrue(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
 
     def test_add_to_queue_already_added(self):
         queue_id = 13
@@ -305,7 +305,7 @@ class TestAgentDAO(unittest.TestCase):
 
         self.agent_dao.remove_from_queue(agent_id, queue_id)
 
-        self.assertNotIn(str(queue_id), self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+        self.assertFalse(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
 
     def test_remove_from_queue_already_removed(self):
         queue_id = 13
@@ -323,4 +323,4 @@ class TestAgentDAO(unittest.TestCase):
 
         self.agent_dao.remove_from_queue(agent_id, queue_id)
 
-        self.assertNotIn(str(queue_id), self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+        self.assertFalse(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
