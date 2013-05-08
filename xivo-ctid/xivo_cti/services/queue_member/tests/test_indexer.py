@@ -39,6 +39,15 @@ class TestQueueMemberIndexer(unittest.TestCase):
 
         mock_agent.add_to_queue.assert_called_once_with(13, 42)
 
+    @patch('xivo_cti.dao.agent')
+    def test_on_queue_member_added_not_agent(self, mock_agent):
+        queue_member = Mock()
+        queue_member.is_agent.return_value = False
+
+        self.queue_member_cti_indexer.on_queue_member_added(queue_member)
+
+        self.assertEquals(mock_agent.add_to_queue.call_count, 0)
+
     @patch('xivo_cti.dao.queue')
     @patch('xivo_cti.dao.agent')
     def test_on_queue_member_removed(self, mock_agent, mock_queue):
@@ -51,3 +60,12 @@ class TestQueueMemberIndexer(unittest.TestCase):
         self.queue_member_cti_indexer.on_queue_member_removed(queue_member)
 
         mock_agent.remove_from_queue.assert_called_once_with(13, 42)
+
+    @patch('xivo_cti.dao.agent')
+    def test_on_queue_member_removed_not_agent(self, mock_agent):
+        queue_member = Mock()
+        queue_member.is_agent.return_value = False
+
+        self.queue_member_cti_indexer.on_queue_member_removed(queue_member)
+
+        self.assertEquals(mock_agent.remove_from_queue.call_count, 0)
