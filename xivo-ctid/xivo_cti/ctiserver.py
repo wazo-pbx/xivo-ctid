@@ -403,12 +403,12 @@ class CTIServer(object):
         self._queue_member_updater.on_initialization()
         self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
         self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
-        self._queue_member_indexer.initialize(self._queue_member_manager)
         self._queue_member_indexer.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
         self._init_statistics_producers()
         self._init_agent_availability()
+        self._queue_member_indexer.initialize(self._queue_member_manager)
 
         logger.info('(2/3) Local AMI socket connection')
         self.interface_ami.init_connection()
