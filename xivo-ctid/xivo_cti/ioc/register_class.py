@@ -55,6 +55,7 @@ from xivo_cti.services.queue_member.cti.subscriber import \
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
 from xivo_cti.services.queue_member.updater import QueueMemberUpdater
+from xivo_cti.services.queue_member.indexer import QueueMemberIndexer
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
@@ -104,6 +105,7 @@ def setup():
     context.register('queue_statistics_producer', QueueStatisticsProducer)
     context.register('queue_member_cti_subscriber', QueueMemberCTISubscriber)
     context.register('queue_member_cti_adapter', QueueMemberCTIAdapter)
+    context.register('queue_member_indexer', QueueMemberIndexer)
     context.register('queue_member_manager', QueueMemberManager)
     context.register('queue_member_notifier', QueueMemberNotifier)
     context.register('queue_member_updater', QueueMemberUpdater)

@@ -46,3 +46,10 @@ class QueueDAO(object):
         except NoSuchQueueException:
             return None
         return queue['name']
+
+    def get_id_from_name(self, queue_name):
+        queue_list = self.innerdata.xod_config['queues'].keeplist
+        for (queue_id, queue) in queue_list.iteritems():
+            if queue['name'] == queue_name:
+                return int(queue_id)
+        return None

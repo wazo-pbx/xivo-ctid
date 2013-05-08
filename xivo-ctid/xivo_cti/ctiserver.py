@@ -154,6 +154,7 @@ class CTIServer(object):
         self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
+        self._queue_member_indexer = context.get('queue_member_indexer')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
@@ -402,10 +403,12 @@ class CTIServer(object):
         self._queue_member_updater.on_initialization()
         self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
         self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_member_indexer.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
         self._init_statistics_producers()
         self._init_agent_availability()
+        self._queue_member_indexer.initialize(self._queue_member_manager)
 
         logger.info('(2/3) Local AMI socket connection')
         self.interface_ami.init_connection()
@@ -425,7 +428,6 @@ class CTIServer(object):
         kind_list = {}
         kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
         kind_list['udp'] = xivoconf_general.get('incoming_udp', {})
-
         for kind_type, incoming_list in kind_list.iteritems():
             for kind, bind_and_port in incoming_list.iteritems():
                 allow_kind = True

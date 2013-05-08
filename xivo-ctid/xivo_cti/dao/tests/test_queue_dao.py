@@ -116,3 +116,28 @@ class TestQueueDAO(unittest.TestCase):
         result = self.dao.get_name_from_id(queue_id)
 
         self.assertEqual(result, None)
+
+    def test_get_id_from_name(self):
+        queue_id = 6
+        queue_name = 'test_name_queue'
+        self._queuelist.keeplist[str(queue_id)] = {
+            'number': '3006',
+            'context': 'ctx',
+            'name': queue_name,
+            'displayname': 'Call on hold',
+        }
+        result = self.dao.get_id_from_name(queue_name)
+
+        self.assertEqual(result, queue_id)
+
+    def test_get_id_from_name_no_id(self):
+        queue_name = 'test_name_queue'
+        self._queuelist.keeplist['666'] = {
+            'number': '3006',
+            'context': 'ctx',
+            'name': 'test_name_another_queue',
+            'displayname': 'Call on hold',
+        }
+        result = self.dao.get_id_from_name(queue_name)
+
+        self.assertEqual(result, None)

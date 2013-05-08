@@ -16,11 +16,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+from functools import wraps
 
 from xivo_cti.services.agent.status import AgentStatus
 
 logger = logging.getLogger(__name__)
 
+
+def notify_clients(decorated_func):
+    @wraps(decorated_func)
+    def wrapper(self, agent_id, *args, **kwargs):
+        self.innerdata.handle_cti_stack('setforce', ('agents', 'updatestatus', str(agent_id)))
+        decorated_func(self, agent_id, *args, **kwargs)
+        try:
+            self.innerdata.handle_cti_stack('empty_stack')
+        except AttributeError:
+            logger.debug("handle_cti_stack called before xivo-ctid is fully booted")
+    return wrapper
 
 class AgentDAO(object):
 
@@ -82,3 +94,16 @@ class AgentDAO(object):
     def on_wrapup(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_wrapup']
+
+    @notify_clients
+    def add_to_queue(self, agent_id, queue_id):
+        queues = self.innerdata.xod_status['agents'][str(agent_id)]['queues']
+        if(queues.count(str(queue_id)) == 0):
+            queues.append(str(queue_id))
+
+    @notify_clients
+    def remove_from_queue(self, agent_id, queue_id):
+        str_queue_id = str(queue_id)
+        queues_before = self.innerdata.xod_status['agents'][str(agent_id)]['queues']
+        queues_after = filter(lambda q: q != str_queue_id, queues_before)
+        self.innerdata.xod_status['agents'][str(agent_id)]['queues'] = queues_after
