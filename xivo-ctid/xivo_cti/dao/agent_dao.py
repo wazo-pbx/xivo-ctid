@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def notify_clients(decorated_func):
     @wraps(decorated_func)
     def wrapper(self, agent_id, *args, **kwargs):
-        self.innerdata.handle_cti_stack('setforce', ('agents', 'updatestatus', agent_id))
+        self.innerdata.handle_cti_stack('setforce', ('agents', 'updatestatus', str(agent_id)))
         decorated_func(self, agent_id, *args, **kwargs)
         try:
             self.innerdata.handle_cti_stack('empty_stack')
