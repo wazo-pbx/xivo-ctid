@@ -22,7 +22,8 @@ from xivo_cti.model.consult_voicemail_destination import ConsultVoicemailDestina
 from xivo_cti.model.extension_destination import ExtensionDestination
 from xivo_cti.model.voicemail_destination import VoicemailDestination
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 
 class TestDestinationFactory(unittest.TestCase):

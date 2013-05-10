@@ -17,7 +17,6 @@
 
 import unittest
 
-from hamcrest import *
 from mock import Mock, patch
 from xivo_cti import dao
 from xivo_cti.services.agent.status import AgentStatus

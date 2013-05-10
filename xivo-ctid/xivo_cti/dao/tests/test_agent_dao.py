@@ -33,6 +33,7 @@ class TestNotifyClients(unittest.TestCase):
 
     def test_notify_clients(self):
         class DecorateMe(object):
+
             def __init__(self, innerdata):
                 self.innerdata = innerdata
                 self.count = 0

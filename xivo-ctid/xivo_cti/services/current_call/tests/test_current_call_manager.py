@@ -18,13 +18,13 @@
 import time
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import only_contains
 from mock import Mock
 from mock import patch
 
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
-from xivo_cti.dao import queue_dao
 from xivo_cti.dao import user_dao
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.current_call import formatter
@@ -718,7 +718,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.set_transfer_channel(channel, transfer_channel)
 
         calls = self.manager._calls_per_line[line]
-        call = filter(lambda c: c[LINE_CHANNEL] == channel, calls)[0]
+        call = [c for c in calls if c[LINE_CHANNEL] == channel][0]
 
         self.assertEqual(call[TRANSFER_CHANNEL], transfer_channel)
 

@@ -18,7 +18,8 @@
 import unittest
 
 from xivo_cti.cti.commands.dial import Dial
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 
 class TestDial(unittest.TestCase):

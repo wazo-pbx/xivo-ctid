@@ -17,7 +17,7 @@
 
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
 
 from mock import Mock
 from mock import patch

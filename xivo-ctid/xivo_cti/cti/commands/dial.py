@@ -19,11 +19,11 @@ from xivo_cti.cti.cti_command import CTICommandClass
 
 
 def _match(msg):
-    return msg.get('command') == 'dial'
+    return msg['command'] == 'dial'
 
 
 def _parse(msg, command):
-    command.destination = msg.get('destination')
+    command.destination = msg['destination']
 
 
 Dial = CTICommandClass('ipbxcommand', _match, _parse)

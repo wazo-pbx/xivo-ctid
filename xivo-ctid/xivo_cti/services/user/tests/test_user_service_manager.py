@@ -21,7 +21,8 @@ from mock import Mock
 from mock import sentinel
 from mock import patch
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 import xivo_cti.services.user.manager as user_service_manager
 from xivo_cti.ioc.context import context
