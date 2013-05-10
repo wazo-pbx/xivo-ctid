@@ -34,7 +34,7 @@ logger = logging.getLogger('cti_command')
 
 LOGINCOMMANDS = [
     'login_pass', 'login_capas'
-    ]
+]
 
 REGCOMMANDS = [
     'logout',
@@ -53,7 +53,7 @@ REGCOMMANDS = [
     'actionfiche',
 
     'ipbxcommand'
-    ]
+]
 
 IPBXCOMMANDS = [
     'originate',
@@ -67,7 +67,7 @@ IPBXCOMMANDS = [
     'mailboxcount',
     'meetme',
     'record',
-    ]
+]
 
 XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
@@ -258,7 +258,7 @@ class Command(object):
         self._othermessages.append({'dest': self._commanddict.get('to'),
                                    'message': {'to': self._commanddict.get('to'),
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
-                                                'text': chitchattext}})
+                                               'text': chitchattext}})
         return reply
 
     def regcommand_actionfiche(self):
@@ -328,10 +328,10 @@ class Command(object):
 
     def regcommand_logfromclient(self):
         logger.warning('logfromclient from user %s (level %s) : %s : %s',
-                         self.ruserid,
-                         self._commanddict.get('level'),
-                         self._commanddict.get('classmethod'),
-                         self._commanddict.get('message'))
+                       self.ruserid,
+                       self._commanddict.get('level'),
+                       self._commanddict.get('classmethod'),
+                       self._commanddict.get('message'))
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:
@@ -547,8 +547,8 @@ class Command(object):
         """
         if 'mailbox' in self._commanddict:
             return [{'amicommand': 'mailboxcount',
-                      'amiargs': (self._commanddict['mailbox'],
-                                    self._commanddict['context'])}]
+                     'amiargs': (self._commanddict['mailbox'],
+                                 self._commanddict['context'])}]
 
     def ipbxcommand_transfer(self):
         try:
@@ -575,7 +575,7 @@ class Command(object):
                 extentodial = None
 
             return [{'amicommand': 'transfer',
-                      'amiargs': [channel, extentodial, dst_context]}]
+                     'amiargs': [channel, extentodial, dst_context]}]
         except KeyError:
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
