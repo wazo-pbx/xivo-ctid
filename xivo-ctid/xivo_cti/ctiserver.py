@@ -65,9 +65,6 @@ from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.queue_logger import QueueLogger
-from xivo_cti.scheduler import Scheduler
-from xivo_cti.services.agent import availability_updater as agent_availability_updater
-from xivo_cti.services.agent import status_manager as agent_status_manager
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
@@ -195,7 +192,7 @@ class CTIServer(object):
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
         Dial.register_callback_params(self._user_service_manager.call_destination,
-            ['cti_connection', 'user_id', 'destination'])
+                                      ['cti_connection', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
@@ -640,8 +637,8 @@ class CTIServer(object):
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
                 interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
-                                                ({'action': 'ctilogin',
-                                                  'properties': socketobject},))
+                                                       ({'action': 'ctilogin',
+                                                       'properties': socketobject},))
                 interface.logintimer.start()
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)

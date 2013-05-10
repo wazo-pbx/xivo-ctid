@@ -34,6 +34,7 @@ def notify_clients(decorated_func):
             logger.debug("handle_cti_stack called before xivo-ctid is fully booted")
     return wrapper
 
+
 class AgentDAO(object):
 
     def __init__(self, innerdata, queue_member_manager):
