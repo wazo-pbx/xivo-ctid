@@ -18,7 +18,8 @@
 
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 from xivo_cti.model.destination import Destination
 from xivo_cti.services.pseudo_url import PseudoURL

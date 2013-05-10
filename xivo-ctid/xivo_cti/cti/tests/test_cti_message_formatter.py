@@ -17,7 +17,8 @@
 
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 

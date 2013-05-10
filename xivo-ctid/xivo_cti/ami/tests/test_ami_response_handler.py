@@ -19,7 +19,8 @@ import unittest
 
 from mock import sentinel
 from mock import Mock
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 

@@ -17,7 +17,6 @@
 
 import unittest
 from mock import Mock, ANY
-from hamcrest import *
 
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.queue_member.member import QueueMemberState, QueueMember

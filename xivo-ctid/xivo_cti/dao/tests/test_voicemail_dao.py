@@ -18,7 +18,8 @@
 import unittest
 
 from mock import Mock
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 from xivo_cti import innerdata
 from xivo_cti import dao
 

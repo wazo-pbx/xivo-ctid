@@ -18,7 +18,8 @@
 import unittest
 
 from mock import Mock
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 from xivo_cti.model.voicemail_destination import VoicemailDestination
 from xivo_dao import extensions_dao

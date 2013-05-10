@@ -21,7 +21,8 @@ from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
 from xivo_cti.innerdata import Safe
 import time
 import unittest
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 from xivo_cti.lists.users_list import UsersList
 from xivo_cti.lists.phones_list import PhonesList
 

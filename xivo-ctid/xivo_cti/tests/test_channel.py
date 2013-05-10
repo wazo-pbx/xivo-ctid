@@ -17,7 +17,12 @@
 
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import has_items
+from hamcrest import is_in
+from hamcrest import is_not
+from hamcrest import same_instance
+
 from xivo_cti.channel import Channel
 
 

@@ -17,7 +17,8 @@
 
 import unittest
 
-from hamcrest import *
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 from xivo_cti.model.extension_destination import ExtensionDestination
 
