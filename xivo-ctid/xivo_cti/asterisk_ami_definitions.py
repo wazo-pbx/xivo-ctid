@@ -53,15 +53,15 @@ event_flags['AGENT'] = ['AgentCalled',
                         'AgentRingNoAnswer',
                         ]
 
-event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent' ]
+event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent']
 
 event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
-                            'VarSet' ]
+                           'VarSet']
 
 event_others['replies'] = [
     'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
     'ParkedCallsComplete',  # after ParkedCalls
-    'Status' , 'StatusComplete',  # after Status
+    'Status', 'StatusComplete',  # after Status
     'QueueParams', 'QueueEntry', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary
     'CoreShowChannel', 'CoreShowChannelsComplete',  # after CoreShowChannels
@@ -76,7 +76,7 @@ event_others['replies'] = [
     'WaitEventComplete',
     'Placeholder', 'DBGetResponse', 'DBGetComplete',
     'DataGet Tree'
-    ]
+]
 
 event_others['extra'] = [
     'Atxfer',  # (patch to fetch ?)
