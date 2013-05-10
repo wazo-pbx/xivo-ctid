@@ -23,6 +23,7 @@ from xivo_cti.dao.agent_dao import notify_clients, AgentDAO
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.status import AgentStatus
 
+
 class TestNotifyClients(unittest.TestCase):
 
     def setUp(self):
@@ -32,6 +33,7 @@ class TestNotifyClients(unittest.TestCase):
 
     def test_notify_clients(self):
         class DecorateMe(object):
+
             def __init__(self, innerdata):
                 self.innerdata = innerdata
                 self.count = 0
@@ -47,11 +49,12 @@ class TestNotifyClients(unittest.TestCase):
         d = DecorateMe(self.innerdata)
         d.decorate_me(agent_id)
 
-        self.assertEqual(d.count,1)
-        self.assertEqual(d.agent_id,agent_id)
+        self.assertEqual(d.count, 1)
+        self.assertEqual(d.agent_id, agent_id)
         expected = [call('setforce', ('agents', 'updatestatus', agent_id)), call('empty_stack')]
         arg_list = self.innerdata.handle_cti_stack.call_args_list
-        self.assertEqual(arg_list,expected)
+        self.assertEqual(arg_list, expected)
+
 
 class TestAgentDAO(unittest.TestCase):
 

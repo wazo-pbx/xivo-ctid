@@ -99,10 +99,10 @@ class TestDaoList(unittest.TestCase):
 
         self.assertEquals(result, {})
 
-    def _generic_object(self, **vars):
+    def _generic_object(self, **variables):
         class generic(object):
             def __init__(self):
-                for key, var in vars.iteritems():
+                for key, var in variables.iteritems():
                     setattr(self, key, var)
 
             def todict(self):
@@ -130,7 +130,6 @@ class TestDaoList(unittest.TestCase):
                 'protocolid': protocol_id,
                 'iduserfeatures': user_id,
                 'name': protocol_name,
-                'iduserfeatures': user_id,
                 'protocol': proto,
                 'useridentity': '%s %s' % (firstname, lastname),
                 'identity': '%s/%s' % (proto.upper(), protocol_name)
@@ -193,10 +192,12 @@ class TestDaoList(unittest.TestCase):
         name = 'test_meetme'
         context = 'default'
         confno = '2000'
-        meetme = self._generic_object(id=meetme_id,
-                                     name=name,
-                                     context=context,
-                                     confno=confno)
+        meetme = self._generic_object(
+            id=meetme_id,
+            name=name,
+            context=context,
+            confno=confno
+        )
 
         expected_result = {
             str(meetme_id): {

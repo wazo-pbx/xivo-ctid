@@ -38,31 +38,28 @@ class TestPresenceServiceExecutor(unittest.TestCase):
                                                                  self.innerdata)
 
     def _get_userstatus(self):
-        return {'available': {
-                    'color': '#08FD20',
-                    'allowed': [
-                        'away',
-                        'outtolunch',
-                        'donotdisturb',
-                        'disconnected'
-                    ],
-                    'actions': {
-                        'enablednd': 'false',
-                        'queueunpause_all': 'true'
-                    },
-                    'longname': 'Disponible'
-                },
-                'disconnected': {
-                    'color': '#202020',
-                    'allowed': [
-                        'available'
-                    ],
-                    'actions': {
-                        'agentlogoff': ''
-                    },
-                    'longname': u'D\xe9connect\xe9'
-                }
+        return {
+            'available': {
+                'color': '#08FD20',
+                'allowed': [
+                    'away',
+                    'outtolunch',
+                    'donotdisturb',
+                    'disconnected'
+                ],
+                'actions': {'enablednd': 'false',
+                            'queueunpause_all': 'true'},
+                'longname': 'Disponible'
+            },
+            'disconnected': {
+                'color': '#202020',
+                'allowed': [
+                    'available'
+                ],
+                'actions': {'agentlogoff': ''},
+                'longname': u'D\xe9connect\xe9'
             }
+        }
 
     @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_dao.user_dao.get_profile')
