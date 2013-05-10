@@ -30,6 +30,7 @@ logger = logging.getLogger('csv directory')
 #
 # Note that we still use bytes as *input* to the CSV parser.
 
+
 class UnicodeDictReader(csv.DictReader):
     @property
     def fieldnames(self):
@@ -40,6 +41,7 @@ class UnicodeDictReader(csv.DictReader):
         return dict((key, val.decode('utf-8'))
                     for (key, val) in csv.DictReader.next(self).iteritems())
 
+
 class CSVFileDirectoryDataSource(DirectoryDataSource):
 
     def __init__(self, csv_file, delimiter, key_mapping):
@@ -49,7 +51,7 @@ class CSVFileDirectoryDataSource(DirectoryDataSource):
         key_mapping -- a dictionary mapping std key to list of CSV field name
         """
         self._csv_file = csv_file
-        self._delimiter = delimiter.encode('UTF-8') # binary input to the parser
+        self._delimiter = delimiter.encode('UTF-8')  # binary input to the parser
         self._key_mapping = key_mapping
 
     def lookup(self, string, fields, contexts=None):
