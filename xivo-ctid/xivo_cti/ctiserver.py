@@ -356,12 +356,7 @@ class CTIServer(object):
             ncount += 1
             (toload,) = self.timeout_queue.get()
             action = toload.get('action')
-            if action == 'ipbxup':
-                data = toload.get('properties').get('data')
-                if data.startswith('asterisk'):
-                    if not self.interface_ami.connected():
-                        self._on_ami_down()
-            elif action == 'ctilogin':
+            if action == 'ctilogin':
                 connc = toload.get('properties')
                 connc.close()
                 if connc in self.fdlist_established:
@@ -420,24 +415,17 @@ class CTIServer(object):
 
         self.fdlist_established = {}
         self.fdlist_listen_cti = {}
-        self.fdlist_udp_cti = {}
 
-        kind_list = {}
-        kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
-        kind_list['udp'] = xivoconf_general.get('incoming_udp', {})
-        for kind_type, incoming_list in kind_list.iteritems():
-            for kind, bind_and_port in incoming_list.iteritems():
-                allow_kind = True
-                if len(bind_and_port) > 2:
-                    allow_kind = bind_and_port[2]
-                if not allow_kind:
-                    logger.warning('%s kind listening socket has been explicitly disabled', kind)
-                    continue
-                bind, port = bind_and_port[:2]
-                if kind_type == 'tcp':
-                    self._init_tcp_socket(kind, bind, port)
-                elif kind_type == 'udp':
-                    self._init_udp_socket(kind, bind, port)
+        incoming_tcp = xivoconf_general.get('incoming_tcp', {})
+        for kind, bind_and_port in incoming_tcp.iteritems():
+            allow_kind = True
+            if len(bind_and_port) > 2:
+                allow_kind = bind_and_port[2]
+            if not allow_kind:
+                logger.warning('%s kind listening socket has been explicitly disabled', kind)
+                continue
+            bind, port = bind_and_port[:2]
+            self._init_tcp_socket(kind, bind, port)
 
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
         while not self.askedtoquit:
@@ -457,20 +445,6 @@ class CTIServer(object):
             self.fdlist_listen_cti[UIsock] = '%s:%s' % (kind, 1)
         except Exception:
             logger.exception('tcp %s %d', bind, trueport)
-
-    def _init_udp_socket(self, kind, bind, port):
-        try:
-            trueport = int(port) + cti_config.PORTDELTA
-            gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
-            if not gai:
-                return
-            (afinet, socktype, proto, dummy, bindtuple) = gai[0]
-            UIsock = socket.socket(afinet, socktype)
-            UIsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            UIsock.bind(bindtuple)
-            self.fdlist_udp_cti[UIsock] = '%s:%s' % (kind, 1)
-        except Exception:
-            logger.exception('udp %s %d', bind, trueport)
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
@@ -537,7 +511,6 @@ class CTIServer(object):
             self.fdlist_full.append(self.pipe_queued_threads[0])
             self.fdlist_full.append(self.ami_sock)
             self.fdlist_full.extend(self.fdlist_listen_cti)
-            self.fdlist_full.extend(self.fdlist_udp_cti)
             self.fdlist_full.extend(self.fdlist_established)
 
             writefds = []
@@ -587,24 +560,6 @@ class CTIServer(object):
             self._on_ami_down()
         else:
             self.interface_ami.handle_event(buf)
-
-    def _socket_udp_cti_read(self, sel_i):
-        [kind, nmax] = self.fdlist_udp_cti[sel_i].split(':')
-        if kind == 'ANNOUNCE':
-            [data, sockparams] = sel_i.recvfrom(cti_config.BUFSIZE_LARGE)
-            # scheduling AMI reconnection
-            args_timer = {
-                'action': 'ipbxup',
-                'properties': {
-                    'data': data,
-                    'sockparams': sockparams
-                }
-            }
-            k = threading.Timer(1, self.cb_timer, (args_timer,))
-            k.setName('Thread-ipbxup-%s' % data.strip())
-            k.start()
-        else:
-            logger.warning('unknown kind %s received', kind)
 
     def _socket_detect_new_tcp_connection(self, sel_i):
         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
@@ -751,9 +706,6 @@ class CTIServer(object):
                 # these AMI connection are used in order to manage AMI commands and events
                 if sel_i == self.ami_sock:
                     self._socket_ami_read(sel_i)
-                # the UDP messages (ANNOUNCE) are catched here
-                elif sel_i in self.fdlist_udp_cti:
-                    self._socket_udp_cti_read(sel_i)
                 # the new TCP connections (CTI, WEBI, INFO) are catched here
                 elif sel_i in self.fdlist_listen_cti:
                     self._socket_detect_new_tcp_connection(sel_i)

@@ -230,8 +230,6 @@ class INFO(interfaces.Interfaces):
                 elif usefulmsg == 'fdlist':
                     for k, v in self._ctiserver.fdlist_listen_cti.iteritems():
                         clireply.append('  listen TCP : %s %s' % (k, v))
-                    for k, v in self._ctiserver.fdlist_udp_cti.iteritems():
-                        clireply.append('  listen UDP : %s %s' % (k, v))
                     for k, v in self._ctiserver.fdlist_established.iteritems():
                         clireply.append('  conn   TCP : %s %s' % (k, v))
                     clireply.append('  full : %s' % self._ctiserver.fdlist_full)
