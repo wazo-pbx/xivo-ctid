@@ -115,19 +115,17 @@ class Fax(object):
 
     def launchasyncs(self):
         sthread = asyncActionsThread('fax-%s' % self.fileid,
-                                     {'innerdata' : self.innerdata,
-                                      'fileid' : self.fileid,
-                                      'rawfile' : self.rawfile
-                                      })
+                                     {'innerdata': self.innerdata,
+                                      'fileid': self.fileid,
+                                      'rawfile': self.rawfile})
         sthread.start()
 
     def step(self, stepname):
         removeme = False
         try:
-            self.requester.reply({'class' : 'faxsend',
-                                  'fileid' : self.fileid,
-                                  'step' : stepname
-                                  })
+            self.requester.reply({'class': 'faxsend',
+                                  'fileid': self.fileid,
+                                  'step': stepname})
         except Exception:
             # when requester is not connected any more ...
             pass
@@ -139,17 +137,17 @@ class Fax(object):
 
     def getparams(self):
         params = {
-            'mode' : 'useraction',
-            'request' : {
-                'requester' : self.requester,
-                'ipbxcommand' : 'sendfax',
-                'commandid' : self.fileid
-                },
-            'amicommand' : 'txfax',
-            'amiargs' : (self.faxfilepath,
-                         self.userid,
-                         self.callerid,
-                         self.number,
-                         self.context)
-            }
+            'mode': 'useraction',
+            'request': {
+                'requester': self.requester,
+                'ipbxcommand': 'sendfax',
+                'commandid': self.fileid
+            },
+            'amicommand': 'txfax',
+            'amiargs': (self.faxfilepath,
+                        self.userid,
+                        self.callerid,
+                        self.number,
+                        self.context)
+        }
         return params

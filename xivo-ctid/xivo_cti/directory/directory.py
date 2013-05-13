@@ -35,20 +35,20 @@ import re
 from itertools import chain, imap
 from operator import itemgetter
 
-from data_sources.csv_file_directory_data_source import CSVFileDirectoryDataSource
-from data_sources.http import HTTPDirectoryDataSource
-from data_sources.internal import InternalDirectoryDataSource
-from data_sources.ldap import LDAPDirectoryDataSource
-from data_sources.phonebook import PhonebookDirectoryDataSource
+from xivo_cti.directory.data_sources.csv_file_directory_data_source import CSVFileDirectoryDataSource
+from xivo_cti.directory.data_sources.http import HTTPDirectoryDataSource
+from xivo_cti.directory.data_sources.internal import InternalDirectoryDataSource
+from xivo_cti.directory.data_sources.ldap import LDAPDirectoryDataSource
+from xivo_cti.directory.data_sources.phonebook import PhonebookDirectoryDataSource
 
 logger = logging.getLogger('directories')
 
-# XXX str/unicode is handled the same way as in 1.1, it might need to be
-#     reviewed more carefully since it seems a bit inconsistent/incomplete
-# XXX there is a potential problem for reverse lookup since it doesn't do
-#     exact string matching, so if we lookup for number '0' then we'll return
-#     every entry that has a '0' in it, which is not what we want. That said,
-#     this behaviour was the same in 1.1 for most directory src
+# str/unicode is handled the same way as in 1.1, it might need to be
+# reviewed more carefully since it seems a bit inconsistent/incomplete
+# there is a potential problem for reverse lookup since it doesn't do
+# exact string matching, so if we lookup for number '0' then we'll return
+# every entry that has a '0' in it, which is not what we want. That said,
+# this behaviour was the same in 1.1 for most directory src
 
 
 class Context(object):
@@ -146,6 +146,7 @@ def _apply_subs(display_elem, result):
     # in python2
     nb_subs = [0]
     nb_succesfull_subs = [0]
+
     def aux(m):
         nb_subs[0] += 1
         var_name = m.group(1)
@@ -154,6 +155,7 @@ def _apply_subs(display_elem, result):
             return result[var_name]
         else:
             return m.group()
+
     fmted_string = _APPLY_SUBS_REGEX.sub(aux, fmt_string)
     # use default value if there was at least one substitution tried
     # but none were successful
@@ -195,7 +197,6 @@ class DirectoryAdapter(object):
     """Adapt a DirectoryDataSource instance to the Directory interface,
     i.e. to something with a name attribute, a lookup_direct and
     lookup_reverse method, etc...
-    
     """
     def __init__(self, directory_src, name, match_direct, match_reverse):
         self._directory_src = directory_src
@@ -240,7 +241,8 @@ class ContextsMgr(object):
             if context_contents != self._old_contents.get(context_id):
                 try:
                     self.contexts[context_id] = Context.new_from_contents(
-                            avail_displays, avail_directories, context_contents)
+                        avail_displays, avail_directories, context_contents
+                    )
                 except Exception:
                     logger.error('Error while creating context %s from %s',
                                  context_id, context_contents, exc_info=True)

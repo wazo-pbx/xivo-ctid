@@ -66,7 +66,6 @@ class DirectoryResultFormatter(object):
         return formatted_results
 
     def _is_name_available(self):
-        print self._types
         return self.NAME_FIELD in self._types
 
     def _format_result(self, result):
@@ -107,7 +106,7 @@ class DirectoryResultFormatter(object):
     def _combine_title_with_types(self, title_fields, type_fields):
         entries = []
 
-        name_field = type_fields.pop(self.NAME_FIELD)
+        name_field = type_fields.pop(self.NAME_FIELD, '')
 
         for number_type, number in type_fields.iteritems():
             entry = dict(title_fields)

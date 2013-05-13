@@ -17,10 +17,13 @@
 
 import unittest
 
+from hamcrest import assert_that
+
 from mock import Mock
 from mock import patch
+from xivo_cti.channel import Channel
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.innerdata import Safe, Channel
+from xivo_cti.innerdata import Safe
 from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
@@ -138,29 +141,3 @@ class TestSafe(unittest.TestCase):
 
         mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
         self.assertTrue(domatch)
-
-
-class TestChannel(unittest.TestCase):
-
-    def test_has_extra_data(self):
-        channel = Channel('local/1002@statcenter', 'statcenter', '1234.12')
-
-        result = channel.has_extra_data('xivo', 'calleridname')
-
-        self.assertFalse(result)
-
-        channel.set_extra_data('xivo', 'calleridname', 'test')
-
-        result = channel.has_extra_data('xivo', 'calleridname')
-
-        self.assertTrue(result)
-
-    def test_update_state(self):
-        state = 'Ringing'
-
-        channel = Channel('1001@my-ctx-00000', 'my-ctx', '1234567.33')
-
-        channel.update_state(5, state)
-
-        self.assertEqual(channel.state, 5)
-        self.assertEqual(channel.properties['state'], state)

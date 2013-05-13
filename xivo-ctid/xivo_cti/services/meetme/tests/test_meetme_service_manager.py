@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013 Avencall
+# Copyright (C) 2012-2013 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,31 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-# vim: set fileencoding=utf-8 :
-
-# Copyright (C) 2012-2013  Avencall
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# Alternatively, XiVO CTI Server is available under other licenses directly
-# contracted with Avencall. See the LICENSE file at top of the source tree
-# or delivered in the installable package in which XiVO CTI Server is
-# distributed for more details.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import unittest
 import copy
 import time
+
 from mock import Mock, NonCallableMock
 from mock import patch
 from xivo_cti.ioc.context import context
@@ -346,7 +325,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                                                                   'name': '4181235555',
                                                                   'channel': 'DAHDI/i1/4181235555-5'}}}}
 
-        self.manager.leave('800', 1)
+        self.manager.leave(conf_room_number, 1)
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -361,7 +340,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
         self.mock_notifier.reset_mock()
 
-        self.manager.leave('800', 2)
+        self.manager.leave(conf_room_number, 2)
 
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
@@ -370,6 +349,23 @@ class TestMeetmeServiceManager(unittest.TestCase):
                                        'members': {}}}
 
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
+
+    def test_leave_after_restart(self):
+        start_time = 1234556.123
+
+        self.manager._cache = {
+            conf_room_number: {
+                'number': conf_room_number,
+                'name': conf_room_name,
+                'pin_required': True,
+                'start_time': start_time,
+                'members': {},
+            }
+        }
+
+        self.manager.leave(conf_room_number, 1)
+
+        self.assertEqual(self.mock_notifier.publish_meetme_update.call_count, 0)
 
     def test_has_members(self):
         self.manager._cache = {'800': {'members': {}}}

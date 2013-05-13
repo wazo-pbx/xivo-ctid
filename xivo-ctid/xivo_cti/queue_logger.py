@@ -23,6 +23,14 @@ from xivo_cti.ami import ami_callback_handler
 
 logger = logging.getLogger('XiVO queue logger')
 
+CALLERIDNUM = 'CallerIDNum'
+CALLTIME = 'call_time_t'
+HOLDTIME = 'HoldTime'
+MEMBER = 'Member'
+QUEUE = 'Queue'
+TALKTIME = 'TalkTime'
+UNIQUEID = 'Uniqueid'
+
 
 class QueueLogger(object):
     _uri = None
@@ -53,11 +61,11 @@ class QueueLogger(object):
 
     @classmethod
     def _trace_event(cls, ev):
-        queue = ev['Queue']
+        queue = ev[QUEUE]
         if not queue in cls.cache:
             cls.cache[queue] = {}
 
-        uniqueid = ev['Uniqueid']
+        uniqueid = ev[UNIQUEID]
         if not uniqueid in cls.cache[queue]:
             cls.cache[queue][uniqueid] = ev
         else:
@@ -65,8 +73,8 @@ class QueueLogger(object):
 
     @classmethod
     def _is_traced_event(cls, ev):
-        queue = ev['Queue']
-        return queue in cls.cache and ev['Uniqueid'] in cls.cache[queue]
+        queue = ev[QUEUE]
+        return queue in cls.cache and ev[UNIQUEID] in cls.cache[queue]
 
     @classmethod
     def _show_cache(cls):
@@ -83,22 +91,22 @@ class QueueLogger(object):
         to_delete = []
         for queue, events in cls.cache.iteritems():
             for event, values in events.iteritems():
-                if 'Holdtime' not in values:
+                if HOLDTIME not in values:
                     continue
-                leave_time = values['call_time_t'] + int(values['Holdtime'])
-                if 'Member' not in values and leave_time < max_time:
+                leave_time = values[CALLTIME] + int(values[HOLDTIME])
+                if MEMBER not in values and leave_time < max_time:
                     to_delete.append((queue, event))
         for queue, event in to_delete:
             del cls.cache[queue][event]
 
     @classmethod
     def Join(cls, ev):
-        ev['call_time_t'] = time.time()
+        ev[CALLTIME] = time.time()
 
         sql = '''INSERT INTO queue_info (call_time_t, queue_name, ''' \
-                          '''caller, caller_uniqueid) ''' \
-              '''VALUES (%d, '%s', '%s', '%s');''' % \
-              (ev['call_time_t'], ev['Queue'], ev['CallerIDNum'], ev['Uniqueid'])
+              '''caller, caller_uniqueid) ''' \
+              '''VALUES (%d, '%s', '%s', '%s');''' % (
+                  ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -108,12 +116,12 @@ class QueueLogger(object):
         if not cls._is_traced_event(ev):
             return ""
 
-        ct = cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
+        ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         sql = '''UPDATE queue_info '''\
               '''SET call_picker = '%s', hold_time = %s '''\
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev["Member"], ev["Holdtime"], ct, ev["Uniqueid"])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[MEMBER], ev[HOLDTIME], ct, ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -123,14 +131,14 @@ class QueueLogger(object):
         if not cls._is_traced_event(ev):
             return ""
 
-        ct = cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
+        ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         sql = '''UPDATE queue_info ''' \
               '''SET talk_time = %s ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev['TalkTime'], ct, ev['Uniqueid'])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[TALKTIME], ct, ev[UNIQUEID])
 
-        del cls.cache[ev['Queue']][ev['Uniqueid']]
+        del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
 
         cls._store_in_db(sql)
 
@@ -139,13 +147,13 @@ class QueueLogger(object):
         if not cls._is_traced_event(ev):
             return ""
 
-        ev['Holdtime'] = time.time() - cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
-        ct = cls.cache[ev['Queue']][ev['Uniqueid']]['call_time_t']
+        ev[HOLDTIME] = time.time() - cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
+        ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         sql = '''UPDATE queue_info ''' \
               '''SET hold_time = %d ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % \
-              (ev['Holdtime'], ct, ev['Uniqueid'])
+              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
+                  ev[HOLDTIME], ct, ev[UNIQUEID])
 
         cls._trace_event(ev)
         cls._store_in_db(sql)
@@ -154,6 +162,6 @@ class QueueLogger(object):
         # manually
         if 'Reason' in ev:
             if ev['Reason'] == "0":
-                del cls.cache[ev['Queue']][ev['Uniqueid']]
+                del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
         else:
             cls._clean_cache()

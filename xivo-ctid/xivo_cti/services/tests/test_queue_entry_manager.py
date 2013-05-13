@@ -150,12 +150,14 @@ class TestQueueEntryManager(unittest.TestCase):
 
         queue_entry_manager.parse_queue_entry(QUEUE_ENTRY_MESSAGE)
 
-        self.manager.insert.assert_called_once_with(QUEUE_NAME,
-                                             1,
-                                             CALLER_ID_NAME_1,
-                                             CALLER_ID_NUMBER_1,
-                                             UNIQUE_ID_1,
-                                             WAIT_TIME_1)
+        self.manager.insert.assert_called_once_with(
+            QUEUE_NAME,
+            1,
+            CALLER_ID_NAME_1,
+            CALLER_ID_NUMBER_1,
+            UNIQUE_ID_1,
+            WAIT_TIME_1
+        )
 
     def test_new_entry(self):
         self._join_1()
@@ -330,7 +332,7 @@ class TestQueueEntryManager(unittest.TestCase):
     @patch('xivo_dao.queue_dao.queue_name', Mock())
     def test_publish(self):
         msg = {'encoded': 'result'}
-        encoder, self.manager._encoder = self.manager._encoder, Mock(QueueEntryEncoder)
+        self.manager._encoder = Mock(QueueEntryEncoder)
         self.manager._notifier = QueueEntryNotifier()
         queue_dao.queue_name.return_value = QUEUE_NAME
         self.manager._encoder.encode.return_value = msg
@@ -365,8 +367,8 @@ class TestQueueEntryManager(unittest.TestCase):
             })
 
     @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', return_value=789)
-    @patch('xivo_dao.queue_dao.id_from_name', return_value=QUEUE_ID)
-    def test_publish_real_time_stats_on_leave_with_calls_in_queue(self, mock_id_from_name, mock_longest_wait_time_calculator):
+    @patch('xivo_dao.queue_dao.id_from_name', Mock(return_value=QUEUE_ID))
+    def test_publish_real_time_stats_on_leave_with_calls_in_queue(self, mock_longest_wait_time_calculator):
 
         self._join_1()
         self._join_2()
@@ -430,8 +432,8 @@ class TestQueueEntryManager(unittest.TestCase):
         self.assertEquals(longest_wait_time, 400)
 
     @patch('xivo_cti.services.queue_entry_manager.longest_wait_time_calculator', Mock(return_value=765))
-    @patch('xivo_dao.queue_dao.id_from_name')
-    def test_publish_all_realtime_stats(self, mock_id_from_name):
+    @patch('xivo_dao.queue_dao.id_from_name', Mock())
+    def test_publish_all_realtime_stats(self):
         cti_connection = {}
         queue_ids = {'service': 56, 'boats': 34}
 

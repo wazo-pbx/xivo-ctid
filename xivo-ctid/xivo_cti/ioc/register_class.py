@@ -32,7 +32,9 @@ from xivo_cti.services.agent.availability_updater import \
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
-from xivo_cti.services.agent_on_call_updater import AgentOnCallUpdater
+from xivo_cti.services.agent.status_manager import AgentStatusManager, \
+    QueueEventReceiver
+from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -53,6 +55,7 @@ from xivo_cti.services.queue_member.cti.subscriber import \
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
 from xivo_cti.services.queue_member.updater import QueueMemberUpdater
+from xivo_cti.services.queue_member.indexer import QueueMemberIndexer
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
@@ -73,9 +76,10 @@ def setup():
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
     context.register('agent_client', AgentClient)
     context.register('agent_executor', AgentExecutor)
-    context.register('agent_on_call_updater', AgentOnCallUpdater)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('agent_status_manager', AgentStatusManager)
+    context.register('agent_status_parser', AgentStatusParser)
     context.register('channel_updater', ChannelUpdater)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)
@@ -95,11 +99,13 @@ def setup():
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
+    context.register('queue_event_receiver', QueueEventReceiver)
     context.register('queue_service_manager', QueueServiceManager)
     context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)
     context.register('queue_member_cti_subscriber', QueueMemberCTISubscriber)
     context.register('queue_member_cti_adapter', QueueMemberCTIAdapter)
+    context.register('queue_member_indexer', QueueMemberIndexer)
     context.register('queue_member_manager', QueueMemberManager)
     context.register('queue_member_notifier', QueueMemberNotifier)
     context.register('queue_member_updater', QueueMemberUpdater)

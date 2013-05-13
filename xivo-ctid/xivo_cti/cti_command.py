@@ -34,7 +34,7 @@ logger = logging.getLogger('cti_command')
 
 LOGINCOMMANDS = [
     'login_pass', 'login_capas'
-    ]
+]
 
 REGCOMMANDS = [
     'logout',
@@ -53,11 +53,10 @@ REGCOMMANDS = [
     'actionfiche',
 
     'ipbxcommand'
-    ]
+]
 
 IPBXCOMMANDS = [
-    # originate-like commands
-    'dial', 'originate',
+    'originate',
     # transfer-like commands
     'intercept', 'parking',
     'transfer', 'atxfer',
@@ -68,7 +67,7 @@ IPBXCOMMANDS = [
     'mailboxcount',
     'meetme',
     'record',
-    ]
+]
 
 XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
@@ -97,10 +96,6 @@ class Command(object):
         self.ruserid = self._commanddict.get('userid', self.userid)
         self.rinnerdata = self._ctiserver.safe
 
-        # identifiers for the requested
-        self.tipbxid = self._commanddict.get('tipbxid', self.ipbxid)
-        self.tinnerdata = self._ctiserver.safe
-
         messagebase = {'class': self.command}
 
         if self.commandid:
@@ -110,7 +105,7 @@ class Command(object):
             messagebase['error_string'] = 'notloggedyet'
         elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
             methodname = 'regcommand_%s' % self.command
-            if hasattr(self, methodname) and 'warning_string' not in messagebase:
+            if hasattr(self, methodname):
                 method_result = getattr(self, methodname)()
                 if not method_result:
                     messagebase['warning_string'] = 'return_is_none'
@@ -136,45 +131,52 @@ class Command(object):
         return z
 
     def regcommand_login_pass(self):
-        head = 'LOGINFAIL - login_pass'
+        self.head = 'LOGINFAIL - login_pass'
         # user authentication
         missings = []
         for argum in ['hashedpassword']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
-            logger.warning('%s - missing args : %s', head, missings)
+            logger.warning('%s - missing args : %s', self.head, missings)
             return 'missing:%s' % ','.join(missings)
 
-        this_hashed_password = self._commanddict.get('hashedpassword')
-        cdetails = self._connection.connection_details
-
-        ipbxid = cdetails.get('ipbxid')
-        userid = cdetails.get('userid')
-        sessionid = cdetails.get('prelogin').get('sessionid')
-
-        if ipbxid and userid:
-            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(userid, sessionid)
-            if ref_hashed_password != this_hashed_password:
-                logger.warning('%s - wrong hashed password', head)
-                return 'login_password'
-            else:
-                cdetails['authenticated'] = True
+        if self._is_user_authenticated():
+            self._connection.connection_details['authenticated'] = True
         else:
-            logger.warning('%s - undefined user : probably the login_id step failed', head)
             return 'login_password'
 
-        reply = {'capalist': [user_dao.get_profile(userid)]}
-        return reply
+        cti_profile_id = user_dao.get_profile(self.userid)
+        if cti_profile_id is None:
+            logger.warning("%s - No CTI profile defined for the user", self.head)
+            return 'capaid_undefined'
+        else:
+            return  {'capalist': [user_dao.get_profile(self.userid)]}
+
+    def _is_user_authenticated(self):
+        this_hashed_password = self._commanddict.get('hashedpassword')
+        cdetails = self._connection.connection_details
+        sessionid = cdetails.get('prelogin').get('sessionid')
+
+        if self.ipbxid and self.userid:
+            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(self.userid, sessionid)
+            if ref_hashed_password != this_hashed_password:
+                logger.warning('%s - wrong hashed password', self.head)
+                return False
+            else:
+                return True
+        else:
+            logger.warning('%s - undefined user : probably the login_id step failed', self.head)
+            return False
 
     def regcommand_login_capas(self):
-        head = 'LOGINFAIL - login_capas'
+        self.head = 'LOGINFAIL - login_capas'
         missings = []
         for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
-            logger.warning('%s - missing args : %s', head, missings)
+            logger.warning('%s - missing args : %s', self.head, missings)
             return 'missing:%s' % ','.join(missings)
 
         cdetails = self._connection.connection_details
@@ -184,12 +186,12 @@ class Command(object):
 
         iserr = self.__check_capa_connection__(capaid)
         if iserr is not None:
-            logger.warning('%s - wrong capaid : %s %s', head, iserr, capaid)
+            logger.warning('%s - wrong capaid : %s %s', self.head, iserr, capaid)
             return iserr
 
         self.__connect_user__(state, capaid)
-        head = 'LOGIN SUCCESSFUL'
-        logger.info('%s for %s', head, cdetails)
+        self.head = 'LOGIN SUCCESSFUL'
+        logger.info('%s for %s', self.head, cdetails)
 
         if self.userid.startswith('cs:'):
             notifyremotelogin = threading.Timer(2, self._ctiserver.cb_timer,
@@ -256,7 +258,7 @@ class Command(object):
         self._othermessages.append({'dest': self._commanddict.get('to'),
                                    'message': {'to': self._commanddict.get('to'),
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
-                                                'text': chitchattext}})
+                                               'text': chitchattext}})
         return reply
 
     def regcommand_actionfiche(self):
@@ -326,10 +328,10 @@ class Command(object):
 
     def regcommand_logfromclient(self):
         logger.warning('logfromclient from user %s (level %s) : %s : %s',
-                         self.ruserid,
-                         self._commanddict.get('level'),
-                         self._commanddict.get('classmethod'),
-                         self._commanddict.get('message'))
+                       self.ruserid,
+                       self._commanddict.get('level'),
+                       self._commanddict.get('classmethod'),
+                       self._commanddict.get('message'))
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:
@@ -412,28 +414,6 @@ class Command(object):
             idz += 1
 
         reply['ipbxreply'] = ipbxreply
-        return reply
-
-    # "any number" :
-    # - an explicit number
-    # - a phone line given by line:xivo/45
-    # - a user given by user:xivo/45 : attempted line will be the first one
-
-    # dial : the requester dials "any number" (originate with source = me)
-    # originate : the source will call destination
-
-    # intercept
-    # transfer
-    # atxfer
-    # park
-
-    # hangup : any channel is hanged up
-
-    # for transfers, hangups, ...
-
-    def ipbxcommand_dial(self):
-        self._commanddict['source'] = 'user:%s/%s' % (self.ripbxid, self.ruserid)
-        reply = self.ipbxcommand_originate()
         return reply
 
     def parseid(self, item):
@@ -567,8 +547,8 @@ class Command(object):
         """
         if 'mailbox' in self._commanddict:
             return [{'amicommand': 'mailboxcount',
-                      'amiargs': (self._commanddict['mailbox'],
-                                    self._commanddict['context'])}]
+                     'amiargs': (self._commanddict['mailbox'],
+                                 self._commanddict['context'])}]
 
     def ipbxcommand_transfer(self):
         try:
@@ -587,9 +567,7 @@ class Command(object):
                 voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
                 prefix = extensions_dao.exten_by_name('vmboxslt')
-                prefix = prefix['exten']
-                prefix = prefix[:len(prefix) - 1]
-                extentodial = prefix + vm_number
+                extentodial = prefix[:-1] + vm_number
                 dst_context = voicemail['context']
             elif dst['type'] == 'meetme' and dst['id'] in self.innerdata.xod_config['meetmes'].keeplist:
                 extentodial = self.innerdata.xod_config['meetmes'].keeplist[dst['id']]['confno']
@@ -597,7 +575,7 @@ class Command(object):
                 extentodial = None
 
             return [{'amicommand': 'transfer',
-                      'amiargs': [channel, extentodial, dst_context]}]
+                     'amiargs': [channel, extentodial, dst_context]}]
         except KeyError:
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
@@ -638,7 +616,7 @@ class Command(object):
         if 'agentids' not in command_dict or command_dict['agentids'] == 'agent:special:me':
             command_dict['agentids'] = self.innerdata.xod_config['users'].keeplist[self.userid]['agentid']
         if '/' in command_dict['agentids']:
-            ipbx_id, agent_id = command_dict['agentids'].split('/', 1)
+            _, agent_id = command_dict['agentids'].split('/', 1)
         else:
             agent_id = command_dict['agentids']
         innerdata = self._ctiserver.safe

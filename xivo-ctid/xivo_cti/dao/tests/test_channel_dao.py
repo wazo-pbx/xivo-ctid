@@ -20,6 +20,7 @@ import unittest
 from mock import Mock
 from xivo_cti.dao.channel_dao import ChannelDAO
 from xivo_cti import innerdata
+from xivo_cti.channel import Channel
 
 
 class TestChannelDAO(unittest.TestCase):
@@ -30,9 +31,9 @@ class TestChannelDAO(unittest.TestCase):
                           'cid_name': 'Alice',
                           'cid_number': '1234',
                           'unique_id': 786234234.33}
-        channel_1 = innerdata.Channel(self.channel_1['id'],
-                                      self.channel_1['context'],
-                                      self.channel_1['unique_id'])
+        channel_1 = Channel(self.channel_1['id'],
+                            self.channel_1['context'],
+                            self.channel_1['unique_id'])
         channel_1.set_extra_data('xivo', 'calleridname', self.channel_1['cid_name'])
         channel_1.set_extra_data('xivo', 'calleridnum', self.channel_1['cid_number'])
 
@@ -40,9 +41,9 @@ class TestChannelDAO(unittest.TestCase):
                           'context': 'testctx',
                           'cid_number': '1234',
                           'unique_id': 123456.43}
-        channel_2 = innerdata.Channel(self.channel_2['id'],
-                                      self.channel_2['context'],
-                                      self.channel_2['unique_id'])
+        channel_2 = Channel(self.channel_2['id'],
+                            self.channel_2['context'],
+                            self.channel_2['unique_id'])
         channel_2.set_extra_data('xivo', 'calleridnum', self.channel_2['cid_number'])
 
         self.innerdata = Mock(innerdata.Safe)

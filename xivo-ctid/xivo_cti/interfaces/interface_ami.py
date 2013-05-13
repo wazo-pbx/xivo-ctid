@@ -28,6 +28,7 @@ from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
 from xivo_cti.ami import ami_event_complete_logger
 from xivo_cti.ami import ami_status_request_logger
+from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_agent_login_logoff import AMIAgentLoginLogoff
@@ -122,6 +123,9 @@ class AMI(object):
             replyto.replytimer.setName('Thread-ami-%s' % actionid)
             replyto.replytimer.start()
 
+    def decode_raw_event(self, raw_event):
+        return raw_event.decode('utf8', 'replace')
+
     def handle_event(self, input_data):
         """
         Handles the AMI events occuring on Asterisk.
@@ -132,11 +136,7 @@ class AMI(object):
         self._input_buffer = events.pop()
 
         for raw_event in events:
-            try:
-                decoded_event = raw_event.decode('utf8')
-            except UnicodeError:
-                logger.exception('could not decode event %r', raw_event)
-                continue
+            decoded_event = self.decode_raw_event(raw_event)
             event = {}
             nocolon = []
             for line in decoded_event.split(self.LINE_SEPARATOR):
@@ -166,6 +166,7 @@ class AMI(object):
                                             event))
                 self.handle_ami_function(event_name, event)
             elif 'Response' in event and event['Response'] is not None:
+                AMIResponseHandler.get_instance().handle_response(event)
                 response = event['Response']
                 if (response == 'Follows' and 'Privilege' in event
                         and event['Privilege'] == 'Command'):
@@ -225,7 +226,7 @@ class AMI(object):
             methodname = ami_def.evfunction_to_method_name.get(evfunction)
             if hasattr(ami_18, methodname):
                 functions.append(getattr(ami_18, methodname))
-        for function in set(functions):
+        for function in functions:
             try:
                 function(event)
             except KeyError:
@@ -233,7 +234,7 @@ class AMI(object):
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
-        if actionid:
+        if actionid and actionid in self.actionids:
             properties = self.actionids.pop(actionid)
             mode = properties['mode']
             if mode == 'newchannel':

@@ -76,13 +76,13 @@ class AgentServiceManager(object):
         agent_state_interface = self._get_agent_state_interface(agent_id)
         if agent_state_interface:
             try:
-                user_line = user_dao.get_line_identity(user_id)
+                user_state_interface = self._get_user_state_interface(user_id)
             except LookupError:
                 logger.warning('Could not listen to agent: user %s has no line', user_id)
             else:
                 self.ami.sendcommand(
                     'Originate',
-                    [('Channel', user_line),
+                    [('Channel', user_state_interface),
                      ('Application', 'ChanSpy'),
                      ('Data', '%s,bds' % agent_state_interface),
                      ('CallerID', u'Listen/Écouter'),
@@ -171,3 +171,13 @@ class AgentServiceManager(object):
         else:
             logger.warning('Could not get status of agent %r: not logged/no such agent', agent_id)
             return None
+
+    def _get_user_state_interface(self, user_id):
+        user_line = user_dao.get_line_identity(user_id)
+        connected_agent_id = user_dao.agent_id(user_id)
+        if connected_agent_id is None:
+            return user_line
+        loggedon_state_interface = self._get_agent_state_interface(connected_agent_id)
+        if loggedon_state_interface is None:
+            loggedon_state_interface = user_line
+        return loggedon_state_interface

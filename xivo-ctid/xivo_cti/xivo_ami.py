@@ -25,7 +25,10 @@ import string
 import time
 import errno
 
+from copy import copy
+
 from xivo_cti.tools.extension import normalize_exten
+from xivo_cti.interfaces.interface_ami import AMI
 
 logger = logging.getLogger('xivo_ami')
 
@@ -138,6 +141,26 @@ class AMIClass(object):
     def sendmeetmelist(self):
         return self._exec_command('MeetMeList', [])
 
+    def bridge_originate(self, line_interface, channel, caller_id,
+                         allow_calling_party_transfer, continue_dialplan):
+        options = ''
+        if allow_calling_party_transfer:
+            options += 'T'
+        if not continue_dialplan:
+            options += 'x'
+
+        if not options:
+            application_data = channel
+        else:
+            application_data = '%s,%s' % (channel, options)
+
+        self._exec_command('Originate',
+                           [('Channel', line_interface),
+                            ('Application', 'Bridge'),
+                            ('Data', application_data),
+                            ('CallerID', caller_id),
+                            ('Async', 'true')])
+
     # \brief Logins to the AMI.
     def login(self):
         if self.events:
@@ -199,7 +222,13 @@ class AMIClass(object):
             command_details.append(('CallerID', '"%s"' % cidnamesrc))
         for var, val in extravars.iteritems():
             command_details.append(('Variable', '%s=%s' % (var, val)))
-        return self._exec_command('Originate', command_details)
+
+        action_id = AMI.make_actionid()
+        self.actionid = copy(action_id)
+
+        self._exec_command('Originate', command_details)
+
+        return action_id
 
     # \brief Requests the Extension Statuses
     def extensionstate(self, extension, context):
@@ -324,6 +353,7 @@ class AMIClass(object):
             logger.warning('Transfer failed: %s', e.message)
             return False
         else:
+            self.setvar('BLINDTRANSFER', 'true', channel)
             command_details = [('Channel', channel),
                                ('Exten', extension),
                                ('Context', context),

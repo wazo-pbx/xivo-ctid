@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+
 class CTIMessageFormatter(object):
 
     def __init__(self):
@@ -54,4 +55,11 @@ class CTIMessageFormatter(object):
             'tipbxid': 'xivo',
             'tid': queue_member.id,
             'config': queue_member.to_cti_config(),
+        }
+
+    @staticmethod
+    def ipbxcommand_error(msg):
+        return {
+            'class': 'ipbxcommand',
+            'error_string': msg,
         }

@@ -143,3 +143,12 @@ class TestCurrentCallFormatter(unittest.TestCase):
                     'call_start': self.channel_2['start']}
 
         self.assertEqual(result, expected)
+
+    def test_attended_transfer_answered(self):
+        line_identity = 'sip/sip_peer'
+        expected = {'class': 'current_call_attended_transfer_answered',
+                    'line': line_identity}
+
+        result = self.formatter.attended_transfer_answered(line_identity)
+
+        self.assertEqual(result, expected)

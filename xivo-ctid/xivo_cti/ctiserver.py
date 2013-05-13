@@ -37,7 +37,9 @@ from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
+from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
 from xivo_cti.cti.commands.hangup import Hangup
@@ -55,16 +57,14 @@ from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
 from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     DisableNoAnswerForward, DisableUnconditionalForward, EnableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
-from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter
+from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
+    EnableRecording, DisableRecording
 from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
 from xivo_cti.interfaces.interfaces import DisconnectCause
 from xivo_cti.queue_logger import QueueLogger
-from xivo_cti.scheduler import Scheduler
-from xivo_cti.services.agent import availability_updater as agent_availability_updater
-from xivo_cti.services import agent_on_call_updater
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
@@ -151,6 +151,7 @@ class CTIServer(object):
         self._queue_member_manager = context.get('queue_member_manager')
         self._queue_member_cti_adapter = context.get('queue_member_cti_adapter')
         self._queue_member_cti_subscriber = context.get('queue_member_cti_subscriber')
+        self._queue_member_indexer = context.get('queue_member_indexer')
 
         self._user_service_manager.presence_service_executor = self._presence_service_executor
 
@@ -162,10 +163,12 @@ class CTIServer(object):
         scheduler.setup(self.pipe_queued_threads[1])
 
         self._agent_availability_updater = context.get('agent_availability_updater')
-        self._agent_on_call_updater = context.get('agent_on_call_updater')
         self._agent_service_cti_parser = context.get('agent_service_cti_parser')
 
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
+
+        self._agent_status_manager = context.get('agent_status_manager')
+        self._queue_event_receiver = context.get('queue_event_receiver')
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
@@ -184,11 +187,16 @@ class CTIServer(object):
         self._register_cti_callbacks()
         self._register_ami_callbacks()
         self._register_message_hooks()
+        self._queue_event_receiver.subscribe()
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
+        Dial.register_callback_params(self._user_service_manager.call_destination,
+                                      ['cti_connection', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
+        EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
+        DisableRecording.register_callback_params(self._user_service_manager.disable_recording, ['target'])
         EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
         DisableFilter.register_callback_params(self._user_service_manager.disable_filter, ['user_id'])
         EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd, ['user_id', 'destination'])
@@ -253,6 +261,10 @@ class CTIServer(object):
             context.get('current_call_manager').attended_transfer,
             ['user_id', 'number']
         )
+        DirectTransfer.register_callback_params(
+            context.get('current_call_manager').direct_transfer,
+            ['user_id', 'number']
+        )
         CancelTransfer.register_callback_params(
             context.get('current_call_manager').cancel_transfer,
             ['user_id']
@@ -272,31 +284,15 @@ class CTIServer(object):
 
     def _register_ami_callbacks(self):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        agent_status_parser = context.get('agent_status_parser')
 
-        callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_availability_updater.parse_ami_answered(event,
-                                                                                                       self._agent_availability_updater))
-        callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_availability_updater.parse_ami_call_completed(event,
-                                                                                                             self._agent_availability_updater))
-        callback_handler.register_callback('QueueMemberPaused',
-                                           lambda event: agent_availability_updater.parse_ami_paused(event,
-                                                                                                     self._agent_availability_updater))
-        callback_handler.register_callback('AgentConnect',
-                                           lambda event: agent_on_call_updater.parse_ami_answered(event,
-                                                                                                  self._agent_on_call_updater))
-        callback_handler.register_callback('AgentComplete',
-                                           lambda event: agent_on_call_updater.parse_ami_call_completed(event,
-                                                                                                             self._agent_on_call_updater))
+        self._queue_member_updater.register_ami_events(callback_handler)
 
-        callback_handler.register_userevent_callback(
-            'AgentLogin',
-            lambda event: agent_availability_updater.parse_ami_login(event, self._agent_availability_updater)
-        )
-        callback_handler.register_userevent_callback(
-            'AgentLogoff',
-            lambda event: agent_availability_updater.parse_ami_logout(event, self._agent_availability_updater)
-        )
+        callback_handler.register_callback('QueueMemberPaused', agent_status_parser.parse_ami_paused)
+        callback_handler.register_callback('AgentConnect', agent_status_parser.parse_ami_acd_call_start)
+        callback_handler.register_callback('AgentComplete', agent_status_parser.parse_ami_acd_call_end)
+        callback_handler.register_userevent_callback('AgentLogin', agent_status_parser.parse_ami_login)
+        callback_handler.register_userevent_callback('AgentLogoff', agent_status_parser.parse_ami_logout)
 
         current_call_parser = context.get('current_call_parser')
         current_call_parser.register_ami_events()
@@ -304,7 +300,8 @@ class CTIServer(object):
         callback_handler.register_callback('NewCallerId',
                                            channel_updater.parse_new_caller_id)
 
-        self._queue_member_updater.register_ami_events(callback_handler)
+        callback_handler.register_callback('Hold', channel_updater.parse_hold)
+        callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
@@ -403,10 +400,12 @@ class CTIServer(object):
         self._queue_member_updater.on_initialization()
         self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
         self._queue_member_cti_subscriber.subscribe_to_queue_member(self._queue_member_notifier)
+        self._queue_member_indexer.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_manager.subscribe_to_queue_member(self._queue_member_notifier)
         self._queue_statistics_producer.subscribe_to_queue_member(self._queue_member_notifier)
         self._init_statistics_producers()
         self._init_agent_availability()
+        self._queue_member_indexer.initialize(self._queue_member_manager)
 
         logger.info('(2/3) Local AMI socket connection')
         self.interface_ami.init_connection()
@@ -426,7 +425,6 @@ class CTIServer(object):
         kind_list = {}
         kind_list['tcp'] = xivoconf_general.get('incoming_tcp', {})
         kind_list['udp'] = xivoconf_general.get('incoming_udp', {})
-
         for kind_type, incoming_list in kind_list.iteritems():
             for kind, bind_and_port in incoming_list.iteritems():
                 allow_kind = True
@@ -639,8 +637,8 @@ class CTIServer(object):
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
                 interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
-                                                ({'action': 'ctilogin',
-                                                  'properties': socketobject},))
+                                                       ({'action': 'ctilogin',
+                                                       'properties': socketobject},))
                 interface.logintimer.start()
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)

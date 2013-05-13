@@ -23,6 +23,24 @@ from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataS
 
 logger = logging.getLogger('csv directory')
 
+# The CSV lib always yields binary data; we will only use Unicode down the
+# chain and would prefer any invalid data to be caught ASAP. Therefore, we
+# define a thin wrapper around DictReader so that binary data won't touch the
+# rest of our code.
+#
+# Note that we still use bytes as *input* to the CSV parser.
+
+
+class UnicodeDictReader(csv.DictReader):
+    @property
+    def fieldnames(self):
+        return [field.decode('utf-8')
+                for field in csv.DictReader.fieldnames.fget(self)]
+
+    def next(self):
+        return dict((key, val.decode('utf-8'))
+                    for (key, val) in csv.DictReader.next(self).iteritems())
+
 
 class CSVFileDirectoryDataSource(DirectoryDataSource):
 
@@ -33,16 +51,15 @@ class CSVFileDirectoryDataSource(DirectoryDataSource):
         key_mapping -- a dictionary mapping std key to list of CSV field name
         """
         self._csv_file = csv_file
-        self._delimiter = delimiter.encode('UTF-8')
+        self._delimiter = delimiter.encode('UTF-8')  # binary input to the parser
         self._key_mapping = key_mapping
 
     def lookup(self, string, fields, contexts=None):
         """Do a lookup using string to match on the given list of src fields."""
-        encoded_string = string.encode('UTF-8')
         fobj = urllib2.urlopen(self._csv_file)
         try:
-            reader = csv.DictReader(fobj, delimiter=self._delimiter)
-            filter_fun = self._new_filter_function(encoded_string, fields,
+            reader = UnicodeDictReader(fobj, delimiter=self._delimiter)
+            filter_fun = self._new_filter_function(string, fields,
                                                    reader.fieldnames)
             map_fun = self._new_map_function(reader.fieldnames)
 

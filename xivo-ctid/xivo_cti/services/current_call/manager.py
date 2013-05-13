@@ -33,8 +33,6 @@ TRANSFER_CHANNEL = 'transfer_channel'
 
 class CurrentCallManager(object):
 
-    _SWITCHBOARD_HOLD_QUEUE = '__switchboard_hold'
-
     def __init__(self, current_call_notifier, current_call_formatter, ami_class, scheduler, device_manager):
         self._calls_per_line = {}
         self._current_call_notifier = current_call_notifier
@@ -44,26 +42,31 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
 
     def bridge_channels(self, channel_1, channel_2):
-        line_1 = self._identity_from_channel(channel_1)
-        line_2 = self._identity_from_channel(channel_2)
+        self._bridge_channels_oriented(channel_1, channel_2)
+        self._bridge_channels_oriented(channel_2, channel_1)
 
-        if line_1 not in self._calls_per_line:
-            self._calls_per_line[line_1] = [
-                {PEER_CHANNEL: channel_2,
-                 LINE_CHANNEL: channel_1,
+    def _bridge_channels_oriented(self, channel, other_channel):
+        line = self._identity_from_channel(channel)
+        if line not in self._calls_per_line:
+            self._calls_per_line[line] = [
+                {PEER_CHANNEL: other_channel,
+                 LINE_CHANNEL: channel,
                  BRIDGE_TIME: time.time(),
                  ON_HOLD: False}
             ]
-            self._current_call_notifier.publish_current_call(line_1)
+            self._current_call_notifier.publish_current_call(line)
 
-        if line_2 not in self._calls_per_line:
-            self._calls_per_line[line_2] = [
-                {PEER_CHANNEL: channel_1,
-                 LINE_CHANNEL: channel_2,
-                 BRIDGE_TIME: time.time(),
-                 ON_HOLD: False}
-            ]
-            self._current_call_notifier.publish_current_call(line_2)
+        line_calls = self._calls_per_line[line]
+        if self._attended_transfer_from_line_is_answered(line_calls, other_channel):
+            self._current_call_notifier.attended_transfer_answered(line)
+
+    def _attended_transfer_from_line_is_answered(self, line_calls, channel_transferee):
+        for line_call in line_calls:
+            if TRANSFER_CHANNEL not in line_call:
+                continue
+            if line_call[TRANSFER_CHANNEL] == channel_transferee:
+                return True
+        return False
 
     def schedule_answer(self, user_id, delay):
         device_id = user_dao.get_device_id(user_id)
@@ -72,6 +75,9 @@ class CurrentCallManager(object):
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)
         line_from_old = self._identity_from_channel(old)
+        if line_from_old not in self._calls_per_line:
+            logger.debug('No masquerade done for channel %s %s', old, new)
+            return
         new_2 = self._calls_per_line[line_from_old][0][PEER_CHANNEL]
 
         self._execute_masquerade(old, new)
@@ -167,61 +173,73 @@ class CurrentCallManager(object):
 
     def hangup(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to hangup but has no line', user_id)
         else:
-            self._hangup_channel(current_call_channel[PEER_CHANNEL])
+            logger.info('Switchboard %s is hanging up his current call', user_id)
+            self.ami.hangup(current_call[PEER_CHANNEL])
 
     def complete_transfer(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to complete a transfer but has no line', user_id)
         else:
-            self._hangup_channel(current_call_channel[LINE_CHANNEL])
+            logger.info('Switchboard %s is completing a transfer', user_id)
+            self.ami.hangup(current_call[LINE_CHANNEL])
 
     def cancel_transfer(self, user_id):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
         except LookupError:
             logger.warning('User %s tried to cancel a transfer but has no line', user_id)
             return
 
-        if TRANSFER_CHANNEL not in current_call_channel:
+        if TRANSFER_CHANNEL not in current_call:
             return
-        transfer_channel = current_call_channel[TRANSFER_CHANNEL]
+        transfer_channel = current_call[TRANSFER_CHANNEL]
         transfered_channel = self._local_channel_peer(transfer_channel)
-        self._hangup_channel(transfered_channel)
+        logger.info('Switchboard %s is cancelling a transfer', user_id)
+        self.ami.hangup(transfered_channel)
 
     def attended_transfer(self, user_id, number):
-        logger.debug('Transfering %s peer to %s', user_id, number)
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
             user_context = dao.user.get_context(user_id)
         except LookupError:
             logger.warning('User %s tried to transfer but has no line or no context', user_id)
         else:
-            logger.debug('Sending atxfer: %s %s %s', current_call_channel[LINE_CHANNEL], number, user_context)
-            self.ami.sendcommand(
-                'Atxfer', [
-                    ('Channel', current_call_channel[LINE_CHANNEL]),
-                    ('Exten', number),
-                    ('Context', user_context),
-                    ('Priority', '1')
-                ]
-            )
+            current_channel = current_call[LINE_CHANNEL]
+            logger.info('Switchboard %s is atxfering %s to %s@%s',
+                        user_id, current_channel, number, user_context)
+            self.ami.atxfer(current_channel, number, user_context)
+
+    def direct_transfer(self, user_id, number):
+        try:
+            current_call = self._get_current_call(user_id)
+            user_context = dao.user.get_context(user_id)
+        except LookupError:
+            logger.warning('User %s tried to transfer but has no line or no context', user_id)
+        else:
+            peer_channel = current_call[PEER_CHANNEL]
+            logger.info('Switchboard %s is transfering %s to %s@%s',
+                        user_id, peer_channel, number, user_context)
+            self.ami.transfer(peer_channel, number, user_context)
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
-            current_call_channel = self._get_current_call_channel(user_id)
+            current_call = self._get_current_call(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError:
             logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
         else:
-            self.ami.transfer(current_call_channel[PEER_CHANNEL], hold_queue_number, hold_queue_ctx)
+            channel_to_hold = current_call[PEER_CHANNEL]
+            logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
+            self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
     def switchboard_unhold(self, user_id, action_id):
+        logger.info('Switchboard %s unholded channel %s', user_id, action_id)
         try:
             user_line = user_dao.get_line_identity(user_id).lower()
             channel = dao.channel.get_channel_from_unique_id(action_id)
@@ -229,18 +247,11 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
-            bridge_option = '%s,Tx' % channel
-            self.ami.sendcommand(
-                'Originate',
-                [('Channel', user_line),
-                 ('Application', 'Bridge'),
-                 ('Data', bridge_option),
-                 ('CallerID', '"%s" <%s>' % (cid_name, cid_number)),
-                 ('Async', 'true')]
-            )
+            caller_id = '"%s" <%s>' % (cid_name, cid_number)
+            self.ami.bridge_originate(user_line, channel, caller_id, True, False)
             self.schedule_answer(user_id, 0.25)
 
-    def _get_current_call_channel(self, user_id):
+    def _get_current_call(self, user_id):
         try:
             line = user_dao.get_line_identity(user_id).lower()
         except LookupError:
@@ -254,6 +265,10 @@ class CurrentCallManager(object):
 
     def _change_hold_status(self, channel, new_status):
         line = self._identity_from_channel(channel)
+        if line not in self._calls_per_line:
+            logger.warning('No line associated to channel %s to set hold to %s',
+                           channel, new_status)
+            return
         peer_lines = [self._identity_from_channel(c[PEER_CHANNEL]) for c in self._calls_per_line[line]]
         for peer_line in peer_lines:
             for call in self._calls_per_line[peer_line]:
@@ -261,9 +276,6 @@ class CurrentCallManager(object):
                     continue
                 call[ON_HOLD] = new_status
                 self._current_call_notifier.publish_current_call(peer_line)
-
-    def _hangup_channel(self, channel):
-        self.ami.sendcommand('Hangup', [('Channel', channel)])
 
     def _local_channel_peer(self, local_channel):
         channel_order = local_channel[-1]

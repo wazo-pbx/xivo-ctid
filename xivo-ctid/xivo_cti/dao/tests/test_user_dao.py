@@ -21,6 +21,8 @@ from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
 from xivo_cti.innerdata import Safe
 import time
 import unittest
+from hamcrest import assert_that
+from hamcrest import equal_to
 from xivo_cti.lists.users_list import UsersList
 from xivo_cti.lists.phones_list import PhonesList
 
@@ -67,6 +69,15 @@ class TestUserDAO(unittest.TestCase):
 
     def test__user_no_user(self):
         self.assertRaises(NoSuchUserException, self.dao._user, 206)
+
+    def test_fullname(self):
+        user_id = 123
+        fullname = 'full'
+        self._userlist.keeplist[user_id] = {'fullname': fullname}
+
+        result = self.dao.get_fullname(user_id)
+
+        assert_that(result, equal_to(fullname), 'User\'s fullname')
 
     @patch('xivo_dao.user_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):

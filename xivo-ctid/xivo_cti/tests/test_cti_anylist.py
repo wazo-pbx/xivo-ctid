@@ -17,8 +17,11 @@
 
 import unittest
 from xivo_cti.cti_anylist import ContextAwareAnyList
-from hamcrest import *
+
 from mock import Mock
+
+from hamcrest import assert_that
+from hamcrest import equal_to
 
 
 class ConcreteContextAwareAnyList(ContextAwareAnyList):
