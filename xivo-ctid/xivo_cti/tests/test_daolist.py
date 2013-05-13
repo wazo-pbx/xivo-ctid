@@ -246,10 +246,10 @@ class TestDaoList(unittest.TestCase):
         context = 'default'
         number = '2000'
         voicemail = self._generic_object(uniqueid=voicemail_id,
-                                     mailbox=mailbox,
-                                     fullname=fullname,
-                                     context=context,
-                                     number=number)
+                                         mailbox=mailbox,
+                                         fullname=fullname,
+                                         context=context,
+                                         number=number)
 
         expected_result = {
             str(voicemail_id): {
