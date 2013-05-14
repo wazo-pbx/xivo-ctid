@@ -114,27 +114,33 @@ class Context(object):
         didextens = cls._didextens_from_contents(avail_directories, contents)
         return cls(directories, display, didextens)
 
-    @staticmethod
-    def _directories_from_contents(avail_directories, contents):
+    @classmethod
+    def _directories_from_contents(cls, avail_directories, contents):
         directory_ids = contents.get('directories', [])
-        directories = [avail_directories[directory_id] for directory_id in
-                       directory_ids]
-        return directories
+        return cls._new_directory_list(directory_ids, avail_directories)
 
     @staticmethod
     def _display_from_contents(avail_displays, contents):
         display_id = contents.get('display')
         return avail_displays.get(display_id)
 
-    @staticmethod
-    def _didextens_from_contents(avail_directories, contents):
+    @classmethod
+    def _didextens_from_contents(cls, avail_directories, contents):
         raw_didextens = contents.get('didextens', {})
         didextens = {}
         for exten, directory_ids in raw_didextens.iteritems():
-            directories = [avail_directories[directory_id] for directory_id in
-                           directory_ids]
-            didextens[exten] = directories
+            didextens[exten] = cls._new_directory_list(directory_ids, avail_directories)
         return didextens
+
+    @staticmethod
+    def _new_directory_list(directory_ids, avail_directories):
+        directories = []
+        for directory_id in directory_ids:
+            try:
+                directories.append(avail_directories[directory_id])
+            except KeyError:
+                logger.error('not using directory %r because not available', directory_id)
+        return directories
 
 
 _APPLY_SUBS_REGEX = re.compile(r'\{([^}]+)\}')
