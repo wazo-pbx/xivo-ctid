@@ -52,7 +52,7 @@ class TestDestinationFactory(unittest.TestCase):
         self.assertRaises(UnimplementedDestinationException, DestinationFactory.make_from, url)
 
     def test_parse_url_exten(self):
-        exten = '1234'
+        exten = '+12 34'
         ipbxid = 'xivo'
         exten_url = 'exten:{0}/{1}'.format(ipbxid, exten)
 

@@ -37,7 +37,7 @@ class DestinationFactory(object):
         'voicemail': VoicemailDestination,
         'vm_consult': ConsultVoicemailDestination,
     }
-    _url_pattern = re.compile(r'(\w+):(\w+)/(\d+)')
+    _url_pattern = re.compile(r'(\w+):(\w+)/(.+)')
 
     @classmethod
     def make_from(cls, url):

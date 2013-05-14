@@ -25,7 +25,6 @@ from xivo_dao import phonefunckey_dao
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.model.destination_factory import DestinationFactory
-from xivo_cti.services.pseudo_url import PseudoURL
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
