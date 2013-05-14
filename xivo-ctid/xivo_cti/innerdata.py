@@ -89,16 +89,8 @@ class Safe(object):
             config_object.init_data()
 
     def init_xod_status(self):
-        self.xod_status['agents'] = self.xod_config['agents'].init_status()
-        self.xod_status['contexts'] = self.xod_config['contexts'].init_status()
-        self.xod_status['groups'] = self.xod_config['groups'].init_status()
-        self.xod_status['meetmes'] = self.xod_config['meetmes'].init_status()
-        self.xod_status['phonebooks'] = self.xod_config['phonebooks'].init_status()
-        self.xod_status['phones'] = self.xod_config['phones'].init_status()
-        self.xod_status['queues'] = self.xod_config['queues'].init_status()
-        self.xod_status['trunks'] = self.xod_config['trunks'].init_status()
-        self.xod_status['users'] = self.xod_config['users'].init_status()
-        self.xod_status['voicemails'] = self.xod_config['voicemails'].init_status()
+        for name, config in self.xod_config.iteritems():
+            self.xod_status[name] = config.init_status()
 
     def update_config_list(self, listname, state, item_id):
         start_time = time.time()
