@@ -235,7 +235,6 @@ class TestUserDAO(unittest.TestCase):
             'protocol': 'sip',
             'number': '1234',
             'iduserfeatures': user_id,
-            'rules_order': 0,
             'identity': 'sip\/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -257,7 +256,6 @@ class TestUserDAO(unittest.TestCase):
             'protocol': 'sip',
             'number': '1234',
             'iduserfeatures': user_id,
-            'rules_order': 0,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -296,7 +294,6 @@ class TestUserDAO(unittest.TestCase):
             'protocol': 'sip',
             'number': '1234',
             'iduserfeatures': user_id,
-            'rules_order': 0,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -314,7 +311,6 @@ class TestUserDAO(unittest.TestCase):
             'protocol': 'sip',
             'number': '1234',
             'iduserfeatures': user_id,
-            'rules_order': 0,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True

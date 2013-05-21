@@ -102,7 +102,6 @@ class Test(unittest.TestCase):
               'iduserfeatures': 11,
               'snom_aoc_enabled': None,
               'fullname': None,
-              'rules_order': 1,
               't38pt_udptl': None,
               'subscribemwi': '0',
               'mohsuggest': None,
@@ -208,7 +207,6 @@ class Test(unittest.TestCase):
               'iduserfeatures': 11,
               'snom_aoc_enabled': None,
               'fullname': None,
-              'rules_order': 2,  # phone order
               't38pt_udptl': None,
               'subscribemwi': '0',
               'mohsuggest': None,
@@ -314,7 +312,6 @@ class Test(unittest.TestCase):
               'iduserfeatures': 11,
               'snom_aoc_enabled': None,
               'fullname': None,
-              'rules_order': 2,  # phone order
               't38pt_udptl': None,
               'subscribemwi': '0',
               'mohsuggest': None,
