@@ -55,7 +55,6 @@ class AnyList(object):
             'protocol',
             'number',
             'iduserfeatures',
-            'rules_order',
             'identity',
             'initialized',
             'allowtransfer',
