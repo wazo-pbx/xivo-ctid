@@ -74,6 +74,7 @@ class AgentStatusManager(object):
         self._agent_availability_updater.update(agent_id, agent_status)
 
     def agent_logged_out(self, agent_id):
+        dao.agent.set_on_wrapup(agent_id, False)
         agent_status = AgentStatus.logged_out
         self._agent_availability_updater.update(agent_id, agent_status)
 

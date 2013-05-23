@@ -132,6 +132,7 @@ class TestAgentStatusManager(unittest.TestCase):
 
         self.agent_status_manager.agent_logged_out(agent_id)
 
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.logged_out)
 
     def test_device_in_use_when_available(self):
