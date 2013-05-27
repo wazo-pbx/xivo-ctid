@@ -41,11 +41,8 @@ def _parse_args(args):
 def _new_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('-c', '--config')
-    parser.add_argument('-C', '--confoverride')
     parser.add_argument('-p', '--pidfile')
     parser.add_argument('-l', '--logfile')
-    parser.add_argument('-i', '--ip')
     parser.add_argument('-P', '--portdelta', type=int)
     return parser
 
@@ -53,21 +50,12 @@ def _new_parser():
 def _process_parsed_args(parsed_args):
     if parsed_args.debug:
         cti_config.DEBUG_MODE = parsed_args.debug
-    if parsed_args.config:
-        cti_config.XIVO_CONF_FILE = parsed_args.config
-    if parsed_args.confoverride:
-        cti_config.XIVO_CONF_OVER = parsed_args.confoverride
     if parsed_args.pidfile:
         cti_config.PIDFILE = parsed_args.pidfile
     if parsed_args.logfile:
         cti_config.LOGFILENAME = parsed_args.logfile
-    if parsed_args.ip:
-        cti_config.XIVOIP = parsed_args.ip
     if parsed_args.portdelta:
         cti_config.PORTDELTA = parsed_args.portdelta
-
-    if cti_config.XIVOIP != 'localhost':
-        cti_config.XIVO_CONF_FILE = 'https://%s/cti/json.php/restricted/configuration' % cti_config.XIVOIP
 
 
 if __name__ == '__main__':
