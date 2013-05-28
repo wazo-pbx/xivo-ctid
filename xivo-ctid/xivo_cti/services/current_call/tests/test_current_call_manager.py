@@ -701,6 +701,15 @@ class TestCurrentCallManager(unittest.TestCase):
             delay, self.device_manager.answer, device_id
         )
 
+    @patch('xivo_dao.user_dao.get_device_id', Mock(side_effect=LookupError()))
+    def test_schedule_answer_no_device(self):
+        user_id = 6
+        delay = 0.25
+
+        self.manager.schedule_answer(user_id, delay)
+
+        self.assertEquals(self.scheduler.schedule.call_count, 0)
+
     def test_set_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()
         channel = u'%s-0000007b' % line
