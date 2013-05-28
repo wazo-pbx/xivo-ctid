@@ -145,9 +145,12 @@ class UserServiceManager(object):
                 self.agent_service_manager.set_presence(agent_id, presence)
 
     def pickup_the_phone(self, user_id):
-        device_id = user_dao.get_device_id(user_id)
-        logger.info('User %s is answering his phone', user_id)
-        self.device_manager.answer(device_id)
+        try:
+            device_id = user_dao.get_device_id(user_id)
+            logger.info('User %s is answering his phone', user_id)
+            self.device_manager.answer(device_id)
+        except LookupError:
+            logger.debug('Cannot auto-answer for user %s', user_id)
 
     def enable_recording(self, target):
         user_dao.enable_recording(target)
