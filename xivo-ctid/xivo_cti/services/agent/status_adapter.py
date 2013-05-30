@@ -29,6 +29,7 @@ class AgentStatusAdapter(object):
     def __init__(self, status_router, call_notifier):
         self._status_router = status_router
         self._call_notifier = call_notifier
+        self._agent_extensions = {}
 
     def handle_call_event(self, call_event):
         extension = call_event.extension
@@ -36,6 +37,7 @@ class AgentStatusAdapter(object):
             agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
         except LookupError:
             logger.debug('endpoint %s has no agent', call_event.extension)
+            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_call_event)
         else:
             self._status_router.route(agent_id, call_event.status)
 
@@ -46,4 +48,10 @@ class AgentStatusAdapter(object):
             logger.debug('agent with id %s is not logged', agent_id)
         else:
             extension = Extension(number, context)
+            self._agent_extensions[agent_id] = extension
             self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
+
+    def unsubscribe_from_agent_events(self, agent_id):
+        extension = self._agent_extensions.pop(agent_id, None)
+        if extension:
+            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_call_event)

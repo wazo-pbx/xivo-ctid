@@ -30,3 +30,6 @@ class CallNotifier(object):
 
     def subscribe_to_status_changes(self, extension):
         pass
+
+    def unsubscribe_from_status_changes(self, extension):
+        pass

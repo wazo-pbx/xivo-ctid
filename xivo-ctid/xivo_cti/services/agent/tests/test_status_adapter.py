@@ -52,6 +52,7 @@ class TestStatusAdapter(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
     def test_handle_call_event_with_no_agent(self, get_agent_id_from_extension):
+        agent_id = 24
         extension = Extension('1000', 'default')
         status = LineStatus.talking
 
@@ -60,10 +61,14 @@ class TestStatusAdapter(unittest.TestCase):
         event = Mock(CallEvent)
         event.extension = extension
         event.status = status
+        self._subscribe_to_event_for_agent(agent_id, extension)
 
         self.adapter.handle_call_event(event)
 
         self.assertEquals(self.router.route.call_count, 0)
+        self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
+            extension,
+            self.adapter.handle_call_event)
 
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
     def test_subscribe_to_agent_events(self, get_extension_from_agent_id):
@@ -86,3 +91,38 @@ class TestStatusAdapter(unittest.TestCase):
         self.adapter.subscribe_to_agent_events(agent_id)
 
         self.assertEquals(self.call_notifier.subscribe_to_status_changes.call_count, 0)
+
+    def test_unsubscribe_from_agent_events(self):
+        agent_id = 29
+        extension = Extension('1000', 'default')
+        self._subscribe_to_event_for_agent(agent_id, extension)
+
+        self.adapter.unsubscribe_from_agent_events(agent_id)
+
+        self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
+            extension,
+            self.adapter.handle_call_event)
+
+    def test_unsubscribe_from_agent_events_twice(self):
+        agent_id = 29
+        extension = Extension('1000', 'default')
+        self._subscribe_to_event_for_agent(agent_id, extension)
+
+        self.adapter.unsubscribe_from_agent_events(agent_id)
+        self.adapter.unsubscribe_from_agent_events(agent_id)
+
+        self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
+            extension,
+            self.adapter.handle_call_event)
+
+    def test_unsubscribe_from_agent_events_if_not_subscribed(self):
+        agent_id = 29
+
+        self.adapter.unsubscribe_from_agent_events(agent_id)
+
+        self.assertEquals(self.call_notifier.unsubscribe_from_status_changes.call_count, 0)
+
+    @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
+    def _subscribe_to_event_for_agent(self, agent_id, extension, get_extension_from_agent_id):
+        get_extension_from_agent_id.return_value = (extension.number, extension.context)
+        self.adapter.subscribe_to_agent_events(agent_id)
