@@ -26,8 +26,9 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusAdapter(object):
 
-    def __init__(self, status_router):
+    def __init__(self, status_router, call_notifier):
         self._status_router = status_router
+        self._call_notifier = call_notifier
 
     def handle_call_event(self, call_event):
         extension = call_event.extension.extension
@@ -38,3 +39,12 @@ class AgentStatusAdapter(object):
             logger.debug('endpoint %s has no agent', call_event.extension)
         else:
             self._status_router.route(agent_id, call_event.status)
+
+    def listen_for_agent_events(self, agent_id):
+        try:
+            number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
+        except LookupError:
+            logger.debug('agent with id %s is not logged', agent_id)
+        else:
+            extension = Extension(number, context)
+            self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)

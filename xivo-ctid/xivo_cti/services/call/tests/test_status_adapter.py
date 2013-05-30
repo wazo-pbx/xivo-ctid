@@ -22,14 +22,16 @@ from xivo_cti.model.extension import Extension
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.call_event import CallEvent
+from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.line_status import LineStatus
 
 
 class TestStatusAdapter(unittest.TestCase):
 
     def setUp(self):
+        self.call_notifier = Mock(CallNotifier)
         self.router = Mock(AgentStatusRouter)
-        self.adapter = AgentStatusAdapter(self.router)
+        self.adapter = AgentStatusAdapter(self.router, self.call_notifier)
 
     @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
     def test_handle_call_event(self, get_agent_id_from_extension):
@@ -63,12 +65,24 @@ class TestStatusAdapter(unittest.TestCase):
 
         self.assertEquals(self.router.route.call_count, 0)
 
-    #def test_listen_for_agent_events(self):
-    #    agent_id = 1
+    @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
+    def test_listen_for_agent_events(self, get_extension_from_agent_id):
+        agent_id = 1
+        extension = Extension('1000', 'default')
 
-    #    self.adapter.listen_for_agent_events(agent_id)
+        get_extension_from_agent_id.return_value = (extension.extension, extension.context)
 
-    #    notifier = Mock()
-    #    notifier.subscribe_to_status_changes()
+        self.adapter.listen_for_agent_events(agent_id)
 
+        get_extension_from_agent_id.assert_called_once_with(agent_id)
+        self.call_notifier.subscribe_to_status_changes.assert_called_once_with(
+            extension,
+            self.adapter.handle_call_event)
 
+    @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id', Mock(side_effect=LookupError))
+    def test_listen_for_agent_events_with_no_agent(self):
+        agent_id = 1
+
+        self.adapter.listen_for_agent_events(agent_id)
+
+        self.assertEquals(self.call_notifier.subscribe_to_status_changes.call_count, 0)
