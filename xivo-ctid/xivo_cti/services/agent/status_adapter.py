@@ -40,7 +40,7 @@ class AgentStatusAdapter(object):
         else:
             self._status_router.route(agent_id, call_event.status)
 
-    def listen_for_agent_events(self, agent_id):
+    def subscribe_to_agent_events(self, agent_id):
         try:
             number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
         except LookupError:
