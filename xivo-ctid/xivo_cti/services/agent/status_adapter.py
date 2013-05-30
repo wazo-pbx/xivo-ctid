@@ -26,9 +26,10 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusAdapter(object):
 
-    def __init__(self, status_router, call_notifier):
+    def __init__(self, status_router, call_notifier, call_storage):
         self._status_router = status_router
         self._call_notifier = call_notifier
+        self._call_storage = call_storage
         self._agent_extensions = {}
 
     def handle_call_event(self, call_event):
@@ -48,8 +49,7 @@ class AgentStatusAdapter(object):
             logger.debug('agent with id %s is not logged', agent_id)
         else:
             extension = Extension(number, context)
-            self._agent_extensions[agent_id] = extension
-            self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
+            self._new_subscription(extension, agent_id)
 
     def unsubscribe_from_agent_events(self, agent_id):
         extension = self._agent_extensions.pop(agent_id, None)
@@ -60,4 +60,10 @@ class AgentStatusAdapter(object):
         for agent_id in agent_status_dao.get_logged_agent_ids():
             number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
             extension = Extension(number, context)
-            self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
+            self._new_subscription(extension, agent_id)
+
+    def _new_subscription(self, extension, agent_id):
+        self._agent_extensions[agent_id] = extension
+        self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
+        extension_status = self._call_storage.get_status_for_extension(extension)
+        self._status_router.route(agent_id, extension_status)
