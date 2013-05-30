@@ -31,10 +31,9 @@ class AgentStatusAdapter(object):
         self._call_notifier = call_notifier
 
     def handle_call_event(self, call_event):
-        extension = call_event.extension.extension
-        context = call_event.extension.context
+        extension = call_event.extension
         try:
-            agent_id = agent_status_dao.get_agent_id_from_extension(extension, context)
+            agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
         except LookupError:
             logger.debug('endpoint %s has no agent', call_event.extension)
         else:

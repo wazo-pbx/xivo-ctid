@@ -47,7 +47,7 @@ class TestStatusAdapter(unittest.TestCase):
 
         self.adapter.handle_call_event(event)
 
-        get_agent_id_from_extension.assert_called_once_with(extension.extension, extension.context)
+        get_agent_id_from_extension.assert_called_once_with(extension.number, extension.context)
         self.router.route.assert_called_once_with(agent_id, status)
 
     @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
@@ -70,7 +70,7 @@ class TestStatusAdapter(unittest.TestCase):
         agent_id = 1
         extension = Extension('1000', 'default')
 
-        get_extension_from_agent_id.return_value = (extension.extension, extension.context)
+        get_extension_from_agent_id.return_value = (extension.number, extension.context)
 
         self.adapter.subscribe_to_agent_events(agent_id)
 
