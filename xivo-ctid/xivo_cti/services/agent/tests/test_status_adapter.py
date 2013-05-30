@@ -122,6 +122,21 @@ class TestStatusAdapter(unittest.TestCase):
 
         self.assertEquals(self.call_notifier.unsubscribe_from_status_changes.call_count, 0)
 
+    @patch('xivo_dao.agent_status_dao.get_logged_agent_ids')
+    @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
+    def test_subscribe_all_logged_agents(self, get_extension_from_agent_id, get_logged_agent_ids):
+        agent_extension_1 = Extension('624', 'default')
+        agent_extension_2 = Extension('635', 'my_context')
+        get_logged_agent_ids.return_value = [13, 72]
+        get_extension_from_agent_id.side_effect = [(agent_extension_1.number, agent_extension_1.context),
+                                                   (agent_extension_2.number, agent_extension_2.context)]
+
+        self.adapter.subscribe_all_logged_agents()
+
+        self.assertEquals(self.call_notifier.subscribe_to_status_changes.call_count, 2)
+        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_1, self.adapter.handle_call_event)
+        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_2, self.adapter.handle_call_event)
+
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
     def _subscribe_to_event_for_agent(self, agent_id, extension, get_extension_from_agent_id):
         get_extension_from_agent_id.return_value = (extension.number, extension.context)

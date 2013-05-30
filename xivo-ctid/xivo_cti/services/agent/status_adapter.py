@@ -55,3 +55,9 @@ class AgentStatusAdapter(object):
         extension = self._agent_extensions.pop(agent_id, None)
         if extension:
             self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_call_event)
+
+    def subscribe_all_logged_agents(self):
+        for agent_id in agent_status_dao.get_logged_agent_ids():
+            number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
+            extension = Extension(number, context)
+            self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
