@@ -18,10 +18,11 @@
 import unittest
 
 from mock import Mock, patch
+from xivo_cti.model.extension import Extension
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_router import AgentStatusRouter
-from xivo_cti.services.call.line_status import LineStatus
 from xivo_cti.services.call.call_event import CallEvent
+from xivo_cti.services.call.line_status import LineStatus
 
 
 class TestStatusAdapter(unittest.TestCase):
@@ -30,32 +31,32 @@ class TestStatusAdapter(unittest.TestCase):
         self.router = Mock(AgentStatusRouter)
         self.adapter = AgentStatusAdapter(self.router)
 
-    @patch('xivo_dao.agent_status_dao.get_agent_id_from_interface')
-    def test_handle_call_event(self, get_agent_id_from_interface):
+    @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
+    def test_handle_call_event(self, get_agent_id_from_extension):
         agent_id = 1
-        interface = 'SIP/abcd'
+        extension = Extension('1000', 'default')
         status = LineStatus.talking
 
         event = Mock(CallEvent)
-        event.endpoint_id = interface
+        event.extension = extension
         event.status = status
 
-        get_agent_id_from_interface.return_value = agent_id
+        get_agent_id_from_extension.return_value = agent_id
 
         self.adapter.handle_call_event(event)
 
-        get_agent_id_from_interface.assert_called_once_with(interface)
+        get_agent_id_from_extension.assert_called_once_with(extension.extension, extension.context)
         self.router.route.assert_called_once_with(agent_id, status)
 
-    @patch('xivo_dao.agent_status_dao.get_agent_id_from_interface')
-    def test_handle_call_event_with_no_agent(self, get_agent_id_from_interface):
-        interface = 'SIP/abcd'
+    @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
+    def test_handle_call_event_with_no_agent(self, get_agent_id_from_extension):
+        extension = Extension('1000', 'default')
         status = LineStatus.talking
 
-        get_agent_id_from_interface.side_effect = LookupError()
+        get_agent_id_from_extension.side_effect = LookupError()
 
         event = Mock(CallEvent)
-        event.endpoint_id = interface
+        event.extension = extension
         event.status = status
 
         self.adapter.handle_call_event(event)

@@ -15,26 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import logging
-
-from xivo_dao import agent_status_dao
-from xivo_cti.model.extension import Extension
+from collections import namedtuple
 
 
-logger = logging.getLogger(__name__)
-
-
-class AgentStatusAdapter(object):
-
-    def __init__(self, status_router):
-        self._status_router = status_router
-
-    def handle_call_event(self, call_event):
-        extension = call_event.extension.extension
-        context = call_event.extension.context
-        try:
-            agent_id = agent_status_dao.get_agent_id_from_extension(extension, context)
-        except LookupError:
-            logger.debug('endpoint %s has no agent', call_event.extension)
-        else:
-            self._status_router.route(agent_id, call_event.status)
+Extension = namedtuple('FullExtension', ['extension', 'context'])
