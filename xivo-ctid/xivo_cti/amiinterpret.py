@@ -221,8 +221,10 @@ class AMI_1_8(object):
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
         chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
         chanprops.set_extra_data('xivo', 'direction', 'internal')
-        chanprops.set_extra_data('xivo', 'calleridnum', usersummary_src.get('phonenumber'))
-        chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
+        if not chanprops.has_extra_data('xivo', 'calleridname'):
+            chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
+        if not chanprops.has_extra_data('xivo', 'calleridnum'):
+            chanprops.set_extra_data('xivo', 'calleridnum', usersummary_src.get('phonenumber'))
         chanprops.set_extra_data('xivo', 'calledidnum', destination_number)
         chanprops.set_extra_data('xivo', 'calledidname', destination_name)
 
