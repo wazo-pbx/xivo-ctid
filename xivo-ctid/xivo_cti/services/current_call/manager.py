@@ -69,8 +69,11 @@ class CurrentCallManager(object):
         return False
 
     def schedule_answer(self, user_id, delay):
-        device_id = user_dao.get_device_id(user_id)
-        self.scheduler.schedule(delay, self.device_manager.answer, device_id)
+        try:
+            device_id = user_dao.get_device_id(user_id)
+            self.scheduler.schedule(delay, self.device_manager.answer, device_id)
+        except LookupError:
+            logger.debug('Not scheduling an answer to a call with no device configured')
 
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)
