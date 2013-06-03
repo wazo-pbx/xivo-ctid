@@ -18,7 +18,7 @@
 import unittest
 
 from mock import Mock, patch
-from xivo_cti.model.extension import Extension
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.call_event import CallEvent

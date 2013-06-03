@@ -18,7 +18,7 @@
 import unittest
 
 from mock import Mock
-from xivo_cti.model.extension import Extension
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.call.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 

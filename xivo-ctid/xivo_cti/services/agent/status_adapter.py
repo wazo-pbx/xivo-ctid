@@ -18,7 +18,7 @@
 import logging
 
 from xivo_dao import agent_status_dao
-from xivo_cti.model.extension import Extension
+from xivo.asterisk.extension import Extension
 
 
 logger = logging.getLogger(__name__)
