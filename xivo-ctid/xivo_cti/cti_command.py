@@ -585,7 +585,7 @@ class Command(object):
             exten = self.parseid(self._commanddict['destination'])['id']
             context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
             channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
-        except KeyError:
+        except (KeyError, IndexError):
             logger.exception('Atxfer failed %s', self._commanddict)
             return [{'error': 'Incomplete info'}]
         else:
