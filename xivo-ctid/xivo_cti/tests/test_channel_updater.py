@@ -77,6 +77,26 @@ class TestChannelUpdater(unittest.TestCase):
         self.assertEqual(channel.extra_data['xivo']['calleridname'], 'Alice')
         self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
 
+    def test_new_caller_id_no_cid_name(self):
+        original_name = 'alice'
+        channel_1 = {
+            'name': 'SIP/abc-124',
+            'context': 'test',
+            'unique_id': 12798734.33,
+        }
+        self.innerdata.channels = {
+            channel_1['name']: Channel(channel_1['name'],
+                                       channel_1['context'],
+                                       channel_1['unique_id'])
+        }
+        self.innerdata.channels[channel_1['name']].extra_data = {'xivo': {'calleridname': original_name}}
+
+        self.updater.new_caller_id(channel_1['name'], '', '1234')
+
+        channel = self.innerdata.channels[channel_1['name']]
+        self.assertEqual(channel.extra_data['xivo']['calleridname'], original_name)
+        self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
+
     def test_new_caller_id_unknown_channel(self):
         self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
 

@@ -62,8 +62,10 @@ class ChannelUpdater(object):
 
     @assert_has_channel
     def new_caller_id(self, channel_name, name, number):
+        logger.debug('New caller ID received on channel %s: "%s" <%s>', channel_name, name, number)
         channel = self.innerdata.channels[channel_name]
-        channel.set_extra_data('xivo', 'calleridname', name)
+        if name:
+            channel.set_extra_data('xivo', 'calleridname', name)
         channel.set_extra_data('xivo', 'calleridnum', number)
 
     @assert_has_channel
