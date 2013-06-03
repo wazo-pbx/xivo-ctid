@@ -576,7 +576,7 @@ class Command(object):
 
             return [{'amicommand': 'transfer',
                      'amiargs': [channel, extentodial, dst_context]}]
-        except KeyError:
+        except (KeyError, IndexError):
             logger.exception('Failed to transfer call')
             return [{'error': 'Incomplete transfer information'}]
 
