@@ -21,7 +21,7 @@ from mock import Mock, patch
 from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_router import AgentStatusRouter
-from xivo_cti.services.call.call_event import CallEvent
+from xivo_cti.model.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.line_status import LineStatus
