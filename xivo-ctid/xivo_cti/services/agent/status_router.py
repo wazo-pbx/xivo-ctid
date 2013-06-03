@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/license
 
-from xivo_cti.services.call.line_status import LineStatus
+from xivo_cti.model.line_status import LineStatus
 
 
 class AgentStatusRouter(object):

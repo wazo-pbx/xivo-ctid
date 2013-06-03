@@ -24,7 +24,7 @@ from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
-from xivo_cti.services.call.line_status import LineStatus
+from xivo_cti.model.line_status import LineStatus
 
 
 class TestStatusAdapter(unittest.TestCase):

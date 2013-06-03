@@ -20,7 +20,7 @@ import unittest
 from mock import Mock
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_router import AgentStatusRouter
-from xivo_cti.services.call.line_status import LineStatus
+from xivo_cti.model.line_status import LineStatus
 
 
 class TestStatusRouter(unittest.TestCase):
