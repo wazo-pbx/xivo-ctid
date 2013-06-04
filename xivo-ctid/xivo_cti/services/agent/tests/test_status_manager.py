@@ -16,77 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock, ANY
+from mock import Mock
 
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
-from xivo_cti.services.queue_member.member import QueueMemberState, QueueMember
-from xivo_cti.services.agent.status_manager import AgentStatusManager, \
-    QueueEventReceiver
+from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
-from xivo_cti.services.queue_member.notifier import QueueMemberNotifier
-
-
-class TestQueueEventReceiver(unittest.TestCase):
-
-    def setUp(self):
-        dao.agent = Mock(AgentDAO)
-        self.notifier = Mock(QueueMemberNotifier)
-        self.status_manager = Mock(AgentStatusManager)
-
-    def test_subscription(self):
-        receiver = QueueEventReceiver(self.notifier, self.status_manager)
-        receiver.subscribe()
-
-        self.notifier.subscribe_to_queue_member_update.assert_called_once_with(ANY)
-
-    def test_receiver_when_agent_does_not_exist(self):
-        member_state = QueueMemberState()
-        member_state.status = 0
-        member = QueueMember('queue1', 'Agent/12', member_state)
-
-        dao.agent.get_id_from_interface.side_effect = [ValueError()]
-
-        receiver = QueueEventReceiver(self.notifier, self.status_manager)
-        receiver.on_queue_member_update(member)
-
-        self.assertEquals(self.status_manager.device_in_use.call_count, 0)
-
-    def test_manager_puts_agent_in_use(self):
-        queue_name = 'queue1'
-        member_name = 'Agent/12'
-        agent_id = 12
-        status = 2
-
-        member_state = QueueMemberState()
-        member_state.status = status
-        member = QueueMember(queue_name, member_name, member_state)
-        dao.agent.get_id_from_interface.return_value = agent_id
-
-        receiver = QueueEventReceiver(self.notifier, self.status_manager)
-        receiver.on_queue_member_update(member)
-
-        self.status_manager.device_in_use.assert_called_once_with(agent_id)
-
-    def test_manager_completes_call(self):
-        queue_name = 'queue1'
-        member_name = 'Agent/12'
-        agent_id = 12
-        status = 1
-
-        member_state = QueueMemberState()
-        member_state.status = status
-        member = QueueMember(queue_name, member_name, member_state)
-
-        dao.agent.get_id_from_interface.return_value = agent_id
-
-        receiver = QueueEventReceiver(self.notifier, self.status_manager)
-        receiver.on_queue_member_update(member)
-
-        self.status_manager.device_not_in_use.assert_called_once_with(agent_id)
 
 
 class TestAgentStatusManager(unittest.TestCase):

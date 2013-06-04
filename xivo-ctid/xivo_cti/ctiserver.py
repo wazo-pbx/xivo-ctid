@@ -168,7 +168,6 @@ class CTIServer(object):
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
         self._agent_status_manager = context.get('agent_status_manager')
-        self._queue_event_receiver = context.get('queue_event_receiver')
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
@@ -187,7 +186,6 @@ class CTIServer(object):
         self._register_cti_callbacks()
         self._register_ami_callbacks()
         self._register_message_hooks()
-        self._queue_event_receiver.subscribe()
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
