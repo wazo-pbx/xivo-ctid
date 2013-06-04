@@ -15,8 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
 from xivo_cti.services.call import helper
+from xivo_cti.services.call.helper import InvalidChannel
 from xivo_cti.model.endpoint_status import EndpointStatus
+
+logger = logging.getLogger(__name__)
 
 
 class CallReceiver(object):
@@ -39,5 +44,9 @@ class CallReceiver(object):
         self._update_channel_status(channel, status)
 
     def _update_channel_status(self, channel, status):
-        extension = helper.get_extension_from_channel(channel)
-        self._call_storage.update_line_status(extension, status)
+        try:
+            extension = helper.get_extension_from_channel(channel)
+        except (InvalidChannel, LookupError) as e:
+            logger.error(e)
+        else:
+            self._call_storage.update_line_status(extension, status)

@@ -19,6 +19,7 @@ import unittest
 
 from mock import patch, Mock
 from xivo_cti.services.call.receiver import CallReceiver
+from xivo_cti.services.call.helper import InvalidChannel
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.endpoint_status import EndpointStatus
@@ -73,6 +74,35 @@ class TestCallReceiver(unittest.TestCase):
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_newstate_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
+        channel = 'aslkdjfas;ldfh'
+        get_extension_from_channel.side_effect = InvalidChannel(channel)
+        ami_event = {
+            'Event': 'Newstate',
+            'ChannelState': '42',
+            'Channel': channel
+        }
+
+        self.call_receiver.handle_newstate(ami_event)
+
+        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_newstate_no_extension(self, channel_state_to_status, get_extension_from_channel):
+        get_extension_from_channel.side_effect = LookupError()
+        ami_event = {
+            'Event': 'Newstate',
+            'ChannelState': '5',
+            'Channel': 'SIP/abcd-00001'
+        }
+
+        self.call_receiver.handle_newstate(ami_event)
+
+        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup(self, channel_state_to_status, get_extension_from_channel):
         extension = Extension('1000', 'default')
         channel = "SIP/abcd-00001"
@@ -89,3 +119,30 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_hangup(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_hangup_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
+        channel = 'aslkdjfas;ldfh'
+        get_extension_from_channel.side_effect = InvalidChannel(channel)
+        ami_event = {
+            'Event': 'Hangup',
+            'Channel': channel,
+        }
+
+        self.call_receiver.handle_hangup(ami_event)
+
+        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_hangup_no_extension(self, channel_state_to_status, get_extension_from_channel):
+        get_extension_from_channel.side_effect = LookupError()
+        ami_event = {
+            'Event': 'Hangup',
+            'Channel': 'SIP/abcd-00001'
+        }
+
+        self.call_receiver.handle_hangup(ami_event)
+
+        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
