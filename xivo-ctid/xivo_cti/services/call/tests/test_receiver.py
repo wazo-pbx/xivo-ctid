@@ -18,19 +18,19 @@
 import unittest
 
 from mock import patch, Mock
-from xivo_cti.services.call.manager import CallManager
+from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.line_status import LineStatus
 from xivo.asterisk.extension import Extension
 
 
-class TestCallManager(unittest.TestCase):
+class TestCallReceiver(unittest.TestCase):
 
     def setUp(self):
         self.call_storage = Mock(CallStorage)
         self.call_notifier = Mock(CallNotifier)
-        self.call_manager = CallManager(self.call_storage, self.call_notifier)
+        self.call_receiver = CallReceiver(self.call_storage, self.call_notifier)
 
     @patch('xivo_dao.line_dao.get_extension_from_interface')
     def test_handle_newstate(self, get_extension_from_interface):
@@ -47,7 +47,7 @@ class TestCallManager(unittest.TestCase):
             'Channel': channel,
         }
 
-        self.call_manager.handle_newstate(ami_event)
+        self.call_receiver.handle_newstate(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
         get_extension_from_interface.assert_called_once_with(interface)
@@ -66,7 +66,7 @@ class TestCallManager(unittest.TestCase):
             'Channel': channel,
         }
 
-        self.call_manager.handle_hangup(ami_event)
+        self.call_receiver.handle_hangup(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
         get_extension_from_interface.assert_called_once_with(interface)

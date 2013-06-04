@@ -20,7 +20,7 @@ from xivo_cti.services.call import helper
 from xivo_cti.model.line_status import LineStatus
 
 
-class CallManager(object):
+class CallReceiver(object):
 
     def __init__(self, call_storage, call_notifier):
         self._call_storage = call_storage
