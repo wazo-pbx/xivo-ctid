@@ -32,9 +32,13 @@ from xivo_cti.services.agent.availability_updater import \
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
+from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_manager import AgentStatusManager, \
     QueueEventReceiver
 from xivo_cti.services.agent.status_parser import AgentStatusParser
+from xivo_cti.services.agent.status_router import AgentStatusRouter
+from xivo_cti.services.call.notifier import CallNotifier
+from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -78,8 +82,12 @@ def setup():
     context.register('agent_executor', AgentExecutor)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('agent_status_adapter', AgentStatusAdapter)
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
+    context.register('agent_status_router', AgentStatusRouter)
+    context.register('call_notifier', CallNotifier)
+    context.register('call_storage', CallStorage)
     context.register('channel_updater', ChannelUpdater)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)

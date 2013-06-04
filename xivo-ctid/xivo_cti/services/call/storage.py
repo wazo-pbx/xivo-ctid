@@ -21,8 +21,8 @@ from xivo_cti.model.endpoint_status import EndpointStatus
 
 class CallStorage(object):
 
-    def __init__(self, notifier):
-        self._notifier = notifier
+    def __init__(self, call_notifier):
+        self._notifier = call_notifier
         self._endpoints = {}
 
     def get_status_for_extension(self, extension):

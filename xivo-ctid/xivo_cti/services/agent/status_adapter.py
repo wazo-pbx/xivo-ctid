@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusAdapter(object):
 
-    def __init__(self, status_router, call_notifier, call_storage):
-        self._status_router = status_router
+    def __init__(self, agent_status_router, call_notifier, call_storage):
+        self._status_router = agent_status_router
         self._call_notifier = call_notifier
         self._call_storage = call_storage
         self._agent_extensions = {}

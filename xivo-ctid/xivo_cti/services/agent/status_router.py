@@ -20,8 +20,8 @@ from xivo_cti.model.endpoint_status import EndpointStatus
 
 class AgentStatusRouter(object):
 
-    def __init__(self, status_manager):
-        self._status_manager = status_manager
+    def __init__(self, agent_status_manager):
+        self._status_manager = agent_status_manager
 
     def route(self, agent_id, status):
         if status == EndpointStatus.available:
