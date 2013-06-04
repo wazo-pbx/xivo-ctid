@@ -33,8 +33,7 @@ from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
-from xivo_cti.services.agent.status_manager import AgentStatusManager, \
-    QueueEventReceiver
+from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.notifier import CallNotifier
@@ -109,7 +108,6 @@ def setup():
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
-    context.register('queue_event_receiver', QueueEventReceiver)
     context.register('queue_service_manager', QueueServiceManager)
     context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)
