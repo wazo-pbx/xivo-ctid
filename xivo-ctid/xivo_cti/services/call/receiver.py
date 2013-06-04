@@ -49,4 +49,4 @@ class CallReceiver(object):
         except (InvalidChannel, LookupError) as e:
             logger.error(e)
         else:
-            self._call_storage.update_line_status(extension, status)
+            self._call_storage.update_endpoint_status(extension, status)

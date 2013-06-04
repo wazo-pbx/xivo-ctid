@@ -51,7 +51,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -70,7 +70,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -85,7 +85,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -99,7 +99,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -118,7 +118,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -132,7 +132,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -145,4 +145,4 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
