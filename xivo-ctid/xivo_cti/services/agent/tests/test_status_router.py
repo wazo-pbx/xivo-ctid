@@ -20,7 +20,7 @@ import unittest
 from mock import Mock
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_router import AgentStatusRouter
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class TestStatusRouter(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestStatusRouter(unittest.TestCase):
 
     def test_route_device_in_use(self):
         agent_id = 1
-        status = LineStatus.talking
+        status = EndpointStatus.talking
 
         self.router.route(agent_id, status)
 
@@ -39,7 +39,7 @@ class TestStatusRouter(unittest.TestCase):
 
     def test_route_device_not_in_use(self):
         agent_id = 1
-        status = LineStatus.available
+        status = EndpointStatus.available
 
         self.router.route(agent_id, status)
 

@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/license
 
 
-class LineStatus(object):
+class EndpointStatus(object):
     available = 1
     talking = 2
     talking_queue = 3

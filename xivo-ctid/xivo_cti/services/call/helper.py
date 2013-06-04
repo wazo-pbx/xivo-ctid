@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class ChannelState(object):
@@ -29,9 +29,9 @@ def interface_from_channel(channel):
 
 def channel_state_to_status(channel_state):
     if channel_state == ChannelState.ring:
-        return LineStatus.ringback_tone
+        return EndpointStatus.ringback_tone
     elif channel_state == ChannelState.ringing:
-        return LineStatus.ringing
+        return EndpointStatus.ringing
 
 
 def get_extension_from_channel(channel):

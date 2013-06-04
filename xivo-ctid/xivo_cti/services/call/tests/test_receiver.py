@@ -21,7 +21,7 @@ from mock import patch, Mock
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo.asterisk.extension import Extension
 
 
@@ -37,7 +37,7 @@ class TestCallReceiver(unittest.TestCase):
         interface = 'SIP/abcd'
         extension = Extension('1000', 'default')
         channel = "%s-00001" % interface
-        call_status = LineStatus.ringing
+        call_status = EndpointStatus.ringing
 
         get_extension_from_channel.return_value = extension
 
@@ -57,7 +57,7 @@ class TestCallReceiver(unittest.TestCase):
         interface = 'SIP/abcd'
         extension = Extension('1000', 'default')
         channel = "%s-00001" % interface
-        call_status = LineStatus.available
+        call_status = EndpointStatus.available
 
         get_extension_from_channel.return_value = extension
 

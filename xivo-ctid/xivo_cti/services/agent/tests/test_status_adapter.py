@@ -24,7 +24,7 @@ from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.model.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class TestStatusAdapter(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestStatusAdapter(unittest.TestCase):
     def test_handle_call_event(self, get_agent_id_from_extension):
         agent_id = 1
         extension = Extension('1000', 'default')
-        status = LineStatus.talking
+        status = EndpointStatus.talking
 
         event = Mock(CallEvent)
         event.extension = extension
@@ -56,7 +56,7 @@ class TestStatusAdapter(unittest.TestCase):
     def test_handle_call_event_with_no_agent(self, get_agent_id_from_extension):
         agent_id = 24
         extension = Extension('1000', 'default')
-        status = LineStatus.talking
+        status = EndpointStatus.talking
 
         get_agent_id_from_extension.side_effect = LookupError()
 
@@ -77,7 +77,7 @@ class TestStatusAdapter(unittest.TestCase):
     def test_subscribe_to_agent_events(self, get_extension_from_agent_id):
         agent_id = 1
         extension = Extension('1000', 'default')
-        status = LineStatus.talking
+        status = EndpointStatus.talking
 
         get_extension_from_agent_id.return_value = (extension.number, extension.context)
         self.call_storage.get_status_for_extension.return_value = status
@@ -133,8 +133,8 @@ class TestStatusAdapter(unittest.TestCase):
     def test_subscribe_all_logged_agents(self, get_extension_from_agent_id, get_logged_agent_ids):
         agent_id_1 = 13
         agent_id_2 = 72
-        status_1 = LineStatus.talking
-        status_2 = LineStatus.available
+        status_1 = EndpointStatus.talking
+        status_2 = EndpointStatus.available
         agent_extension_1 = Extension('624', 'default')
         agent_extension_2 = Extension('635', 'my_context')
         get_logged_agent_ids.return_value = [agent_id_1, agent_id_2]
@@ -155,7 +155,7 @@ class TestStatusAdapter(unittest.TestCase):
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
     def test_subscribe_all_logged_agents_with_one_agent_then_unsubscribe(self, get_extension_from_agent_id, get_logged_agent_ids):
         agent_id = 13
-        status = LineStatus.talking
+        status = EndpointStatus.talking
         agent_extension = Extension('624', 'default')
         get_logged_agent_ids.return_value = [agent_id]
         self.call_storage.get_status_for_extension.return_value = status

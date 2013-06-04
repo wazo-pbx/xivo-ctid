@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.services.call import helper
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class CallReceiver(object):
@@ -33,7 +33,7 @@ class CallReceiver(object):
 
     def handle_hangup(self, event):
         channel = event['Channel']
-        status = LineStatus.available
+        status = EndpointStatus.available
 
         self._update_channel_status(channel, status)
 

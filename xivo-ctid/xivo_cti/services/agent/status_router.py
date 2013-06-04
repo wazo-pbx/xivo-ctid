@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/license
 
-from xivo_cti.model.line_status import LineStatus
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class AgentStatusRouter(object):
@@ -24,7 +24,7 @@ class AgentStatusRouter(object):
         self._status_manager = status_manager
 
     def route(self, agent_id, status):
-        if status == LineStatus.available:
+        if status == EndpointStatus.available:
             self._status_manager.device_not_in_use(agent_id)
-        elif status == LineStatus.talking:
+        elif status == EndpointStatus.talking:
             self._status_manager.device_in_use(agent_id)
