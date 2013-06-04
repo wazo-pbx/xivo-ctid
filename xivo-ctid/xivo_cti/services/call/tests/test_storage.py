@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import patch, Mock
+from mock import Mock
 from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.model.call_event import CallEvent
@@ -39,3 +39,88 @@ class TestCallStorage(unittest.TestCase):
         self.storage.update_endpoint_status(extension, status)
 
         self.notifier.notify.assert_called_once_with(expected_event)
+
+    def test_update_endpoint_status_called_twice_same_status(self):
+        extension = Extension('1234', 'my_context')
+        status = EndpointStatus.ringing
+        expected_event = CallEvent(extension, status)
+
+        self.storage.update_endpoint_status(extension, status)
+        self.storage.update_endpoint_status(extension, status)
+
+        self.notifier.notify.assert_called_once_with(expected_event)
+
+    def test_update_endpoint_status_called_twice_different_status(self):
+        extension = Extension('1234', 'my_context')
+
+        first_status = EndpointStatus.available
+        second_status = EndpointStatus.ringing
+
+        first_event = CallEvent(extension, first_status)
+        second_event = CallEvent(extension, second_status)
+
+        self.storage.update_endpoint_status(extension, first_status)
+        self.storage.update_endpoint_status(extension, second_status)
+
+        self.notifier.notify.assert_any_call(first_event)
+        self.notifier.notify.assert_any_call(second_event)
+
+    def test_update_endpoint_status_2_different_extensions(self):
+        first_extension = Extension('1234', 'my_context')
+        second_extension = Extension('5678', 'my_context')
+
+        status = EndpointStatus.ringing
+
+        first_expected_event = CallEvent(first_extension, status)
+        second_expected_event = CallEvent(second_extension, status)
+
+        self.storage.update_endpoint_status(first_extension, status)
+        self.storage.update_endpoint_status(second_extension, status)
+
+        self.notifier.notify.assert_any_call(first_expected_event)
+        self.notifier.notify.assert_any_call(second_expected_event)
+
+    def test_update_endpoint_status_same_extension_different_context(self):
+        first_extension = Extension('1234', 'my_context')
+        second_extension = Extension('1234', 'other_context')
+
+        status = EndpointStatus.ringing
+
+        first_expected_event = CallEvent(first_extension, status)
+        second_expected_event = CallEvent(second_extension, status)
+
+        self.storage.update_endpoint_status(first_extension, status)
+        self.storage.update_endpoint_status(second_extension, status)
+
+        self.notifier.notify.assert_any_call(first_expected_event)
+        self.notifier.notify.assert_any_call(second_expected_event)
+
+    def test_get_status_for_extension(self):
+        extension = Extension('1234', 'ze_context')
+
+        expected_status = EndpointStatus.available
+
+        result = self.storage.get_status_for_extension(extension)
+
+        self.assertEquals(expected_status, result)
+
+    def test_get_status_for_extension_during_call(self):
+        extension = Extension('1234', 'ze_context')
+        status = EndpointStatus.ringing
+
+        self.storage.update_endpoint_status(extension, status)
+        result = self.storage.get_status_for_extension(extension)
+
+        self.assertEquals(status, result)
+
+    def test_get_status_for_extension_after_call(self):
+        extension = Extension('1234', 'ze_context')
+        during_call_status = EndpointStatus.ringing
+        after_call_status = EndpointStatus.available
+
+        self.storage.update_endpoint_status(extension, during_call_status)
+        self.storage.update_endpoint_status(extension, after_call_status)
+
+        result = self.storage.get_status_for_extension(extension)
+
+        self.assertEquals(after_call_status, result)

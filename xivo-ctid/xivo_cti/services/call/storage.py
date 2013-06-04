@@ -16,16 +16,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.model.call_event import CallEvent
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class CallStorage(object):
 
     def __init__(self, notifier):
         self._notifier = notifier
+        self._endpoints = {}
 
     def get_status_for_extension(self, extension):
-        pass
+        return self._endpoints.get(extension, EndpointStatus.available)
 
     def update_endpoint_status(self, extension, status):
+        if self._need_to_update(extension, status):
+            self._update(extension, status)
+            self._notify(extension, status)
+
+    def _need_to_update(self, extension, status):
+        return extension not in self._endpoints or self._endpoints[extension] != status
+
+    def _update(self, extension, status):
+        if status == EndpointStatus.available:
+            self._endpoints.pop(extension, None)
+        else:
+            self._endpoints[extension] = status
+
+    def _notify(self, extension, status):
         event = CallEvent(extension, status)
         self._notifier.notify(event)
