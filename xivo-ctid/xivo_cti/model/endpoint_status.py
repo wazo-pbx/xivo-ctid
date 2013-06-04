@@ -17,8 +17,8 @@
 
 
 class EndpointStatus(object):
-    available = 1
-    talking = 2
-    talking_queue = 3
-    ringing = 4
-    ringback_tone = 5
+    available = 'available'
+    talking = 'talking'
+    talking_queue = 'talking_queue'
+    ringing = 'ringing'
+    ringback_tone = 'ringback_tone'
