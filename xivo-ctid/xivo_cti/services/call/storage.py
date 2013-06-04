@@ -33,6 +33,12 @@ class CallStorage(object):
             self._update(extension, status)
             self._notify(extension, status)
 
+    def new_call(self, uniqueid, source, destination):
+        pass
+
+    def end_call(self, uniqueid):
+        pass
+
     def _need_to_update(self, extension, status):
         return extension not in self._endpoints or self._endpoints[extension] != status
 

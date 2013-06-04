@@ -50,3 +50,28 @@ class CallReceiver(object):
             logger.error(e)
         else:
             self._call_storage.update_endpoint_status(extension, status)
+
+    def handle_dial(self, event):
+        if event['SubEvent'] == 'Begin':
+            self._handle_dial_begin(event)
+        elif event['SubEvent'] == 'End':
+            self._handle_dial_end(event)
+
+    def _handle_dial_begin(self, event):
+        channel_source = event['Channel']
+        channel_destination = event['Destination']
+        uniqueid = event['UniqueID']
+
+        try:
+            extension_source = helper.get_extension_from_channel(channel_source)
+            extension_destination = helper.get_extension_from_channel(channel_destination)
+        except (InvalidChannel, LookupError) as e:
+            logger.error(e)
+        else:
+            self._call_storage.new_call(uniqueid=uniqueid,
+                                        source=extension_source,
+                                        destination=extension_destination)
+
+    def _handle_dial_end(self, event):
+        uniqueid = event['UniqueID']
+        self._call_storage.end_call(uniqueid)

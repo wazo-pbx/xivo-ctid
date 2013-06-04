@@ -146,3 +146,88 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_hangup(ami_event)
 
         self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    def test_handle_dial_begin(self, get_extension_from_channel):
+        channel_source = 'SIP/abcdef-0001'
+        channel_destination = 'SIP/ghijk-0002'
+        uniqueid = '012334455.12'
+
+        ami_event = {
+            'Event': 'Dial',
+            'SubEvent': 'Begin',
+            'Channel': channel_source,
+            'Destination': channel_destination,
+            'UniqueID': uniqueid,
+        }
+
+        source = Extension('1000', 'default')
+        destination = Extension('1001', 'default')
+
+        side_effect = lambda channel: source if channel == channel_source else destination
+        get_extension_from_channel.side_effect = side_effect
+
+        self.call_receiver.handle_dial(ami_event)
+
+        self.call_storage.new_call.assert_called_once_with(uniqueid=uniqueid,
+                                                           source=source,
+                                                           destination=destination)
+
+        get_extension_from_channel.assert_any_call(channel_source)
+        get_extension_from_channel.assert_any_call(channel_destination)
+        self.assertEquals(get_extension_from_channel.call_count, 2)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    def test_handle_dial_begin_invalid_channel(self, get_extension_from_channel):
+        channel_source = 'SIP/abcdef-0001'
+        channel_destination = 'SIP/ghijk-0002'
+        uniqueid = '012334455.12'
+
+        ami_event = {
+            'Event': 'Dial',
+            'SubEvent': 'Begin',
+            'Channel': channel_source,
+            'Destination': channel_destination,
+            'UniqueID': uniqueid,
+        }
+
+        get_extension_from_channel.side_effect = InvalidChannel(channel_source)
+
+        self.call_receiver.handle_dial(ami_event)
+
+        self.assertEquals(self.call_storage.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    def test_handle_dial_begin_extension_does_not_exist(self, get_extension_from_channel):
+        channel_source = 'SIP/abcdef-0001'
+        channel_destination = 'SIP/ghijk-0002'
+        uniqueid = '012334455.12'
+
+        ami_event = {
+            'Event': 'Dial',
+            'SubEvent': 'Begin',
+            'Channel': channel_source,
+            'Destination': channel_destination,
+            'UniqueID': uniqueid,
+        }
+
+        get_extension_from_channel.side_effect = LookupError()
+
+        self.call_receiver.handle_dial(ami_event)
+
+        self.assertEquals(self.call_storage.call_count, 0)
+
+    def test_handle_dial_end(self):
+        channel_source = 'SIP/abcdef-0001'
+        uniqueid = '012334455.12'
+
+        ami_event = {
+            'Event': 'Dial',
+            'SubEvent': 'End',
+            'Channel': channel_source,
+            'UniqueID': uniqueid,
+        }
+
+        self.call_receiver.handle_dial(ami_event)
+
+        self.call_storage.end_call.assert_called_once_with(uniqueid)
