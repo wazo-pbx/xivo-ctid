@@ -303,6 +303,10 @@ class CTIServer(object):
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
         callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
 
+        call_receiver = context.get('call_receiver')
+        callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
+        callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
+
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
                                ('listname', 'users')],
@@ -318,6 +322,7 @@ class CTIServer(object):
             else:
                 agent_status_cti = AgentStatus.logged_out
             dao.innerdata.set_agent_availability(agent_status.id, agent_status_cti)
+        context.get('agent_status_adapter').subscribe_all_logged_agents()
 
     def run(self):
         while True:
