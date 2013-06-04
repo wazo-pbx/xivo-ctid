@@ -33,13 +33,14 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver = CallReceiver(self.call_storage, self.call_notifier)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    def test_handle_newstate(self, get_extension_from_channel):
-        interface = 'SIP/abcd'
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_newstate(self, channel_state_to_status, get_extension_from_channel):
         extension = Extension('1000', 'default')
-        channel = "%s-00001" % interface
+        channel = "SIP/abcd-00001"
         call_status = EndpointStatus.ringing
 
         get_extension_from_channel.return_value = extension
+        channel_state_to_status.return_value = call_status
 
         ami_event = {
             'Event': 'Newstate',
@@ -50,16 +51,16 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_newstate(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
-        get_extension_from_channel.assert_called_once_with(channel)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    def test_handle_hangup(self, get_extension_from_channel):
-        interface = 'SIP/abcd'
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_hangup(self, channel_state_to_status, get_extension_from_channel):
         extension = Extension('1000', 'default')
-        channel = "%s-00001" % interface
+        channel = "SIP/abcd-00001"
         call_status = EndpointStatus.available
 
         get_extension_from_channel.return_value = extension
+        channel_state_to_status.return_value = call_status
 
         ami_event = {
             'Event': 'Hangup',
@@ -69,4 +70,3 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_hangup(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
-        get_extension_from_channel.assert_called_once_with(channel)
