@@ -65,6 +65,14 @@ class TestCallHelper(unittest.TestCase):
 
         self.assertEquals(expected_status, result)
 
+    def test_channel_state_to_status_talking(self):
+        channel_state = ChannelState.talking
+        expected_status = EndpointStatus.talking
+
+        result = helper.channel_state_to_status(channel_state)
+
+        self.assertEquals(expected_status, result)
+
     def test_channel_state_to_status_unknown(self):
         channel_state = 'unknown'
         expected_status = None

@@ -28,6 +28,7 @@ ProtocolInterface = collections.namedtuple('ProtocolInterface', ['protocol', 'in
 class ChannelState(object):
     ring = '4'
     ringing = '5'
+    talking = '6'
 
 
 class InvalidChannel(ValueError):
@@ -50,6 +51,8 @@ def channel_state_to_status(channel_state):
         return EndpointStatus.ringback_tone
     elif channel_state == ChannelState.ringing:
         return EndpointStatus.ringing
+    elif channel_state == ChannelState.talking:
+        return EndpointStatus.talking
     else:
         return None
 
