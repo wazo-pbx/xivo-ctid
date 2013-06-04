@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_dao import line_dao
 from xivo_cti.services.call import helper
 from xivo_cti.model.line_status import LineStatus
 
@@ -27,22 +26,17 @@ class CallReceiver(object):
         self._call_notifier = call_notifier
 
     def handle_newstate(self, event):
-        interface = self._interface_from_event(event)
+        channel = event['Channel']
         status = helper.channel_state_to_status(event['ChannelState'])
 
-        self._update_interface_status(interface, status)
+        self._update_channel_status(channel, status)
 
     def handle_hangup(self, event):
-        interface = self._interface_from_event(event)
+        channel = event['Channel']
         status = LineStatus.available
 
-        self._update_interface_status(interface, status)
+        self._update_channel_status(channel, status)
 
-    def _interface_from_event(self, event):
-        channel = event['Channel']
-        interface = helper.interface_from_channel(channel)
-        return interface
-
-    def _update_interface_status(self, interface, status):
-        extension = line_dao.get_extension_from_interface(interface)
+    def _update_channel_status(self, channel, status):
+        extension = helper.get_extension_from_channel(channel)
         self._call_storage.update_line_status(extension, status)

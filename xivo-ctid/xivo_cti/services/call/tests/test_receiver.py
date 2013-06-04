@@ -32,14 +32,14 @@ class TestCallReceiver(unittest.TestCase):
         self.call_notifier = Mock(CallNotifier)
         self.call_receiver = CallReceiver(self.call_storage, self.call_notifier)
 
-    @patch('xivo_dao.line_dao.get_extension_from_interface')
-    def test_handle_newstate(self, get_extension_from_interface):
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    def test_handle_newstate(self, get_extension_from_channel):
         interface = 'SIP/abcd'
         extension = Extension('1000', 'default')
         channel = "%s-00001" % interface
         call_status = LineStatus.ringing
 
-        get_extension_from_interface.return_value = extension
+        get_extension_from_channel.return_value = extension
 
         ami_event = {
             'Event': 'Newstate',
@@ -50,16 +50,16 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_newstate(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
-        get_extension_from_interface.assert_called_once_with(interface)
+        get_extension_from_channel.assert_called_once_with(channel)
 
-    @patch('xivo_dao.line_dao.get_extension_from_interface')
-    def test_handle_hangup(self, get_extension_from_interface):
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    def test_handle_hangup(self, get_extension_from_channel):
         interface = 'SIP/abcd'
         extension = Extension('1000', 'default')
         channel = "%s-00001" % interface
         call_status = LineStatus.available
 
-        get_extension_from_interface.return_value = extension
+        get_extension_from_channel.return_value = extension
 
         ami_event = {
             'Event': 'Hangup',
@@ -69,4 +69,4 @@ class TestCallReceiver(unittest.TestCase):
         self.call_receiver.handle_hangup(ami_event)
 
         self.call_storage.update_line_status.assert_called_once_with(extension, call_status)
-        get_extension_from_interface.assert_called_once_with(interface)
+        get_extension_from_channel.assert_called_once_with(channel)
