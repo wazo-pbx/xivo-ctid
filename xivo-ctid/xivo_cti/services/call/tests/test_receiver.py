@@ -54,6 +54,25 @@ class TestCallReceiver(unittest.TestCase):
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
+    def test_handle_newstate_ignored(self, channel_state_to_status, get_extension_from_channel):
+        extension = Extension('1000', 'default')
+        channel = "SIP/abcd-00001"
+
+        get_extension_from_channel.return_value = extension
+        channel_state_to_status.return_value = None
+
+        ami_event = {
+            'Event': 'Newstate',
+            'ChannelState': '42',
+            'Channel': channel,
+        }
+
+        self.call_receiver.handle_newstate(ami_event)
+
+        self.assertEquals(self.call_storage.update_line_status.call_count, 0)
+
+    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup(self, channel_state_to_status, get_extension_from_channel):
         extension = Extension('1000', 'default')
         channel = "SIP/abcd-00001"

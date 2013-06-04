@@ -18,6 +18,8 @@
 import unittest
 
 from xivo_cti.services.call import helper
+from xivo_cti.services.call.helper import ChannelState
+from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class TestCallHelper(unittest.TestCase):
@@ -37,3 +39,27 @@ class TestCallHelper(unittest.TestCase):
         result = helper.interface_from_channel(channel)
 
         self.assertEquals(expected_interface, result)
+
+    def test_channel_state_to_status_ring(self):
+        channel_state = ChannelState.ring
+        expected_status = EndpointStatus.ringback_tone
+
+        result = helper.channel_state_to_status(channel_state)
+
+        self.assertEquals(expected_status, result)
+
+    def test_channel_state_to_status_ringing(self):
+        channel_state = ChannelState.ringing
+        expected_status = EndpointStatus.ringing
+
+        result = helper.channel_state_to_status(channel_state)
+
+        self.assertEquals(expected_status, result)
+
+    def test_channel_state_to_status_unknown(self):
+        channel_state = 'unknown'
+        expected_status = None
+
+        result = helper.channel_state_to_status(channel_state)
+
+        self.assertEquals(expected_status, result)

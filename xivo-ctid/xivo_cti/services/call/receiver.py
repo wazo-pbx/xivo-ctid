@@ -29,7 +29,8 @@ class CallReceiver(object):
         channel = event['Channel']
         status = helper.channel_state_to_status(event['ChannelState'])
 
-        self._update_channel_status(channel, status)
+        if status is not None:
+            self._update_channel_status(channel, status)
 
     def handle_hangup(self, event):
         channel = event['Channel']

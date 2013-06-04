@@ -32,6 +32,8 @@ def channel_state_to_status(channel_state):
         return EndpointStatus.ringback_tone
     elif channel_state == ChannelState.ringing:
         return EndpointStatus.ringing
+    else:
+        return None
 
 
 def get_extension_from_channel(channel):
