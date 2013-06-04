@@ -15,17 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import unittest
+
+from mock import patch, Mock
+from xivo.asterisk.extension import Extension
+from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.model.call_event import CallEvent
+from xivo_cti.services.call.notifier import CallNotifier
+from xivo_cti.services.call.storage import CallStorage
 
 
-class CallStorage(object):
+class TestCallStorage(unittest.TestCase):
 
-    def __init__(self, notifier):
-        self._notifier = notifier
+    def setUp(self):
+        self.notifier = Mock(CallNotifier)
+        self.storage = CallStorage(self.notifier)
 
-    def get_status_for_extension(self, extension):
-        pass
+    def test_update_endpoint_status(self):
+        extension = Extension('1234', 'my_context')
+        status = EndpointStatus.ringing
+        expected_event = CallEvent(extension, status)
 
-    def update_endpoint_status(self, extension, status):
-        event = CallEvent(extension, status)
-        self._notifier.notify(event)
+        self.storage.update_endpoint_status(extension, status)
+
+        self.notifier.notify.assert_called_once_with(expected_event)
