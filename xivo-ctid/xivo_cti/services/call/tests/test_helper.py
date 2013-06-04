@@ -17,28 +17,37 @@
 
 import unittest
 
+from mock import patch
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.call import helper
 from xivo_cti.services.call.helper import ChannelState
+from xivo_cti.services.call.helper import InvalidChannel
+from xivo_cti.services.call.helper import ProtocolInterface
 from xivo_cti.model.endpoint_status import EndpointStatus
 
 
 class TestCallHelper(unittest.TestCase):
 
-    def test_interface_from_channel_sip(self):
+    def test_protocol_interface_from_channel_sip(self):
         channel = 'SIP/askdjhf-3216549'
-        expected_interface = 'SIP/askdjhf'
+        expected_result = ProtocolInterface('SIP', 'askdjhf')
 
-        result = helper.interface_from_channel(channel)
+        result = helper.protocol_interface_from_channel(channel)
 
-        self.assertEquals(expected_interface, result)
+        self.assertEquals(expected_result, result)
 
-    def test_interface_from_channel_sccp(self):
+    def test_protocol_interface_from_channel_sccp(self):
         channel = 'sccp/13486@SEP6556DEADBEEF-658'
-        expected_interface = 'sccp/13486@SEP6556DEADBEEF'
+        expected_result = ProtocolInterface('sccp', '13486')
 
-        result = helper.interface_from_channel(channel)
+        result = helper.protocol_interface_from_channel(channel)
 
-        self.assertEquals(expected_interface, result)
+        self.assertEquals(expected_result, result)
+
+    def test_protocol_interface_from_channel_invalid(self):
+        invalid_channel = 'slkdfjaslkdjfaslkdjflskdjf'
+
+        self.assertRaises(InvalidChannel, helper.protocol_interface_from_channel, invalid_channel)
 
     def test_channel_state_to_status_ring(self):
         channel_state = ChannelState.ring
@@ -63,3 +72,29 @@ class TestCallHelper(unittest.TestCase):
         result = helper.channel_state_to_status(channel_state)
 
         self.assertEquals(expected_status, result)
+
+    @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
+    def test_get_extension_from_channel_invalid(self, dao_get_extension):
+        channel = 'asopwasfhasl;jfhofh'
+        expected_extension = Extension('1000', 'my_context')
+        dao_get_extension.return_value = expected_extension
+
+        self.assertRaises(InvalidChannel, helper.get_extension_from_channel, channel)
+
+    @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
+    def test_get_extension_from_channel_no_extension(self, dao_get_extension):
+        channel = 'SIP/asdlkfj-532486'
+        dao_get_extension.side_effect = LookupError
+
+        self.assertRaises(LookupError, helper.get_extension_from_channel, channel)
+
+    @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
+    def test_get_extension_from_channel(self, dao_get_extension):
+        channel = 'SIP/asdlkfj-532486'
+        expected_extension = Extension('1000', 'my_context')
+        dao_get_extension.return_value = expected_extension
+
+        result = helper.get_extension_from_channel(channel)
+
+        dao_get_extension.assert_called_once_with('SIP', 'asdlkfj')
+        self.assertEquals(expected_extension, result)
