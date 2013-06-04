@@ -24,16 +24,19 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusParser(object):
 
-    def __init__(self, agent_status_manager):
+    def __init__(self, agent_status_manager, agent_status_adapter):
         self._agent_status_manager = agent_status_manager
+        self._agent_status_adapter = agent_status_adapter
 
     def parse_ami_login(self, ami_event):
         agent_id = int(ami_event['AgentID'])
         self._agent_status_manager.agent_logged_in(agent_id)
+        self._agent_status_adapter.subscribe_to_agent_events(agent_id)
 
     def parse_ami_logout(self, ami_event):
         agent_id = int(ami_event['AgentID'])
         self._agent_status_manager.agent_logged_out(agent_id)
+        self._agent_status_adapter.unsubscribe_from_agent_events(agent_id)
 
     def parse_ami_paused(self, ami_event):
         agent_member_name = ami_event['MemberName']

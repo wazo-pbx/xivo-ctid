@@ -20,6 +20,7 @@ from mock import Mock
 
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO
+from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 
@@ -29,7 +30,8 @@ class TestAgentStatusParser(unittest.TestCase):
     def setUp(self):
         dao.agent = Mock(AgentDAO)
         self.manager = Mock(AgentStatusManager)
-        self.parser = AgentStatusParser(self.manager)
+        self.adapter = Mock(AgentStatusAdapter)
+        self.parser = AgentStatusParser(self.manager, self.adapter)
 
     def test_parse_ami_login(self):
         agent_id = 12
@@ -41,6 +43,7 @@ class TestAgentStatusParser(unittest.TestCase):
         self.parser.parse_ami_login(ami_event)
 
         self.manager.agent_logged_in.assert_called_once_with(agent_id)
+        self.adapter.subscribe_to_agent_events.assert_called_once_with(agent_id)
 
     def test_parse_ami_logout(self):
         agent_id = 12
@@ -52,6 +55,7 @@ class TestAgentStatusParser(unittest.TestCase):
         self.parser.parse_ami_logout(ami_event)
 
         self.manager.agent_logged_out.assert_called_once_with(agent_id)
+        self.adapter.unsubscribe_from_agent_events.assert_called_once_with(agent_id)
 
     def test_parse_ami_paused_partially(self):
         agent_id = 12
