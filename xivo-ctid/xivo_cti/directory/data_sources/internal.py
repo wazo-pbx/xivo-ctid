@@ -39,13 +39,16 @@ class InternalDirectoryDataSource(DirectoryDataSource):
             return []
 
         test_columns = fields
-        request_beg = 'SELECT ${columns} FROM userfeatures ' \
-                'LEFT JOIN linefeatures ON userfeatures.id = linefeatures.iduserfeatures ' \
-                'WHERE '
+        request_beg = ('SELECT ${columns} FROM userfeatures '
+                'LEFT JOIN user_line '
+                'ON userfeatures.id = user_line.user_id '
+                'LEFT JOIN extenumbers '
+                "ON extenumbers.type = 'user' AND user_line.line_id = CAST(extenumbers.typeval as integer) "
+                'WHERE ')
         request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
         if cti_context.get('config').part_context():
             if contexts:
-                request_contexts = ' OR '.join("linefeatures.context = '%s'" % context for context in contexts)
+                request_contexts = ' OR '.join("extenumbers.context = '%s'" % context for context in contexts)
             else:
                 request_contexts = '1 = 0'
             request = request_beg + '(' + request_end + ') and (' + request_contexts + ')'
