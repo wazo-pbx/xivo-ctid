@@ -20,7 +20,6 @@ import unittest
 from mock import patch, Mock
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.helper import InvalidChannel
-from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo.asterisk.extension import Extension
@@ -30,8 +29,7 @@ class TestCallReceiver(unittest.TestCase):
 
     def setUp(self):
         self.call_storage = Mock(CallStorage)
-        self.endpoint_notifier = Mock(EndpointNotifier)
-        self.call_receiver = CallReceiver(self.call_storage, self.endpoint_notifier)
+        self.call_receiver = CallReceiver(self.call_storage)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')

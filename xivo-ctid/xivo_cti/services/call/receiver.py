@@ -26,9 +26,8 @@ logger = logging.getLogger(__name__)
 
 class CallReceiver(object):
 
-    def __init__(self, call_storage, endpoint_notifier):
+    def __init__(self, call_storage):
         self._call_storage = call_storage
-        self._endpoint_notifier = endpoint_notifier
 
     def handle_newstate(self, event):
         channel = event['Channel']
