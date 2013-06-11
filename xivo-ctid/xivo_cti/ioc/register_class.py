@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo.pubsub import Pubsub
 from xivo_agent.ctl.client import AgentClient
 from xivo_cti import cti_config
 from xivo_cti.amiinterpret import AMI_1_8
@@ -105,6 +106,7 @@ def setup():
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
+    context.register('pubsub', Pubsub)
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)

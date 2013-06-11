@@ -18,23 +18,19 @@
 
 class CallNotifier(object):
 
-    def __init__(self):
+    def __init__(self, pubsub):
         self._callbacks = {}
+        self._pubsub = pubsub
 
     def notify(self, event):
         extension = event.extension
-        if extension in self._callbacks:
-            for callback in self._callbacks[extension]:
-                callback(event)
+        self._pubsub.publish(('status', extension), event)
 
     def notify_call(self, event):
         pass
 
     def subscribe_to_status_changes(self, extension, callback):
-        self._callbacks.setdefault(extension, []).append(callback)
+        self._pubsub.subscribe(('status', extension), callback)
 
     def unsubscribe_from_status_changes(self, extension, callback):
-        if extension in self._callbacks:
-            self._callbacks[extension].remove(callback)
-            if len(self._callbacks[extension]) == 0:
-                self._callbacks.pop(extension)
+        self._pubsub.unsubscribe(('status', extension), callback)

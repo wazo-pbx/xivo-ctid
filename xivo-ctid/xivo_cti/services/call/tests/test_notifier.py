@@ -26,92 +26,30 @@ from xivo_cti.services.call.notifier import CallNotifier
 class TestCallNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.notifier = CallNotifier()
+        self.pubsub = Mock()
+        self.notifier = CallNotifier(self.pubsub)
 
-    def test_subscribe_and_notify(self):
+    def test_subscribe_to_status_changes(self):
         callback = Mock()
         extension = Extension('1000', 'my_context')
-        event = Mock(EndpointEvent)
-        event.extension = extension
 
         self.notifier.subscribe_to_status_changes(extension, callback)
 
-        self.notifier.notify(event)
-        callback.assert_called_once_with(event)
+        self.pubsub.subscribe.assert_called_once_with(('status', extension), callback)
 
-    def test_multiple_subscribe_on_same_extension_and_one_notify(self):
-        callback_1 = Mock()
-        callback_2 = Mock()
-        extension = Extension('1000', 'my_context')
-        event = Mock(EndpointEvent)
-        event.extension = extension
-
-        self.notifier.subscribe_to_status_changes(extension, callback_1)
-        self.notifier.subscribe_to_status_changes(extension, callback_2)
-
-        self.notifier.notify(event)
-        callback_1.assert_called_once_with(event)
-        callback_2.assert_called_once_with(event)
-
-    def test_multiple_subscribe_on_different_extensions_and_two_notify(self):
+    def test_unsubscribe_from_status_changes(self):
         callback = Mock()
-        extension_1 = Extension('1000', 'my_context')
-        extension_2 = Extension('1001', 'my_other_context')
-        event_1 = Mock(EndpointEvent)
-        event_1.extension = extension_1
-        event_2 = Mock(EndpointEvent)
-        event_2.extension = extension_2
-
-        self.notifier.subscribe_to_status_changes(extension_1, callback)
-        self.notifier.subscribe_to_status_changes(extension_2, callback)
-
-        self.notifier.notify(event_1)
-        callback.assert_any_call(event_1)
-        self.assertEquals(callback.call_count, 1)
-
-        self.notifier.notify(event_2)
-        callback.assert_any_call(event_2)
-        self.assertEquals(callback.call_count, 2)
-
-    def test_unsubscribe_when_never_subscribed(self):
         extension = Extension('1000', 'my_context')
-        callback = Mock()
 
         self.notifier.unsubscribe_from_status_changes(extension, callback)
 
-        # Does not raise Exception
+        self.pubsub.unsubscribe.assert_called_once_with(('status', extension), callback)
 
-    def test_unsubscribed_when_subscribed(self):
-        extension = Extension('1000', 'my_context')
-        callback = Mock()
-        event = Mock(EndpointEvent)
-        event.extension = extension
-        self.notifier.subscribe_to_status_changes(extension, callback)
-
-        self.notifier.unsubscribe_from_status_changes(extension, callback)
-
-        self.notifier.notify(event)
-        self.assertEquals(callback.call_count, 0)
-
-    def notify_when_nobody_subscribed(self):
-        event = Mock(EndpointEvent)
-        event.extension = Extension('1000', 'my_context')
-
-        self.notifier.notify(event)
-
-        # Does not raise Exception
-
-    def test_unsubscribe_when_multiple_subscribers_on_same_extension(self):
-        callback_1 = Mock()
-        callback_2 = Mock()
+    def test_notify(self):
         extension = Extension('1000', 'my_context')
         event = Mock(EndpointEvent)
         event.extension = extension
-        self.notifier.subscribe_to_status_changes(extension, callback_1)
-        self.notifier.subscribe_to_status_changes(extension, callback_2)
-
-        self.notifier.unsubscribe_from_status_changes(extension, callback_1)
 
         self.notifier.notify(event)
-        self.assertEquals(callback_1.call_count, 0)
-        callback_2.assert_called_once_with(event)
+
+        self.pubsub.publish.assert_called_once_with(('status', extension), event)
