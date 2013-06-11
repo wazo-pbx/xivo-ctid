@@ -21,9 +21,9 @@ from mock import Mock, patch
 from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_router import AgentStatusRouter
-from xivo_cti.model.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
+from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 
 
@@ -36,42 +36,42 @@ class TestStatusAdapter(unittest.TestCase):
         self.adapter = AgentStatusAdapter(self.router, self.call_notifier, self.call_storage)
 
     @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
-    def test_handle_call_event(self, get_agent_id_from_extension):
+    def test_handle_endpoint_event(self, get_agent_id_from_extension):
         agent_id = 1
         extension = Extension('1000', 'default')
         status = EndpointStatus.talking
 
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
         event.status = status
 
         get_agent_id_from_extension.return_value = agent_id
 
-        self.adapter.handle_call_event(event)
+        self.adapter.handle_endpoint_event(event)
 
         get_agent_id_from_extension.assert_called_once_with(extension.number, extension.context)
         self.router.route.assert_called_once_with(agent_id, status)
 
     @patch('xivo_dao.agent_status_dao.get_agent_id_from_extension')
-    def test_handle_call_event_with_no_agent(self, get_agent_id_from_extension):
+    def test_handle_endpoint_event_with_no_agent(self, get_agent_id_from_extension):
         agent_id = 24
         extension = Extension('1000', 'default')
         status = EndpointStatus.talking
 
         get_agent_id_from_extension.side_effect = LookupError()
 
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
         event.status = status
         self._subscribe_to_event_for_agent(agent_id, extension)
         self.router.reset_mock()
 
-        self.adapter.handle_call_event(event)
+        self.adapter.handle_endpoint_event(event)
 
         self.assertEquals(self.router.route.call_count, 0)
         self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
             extension,
-            self.adapter.handle_call_event)
+            self.adapter.handle_endpoint_event)
 
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')
     def test_subscribe_to_agent_events(self, get_extension_from_agent_id):
@@ -87,7 +87,7 @@ class TestStatusAdapter(unittest.TestCase):
         get_extension_from_agent_id.assert_called_once_with(agent_id)
         self.call_notifier.subscribe_to_status_changes.assert_called_once_with(
             extension,
-            self.adapter.handle_call_event)
+            self.adapter.handle_endpoint_event)
         self.router.route.assert_called_once_with(agent_id, status)
 
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id', Mock(side_effect=LookupError))
@@ -107,7 +107,7 @@ class TestStatusAdapter(unittest.TestCase):
 
         self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
             extension,
-            self.adapter.handle_call_event)
+            self.adapter.handle_endpoint_event)
 
     def test_unsubscribe_from_agent_events_twice(self):
         agent_id = 29
@@ -119,7 +119,7 @@ class TestStatusAdapter(unittest.TestCase):
 
         self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(
             extension,
-            self.adapter.handle_call_event)
+            self.adapter.handle_endpoint_event)
 
     def test_unsubscribe_from_agent_events_if_not_subscribed(self):
         agent_id = 29
@@ -145,8 +145,8 @@ class TestStatusAdapter(unittest.TestCase):
         self.adapter.subscribe_all_logged_agents()
 
         self.assertEquals(self.call_notifier.subscribe_to_status_changes.call_count, 2)
-        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_1, self.adapter.handle_call_event)
-        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_2, self.adapter.handle_call_event)
+        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_1, self.adapter.handle_endpoint_event)
+        self.call_notifier.subscribe_to_status_changes.assert_any_call(agent_extension_2, self.adapter.handle_endpoint_event)
         self.assertEquals(self.router.route.call_count, 2)
         self.router.route.assert_any_call(agent_id_1, status_1)
         self.router.route.assert_any_call(agent_id_2, status_2)
@@ -164,8 +164,8 @@ class TestStatusAdapter(unittest.TestCase):
         self.adapter.subscribe_all_logged_agents()
         self.adapter.unsubscribe_from_agent_events(agent_id)
 
-        self.call_notifier.subscribe_to_status_changes.assert_called_once_with(agent_extension, self.adapter.handle_call_event)
-        self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(agent_extension, self.adapter.handle_call_event)
+        self.call_notifier.subscribe_to_status_changes.assert_called_once_with(agent_extension, self.adapter.handle_endpoint_event)
+        self.call_notifier.unsubscribe_from_status_changes.assert_called_once_with(agent_extension, self.adapter.handle_endpoint_event)
         self.router.route.assert_called_once_with(agent_id, status)
 
     @patch('xivo_dao.agent_status_dao.get_extension_from_agent_id')

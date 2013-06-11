@@ -32,15 +32,15 @@ class AgentStatusAdapter(object):
         self._call_storage = call_storage
         self._agent_extensions = {}
 
-    def handle_call_event(self, call_event):
-        extension = call_event.extension
+    def handle_endpoint_event(self, endpoint_event):
+        extension = endpoint_event.extension
         try:
             agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
         except LookupError:
-            logger.debug('endpoint %s has no agent', call_event.extension)
-            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_call_event)
+            logger.debug('endpoint %s has no agent', endpoint_event.extension)
+            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
         else:
-            self._status_router.route(agent_id, call_event.status)
+            self._status_router.route(agent_id, endpoint_event.status)
 
     def subscribe_to_agent_events(self, agent_id):
         try:
@@ -54,7 +54,7 @@ class AgentStatusAdapter(object):
     def unsubscribe_from_agent_events(self, agent_id):
         extension = self._agent_extensions.pop(agent_id, None)
         if extension:
-            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_call_event)
+            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
 
     def subscribe_all_logged_agents(self):
         for agent_id in agent_status_dao.get_logged_agent_ids():
@@ -64,6 +64,6 @@ class AgentStatusAdapter(object):
 
     def _new_subscription(self, extension, agent_id):
         self._agent_extensions[agent_id] = extension
-        self._call_notifier.subscribe_to_status_changes(extension, self.handle_call_event)
+        self._call_notifier.subscribe_to_status_changes(extension, self.handle_endpoint_event)
         extension_status = self._call_storage.get_status_for_extension(extension)
         self._status_router.route(agent_id, extension_status)

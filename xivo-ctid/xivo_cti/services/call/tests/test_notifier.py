@@ -19,7 +19,7 @@ import unittest
 
 from mock import Mock
 from xivo.asterisk.extension import Extension
-from xivo_cti.model.call_event import CallEvent
+from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.services.call.notifier import CallNotifier
 
 
@@ -31,7 +31,7 @@ class TestCallNotifier(unittest.TestCase):
     def test_subscribe_and_notify(self):
         callback = Mock()
         extension = Extension('1000', 'my_context')
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
 
         self.notifier.subscribe_to_status_changes(extension, callback)
@@ -43,7 +43,7 @@ class TestCallNotifier(unittest.TestCase):
         callback_1 = Mock()
         callback_2 = Mock()
         extension = Extension('1000', 'my_context')
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
 
         self.notifier.subscribe_to_status_changes(extension, callback_1)
@@ -57,9 +57,9 @@ class TestCallNotifier(unittest.TestCase):
         callback = Mock()
         extension_1 = Extension('1000', 'my_context')
         extension_2 = Extension('1001', 'my_other_context')
-        event_1 = Mock(CallEvent)
+        event_1 = Mock(EndpointEvent)
         event_1.extension = extension_1
-        event_2 = Mock(CallEvent)
+        event_2 = Mock(EndpointEvent)
         event_2.extension = extension_2
 
         self.notifier.subscribe_to_status_changes(extension_1, callback)
@@ -84,7 +84,7 @@ class TestCallNotifier(unittest.TestCase):
     def test_unsubscribed_when_subscribed(self):
         extension = Extension('1000', 'my_context')
         callback = Mock()
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
         self.notifier.subscribe_to_status_changes(extension, callback)
 
@@ -94,7 +94,7 @@ class TestCallNotifier(unittest.TestCase):
         self.assertEquals(callback.call_count, 0)
 
     def notify_when_nobody_subscribed(self):
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = Extension('1000', 'my_context')
 
         self.notifier.notify(event)
@@ -105,7 +105,7 @@ class TestCallNotifier(unittest.TestCase):
         callback_1 = Mock()
         callback_2 = Mock()
         extension = Extension('1000', 'my_context')
-        event = Mock(CallEvent)
+        event = Mock(EndpointEvent)
         event.extension = extension
         self.notifier.subscribe_to_status_changes(extension, callback_1)
         self.notifier.subscribe_to_status_changes(extension, callback_2)

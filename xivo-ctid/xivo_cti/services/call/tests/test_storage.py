@@ -19,8 +19,8 @@ import unittest
 
 from mock import Mock
 from xivo.asterisk.extension import Extension
+from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
-from xivo_cti.model.call_event import CallEvent
 from xivo_cti.services.call.notifier import CallNotifier
 from xivo_cti.services.call.storage import CallStorage
 
@@ -34,7 +34,7 @@ class TestCallStorage(unittest.TestCase):
     def test_update_endpoint_status(self):
         extension = Extension('1234', 'my_context')
         status = EndpointStatus.ringing
-        expected_event = CallEvent(extension, status)
+        expected_event = EndpointEvent(extension, status)
 
         self.storage.update_endpoint_status(extension, status)
 
@@ -43,7 +43,7 @@ class TestCallStorage(unittest.TestCase):
     def test_update_endpoint_status_called_twice_same_status(self):
         extension = Extension('1234', 'my_context')
         status = EndpointStatus.ringing
-        expected_event = CallEvent(extension, status)
+        expected_event = EndpointEvent(extension, status)
 
         self.storage.update_endpoint_status(extension, status)
         self.storage.update_endpoint_status(extension, status)
@@ -56,8 +56,8 @@ class TestCallStorage(unittest.TestCase):
         first_status = EndpointStatus.available
         second_status = EndpointStatus.ringing
 
-        first_event = CallEvent(extension, first_status)
-        second_event = CallEvent(extension, second_status)
+        first_event = EndpointEvent(extension, first_status)
+        second_event = EndpointEvent(extension, second_status)
 
         self.storage.update_endpoint_status(extension, first_status)
         self.storage.update_endpoint_status(extension, second_status)
@@ -71,8 +71,8 @@ class TestCallStorage(unittest.TestCase):
 
         status = EndpointStatus.ringing
 
-        first_expected_event = CallEvent(first_extension, status)
-        second_expected_event = CallEvent(second_extension, status)
+        first_expected_event = EndpointEvent(first_extension, status)
+        second_expected_event = EndpointEvent(second_extension, status)
 
         self.storage.update_endpoint_status(first_extension, status)
         self.storage.update_endpoint_status(second_extension, status)
@@ -86,8 +86,8 @@ class TestCallStorage(unittest.TestCase):
 
         status = EndpointStatus.ringing
 
-        first_expected_event = CallEvent(first_extension, status)
-        second_expected_event = CallEvent(second_extension, status)
+        first_expected_event = EndpointEvent(first_extension, status)
+        second_expected_event = EndpointEvent(second_extension, status)
 
         self.storage.update_endpoint_status(first_extension, status)
         self.storage.update_endpoint_status(second_extension, status)

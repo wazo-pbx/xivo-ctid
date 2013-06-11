@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.model.call_event import CallEvent
+from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 
 
@@ -49,5 +49,5 @@ class CallStorage(object):
             self._endpoints[extension] = status
 
     def _notify(self, extension, status):
-        event = CallEvent(extension, status)
+        event = EndpointEvent(extension, status)
         self._notifier.notify(event)
