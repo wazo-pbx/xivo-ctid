@@ -15,8 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from collections import namedtuple
 from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
+from xivo_cti.model.call_event import CallEvent
+from xivo_cti.model.call_status import CallStatus
+
+Call = namedtuple('Call', ['source', 'destination'])
 
 
 class CallStorage(object):
@@ -24,6 +29,7 @@ class CallStorage(object):
     def __init__(self, call_notifier):
         self._notifier = call_notifier
         self._endpoints = {}
+        self._calls = {}
 
     def get_status_for_extension(self, extension):
         return self._endpoints.get(extension, EndpointStatus.available)
@@ -34,10 +40,24 @@ class CallStorage(object):
             self._notify(extension, status)
 
     def new_call(self, uniqueid, source, destination):
-        pass
+        if uniqueid not in self._calls:
+            self._calls[uniqueid] = Call(source, destination)
+            event = CallEvent(uniqueid=uniqueid,
+                              source=source,
+                              destination=destination,
+                              status=CallStatus.ringing)
+            self._notifier.notify_call(event)
 
     def end_call(self, uniqueid):
-        pass
+        if uniqueid in self._calls:
+            source = self._calls[uniqueid].source
+            destination = self._calls[uniqueid].destination
+            event = CallEvent(uniqueid=uniqueid,
+                              source=source,
+                              destination=destination,
+                              status=CallStatus.hangup)
+            self._notifier.notify_call(event)
+            self._calls.pop(uniqueid)
 
     def _need_to_update(self, extension, status):
         return extension not in self._endpoints or self._endpoints[extension] != status

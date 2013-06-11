@@ -27,6 +27,9 @@ class CallNotifier(object):
             for callback in self._callbacks[extension]:
                 callback(event)
 
+    def notify_call(self, event):
+        pass
+
     def subscribe_to_status_changes(self, extension, callback):
         self._callbacks.setdefault(extension, []).append(callback)
 
