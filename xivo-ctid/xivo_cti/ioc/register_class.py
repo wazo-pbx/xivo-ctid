@@ -37,6 +37,7 @@ from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.agent.status_router import AgentStatusRouter
+from xivo_cti.services.call.call_notifier import CallNotifier
 from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
@@ -87,7 +88,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
-    context.register('endpoint_notifier', EndpointNotifier)
+    context.register('call_notifier', EndpointNotifier)
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)
     context.register('channel_updater', ChannelUpdater)
@@ -100,6 +101,7 @@ def setup():
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
+    context.register('endpoint_notifier', EndpointNotifier)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
     context.register('meetme_service_manager', MeetmeServiceManager)

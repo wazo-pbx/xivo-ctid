@@ -23,6 +23,7 @@ from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.model.call_event import CallEvent
 from xivo_cti.model.call_status import CallStatus
+from xivo_cti.services.call.call_notifier import CallNotifier
 from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.storage import CallStorage
 
@@ -31,7 +32,8 @@ class TestCallStorage(unittest.TestCase):
 
     def setUp(self):
         self.endpoint_notifier = Mock(EndpointNotifier)
-        self.storage = CallStorage(self.endpoint_notifier)
+        self.call_notifier = Mock(CallNotifier)
+        self.storage = CallStorage(self.endpoint_notifier, self.call_notifier)
 
     def test_update_endpoint_status(self):
         extension = Extension('1234', 'my_context')
@@ -136,7 +138,7 @@ class TestCallStorage(unittest.TestCase):
 
         self.storage.new_call(uniqueid, source, destination)
 
-        self.endpoint_notifier.notify_call.assert_called_once_with(expected_event)
+        self.call_notifier.notify.assert_called_once_with(expected_event)
 
     def test_new_call_twice(self):
         uniqueid = '348632486.35'
@@ -148,7 +150,7 @@ class TestCallStorage(unittest.TestCase):
         self.storage.new_call(uniqueid, source, destination)
         self.storage.new_call(uniqueid, source, destination)
 
-        self.endpoint_notifier.notify_call.assert_called_once_with(expected_event)
+        self.call_notifier.notify.assert_called_once_with(expected_event)
 
     def test_new_call_two_different_calls(self):
         uniqueid_1 = '35732468.66'
@@ -165,16 +167,16 @@ class TestCallStorage(unittest.TestCase):
         self.storage.new_call(uniqueid_1, source_1, destination_1)
         self.storage.new_call(uniqueid_2, source_2, destination_2)
 
-        self.assertEqual(self.endpoint_notifier.notify_call.call_count, 2)
-        self.endpoint_notifier.notify_call.assert_any_call(expected_event_1)
-        self.endpoint_notifier.notify_call.assert_any_call(expected_event_2)
+        self.assertEqual(self.call_notifier.notify.call_count, 2)
+        self.call_notifier.notify.assert_any_call(expected_event_1)
+        self.call_notifier.notify.assert_any_call(expected_event_2)
 
     def test_end_call_not_started(self):
         uniqueid = '564324563.46'
 
         self.storage.end_call(uniqueid)
 
-        self.assertEquals(self.endpoint_notifier.notify_call.call_count, 0)
+        self.assertEquals(self.call_notifier.notify.call_count, 0)
 
     def test_end_call_started(self):
         uniqueid = '653246546.41'
@@ -186,8 +188,8 @@ class TestCallStorage(unittest.TestCase):
         self.storage.new_call(uniqueid, source, destination)
         self.storage.end_call(uniqueid)
 
-        self.assertEquals(self.endpoint_notifier.notify_call.call_count, 2)
-        self.endpoint_notifier.notify_call.assert_any_call(expected_event)
+        self.assertEquals(self.call_notifier.notify.call_count, 2)
+        self.call_notifier.notify.assert_any_call(expected_event)
 
     def test_end_call_started_once_ended_twice(self):
         uniqueid = '3248646348.46'
@@ -200,5 +202,5 @@ class TestCallStorage(unittest.TestCase):
         self.storage.end_call(uniqueid)
         self.storage.end_call(uniqueid)
 
-        self.assertEquals(self.endpoint_notifier.notify_call.call_count, 2)
-        self.endpoint_notifier.notify_call.assert_any_call(expected_event)
+        self.assertEquals(self.call_notifier.notify.call_count, 2)
+        self.call_notifier.notify.assert_any_call(expected_event)
