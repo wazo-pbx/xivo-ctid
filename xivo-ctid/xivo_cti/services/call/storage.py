@@ -26,8 +26,8 @@ Call = namedtuple('Call', ['source', 'destination'])
 
 class CallStorage(object):
 
-    def __init__(self, call_notifier):
-        self._notifier = call_notifier
+    def __init__(self, endpoint_notifier):
+        self._endpoint_notifier = endpoint_notifier
         self._endpoints = {}
         self._calls = {}
 
@@ -46,7 +46,7 @@ class CallStorage(object):
                               source=source,
                               destination=destination,
                               status=CallStatus.ringing)
-            self._notifier.notify_call(event)
+            self._endpoint_notifier.notify_call(event)
 
     def end_call(self, uniqueid):
         if uniqueid in self._calls:
@@ -56,7 +56,7 @@ class CallStorage(object):
                               source=source,
                               destination=destination,
                               status=CallStatus.hangup)
-            self._notifier.notify_call(event)
+            self._endpoint_notifier.notify_call(event)
             self._calls.pop(uniqueid)
 
     def _need_to_update(self, extension, status):
@@ -70,4 +70,4 @@ class CallStorage(object):
 
     def _notify(self, extension, status):
         event = EndpointEvent(extension, status)
-        self._notifier.notify(event)
+        self._endpoint_notifier.notify(event)

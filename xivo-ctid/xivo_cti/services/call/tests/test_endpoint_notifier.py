@@ -20,14 +20,14 @@ import unittest
 from mock import Mock
 from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_event import EndpointEvent
-from xivo_cti.services.call.notifier import CallNotifier
+from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 
 
-class TestCallNotifier(unittest.TestCase):
+class TestEndpointNotifier(unittest.TestCase):
 
     def setUp(self):
         self.pubsub = Mock()
-        self.notifier = CallNotifier(self.pubsub)
+        self.notifier = EndpointNotifier(self.pubsub)
 
     def test_subscribe_to_status_changes(self):
         callback = Mock()

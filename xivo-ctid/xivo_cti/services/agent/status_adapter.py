@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusAdapter(object):
 
-    def __init__(self, agent_status_router, call_notifier, call_storage):
+    def __init__(self, agent_status_router, endpoint_notifier, call_storage):
         self._status_router = agent_status_router
-        self._call_notifier = call_notifier
+        self._endpoint_notifier = endpoint_notifier
         self._call_storage = call_storage
         self._agent_extensions = {}
 
@@ -38,7 +38,7 @@ class AgentStatusAdapter(object):
             agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
         except LookupError:
             logger.debug('endpoint %s has no agent', endpoint_event.extension)
-            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
+            self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
         else:
             self._status_router.route(agent_id, endpoint_event.status)
 
@@ -54,7 +54,7 @@ class AgentStatusAdapter(object):
     def unsubscribe_from_agent_events(self, agent_id):
         extension = self._agent_extensions.pop(agent_id, None)
         if extension:
-            self._call_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
+            self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
 
     def subscribe_all_logged_agents(self):
         for agent_id in agent_status_dao.get_logged_agent_ids():
@@ -64,6 +64,6 @@ class AgentStatusAdapter(object):
 
     def _new_subscription(self, extension, agent_id):
         self._agent_extensions[agent_id] = extension
-        self._call_notifier.subscribe_to_status_changes(extension, self.handle_endpoint_event)
+        self._endpoint_notifier.subscribe_to_status_changes(extension, self.handle_endpoint_event)
         extension_status = self._call_storage.get_status_for_extension(extension)
         self._status_router.route(agent_id, extension_status)
