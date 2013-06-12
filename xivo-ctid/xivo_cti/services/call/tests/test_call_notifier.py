@@ -31,21 +31,37 @@ class TestCallNotifier(unittest.TestCase):
         self.pubsub = Mock(Pubsub)
         self.notifier = CallNotifier(self.pubsub)
 
-    def test_subscribe(self):
+    def test_subscribe_to_incoming_call_events(self):
         extension = Extension('1239', 'context_k')
         callback = Mock()
 
-        self.notifier.subscribe_to_call_events(extension, callback)
+        self.notifier.subscribe_to_incoming_call_events(extension, callback)
 
-        self.pubsub.subscribe.assert_called_once_with(('calls', extension), callback)
+        self.pubsub.subscribe.assert_called_once_with(('calls_incoming', extension), callback)
 
-    def test_unsubscribe(self):
+    def test_subscribe_to_outgoing_call_events(self):
+        extension = Extension('2439', 'context_l')
+        callback = Mock()
+
+        self.notifier.subscribe_to_outgoing_call_events(extension, callback)
+
+        self.pubsub.subscribe.assert_called_once_with(('calls_outgoing', extension), callback)
+
+    def test_unsubscribe_from_incoming_call_events(self):
         extension = Extension('1239', 'context_k')
         callback = Mock()
 
-        self.notifier.unsubscribe_from_call_events(extension, callback)
+        self.notifier.unsubscribe_from_incoming_call_events(extension, callback)
 
-        self.pubsub.unsubscribe.assert_called_once_with(('calls', extension), callback)
+        self.pubsub.unsubscribe.assert_called_once_with(('calls_incoming', extension), callback)
+
+    def test_unsubscribe_from_ougoing_call_events(self):
+        extension = Extension('3297', 'context_l')
+        callback = Mock()
+
+        self.notifier.unsubscribe_from_outgoing_call_events(extension, callback)
+
+        self.pubsub.unsubscribe.assert_called_once_with(('calls_outgoing', extension), callback)
 
     def test_notify(self):
         uniqueid = '2938749837.34'
@@ -57,5 +73,5 @@ class TestCallNotifier(unittest.TestCase):
         self.notifier.notify(event)
 
         self.assertEquals(self.pubsub.publish.call_count, 2)
-        self.pubsub.publish.assert_any_call(('calls', source), event)
-        self.pubsub.publish.assert_any_call(('calls', destination), event)
+        self.pubsub.publish.assert_any_call(('calls_outgoing', source), event)
+        self.pubsub.publish.assert_any_call(('calls_incoming', destination), event)

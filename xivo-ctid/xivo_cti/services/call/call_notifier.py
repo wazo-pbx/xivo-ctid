@@ -21,11 +21,17 @@ class CallNotifier(object):
         self._pubsub = pubsub
 
     def notify(self, event):
-        self._pubsub.publish(('calls', event.source), event)
-        self._pubsub.publish(('calls', event.destination), event)
+        self._pubsub.publish(('calls_outgoing', event.source), event)
+        self._pubsub.publish(('calls_incoming', event.destination), event)
 
-    def subscribe_to_call_events(self, extension, callback):
-        self._pubsub.subscribe(('calls', extension), callback)
+    def subscribe_to_incoming_call_events(self, extension, callback):
+        self._pubsub.subscribe(('calls_incoming', extension), callback)
 
-    def unsubscribe_from_call_events(self, extension, callback):
-        self._pubsub.unsubscribe(('calls', extension), callback)
+    def subscribe_to_outgoing_call_events(self, extension, callback):
+        self._pubsub.subscribe(('calls_outgoing', extension), callback)
+
+    def unsubscribe_from_incoming_call_events(self, extension, callback):
+        self._pubsub.unsubscribe(('calls_incoming', extension), callback)
+
+    def unsubscribe_from_outgoing_call_events(self, extension, callback):
+        self._pubsub.unsubscribe(('calls_outgoing', extension), callback)
