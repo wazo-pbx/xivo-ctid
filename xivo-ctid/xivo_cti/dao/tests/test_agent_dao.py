@@ -19,9 +19,10 @@ import unittest
 
 from mock import Mock, call
 from xivo_cti import innerdata
-from xivo_cti.dao.agent_dao import notify_clients, AgentDAO
+from xivo_cti.dao.agent_dao import notify_clients, AgentDAO, AgentCallStatus, AgentNonACDStatus
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.services.call.direction import CallDirection
 
 
 class TestNotifyClients(unittest.TestCase):
@@ -198,34 +199,68 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_set_on_call_nonacd(self):
+    def test_set_on_call_nonacd_no_call(self):
         agent_id = 12
+        nonacd_status = AgentNonACDStatus.no_call
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'on_call_nonacd': False
+                    'nonacd_call_status': AgentNonACDStatus.incoming
                 }
             }
         }
 
-        self.agent_dao.set_on_call_nonacd(agent_id, True)
+        self.agent_dao.set_on_call_nonacd(agent_id, nonacd_status)
 
-        self.assertTrue(self.innerdata.xod_status['agents'][str(agent_id)]['on_call_nonacd'])
+        result = self.innerdata.xod_status['agents'][str(agent_id)]['nonacd_call_status']
+        self.assertEquals(nonacd_status, result)
+
+    def test_set_on_call_nonacd_incoming(self):
+        agent_id = 12
+        nonacd_status = AgentNonACDStatus.incoming
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'nonacd_call_status': AgentNonACDStatus.no_call
+                }
+            }
+        }
+
+        self.agent_dao.set_on_call_nonacd(agent_id, nonacd_status)
+
+        result = self.innerdata.xod_status['agents'][str(agent_id)]['nonacd_call_status']
+        self.assertEquals(nonacd_status, result)
+
+    def test_set_on_call_nonacd_outgoing(self):
+        agent_id = 12
+        nonacd_status = AgentNonACDStatus.outgoing
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'nonacd_call_status': AgentNonACDStatus.no_call
+                }
+            }
+        }
+
+        self.agent_dao.set_on_call_nonacd(agent_id, nonacd_status)
+
+        result = self.innerdata.xod_status['agents'][str(agent_id)]['nonacd_call_status']
+        self.assertEquals(nonacd_status, result)
 
     def test_on_call_nonacd(self):
         agent_id = 12
+        nonacd_status = AgentNonACDStatus.no_call
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'on_call_nonacd': True
+                    'nonacd_call_status': nonacd_status
                 }
             }
         }
-        expected_result = True
 
         result = self.agent_dao.on_call_nonacd(agent_id)
 
-        self.assertEqual(result, expected_result)
+        self.assertEqual(nonacd_status, result)
 
     def test_set_on_wrapup(self):
         agent_id = 12
@@ -327,3 +362,83 @@ class TestAgentDAO(unittest.TestCase):
         self.agent_dao.remove_from_queue(agent_id, queue_id)
 
         self.assertFalse(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
+
+    def test_call_status_no_call(self):
+        agent_id = 56
+        expected_result = AgentCallStatus.no_call
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': False,
+                    'nonacd_call_status': AgentNonACDStatus.no_call,
+                }
+            }
+        }
+
+        result = self.agent_dao.call_status(agent_id)
+
+        self.assertEquals(expected_result, result)
+
+    def test_call_status_call_acd(self):
+        agent_id = 56
+        expected_result = AgentCallStatus.call_acd
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': True,
+                    'nonacd_call_status': AgentNonACDStatus.no_call,
+                }
+            }
+        }
+
+        result = self.agent_dao.call_status(agent_id)
+
+        self.assertEquals(expected_result, result)
+
+    def test_call_status_call_nonacd_incoming(self):
+        agent_id = 56
+        expected_result = AgentCallStatus.incoming_call_nonacd
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': False,
+                    'nonacd_call_status': AgentNonACDStatus.incoming,
+                }
+            }
+        }
+
+        result = self.agent_dao.call_status(agent_id)
+
+        self.assertEquals(expected_result, result)
+
+    def test_call_status_call_nonacd_outgoing(self):
+        agent_id = 56
+        expected_result = AgentCallStatus.outgoing_call_nonacd
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': False,
+                    'nonacd_call_status': AgentNonACDStatus.outgoing,
+                }
+            }
+        }
+
+        result = self.agent_dao.call_status(agent_id)
+
+        self.assertEquals(expected_result, result)
+
+    def test_call_status_call_acd_and_non_acd(self):
+        agent_id = 56
+        expected_result = AgentCallStatus.call_acd
+        self.innerdata.xod_status = {
+            'agents': {
+                str(agent_id): {
+                    'on_call_acd': True,
+                    'nonacd_call_status': AgentNonACDStatus.incoming,
+                }
+            }
+        }
+
+        result = self.agent_dao.call_status(agent_id)
+
+        self.assertEquals(expected_result, result)

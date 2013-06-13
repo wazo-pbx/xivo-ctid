@@ -304,6 +304,7 @@ class CTIServer(object):
         call_receiver = context.get('call_receiver')
         callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
         callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
+        callback_handler.register_callback('Dial', call_receiver.handle_dial)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),

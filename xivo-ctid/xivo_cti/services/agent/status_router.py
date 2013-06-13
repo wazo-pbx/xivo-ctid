@@ -31,6 +31,8 @@ class AgentStatusRouter(object):
             if event.calls:
                 direction = self._get_call_direction(event.extension, event.calls)
                 self._status_manager.device_in_use(agent_id, direction)
+            else:
+                self._status_manager.device_in_use(agent_id, CallDirection.outgoing)
 
     def _get_call_direction(self, extension, calls):
         if extension == calls[0].destination:

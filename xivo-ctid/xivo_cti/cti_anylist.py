@@ -20,6 +20,7 @@ import copy
 import logging
 from collections import defaultdict
 from xivo_cti import cti_daolist
+from xivo_cti.dao.agent_dao import AgentNonACDStatus
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.ioc.context import context as cti_context
 
@@ -115,7 +116,7 @@ class AnyList(object):
             'channel': None,
             'availability': AgentStatus.logged_out,
             'availability_since': time.time(),
-            'on_call_nonacd': False,
+            'nonacd_call_status': AgentNonACDStatus.no_call,
             'on_call_acd': False,
             'on_wrapup': False,
             'queues': [],

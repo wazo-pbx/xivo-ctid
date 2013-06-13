@@ -18,6 +18,7 @@
 
 class AgentStatus(object):
     available = 'available'
-    on_call_nonacd = 'on_call_nonacd'
+    on_call_nonacd_incoming = 'on_call_nonacd_incoming'
+    on_call_nonacd_outgoing = 'on_call_nonacd_outgoing'
     unavailable = 'unavailable'
     logged_out = 'logged_out'
