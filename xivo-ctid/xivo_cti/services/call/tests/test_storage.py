@@ -25,6 +25,7 @@ from xivo_cti.model.call_event import CallEvent
 from xivo_cti.model.call_status import CallStatus
 from xivo_cti.services.call.call_notifier import CallNotifier
 from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
+from xivo_cti.services.call.storage import Call
 from xivo_cti.services.call.storage import CallStorage
 
 
@@ -38,7 +39,8 @@ class TestCallStorage(unittest.TestCase):
     def test_update_endpoint_status(self):
         extension = Extension('1234', 'my_context')
         status = EndpointStatus.ringing
-        expected_event = EndpointEvent(extension, status)
+        calls = [self._create_call(source=extension)]
+        expected_event = EndpointEvent(extension, status, calls)
 
         self.storage.update_endpoint_status(extension, status)
 
@@ -47,7 +49,8 @@ class TestCallStorage(unittest.TestCase):
     def test_update_endpoint_status_called_twice_same_status(self):
         extension = Extension('1234', 'my_context')
         status = EndpointStatus.ringing
-        expected_event = EndpointEvent(extension, status)
+        calls = [self._create_call(source=extension)]
+        expected_event = EndpointEvent(extension, status, calls)
 
         self.storage.update_endpoint_status(extension, status)
         self.storage.update_endpoint_status(extension, status)
@@ -57,11 +60,13 @@ class TestCallStorage(unittest.TestCase):
     def test_update_endpoint_status_called_twice_different_status(self):
         extension = Extension('1234', 'my_context')
 
+        calls = [self._create_call(source=extension)]
+
         first_status = EndpointStatus.available
         second_status = EndpointStatus.ringing
 
-        first_event = EndpointEvent(extension, first_status)
-        second_event = EndpointEvent(extension, second_status)
+        first_event = EndpointEvent(extension, first_status, calls)
+        second_event = EndpointEvent(extension, second_status, calls)
 
         self.storage.update_endpoint_status(extension, first_status)
         self.storage.update_endpoint_status(extension, second_status)
@@ -75,12 +80,16 @@ class TestCallStorage(unittest.TestCase):
 
         status = EndpointStatus.ringing
 
-        first_expected_event = EndpointEvent(first_extension, status)
-        second_expected_event = EndpointEvent(second_extension, status)
+        first_extension_calls = [self._create_call(source=first_extension)]
+        second_extension_calls = [self._create_call(source=second_extension)]
+
+        first_expected_event = EndpointEvent(first_extension, status, first_extension_calls)
+        second_expected_event = EndpointEvent(second_extension, status, second_extension_calls)
 
         self.storage.update_endpoint_status(first_extension, status)
         self.storage.update_endpoint_status(second_extension, status)
 
+        self.assertEquals(self.endpoint_notifier.notify.call_count, 2)
         self.endpoint_notifier.notify.assert_any_call(first_expected_event)
         self.endpoint_notifier.notify.assert_any_call(second_expected_event)
 
@@ -90,8 +99,10 @@ class TestCallStorage(unittest.TestCase):
 
         status = EndpointStatus.ringing
 
-        first_expected_event = EndpointEvent(first_extension, status)
-        second_expected_event = EndpointEvent(second_extension, status)
+        first_extension_calls = [self._create_call(source=first_extension)]
+        second_extension_calls = [self._create_call(source=second_extension)]
+        first_expected_event = EndpointEvent(first_extension, status, first_extension_calls)
+        second_expected_event = EndpointEvent(second_extension, status, second_extension_calls)
 
         self.storage.update_endpoint_status(first_extension, status)
         self.storage.update_endpoint_status(second_extension, status)
@@ -129,16 +140,68 @@ class TestCallStorage(unittest.TestCase):
 
         self.assertEquals(after_call_status, result)
 
+    def test_find_all_calls_for_extension_when_no_extension(self):
+        extension = Extension('1234', 'ze_context')
+        expected_calls = []
+
+        result = self.storage.find_all_calls_for_extension(extension)
+
+        self.assertEquals(expected_calls, result)
+
+    def test_find_all_calls_for_extension_when_no_calls(self):
+        extension = Extension('1234', 'ze_context')
+        expected_calls = []
+
+        result = self.storage.find_all_calls_for_extension(extension)
+
+        self.assertEquals(expected_calls, result)
+
+    def test_find_all_calls_for_extension_when_calls_received(self):
+        extension = Extension('1234', 'ze_context')
+        uniqueid = '293874324.34'
+        source = extension
+        destination = Extension('2398', 'ze_context')
+        expected_calls = [Call(source, destination)]
+
+        self.storage.new_call(uniqueid, source, destination)
+        result = self.storage.find_all_calls_for_extension(extension)
+
+        self.assertEquals(expected_calls, result)
+
+    def test_find_all_calls_for_extension_when_calls_emitted(self):
+        extension = Extension('1234', 'ze_context')
+        uniqueid = '293874324.34'
+        source = Extension('2398', 'ze_context')
+        destination = extension
+        expected_calls = [Call(source, destination)]
+
+        self.storage.new_call(uniqueid, source, destination)
+        result = self.storage.find_all_calls_for_extension(extension)
+
+        self.assertEquals(expected_calls, result)
+
+    def test_find_all_calls_for_extension_when_calls_do_not_concern_extension(self):
+        extension = Extension('1234', 'ze_context')
+        uniqueid = '293874324.34'
+        source = Extension('2398', 'ze_context')
+        destination = Extension('3297', 'ze_context')
+        expected_calls = []
+
+        self.storage.new_call(uniqueid, source, destination)
+        result = self.storage.find_all_calls_for_extension(extension)
+
+        self.assertEquals(expected_calls, result)
+
     def test_new_call(self):
         uniqueid = '564324563.46'
         source = Extension('2335', 'context_x')
         destination = Extension('2324', 'context_x')
         status = CallStatus.ringing
-        expected_event = CallEvent(uniqueid, source, destination, status)
+        expected_call_event = CallEvent(uniqueid, source, destination, status)
 
         self.storage.new_call(uniqueid, source, destination)
 
-        self.call_notifier.notify.assert_called_once_with(expected_event)
+        self.call_notifier.notify.assert_called_once_with(expected_call_event)
 
     def test_new_call_twice(self):
         uniqueid = '348632486.35'
@@ -182,13 +245,13 @@ class TestCallStorage(unittest.TestCase):
         uniqueid = '653246546.41'
         source = Extension('3283', 'context_y')
         destination = Extension('3258', 'context_y')
-        status = CallStatus.hangup
-        expected_event = CallEvent(uniqueid, source, destination, status)
+        call_status = CallStatus.hangup
+        expected_event = CallEvent(uniqueid, source, destination, call_status)
+        self._create_call(uniqueid=uniqueid, source=source, destination=destination)
 
-        self.storage.new_call(uniqueid, source, destination)
         self.storage.end_call(uniqueid)
 
-        self.assertEquals(self.call_notifier.notify.call_count, 2)
+        self.assertEquals(self.call_notifier.notify.call_count, 1)
         self.call_notifier.notify.assert_any_call(expected_event)
 
     def test_end_call_started_once_ended_twice(self):
@@ -197,10 +260,24 @@ class TestCallStorage(unittest.TestCase):
         destination = Extension('5838', 'context_y')
         status = CallStatus.hangup
         expected_event = CallEvent(uniqueid, source, destination, status)
+        self._create_call(uniqueid=uniqueid, source=source, destination=destination)
+
+        self.storage.end_call(uniqueid)
+        self.storage.end_call(uniqueid)
+
+        self.assertEquals(self.call_notifier.notify.call_count, 1)
+        self.call_notifier.notify.assert_any_call(expected_event)
+
+    def _create_call(self, uniqueid=None, source=None, destination=None):
+        if not uniqueid:
+            uniqueid = Mock()
+        if not source:
+            source = Extension('3984', 'my_context')
+        if not destination:
+            destination = Extension('3973', 'my_context')
 
         self.storage.new_call(uniqueid, source, destination)
-        self.storage.end_call(uniqueid)
-        self.storage.end_call(uniqueid)
+        self.call_notifier.reset_mock()
+        self.endpoint_notifier.reset_mock()
 
-        self.assertEquals(self.call_notifier.notify.call_count, 2)
-        self.call_notifier.notify.assert_any_call(expected_event)
+        return Call(source, destination)

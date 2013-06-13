@@ -17,4 +17,4 @@
 
 from collections import namedtuple
 
-EndpointEvent = namedtuple('EndpointEvent', ['extension', 'status'])
+EndpointEvent = namedtuple('EndpointEvent', ['extension', 'status', 'calls'])

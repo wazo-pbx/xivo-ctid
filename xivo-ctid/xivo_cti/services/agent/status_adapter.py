@@ -19,6 +19,7 @@ import logging
 
 from xivo_dao import agent_status_dao
 from xivo.asterisk.extension import Extension
+from xivo_cti.model.endpoint_event import EndpointEvent
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class AgentStatusAdapter(object):
             logger.debug('endpoint %s has no agent', endpoint_event.extension)
             self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
         else:
-            self._status_router.route(agent_id, endpoint_event.status)
+            self._status_router.route(agent_id, endpoint_event)
 
     def subscribe_to_agent_events(self, agent_id):
         try:
@@ -65,5 +66,7 @@ class AgentStatusAdapter(object):
     def _new_subscription(self, extension, agent_id):
         self._agent_extensions[agent_id] = extension
         self._endpoint_notifier.subscribe_to_status_changes(extension, self.handle_endpoint_event)
-        extension_status = self._call_storage.get_status_for_extension(extension)
-        self._status_router.route(agent_id, extension_status)
+        endpoint_status = self._call_storage.get_status_for_extension(extension)
+        calls = self._call_storage.find_all_calls_for_extension(extension)
+        event = EndpointEvent(extension, endpoint_status, calls)
+        self._status_router.route(agent_id, event)

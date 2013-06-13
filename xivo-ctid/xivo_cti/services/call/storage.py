@@ -35,10 +35,15 @@ class CallStorage(object):
     def get_status_for_extension(self, extension):
         return self._endpoints.get(extension, EndpointStatus.available)
 
+    def find_all_calls_for_extension(self, extension):
+        result = [call for call in self._calls.itervalues()
+                  if call.source == extension or call.destination == extension]
+        return result
+
     def update_endpoint_status(self, extension, status):
         if self._need_to_update(extension, status):
             self._update(extension, status)
-            self._notify(extension, status)
+            self._notify_endpoint(extension, status)
 
     def new_call(self, uniqueid, source, destination):
         if uniqueid not in self._calls:
@@ -69,6 +74,7 @@ class CallStorage(object):
         else:
             self._endpoints[extension] = status
 
-    def _notify(self, extension, status):
-        event = EndpointEvent(extension, status)
+    def _notify_endpoint(self, extension, status):
+        calls = self.find_all_calls_for_extension(extension)
+        event = EndpointEvent(extension, status, calls)
         self._endpoint_notifier.notify(event)
