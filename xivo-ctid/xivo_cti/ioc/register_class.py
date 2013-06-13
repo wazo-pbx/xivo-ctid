@@ -88,7 +88,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
-    context.register('call_notifier', EndpointNotifier)
+    context.register('call_notifier', CallNotifier)
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)
     context.register('channel_updater', ChannelUpdater)
