@@ -18,8 +18,12 @@
 import unittest
 
 from mock import Mock
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_router import AgentStatusRouter
+from xivo_cti.services.call.direction import CallDirection
+from xivo_cti.services.call.storage import Call
+from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 
 
@@ -29,19 +33,48 @@ class TestStatusRouter(unittest.TestCase):
         self.status_manager = Mock(AgentStatusManager)
         self.router = AgentStatusRouter(self.status_manager)
 
-    def test_route_device_in_use(self):
-        agent_id = 1
-        status = EndpointStatus.talking
-
-        self.router.route(agent_id, status)
-
-        self.status_manager.device_in_use.assert_called_once_with(agent_id)
-
     def test_route_device_not_in_use(self):
         agent_id = 1
+        extension = Extension('9327', 'a_context')
         status = EndpointStatus.available
+        calls = []
+        event = EndpointEvent(extension, status, calls)
 
-        self.router.route(agent_id, status)
+        self.router.route(agent_id, event)
 
         self.status_manager.device_not_in_use.assert_called_once_with(agent_id)
-        #self.status_manager.acd_call_end.assert_called_once_with(agent_id)
+
+    def test_route_device_in_use_no_calls(self):
+        agent_id = 1
+        extension = Extension('9327', 'a_context')
+        status = EndpointStatus.talking
+        calls = []
+        event = EndpointEvent(extension, status, calls)
+
+        self.router.route(agent_id, event)
+
+        self.assertEquals(self.status_manager.device_in_use.call_count, 0)
+
+    def test_route_device_in_use_incoming(self):
+        agent_id = 1
+        extension = Extension('9327', 'a_context')
+        status = EndpointStatus.talking
+        calls = [Call(source=Mock(Call), destination=extension)]
+        event = EndpointEvent(extension, status, calls)
+        expected_direction = CallDirection.incoming
+
+        self.router.route(agent_id, event)
+
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+
+    def test_route_device_in_use_outgoing(self):
+        agent_id = 1
+        extension = Extension('9327', 'a_context')
+        status = EndpointStatus.talking
+        calls = [Call(source=extension, destination=Mock(Call))]
+        event = EndpointEvent(extension, status, calls)
+        expected_direction = CallDirection.outgoing
+
+        self.router.route(agent_id, event)
+
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
