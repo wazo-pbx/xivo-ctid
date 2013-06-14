@@ -26,9 +26,6 @@ class EndpointNotifier(object):
         extension = event.extension
         self._pubsub.publish(('status', extension), event)
 
-    def notify_call(self, event):
-        pass
-
     def subscribe_to_status_changes(self, extension, callback):
         self._pubsub.subscribe(('status', extension), callback)
 
