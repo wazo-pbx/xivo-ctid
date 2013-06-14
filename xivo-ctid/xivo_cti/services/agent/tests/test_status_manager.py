@@ -323,7 +323,7 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
 
-    def test_agent_wrapup_completed_on_call_nonacd(self):
+    def test_agent_wrapup_completed_on_call_nonacd_incoming(self):
         dao.agent.is_completely_paused.return_value = False
         dao.agent.is_logged.return_value = True
         dao.agent.call_status.return_value = AgentCallStatus.incoming_call_nonacd
@@ -333,6 +333,17 @@ class TestAgentStatusManager(unittest.TestCase):
 
         dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd_incoming)
+
+    def test_agent_wrapup_completed_on_call_nonacd_outgoing(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = True
+        dao.agent.call_status.return_value = AgentCallStatus.outgoing_call_nonacd
+        agent_id = 12
+
+        self.agent_status_manager.agent_wrapup_completed(agent_id)
+
+        dao.agent.set_on_wrapup.assert_called_once_with(agent_id, False)
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd_outgoing)
 
     def test_agent_paused_all(self):
         dao.agent.is_logged.return_value = True
@@ -360,7 +371,7 @@ class TestAgentStatusManager(unittest.TestCase):
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
 
-    def test_agent_unpaused_on_call_nonacd(self):
+    def test_agent_unpaused_on_call_nonacd_incoming(self):
         dao.agent.is_logged.return_value = True
         dao.agent.call_status.return_value = AgentCallStatus.incoming_call_nonacd
         dao.agent.on_wrapup.return_value = False
@@ -369,6 +380,16 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.agent_unpaused(agent_id)
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd_incoming)
+
+    def test_agent_unpaused_on_call_nonacd_outgoing(self):
+        dao.agent.is_logged.return_value = True
+        dao.agent.call_status.return_value = AgentCallStatus.outgoing_call_nonacd
+        dao.agent.on_wrapup.return_value = False
+        agent_id = 12
+
+        self.agent_status_manager.agent_unpaused(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.on_call_nonacd_outgoing)
 
     def test_agent_unpaused_on_call_acd(self):
         dao.agent.is_logged.return_value = True
