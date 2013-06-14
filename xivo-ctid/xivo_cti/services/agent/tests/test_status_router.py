@@ -50,10 +50,11 @@ class TestStatusRouter(unittest.TestCase):
         status = EndpointStatus.talking
         calls = []
         event = EndpointEvent(extension, status, calls)
+        expected_direction = CallDirection.outgoing
 
         self.router.route(agent_id, event)
 
-        self.assertEquals(self.status_manager.device_in_use.call_count, 0)
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
 
     def test_route_device_in_use_incoming(self):
         agent_id = 1
