@@ -88,7 +88,10 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        get_extension_from_channel.side_effect = LookupError()
+        extension = Extension('', '')
+        call_status = EndpointStatus.ringing
+        get_extension_from_channel.return_value = extension
+        channel_state_to_status.return_value = call_status
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '5',
@@ -97,7 +100,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
+        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
@@ -135,7 +138,10 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        get_extension_from_channel.side_effect = LookupError()
+        extension = Extension('', '')
+        call_status = EndpointStatus.available
+        get_extension_from_channel.return_value = extension
+        channel_state_to_status.return_value = call_status
         ami_event = {
             'Event': 'Hangup',
             'Channel': 'SIP/abcd-00001'
@@ -143,7 +149,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
+        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     def test_handle_dial_begin(self, get_extension_from_channel):
@@ -199,6 +205,9 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin_extension_does_not_exist(self, get_extension_from_channel):
         channel_source = 'SIP/abcdef-0001'
         channel_destination = 'SIP/ghijk-0002'
+        source_extension = Extension('', '')
+
+        destination_extension = Extension('3573', 'context42')
         uniqueid = '012334455.12'
 
         ami_event = {
@@ -209,11 +218,14 @@ class TestCallReceiver(unittest.TestCase):
             'UniqueID': uniqueid,
         }
 
-        get_extension_from_channel.side_effect = LookupError()
+        get_extension_from_channel.side_effect = [source_extension,
+                                                  destination_extension]
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.assertEquals(self.call_storage.call_count, 0)
+        self.call_storage.new_call.assert_called_once_with(uniqueid=uniqueid,
+                                                           source=source_extension,
+                                                           destination=destination_extension)
 
     def test_handle_dial_end(self):
         channel_source = 'SIP/abcdef-0001'

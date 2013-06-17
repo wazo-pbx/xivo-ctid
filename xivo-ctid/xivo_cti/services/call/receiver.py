@@ -45,7 +45,7 @@ class CallReceiver(object):
     def _update_channel_status(self, channel, status):
         try:
             extension = helper.get_extension_from_channel(channel)
-        except (InvalidChannel, LookupError) as e:
+        except (InvalidChannel) as e:
             logger.error(e)
         else:
             self._call_storage.update_endpoint_status(extension, status)
@@ -64,7 +64,7 @@ class CallReceiver(object):
         try:
             extension_source = helper.get_extension_from_channel(channel_source)
             extension_destination = helper.get_extension_from_channel(channel_destination)
-        except (InvalidChannel, LookupError) as e:
+        except (InvalidChannel) as e:
             logger.error(e)
         else:
             self._call_storage.new_call(uniqueid=uniqueid,

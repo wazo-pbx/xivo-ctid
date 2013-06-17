@@ -93,8 +93,11 @@ class TestCallHelper(unittest.TestCase):
     def test_get_extension_from_channel_no_extension(self, dao_get_extension):
         channel = 'SIP/asdlkfj-532486'
         dao_get_extension.side_effect = LookupError
+        expected_result = Extension('', '')
 
-        self.assertRaises(LookupError, helper.get_extension_from_channel, channel)
+        result = helper.get_extension_from_channel(channel)
+
+        self.assertEquals(expected_result, result)
 
     @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
     def test_get_extension_from_channel(self, dao_get_extension):

@@ -18,6 +18,7 @@
 import collections
 import re
 
+from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_dao import line_dao
 channel_regexp = re.compile(r'(sip|sccp)/(\w+).*', re.I)
@@ -59,6 +60,9 @@ def channel_state_to_status(channel_state):
 
 def get_extension_from_channel(channel):
     protocol_interface = protocol_interface_from_channel(channel)
-    extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
-                                                               protocol_interface.interface)
+    try:
+        extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
+                                                                   protocol_interface.interface)
+    except LookupError:
+        extension = Extension('', '')
     return extension
