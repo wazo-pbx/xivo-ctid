@@ -74,7 +74,7 @@ class AgentStatusManager(object):
     def device_not_in_use(self, agent_id):
         if dao.agent.call_status(agent_id) == AgentCallStatus.no_call:
             return
-        dao.agent.set_on_call_nonacd(agent_id, False)
+        dao.agent.set_on_call_nonacd(agent_id, AgentNonACDStatus.no_call)
         if not dao.agent.is_logged(agent_id):
             return
         if dao.agent.on_wrapup(agent_id):

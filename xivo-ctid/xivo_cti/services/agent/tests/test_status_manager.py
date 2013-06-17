@@ -195,7 +195,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, AgentNonACDStatus.no_call)
 
     def test_device_not_in_use_when_on_call_acd(self):
         agent_id = 12
@@ -207,7 +207,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, AgentNonACDStatus.no_call)
 
     def test_device_not_in_use_when_available(self):
         agent_id = 12
@@ -231,7 +231,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, AgentNonACDStatus.no_call)
 
     def test_device_not_in_use_when_paused(self):
         agent_id = 12
@@ -243,7 +243,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, AgentNonACDStatus.no_call)
 
     def test_device_not_in_use_when_unlogged(self):
         agent_id = 12
@@ -255,7 +255,7 @@ class TestAgentStatusManager(unittest.TestCase):
         self.agent_status_manager.device_not_in_use(agent_id)
 
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
-        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, False)
+        dao.agent.set_on_call_nonacd.assert_called_once_with(agent_id, AgentNonACDStatus.no_call)
 
     def test_acd_call_start_when_available(self):
         agent_id = 12
