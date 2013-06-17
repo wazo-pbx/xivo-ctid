@@ -199,7 +199,7 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.assertEquals(self.call_storage.call_count, 0)
+        self.assertEquals(self.call_storage.new_call.call_count, 0)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     def test_handle_dial_begin_extension_does_not_exist(self, get_extension_from_channel):
