@@ -46,6 +46,16 @@ class TestAgentStatusManager(unittest.TestCase):
 
         self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.available)
 
+    def test_agent_logged_in_call_acd(self):
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.call_status.return_value = AgentCallStatus.call_acd
+
+        agent_id = 12
+
+        self.agent_status_manager.agent_logged_in(agent_id)
+
+        self.agent_availability_updater.update.assert_called_once_with(agent_id, AgentStatus.unavailable)
+
     def test_agent_logged_in_paused(self):
         dao.agent.is_completely_paused.return_value = True
         dao.agent.call_status.return_value = AgentCallStatus.no_call

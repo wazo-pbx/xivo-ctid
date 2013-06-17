@@ -34,6 +34,8 @@ class AgentStatusManager(object):
     def agent_logged_in(self, agent_id):
         if dao.agent.is_completely_paused(agent_id):
             agent_status = AgentStatus.unavailable
+        elif dao.agent.call_status(agent_id) == AgentCallStatus.call_acd:
+            agent_status = AgentStatus.unavailable
         elif dao.agent.call_status(agent_id) == AgentCallStatus.incoming_call_nonacd:
             agent_status = AgentStatus.on_call_nonacd_incoming
         elif dao.agent.call_status(agent_id) == AgentCallStatus.outgoing_call_nonacd:
