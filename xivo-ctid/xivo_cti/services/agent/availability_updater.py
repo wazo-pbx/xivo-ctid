@@ -29,7 +29,7 @@ class AgentAvailabilityUpdater(object):
 
     def update(self, agent_id, agent_status):
         try:
-            dao.innerdata.set_agent_availability(agent_id, agent_status)
+            dao.agent.set_agent_availability(agent_id, agent_status)
         except NoSuchAgentException:
             logger.info('Tried to update status of an unknown agent')
         else:

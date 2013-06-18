@@ -320,7 +320,7 @@ class CTIServer(object):
                 agent_status_cti = AgentStatus.available
             else:
                 agent_status_cti = AgentStatus.logged_out
-            dao.innerdata.set_agent_availability(agent_status.id, agent_status_cti)
+            dao.agent.set_agent_availability(agent_status.id, agent_status_cti)
         context.get('agent_status_adapter').subscribe_all_logged_agents()
 
     def run(self):

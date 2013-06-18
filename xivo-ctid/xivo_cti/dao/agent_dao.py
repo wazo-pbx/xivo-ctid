@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+import time
 from functools import wraps
 
 from xivo_cti.services.agent.status import AgentStatus
-from xivo_cti.services.call.direction import CallDirection
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,19 @@ class AgentDAO(object):
         agent_list = self.innerdata.xod_config['agents'].keeplist
         agent_number = agent_list[str(agent_id)]['number']
         return 'Agent/%s' % agent_number
+
+    def agent_status(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status
+
+    def set_agent_availability(self, agent_id, availability):
+        agent_id = str(agent_id)
+        if agent_id not in self.innerdata.xod_status['agents']:
+            raise NoSuchAgentException('Unknown agent %s' % agent_id)
+        agent_status = self.innerdata.xod_status['agents'][agent_id]
+        if availability != agent_status['availability']:
+            agent_status['availability_since'] = time.time()
+            agent_status['availability'] = availability
 
     def is_completely_paused(self, agent_id):
         agent_interface = self.get_interface_from_id(agent_id)
