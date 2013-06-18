@@ -91,6 +91,8 @@ class AgentStatusManager(object):
 
     def acd_call_end(self, agent_id):
         dao.agent.set_on_call_acd(agent_id, False)
+        if not dao.agent.is_logged(agent_id):
+            return
         if dao.agent.is_completely_paused(agent_id):
             return
         self._agent_availability_updater.update(agent_id, AgentStatus.available)

@@ -285,6 +285,16 @@ class TestAgentStatusManager(unittest.TestCase):
         self.assertEquals(self.agent_availability_updater.update.call_count, 0)
         dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
 
+    def test_acd_call_end_when_unlogged(self):
+        agent_id = 12
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.is_logged.return_value = False
+
+        self.agent_status_manager.acd_call_end(agent_id)
+
+        self.assertEquals(self.agent_availability_updater.update.call_count, 0)
+        dao.agent.set_on_call_acd.assert_called_once_with(agent_id, False)
+
     def test_agent_in_wrapup(self):
         agent_id = 12
         wrapup_time = 25
