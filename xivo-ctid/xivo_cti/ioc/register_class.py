@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo.pubsub import Pubsub
 from xivo_agent.ctl.client import AgentClient
 from xivo_cti import cti_config
 from xivo_cti.amiinterpret import AMI_1_8
@@ -32,9 +33,14 @@ from xivo_cti.services.agent.availability_updater import \
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
-from xivo_cti.services.agent.status_manager import AgentStatusManager, \
-    QueueEventReceiver
+from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
+from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_parser import AgentStatusParser
+from xivo_cti.services.agent.status_router import AgentStatusRouter
+from xivo_cti.services.call.call_notifier import CallNotifier
+from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
+from xivo_cti.services.call.receiver import CallReceiver
+from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -78,8 +84,13 @@ def setup():
     context.register('agent_executor', AgentExecutor)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
+    context.register('agent_status_adapter', AgentStatusAdapter)
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
+    context.register('agent_status_router', AgentStatusRouter)
+    context.register('call_notifier', CallNotifier)
+    context.register('call_receiver', CallReceiver)
+    context.register('call_storage', CallStorage)
     context.register('channel_updater', ChannelUpdater)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)
@@ -90,16 +101,17 @@ def setup():
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
+    context.register('endpoint_notifier', EndpointNotifier)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
+    context.register('pubsub', Pubsub)
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
-    context.register('queue_event_receiver', QueueEventReceiver)
     context.register('queue_service_manager', QueueServiceManager)
     context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)

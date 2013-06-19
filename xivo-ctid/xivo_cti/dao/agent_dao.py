@@ -16,9 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+import time
 from functools import wraps
 
 from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,19 @@ def notify_clients(decorated_func):
         except AttributeError:
             logger.debug("handle_cti_stack called before xivo-ctid is fully booted")
     return wrapper
+
+
+class AgentCallStatus(object):
+    no_call = 'no_call'
+    incoming_call_nonacd = 'incoming_call_nonacd'
+    outgoing_call_nonacd = 'outgoing_call_nonacd'
+    call_acd = 'call_acd'
+
+
+class AgentNonACDStatus(object):
+    no_call = 'no_call'
+    incoming = 'incoming'
+    outgoing = 'outgoing'
 
 
 class AgentDAO(object):
@@ -58,6 +73,19 @@ class AgentDAO(object):
         agent_number = agent_list[str(agent_id)]['number']
         return 'Agent/%s' % agent_number
 
+    def agent_status(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status
+
+    def set_agent_availability(self, agent_id, availability):
+        agent_id = str(agent_id)
+        if agent_id not in self.innerdata.xod_status['agents']:
+            raise NoSuchAgentException('Unknown agent %s' % agent_id)
+        agent_status = self.innerdata.xod_status['agents'][agent_id]
+        if availability != agent_status['availability']:
+            agent_status['availability_since'] = time.time()
+            agent_status['availability'] = availability
+
     def is_completely_paused(self, agent_id):
         agent_interface = self.get_interface_from_id(agent_id)
 
@@ -80,13 +108,13 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_call_acd']
 
-    def set_on_call_nonacd(self, agent_id, on_call_nonacd):
+    def set_on_call_nonacd(self, agent_id, nonacd_status):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        agent_status['on_call_nonacd'] = on_call_nonacd
+        agent_status['nonacd_call_status'] = nonacd_status
 
     def on_call_nonacd(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status['on_call_nonacd']
+        return agent_status['nonacd_call_status']
 
     def set_on_wrapup(self, agent_id, on_wrapup):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
@@ -95,6 +123,20 @@ class AgentDAO(object):
     def on_wrapup(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_wrapup']
+
+    def call_status(self, agent_id):
+        if self.on_call_acd(agent_id):
+            return AgentCallStatus.call_acd
+        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.incoming:
+            return AgentCallStatus.incoming_call_nonacd
+        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.outgoing:
+            return AgentCallStatus.outgoing_call_nonacd
+        else:
+            return AgentCallStatus.no_call
+
+    def call_direction(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['call_direction']
 
     @notify_clients
     def add_to_queue(self, agent_id, queue_id):

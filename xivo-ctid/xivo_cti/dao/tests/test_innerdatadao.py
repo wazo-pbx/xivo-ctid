@@ -16,12 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock, patch
+from mock import Mock
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
-from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.innerdata import Safe
 from xivo_cti.exception import NotAQueueException
-from xivo_cti.exception import NoSuchAgentException
 
 
 class TestInnerdataDAO(unittest.TestCase):
@@ -82,81 +80,6 @@ class TestInnerdataDAO(unittest.TestCase):
         result = self.innerdata_dao.get_presences(profile)
 
         self.assertEquals(result, expected_result)
-
-    @patch('time.time')
-    def test_set_agent_status(self, mock_time):
-        time_now = 123456789
-        mock_time.return_value = time_now
-        expected_agent_availability = AgentStatus.available
-        expected_agent_availability_since = time_now
-        agent_id = 6573
-        self.innerdata_dao.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'availability': AgentStatus.logged_out,
-                    'availability_since': time_now - 300,
-                }
-            }
-        }
-
-        self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
-
-        agent_status = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
-
-        self.assertEqual(expected_agent_availability, agent_status['availability'])
-        self.assertEqual(expected_agent_availability_since, agent_status['availability_since'])
-
-    @patch('time.time')
-    def test_set_agent_status_no_cti_state_change(self, mock_time):
-        time_now = 123456789
-        mock_time.return_value = time_now
-        expected_agent_availability = AgentStatus.unavailable
-        expected_agent_availability_since = time_now - 400
-        agent_id = 6573
-        self.innerdata_dao.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'availability': AgentStatus.unavailable,
-                    'availability_since': expected_agent_availability_since,
-                }
-            }
-        }
-
-        self.innerdata_dao.set_agent_availability(agent_id, expected_agent_availability)
-
-        agent = self.innerdata_dao.innerdata.xod_status['agents'][str(agent_id)]
-
-        self.assertEqual(expected_agent_availability, agent['availability'])
-        self.assertEqual(expected_agent_availability_since, agent['availability_since'])
-
-    def test_agent_status(self):
-        agent_id = 42
-        expected_status = {
-            'availability': AgentStatus.logged_out,
-            'availability_since': 1234566778,
-            'channel': 'Agent/4242',
-        }
-        self.innerdata_dao.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'availability': AgentStatus.logged_out,
-                    'availability_since': 1234566778,
-                    'channel': 'Agent/4242',
-                }
-            }
-        }
-
-        agent_status = self.innerdata_dao.agent_status(agent_id)
-
-        self.assertEqual(agent_status, expected_status)
-
-    def test_set_agent_availability_on_a_removed_agent(self):
-        agent_id = 42
-        agent_availability = AgentStatus.unavailable
-        self.innerdata_dao.innerdata.xod_status = {
-            'agents': {}
-        }
-        self.assertRaises(NoSuchAgentException, self.innerdata_dao.set_agent_availability, agent_id, agent_availability)
 
     def _assert_contains_same_elements(self, list, expected_list):
         self.assertEquals(len(list), len(expected_list))

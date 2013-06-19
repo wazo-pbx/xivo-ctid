@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 
-# Copyright (C) 2007-2013 Avencall
+# Copyright (C) 2013  Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,22 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import logging
-from xivo_cti import dao
-from xivo_cti.exception import NoSuchAgentException
 
-logger = logging.getLogger(__name__)
-
-
-class AgentAvailabilityUpdater(object):
-
-    def __init__(self, agent_availability_notifier):
-        self.notifier = agent_availability_notifier
-
-    def update(self, agent_id, agent_status):
-        try:
-            dao.agent.set_agent_availability(agent_id, agent_status)
-        except NoSuchAgentException:
-            logger.info('Tried to update status of an unknown agent')
-        else:
-            self.notifier.notify(agent_id)
+class CallDirection(object):
+    incoming = 'incoming'
+    outgoing = 'outgoing'

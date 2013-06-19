@@ -168,7 +168,6 @@ class CTIServer(object):
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
         self._agent_status_manager = context.get('agent_status_manager')
-        self._queue_event_receiver = context.get('queue_event_receiver')
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect('localhost')
@@ -187,7 +186,6 @@ class CTIServer(object):
         self._register_cti_callbacks()
         self._register_ami_callbacks()
         self._register_message_hooks()
-        self._queue_event_receiver.subscribe()
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
@@ -303,6 +301,11 @@ class CTIServer(object):
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
         callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
 
+        call_receiver = context.get('call_receiver')
+        callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
+        callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
+        callback_handler.register_callback('Dial', call_receiver.handle_dial)
+
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
                                ('listname', 'users')],
@@ -317,7 +320,8 @@ class CTIServer(object):
                 agent_status_cti = AgentStatus.available
             else:
                 agent_status_cti = AgentStatus.logged_out
-            dao.innerdata.set_agent_availability(agent_status.id, agent_status_cti)
+            dao.agent.set_agent_availability(agent_status.id, agent_status_cti)
+        context.get('agent_status_adapter').subscribe_all_logged_agents()
 
     def run(self):
         while True:

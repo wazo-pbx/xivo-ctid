@@ -16,9 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import time
 from xivo_cti.exception import NotAQueueException
-from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger("InnerdataDAO")
 
@@ -40,16 +38,3 @@ class InnerdataDAO(object):
     def get_presences(self, profile):
         profile_id = self.innerdata._config.getconfig('profiles').get(profile).get('userstatus')
         return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
-
-    def set_agent_availability(self, agent_id, availability):
-        agent_id = str(agent_id)
-        if agent_id not in self.innerdata.xod_status['agents']:
-            raise NoSuchAgentException('Unknown agent %s' % agent_id)
-        agent_status = self.innerdata.xod_status['agents'][agent_id]
-        if availability != agent_status['availability']:
-            agent_status['availability_since'] = time.time()
-            agent_status['availability'] = availability
-
-    def agent_status(self, agent_id):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status

@@ -13,12 +13,12 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>
+# along with this program.  If not, see <http://www.gnu.org/license
 
 
-class AgentStatus(object):
+class EndpointStatus(object):
     available = 'available'
-    on_call_nonacd_incoming = 'on_call_nonacd_incoming'
-    on_call_nonacd_outgoing = 'on_call_nonacd_outgoing'
-    unavailable = 'unavailable'
-    logged_out = 'logged_out'
+    talking = 'talking'
+    talking_queue = 'talking_queue'
+    ringing = 'ringing'
+    ringback_tone = 'ringback_tone'
