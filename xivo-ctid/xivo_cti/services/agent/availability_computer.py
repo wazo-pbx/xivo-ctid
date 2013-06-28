@@ -23,8 +23,8 @@ from xivo_dao import agent_status_dao
 
 class AgentAvailabilityComputer(object):
 
-    def __init__(self, updater):
-        self.updater = updater
+    def __init__(self, agent_availability_updater):
+        self.updater = agent_availability_updater
 
     def compute(self, agent_id):
         if not agent_status_dao.is_agent_logged_in(agent_id):
