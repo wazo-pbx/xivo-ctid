@@ -30,12 +30,21 @@ class AgentStatusRouter(object):
         elif event.status == EndpointStatus.talking:
             if event.calls:
                 direction = self._get_call_direction(event.extension, event.calls)
-                self._status_manager.device_in_use(agent_id, direction)
+                is_internal = self._is_call_internal(event.calls)
+                self._status_manager.device_in_use(agent_id, direction, is_internal)
             else:
-                self._status_manager.device_in_use(agent_id, CallDirection.outgoing)
+                self._status_manager.device_in_use(agent_id, CallDirection.outgoing, True)
 
     def _get_call_direction(self, extension, calls):
-        if extension == calls[0].destination:
+        call = self._considered_call(calls)
+        if extension == call.destination:
             return CallDirection.incoming
-        elif extension == calls[0].source:
+        elif extension == call.source:
             return CallDirection.outgoing
+
+    def _is_call_internal(self, calls):
+        call = self._considered_call(calls)
+        return call.is_internal
+
+    def _considered_call(self, calls):
+        return calls[0]

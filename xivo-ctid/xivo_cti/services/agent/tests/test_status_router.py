@@ -51,31 +51,36 @@ class TestStatusRouter(unittest.TestCase):
         calls = []
         event = EndpointEvent(extension, status, calls)
         expected_direction = CallDirection.outgoing
+        expected_is_internal = True
 
         self.router.route(agent_id, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction, expected_is_internal)
 
-    def test_route_device_in_use_incoming(self):
+    def test_route_device_in_use_incoming_internal(self):
         agent_id = 1
-        extension = Extension('9327', 'a_context')
-        status = EndpointStatus.talking
-        calls = [Call(source=Mock(Call), destination=extension)]
-        event = EndpointEvent(extension, status, calls)
+        is_internal = True
         expected_direction = CallDirection.incoming
-
-        self.router.route(agent_id, event)
-
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
-
-    def test_route_device_in_use_outgoing(self):
-        agent_id = 1
+        expected_is_internal = is_internal
         extension = Extension('9327', 'a_context')
         status = EndpointStatus.talking
-        calls = [Call(source=extension, destination=Mock(Call))]
+        calls = [Call(source=Mock(Call), destination=extension, is_internal=is_internal)]
         event = EndpointEvent(extension, status, calls)
-        expected_direction = CallDirection.outgoing
 
         self.router.route(agent_id, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction, expected_is_internal)
+
+    def test_route_device_in_use_outgoing_external(self):
+        agent_id = 1
+        is_internal = False
+        expected_is_internal = is_internal
+        expected_direction = CallDirection.outgoing
+        extension = Extension('9327', 'a_context')
+        status = EndpointStatus.talking
+        calls = [Call(source=extension, destination=Mock(Extension), is_internal=is_internal)]
+        event = EndpointEvent(extension, status, calls)
+
+        self.router.route(agent_id, event)
+
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction, expected_is_internal)

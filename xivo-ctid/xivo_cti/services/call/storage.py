@@ -21,7 +21,7 @@ from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.model.call_event import CallEvent
 from xivo_cti.model.call_status import CallStatus
 
-Call = namedtuple('Call', ['source', 'destination'])
+Call = namedtuple('Call', ['source', 'destination', 'is_internal'])
 
 
 class CallStorage(object):
