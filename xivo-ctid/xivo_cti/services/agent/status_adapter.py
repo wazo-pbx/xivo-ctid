@@ -49,7 +49,7 @@ class AgentStatusAdapter(object):
         except LookupError:
             logger.debug('agent with id %s is not logged', agent_id)
         else:
-            extension = Extension(number, context)
+            extension = Extension(number, context, is_internal=True)
             self._new_subscription(extension, agent_id)
 
     def unsubscribe_from_agent_events(self, agent_id):
