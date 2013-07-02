@@ -64,12 +64,12 @@ class TestStatusRouter(unittest.TestCase):
         expected_is_internal = is_internal
         extension = Extension('9327', 'a_context')
         status = EndpointStatus.talking
-        calls = [Call(source=Mock(Call), destination=extension, is_internal=is_internal)]
+        calls = [Call(source=Mock(Call), destination=extension)]
         event = EndpointEvent(extension, status, calls)
 
         self.router.route(agent_id, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction, expected_is_internal)
+        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
 
     def test_route_device_in_use_outgoing_external(self):
         agent_id = 1
@@ -78,7 +78,7 @@ class TestStatusRouter(unittest.TestCase):
         expected_direction = CallDirection.outgoing
         extension = Extension('9327', 'a_context')
         status = EndpointStatus.talking
-        calls = [Call(source=extension, destination=Mock(Extension), is_internal=is_internal)]
+        calls = [Call(source=extension, destination=Mock(Extension))]
         event = EndpointEvent(extension, status, calls)
 
         self.router.route(agent_id, event)
