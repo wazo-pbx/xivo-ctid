@@ -25,6 +25,13 @@ from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo.asterisk.extension import Extension
 
 
+NUMBER = '3573'
+CONTEXT = 'my_context'
+EXTENSION = Mock(number=NUMBER, context=CONTEXT)
+CHANNEL = 'SIP/abcd-00001'
+UNIQUEID = '5765887387.56'
+
+
 class TestCallReceiver(unittest.TestCase):
 
     def setUp(self):
@@ -34,36 +41,31 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension('1000', 'default')
-        channel = "SIP/abcd-00001"
         call_status = EndpointStatus.ringing
 
-        get_extension_from_channel.return_value = extension
+        get_extension_from_channel.return_value = EXTENSION
         channel_state_to_status.return_value = call_status
 
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '5',
-            'Channel': channel,
+            'Channel': CHANNEL,
         }
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate_ignored(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension('1000', 'default')
-        channel = "SIP/abcd-00001"
-
-        get_extension_from_channel.return_value = extension
+        get_extension_from_channel.return_value = EXTENSION
         channel_state_to_status.return_value = None
 
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '42',
-            'Channel': channel,
+            'Channel': CHANNEL,
         }
 
         self.call_receiver.handle_newstate(ami_event)
@@ -73,12 +75,12 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
-        channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannel(channel)
+        invalid_channel = 'aslkdjfas;ldfh'
+        get_extension_from_channel.side_effect = InvalidChannel(invalid_channel)
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '42',
-            'Channel': channel
+            'Channel': invalid_channel
         }
 
         self.call_receiver.handle_newstate(ami_event)
@@ -88,14 +90,14 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension('', '')
+        extension = Extension(number='', context='', is_internal=False)
         call_status = EndpointStatus.ringing
         get_extension_from_channel.return_value = extension
         channel_state_to_status.return_value = call_status
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '5',
-            'Channel': 'SIP/abcd-00001'
+            'Channel': CHANNEL
         }
 
         self.call_receiver.handle_newstate(ami_event)
@@ -105,30 +107,28 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension('1000', 'default')
-        channel = "SIP/abcd-00001"
         call_status = EndpointStatus.available
 
-        get_extension_from_channel.return_value = extension
+        get_extension_from_channel.return_value = EXTENSION
         channel_state_to_status.return_value = call_status
 
         ami_event = {
             'Event': 'Hangup',
-            'Channel': channel,
+            'Channel': CHANNEL,
         }
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, call_status)
 
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
-        channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannel(channel)
+        invalid_channel = 'aslkdjfas;ldfh'
+        get_extension_from_channel.side_effect = InvalidChannel(invalid_channel)
         ami_event = {
             'Event': 'Hangup',
-            'Channel': channel,
+            'Channel': CHANNEL,
         }
 
         self.call_receiver.handle_hangup(ami_event)
@@ -138,13 +138,13 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.get_extension_from_channel')
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension('', '')
+        extension = Extension(number='', context='', is_internal=False)
         call_status = EndpointStatus.available
         get_extension_from_channel.return_value = extension
         channel_state_to_status.return_value = call_status
         ami_event = {
             'Event': 'Hangup',
-            'Channel': 'SIP/abcd-00001'
+            'Channel': CHANNEL
         }
 
         self.call_receiver.handle_hangup(ami_event)
@@ -155,25 +155,24 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin(self, get_extension_from_channel):
         channel_source = 'SIP/abcdef-0001'
         channel_destination = 'SIP/ghijk-0002'
-        uniqueid = '012334455.12'
 
         ami_event = {
             'Event': 'Dial',
             'SubEvent': 'Begin',
             'Channel': channel_source,
             'Destination': channel_destination,
-            'UniqueID': uniqueid,
+            'UniqueID': UNIQUEID,
         }
 
-        source = Extension('1000', 'default')
-        destination = Extension('1001', 'default')
+        source = Mock(number=NUMBER, context=CONTEXT)
+        destination = Mock(number=NUMBER, context=CONTEXT)
 
         side_effect = lambda channel: source if channel == channel_source else destination
         get_extension_from_channel.side_effect = side_effect
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.call_storage.new_call.assert_called_once_with(uniqueid=uniqueid,
+        self.call_storage.new_call.assert_called_once_with(uniqueid=UNIQUEID,
                                                            source=source,
                                                            destination=destination)
 
@@ -185,14 +184,13 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin_invalid_channel(self, get_extension_from_channel):
         channel_source = 'SIP/abcdef-0001'
         channel_destination = 'SIP/ghijk-0002'
-        uniqueid = '012334455.12'
 
         ami_event = {
             'Event': 'Dial',
             'SubEvent': 'Begin',
             'Channel': channel_source,
             'Destination': channel_destination,
-            'UniqueID': uniqueid,
+            'UniqueID': UNIQUEID,
         }
 
         get_extension_from_channel.side_effect = InvalidChannel(channel_source)
@@ -205,17 +203,15 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin_extension_does_not_exist(self, get_extension_from_channel):
         channel_source = 'SIP/abcdef-0001'
         channel_destination = 'SIP/ghijk-0002'
-        source_extension = Extension('', '')
-
-        destination_extension = Extension('3573', 'context42')
-        uniqueid = '012334455.12'
+        source_extension = Extension(number='', context='', is_internal=False)
+        destination_extension = Mock(number=NUMBER, context=CONTEXT)
 
         ami_event = {
             'Event': 'Dial',
             'SubEvent': 'Begin',
             'Channel': channel_source,
             'Destination': channel_destination,
-            'UniqueID': uniqueid,
+            'UniqueID': UNIQUEID,
         }
 
         get_extension_from_channel.side_effect = [source_extension,
@@ -223,21 +219,18 @@ class TestCallReceiver(unittest.TestCase):
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.call_storage.new_call.assert_called_once_with(uniqueid=uniqueid,
+        self.call_storage.new_call.assert_called_once_with(uniqueid=UNIQUEID,
                                                            source=source_extension,
                                                            destination=destination_extension)
 
     def test_handle_dial_end(self):
-        channel_source = 'SIP/abcdef-0001'
-        uniqueid = '012334455.12'
-
         ami_event = {
             'Event': 'Dial',
             'SubEvent': 'End',
-            'Channel': channel_source,
-            'UniqueID': uniqueid,
+            'Channel': CHANNEL,
+            'UniqueID': UNIQUEID,
         }
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.call_storage.end_call.assert_called_once_with(uniqueid)
+        self.call_storage.end_call.assert_called_once_with(UNIQUEID)
