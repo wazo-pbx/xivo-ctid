@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 from xivo_cti import dao
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.call.direction import CallDirection
 from xivo_dao import agent_status_dao
+
+logger = logging.getLogger(__name__)
 
 
 class AgentAvailabilityComputer(object):

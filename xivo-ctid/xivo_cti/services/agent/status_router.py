@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/license
 
+import logging
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.services.call.direction import CallDirection
+
+logger = logging.getLogger(__name__)
 
 
 class AgentStatusRouter(object):
