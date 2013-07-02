@@ -103,23 +103,37 @@ class AMI_1_8(object):
     def ami_bridge(self, event):
         if event['Bridgestate'] != 'Link':
             return
-        channel1 = event['Channel1']
-        channel2 = event['Channel2']
-        if channel1 in self.innerdata.channels:
-            self.innerdata.channels[channel1].properties['talkingto_kind'] = 'channel'
-            self.innerdata.channels[channel1].properties['talkingto_id'] = channel2
-            self.innerdata.channels[channel1].properties['timestamp'] = time.time()
-            self.innerdata.channels[channel1].properties['commstatus'] = 'linked-caller'
-            self.innerdata.setpeerchannel(channel1, channel2)
-            self.innerdata.update(channel1)
-        if channel2 in self.innerdata.channels:
-            self.innerdata.channels[channel2].properties['talkingto_kind'] = 'channel'
-            self.innerdata.channels[channel2].properties['talkingto_id'] = channel1
-            self.innerdata.channels[channel2].properties['timestamp'] = time.time()
-            self.innerdata.channels[channel2].properties['commstatus'] = 'linked-called'
-            self.innerdata.setpeerchannel(channel2, channel1)
-            self.innerdata.update(channel2)
-            self.innerdata.sheetsend('link', channel2)
+
+        channel_1 = self.innerdata.channels.get(event['Channel1'])
+        channel_2 = self.innerdata.channels.get(event['Channel2'])
+
+        if channel_1:
+            self._update_connected_channel(channel_1, channel_2)
+            channel_1.properties['commstatus'] = 'linked-caller'
+
+        if channel_2:
+            self._update_connected_channel(channel_2, channel_1)
+            channel_2.properties['commstatus'] = 'linked-called'
+            self._trigger_link_event(channel_2)
+
+    def _update_connected_channel(self, channel, peer_channel):
+        channel.properties.update({
+            'talkingto_kind': 'channel',
+            'talkingto_id': peer_channel.channel,
+            'timestamp': time.time(),
+        })
+        self.innerdata.setpeerchannel(channel.channel, peer_channel.channel)
+        self.innerdata.update(channel.channel)
+
+    def _trigger_link_event(self, channel):
+        phone = self.innerdata.xod_config['phones'].find_phone_by_channel(channel.channel)
+        if not phone:
+            return
+
+        channel.set_extra_data('xivo', 'desttype', 'user')
+        channel.set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
+
+        self.innerdata.sheetsend('link', channel.channel)
 
     def ami_unlink(self, event):
         self.innerdata.sheetsend('unlink', event['Channel1'])
