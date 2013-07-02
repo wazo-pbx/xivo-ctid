@@ -19,11 +19,15 @@ import unittest
 
 from mock import Mock
 from xivo.pubsub import Pubsub
-from xivo.asterisk.extension import Extension
 from xivo_cti.model.call_status import CallStatus
 from xivo_cti.model.call_event import CallEvent
 from xivo_cti.services.call.call_notifier import CallNotifier
 
+
+NUMBER = '2587'
+CONTEXT = 'my_context'
+EXTENSION = Mock(number=NUMBER, context=CONTEXT)
+CALLBACK = Mock()
 
 class TestCallNotifier(unittest.TestCase):
 
@@ -32,41 +36,29 @@ class TestCallNotifier(unittest.TestCase):
         self.notifier = CallNotifier(self.pubsub)
 
     def test_subscribe_to_incoming_call_events(self):
-        extension = Extension('1239', 'context_k')
-        callback = Mock()
+        self.notifier.subscribe_to_incoming_call_events(EXTENSION, CALLBACK)
 
-        self.notifier.subscribe_to_incoming_call_events(extension, callback)
-
-        self.pubsub.subscribe.assert_called_once_with(('calls_incoming', extension), callback)
+        self.pubsub.subscribe.assert_called_once_with(('calls_incoming', EXTENSION), CALLBACK)
 
     def test_subscribe_to_outgoing_call_events(self):
-        extension = Extension('2439', 'context_l')
-        callback = Mock()
+        self.notifier.subscribe_to_outgoing_call_events(EXTENSION, CALLBACK)
 
-        self.notifier.subscribe_to_outgoing_call_events(extension, callback)
-
-        self.pubsub.subscribe.assert_called_once_with(('calls_outgoing', extension), callback)
+        self.pubsub.subscribe.assert_called_once_with(('calls_outgoing', EXTENSION), CALLBACK)
 
     def test_unsubscribe_from_incoming_call_events(self):
-        extension = Extension('1239', 'context_k')
-        callback = Mock()
+        self.notifier.unsubscribe_from_incoming_call_events(EXTENSION, CALLBACK)
 
-        self.notifier.unsubscribe_from_incoming_call_events(extension, callback)
-
-        self.pubsub.unsubscribe.assert_called_once_with(('calls_incoming', extension), callback)
+        self.pubsub.unsubscribe.assert_called_once_with(('calls_incoming', EXTENSION), CALLBACK)
 
     def test_unsubscribe_from_ougoing_call_events(self):
-        extension = Extension('3297', 'context_l')
-        callback = Mock()
+        self.notifier.unsubscribe_from_outgoing_call_events(EXTENSION, CALLBACK)
 
-        self.notifier.unsubscribe_from_outgoing_call_events(extension, callback)
-
-        self.pubsub.unsubscribe.assert_called_once_with(('calls_outgoing', extension), callback)
+        self.pubsub.unsubscribe.assert_called_once_with(('calls_outgoing', EXTENSION), CALLBACK)
 
     def test_notify(self):
         uniqueid = '2938749837.34'
-        source = Extension('3978', 'kontext')
-        destination = Extension('6355', 'kontext')
+        source = Mock(number=NUMBER, context=CONTEXT)
+        destination = Mock(number=NUMBER, context=CONTEXT)
         status = CallStatus.ringing
         event = CallEvent(uniqueid, source, destination, status)
 
