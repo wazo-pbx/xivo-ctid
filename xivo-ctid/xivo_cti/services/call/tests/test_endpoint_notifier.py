@@ -18,9 +18,14 @@
 import unittest
 
 from mock import Mock
-from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
+
+
+NUMBER = '2573'
+CONTEXT = 'my_context'
+EXTENSION = Mock(number=NUMBER, context=CONTEXT)
+CALLBACK = Mock()
 
 
 class TestEndpointNotifier(unittest.TestCase):
@@ -30,26 +35,19 @@ class TestEndpointNotifier(unittest.TestCase):
         self.notifier = EndpointNotifier(self.pubsub)
 
     def test_subscribe_to_status_changes(self):
-        callback = Mock()
-        extension = Extension('1000', 'my_context')
+        self.notifier.subscribe_to_status_changes(EXTENSION, CALLBACK)
 
-        self.notifier.subscribe_to_status_changes(extension, callback)
-
-        self.pubsub.subscribe.assert_called_once_with(('status', extension), callback)
+        self.pubsub.subscribe.assert_called_once_with(('status', EXTENSION), CALLBACK)
 
     def test_unsubscribe_from_status_changes(self):
-        callback = Mock()
-        extension = Extension('1000', 'my_context')
+        self.notifier.unsubscribe_from_status_changes(EXTENSION, CALLBACK)
 
-        self.notifier.unsubscribe_from_status_changes(extension, callback)
-
-        self.pubsub.unsubscribe.assert_called_once_with(('status', extension), callback)
+        self.pubsub.unsubscribe.assert_called_once_with(('status', EXTENSION), CALLBACK)
 
     def test_notify(self):
-        extension = Extension('1000', 'my_context')
         event = Mock(EndpointEvent)
-        event.extension = extension
+        event.extension = EXTENSION
 
         self.notifier.notify(event)
 
-        self.pubsub.publish.assert_called_once_with(('status', extension), event)
+        self.pubsub.publish.assert_called_once_with(('status', EXTENSION), event)
