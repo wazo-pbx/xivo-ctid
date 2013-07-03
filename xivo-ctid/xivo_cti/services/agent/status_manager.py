@@ -18,8 +18,7 @@
 import logging
 
 from xivo_cti import dao
-from xivo_cti.dao.agent_dao import AgentCallStatus, AgentNonACDStatus
-from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.dao.agent_dao import AgentCallStatus
 from xivo_cti.services.call.direction import CallDirection
 
 logger = logging.getLogger(__name__)
