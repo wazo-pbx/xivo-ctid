@@ -36,21 +36,26 @@ class AgentAvailabilityComputer(object):
             agent_status = AgentStatus.unavailable
         elif dao.agent.on_wrapup(agent_id):
             agent_status = AgentStatus.unavailable
+        elif dao.agent.on_call_acd(agent_id):
+            agent_status = AgentStatus.unavailable
         else:
-            call_status = dao.agent.call_status(agent_id)
-            if call_status is None:
-                agent_status = AgentStatus.available
-            elif call_status.is_acd:
-                agent_status = AgentStatus.unavailable
-            elif call_status.is_internal:
-                if call_status.direction == CallDirection.incoming:
-                    agent_status = AgentStatus.on_call_nonacd_incoming_internal
-                else:
-                    agent_status = AgentStatus.on_call_nonacd_outgoing_internal
-            else:
-                if call_status.direction == CallDirection.incoming:
-                    agent_status = AgentStatus.on_call_nonacd_incoming_external
-                else:
-                    agent_status = AgentStatus.on_call_nonacd_outgoing_external
+            agent_status = self._compute_non_acd_status(agent_id)
 
         self.updater.update(agent_id, agent_status)
+
+    def _compute_non_acd_status(self, agent_id):
+        call_status = dao.agent.nonacd_call_status(agent_id)
+        if call_status is None:
+            agent_status = AgentStatus.available
+        elif call_status.is_internal:
+            if call_status.direction == CallDirection.incoming:
+                agent_status = AgentStatus.on_call_nonacd_incoming_internal
+            else:
+                agent_status = AgentStatus.on_call_nonacd_outgoing_internal
+        else:
+            if call_status.direction == CallDirection.incoming:
+                agent_status = AgentStatus.on_call_nonacd_incoming_external
+            else:
+                agent_status = AgentStatus.on_call_nonacd_outgoing_external
+
+        return agent_status
