@@ -40,12 +40,6 @@ def notify_clients(decorated_func):
 AgentCallStatus = namedtuple('AgentCallStatus', ['is_acd', 'direction', 'is_internal'])
 
 
-class AgentNonACDStatus(object):
-    no_call = 'no_call'
-    incoming = 'incoming'
-    outgoing = 'outgoing'
-
-
 class AgentDAO(object):
 
     def __init__(self, innerdata, queue_member_manager):
@@ -99,14 +93,6 @@ class AgentDAO(object):
     def on_call_acd(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_call_acd']
-
-    def set_on_call_nonacd(self, agent_id, nonacd_status):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        agent_status['nonacd_call_status'] = nonacd_status
-
-    def on_call_nonacd(self, agent_id):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status['nonacd_call_status']
 
     def set_on_wrapup(self, agent_id, on_wrapup):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
