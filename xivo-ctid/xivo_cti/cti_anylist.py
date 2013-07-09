@@ -115,7 +115,8 @@ class AnyList(object):
             'channel': None,
             'availability': AgentStatus.logged_out,
             'availability_since': time.time(),
-            'call_status': None,
+            'nonacd_call_status': None,
+            'on_call_acd': False,
             'on_wrapup': False,
             'queues': [],
             'groups': []
