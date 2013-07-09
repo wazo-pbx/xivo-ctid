@@ -37,7 +37,7 @@ def notify_clients(decorated_func):
     return wrapper
 
 
-AgentCallStatus = namedtuple('AgentCallStatus', ['is_acd', 'direction', 'is_internal'])
+AgentCallStatus = namedtuple('AgentCallStatus', ['direction', 'is_internal'])
 
 
 class AgentDAO(object):
@@ -111,6 +111,9 @@ class AgentDAO(object):
         return agent_status['call_status']
 
     def nonacd_call_status(self, agent_id):
+        raise NotImplementedError()
+
+    def set_nonacd_call_status(self, agent_id, call_status):
         raise NotImplementedError()
 
     def call_direction(self, agent_id):

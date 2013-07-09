@@ -52,25 +52,23 @@ class TestAgentStatusManager(unittest.TestCase):
     def test_device_in_use_incoming_external(self):
         given_direction = CallDirection.incoming
         given_is_internal = False
-        expected_call_status = AgentCallStatus(is_acd=False,
-                                               direction=given_direction,
+        expected_call_status = AgentCallStatus(direction=given_direction,
                                                is_internal=given_is_internal)
 
         self.agent_status_manager.device_in_use(AGENT_ID, given_direction, given_is_internal)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_nonacd_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
 
     def test_device_in_use_outgoing_internal(self):
         given_direction = CallDirection.outgoing
         given_is_internal = True
-        expected_call_status = AgentCallStatus(is_acd=False,
-                                               direction=given_direction,
+        expected_call_status = AgentCallStatus(direction=given_direction,
                                                is_internal=given_is_internal)
 
         self.agent_status_manager.device_in_use(AGENT_ID, given_direction, given_is_internal)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_nonacd_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
 
     def test_device_not_in_use(self):
@@ -78,35 +76,33 @@ class TestAgentStatusManager(unittest.TestCase):
 
         self.agent_status_manager.device_not_in_use(AGENT_ID)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_nonacd_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
 
     def test_acd_call_start(self):
-        expected_call_status = AgentCallStatus(is_acd=True,
-                                               direction=CallDirection.incoming,
-                                               is_internal=False)
+        expected_on_call_acd = True
 
         self.agent_status_manager.acd_call_start(AGENT_ID)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_on_call_acd.assert_called_once_with(AGENT_ID, expected_on_call_acd)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
 
     def test_acd_call_end(self):
-        expected_call_status = None
+        expected_on_call_acd = False
 
         self.agent_status_manager.acd_call_end(AGENT_ID)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_on_call_acd.assert_called_once_with(AGENT_ID, expected_on_call_acd)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
 
     def test_agent_in_wrapup(self):
-        expected_call_status = None
+        expected_on_call_acd = False
         expected_in_wrapup = True
         wrapup_time = 10
 
         self.agent_status_manager.agent_in_wrapup(AGENT_ID, wrapup_time)
 
-        dao.agent.set_call_status.assert_called_once_with(AGENT_ID, expected_call_status)
+        dao.agent.set_on_call_acd.assert_called_once_with(AGENT_ID, expected_on_call_acd)
         dao.agent.set_on_wrapup.assert_called_once_with(AGENT_ID, expected_in_wrapup)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
         self.scheduler.schedule.assert_called_once_with(wrapup_time, self.agent_status_manager.agent_wrapup_completed, AGENT_ID)

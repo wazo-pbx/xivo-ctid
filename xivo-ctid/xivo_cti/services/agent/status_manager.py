@@ -19,7 +19,6 @@ import logging
 
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentCallStatus
-from xivo_cti.services.call.direction import CallDirection
 
 logger = logging.getLogger(__name__)
 
@@ -38,26 +37,21 @@ class AgentStatusManager(object):
         self._agent_availability_computer.compute(agent_id)
 
     def device_in_use(self, agent_id, direction, is_internal):
-        call_status = AgentCallStatus(is_acd=False,
-                                      direction=direction,
+        call_status = AgentCallStatus(direction=direction,
                                       is_internal=is_internal)
-        dao.agent.set_call_status(agent_id, call_status)
+        dao.agent.set_nonacd_call_status(agent_id, call_status)
         self._agent_availability_computer.compute(agent_id)
 
     def device_not_in_use(self, agent_id):
-        dao.agent.set_call_status(agent_id, None)
+        dao.agent.set_nonacd_call_status(agent_id, None)
         self._agent_availability_computer.compute(agent_id)
 
     def acd_call_start(self, agent_id):
-        call_status = AgentCallStatus(is_acd=True,
-                                      direction=CallDirection.incoming,
-                                      is_internal=False)
-
-        dao.agent.set_call_status(agent_id, call_status)
+        dao.agent.set_on_call_acd(agent_id, True)
         self._agent_availability_computer.compute(agent_id)
 
     def acd_call_end(self, agent_id):
-        dao.agent.set_call_status(agent_id, None)
+        dao.agent.set_on_call_acd(agent_id, False)
         self._agent_availability_computer.compute(agent_id)
 
     def agent_in_wrapup(self, agent_id, wrapup_time):
@@ -66,7 +60,7 @@ class AgentStatusManager(object):
                                 self.agent_wrapup_completed,
                                 agent_id)
 
-        dao.agent.set_call_status(agent_id, None)
+        dao.agent.set_on_call_acd(agent_id, False)
         self._agent_availability_computer.compute(agent_id)
 
     def agent_wrapup_completed(self, agent_id):
