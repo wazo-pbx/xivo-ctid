@@ -356,7 +356,7 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertFalse(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
 
-    def test_set_call_status(self):
+    def test_set_nonacd_call_status(self):
         agent_id = 56
         self.innerdata.xod_status = {
             'agents': {
@@ -364,30 +364,28 @@ class TestAgentDAO(unittest.TestCase):
                 }
             }
         }
-        call_status = AgentCallStatus(is_acd=True,
-                                      direction=CallDirection.incoming,
+        call_status = AgentCallStatus(direction=CallDirection.incoming,
                                       is_internal=False)
 
-        self.agent_dao.set_call_status(agent_id, call_status)
+        self.agent_dao.set_nonacd_call_status(agent_id, call_status)
 
-        result = self.innerdata.xod_status['agents'][str(agent_id)]['call_status']
+        result = self.innerdata.xod_status['agents'][str(agent_id)]['nonacd_call_status']
 
         self.assertEquals(call_status, result)
 
-    def test_call_status(self):
+    def test_nonacd_call_status(self):
         agent_id = 56
-        call_status = AgentCallStatus(is_acd=True,
-                                      direction=CallDirection.incoming,
+        call_status = AgentCallStatus(direction=CallDirection.incoming,
                                       is_internal=False)
         expected_result = call_status
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'call_status': call_status,
+                    'nonacd_call_status': call_status,
                 }
             }
         }
 
-        result = self.agent_dao.call_status(agent_id)
+        result = self.agent_dao.nonacd_call_status(agent_id)
 
         self.assertEquals(expected_result, result)

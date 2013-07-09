@@ -102,19 +102,13 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_wrapup']
 
-    def set_call_status(self, agent_id, call_status):
+    def set_nonacd_call_status(self, agent_id, call_status):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        agent_status['call_status'] = call_status
-
-    def call_status(self, agent_id):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status['call_status']
+        agent_status['nonacd_call_status'] = call_status
 
     def nonacd_call_status(self, agent_id):
-        raise NotImplementedError()
-
-    def set_nonacd_call_status(self, agent_id, call_status):
-        raise NotImplementedError()
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['nonacd_call_status']
 
     def call_direction(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
