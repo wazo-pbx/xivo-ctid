@@ -19,10 +19,11 @@ import unittest
 from mock import Mock, patch
 
 from xivo_cti import dao
-from xivo_cti.dao.agent_dao import AgentDAO, AgentNonACDStatus
+from xivo_cti.dao.agent_dao import AgentDAO, AgentCallStatus
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.services.call.direction import CallDirection
 
 AGENT_ID = 13
 
@@ -36,8 +37,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_available(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = None
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
@@ -47,8 +47,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_paused(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = None
         dao.agent.is_completely_paused.return_value = True
         dao.agent.on_wrapup.return_value = False
 
@@ -58,8 +57,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=False))
     def test_compute_logout(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = None
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
@@ -69,8 +67,9 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_acd(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = True
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=True,
+                                                             direction=CallDirection.incoming,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
@@ -80,8 +79,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_wrapup(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = None
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = True
 
@@ -91,8 +89,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_wrapup_pause(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = None
         dao.agent.is_completely_paused.return_value = True
         dao.agent.on_wrapup.return_value = True
 
@@ -102,8 +99,9 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_acd_pause(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = True
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=True,
+                                                             direction=CallDirection.incoming,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = True
         dao.agent.on_wrapup.return_value = False
 
@@ -113,8 +111,9 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=False))
     def test_compute_logout_call_acd(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.no_call
-        dao.agent.on_call_acd.return_value = True
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=True,
+                                                             direction=CallDirection.incoming,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
@@ -123,31 +122,58 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
         self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.logged_out)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
-    def test_compute_call_nonacd_incoming(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.incoming
-        dao.agent.on_call_acd.return_value = False
+    def test_compute_call_nonacd_incoming_internal(self):
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.incoming,
+                                                             is_internal=True)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_incoming)
+        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_incoming_internal)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
-    def test_compute_call_nonacd_outgoing(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.outgoing
-        dao.agent.on_call_acd.return_value = False
+    def test_compute_call_nonacd_incoming_external(self):
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.incoming,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing)
+        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_incoming_external)
+
+    @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
+    def test_compute_call_nonacd_outgoing_internal(self):
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.outgoing,
+                                                             is_internal=True)
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_wrapup.return_value = False
+
+        self.availability_computer.compute(AGENT_ID)
+
+        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_internal)
+
+    @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
+    def test_compute_call_nonacd_outgoing_external(self):
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.outgoing,
+                                                             is_internal=False)
+        dao.agent.is_completely_paused.return_value = False
+        dao.agent.on_wrapup.return_value = False
+
+        self.availability_computer.compute(AGENT_ID)
+
+        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_wrapup(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.outgoing
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.outgoing,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = True
 
@@ -157,8 +183,9 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_pause(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.outgoing
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.outgoing,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = True
         dao.agent.on_wrapup.return_value = False
 
@@ -168,8 +195,9 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=False))
     def test_compute_call_nonacd_logout(self):
-        dao.agent.on_call_nonacd.return_value = AgentNonACDStatus.outgoing
-        dao.agent.on_call_acd.return_value = False
+        dao.agent.call_status.return_value = AgentCallStatus(is_acd=False,
+                                                             direction=CallDirection.outgoing,
+                                                             is_internal=False)
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = False
 

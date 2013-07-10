@@ -23,6 +23,7 @@ from xivo_cti.dao.agent_dao import notify_clients, AgentDAO, AgentCallStatus, Ag
 from xivo_cti.exception import NoSuchAgentException
 from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.services.call.direction import CallDirection
 
 
 class TestNotifyClients(unittest.TestCase):
@@ -418,78 +419,16 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertFalse(str(queue_id) in self.innerdata.xod_status['agents'][str(agent_id)]['queues'])
 
-    def test_call_status_no_call(self):
+    def test_call_status(self):
         agent_id = 56
-        expected_result = AgentCallStatus.no_call
+        call_status = AgentCallStatus(is_acd=True,
+                                      direction=CallDirection.incoming,
+                                      is_internal=False)
+        expected_result = call_status
         self.innerdata.xod_status = {
             'agents': {
                 str(agent_id): {
-                    'on_call_acd': False,
-                    'nonacd_call_status': AgentNonACDStatus.no_call,
-                }
-            }
-        }
-
-        result = self.agent_dao.call_status(agent_id)
-
-        self.assertEquals(expected_result, result)
-
-    def test_call_status_call_acd(self):
-        agent_id = 56
-        expected_result = AgentCallStatus.call_acd
-        self.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'on_call_acd': True,
-                    'nonacd_call_status': AgentNonACDStatus.no_call,
-                }
-            }
-        }
-
-        result = self.agent_dao.call_status(agent_id)
-
-        self.assertEquals(expected_result, result)
-
-    def test_call_status_call_nonacd_incoming(self):
-        agent_id = 56
-        expected_result = AgentCallStatus.incoming_call_nonacd
-        self.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'on_call_acd': False,
-                    'nonacd_call_status': AgentNonACDStatus.incoming,
-                }
-            }
-        }
-
-        result = self.agent_dao.call_status(agent_id)
-
-        self.assertEquals(expected_result, result)
-
-    def test_call_status_call_nonacd_outgoing(self):
-        agent_id = 56
-        expected_result = AgentCallStatus.outgoing_call_nonacd
-        self.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'on_call_acd': False,
-                    'nonacd_call_status': AgentNonACDStatus.outgoing,
-                }
-            }
-        }
-
-        result = self.agent_dao.call_status(agent_id)
-
-        self.assertEquals(expected_result, result)
-
-    def test_call_status_call_acd_and_non_acd(self):
-        agent_id = 56
-        expected_result = AgentCallStatus.call_acd
-        self.innerdata.xod_status = {
-            'agents': {
-                str(agent_id): {
-                    'on_call_acd': True,
-                    'nonacd_call_status': AgentNonACDStatus.incoming,
+                    'call_status': call_status,
                 }
             }
         }

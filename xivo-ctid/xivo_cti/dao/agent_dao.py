@@ -17,6 +17,7 @@
 
 import logging
 import time
+from collections import namedtuple
 from functools import wraps
 
 from xivo_cti.exception import NoSuchAgentException
@@ -36,11 +37,7 @@ def notify_clients(decorated_func):
     return wrapper
 
 
-class AgentCallStatus(object):
-    no_call = 'no_call'
-    incoming_call_nonacd = 'incoming_call_nonacd'
-    outgoing_call_nonacd = 'outgoing_call_nonacd'
-    call_acd = 'call_acd'
+AgentCallStatus = namedtuple('AgentCallStatus', ['is_acd', 'direction', 'is_internal'])
 
 
 class AgentNonACDStatus(object):
@@ -119,15 +116,12 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_wrapup']
 
+    def set_call_status(self, agent_id, call_status):
+        pass
+
     def call_status(self, agent_id):
-        if self.on_call_acd(agent_id):
-            return AgentCallStatus.call_acd
-        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.incoming:
-            return AgentCallStatus.incoming_call_nonacd
-        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.outgoing:
-            return AgentCallStatus.outgoing_call_nonacd
-        else:
-            return AgentCallStatus.no_call
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['call_status']
 
     def call_direction(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
