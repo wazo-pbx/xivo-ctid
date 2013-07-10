@@ -18,8 +18,7 @@
 import logging
 
 from xivo_cti import dao
-from xivo_cti.dao.agent_dao import AgentCallStatus, AgentNonACDStatus
-from xivo_cti.services.agent.status import AgentStatus
+from xivo_cti.dao.agent_dao import AgentNonACDStatus
 from xivo_cti.services.call.direction import CallDirection
 
 logger = logging.getLogger(__name__)
@@ -27,113 +26,52 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusManager(object):
 
-    def __init__(self, agent_availability_updater, scheduler):
-        self._agent_availability_updater = agent_availability_updater
+    def __init__(self, agent_availability_computer, scheduler):
+        self._agent_availability_computer = agent_availability_computer
         self.scheduler = scheduler
 
     def agent_logged_in(self, agent_id):
-        if dao.agent.is_completely_paused(agent_id):
-            agent_status = AgentStatus.unavailable
-        elif dao.agent.call_status(agent_id) == AgentCallStatus.call_acd:
-            agent_status = AgentStatus.unavailable
-        elif dao.agent.call_status(agent_id) == AgentCallStatus.incoming_call_nonacd:
-            agent_status = AgentStatus.on_call_nonacd_incoming
-        elif dao.agent.call_status(agent_id) == AgentCallStatus.outgoing_call_nonacd:
-            agent_status = AgentStatus.on_call_nonacd_outgoing
-        else:
-            agent_status = AgentStatus.available
-
-        self._agent_availability_updater.update(agent_id, agent_status)
+        self._agent_availability_computer.compute(agent_id)
 
     def agent_logged_out(self, agent_id):
         dao.agent.set_on_wrapup(agent_id, False)
-        agent_status = AgentStatus.logged_out
-        self._agent_availability_updater.update(agent_id, agent_status)
+        self._agent_availability_computer.compute(agent_id)
 
     def device_in_use(self, agent_id, direction):
-        if dao.agent.call_status(agent_id) in [AgentCallStatus.incoming_call_nonacd,
-                                               AgentCallStatus.outgoing_call_nonacd]:
-            return
         if direction == CallDirection.incoming:
-            dao.agent.set_on_call_nonacd(agent_id, AgentNonACDStatus.incoming)
-        elif direction == CallDirection.outgoing:
-            dao.agent.set_on_call_nonacd(agent_id, AgentNonACDStatus.outgoing)
-        if not dao.agent.is_logged(agent_id):
-            return
-        if dao.agent.on_wrapup(agent_id):
-            return
-        if dao.agent.is_completely_paused(agent_id):
-            return
-        if dao.agent.call_status(agent_id) == AgentCallStatus.call_acd:
-            return
-        if direction == CallDirection.incoming:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_incoming)
-        elif direction == CallDirection.outgoing:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_outgoing)
+            call_status = AgentNonACDStatus.incoming
+        else:
+            call_status = AgentNonACDStatus.outgoing
+        dao.agent.set_on_call_nonacd(agent_id, call_status)
+        self._agent_availability_computer.compute(agent_id)
 
     def device_not_in_use(self, agent_id):
-        if dao.agent.call_status(agent_id) == AgentCallStatus.no_call:
-            return
         dao.agent.set_on_call_nonacd(agent_id, AgentNonACDStatus.no_call)
-        if not dao.agent.is_logged(agent_id):
-            return
-        if dao.agent.on_wrapup(agent_id):
-            return
-        if dao.agent.is_completely_paused(agent_id):
-            return
-        if dao.agent.call_status(agent_id) == AgentCallStatus.call_acd:
-            return
-        self._agent_availability_updater.update(agent_id, AgentStatus.available)
+        self._agent_availability_computer.compute(agent_id)
 
     def acd_call_start(self, agent_id):
         dao.agent.set_on_call_acd(agent_id, True)
-        self._agent_availability_updater.update(agent_id, AgentStatus.unavailable)
+        self._agent_availability_computer.compute(agent_id)
 
     def acd_call_end(self, agent_id):
         dao.agent.set_on_call_acd(agent_id, False)
-        if not dao.agent.is_logged(agent_id):
-            return
-        if dao.agent.is_completely_paused(agent_id):
-            return
-        self._agent_availability_updater.update(agent_id, AgentStatus.available)
+        self._agent_availability_computer.compute(agent_id)
 
     def agent_in_wrapup(self, agent_id, wrapup_time):
-        dao.agent.set_on_call_acd(agent_id, False)
         dao.agent.set_on_wrapup(agent_id, True)
         self.scheduler.schedule(wrapup_time,
                                 self.agent_wrapup_completed,
                                 agent_id)
 
+        dao.agent.set_on_call_acd(agent_id, False)
+        self._agent_availability_computer.compute(agent_id)
+
     def agent_wrapup_completed(self, agent_id):
         dao.agent.set_on_wrapup(agent_id, False)
-        if dao.agent.is_completely_paused(agent_id):
-            return
-        if not dao.agent.is_logged(agent_id):
-            return
-        agent_call_status = dao.agent.call_status(agent_id)
-        if agent_call_status == AgentCallStatus.no_call:
-            self._agent_availability_updater.update(agent_id, AgentStatus.available)
-        elif agent_call_status == AgentCallStatus.incoming_call_nonacd:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_incoming)
-        elif agent_call_status == AgentCallStatus.outgoing_call_nonacd:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_outgoing)
+        self._agent_availability_computer.compute(agent_id)
 
     def agent_paused_all(self, agent_id):
-        if not dao.agent.is_logged(agent_id):
-            return
-        self._agent_availability_updater.update(agent_id, AgentStatus.unavailable)
+        self._agent_availability_computer.compute(agent_id)
 
     def agent_unpaused(self, agent_id):
-        if not dao.agent.is_logged(agent_id):
-            return
-        if dao.agent.on_wrapup(agent_id):
-            return
-        agent_call_status = dao.agent.call_status(agent_id)
-        if agent_call_status == AgentCallStatus.call_acd:
-            return
-        if agent_call_status == AgentCallStatus.no_call:
-            self._agent_availability_updater.update(agent_id, AgentStatus.available)
-        elif agent_call_status == AgentCallStatus.incoming_call_nonacd:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_incoming)
-        elif agent_call_status == AgentCallStatus.outgoing_call_nonacd:
-            self._agent_availability_updater.update(agent_id, AgentStatus.on_call_nonacd_outgoing)
+        self._agent_availability_computer.compute(agent_id)
