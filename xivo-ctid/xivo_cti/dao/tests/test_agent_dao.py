@@ -225,26 +225,6 @@ class TestAgentDAO(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_is_logged(self):
-        agent_id = 12
-
-        agent_status = {str(agent_id): {'availability': AgentStatus.logged_out}}
-        self.innerdata.xod_status = {'agents': agent_status}
-
-        result = self.agent_dao.is_logged(agent_id)
-
-        self.assertEqual(result, False)
-
-    def test_is_logged_true(self):
-        agent_id = 12
-
-        agent_status = {str(agent_id): {'availability': AgentStatus.available}}
-        self.innerdata.xod_status = {'agents': agent_status}
-
-        result = self.agent_dao.is_logged(agent_id)
-
-        self.assertEqual(result, True)
-
     def test_set_on_call_acd(self):
         agent_id = 12
         self.innerdata.xod_status = {

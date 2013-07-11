@@ -26,10 +26,9 @@ from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
 from xivo_cti.scheduler import Scheduler
-from xivo_cti.services.agent.availability_notifier import \
-    AgentAvailabilityNotifier
-from xivo_cti.services.agent.availability_updater import \
-    AgentAvailabilityUpdater
+from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
+from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
+from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.agent.parser import AgentServiceCTIParser
@@ -78,6 +77,7 @@ def setup():
     context.register('interface_ami', AMI)
     context.register('ami_18', AMI_1_8)
     context.register('ami_class', AMIClass)
+    context.register('agent_availability_computer', AgentAvailabilityComputer)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
     context.register('agent_client', AgentClient)

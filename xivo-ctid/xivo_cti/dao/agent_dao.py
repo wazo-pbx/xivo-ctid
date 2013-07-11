@@ -19,7 +19,6 @@ import logging
 import time
 from functools import wraps
 
-from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.exception import NoSuchAgentException
 
 logger = logging.getLogger(__name__)
@@ -95,10 +94,6 @@ class AgentDAO(object):
 
         paused_count = self._queue_member_manager.get_paused_count_by_member_name(agent_interface)
         return paused_count == agent_membership_count
-
-    def is_logged(self, agent_id):
-        availability = self.innerdata.xod_status['agents'][str(agent_id)]['availability']
-        return availability != AgentStatus.logged_out
 
     def set_on_call_acd(self, agent_id, on_call_acd):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
