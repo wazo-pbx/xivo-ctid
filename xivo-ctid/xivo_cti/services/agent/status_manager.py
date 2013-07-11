@@ -18,8 +18,7 @@
 import logging
 
 from xivo_cti import dao
-from xivo_cti.dao.agent_dao import AgentNonACDStatus
-from xivo_cti.services.call.direction import CallDirection
+from xivo_cti.dao.agent_dao import AgentCallStatus
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +36,14 @@ class AgentStatusManager(object):
         dao.agent.set_on_wrapup(agent_id, False)
         self._agent_availability_computer.compute(agent_id)
 
-    def device_in_use(self, agent_id, direction):
-        if direction == CallDirection.incoming:
-            call_status = AgentNonACDStatus.incoming
-        else:
-            call_status = AgentNonACDStatus.outgoing
-        dao.agent.set_on_call_nonacd(agent_id, call_status)
+    def device_in_use(self, agent_id, direction, is_internal):
+        call_status = AgentCallStatus(direction=direction,
+                                      is_internal=is_internal)
+        dao.agent.set_nonacd_call_status(agent_id, call_status)
         self._agent_availability_computer.compute(agent_id)
 
     def device_not_in_use(self, agent_id):
-        dao.agent.set_on_call_nonacd(agent_id, AgentNonACDStatus.no_call)
+        dao.agent.set_nonacd_call_status(agent_id, None)
         self._agent_availability_computer.compute(agent_id)
 
     def acd_call_start(self, agent_id):

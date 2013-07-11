@@ -49,7 +49,7 @@ class AgentStatusAdapter(object):
         except LookupError:
             logger.debug('agent with id %s is not logged', agent_id)
         else:
-            extension = Extension(number, context)
+            extension = Extension(number, context, is_internal=True)
             self._new_subscription(extension, agent_id)
 
     def unsubscribe_from_agent_events(self, agent_id):
@@ -59,9 +59,7 @@ class AgentStatusAdapter(object):
 
     def subscribe_all_logged_agents(self):
         for agent_id in agent_status_dao.get_logged_agent_ids():
-            number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
-            extension = Extension(number, context)
-            self._new_subscription(extension, agent_id)
+            self.subscribe_to_agent_events(agent_id)
 
     def _new_subscription(self, extension, agent_id):
         self._agent_extensions[agent_id] = extension

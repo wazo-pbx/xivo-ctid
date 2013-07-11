@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2013 Avencall
+# Copyright (C) 2013 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,11 +16,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
-class AgentStatus(object):
-    available = 'available'
-    on_call_nonacd_incoming_internal = 'on_call_nonacd_incoming_internal'
-    on_call_nonacd_incoming_external = 'on_call_nonacd_incoming_external'
-    on_call_nonacd_outgoing_internal = 'on_call_nonacd_outgoing_internal'
-    on_call_nonacd_outgoing_external = 'on_call_nonacd_outgoing_external'
-    unavailable = 'unavailable'
-    logged_out = 'logged_out'
+class Call(object):
+
+    def __init__(self, source, destination):
+        self.source = source
+        self.destination = destination
+
+    @property
+    def is_internal(self):
+        return self.source.is_internal and self.destination.is_internal
+
+    def __eq__(self, compared_call):
+        return self._is_equal(compared_call)
+
+    def __ne__(self, compared_call):
+        return not self._is_equal(compared_call)
+
+    def _is_equal(self, compared_call):
+        return (self.source == compared_call.source and
+                self.destination == compared_call.destination)

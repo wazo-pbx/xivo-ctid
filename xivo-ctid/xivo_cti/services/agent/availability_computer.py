@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 from xivo_cti import dao
 from xivo_cti.services.agent.status import AgentStatus
-from xivo_cti.dao.agent_dao import AgentNonACDStatus
+from xivo_cti.services.call.direction import CallDirection
 from xivo_dao import agent_status_dao
+
+logger = logging.getLogger(__name__)
 
 
 class AgentAvailabilityComputer(object):
@@ -36,12 +39,23 @@ class AgentAvailabilityComputer(object):
         elif dao.agent.on_call_acd(agent_id):
             agent_status = AgentStatus.unavailable
         else:
-            call_status = dao.agent.on_call_nonacd(agent_id)
-            if call_status == AgentNonACDStatus.no_call:
-                agent_status = AgentStatus.available
-            elif call_status == AgentNonACDStatus.incoming:
-                agent_status = AgentStatus.on_call_nonacd_incoming
-            else:
-                agent_status = AgentStatus.on_call_nonacd_outgoing
+            agent_status = self._compute_non_acd_status(agent_id)
 
         self.updater.update(agent_id, agent_status)
+
+    def _compute_non_acd_status(self, agent_id):
+        call_status = dao.agent.nonacd_call_status(agent_id)
+        if call_status is None:
+            agent_status = AgentStatus.available
+        elif call_status.is_internal:
+            if call_status.direction == CallDirection.incoming:
+                agent_status = AgentStatus.on_call_nonacd_incoming_internal
+            else:
+                agent_status = AgentStatus.on_call_nonacd_outgoing_internal
+        else:
+            if call_status.direction == CallDirection.incoming:
+                agent_status = AgentStatus.on_call_nonacd_incoming_external
+            else:
+                agent_status = AgentStatus.on_call_nonacd_outgoing_external
+
+        return agent_status

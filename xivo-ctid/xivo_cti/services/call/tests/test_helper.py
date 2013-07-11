@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import patch
+from mock import patch, Mock
 from xivo.asterisk.extension import Extension
 from xivo_cti.services.call import helper
 from xivo_cti.services.call.helper import ChannelState
@@ -84,8 +84,6 @@ class TestCallHelper(unittest.TestCase):
     @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
     def test_get_extension_from_channel_invalid(self, dao_get_extension):
         channel = 'asopwasfhasl;jfhofh'
-        expected_extension = Extension('1000', 'my_context')
-        dao_get_extension.return_value = expected_extension
 
         self.assertRaises(InvalidChannel, helper.get_extension_from_channel, channel)
 
@@ -93,7 +91,7 @@ class TestCallHelper(unittest.TestCase):
     def test_get_extension_from_channel_no_extension(self, dao_get_extension):
         channel = 'SIP/asdlkfj-532486'
         dao_get_extension.side_effect = LookupError
-        expected_result = Extension('', '')
+        expected_result = Extension(number='', context='', is_internal=False)
 
         result = helper.get_extension_from_channel(channel)
 
@@ -102,7 +100,7 @@ class TestCallHelper(unittest.TestCase):
     @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
     def test_get_extension_from_channel(self, dao_get_extension):
         channel = 'SIP/asdlkfj-532486'
-        expected_extension = Extension('1000', 'my_context')
+        expected_extension = Mock()
         dao_get_extension.return_value = expected_extension
 
         result = helper.get_extension_from_channel(channel)

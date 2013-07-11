@@ -20,8 +20,7 @@ from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_cti.model.call_event import CallEvent
 from xivo_cti.model.call_status import CallStatus
-
-Call = namedtuple('Call', ['source', 'destination'])
+from xivo_cti.services.call.call import Call
 
 
 class CallStorage(object):

@@ -64,5 +64,5 @@ def get_extension_from_channel(channel):
         extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
                                                                    protocol_interface.interface)
     except LookupError:
-        extension = Extension('', '')
+        extension = Extension(number='', context='', is_internal=False)
     return extension

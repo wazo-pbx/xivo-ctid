@@ -17,6 +17,7 @@
 
 import logging
 import time
+from collections import namedtuple
 from functools import wraps
 
 from xivo_cti.exception import NoSuchAgentException
@@ -36,17 +37,7 @@ def notify_clients(decorated_func):
     return wrapper
 
 
-class AgentCallStatus(object):
-    no_call = 'no_call'
-    incoming_call_nonacd = 'incoming_call_nonacd'
-    outgoing_call_nonacd = 'outgoing_call_nonacd'
-    call_acd = 'call_acd'
-
-
-class AgentNonACDStatus(object):
-    no_call = 'no_call'
-    incoming = 'incoming'
-    outgoing = 'outgoing'
+AgentCallStatus = namedtuple('AgentCallStatus', ['direction', 'is_internal'])
 
 
 class AgentDAO(object):
@@ -103,14 +94,6 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_call_acd']
 
-    def set_on_call_nonacd(self, agent_id, nonacd_status):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        agent_status['nonacd_call_status'] = nonacd_status
-
-    def on_call_nonacd(self, agent_id):
-        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
-        return agent_status['nonacd_call_status']
-
     def set_on_wrapup(self, agent_id, on_wrapup):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         agent_status['on_wrapup'] = on_wrapup
@@ -119,15 +102,13 @@ class AgentDAO(object):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['on_wrapup']
 
-    def call_status(self, agent_id):
-        if self.on_call_acd(agent_id):
-            return AgentCallStatus.call_acd
-        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.incoming:
-            return AgentCallStatus.incoming_call_nonacd
-        elif self.on_call_nonacd(agent_id) == AgentNonACDStatus.outgoing:
-            return AgentCallStatus.outgoing_call_nonacd
-        else:
-            return AgentCallStatus.no_call
+    def set_nonacd_call_status(self, agent_id, call_status):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        agent_status['nonacd_call_status'] = call_status
+
+    def nonacd_call_status(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['nonacd_call_status']
 
     def call_direction(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]

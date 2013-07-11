@@ -18,13 +18,18 @@
 import unittest
 
 from mock import Mock
-from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.direction import CallDirection
 from xivo_cti.services.call.storage import Call
 from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
+
+
+AGENT_ID = 13
+NUMBER = '5327'
+CONTEXT = 'my_context'
+EXTENSION = Mock(number=NUMBER, context=CONTEXT)
 
 
 class TestStatusRouter(unittest.TestCase):
@@ -34,48 +39,47 @@ class TestStatusRouter(unittest.TestCase):
         self.router = AgentStatusRouter(self.status_manager)
 
     def test_route_device_not_in_use(self):
-        agent_id = 1
-        extension = Extension('9327', 'a_context')
         status = EndpointStatus.available
         calls = []
-        event = EndpointEvent(extension, status, calls)
+        event = EndpointEvent(EXTENSION, status, calls)
 
-        self.router.route(agent_id, event)
+        self.router.route(AGENT_ID, event)
 
-        self.status_manager.device_not_in_use.assert_called_once_with(agent_id)
+        self.status_manager.device_not_in_use.assert_called_once_with(AGENT_ID)
 
     def test_route_device_in_use_no_calls(self):
-        agent_id = 1
-        extension = Extension('9327', 'a_context')
         status = EndpointStatus.talking
         calls = []
-        event = EndpointEvent(extension, status, calls)
+        event = EndpointEvent(EXTENSION, status, calls)
         expected_direction = CallDirection.outgoing
+        expected_is_internal = True
 
-        self.router.route(agent_id, event)
+        self.router.route(AGENT_ID, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+        self.status_manager.device_in_use.assert_called_once_with(AGENT_ID, expected_direction, expected_is_internal)
 
-    def test_route_device_in_use_incoming(self):
-        agent_id = 1
-        extension = Extension('9327', 'a_context')
+    def test_route_device_in_use_incoming_internal(self):
+        is_internal = True
+        extension = Mock(number=NUMBER, context=CONTEXT, is_internal=is_internal)
+        expected_direction = CallDirection.incoming
+        expected_is_internal = is_internal
         status = EndpointStatus.talking
         calls = [Call(source=Mock(Call), destination=extension)]
         event = EndpointEvent(extension, status, calls)
-        expected_direction = CallDirection.incoming
 
-        self.router.route(agent_id, event)
+        self.router.route(AGENT_ID, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+        self.status_manager.device_in_use.assert_called_once_with(AGENT_ID, expected_direction, expected_is_internal)
 
-    def test_route_device_in_use_outgoing(self):
-        agent_id = 1
-        extension = Extension('9327', 'a_context')
-        status = EndpointStatus.talking
-        calls = [Call(source=extension, destination=Mock(Call))]
-        event = EndpointEvent(extension, status, calls)
+    def test_route_device_in_use_outgoing_external(self):
+        is_internal = False
+        extension = Mock(number=NUMBER, context=CONTEXT, is_internal=is_internal)
+        expected_is_internal = is_internal
         expected_direction = CallDirection.outgoing
+        status = EndpointStatus.talking
+        calls = [Call(source=extension, destination=Mock())]
+        event = EndpointEvent(extension, status, calls)
 
-        self.router.route(agent_id, event)
+        self.router.route(AGENT_ID, event)
 
-        self.status_manager.device_in_use.assert_called_once_with(agent_id, expected_direction)
+        self.status_manager.device_in_use.assert_called_once_with(AGENT_ID, expected_direction, expected_is_internal)
