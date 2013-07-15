@@ -43,7 +43,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
                 'LEFT JOIN user_line '
                 'ON userfeatures.id = user_line.user_id '
                 'LEFT JOIN extensions '
-                "ON extensions.type = 'user' AND user_line.line_id = CAST(extensions.typeval as integer) "
+                "ON extensions.type = 'user' AND userfeatures.id = CAST(extensions.typeval as integer) "
                 'WHERE ')
         request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
         if cti_context.get('config').part_context():
