@@ -18,11 +18,11 @@
 import unittest
 
 from mock import patch, Mock
+from xivo.asterisk.extension import Extension
+from xivo.asterisk.protocol_interface import InvalidChannel
 from xivo_cti.services.call.receiver import CallReceiver
-from xivo_cti.services.call.helper import InvalidChannel
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.endpoint_status import EndpointStatus
-from xivo.asterisk.extension import Extension
 
 
 NUMBER = '3573'

@@ -15,36 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import collections
-import re
 
 from xivo.asterisk.extension import Extension
+from xivo.asterisk.protocol_interface import protocol_interface_from_channel
 from xivo_cti.model.endpoint_status import EndpointStatus
 from xivo_dao import line_dao
-channel_regexp = re.compile(r'(sip|sccp)/(\w+).*', re.I)
-
-ProtocolInterface = collections.namedtuple('ProtocolInterface', ['protocol', 'interface'])
 
 
 class ChannelState(object):
     ring = '4'
     ringing = '5'
     talking = '6'
-
-
-class InvalidChannel(ValueError):
-    def __init__(self, invalid_channel):
-        ValueError.__init__(self, 'the channel %s is invalid' % invalid_channel)
-
-
-def protocol_interface_from_channel(channel):
-    matches = channel_regexp.match(channel)
-    if matches is None:
-        raise InvalidChannel(channel)
-    protocol = matches.group(1)
-    interface = matches.group(2)
-
-    return ProtocolInterface(protocol, interface)
 
 
 def channel_state_to_status(channel_state):

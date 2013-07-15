@@ -21,33 +21,11 @@ from mock import patch, Mock
 from xivo.asterisk.extension import Extension
 from xivo_cti.services.call import helper
 from xivo_cti.services.call.helper import ChannelState
-from xivo_cti.services.call.helper import InvalidChannel
-from xivo_cti.services.call.helper import ProtocolInterface
 from xivo_cti.model.endpoint_status import EndpointStatus
+from xivo.asterisk.protocol_interface import InvalidChannel
 
 
 class TestCallHelper(unittest.TestCase):
-
-    def test_protocol_interface_from_channel_sip(self):
-        channel = 'SIP/askdjhf-3216549'
-        expected_result = ProtocolInterface('SIP', 'askdjhf')
-
-        result = helper.protocol_interface_from_channel(channel)
-
-        self.assertEquals(expected_result, result)
-
-    def test_protocol_interface_from_channel_sccp(self):
-        channel = 'sccp/13486@SEP6556DEADBEEF-658'
-        expected_result = ProtocolInterface('sccp', '13486')
-
-        result = helper.protocol_interface_from_channel(channel)
-
-        self.assertEquals(expected_result, result)
-
-    def test_protocol_interface_from_channel_invalid(self):
-        invalid_channel = 'slkdfjaslkdjfaslkdjflskdjf'
-
-        self.assertRaises(InvalidChannel, helper.protocol_interface_from_channel, invalid_channel)
 
     def test_channel_state_to_status_ring(self):
         channel_state = ChannelState.ring
@@ -82,7 +60,7 @@ class TestCallHelper(unittest.TestCase):
         self.assertEquals(expected_status, result)
 
     @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
-    def test_get_extension_from_channel_invalid(self, dao_get_extension):
+    def test_get_extension_from_channel_invalid(self, _dao_get_extension):
         channel = 'asopwasfhasl;jfhofh'
 
         self.assertRaises(InvalidChannel, helper.get_extension_from_channel, channel)

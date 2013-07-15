@@ -18,6 +18,8 @@
 import logging
 import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
+from xivo.asterisk import protocol_interface
+from xivo.asterisk.protocol_interface import InvalidChannel
 
 logger = logging.getLogger('phonelist')
 
@@ -330,24 +332,16 @@ class PhonesList(ContextAwareAnyList):
                 self.keeplist[phoneid]['comms'][uid].update(infos)
 
     def find_phone_by_channel(self, channel):
-        proto, phonename_from_channel = channel.split('-', 1)[0].split('/', 1)
-        if proto == 'sccp':
-            phonename = self._sccpname(phonename_from_channel)
-        else:
-            phonename = self._sipname(phonename_from_channel)
-
-        phone_id = self.get_phone_id_from_proto_and_name(proto.lower(), phonename)
+        try:
+            proto_iface = protocol_interface.protocol_interface_from_channel(channel)
+        except InvalidChannel:
+            return None
+        phone_id = self.get_phone_id_from_proto_and_name(proto_iface.protocol.lower(), proto_iface.interface)
 
         if phone_id is None:
             return None
         else:
             return self.keeplist[phone_id]
-
-    def _sccpname(self, phonename):
-        return phonename.split('@')[0]
-
-    def _sipname(self, phonename):
-        return phonename
 
     def get_main_line(self, user_id):
         users_phones = [phone for phone in self.keeplist.itervalues() if int(phone['iduserfeatures']) == int(user_id)]

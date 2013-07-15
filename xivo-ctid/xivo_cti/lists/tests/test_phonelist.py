@@ -18,11 +18,13 @@
 import unittest
 from xivo_cti.lists.phones_list import PhonesList
 from mock import Mock
+from mock import patch
+from xivo.asterisk.protocol_interface import InvalidChannel
 from xivo_cti.innerdata import Safe
 from xivo_cti.ctiserver import CTIServer
 
 
-class Test(unittest.TestCase):
+class TestPhoneList(unittest.TestCase):
 
     PHONE_1 = {'protocol': 'sip',
               'buggymwi': None,
@@ -360,11 +362,19 @@ class Test(unittest.TestCase):
         self.assertEqual(phone, self.PHONE_2)
 
     def test_find_phone_by_channel_sccp(self):
-        channel = 'sccp/102@SEP004F3355A2FF'
+        channel = 'SCCP/102-00000000001'
 
         phone = self.phone_list.find_phone_by_channel(channel)
 
         self.assertEqual(phone, self.PHONE_3)
+
+    @patch('xivo.asterisk.protocol_interface.protocol_interface_from_channel', Mock(side_effect=InvalidChannel('test')))
+    def test_find_phone_by_channel_invalid(self):
+        channel = 'Invalid/102-00000000001'
+
+        phone = self.phone_list.find_phone_by_channel(channel)
+
+        self.assertEqual(phone, None)
 
     def test_get_user_main_line(self):
         user_id = '11'

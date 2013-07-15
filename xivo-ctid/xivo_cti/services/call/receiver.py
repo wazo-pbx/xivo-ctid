@@ -18,8 +18,8 @@
 import logging
 
 from xivo_cti.services.call import helper
-from xivo_cti.services.call.helper import InvalidChannel
 from xivo_cti.model.endpoint_status import EndpointStatus
+from xivo.asterisk.protocol_interface import InvalidChannel
 
 logger = logging.getLogger(__name__)
 
