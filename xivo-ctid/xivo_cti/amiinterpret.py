@@ -114,6 +114,10 @@ class AMI_1_8(object):
         if channel_2:
             self._update_connected_channel(channel_2, channel_1)
             channel_2.properties['commstatus'] = 'linked-called'
+
+        if 'agentcallback' in channel_1.channel or 'agentcallback' in channel_2.channel:
+            logger.debug('A call has been bridged to an agent, not sending the link event now')
+        else:
             self._trigger_link_event(channel_2)
 
     def _update_connected_channel(self, channel, peer_channel):

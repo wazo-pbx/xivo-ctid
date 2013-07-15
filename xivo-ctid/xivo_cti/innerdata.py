@@ -170,6 +170,7 @@ class Safe(object):
                 channel = self.channels[channel_name]
                 proto, agent_number = event['MemberName'].split('/', 1)
                 if proto == 'Agent':
+                    channel.set_extra_data('xivo', 'agentnumber', agent_number)
                     data_type = 'agent'
                     data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
                 else:
@@ -178,6 +179,7 @@ class Safe(object):
                     data_id = str(user_dao.find_by_line_id(phone_id))
                 channel.set_extra_data('xivo', 'desttype', data_type)
                 channel.set_extra_data('xivo', 'destid', data_id)
+                self.sheetsend('link', channel_name)
         except (AttributeError, LookupError):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
@@ -573,8 +575,6 @@ class Safe(object):
             connection['conn'].commit()
 
     def sheetsend(self, where, channel):
-        if '@agentcallback' in channel:
-            return
         if 'sheets' not in self._config.getconfig():
             return
         bsheets = self._config.getconfig('sheets')
