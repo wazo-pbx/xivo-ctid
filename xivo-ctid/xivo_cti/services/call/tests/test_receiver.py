@@ -19,7 +19,7 @@ import unittest
 
 from mock import patch, Mock
 from xivo.asterisk.extension import Extension
-from xivo.asterisk.protocol_interface import InvalidChannel
+from xivo.asterisk.protocol_interface import InvalidChannelError
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.endpoint_status import EndpointStatus
@@ -76,7 +76,7 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_newstate_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
         invalid_channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannel(invalid_channel)
+        get_extension_from_channel.side_effect = InvalidChannelError(invalid_channel)
         ami_event = {
             'Event': 'Newstate',
             'ChannelState': '42',
@@ -125,7 +125,7 @@ class TestCallReceiver(unittest.TestCase):
     @patch('xivo_cti.services.call.helper.channel_state_to_status')
     def test_handle_hangup_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
         invalid_channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannel(invalid_channel)
+        get_extension_from_channel.side_effect = InvalidChannelError(invalid_channel)
         ami_event = {
             'Event': 'Hangup',
             'Channel': CHANNEL,
@@ -193,7 +193,7 @@ class TestCallReceiver(unittest.TestCase):
             'UniqueID': UNIQUEID,
         }
 
-        get_extension_from_channel.side_effect = InvalidChannel(channel_source)
+        get_extension_from_channel.side_effect = InvalidChannelError(channel_source)
 
         self.call_receiver.handle_dial(ami_event)
 

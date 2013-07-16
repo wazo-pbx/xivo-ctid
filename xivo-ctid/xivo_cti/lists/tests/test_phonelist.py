@@ -19,7 +19,7 @@ import unittest
 from xivo_cti.lists.phones_list import PhonesList
 from mock import Mock
 from mock import patch
-from xivo.asterisk.protocol_interface import InvalidChannel
+from xivo.asterisk.protocol_interface import InvalidChannelError
 from xivo_cti.innerdata import Safe
 from xivo_cti.ctiserver import CTIServer
 
@@ -368,7 +368,7 @@ class TestPhoneList(unittest.TestCase):
 
         self.assertEqual(phone, self.PHONE_3)
 
-    @patch('xivo.asterisk.protocol_interface.protocol_interface_from_channel', Mock(side_effect=InvalidChannel('test')))
+    @patch('xivo.asterisk.protocol_interface.protocol_interface_from_channel', Mock(side_effect=InvalidChannelError('test')))
     def test_find_phone_by_channel_invalid(self):
         channel = 'Invalid/102-00000000001'
 

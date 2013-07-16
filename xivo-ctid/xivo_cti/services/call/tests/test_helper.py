@@ -22,7 +22,7 @@ from xivo.asterisk.extension import Extension
 from xivo_cti.services.call import helper
 from xivo_cti.services.call.helper import ChannelState
 from xivo_cti.model.endpoint_status import EndpointStatus
-from xivo.asterisk.protocol_interface import InvalidChannel
+from xivo.asterisk.protocol_interface import InvalidChannelError
 
 
 class TestCallHelper(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestCallHelper(unittest.TestCase):
     def test_get_extension_from_channel_invalid(self, _dao_get_extension):
         channel = 'asopwasfhasl;jfhofh'
 
-        self.assertRaises(InvalidChannel, helper.get_extension_from_channel, channel)
+        self.assertRaises(InvalidChannelError, helper.get_extension_from_channel, channel)
 
     @patch('xivo_dao.line_dao.get_extension_from_protocol_interface')
     def test_get_extension_from_channel_no_extension(self, dao_get_extension):

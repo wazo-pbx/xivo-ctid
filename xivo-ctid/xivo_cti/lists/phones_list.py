@@ -19,7 +19,7 @@ import logging
 import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
 from xivo.asterisk import protocol_interface
-from xivo.asterisk.protocol_interface import InvalidChannel
+from xivo.asterisk.protocol_interface import InvalidChannelError
 
 logger = logging.getLogger('phonelist')
 
@@ -334,7 +334,7 @@ class PhonesList(ContextAwareAnyList):
     def find_phone_by_channel(self, channel):
         try:
             proto_iface = protocol_interface.protocol_interface_from_channel(channel)
-        except InvalidChannel:
+        except InvalidChannelError:
             return None
         phone_id = self.get_phone_id_from_proto_and_name(proto_iface.protocol.lower(), proto_iface.interface)
 
