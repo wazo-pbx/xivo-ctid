@@ -179,13 +179,15 @@ class Safe(object):
                     data_id = str(user_dao.find_by_line_id(phone_id))
                 channel.set_extra_data('xivo', 'desttype', data_type)
                 channel.set_extra_data('xivo', 'destid', data_id)
-                self.sheetsend('link', channel_name)
         except (AttributeError, LookupError):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_linked(self, event):
         # Will be called when joining a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
+        channel_name = event['Channel']
+        if channel_name in self.channels:
+            self.sheetsend('link', channel_name)
 
     def handle_agent_unlinked(self, event):
         # Will be called when leaving a group/queue with an agent or user member
