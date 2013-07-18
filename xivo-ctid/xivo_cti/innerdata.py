@@ -257,6 +257,7 @@ class Safe(object):
 
     def user_match(self, userid, tomatch):
         domatch = False
+        user = self.xod_config['users'].keeplist[userid]
 
         # does the user fullfil the destination criteria ?
         if 'desttype' in tomatch and 'destid' in tomatch:
@@ -264,7 +265,6 @@ class Safe(object):
             if dest_type == 'user' and userid == str(dest_id):
                 domatch = True
             elif dest_type == 'agent':
-                user = self.xod_config['users'].keeplist[userid]
                 domatch = user['agentid'] == int(dest_id)
             elif dest_type == 'queue' and dest_id:
                 domatch = queue_dao.is_user_member_of_queue(userid, dest_id)
@@ -275,17 +275,12 @@ class Safe(object):
             domatch = True
 
         if domatch and 'profileids' in tomatch:
-            user = user_dao.get(userid)
-            if user.cti_profile_id not in tomatch.get('profileids'):
+            if user['cti_profile_id'] not in tomatch['profileids']:
                 domatch = False
-
-        if domatch and 'entities' in tomatch:
-            pass
 
         if domatch and 'contexts' in tomatch:
             domatch = False
-            context = dao.user.get_context(userid)
-            if context in tomatch['contexts']:
+            if user['context'] in tomatch['contexts']:
                 domatch = True
 
         return domatch
