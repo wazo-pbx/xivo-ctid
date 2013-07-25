@@ -23,6 +23,7 @@ from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.ctiserver import CTIServer
+from xivo_cti.lists.users_list import UsersList
 
 
 class Test(unittest.TestCase):
@@ -91,12 +92,17 @@ class Test(unittest.TestCase):
     @patch('xivo_cti.ioc.context.context.get', Mock())
     @patch('xivo_dao.user_dao.get_profile')
     def test_regcommand_login_pass_no_profile(self, mock_get_profile):
+        user_id = 2
+        cti_profile_id = None
         message = {"class": "login_pass",
                    "hashedpassword": "abcd"}
         self.conn.connection_details = {'prelogin': {'sessionid': '1234'}}
         cti_command = Command(self.conn, message)
         cti_command.ipbxid = 1
-        cti_command.userid = 2
+        cti_command.userid = user_id
+        cti_command.user_keeplist = {
+            'cti_profile_id': cti_profile_id
+        }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
         mock_get_profile.return_value = None
         self.assertEquals("capaid_undefined", cti_command.regcommand_login_pass())
@@ -104,12 +110,17 @@ class Test(unittest.TestCase):
     @patch('xivo_cti.ioc.context.context.get', Mock())
     @patch('xivo_dao.user_dao.get_profile')
     def test_regcommand_login_pass_success(self, mock_get_profile):
+        user_id = 2
+        cti_profile_id = 3
         message = {"class": "login_pass",
                    "hashedpassword": "abcd"}
         self.conn.connection_details = {'prelogin': {'sessionid': '1234'}}
         cti_command = Command(self.conn, message)
         cti_command.ipbxid = 1
-        cti_command.userid = 2
+        cti_command.userid = user_id
+        cti_command.user_keeplist = {
+            'cti_profile_id': cti_profile_id
+        }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
-        mock_get_profile.return_value = 3
-        self.assertEquals({'capalist': [3]}, cti_command.regcommand_login_pass())
+        mock_get_profile.return_value = cti_profile_id
+        self.assertEquals({'capalist': [cti_profile_id]}, cti_command.regcommand_login_pass())
