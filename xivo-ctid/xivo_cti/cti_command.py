@@ -95,10 +95,7 @@ class Command(object):
         self.ruserid = self._commanddict.get('userid', self.userid)
         self.rinnerdata = self._ctiserver.safe
 
-        self.user_keeplist = {}
-        user_keeplist = self.innerdata.xod_config['users'].keeplist
-        if self.userid in user_keeplist:
-            self.user_keeplist = user_keeplist[self.userid]
+        self.user_keeplist = self.innerdata.xod_config['users'].keeplist.get(self.userid)
 
         messagebase = {'class': self.command}
 
@@ -204,10 +201,8 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        profilespecs = {}
-        if self.user_keeplist:
-            cti_profile_id = self.user_keeplist['cti_profile_id']
-            profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
+        cti_profile_id = self.user_keeplist['cti_profile_id']
+        profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
         summarycapas = {}
