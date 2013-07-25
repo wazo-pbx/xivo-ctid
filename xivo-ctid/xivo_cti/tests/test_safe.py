@@ -17,8 +17,6 @@
 
 import unittest
 
-from hamcrest import assert_that
-
 from mock import Mock
 from mock import patch
 from xivo_cti.channel import Channel
@@ -125,11 +123,9 @@ class TestSafe(unittest.TestCase):
         userlist = Mock(UsersList)
         userlist.keeplist = {}
         userlist.keeplist[user_id] = {
-            str(user_id): {
-                'cti_profile_id': 1,
-                'context': 'default',
-                'agentid': 22
-            }
+            'cti_profile_id': 1,
+            'context': 'default',
+            'agentid': 22
         }
         self.safe.xod_config = {
             'users': userlist
@@ -152,11 +148,9 @@ class TestSafe(unittest.TestCase):
         userlist = Mock(UsersList)
         userlist.keeplist = {}
         userlist.keeplist[user_id] = {
-            str(user_id): {
-                'cti_profile_id': 1,
-                'context': 'default',
-                'agentid': 22
-            }
+            'cti_profile_id': 1,
+            'context': 'default',
+            'agentid': 22
         }
         self.safe.xod_config = {
             'users': userlist
