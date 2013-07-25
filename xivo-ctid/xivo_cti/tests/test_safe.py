@@ -17,8 +17,6 @@
 
 import unittest
 
-from hamcrest import assert_that
-
 from mock import Mock
 from mock import patch
 from xivo_cti.channel import Channel
@@ -33,6 +31,7 @@ from xivo_cti import innerdata
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
+from xivo_cti.lists.users_list import UsersList
 
 
 class TestSafe(unittest.TestCase):
@@ -118,9 +117,19 @@ class TestSafe(unittest.TestCase):
         queue_id = 42
         tomatch = {
             'desttype': 'queue',
-            'destid': queue_id,
+            'destid': queue_id
         }
         mock_is_user_member_of_queue.return_value = True
+        userlist = Mock(UsersList)
+        userlist.keeplist = {}
+        userlist.keeplist[user_id] = {
+            'cti_profile_id': 1,
+            'context': 'default',
+            'agentid': 22
+        }
+        self.safe.xod_config = {
+            'users': userlist
+        }
 
         domatch = self.safe.user_match(user_id, tomatch)
 
@@ -136,6 +145,16 @@ class TestSafe(unittest.TestCase):
             'destid': group_id,
         }
         mock_is_user_member_of_group.return_value = True
+        userlist = Mock(UsersList)
+        userlist.keeplist = {}
+        userlist.keeplist[user_id] = {
+            'cti_profile_id': 1,
+            'context': 'default',
+            'agentid': 22
+        }
+        self.safe.xod_config = {
+            'users': userlist
+        }
 
         domatch = self.safe.user_match(user_id, tomatch)
 

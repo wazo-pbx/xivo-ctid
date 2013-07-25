@@ -27,7 +27,6 @@ from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao import extensions_dao
-from xivo_dao import user_dao
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 
 logger = logging.getLogger('cti_command')
@@ -96,6 +95,8 @@ class Command(object):
         self.ruserid = self._commanddict.get('userid', self.userid)
         self.rinnerdata = self._ctiserver.safe
 
+        self.user_keeplist = self.innerdata.xod_config['users'].keeplist.get(self.userid)
+
         messagebase = {'class': self.command}
 
         if self.commandid:
@@ -146,12 +147,12 @@ class Command(object):
         else:
             return 'login_password'
 
-        cti_profile_id = user_dao.get_profile(self.userid)
+        cti_profile_id = self.user_keeplist['cti_profile_id']
         if cti_profile_id is None:
             logger.warning("%s - No CTI profile defined for the user", self.head)
             return 'capaid_undefined'
         else:
-            return  {'capalist': [user_dao.get_profile(self.userid)]}
+            return  {'capalist': [cti_profile_id]}
 
     def _is_user_authenticated(self):
         this_hashed_password = self._commanddict.get('hashedpassword')
@@ -200,7 +201,7 @@ class Command(object):
             notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
             notifyremotelogin.start()
 
-        cti_profile_id = dao.user.get_cti_profile_id(self.userid)
+        cti_profile_id = self.user_keeplist['cti_profile_id']
         profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
         capastruct = {}
