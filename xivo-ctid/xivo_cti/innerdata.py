@@ -257,7 +257,6 @@ class Safe(object):
 
     def user_match(self, userid, tomatch):
         domatch = False
-        print self.xod_config['users']
         user = self.xod_config['users'].keeplist[userid]
 
         # does the user fullfil the destination criteria ?
