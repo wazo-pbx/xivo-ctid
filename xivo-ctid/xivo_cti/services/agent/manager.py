@@ -18,8 +18,8 @@
 import logging
 from xivo_cti.tools.idconverter import IdConverter
 from xivo_dao import agent_dao
+from xivo_dao import user_line_dao
 from xivo_dao import agent_status_dao
-from xivo_dao import line_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
@@ -43,7 +43,7 @@ class AgentServiceManager(object):
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if extens else None
 
-        if not line_dao.is_phone_exten(agent_exten):
+        if not user_line_dao.is_phone_exten(agent_exten):
             logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
             return 'error', {'error_string': 'agent_login_invalid_exten',
                              'class': 'ipbxcommand'}
@@ -100,8 +100,8 @@ class AgentServiceManager(object):
         user_ids = user_dao.find_by_agent_id(agent_id)
         line_ids = []
         for user_id in user_ids:
-            line_ids.extend(line_dao.find_line_id_by_user_id(user_id))
-        return [line_dao.number(line_id) for line_id in line_ids]
+            line_ids.extend(user_line_dao.find_line_id_by_user_id(user_id))
+        return [user_line_dao.get_main_exten_by_line_id(line_id) for line_id in line_ids]
 
     def login(self, agent_id, exten, context):
         logger.info('Logging in agent %r', agent_id)
@@ -173,7 +173,7 @@ class AgentServiceManager(object):
             return None
 
     def _get_user_state_interface(self, user_id):
-        user_line = user_dao.get_line_identity(user_id)
+        user_line = user_line_dao.get_line_identity_by_user_id(user_id)
         connected_agent_id = user_dao.agent_id(user_id)
         if connected_agent_id is None:
             return user_line

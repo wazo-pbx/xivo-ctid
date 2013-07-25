@@ -20,7 +20,6 @@ from mock import Mock, patch
 
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.manager import AgentServiceManager
-from xivo_cti.services.queue_member.manager import QueueMemberManager
 from xivo_cti.services.agent.executor import AgentExecutor
 
 
@@ -36,7 +35,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager = AgentServiceManager(self.agent_executor,
                                                  self.ami)
 
-    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.user_line_dao.is_phone_exten')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
@@ -57,7 +56,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
-    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.user_line_dao.is_phone_exten')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_on_cti_agent_login_when_extension_in_use(self,
@@ -76,7 +75,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(result, ('error', {'error_string': 'agent_login_exten_in_use', 'class': 'ipbxcommand'}))
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
-    @patch('xivo_dao.line_dao.is_phone_exten')
+    @patch('xivo_dao.user_line_dao.is_phone_exten')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
     def test_on_cti_agent_login_when_no_such_extension(self,
@@ -95,9 +94,9 @@ class TestAgentServiceManager(unittest.TestCase):
         self.assertEqual(result, ('error', {'error_string': 'agent_login_invalid_exten', 'class': 'ipbxcommand'}))
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
-    @patch('xivo_dao.line_dao.is_phone_exten')
-    @patch('xivo_dao.line_dao.number')
-    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.user_line_dao.is_phone_exten')
+    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.user_dao.find_by_agent_id')
     @patch('xivo_dao.user_dao.agent_id')
@@ -139,7 +138,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_dao.agent_status_dao.get_status')
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_on_cti_listen(self, mock_get_line_identity, mock_get_status, mock_agent_id):
         agent_id = '42'
         connected_agent_id = '67'
@@ -171,7 +170,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_dao.agent_status_dao.get_status')
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_on_cti_listen_supervisor_not_agent(self, mock_get_line_identity, mock_get_status, mock_agent_id):
         agent_id = '42'
         connected_agent_id = None
@@ -197,7 +196,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                                       ('Async', 'true')])
 
     @patch('xivo_dao.agent_status_dao.get_status')
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_on_cti_listen_no_associated_line(self, mock_get_line_identity, mock_get_status):
         agent_id = '42'
         agent_xid = 'xivo/%s' % agent_id
@@ -216,7 +215,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_dao.agent_status_dao.get_status')
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_on_cti_listen_superviso_not_logged_on(self, mock_get_line_identity, mock_get_status, mock_agent_id):
         agent_id = '42'
         connected_agent_id = '67'
@@ -243,9 +242,9 @@ class TestAgentServiceManager(unittest.TestCase):
                                                       ('CallerID', u'Listen/Écouter'),
                                                       ('Async', 'true')])
 
-    @patch('xivo_dao.line_dao.is_phone_exten')
-    @patch('xivo_dao.line_dao.number')
-    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.user_line_dao.is_phone_exten')
+    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.user_dao.find_by_agent_id')
     @patch('xivo_dao.user_dao.agent_id')
@@ -274,8 +273,8 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
-    @patch('xivo_dao.line_dao.number')
-    @patch('xivo_dao.line_dao.find_line_id_by_user_id')
+    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.user_dao.find_by_agent_id')
     def test_find_agent_exten(self,
                               mock_find_by_agent_id,

@@ -17,7 +17,7 @@
 
 import time
 import logging
-from xivo_dao import user_dao
+from xivo_dao import user_dao, user_line_dao
 from xivo_cti import dao
 
 
@@ -244,7 +244,7 @@ class CurrentCallManager(object):
     def switchboard_unhold(self, user_id, action_id):
         logger.info('Switchboard %s unholded channel %s', user_id, action_id)
         try:
-            user_line = user_dao.get_line_identity(user_id).lower()
+            user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
             channel = dao.channel.get_channel_from_unique_id(action_id)
             cid_name, cid_number = dao.channel.get_caller_id_name_number(channel)
         except LookupError:
@@ -256,7 +256,7 @@ class CurrentCallManager(object):
 
     def _get_current_call(self, user_id):
         try:
-            line = user_dao.get_line_identity(user_id).lower()
+            line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
         except LookupError:
             raise LookupError('User %s has no line' % user_id)
         else:

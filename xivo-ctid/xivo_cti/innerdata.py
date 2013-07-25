@@ -35,7 +35,7 @@ from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
 from xivo_cti import dao
-from xivo_dao import directory_dao
+from xivo_dao import directory_dao, user_line_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
@@ -176,7 +176,7 @@ class Safe(object):
                 else:
                     data_type = 'user'
                     phone_id = self.zphones(proto, agent_number)
-                    data_id = str(user_dao.find_by_line_id(phone_id))
+                    data_id = str(user_line_dao.get_main_user_id_by_line_id(phone_id))
                 channel.set_extra_data('xivo', 'desttype', data_type)
                 channel.set_extra_data('xivo', 'destid', data_id)
         except (AttributeError, LookupError):

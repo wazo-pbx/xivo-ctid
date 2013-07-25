@@ -23,9 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from xivo_dao import line_dao, group_dao, agent_dao, \
+from xivo_dao import group_dao, agent_dao, \
     meetme_dao, queue_dao, voicemail_dao, context_dao, \
-    phonebook_dao, user_dao, trunk_dao
+    phonebook_dao, user_dao, trunk_dao, user_line_dao
 
 logger = logging.getLogger('daolist')
 
@@ -66,26 +66,27 @@ class DaoList(object):
 
     def _get_phones(self):
         full_line = []
-        full_line.extend(line_dao.all_with_protocol('sip'))
-        full_line.extend(line_dao.all_with_protocol('iax'))
-        full_line.extend(line_dao.all_with_protocol('sccp'))
-        full_line.extend(line_dao.all_with_protocol('custom'))
+        full_line.extend(user_line_dao.all_with_protocol('sip'))
+        full_line.extend(user_line_dao.all_with_protocol('iax'))
+        full_line.extend(user_line_dao.all_with_protocol('sccp'))
+        full_line.extend(user_line_dao.all_with_protocol('custom'))
 
         res = {}
         for line in full_line:
-            line, protocol, firstname, lastname = line
-            res.update(self._format_line_data(line, protocol, firstname, lastname))
+            line, protocol, user = line
+            res.update(self._format_line_data(line, protocol, user))
         return res
 
     def _get_phone(self, id):
-        line, protocol, firstname, lastname = line_dao.get_with_line_id(id)
-        return self._format_line_data(line, protocol, firstname, lastname)
+        line, protocol, user = user_line_dao.get_with_line_id(id)
+        return self._format_line_data(line, protocol, user)
 
-    def _format_line_data(self, line, protocol, firstname, lastname):
+    def _format_line_data(self, line, protocol, user):
         res = {}
         merged_line = protocol.todict()
         merged_line.update(line.todict())
-        merged_line['useridentity'] = '%s %s' % (firstname, lastname)
+        merged_line['iduserfeatures'] = user.id
+        merged_line['useridentity'] = '%s %s' % (user.firstname, user.lastname)
         protocol = merged_line['protocol'].upper()
         iface_name = merged_line['name']
         merged_line['identity'] = '%s/%s' % (protocol, iface_name)

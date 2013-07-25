@@ -467,7 +467,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
         self.manager._calls_per_line = {
@@ -490,7 +490,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.hangup.assert_called_once_with(self.channel_2)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_complete_transfer(self, mock_get_line_identity):
         user_id = 5
         self.manager._calls_per_line = {
@@ -513,7 +513,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.hangup.assert_called_once_with(self.channel_1)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_complete_transfer_no_transfer_target_channel(self, mock_get_line_identity):
         user_id = 5
         self.manager._calls_per_line = {
@@ -536,7 +536,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         # No exception
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_complete_transfer_no_call(self, mock_get_line_identity):
         user_id = 5
         self.manager._calls_per_line = {
@@ -547,7 +547,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.complete_transfer(user_id)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_attended_transfer(self, mock_get_line_identity):
         user_id = 5
         number = '1234'
@@ -575,7 +575,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.ami.atxfer.assert_called_once_with(
             self.channel_1, number, line_context)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_direct_transfer(self, mock_get_line_identity):
         user_id = 5
         number = '9876'
@@ -603,7 +603,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.ami.transfer.assert_called_once_with(
             self.channel_2, number, line_context)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_hangup_no_line(self, mock_get_line_identity):
         user_id = 5
         mock_get_line_identity.side_effect = LookupError()
@@ -612,7 +612,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEqual(self.manager.ami.sendcommand.call_count, 0)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     @patch('xivo_cti.dao.queue')
     def test_switchboard_hold(self, mock_queue_dao, mock_get_line_identity):
         mock_queue_dao.get_number_context_from_name.return_value = '3006', 'ctx'
@@ -639,7 +639,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_unhold(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -664,7 +664,7 @@ class TestCurrentCallManager(unittest.TestCase):
             allow_calling_party_transfer, continue_dialplan)
         self.manager.schedule_answer.assert_called_once_with(user_id, delay)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_unhold_no_line(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -676,7 +676,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_unhold_no_channel(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
@@ -738,7 +738,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.set_transfer_channel(channel, transfer_channel)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_cancel_transfer(self, mock_get_line_identity):
         local_transfer_channel = u'Local/1003@pcm-dev-00000032;'
         transfer_channel = local_transfer_channel + u'1'
@@ -765,7 +765,7 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.manager.ami.hangup.assert_called_once_with(transfered_channel)
 
-    @patch('xivo_dao.user_dao.get_line_identity')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
         user_id = 5
         self.manager._calls_per_line = {

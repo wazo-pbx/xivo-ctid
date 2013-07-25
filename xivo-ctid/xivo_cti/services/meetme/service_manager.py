@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
-from xivo_dao import line_dao
+from xivo_dao import line_dao, user_line_dao
 from xivo_dao import meetme_dao
 from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
@@ -126,7 +126,7 @@ class MeetmeServiceManager(object):
         logger.debug('Join %s %s %s %s %s', channel, conf_number, join_seq_number, cid_name, cid_num)
         if cid_num == conf_number:
             try:
-                cid_all, cid_name, cid_num = line_dao.get_cid_for_channel(channel)
+                cid_all, cid_name, cid_num = user_line_dao.get_cid_for_channel(channel)
             except (ValueError, LookupError):
                 logger.info('Joining from an originate, cannot get Caller ID from this channel')
         member_status = _build_joining_member_status(join_seq_number,
@@ -230,7 +230,7 @@ def _build_joining_member_status(join_seq, name, number, channel, is_muted):
 
 def _build_member_status(join_seq_number, name, number, channel, is_muted):
     return {'join_order': join_seq_number,
-            'join_time': -1,
+            'join_time':-1,
             'number': number,
             'name': name,
             'channel': channel,
