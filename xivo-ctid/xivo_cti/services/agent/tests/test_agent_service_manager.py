@@ -95,7 +95,7 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_dao.user_line_dao.is_phone_exten')
-    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.get_main_exten_by_line_id')
     @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.user_dao.find_by_agent_id')
@@ -107,7 +107,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                           mock_find_by_agent_id,
                                           mock_agent_context,
                                           mock_find_line_id_by_user_id,
-                                          mock_number,
+                                          mock_get_main_exten_by_line_id,
                                           mock_is_phone_exten):
         user_id = 10
         agent_id = 11
@@ -117,7 +117,7 @@ class TestAgentServiceManager(unittest.TestCase):
         mock_agent_id.return_value = agent_id
         mock_find_by_agent_id.return_value = [user_id]
         mock_find_line_id_by_user_id.return_value = [line_id]
-        mock_number.return_value = self.line_number
+        mock_get_main_exten_by_line_id.return_value = self.line_number
         mock_is_phone_exten.return_value = True
         mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
@@ -243,7 +243,7 @@ class TestAgentServiceManager(unittest.TestCase):
                                                       ('Async', 'true')])
 
     @patch('xivo_dao.user_line_dao.is_phone_exten')
-    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.get_main_exten_by_line_id')
     @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.user_dao.find_by_agent_id')
@@ -255,7 +255,7 @@ class TestAgentServiceManager(unittest.TestCase):
                               mock_find_by_agent_id,
                               mock_agent_context,
                               mock_find_line_id_by_user_id,
-                              mock_number,
+                              mock_get_main_exten_by_line_id,
                               mock_is_phone_exten):
         user_id = 12
         agent_id = 44
@@ -264,7 +264,7 @@ class TestAgentServiceManager(unittest.TestCase):
         mock_agent_id.return_value = agent_id
         mock_find_by_agent_id.return_value = [user_id]
         mock_find_line_id_by_user_id.return_value = [13]
-        mock_number.return_value = self.line_number
+        mock_get_main_exten_by_line_id.return_value = self.line_number
         mock_is_phone_exten.return_value = True
         mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
@@ -273,17 +273,17 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_manager.login.assert_called_once_with(agent_id, self.line_number, agent_context)
 
-    @patch('xivo_dao.user_line_dao.number')
+    @patch('xivo_dao.user_line_dao.get_main_exten_by_line_id')
     @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
     @patch('xivo_dao.user_dao.find_by_agent_id')
     def test_find_agent_exten(self,
                               mock_find_by_agent_id,
                               mock_find_line_id_by_user_id,
-                              mock_number):
+                              mock_get_main_exten_by_line_id):
         agent_id = 11
         mock_find_by_agent_id.return_value = [12]
         mock_find_line_id_by_user_id.return_value = [13]
-        mock_number.return_value = self.line_number
+        mock_get_main_exten_by_line_id.return_value = self.line_number
 
         extens = self.agent_manager.find_agent_exten(agent_id)
 

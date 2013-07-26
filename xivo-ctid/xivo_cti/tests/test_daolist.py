@@ -123,6 +123,9 @@ class TestDaoList(unittest.TestCase):
         protocol = self._generic_object(id=protocol_id,
                                         name=protocol_name,
                                         protocol=proto)
+        user = self._generic_object(id=user_id,
+                                    firstname=firstname,
+                                    lastname=lastname)
 
         expected_result = {
             str(line_id): {
@@ -136,7 +139,7 @@ class TestDaoList(unittest.TestCase):
             }
         }
 
-        result = self.daolist._format_line_data(linefeatures, protocol, firstname, lastname)
+        result = self.daolist._format_line_data(linefeatures, protocol, user)
 
         self.assertEquals(result, expected_result)
 

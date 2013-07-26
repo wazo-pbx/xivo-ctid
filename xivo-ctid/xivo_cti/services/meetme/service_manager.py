@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
-from xivo_dao import line_dao, user_line_dao
+from xivo_dao import user_line_dao
 from xivo_dao import meetme_dao
 from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
