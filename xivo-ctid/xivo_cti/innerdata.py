@@ -164,21 +164,24 @@ class Safe(object):
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _channel_extra_vars_agent_linked_unlinked(self, event):
+        channel_name = event['Channel']
+        channel = self.channels.get(channel_name)
+        if not channel:
+            return
+        proto, agent_number = event['MemberName'].split('/', 1)
         try:
-            channel_name = event['Channel']
-            if channel_name in self.channels:
-                channel = self.channels[channel_name]
-                proto, agent_number = event['MemberName'].split('/', 1)
-                if proto == 'Agent':
-                    channel.set_extra_data('xivo', 'agentnumber', agent_number)
-                    data_type = 'agent'
-                    data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
-                else:
-                    data_type = 'user'
-                    phone_id = self.zphones(proto, agent_number)
-                    data_id = str(user_line_dao.get_main_user_id_by_line_id(phone_id))
-                channel.set_extra_data('xivo', 'desttype', data_type)
-                channel.set_extra_data('xivo', 'destid', data_id)
+            if proto == 'Agent':
+                channel.set_extra_data('xivo', 'agentnumber', agent_number)
+                data_type = 'agent'
+                data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+            else:
+                data_type = 'user'
+                phone_id = self.zphones(proto, agent_number)
+                if not phone_id:
+                    return
+                data_id = str(user_line_dao.get_main_user_id_by_line_id(phone_id))
+            channel.set_extra_data('xivo', 'desttype', data_type)
+            channel.set_extra_data('xivo', 'destid', data_id)
         except (AttributeError, LookupError):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
