@@ -316,7 +316,7 @@ class Safe(object):
 
     def user_get_hashed_password(self, userid, sessionid):
         tohash = '%s:%s' % (sessionid,
-                            old_user_dao.get(userid).passwdclient)
+                            user_dao.get(userid).password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
