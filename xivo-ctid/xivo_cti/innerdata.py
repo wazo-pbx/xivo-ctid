@@ -35,11 +35,13 @@ from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
 from xivo_cti import dao
-from xivo_dao import directory_dao, user_line_dao
+from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
-from xivo_dao import user_dao
+from xivo_dao import user_dao as old_user_dao
+from xivo_dao.data_handler.user import dao as user_dao
+from xivo_dao.data_handler.exception import ElementNotExistsError
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
 from collections import defaultdict
@@ -179,10 +181,14 @@ class Safe(object):
                 phone_id = self.zphones(proto, agent_number)
                 if not phone_id:
                     return
-                data_id = str(user_line_dao.get_main_user_id_by_line_id(phone_id))
+                user = user_dao.get_main_user_by_line_id(phone_id)
+                data_id = str(user.id)
             channel.set_extra_data('xivo', 'desttype', data_type)
             channel.set_extra_data('xivo', 'destid', data_id)
-        except (AttributeError, LookupError):
+        except ElementNotExistsError:
+            raise
+        except (AttributeError, LookupError) as e:
+            logger.exception(e)
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_linked(self, event):
@@ -310,12 +316,12 @@ class Safe(object):
 
     def user_get_hashed_password(self, userid, sessionid):
         tohash = '%s:%s' % (sessionid,
-                            user_dao.get(userid).passwdclient)
+                            user_dao.get(userid).password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
     def user_get_userstatuskind(self, userid):
-        cti_profile_id = user_dao.get_profile(userid)
+        cti_profile_id = old_user_dao.get_profile(userid)
         zz = self._config.getconfig('profiles').get(cti_profile_id)
         return zz.get('userstatus')
 
@@ -562,7 +568,7 @@ class Safe(object):
         columns = ('eventdate', 'loginclient', 'company', 'status',
                    'action', 'arguments', 'callduration')
         datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        user = user_dao.get(userid)
+        user = old_user_dao.get(userid)
         userstatus = self.xod_status.get('users').get(userid).get('availstate')
         arguments = (datetime,
                      user.loginclient,
