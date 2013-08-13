@@ -234,8 +234,9 @@ class CurrentCallManager(object):
         try:
             current_call = self._get_current_call(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
-        except LookupError:
+        except LookupError as e:
             logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
+            logger.exception(e)
         else:
             channel_to_hold = current_call[PEER_CHANNEL]
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
