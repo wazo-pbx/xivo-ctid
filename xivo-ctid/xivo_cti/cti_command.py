@@ -227,8 +227,7 @@ class Command(object):
                  'userid': self.userid,
                  'appliname': profilespecs.get('name'),
                  'capaxlets': profilespecs.get('xlets'),
-                 'capas': capastruct,
-                 'presence': 'available'}
+                 'capas': capastruct}
 
         self._connection.connection_details['logged'] = True
         self._connection.logintimer.cancel()
