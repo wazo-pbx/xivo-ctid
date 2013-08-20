@@ -35,13 +35,9 @@ class AMIInitializer(object):
                                                    ['CoreShowChannelsComplete'],
                                                    ['SIPshowregistry', 'IAXregistry'])
     REGISTRATION_COMPLETE = InitializingEntry('RegistrationsComplete',
-                                              ['DAHDIShowChannelsComplete'],
-                                              ['RegistrationComplete'],
-                                              ['DAHDIShowChannels'])
-    DAHDI_SHOW_CHANNELS_COMPLETE = InitializingEntry('DAHDIShowChannelsComplete',
-                                                     ['QueueSummaryComplete'],
-                                                     ['DAHDIShowChannelsComplete'],
-                                                     ['QueueSummary'])
+                                              ['DAHDIShowChannelsComplete', 'QueueSummaryComplete'],
+                                              ['RegistrationComplete', 'DAHDIShowChannelsComplete'],
+                                              ['DAHDIShowChannels', 'QueueSummary'])
     QUEUE_SUMMARY_COMPLETE = InitializingEntry('QueueSummaryComplete',
                                                ['QueueStatusComplete'],
                                                ['QueueSummaryComplete'],
@@ -69,7 +65,6 @@ class AMIInitializer(object):
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
                      CORE_SHOW_CHANNEL_COMPLETE.trigger: CORE_SHOW_CHANNEL_COMPLETE,
                      REGISTRATION_COMPLETE.trigger: REGISTRATION_COMPLETE,
-                     DAHDI_SHOW_CHANNELS_COMPLETE.trigger: DAHDI_SHOW_CHANNELS_COMPLETE,
                      QUEUE_SUMMARY_COMPLETE.trigger: QUEUE_SUMMARY_COMPLETE,
                      QUEUE_STATUS_COMPLETE.trigger: QUEUE_STATUS_COMPLETE,
                      PARKED_CALLS_COMPLETE.trigger: PARKED_CALLS_COMPLETE,

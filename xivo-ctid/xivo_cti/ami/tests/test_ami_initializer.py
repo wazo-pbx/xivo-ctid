@@ -83,20 +83,12 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('DAHDIShowChannelsComplete')
-        self.ami_initializer._unregister.assert_called_once_with('RegistrationComplete')
-        self.ami_initializer._send.assert_called_once_with('DAHDIShowChannels')
-
-    def test_go_dahdi_show_channels_complete(self):
-        self.setup_mock()
-        msg = {'Event': 'DAHDIShowChannelsComplete',
-               'Items': '0'}
-
-        self.ami_initializer.go(msg)
-
-        self.ami_initializer._register.assert_called_once_with('QueueSummaryComplete')
-        self.ami_initializer._unregister.assert_called_once_with('DAHDIShowChannelsComplete')
-        self.ami_initializer._send.assert_called_once_with('QueueSummary')
+        self.ami_initializer._register.assert_any_call('DAHDIShowChannelsComplete')
+        self.ami_initializer._register.assert_any_call('QueueSummaryComplete')
+        self.ami_initializer._unregister.assert_any_call('RegistrationComplete')
+        self.ami_initializer._unregister.assert_any_call('DAHDIShowChannelsComplete')
+        self.ami_initializer._send.assert_any_call('DAHDIShowChannels')
+        self.ami_initializer._send.assert_any_call('QueueSummary')
 
     def test_go_queue_summary_complete(self):
         self.setup_mock()
