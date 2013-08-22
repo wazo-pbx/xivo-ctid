@@ -15,31 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import csv
 import urllib2
 from itertools import ifilter, imap
 import logging
+from xivo.unicode_csv import UnicodeDictReader
 from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
 
 logger = logging.getLogger('csv directory')
-
-# The CSV lib always yields binary data; we will only use Unicode down the
-# chain and would prefer any invalid data to be caught ASAP. Therefore, we
-# define a thin wrapper around DictReader so that binary data won't touch the
-# rest of our code.
-#
-# Note that we still use bytes as *input* to the CSV parser.
-
-
-class UnicodeDictReader(csv.DictReader):
-    @property
-    def fieldnames(self):
-        return [field.decode('utf-8')
-                for field in csv.DictReader.fieldnames.fget(self)]
-
-    def next(self):
-        return dict((key, val.decode('utf-8'))
-                    for (key, val) in csv.DictReader.next(self).iteritems())
 
 
 class CSVFileDirectoryDataSource(DirectoryDataSource):
