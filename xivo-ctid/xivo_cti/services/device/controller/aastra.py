@@ -37,13 +37,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from xivo_dao import device_dao
+from xivo_dao import line_dao
 
 
 class AastraController(object):
 
     def answer(self, device_id):
-        peer = device_dao.get_peer_name(device_id)
+        peer = line_dao.get_peer_name(device_id)
         return peer, {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
                       'Event': 'aastra-xml',
                       'Content-type': 'application/xml'}

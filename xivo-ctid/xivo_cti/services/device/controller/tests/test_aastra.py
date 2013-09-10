@@ -44,7 +44,7 @@ from xivo_cti.services.device.controller.aastra import AastraController
 
 class TestAastraController(unittest.TestCase):
 
-    @patch('xivo_dao.device_dao.get_peer_name')
+    @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer(self, mock_get_peer_name):
         device_id = 66
         peer = 'SIP/1234'
@@ -63,7 +63,7 @@ class TestAastraController(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    @patch('xivo_dao.device_dao.get_peer_name')
+    @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer_good_peer(self, mock_get_peer_name):
         device_id = 66
         peer = 'SIP/abcde'
