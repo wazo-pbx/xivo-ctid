@@ -45,6 +45,7 @@ from mock import patch, Mock
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.xivo_ami import AMIClass
+from xivo_dao.data_handler.device.model import Device
 
 
 class TestDeviceManager(unittest.TestCase):
@@ -93,51 +94,51 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEquals(self.manager.send_sipnotify.call_count, 0)
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
-    @patch('xivo_dao.device_dao.get_vendor_model')
-    def test_is_supported_device_6731i(self, mock_get_vendor_model):
-        device_id = 13
-        vendor = 'Aastra'
-        model = '6731i'
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_supported_device_6731i(self, device_services_get):
+        device = Device(id=13,
+                        vendor='Aastra',
+                        model='6731i')
 
-        mock_get_vendor_model.return_value = vendor, model
+        device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device_id)
-
-        self.assertEqual(result, True)
-
-    @patch('xivo_dao.device_dao.get_vendor_model')
-    def test_is_supported_device_6757i(self, mock_get_vendor_model):
-        device_id = 13
-        vendor = 'Aastra'
-        model = '6757i'
-
-        mock_get_vendor_model.return_value = vendor, model
-
-        result = self.manager.is_supported_device(device_id)
+        result = self.manager.is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
-    @patch('xivo_dao.device_dao.get_vendor_model')
-    def test_is_supported_device_6755i(self, mock_get_vendor_model):
-        device_id = 13
-        vendor = 'Aastra'
-        model = '6755i'
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_supported_device_6757i(self, device_services_get):
+        device = Device(id=13,
+                        vendor='Aastra',
+                        model='6757i')
 
-        mock_get_vendor_model.return_value = vendor, model
+        device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device_id)
+        result = self.manager.is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
-    @patch('xivo_dao.device_dao.get_vendor_model')
-    def test_is_not_supported_device(self, mock_get_vendor_model):
-        device_id = 13
-        vendor = 'Cisco'
-        model = '1234'
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_supported_device_6755i(self, device_services_get):
+        device = Device(id=13,
+                        vendor='Aastra',
+                        model='6755i')
 
-        mock_get_vendor_model.return_value = vendor, model
+        device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device_id)
+        result = self.manager.is_supported_device(device.id)
+
+        self.assertEqual(result, True)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_not_supported_device(self, device_services_get):
+        device = Device(id=13,
+                        vendor='Cisco',
+                        model='1234')
+
+        device_services_get.return_value = device
+
+        result = self.manager.is_supported_device(device.id)
 
         self.assertEqual(result, False)
 
