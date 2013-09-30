@@ -82,7 +82,7 @@ class QueueMemberUpdater(object):
         queue_name = ami_event['Queue']
         member_name = ami_event['Name']
         queue_member = self._queue_member_manager.get_queue_member_by_name(queue_name, member_name)
-        if queue_member:
+        if queue_member is not None:
             new_state = QueueMemberState.from_ami_queue_member(ami_event)
             self._queue_member_manager._update_queue_member(queue_member, new_state)
 
@@ -90,7 +90,7 @@ class QueueMemberUpdater(object):
         queue_name = ami_event['Queue']
         member_name = ami_event['MemberName']
         queue_member = self._queue_member_manager.get_queue_member_by_name(queue_name, member_name)
-        if queue_member:
+        if queue_member is not None:
             new_state = QueueMemberState.from_ami_queue_member_status(ami_event)
             self._queue_member_manager._update_queue_member(queue_member, new_state)
 
