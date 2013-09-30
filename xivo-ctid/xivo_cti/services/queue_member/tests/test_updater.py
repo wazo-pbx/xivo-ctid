@@ -90,12 +90,31 @@ class TestQueueMemberUpdater(unittest.TestCase):
 
         self.queue_member_manager._update_queue_member.assert_called_once_with(queue_member, state)
 
-    @patch.object(QueueMemberState, 'from_ami_queue_member')
-    def test_on_ami_queue_member_no_queue_member(self, mock_from_ami_queue_member):
+    def test_on_ami_queue_member_no_queue_member(self):
         self.queue_member_manager.get_queue_member_by_name.return_value = None
         ami_event = {'Queue': 'queue1', 'Name': None}
 
         self.queue_member_updater.on_ami_queue_member(ami_event)
+
+        assert_that(self.queue_member_manager._update_queue_member.call_count, equal_to(0),
+                    'Call count to update_queue_member')
+
+    @patch.object(QueueMemberState, 'from_ami_queue_member')
+    def test_on_ami_queue_member_status(self, mock_from_ami_queue_member):
+        queue_member = sentinel.queue_member
+        mock_from_ami_queue_member.return_value = state = sentinel.state
+        self.queue_member_manager.get_queue_member_by_name.return_value = queue_member
+        ami_event = {'Queue': 'queue1', 'MemberName': None}
+
+        self.queue_member_updater.on_ami_queue_member_status(ami_event)
+
+        self.queue_member_manager._update_queue_member.assert_called_once_with(queue_member, state)
+
+    def test_on_ami_queue_member_status_no_queue_member(self):
+        self.queue_member_manager.get_queue_member_by_name.return_value = None
+        ami_event = {'Queue': 'queue1', 'MemberName': None}
+
+        self.queue_member_updater.on_ami_queue_member_status(ami_event)
 
         assert_that(self.queue_member_manager._update_queue_member.call_count, equal_to(0),
                     'Call count to update_queue_member')
