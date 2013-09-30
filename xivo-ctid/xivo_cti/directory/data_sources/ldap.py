@@ -17,7 +17,7 @@
 
 import logging
 from itertools import imap
-from xivo_cti.directory.data_sources.directory_data_source import DirectoryDataSource
+from xivo_dird.directory.data_sources.directory_data_source import DirectoryDataSource
 from xivo_dird.ldap import XivoLDAP
 
 logger = logging.getLogger('ldap directory')
