@@ -39,7 +39,8 @@ class AMI_1_8(object):
                   'User',
                   'Queue',
                   'Group',
-                  'Did',)
+                  'Did',
+                  'ReverseLookup',)
 
     def __init__(self, cti_server, innerdata, interface_ami):
         self._ctiserver = cti_server
@@ -339,6 +340,12 @@ class AMI_1_8(object):
         cti_varname = event.get('VARIABLE')
         dp_value = event.get('VALUE')
         chanprops.set_extra_data('dp', cti_varname, dp_value)
+
+    def userevent_reverselookup(self, chanprops, event):
+        for key, value in event.iteritems():
+            if key.startswith('db-'):
+                key = key.split('-', 1)[-1]
+                chanprops.set_extra_data('db', key, value)
 
     def ami_userevent(self, event):
         eventname = event['UserEvent']
