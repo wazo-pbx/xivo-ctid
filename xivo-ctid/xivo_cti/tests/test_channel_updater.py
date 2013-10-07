@@ -97,6 +97,26 @@ class TestChannelUpdater(unittest.TestCase):
         self.assertEqual(channel.extra_data['xivo']['calleridname'], original_name)
         self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
 
+    def test_reverse_lookup_result(self):
+        channel_name = 'SIP/abc'
+        event = {
+            'db-reverse': 'rev',
+            'db-fullname': 'Pierre Laroche',
+            'db-mail': 'pierre@home.com',
+            'dp-not-db': 'lol',
+        }
+        channel = Mock(Channel)
+        self.innerdata.channels = {
+            channel_name: channel,
+        }
+
+        self.updater.reverse_lookup_result(channel_name, event)
+
+        channel.set_extra_data.assert_any_call('db', 'reverse', 'rev')
+        channel.set_extra_data.assert_any_call('db', 'fullname', 'Pierre Laroche')
+        channel.set_extra_data.assert_any_call('db', 'mail', 'pierre@home.com')
+        assert_that(channel.set_extra_data.call_count, equal_to(3), 'set_extra_data call count')
+
     def test_new_caller_id_unknown_channel(self):
         self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
 

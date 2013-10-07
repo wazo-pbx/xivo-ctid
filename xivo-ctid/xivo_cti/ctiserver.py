@@ -297,6 +297,7 @@ class CTIServer(object):
 
         callback_handler.register_callback('NewCallerId',
                                            channel_updater.parse_new_caller_id)
+        callback_handler.register_callback('UserEvent', channel_updater.parse_userevent)
 
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
         callback_handler.register_callback('Inherit', channel_updater.parse_inherit)
