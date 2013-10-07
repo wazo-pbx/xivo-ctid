@@ -39,7 +39,7 @@ class AMI_1_8(object):
                   'User',
                   'Queue',
                   'Group',
-                  'Did',)
+                  'Did')
 
     def __init__(self, cti_server, innerdata, interface_ami):
         self._ctiserver = cti_server

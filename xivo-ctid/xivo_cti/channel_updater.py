@@ -22,6 +22,13 @@ from xivo_cti.ioc.context import context
 logger = logging.getLogger(__name__)
 
 
+def parse_userevent(event):
+    if event['UserEvent'] == 'ReverseLookup':
+        channel = event.get('CHANNEL')
+        updater = context.get('channel_updater')
+        updater.reverse_lookup_result(channel, event)
+
+
 def parse_new_caller_id(event):
     updater = context.get('channel_updater')
     updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
@@ -67,6 +74,14 @@ class ChannelUpdater(object):
         if name:
             channel.set_extra_data('xivo', 'calleridname', name)
         channel.set_extra_data('xivo', 'calleridnum', number)
+
+    @assert_has_channel
+    def reverse_lookup_result(self, channel_name, event):
+        channel = self.innerdata.channels[channel_name]
+        for key, value in event.iteritems():
+            if key.startswith('db-'):
+                key = key.split('-', 1)[-1]
+                channel.set_extra_data('db', key, value)
 
     @assert_has_channel
     @notify_clients
