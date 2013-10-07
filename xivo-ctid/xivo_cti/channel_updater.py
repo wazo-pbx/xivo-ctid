@@ -22,7 +22,7 @@ from xivo_cti.ioc.context import context
 logger = logging.getLogger(__name__)
 
 
-def parse_user_event(event):
+def parse_userevent(event):
     if event['UserEvent'] == 'ReverseLookup':
         channel = event.get('CHANNEL')
         updater = context.get('channel_updater')
