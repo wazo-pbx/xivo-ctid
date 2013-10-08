@@ -25,6 +25,7 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.xivo_ami import AMIClass
 from xivo_dao.data_handler.device.model import Device
+from xivo_dao.data_handler.exception import ElementNotExistsError
 
 
 class TestDeviceManager(unittest.TestCase):
@@ -118,6 +119,17 @@ class TestDeviceManager(unittest.TestCase):
         device_services_get.return_value = device
 
         result = self.manager.is_supported_device(device.id)
+
+        self.assertEqual(result, False)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_supported_device_does_not_exists(self, mock_get):
+        def aux(_):
+            raise ElementNotExistsError('not found')
+
+        mock_get.side_effect = aux
+
+        result = self.manager.is_supported_device('000deadbeef000')
 
         self.assertEqual(result, False)
 

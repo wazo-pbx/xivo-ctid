@@ -18,6 +18,7 @@
 
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_dao.data_handler.device import services as device_services
+from xivo_dao.data_handler.exception import ElementNotExistsError
 
 
 class DeviceManager(object):
@@ -32,8 +33,11 @@ class DeviceManager(object):
             self.send_sipnotify(cmd)
 
     def is_supported_device(self, device_id):
-        device = device_services.get(device_id)
-        return device.vendor == 'Aastra' and device.model in ['6731i', '6757i', '6755i']
+        try:
+            device = device_services.get(device_id)
+            return device.vendor == 'Aastra' and device.model in ['6731i', '6757i', '6755i']
+        except ElementNotExistsError:
+            return False
 
     def send_sipnotify(self, cmd):
         self.ami.sipnotify(*cmd)
