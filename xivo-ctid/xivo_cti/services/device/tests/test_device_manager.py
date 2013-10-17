@@ -59,6 +59,14 @@ class TestDeviceManager(unittest.TestCase):
 
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
+    @patch('xivo_dao.data_handler.device.services.get',
+           Mock(side_effect=ElementNotExistsError('Not found')))
+    def test_answer_no_configured_device(self):
+
+        self.manager.answer(5)
+
+        self.assertEquals(self.aastra_controller.answer.call_count, 0)
+
     @patch('xivo_dao.data_handler.device.services.get')
     def test_is_supported_device_6731i(self, device_services_get):
         device = Device(id=13,

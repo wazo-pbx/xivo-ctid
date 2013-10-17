@@ -32,7 +32,11 @@ class DeviceManager(object):
         self.aastra_controller = AastraController(ami_class)
 
     def answer(self, device_id):
-        device = device_services.get(device_id)
+        try:
+            device = device_services.get(device_id)
+        except ElementNotExistsError:
+            return
+
         if self.is_supported_device(device_id):
             self.aastra_controller.answer(device)
 
