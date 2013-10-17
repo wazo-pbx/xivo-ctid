@@ -22,7 +22,6 @@ from xivo_dao.data_handler.exception import ElementNotExistsError
 
 POPC_DEVICES = {
     'Aastra': ['6731i', '6757i', '6755i'],
-    'Snom': ['720'],
 }
 
 
