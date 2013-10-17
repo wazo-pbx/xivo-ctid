@@ -111,6 +111,18 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEqual(result, True)
 
     @patch('xivo_dao.data_handler.device.services.get')
+    def test_is_supported_device_snom_720(self, device_services_get):
+        device = Device(id=13,
+                        vendor='Snom',
+                        model='720')
+
+        device_services_get.return_value = device
+
+        result = self.manager.is_supported_device(device.id)
+
+        self.assertEqual(result, True)
+
+    @patch('xivo_dao.data_handler.device.services.get')
     def test_is_not_supported_device(self, device_services_get):
         device = Device(id=13,
                         vendor='Cisco',
