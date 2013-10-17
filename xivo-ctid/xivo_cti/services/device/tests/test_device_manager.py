@@ -94,15 +94,6 @@ class TestDeviceManager(unittest.TestCase):
 
         self.assertEqual(result, True)
 
-    def test_is_supported_device_snom_720(self):
-        device = Device(id=13,
-                        vendor='Snom',
-                        model='720')
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, True)
-
     def test_is_not_supported_device(self):
         device = Device(id=13,
                         vendor='Cisco',
