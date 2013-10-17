@@ -29,13 +29,12 @@ POPC_DEVICES = {
 class DeviceManager(object):
 
     def __init__(self, ami_class):
-        self.ami = ami_class
-        self.aastra_controller = AastraController()
+        self.aastra_controller = AastraController(ami_class)
 
     def answer(self, device_id):
+        device = device_services.get(device_id)
         if self.is_supported_device(device_id):
-            cmd = self.aastra_controller.answer(device_id)
-            self.send_sipnotify(cmd)
+            self.aastra_controller.answer(device)
 
     def is_supported_device(self, device_id):
         try:
@@ -44,6 +43,3 @@ class DeviceManager(object):
             return False
 
         return device.model in POPC_DEVICES.get(device.vendor, [])
-
-    def send_sipnotify(self, cmd):
-        self.ami.sipnotify(*cmd)

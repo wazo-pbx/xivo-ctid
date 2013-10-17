@@ -20,8 +20,14 @@ from xivo_dao import line_dao
 
 class AastraController(object):
 
-    def answer(self, device_id):
-        peer = line_dao.get_peer_name(device_id)
-        return peer, {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
-                      'Event': 'aastra-xml',
-                      'Content-type': 'application/xml'}
+    def __init__(self, ami):
+        self._ami = ami
+
+    def answer(self, device):
+        peer = line_dao.get_peer_name(device.id)
+        xml_content = {
+            'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
+            'Event': 'aastra-xml',
+            'Content-type': 'application/xml',
+        }
+        self._ami.sipnotify(peer, xml_content)

@@ -18,45 +18,29 @@
 import unittest
 
 from mock import patch
+from mock import Mock
+from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.services.device.controller.aastra import AastraController
+from xivo_dao.data_handler.device.model import Device
 
 
 class TestAastraController(unittest.TestCase):
 
+    def setUp(self):
+        self._ami_class = Mock(AMIClass)
+
     @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer(self, mock_get_peer_name):
-        device_id = 66
         peer = 'SIP/1234'
+        device = Device(id=13)
 
         mock_get_peer_name.return_value = peer
 
-        aastra_controller = AastraController()
-
-        result = aastra_controller.answer(device_id)
+        aastra_controller = AastraController(self._ami_class)
+        aastra_controller.answer(device)
 
         var_content = {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
                        'Event': 'aastra-xml',
                        'Content-type': 'application/xml'}
 
-        expected_result = (peer, var_content)
-
-        self.assertEqual(result, expected_result)
-
-    @patch('xivo_dao.line_dao.get_peer_name')
-    def test_answer_good_peer(self, mock_get_peer_name):
-        device_id = 66
-        peer = 'SIP/abcde'
-
-        mock_get_peer_name.return_value = peer
-
-        aastra_controller = AastraController()
-
-        result = aastra_controller.answer(device_id)
-
-        var_content = {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
-                       'Event': 'aastra-xml',
-                       'Content-type': 'application/xml'}
-
-        expected_result = (peer, var_content)
-
-        self.assertEqual(result, expected_result)
+        self._ami_class.sipnotify.assert_called_once_with(peer, var_content)

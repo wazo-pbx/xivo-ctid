@@ -19,59 +19,44 @@
 import unittest
 import mock
 
-from mock import patch, Mock
+from mock import patch
+from mock import Mock
 
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
-from xivo_cti.xivo_ami import AMIClass
 from xivo_dao.data_handler.device.model import Device
 from xivo_dao.data_handler.exception import ElementNotExistsError
+from xivo_cti.xivo_ami import AMIClass
 
 
 class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
         self.aastra_controller = mock.Mock(AastraController)
-        ami_class = Mock(AMIClass)
-        self.manager = DeviceManager(ami_class)
+        self.ami_class = Mock(AMIClass)
+        self.manager = DeviceManager(self.ami_class)
         self.manager.aastra_controller = self.aastra_controller
 
-    def test_answer(self):
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_answer(self, mock_device_service_get):
         device_id = 13
-        formatted_answer_ami_command = 'peer', {'var': 'val'}
-        self.aastra_controller.answer.return_value = formatted_answer_ami_command
-        self.manager.send_sipnotify = mock.Mock()
+        mock_device_service_get.return_value = device = Device(id=device_id)
         self.manager.is_supported_device = mock.Mock(return_value=True)
 
         self.manager.answer(device_id)
 
-        self.aastra_controller.answer.assert_called_once_with(device_id)
-        self.manager.send_sipnotify.assert_called_once_with(formatted_answer_ami_command)
+        self.aastra_controller.answer.assert_called_once_with(device)
 
-    def test_answer_from_good_device_manager(self):
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_answer_with_unsupported_device(self, mock_device_service_get):
         device_id = 13
-        formatted_answer_ami_command = 'peer', {'var': 'val'}
-        self.aastra_controller.answer.return_value = formatted_answer_ami_command
-        self.manager.send_sipnotify = mock.Mock()
-        self.manager.is_supported_device = mock.Mock(return_value=True)
-
-        self.manager.answer(device_id)
-
-        self.aastra_controller.answer.assert_called_once_with(device_id)
-        self.manager.send_sipnotify.assert_called_once_with(formatted_answer_ami_command)
-
-    def test_answer_with_unsupported_device(self):
-        device_id = 13
-        formatted_answer_ami_command = 'peer', {'var': 'val'}
-        self.aastra_controller.answer.return_value = formatted_answer_ami_command
-        self.manager.send_sipnotify = mock.Mock()
-        self.manager.is_supported_device = mock.Mock(return_value=False)
+        mock_device_service_get.return_value = Device(id=device_id)
+        self.manager.is_supported_device = Mock(return_value=False)
 
         self.manager.answer(device_id)
 
         self.manager.is_supported_device.assert_called_once_with(device_id)
 
-        self.assertEquals(self.manager.send_sipnotify.call_count, 0)
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
     @patch('xivo_dao.data_handler.device.services.get')
@@ -144,11 +129,3 @@ class TestDeviceManager(unittest.TestCase):
         result = self.manager.is_supported_device('000deadbeef000')
 
         self.assertEqual(result, False)
-
-    def test_send_sipnotify(self):
-        channel, vars = 'SIP/abc', {'un': 1}
-        cmd = channel, vars
-
-        self.manager.send_sipnotify(cmd)
-
-        self.manager.ami.sipnotify.assert_called_once_with(channel, vars)
