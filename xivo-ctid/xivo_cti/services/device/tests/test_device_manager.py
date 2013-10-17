@@ -68,36 +68,69 @@ class TestDeviceManager(unittest.TestCase):
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
     def test_is_supported_device_6731i(self):
-        device = Device(id=13,
-                        vendor='Aastra',
-                        model='6731i')
+        device = Device(
+            id=13,
+            vendor='Aastra',
+            model='6731i',
+            plugin='xivo-aastra-switchboard',
+        )
 
         result = self.manager._is_supported_device(device)
 
         self.assertEqual(result, True)
 
+    def test_is_supported_device_not_switchboard(self):
+        device = Device(
+            id=13,
+            vendor='Aastra',
+            model='6731i',
+            plugin='xivo-aastra-3.2.2-SP3',
+        )
+
+        result = self.manager._is_supported_device(device)
+
+        self.assertEqual(result, False)
+
     def test_is_supported_device_6757i(self):
-        device = Device(id=13,
-                        vendor='Aastra',
-                        model='6757i')
+        device = Device(
+            id=13,
+            vendor='Aastra',
+            model='6757i',
+            plugin='xivo-aastra-switchboard',
+        )
 
         result = self.manager._is_supported_device(device)
 
         self.assertEqual(result, True)
 
     def test_is_supported_device_6755i(self):
-        device = Device(id=13,
-                        vendor='Aastra',
-                        model='6755i')
+        device = Device(
+            id=13,
+            vendor='Aastra',
+            model='6755i',
+            plugin='xivo-aastra-switchboard',
+        )
 
         result = self.manager._is_supported_device(device)
 
         self.assertEqual(result, True)
 
     def test_is_not_supported_device(self):
-        device = Device(id=13,
-                        vendor='Cisco',
-                        model='1234')
+        device = Device(
+            id=13,
+            vendor='Cisco',
+            model='1234',
+            plugin='xivo-aastra-plugin',
+        )
+
+        result = self.manager._is_supported_device(device)
+
+        self.assertEqual(result, False)
+
+    def test_is_not_supported_device_missing_field(self):
+        device = Device(
+            id=13,
+        )
 
         result = self.manager._is_supported_device(device)
 

@@ -40,4 +40,9 @@ class DeviceManager(object):
             self.aastra_controller.answer(device)
 
     def _is_supported_device(self, device):
-        return device.model in POPC_DEVICES.get(device.vendor, [])
+        try:
+            if 'switchboard' not in device.plugin:
+                return False
+            return device.model in POPC_DEVICES.get(device.vendor, [])
+        except AttributeError:
+            return False
