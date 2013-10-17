@@ -41,7 +41,7 @@ class TestDeviceManager(unittest.TestCase):
     def test_answer(self, mock_device_service_get):
         device_id = 13
         mock_device_service_get.return_value = device = Device(id=device_id)
-        self.manager.is_supported_device = mock.Mock(return_value=True)
+        self.manager._is_supported_device = mock.Mock(return_value=True)
 
         self.manager.answer(device_id)
 
@@ -51,11 +51,11 @@ class TestDeviceManager(unittest.TestCase):
     def test_answer_with_unsupported_device(self, mock_device_service_get):
         device_id = 13
         mock_device_service_get.return_value = Device(id=device_id)
-        self.manager.is_supported_device = Mock(return_value=False)
+        self.manager._is_supported_device = Mock(return_value=False)
 
         self.manager.answer(device_id)
 
-        self.manager.is_supported_device.assert_called_once_with(device_id)
+        self.manager._is_supported_device.assert_called_once_with(device_id)
 
         self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
@@ -75,7 +75,7 @@ class TestDeviceManager(unittest.TestCase):
 
         device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device.id)
+        result = self.manager._is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
@@ -87,7 +87,7 @@ class TestDeviceManager(unittest.TestCase):
 
         device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device.id)
+        result = self.manager._is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
@@ -99,7 +99,7 @@ class TestDeviceManager(unittest.TestCase):
 
         device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device.id)
+        result = self.manager._is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
@@ -111,7 +111,7 @@ class TestDeviceManager(unittest.TestCase):
 
         device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device.id)
+        result = self.manager._is_supported_device(device.id)
 
         self.assertEqual(result, True)
 
@@ -123,7 +123,7 @@ class TestDeviceManager(unittest.TestCase):
 
         device_services_get.return_value = device
 
-        result = self.manager.is_supported_device(device.id)
+        result = self.manager._is_supported_device(device.id)
 
         self.assertEqual(result, False)
 
@@ -134,6 +134,6 @@ class TestDeviceManager(unittest.TestCase):
 
         mock_get.side_effect = aux
 
-        result = self.manager.is_supported_device('000deadbeef000')
+        result = self.manager._is_supported_device('000deadbeef000')
 
         self.assertEqual(result, False)

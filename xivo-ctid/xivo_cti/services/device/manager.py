@@ -37,10 +37,10 @@ class DeviceManager(object):
         except ElementNotExistsError:
             return
 
-        if self.is_supported_device(device_id):
+        if self._is_supported_device(device_id):
             self.aastra_controller.answer(device)
 
-    def is_supported_device(self, device_id):
+    def _is_supported_device(self, device_id):
         try:
             device = device_services.get(device_id)
         except ElementNotExistsError:
