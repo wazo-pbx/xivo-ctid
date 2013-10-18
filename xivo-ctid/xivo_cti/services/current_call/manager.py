@@ -68,12 +68,8 @@ class CurrentCallManager(object):
                 return True
         return False
 
-    def schedule_answer(self, user_id, delay):
-        try:
-            device_id = user_dao.get_device_id(user_id)
-            self.scheduler.schedule(delay, self.device_manager.get_answer_fn(device_id))
-        except LookupError:
-            logger.debug('Not scheduling an answer to a call with no device configured')
+    def schedule_answer(self, answer_fn, delay):
+        self.scheduler.schedule(delay, answer_fn)
 
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)
@@ -242,7 +238,7 @@ class CurrentCallManager(object):
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
             self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
-    def switchboard_unhold(self, user_id, action_id):
+    def switchboard_unhold(self, user_id, action_id, client_connection):
         logger.info('Switchboard %s unholded channel %s', user_id, action_id)
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
@@ -253,7 +249,7 @@ class CurrentCallManager(object):
         else:
             caller_id = '"%s" <%s>' % (cid_name, cid_number)
             self.ami.bridge_originate(user_line, channel, caller_id, True, False)
-            self.schedule_answer(user_id, 0.25)
+            self.schedule_answer(client_connection.answer_cb, 0.25)
 
     def _get_current_call(self, user_id):
         try:

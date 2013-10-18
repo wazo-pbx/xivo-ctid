@@ -26,6 +26,7 @@ from mock import patch
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
 from xivo_cti.dao import user_dao
+from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.current_call import formatter
 from xivo_cti.services.current_call import manager
@@ -650,6 +651,7 @@ class TestCurrentCallManager(unittest.TestCase):
         delay = 0.25
         allow_calling_party_transfer = True
         continue_dialplan = False
+        client_connection = Mock(CTI)
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
@@ -657,12 +659,12 @@ class TestCurrentCallManager(unittest.TestCase):
         mock_get_line_identity.return_value = user_line
         self.manager.schedule_answer = Mock()
 
-        self.manager.switchboard_unhold(user_id, unique_id)
+        self.manager.switchboard_unhold(user_id, unique_id, client_connection)
 
         self.manager.ami.bridge_originate.assert_called_once_with(
             user_line, channel_to_intercept, caller_id,
             allow_calling_party_transfer, continue_dialplan)
-        self.manager.schedule_answer.assert_called_once_with(user_id, delay)
+        self.manager.schedule_answer.assert_called_once_with(client_connection.answer_cb, delay)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_unhold_no_line(self, mock_get_line_identity):
@@ -673,8 +675,12 @@ class TestCurrentCallManager(unittest.TestCase):
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
         mock_get_line_identity.side_effect = LookupError('No such line')
+        client_connection = Mock(CTI)
 
-        self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
+        self.assertRaises(
+            LookupError,
+            self.manager.switchboard_unhold, user_id, unique_id, client_connection
+        )
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_unhold_no_channel(self, mock_get_line_identity):
@@ -685,30 +691,20 @@ class TestCurrentCallManager(unittest.TestCase):
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.side_effect = LookupError()
         mock_get_line_identity.return_value = user_line
+        client_connection = Mock(CTI)
 
-        self.assertRaises(LookupError, self.manager.switchboard_unhold, user_id, unique_id)
-
-    @patch('xivo_dao.user_dao.get_device_id')
-    def test_schedule_answer(self, mock_get_device_id):
-        user_id = 6
-        delay = 0.25
-        device_id = 14
-        mock_get_device_id.return_value = device_id
-
-        self.manager.schedule_answer(user_id, delay)
-
-        self.scheduler.schedule.assert_called_once_with(
-            delay, self.device_manager.get_answer_fn(device_id)
+        self.assertRaises(
+            LookupError,
+            self.manager.switchboard_unhold, user_id, unique_id, client_connection
         )
 
-    @patch('xivo_dao.user_dao.get_device_id', Mock(side_effect=LookupError()))
-    def test_schedule_answer_no_device(self):
-        user_id = 6
+    def test_schedule_answer(self):
         delay = 0.25
+        answer_fn = Mock()
 
-        self.manager.schedule_answer(user_id, delay)
+        self.manager.schedule_answer(answer_fn, delay)
 
-        self.assertEquals(self.scheduler.schedule.call_count, 0)
+        self.scheduler.schedule.assert_called_once_with(delay, answer_fn)
 
     def test_set_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()

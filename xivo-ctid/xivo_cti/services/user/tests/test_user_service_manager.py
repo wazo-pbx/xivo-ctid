@@ -107,7 +107,8 @@ class TestUserServiceManager(unittest.TestCase):
     def test_on_originate_response_callback_success(self):
         user_id = 1
         exten = '543'
-        connection = sentinel
+        connection = Mock(CTI)
+        connection.answer_cb = sentinel
         response = {
             'Response': 'Success',
             'ActionID': '123423847',
@@ -115,9 +116,11 @@ class TestUserServiceManager(unittest.TestCase):
         }
         self.user_service_manager._on_originate_success = Mock()
 
-        self.user_service_manager._on_originate_response_callback(connection, user_id, exten, response)
+        self.user_service_manager._on_originate_response_callback(
+            connection, user_id, exten, response,
+        )
 
-        self.user_service_manager._on_originate_success.assert_called_once_with(user_id)
+        self.user_service_manager._on_originate_success.assert_called_once_with(connection.answer_cb)
 
     def test_on_originate_response_callback_error(self):
         user_id = 1
@@ -450,16 +453,12 @@ class TestUserServiceManager(unittest.TestCase):
         self.assertEquals(mock_is_agent.call_count, 0)
         self.assertEquals(self.user_service_manager.agent_service_manager.set_presence.call_count, 0)
 
-    @patch('xivo_dao.user_dao.get_device_id')
-    def test_pickup_the_phone(self, mock_get_device_id):
-        user_id = 23
-        device_id = 32
-        self.device_manager.get_answer_fn.return_value = answer_fn = Mock()
-        mock_get_device_id.return_value = device_id
+    def test_pickup_the_phone(self):
+        client_connection = Mock(CTI)
 
-        self.user_service_manager.pickup_the_phone(user_id)
+        self.user_service_manager.pickup_the_phone(client_connection)
 
-        answer_fn.assert_called_once_with()
+        client_connection.answer_cb.assert_called_once_with()
 
     @patch('xivo_dao.user_dao.enable_recording')
     def test_enable_recording(self, mock_enable_recording):

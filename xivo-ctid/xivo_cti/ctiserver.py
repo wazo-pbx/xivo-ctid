@@ -188,7 +188,7 @@ class CTIServer(object):
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
-        Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['user_id'])
+        Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['cti_connection'])
         Dial.register_callback_params(self._user_service_manager.call_destination,
                                       ['cti_connection', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
@@ -277,7 +277,7 @@ class CTIServer(object):
         )
         UnholdSwitchboard.register_callback_params(
             context.get('current_call_manager').switchboard_unhold,
-            ['user_id', 'unique_id'],
+            ['user_id', 'unique_id', 'cti_connection'],
         )
 
     def _register_ami_callbacks(self):

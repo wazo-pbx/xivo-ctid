@@ -65,6 +65,9 @@ class CTI(interfaces.Interfaces):
         self._cti_command_runner = CTICommandRunner()
         self._register_login_callbacks()
 
+    def answer_cb(self):
+        pass
+
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
 
@@ -175,10 +178,12 @@ class CTI(interfaces.Interfaces):
 
         innerdata = self._ctiserver.safe
         user_dict = innerdata.xod_config.get('users').finduser(login)
+        user_id = user_dict.get('id')
 
         if user_dict:
             self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
-                                            'userid': str(user_dict.get('id'))})
+                                            'userid': str(user_id)})
+            self.answer_cb = self._get_answer_cb(user_id)
 
         session_id = ''.join(random.sample(ALPHANUMS, 10))
         self.connection_details['prelogin'] = {'sessionid': session_id}

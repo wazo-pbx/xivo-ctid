@@ -144,13 +144,8 @@ class UserServiceManager(object):
                 agent_id = user_dao.agent_id(user_id)
                 self.agent_service_manager.set_presence(agent_id, presence)
 
-    def pickup_the_phone(self, user_id):
-        try:
-            device_id = user_dao.get_device_id(user_id)
-            logger.info('User %s is answering his phone', user_id)
-            self.device_manager.get_answer_fn(device_id)()
-        except LookupError:
-            logger.debug('Cannot auto-answer for user %s', user_id)
+    def pickup_the_phone(self, client_connection):
+        client_connection.answer_cb()
 
     def enable_recording(self, target):
         user_dao.enable_recording(target)
@@ -184,12 +179,12 @@ class UserServiceManager(object):
     def _on_originate_response_callback(self, client_connection, user_id, exten, result):
         response = result.get(RESPONSE)
         if response == SUCCESS:
-            self._on_originate_success(user_id)
+            self._on_originate_success(client_connection.answer_cb)
         else:
             self._on_originate_error(client_connection, user_id, exten, result.get(MESSAGE))
 
-    def _on_originate_success(self, user_id):
-        context.get('current_call_manager').schedule_answer(user_id, ORIGINATE_AUTO_ANSWER_DELAY)
+    def _on_originate_success(self, answer_fn):
+        context.get('current_call_manager').schedule_answer(answer_fn, ORIGINATE_AUTO_ANSWER_DELAY)
 
     def _on_originate_error(self, client_connection, user_id, exten, message):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
