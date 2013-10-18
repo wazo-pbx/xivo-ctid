@@ -194,9 +194,11 @@ class CTI(interfaces.Interfaces):
 
     def _get_answer_cb(self, user_id):
         device_manager = context.get('device_manager')
-
-        device_id = user_dao.get_device_id(user_id)
-        return device_manager.get_answer_fn(device_id)
+        try:
+            device_id = user_dao.get_device_id(user_id)
+            return device_manager.get_answer_fn(device_id)
+        except LookupError:
+            return self.answer_cb
 
 
 class CTIS(CTI):

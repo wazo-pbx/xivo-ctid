@@ -19,6 +19,8 @@ import unittest
 
 from mock import Mock
 from mock import patch
+from hamcrest import assert_that
+from hamcrest import equal_to
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.interfaces.interface_cti import NotLoggedException
@@ -53,3 +55,11 @@ class TestCTI(unittest.TestCase):
 
         mock_device_manager.get_answer_fn.assert_called_once_with(device_id)
         answer_fn.assert_called_once_with()
+
+    @patch('xivo_dao.user_dao.get_device_id', Mock(side_effect=LookupError))
+    @patch('xivo_cti.ioc.context.context.get', Mock())
+    def test_get_answer_cb_no_device(self):
+
+        fn = self._cti_connection._get_answer_cb(5)
+
+        assert_that(fn, equal_to(self._cti_connection.answer_cb))
