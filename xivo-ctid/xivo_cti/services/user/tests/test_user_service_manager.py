@@ -36,7 +36,6 @@ from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.interfaces import interface_ami
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 
@@ -455,12 +454,12 @@ class TestUserServiceManager(unittest.TestCase):
     def test_pickup_the_phone(self, mock_get_device_id):
         user_id = 23
         device_id = 32
-
+        self.device_manager.get_answer_fn.return_value = answer_fn = Mock()
         mock_get_device_id.return_value = device_id
 
         self.user_service_manager.pickup_the_phone(user_id)
 
-        self.device_manager.answer.assert_called_once_with(device_id)
+        answer_fn.assert_called_once_with()
 
     @patch('xivo_dao.user_dao.enable_recording')
     def test_enable_recording(self, mock_enable_recording):

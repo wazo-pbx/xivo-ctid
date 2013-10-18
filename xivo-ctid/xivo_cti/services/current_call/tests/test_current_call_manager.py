@@ -698,7 +698,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.schedule_answer(user_id, delay)
 
         self.scheduler.schedule.assert_called_once_with(
-            delay, self.device_manager.answer, device_id
+            delay, self.device_manager.get_answer_fn(device_id)
         )
 
     @patch('xivo_dao.user_dao.get_device_id', Mock(side_effect=LookupError()))

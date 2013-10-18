@@ -17,6 +17,7 @@
 
 
 from xivo_cti.services.device.controller.aastra import AastraController
+from xivo_cti.services.device.controller.base import BaseController
 from xivo_dao.data_handler.device import services as device_services
 from xivo_dao.data_handler.exception import ElementNotExistsError
 
@@ -28,16 +29,19 @@ POPC_DEVICES = {
 class DeviceManager(object):
 
     def __init__(self, ami_class):
-        self.aastra_controller = AastraController(ami_class)
+        self._base_controller = BaseController(ami_class)
+        self._aastra_controller = AastraController(ami_class)
 
-    def answer(self, device_id):
+    def get_answer_fn(self, device_id):
         try:
             device = device_services.get(device_id)
         except ElementNotExistsError:
-            return
+            device = None
 
         if self._is_supported_device(device):
-            self.aastra_controller.answer(device)
+            return lambda: self._aastra_controller.answer(device)
+        else:
+            return lambda: self._base_controller.answer(device)
 
     def _is_supported_device(self, device):
         try:

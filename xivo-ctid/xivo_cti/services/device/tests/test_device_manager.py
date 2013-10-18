@@ -19,11 +19,14 @@
 import unittest
 import mock
 
+from hamcrest import assert_that
+from hamcrest import equal_to
 from mock import patch
 from mock import Mock
 
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
+from xivo_cti.services.device.controller.base import BaseController
 from xivo_dao.data_handler.device.model import Device
 from xivo_dao.data_handler.exception import ElementNotExistsError
 from xivo_cti.xivo_ami import AMIClass
@@ -32,40 +35,10 @@ from xivo_cti.xivo_ami import AMIClass
 class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
-        self.aastra_controller = mock.Mock(AastraController)
         self.ami_class = Mock(AMIClass)
+        self._base_controller = Mock(BaseController)
+        self._aastra_controller = Mock(AastraController)
         self.manager = DeviceManager(self.ami_class)
-        self.manager.aastra_controller = self.aastra_controller
-
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_answer(self, mock_device_service_get):
-        device_id = 13
-        mock_device_service_get.return_value = device = Device(id=device_id)
-        self.manager._is_supported_device = mock.Mock(return_value=True)
-
-        self.manager.answer(device_id)
-
-        self.aastra_controller.answer.assert_called_once_with(device)
-
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_answer_with_unsupported_device(self, mock_device_service_get):
-        device_id = 13
-        mock_device_service_get.return_value = device = Device(id=device_id)
-        self.manager._is_supported_device = Mock(return_value=False)
-
-        self.manager.answer(device_id)
-
-        self.manager._is_supported_device.assert_called_once_with(device)
-
-        self.assertEquals(self.aastra_controller.answer.call_count, 0)
-
-    @patch('xivo_dao.data_handler.device.services.get',
-           Mock(side_effect=ElementNotExistsError('Not found')))
-    def test_answer_no_configured_device(self):
-
-        self.manager.answer(5)
-
-        self.assertEquals(self.aastra_controller.answer.call_count, 0)
 
     def test_is_supported_device_6731i(self):
         device = Device(
@@ -135,3 +108,42 @@ class TestDeviceManager(unittest.TestCase):
         result = self.manager._is_supported_device(device)
 
         self.assertEqual(result, False)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_not_supported(self, mock_device_service_get):
+        device = Device(
+            id=42,
+            vendor='Cisco',
+            model='1234',
+            plugin='xivo-aastra-plugin',
+        )
+        mock_device_service_get.return_value = device
+        self.manager._base_controller = self._base_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._base_controller.answer.assert_called_once_with(device)
+
+    @patch('xivo_dao.data_handler.device.services.get',
+           Mock(side_effect=ElementNotExistsError('Not found')))
+    def test_get_answer_fn_no_device(self):
+        self.manager._base_controller = self._base_controller
+
+        self.manager.get_answer_fn(5)()
+
+        self._base_controller.answer.assert_called_once_with(None)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_aastra_switchboard(self, mock_device_service_get):
+        device = Device(
+            id=13,
+            vendor='Aastra',
+            model='6755i',
+            plugin='xivo-aastra-switchboard',
+        )
+        mock_device_service_get.return_value = device
+        self.manager._aastra_controller = self._aastra_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._aastra_controller.answer.assert_called_once_with(device)

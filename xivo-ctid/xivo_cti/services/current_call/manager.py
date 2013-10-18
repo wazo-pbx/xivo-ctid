@@ -71,7 +71,7 @@ class CurrentCallManager(object):
     def schedule_answer(self, user_id, delay):
         try:
             device_id = user_dao.get_device_id(user_id)
-            self.scheduler.schedule(delay, self.device_manager.answer, device_id)
+            self.scheduler.schedule(delay, self.device_manager.get_answer_fn(device_id))
         except LookupError:
             logger.debug('Not scheduling an answer to a call with no device configured')
 

@@ -148,7 +148,7 @@ class UserServiceManager(object):
         try:
             device_id = user_dao.get_device_id(user_id)
             logger.info('User %s is answering his phone', user_id)
-            self.device_manager.answer(device_id)
+            self.device_manager.get_answer_fn(device_id)()
         except LookupError:
             logger.debug('Cannot auto-answer for user %s', user_id)
 
