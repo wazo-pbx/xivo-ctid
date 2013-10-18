@@ -15,17 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_dao import line_dao
+from hamcrest import assert_that
+from hamcrest import equal_to
+from mock import Mock
+from unittest import TestCase
+from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.services.device.controller import base
+from xivo_dao.data_handler.device.model import Device
 
 
-class AastraController(base.BaseController):
+class TestBaseController(TestCase):
 
-    def answer(self, device):
-        peer = line_dao.get_peer_name(device.id)
-        xml_content = {
-            'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
-            'Event': 'aastra-xml',
-            'Content-type': 'application/xml',
-        }
-        self._ami.sipnotify(peer, xml_content)
+    def setUp(self):
+        self._ami = Mock(AMIClass)
+
+    def test_base_controller_ami_field(self):
+        c = base.BaseController(self._ami)
+
+        assert_that(c._ami, equal_to(self._ami))
+
+    def test_answer_function_with_device_exists(self):
+        c = base.BaseController(self._ami)
+
+        c.answer(Device())
