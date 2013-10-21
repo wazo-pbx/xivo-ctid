@@ -52,7 +52,7 @@ class TestSnomController(unittest.TestCase):
         snom_controller = SnomController(self._ami_class)
         answerer = Mock(_SnomAnswerer)
         snom_controller._get_answerer = Mock(return_value=answerer)
-        answerer.answer.side_effect = lambda: time.sleep(2)
+        answerer.answer.side_effect = lambda: time.sleep(0.2)
 
         call_time = time.time()
         snom_controller.answer(device)
