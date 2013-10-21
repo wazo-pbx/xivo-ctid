@@ -17,6 +17,7 @@
 
 import base64
 import logging
+import threading
 import urllib
 import urllib2
 
@@ -31,7 +32,7 @@ class SnomController(base.BaseController):
 
     def answer(self, device):
         answerer = self._get_answerer(device.ip, self._username, self._password)
-        answerer.answer()
+        threading.Thread(target=answerer.answer).start()
 
     def _get_answerer(self, hostname, username, password):
         return _SnomAnswerer(hostname, username, password)

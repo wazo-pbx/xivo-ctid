@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import time
 import unittest
 import urllib2
 
 from base64 import standard_b64encode
 from hamcrest import assert_that
 from hamcrest import equal_to
+from hamcrest import less_than
 from mock import Mock
 from mock import patch
 from mock import sentinel
@@ -44,6 +46,20 @@ class TestSnomController(unittest.TestCase):
 
         snom_controller._get_answerer.assert_called_once_with(device.ip, 'guest', 'guest')
         answerer.answer.assert_called_once_with()
+
+    def test_answer_blocking(self):
+        device = Device(ip='127.0.0.1')
+        snom_controller = SnomController(self._ami_class)
+        answerer = Mock(_SnomAnswerer)
+        snom_controller._get_answerer = Mock(return_value=answerer)
+        answerer.answer.side_effect = lambda: time.sleep(2)
+
+        call_time = time.time()
+        snom_controller.answer(device)
+        return_time = time.time()
+
+        elapsed_time = return_time - call_time
+        assert_that(elapsed_time, less_than(0.1), 'Time spent in a blocking answer in second')
 
     def test_get_answerer(self):
         ip = '127.0.0.1'
