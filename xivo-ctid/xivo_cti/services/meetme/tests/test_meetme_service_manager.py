@@ -232,7 +232,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
         channel = 'SIP/kjsdfh-12356'
         result = service_manager._build_member_status(1, 'Tester One', '666', channel, True)
         expected = {'join_order': 1,
-                    'join_time':-1,
+                    'join_time': -1,
                     'number': '666',
                     'name': 'Tester One',
                     'channel': channel,
@@ -552,10 +552,10 @@ class TestMeetmeServiceManager(unittest.TestCase):
         expected = {conf_room_number: {'number': conf_room_number,
                                        'name': conf_room_name,
                                        'pin_required': False,
-                                       'start_time':-1,
+                                       'start_time': -1,
                                        'context': 'dev',
                                        'members': {1: {'join_order': 1,
-                                                       'join_time':-1,
+                                                       'join_time': -1,
                                                        'number': number,
                                                        'name': name,
                                                        'channel': channel,
