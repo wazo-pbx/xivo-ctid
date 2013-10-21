@@ -1,23 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013 Avencall
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-# vim: set fileencoding=utf-8 :
-
 # Copyright (C) 2007-2012 Avencall
 #
 # This program is free software; you can redistribute it and/or modify
@@ -75,16 +58,16 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         self.notifier._send_meetme_membership = Mock()
         self.notifier._current_state = {'800': {'number': '800',
-                                                 'name': 'test_conf',
-                                                 'pin_required': True,
-                                                 'start_time': 12345.123,
-                                                 'context': 'default',
-                                                 'members': {1: {'join_order': 1,
-                                                                 'join_time': 12345.123,
-                                                                 'number': '1002',
-                                                                 'name': 'Tester 1',
-                                                                 'channel': 'sip/bcde',
-                                                                 'muted': True}}}}
+                                                'name': 'test_conf',
+                                                'pin_required': True,
+                                                'start_time': 12345.123,
+                                                'context': 'default',
+                                                'members': {1: {'join_order': 1,
+                                                                'join_time': 12345.123,
+                                                                'number': '1002',
+                                                                'name': 'Tester 1',
+                                                                'channel': 'sip/bcde',
+                                                                'muted': True}}}}
 
         expected_msg = encoder.encode_update(self.notifier._current_state)
 
@@ -212,7 +195,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
                                        'name': 'Tester 1',
                                        'channel': 'sip/bcde',
                                        'muted': True}}},
-                '801': {'number': '801',
+               '801': {'number': '801',
                        'name': 'test_conf',
                        'pin_required': True,
                        'start_time': 12345.123,

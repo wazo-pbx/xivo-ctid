@@ -42,7 +42,7 @@ _OBJECTS = [
     'meetme',
     'voicemail',
     'phonebook'
-    ]
+]
 STATES = [
     'add',
     'edit',
@@ -50,7 +50,7 @@ STATES = [
     'deleteall',
     'enable',
     'disable'
-    ]
+]
 
 
 class WEBI(interfaces.Interfaces):
@@ -68,19 +68,20 @@ class WEBI(interfaces.Interfaces):
         interfaces.Interfaces.disconnected(self, cause)
 
     def _object_request_cmd(self, sre_obj):
-            object_name = sre_obj.group(1)
-            state = sre_obj.group(2)
-            id = sre_obj.group(3) if sre_obj.group(3) else None
-            if object_name not in _OBJECTS:
-                logger.warning('WEBI did an unknow object %s', object_name)
-            else:
-                msg_data = {'object_name': object_name,
-                            'state': state,
-                            'id': id
-                            }
-                self._ctiserver.update_config_list.append(msg_data)
-                if object_name == 'meetme':
-                    context.get('meetme_service_manager').initialize()
+        object_name = sre_obj.group(1)
+        state = sre_obj.group(2)
+        id = sre_obj.group(3) if sre_obj.group(3) else None
+        if object_name not in _OBJECTS:
+            logger.warning('WEBI did an unknow object %s', object_name)
+        else:
+            msg_data = {
+                'object_name': object_name,
+                'state': state,
+                'id': id
+            }
+            self._ctiserver.update_config_list.append(msg_data)
+            if object_name == 'meetme':
+                context.get('meetme_service_manager').initialize()
 
     def manage_connection(self, msg):
         clireply = []

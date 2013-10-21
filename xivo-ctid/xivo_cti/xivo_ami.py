@@ -21,7 +21,6 @@ Asterisk AMI utilities.
 
 import logging
 import socket
-import string
 import time
 import errno
 
@@ -32,18 +31,12 @@ from xivo_cti.interfaces.interface_ami import AMI
 
 logger = logging.getLogger('xivo_ami')
 
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
-
 switch_originates = True
 
 
 class AMIClass(object):
     class AMIError(Exception):
-        def __init__(self, msg):
-            self.msg = msg
-
-        def __str__(self):
-            return self.msg
+        pass
 
     def __init__(self, config):
         ipbxconfig = config.getconfig('ipbx_connection')
@@ -107,10 +100,10 @@ class AMIClass(object):
             t1 = time.time()
             if e.errno == errno.EPIPE:
                 logger.exception('(sendcommand I/O Error EPIPE (%s %s %s) timespent=%f)',
-                             action, self.actionid, self.fd, (t1 - t0))
+                                 action, self.actionid, self.fd, (t1 - t0))
             else:
                 logger.exception('(sendcommand I/O Error Other (%s %s %s) timespent=%f)',
-                             action, self.actionid, self.fd, (t1 - t0))
+                                 action, self.actionid, self.fd, (t1 - t0))
             ret = False
         if self.actionid:
             self.actionid = None
@@ -205,14 +198,14 @@ class AMIClass(object):
         else:
             channel = '%s/%s' % (phoneproto, phonesrcname)
         command_details = [('Channel', channel),
-                            ('Exten', phonedst),
-                            ('Context', locext),
-                            ('Priority', '1'),
-                            ('Timeout', str(timeout * 1000)),
-                            ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
-                            ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
-                            ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
-                            ('Async', 'true')]
+                           ('Exten', phonedst),
+                           ('Context', locext),
+                           ('Priority', '1'),
+                           ('Timeout', str(timeout * 1000)),
+                           ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
+                           ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
+                           ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
+                           ('Async', 'true')]
         if switch_originates:
             if (phonedst.startswith('#')):
                 command_details.append(('CallerID', '"%s"' % cidnamedst))

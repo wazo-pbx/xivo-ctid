@@ -22,7 +22,7 @@ class Originate(AMIAction):
 
     _required_fields = ['channel']
     _optional_dependencies = [('exten', 'context', 'priority'),
-                               ('application', 'data')]
+                              ('application', 'data')]
 
     def __init__(self):
         super(Originate, self).__init__()

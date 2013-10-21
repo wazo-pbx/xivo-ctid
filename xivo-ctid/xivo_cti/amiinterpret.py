@@ -194,7 +194,7 @@ class AMI_1_8(object):
             'cid_name': event.pop('CallerIDName'),
             'cid_num': event.pop('CallerIDNum'),
             'parktime': time.time(),
-            }
+        }
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].setparking(exten, parkinglot)
 

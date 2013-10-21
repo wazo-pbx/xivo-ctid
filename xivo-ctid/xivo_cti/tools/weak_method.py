@@ -27,7 +27,7 @@ class WeakMethodBound(object):
         self.instance = weakref.ref(function.im_self)
 
     def __call__(self, *args):
-        if self.instance() == None:
+        if self.instance() is None:
             raise TypeError('Method call on a dead object')
         ret = self.function(self.instance(), *args)
         return ret
@@ -45,7 +45,7 @@ class WeakMethodFree(object):
         self.function = weakref.ref(function)
 
     def __call__(self, *arg):
-        if self.function() == None:
+        if self.function() is None:
             raise TypeError('Function no longer exist')
         return (self.function()(*arg))
 

@@ -93,7 +93,7 @@ class AMI(object):
         try:
             self.timeout_queue.put(args)
             os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
-                      self._ctiserver.myipbxid)
+                     self._ctiserver.myipbxid)
         except Exception:
             logger.exception('cb_timer %s', args)
 
@@ -114,7 +114,7 @@ class AMI(object):
     def delayed_action(self, usefulmsg, replyto=None):
         actionid = self.make_actionid()
         self.amiclass.sendcommand('Command', [('Command', usefulmsg),
-                                           ('ActionID', actionid)])
+                                              ('ActionID', actionid)])
         if replyto is not None:
             self.waiting_actionid[actionid] = replyto
             replyto.replytimer = threading.Timer(2, self.cb_timer,
