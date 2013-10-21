@@ -17,10 +17,7 @@
 
 
 import unittest
-import mock
 
-from hamcrest import assert_that
-from hamcrest import equal_to
 from mock import patch
 from mock import Mock
 
