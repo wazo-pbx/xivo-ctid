@@ -34,11 +34,7 @@ class Test(unittest.TestCase):
         f = weak_method.WeakCallable(func)
         self.assertEqual(f(1234), 2468)
         del func
-        try:
-            f(1234)
-            self.assertTrue(False)
-        except TypeError:
-            self.assertTrue(True)
+        self.assertRaises(TypeError, f, 1234)
 
     def test_weakref_method(self):
         class Test(object):
@@ -48,11 +44,7 @@ class Test(unittest.TestCase):
         f = weak_method.WeakCallable(instance.func)
         self.assertEqual(f(1234), 2468)
         del instance
-        try:
-            f(1234)
-            self.assertTrue(False)
-        except TypeError:
-            self.assertTrue(True)
+        self.assertRaises(TypeError, f, 1234)
 
     def test_method_dead(self):
         class Test(object):

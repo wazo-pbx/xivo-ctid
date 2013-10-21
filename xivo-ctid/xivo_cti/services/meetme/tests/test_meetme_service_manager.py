@@ -593,11 +593,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
         self.assertTrue(self.manager._has_member('800', 1, 'Tester One', '1234'))
 
     def test_muting(self):
-        try:
-            self.manager.mute(conf_room_number, 1)
-        except Exception:
-            self.assertTrue(False)
-
+        self.manager.mute(conf_room_number, 1)
         self.manager._cache = {conf_room_number: {'number': conf_room_number,
                                                   'name': conf_room_name,
                                                   'pin_required': True,
@@ -623,11 +619,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
         self.mock_notifier.publish_meetme_update.assert_called_once_with(expected)
 
     def test_unmuting(self):
-        try:
-            self.manager.unmute(conf_room_number, 1)
-        except Exception:
-            self.assertTrue(False)
-
+        self.manager.unmute(conf_room_number, 1)
         self.manager._cache = {conf_room_number: {'number': conf_room_number,
                                                   'name': conf_room_name,
                                                   'pin_required': True,
