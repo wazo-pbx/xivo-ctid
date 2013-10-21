@@ -27,6 +27,7 @@ from mock import Mock
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
+from xivo_cti.services.device.controller.snom import SnomController
 from xivo_dao.data_handler.device.model import Device
 from xivo_dao.data_handler.exception import ElementNotExistsError
 from xivo_cti.xivo_ami import AMIClass
@@ -38,6 +39,7 @@ class TestDeviceManager(unittest.TestCase):
         self.ami_class = Mock(AMIClass)
         self._base_controller = Mock(BaseController)
         self._aastra_controller = Mock(AastraController)
+        self._snom_controller = Mock(SnomController)
         self.manager = DeviceManager(self.ami_class)
 
     def test_is_supported_device_6731i(self):
@@ -82,6 +84,18 @@ class TestDeviceManager(unittest.TestCase):
             vendor='Aastra',
             model='6755i',
             plugin='xivo-aastra-switchboard',
+        )
+
+        result = self.manager._is_supported_device(device)
+
+        self.assertEqual(result, True)
+
+    def test_is_supported_device_snom_720(self):
+        device = Device(
+            id=42,
+            vendor='Snom',
+            model='720',
+            plugin='xivo-snom-switchboard',
         )
 
         result = self.manager._is_supported_device(device)
@@ -147,3 +161,18 @@ class TestDeviceManager(unittest.TestCase):
         self.manager.get_answer_fn(device.id)()
 
         self._aastra_controller.answer.assert_called_once_with(device)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_snom_switchboard(self, mock_device_service_get):
+        device = Device(
+            id=13,
+            vendor='Snom',
+            model='720',
+            plugin='xivo-snom-switchboard',
+        )
+        mock_device_service_get.return_value = device
+        self.manager._snom_controller = self._snom_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._snom_controller.answer.assert_called_once_with(device)

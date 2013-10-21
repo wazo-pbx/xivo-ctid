@@ -18,11 +18,13 @@
 
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
+from xivo_cti.services.device.controller.snom import SnomController
 from xivo_dao.data_handler.device import services as device_services
 from xivo_dao.data_handler.exception import ElementNotExistsError
 
 POPC_DEVICES = {
     'Aastra': ['6731i', '6757i', '6755i'],
+    'Snom': ['720'],
 }
 
 
@@ -31,6 +33,7 @@ class DeviceManager(object):
     def __init__(self, ami_class):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
+        self._snom_controller = SnomController(ami_class)
 
     def get_answer_fn(self, device_id):
         try:
@@ -38,10 +41,13 @@ class DeviceManager(object):
         except ElementNotExistsError:
             device = None
 
-        if self._is_supported_device(device):
-            return lambda: self._aastra_controller.answer(device)
-        else:
+        if not self._is_supported_device(device):
             return lambda: self._base_controller.answer(device)
+
+        if device.vendor == 'Aastra':
+            return lambda: self._aastra_controller.answer(device)
+        elif device.vendor == 'Snom':
+            return lambda: self._snom_controller.answer(device)
 
     def _is_supported_device(self, device):
         try:
