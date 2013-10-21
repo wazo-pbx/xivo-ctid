@@ -22,4 +22,4 @@ class BaseController(object):
         self._ami = ami
 
     def answer(self, device):
-        raise NotImplementedError()
+        return
