@@ -117,7 +117,7 @@ class TestSnomAnswerer(unittest.TestCase):
     def test_get_data(self):
         data = self._answerer._get_data()
 
-        expected_data = 'key=HEADSET'
+        expected_data = 'key=P1'
         assert_that(data, equal_to(expected_data))
 
     def test_get_request(self):

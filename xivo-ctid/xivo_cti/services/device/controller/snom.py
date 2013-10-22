@@ -42,7 +42,7 @@ class _SnomAnswerer(object):
 
     _auth_string = u'%(username)s:%(password)s'
     _command_url = u'http://%(hostname)s/command.htm'
-    _data = {'key': 'HEADSET'}
+    _data = {'key': 'P1'}
 
     def __init__(self, hostname, username, password):
         self._hostname = hostname
