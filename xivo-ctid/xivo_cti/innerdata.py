@@ -76,16 +76,18 @@ class Safe(object):
         self._sent_sheets = defaultdict(list)
 
     def init_xod_config(self):
-        self.xod_config['agents'] = agents_list.AgentsList(self)
-        self.xod_config['contexts'] = contexts_list.ContextsList(self)
-        self.xod_config['groups'] = groups_list.GroupsList(self)
-        self.xod_config['meetmes'] = meetmes_list.MeetmesList(self)
-        self.xod_config['phonebooks'] = phonebooks_list.PhonebooksList(self)
-        self.xod_config['phones'] = phones_list.PhonesList(self)
-        self.xod_config['queues'] = queues_list.QueuesList(self)
-        self.xod_config['trunks'] = trunks_list.TrunksList(self)
-        self.xod_config['users'] = users_list.UsersList(self)
-        self.xod_config['voicemails'] = voicemails_list.VoicemailsList(self)
+        self.xod_config = {
+            'agents': agents_list.AgentsList(self),
+            'contexts': contexts_list.ContextsList(self),
+            'groups': groups_list.GroupsList(self),
+            'meetmes': meetmes_list.MeetmesList(self),
+            'phonebooks': phonebooks_list.PhonebooksList(self),
+            'phones': phones_list.PhonesList(self),
+            'queues': queues_list.QueuesList(self),
+            'trunks': trunks_list.TrunksList(self),
+            'users': users_list.UsersList(self),
+            'voicemails': voicemails_list.VoicemailsList(self),
+        }
 
         for config_object in self.xod_config.itervalues():
             config_object.init_data()
