@@ -50,9 +50,6 @@ class DeviceManager(object):
             return lambda: self._snom_controller.answer(device)
 
     def _is_supported_device(self, device):
-        try:
-            if 'switchboard' not in device.plugin:
-                return False
+        if device and device.plugin and 'switchboard' in device.plugin:
             return device.model in POPC_DEVICES.get(device.vendor, [])
-        except AttributeError:
-            return False
+        return False
