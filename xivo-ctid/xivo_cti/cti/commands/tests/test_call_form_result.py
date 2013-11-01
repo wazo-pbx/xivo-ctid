@@ -19,7 +19,7 @@ import unittest
 
 from hamcrest import assert_that
 from hamcrest import equal_to
-from xivo_cti.cti.commands.action_fiche import CallFormResult
+from xivo_cti.cti.commands.call_form_result import CallFormResult
 
 
 class TestCallFormResult(unittest.TestCase):
