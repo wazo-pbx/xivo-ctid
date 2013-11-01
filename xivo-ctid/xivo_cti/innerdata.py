@@ -22,7 +22,7 @@ import os
 import string
 import time
 import Queue
-from xivo_cti import cti_config, cti_sheets, db_connection_manager
+from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.channel import Channel
 from xivo_cti.directory import directory
@@ -564,23 +564,6 @@ class Safe(object):
             return trunk_dao.find_by_proto_name(protocol, name)
         except (LookupError, ValueError):
             return None
-
-    def fill_user_ctilog(self, userid, what, options='', callduration=None):
-        request = "INSERT INTO ctilog (${columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        columns = ('eventdate', 'loginclient', 'company', 'status',
-                   'action', 'arguments', 'callduration')
-        datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        user = old_user_dao.get(userid)
-        userstatus = self.xod_status.get('users').get(userid).get('availstate')
-        arguments = (datetime,
-                     user.loginclient,
-                     user.entityid,
-                     userstatus,
-                     what, options, callduration)
-
-        with db_connection_manager.DbConnectionPool(cti_config.DB_URI) as connection:
-            connection['cur'].query(request, columns, arguments)
-            connection['conn'].commit()
 
     def sheetsend(self, where, channel):
         if 'agentcallback' in channel and where != 'link':
