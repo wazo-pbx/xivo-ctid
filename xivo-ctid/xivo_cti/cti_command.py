@@ -49,6 +49,7 @@ REGCOMMANDS = [
     'logfromclient',
     'getqueuesstats',
     'sheet',
+    'actionfiche',
 
     'ipbxcommand'
 ]
@@ -258,6 +259,15 @@ class Command(object):
                                    'message': {'to': self._commanddict.get('to'),
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
                                                'text': chitchattext}})
+        return reply
+
+    def regcommand_actionfiche(self):
+        reply = {}
+        infos = self._commanddict.get('infos')
+        self.rinnerdata.fill_user_ctilog(self.ruserid,
+                                         'cticommand:actionfiche',
+                                         infos.get('buttonname'))
+        logger.info('Received from client : %s' % infos.get('variables'))
         return reply
 
     def regcommand_history(self):
