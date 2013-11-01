@@ -37,6 +37,7 @@ from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
+from xivo_cti.cti.commands.call_form_result import CallFormResult
 from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 from xivo_cti.cti.commands.direct_transfer import DirectTransfer
@@ -141,6 +142,7 @@ class CTIServer(object):
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
+        self._call_form_result_handler = context.get('call_form_result_handler')
 
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
@@ -189,6 +191,9 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['cti_connection'])
+        CallFormResult.register_callback_params(
+            self._call_form_result_handler.parse, ['user_id', 'variables'],
+        )
         Dial.register_callback_params(self._user_service_manager.call_destination,
                                       ['cti_connection', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
