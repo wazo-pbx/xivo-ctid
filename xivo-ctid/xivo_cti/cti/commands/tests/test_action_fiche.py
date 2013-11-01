@@ -31,7 +31,7 @@ class TestActionFiche(unittest.TestCase):
             'XIVOFORM_firstname': 'Preston',
         }
         self._message = {
-            'class': 'actionfiche',
+            'class': 'call_form_result',
             'commandid': self._commandid,
             'infos': {
                 'buttonname': 'saveandclose',
