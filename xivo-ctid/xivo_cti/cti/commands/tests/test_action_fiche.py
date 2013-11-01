@@ -19,10 +19,10 @@ import unittest
 
 from hamcrest import assert_that
 from hamcrest import equal_to
-from xivo_cti.cti.commands.action_fiche import ActionFiche
+from xivo_cti.cti.commands.action_fiche import CallFormResult
 
 
-class TestActionFiche(unittest.TestCase):
+class TestCallFormResult(unittest.TestCase):
 
     def setUp(self):
         self._commandid = 1234556678
@@ -40,6 +40,6 @@ class TestActionFiche(unittest.TestCase):
         }
 
     def test_from_dict(self):
-        action_fiche = ActionFiche.from_dict(self._message)
+        call_form_result = CallFormResult.from_dict(self._message)
 
-        assert_that(action_fiche.variables, equal_to(self._variables))
+        assert_that(call_form_result.variables, equal_to(self._variables))

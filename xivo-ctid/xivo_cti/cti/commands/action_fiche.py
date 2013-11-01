@@ -22,5 +22,5 @@ def _parse(msg, command):
     command.variables = msg.get('infos', {}).get('variables', {})
 
 
-ActionFiche = CTICommandClass('call_form_result', None, _parse)
-ActionFiche.add_to_registry()
+CallFormResult = CTICommandClass('call_form_result', None, _parse)
+CallFormResult.add_to_registry()
