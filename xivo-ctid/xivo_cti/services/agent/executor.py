@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-from xivo_agent.ctl import error
-from xivo_agent.exception import AgentClientError
+from xivo_bus.resources.agent import error
+from xivo_bus.resources.agent.exception import AgentClientError
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
 logger = logging.getLogger(__name__)

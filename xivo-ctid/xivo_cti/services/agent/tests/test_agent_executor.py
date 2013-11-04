@@ -17,8 +17,8 @@
 
 import unittest
 from mock import Mock, call
-from xivo_agent.ctl import error
-from xivo_agent.exception import AgentClientError
+from xivo_bus.resources.agent import error
+from xivo_bus.resources.agent.exception import AgentClientError
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass

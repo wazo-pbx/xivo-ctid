@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo.pubsub import Pubsub
-from xivo_agent.ctl.client import AgentClient
+from xivo_bus.resources.agent.client import AgentClient
 from xivo_cti import cti_config
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.channel_updater import ChannelUpdater
