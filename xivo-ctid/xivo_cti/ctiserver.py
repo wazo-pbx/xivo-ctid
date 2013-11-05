@@ -172,7 +172,7 @@ class CTIServer(object):
         self._agent_status_manager = context.get('agent_status_manager')
 
         self._agent_client = context.get('agent_client')
-        self._agent_client.connect('localhost')
+        self._agent_client.connect()
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
@@ -387,8 +387,14 @@ class CTIServer(object):
         self.askedtoquit = False
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
-        logger.info('(1/3) Retrieving data')
 
+        logger.info('Connecting to bus')
+        bus_client = context.get('bus_client')
+        if not bus_client.connected:
+            bus_client.connect()
+        bus_client.declare_cti_exchange()
+
+        logger.info('Retrieving data')
         self.safe = context.get('innerdata')
         self.safe.user_service_manager = self._user_service_manager
         self.safe.queue_member_cti_adapter = self._queue_member_cti_adapter
@@ -411,13 +417,13 @@ class CTIServer(object):
         self._init_agent_availability()
         self._queue_member_indexer.initialize(self._queue_member_manager)
 
-        logger.info('(2/3) Local AMI socket connection')
+        logger.info('Local AMI socket connection')
         self.interface_ami.init_connection()
         self.ami_sock = self.interface_ami.connect()
         if not self.ami_sock:
             self._on_ami_down()
 
-        logger.info('(3/3) Listening sockets')
+        logger.info('Listening sockets')
         xivoconf_general = self._config.getconfig('main')
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)

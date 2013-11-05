@@ -19,7 +19,8 @@ import unittest
 
 from hamcrest import assert_that
 from hamcrest import equal_to
-from mock import Mock
+from mock import Mock, patch, sentinel
+from xivo_bus.ctl.client import BusCtlClient
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 
 
@@ -35,7 +36,7 @@ class TestCallFormResultHandler(unittest.TestCase):
             'firstname': 'Robert',
             'lastname': 'Lepage',
         }
-        handler = CallFormResultHandler()
+        handler = CallFormResultHandler(Mock())
         handler._send_call_form_result = Mock()
         handler.parse(user_id, variables)
 
@@ -56,6 +57,19 @@ class TestCallFormResultHandler(unittest.TestCase):
             'client_number': '1234',
         }
 
-        handler = CallFormResultHandler()
+        handler = CallFormResultHandler(Mock())
 
         assert_that(handler._clean_variables(variables), equal_to(expected_variables))
+
+    @patch('xivo_cti.call_forms.call_form_result_handler.CallFormResultEvent')
+    def test_send_call_form_result(self, CallFormResultEvent):
+        user_id = 42
+        variables = {'a': 'b'}
+        CallFormResultEvent.return_value = sentinel
+        bus_client = Mock(BusCtlClient)
+        handler = CallFormResultHandler(bus_client)
+
+        handler._send_call_form_result(user_id, variables)
+
+        bus_client.publish_cti_event.assert_called_once_with(sentinel)
+        CallFormResultEvent.assert_called_once_with(user_id, variables)
