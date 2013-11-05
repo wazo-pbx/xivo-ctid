@@ -32,9 +32,6 @@ class QueueEntryEncoder(object):
                       'queue_id': None,
                       'entries': []}
 
-    def __init__(self):
-        pass
-
     def encode(self, queue_name, entries):
         msg = dict(self.MSG_TEMPLATE)
         entry_list = self._build_entry_list(entries)

@@ -18,9 +18,6 @@
 
 class CTIMessageFormatter(object):
 
-    def __init__(self):
-        pass
-
     def add_queue_members(self, queue_member_ids):
         return {
             'class': 'getlist',

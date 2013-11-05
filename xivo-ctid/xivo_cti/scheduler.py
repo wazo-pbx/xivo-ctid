@@ -21,9 +21,6 @@ import os
 
 class Scheduler(object):
 
-    def __init__(self):
-        pass
-
     def setup(self, pipe_thread):
         self._pipe_thread = pipe_thread
 

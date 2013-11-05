@@ -25,9 +25,6 @@ class AMIAgentLoginLogoff(object):
 
     _instance = None
 
-    def __init__(self):
-        pass
-
     def _build_agent_id(self, agent_number):
         return 'Agent/%s' % agent_number
 

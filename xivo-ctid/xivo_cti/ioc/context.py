@@ -137,9 +137,11 @@ def _getargspec(factory):
         factory = factory.__init__
 
     try:
-        args, vargs, vkw, defaults = inspect.getargspec(factory)
         if inspect.ismethod(factory):
+            args, vargs, vkw, defaults = inspect.getargspec(factory)
             args = args[1:]
+        else:
+            args, defaults = [], None
         return args, defaults
     except TypeError:
         raise Exception('The function "%s" does not exist' % factory.__name__)

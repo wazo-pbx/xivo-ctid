@@ -26,9 +26,6 @@ class CallFormResultHandler(object):
 
     _variable_pattern = re.compile(r'XIVOFORM_(\w+)')
 
-    def __init__(self):
-        pass
-
     def parse(self, user_id, variables):
         self._send_call_form_result(
             user_id,

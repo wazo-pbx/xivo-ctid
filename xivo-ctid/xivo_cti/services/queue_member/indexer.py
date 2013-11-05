@@ -23,9 +23,6 @@ logger = logging.getLogger('QueueMemberIndexer')
 
 class QueueMemberIndexer(object):
 
-    def __init__(self):
-        pass
-
     def on_queue_member_added(self, queue_member):
         if queue_member.is_agent():
             queue_id = dao.queue.get_id_from_name(queue_member.queue_name)
