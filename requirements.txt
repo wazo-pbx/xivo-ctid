@@ -2,7 +2,7 @@
 svn+https://github.com/xivo-pbx/xivo-dao/trunk/xivo-dao
 svn+https://github.com/xivo-pbx/xivo-dird/trunk/xivo-dird
 svn+https://github.com/xivo-pbx/xivo-lib-python/trunk/xivo-lib-python
-svn+https://github.com/xivo-pbx/xivo-provisioning/trunk/xivo-provisioning
+-e svn+https://github.com/xivo-pbx/xivo-provisioning/trunk/xivo-provisioning#egg=provd
 -e svn+https://github.com/xivo-pbx/xivo-bus/trunk/xivo-bus#egg=xivo-bus
 mock
 pika
