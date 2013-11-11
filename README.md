@@ -1,4 +1,4 @@
-How to run unit tests
+How to run unit tests [![Build Status](https://travis-ci.org/xivo-pbx/xivo-ctid.png?branch=master)](https://travis-ci.org/xivo-pbx/xivo-ctid)
 ---------------------
 
 
