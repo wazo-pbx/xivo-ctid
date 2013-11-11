@@ -187,14 +187,6 @@ class AMI_1_8(object):
         parkinglot = event['Parkinglot']
         if parkinglot.startswith('parkinglot_'):
             parkinglot = '_'.join(parkinglot.split('_')[1:])
-        parkingevent = {
-            'parker': event.pop('From'),
-            'parked': channel,
-            'exten': exten,
-            'cid_name': event.pop('CallerIDName'),
-            'cid_num': event.pop('CallerIDNum'),
-            'parktime': time.time(),
-        }
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].setparking(exten, parkinglot)
 
