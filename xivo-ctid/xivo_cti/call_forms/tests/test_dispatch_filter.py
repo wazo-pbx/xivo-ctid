@@ -18,10 +18,8 @@
 import unittest
 
 from hamcrest import assert_that
-from hamcrest import contains
 from hamcrest import equal_to
 from hamcrest import only_contains
-from mock import call
 from mock import Mock
 from mock import sentinel
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
@@ -47,6 +45,13 @@ class TestDispatchFilter(unittest.TestCase):
         self._df.handle_dial(sentinel.uid, sentinel.chan)
 
         self._dispatch.assert_called_once_with('dial', sentinel.chan)
+
+    def test_handle_dial_to_queue(self):
+        self._df.handle_queue(sentinel.uid, sentinel.chan_queue)
+        self._dispatch.reset_mock()
+        self._df.handle_dial(sentinel.uid, sentinel.chan_dial)
+
+        assert_that(self._dispatch.call_count, equal_to(0))
 
     def test_handle_did(self):
         self._df.handle_did(sentinel.uid, sentinel.chan)

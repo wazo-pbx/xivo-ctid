@@ -35,7 +35,8 @@ class DispatchFilter(object):
             self._dispatch('link', channel_name)
 
     def handle_dial(self, uniqueid, channel_name):
-        self._dispatch('dial', channel_name)
+        if self._is_calling_a_user(uniqueid):
+            self._dispatch('dial', channel_name)
 
     def handle_did(self, uniqueid, channel_name):
         self._dispatch('incomingdid', channel_name)
