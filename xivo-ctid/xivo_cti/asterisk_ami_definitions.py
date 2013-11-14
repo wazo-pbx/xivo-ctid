@@ -25,7 +25,7 @@ event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          'Reload', 'Shutdown', 'ModuleLoadReport',
                          'FullyBooted',  # (1.8)
                          'DNDState', 'MobileStatus', 'Registry',
-                         'ChannelReload', 'ChannelUpdate', 'LogChannel'
+                         'ChannelReload', 'LogChannel'
                          ]
 
 event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',

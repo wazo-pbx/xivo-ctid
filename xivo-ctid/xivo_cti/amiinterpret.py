@@ -144,16 +144,6 @@ class AMI_1_8(object):
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
 
-    def ami_channelupdate(self, event):
-        # could be especially useful when there is a trunk : links callno-remote and callno-local
-        # when the call is outgoing, one never receives the callno-remote
-        channeltype = event['Channeltype']
-        if channeltype == 'IAX2':
-            logger.info('ami_channelupdate %s : %s - %s : %s',
-                        channeltype, event['IAX2-callno-local'],
-                        event['IAX2-callno-remote'],
-                        event)
-
     def ami_originateresponse(self, event):
         channel = event['Channel']
         actionid = event.get('ActionID')
