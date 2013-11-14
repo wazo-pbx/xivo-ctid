@@ -222,11 +222,6 @@ class INFO(interfaces.Interfaces):
                         except Exception:
                             logger.exception('INFO %s', usefulmsg)
 
-                elif usefulmsg.startswith('sheet '):
-                    k = usefulmsg.split(' ')
-                    self.innerdata.sheetsend(k[1], k[2])
-                    clireply.append('thank you !')
-
                 elif usefulmsg == 'fdlist':
                     for k, v in self._ctiserver.fdlist_listen_cti.iteritems():
                         clireply.append('  listen TCP : %s %s' % (k, v))
