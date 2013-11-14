@@ -42,6 +42,12 @@ class TestDispatchFilter(unittest.TestCase):
 
         self._innerdata.sheetsend.assert_called_once_with(sentinel.ev, sentinel.chan)
 
+    def test_handle_dial_to_user(self):
+        self._df.handle_user(sentinel.uid, sentinel.chan)
+        self._df.handle_dial(sentinel.uid, sentinel.chan)
+
+        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+
     def test_handle_did(self):
         self._df.handle_did(sentinel.uid, sentinel.chan)
 
@@ -60,18 +66,13 @@ class TestDispatchFilter(unittest.TestCase):
     def test_handle_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        assert_that(self._df._dispatch.call_count, equal_to(0))
 
     def test_handle_bridge_call_to_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        assert_that(
-            self._dispatch.mock_calls,
-            contains(call('dial', sentinel.chan),
-                     call('link', sentinel.chan)),
-            'a call to dial followed by a call to link',
-        )
+        self._dispatch.assert_called_once_with('link', sentinel.chan)
 
     def test_handle_bridge_call_to_user_hold_resume(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
@@ -79,12 +80,7 @@ class TestDispatchFilter(unittest.TestCase):
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        assert_that(
-            self._dispatch.mock_calls,
-            contains(call('dial', sentinel.chan),
-                     call('link', sentinel.chan)),
-            'only one call to link',
-        )
+        self._dispatch.assert_called_once_with('link', sentinel.chan)
 
     def test_handle_bridge_call_to_queue(self):
         self._df.handle_queue(sentinel.uid, sentinel.chan)

@@ -34,6 +34,9 @@ class DispatchFilter(object):
             self._linked_calls.append(uniqueid)
             self._dispatch('link', channel_name)
 
+    def handle_dial(self, uniqueid, channel_name):
+        self._dispatch('dial', channel_name)
+
     def handle_did(self, uniqueid, channel_name):
         self._dispatch('incomingdid', channel_name)
 
@@ -49,7 +52,6 @@ class DispatchFilter(object):
 
     def handle_user(self, uniqueid, channel_name):
         self._calls_to_user[uniqueid] = True
-        self._dispatch('dial', channel_name)
 
     def _clean_uniqueid(self, uniqueid):
         if uniqueid in self._linked_calls:
