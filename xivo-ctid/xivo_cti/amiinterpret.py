@@ -139,9 +139,6 @@ class AMI_1_8(object):
 
         self.innerdata.sheetsend('link', channel.channel)
 
-    def ami_unlink(self, event):
-        self.innerdata.sheetsend('unlink', event['Channel1'])
-
     def ami_masquerade(self, event):
         original = event['Original']
         clone = event['Clone']

@@ -28,7 +28,7 @@ event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          'ChannelReload', 'ChannelUpdate', 'LogChannel'
                          ]
 
-event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
+event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
                        'Bridge', 'BridgeExec', 'BridgeAction',
                        'Transfer',  # only in chan_sip
                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
