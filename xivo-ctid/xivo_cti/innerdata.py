@@ -31,6 +31,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
+from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
@@ -194,12 +195,15 @@ class Safe(object):
         # Will be called when joining a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
         channel_name = event['Channel']
-        if channel_name in self.channels:
-            self.sheetsend('link', channel_name)
+        uniqueid = event['Uniqueid']
+        context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid, channel_name)
 
     def handle_agent_unlinked(self, event):
         # Will be called when leaving a group/queue with an agent or user member
         self._channel_extra_vars_agent_linked_unlinked(event)
+        uniqueid = event['Uniqueid']
+        channel_name = event['Channel']
+        context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid, channel_name)
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
@@ -420,7 +424,6 @@ class Safe(object):
                     self.appendcti(* oldevent_list)
 
     def hangup(self, channel):
-        self._schedule_sent_sheets_cleanup(channel)
         if channel in self.channels:
             self._remove_channel_relations(channel)
             del self.channels[channel]
@@ -537,8 +540,6 @@ class Safe(object):
             return None
 
     def sheetsend(self, where, channel):
-        if 'agentcallback' in channel and where != 'link':
-            return
         if 'sheets' not in self._config.getconfig():
             return
         bsheets = self._config.getconfig('sheets')
@@ -590,26 +591,12 @@ class Safe(object):
             # print sheet.internaldata
 
             # 7. send the payload
-            sheet_info = (tosendlist, where, sheet.payload)
-            if sheet_info not in self._sent_sheets[channel]:
-                self._sent_sheets[channel].append(sheet_info)
-                self._ctiserver.sendsheettolist(tosendlist,
-                                                {'class': 'sheet',
-                                                 'channel': channel,
-                                                 'serial': sheet.serial,
-                                                 'compressed': sheet.compressed,
-                                                 'payload': sheet.payload})
-            else:
-                logger.debug('Almost sent a sheet twice')
-
-    def _schedule_sent_sheets_cleanup(self, channel):
-        self.cb_timer({'action': 'sheet_cleanup',
-                       'properties': {'channel': channel}})
-
-    def _remove_sent_sheet(self, channel):
-        if channel in self._sent_sheets:
-            logger.debug('Removing %s from sent sheets', channel)
-            del self._sent_sheets[channel]
+            self._ctiserver.sendsheettolist(tosendlist,
+                                            {'class': 'sheet',
+                                             'channel': channel,
+                                             'serial': sheet.serial,
+                                             'compressed': sheet.compressed,
+                                             'payload': sheet.payload})
 
     # Timers/Synchro stuff - begin
 
