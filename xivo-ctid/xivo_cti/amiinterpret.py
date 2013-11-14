@@ -35,7 +35,6 @@ class AMI_1_8(object):
 
     userevents = ('Feature',
                   'dialplan2cti',
-                  'Agent',
                   'User',
                   'Queue',
                   'Group',
@@ -186,19 +185,6 @@ class AMI_1_8(object):
         channel = event['Channel']
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
-
-    def userevent_agent(self, chanprops, event):
-        agent_id = int(event['XIVO_AGENT_ID'])
-        try:
-            agent_number = agent_dao.agent_number(agent_id)
-
-            # chanprops is the ";2" channel of a "Local channel", but we need
-            # to set the extra_data information on the ";1" channel
-            semicolon1_channel = chanprops.channel[:-1] + '1'
-            semicolon1_chanprops = self.innerdata.channels[semicolon1_channel]
-            semicolon1_chanprops.set_extra_data('xivo', 'agentnumber', agent_number)
-        except Exception:
-            logger.warning('Could not set extra data in userevent agent', exc_info=True)
 
     def userevent_user(self, chanprops, event):
         xivo_userid = event.get('XIVO_USERID')
