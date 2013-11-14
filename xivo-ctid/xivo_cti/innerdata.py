@@ -510,32 +510,6 @@ class Safe(object):
         chanprops.peerchannel = peerchannel
         chanprops.properties['talkingto_id'] = peerchannel
 
-    def currentstatus(self):
-        rep = []
-        rep.append('* full status on %s' % time.asctime())
-        rep.append('* channels')
-        for k, v in self.channels.iteritems():
-            rep.append('  * %s' % k)
-            rep.append('    * relations : %s' % v.relations)
-            if v.peerchannel:
-                rep.append('    * peerchannel : %s' % v.peerchannel)
-            rep.append('    * properties : %s' % v.properties)
-        rep.append('* phones')
-        for k, v in self.xod_status['phones'].iteritems():
-            rep.append('  * %s :' % k)
-            if v.get('hintstatus'):
-                rep.append('    * hintstatus : %s' % v.get('hintstatus'))
-            if v.get('channels'):
-                rep.append('    * channels : %s' % v.get('channels'))
-        rep.append('* agents')
-        for k, v in self.xod_status['agents'].iteritems():
-            rep.append('  * %s :' % k)
-        rep.append('* queues')
-        for k, v in self.xod_status['queues'].iteritems():
-            rep.append('  * %s :' % k)
-        rep.append('--------------')
-        return rep
-
     # IPBX side
 
     def ast_channel_to_termination(self, channel):

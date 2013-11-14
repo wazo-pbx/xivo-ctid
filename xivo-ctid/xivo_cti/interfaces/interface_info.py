@@ -268,9 +268,6 @@ class INFO(interfaces.Interfaces):
                     listname = usefulmsg[7:]
                     self.innerdata.update_config_list(listname)
 
-                elif usefulmsg == 'currentstatus':
-                    clireply.extend(self.innerdata.currentstatus())
-
                 else:
                     retstr = 'KO'
 
