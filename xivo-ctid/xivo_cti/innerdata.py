@@ -617,9 +617,6 @@ class Safe(object):
                     actionid = fileid
                     self._ctiserver.interface_ami.execute_and_track(actionid, params)
                     del self.faxes[fileid]
-            elif action == 'sheet_cleanup':
-                channel = toload['properties']['channel']
-                self._remove_sent_sheet(channel)
 
             # other cases to handle : login, agentlogoff (would that still be true ?)
         return ncount
