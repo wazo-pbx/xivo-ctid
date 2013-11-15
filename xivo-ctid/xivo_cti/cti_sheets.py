@@ -56,38 +56,37 @@ class Sheet(object):
     def addinternal(self, varname, varvalue):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
+    def replacement_callback(self, variable_name):
+        try:
+            family, name = variable_name.split('-', 1)
+        except ValueError:
+            logger.warning('Invalid variable %r', variable_name)
+            return None
+        else:
+            try:
+                data = self._variables
+                if family == 'xivo' and name == 'callerpicture':
+                    user_id = data['xivo']['userid']
+                    return self._get_user_picture(user_id)
+                else:
+                    try:
+                        value = data[family][name]
+                    except KeyError:
+                        logger.warning('No value for variable %r', variable_name)
+                        return None
+                    else:
+                        return value if value else None
+            except Exception as e:
+                logger.warning('Could not replace variable %r: %s', variable_name, e)
+                return None
+
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
         if disabled:
             return {}
 
         title, ftype, defaultval, sformat = lineprops[:4]
-        data = self._variables
-
-        def replacement_callback(variable_name):
-            try:
-                family, name = variable_name.split('-', 1)
-            except ValueError:
-                logger.warning('Invalid variable %r', variable_name)
-                return None
-            else:
-                try:
-                    if family == 'xivo' and name == 'callerpicture':
-                        user_id = data['xivo']['userid']
-                        return self._get_user_picture(user_id)
-                    else:
-                        try:
-                            value = data[family][name]
-                        except KeyError:
-                            logger.warning('No value for variable %r', variable_name)
-                            return None
-                        else:
-                            return value if value else None
-                except Exception as e:
-                    logger.warning('Could not replace variable %r: %s', variable_name, e)
-                    return None
-
-        finalstring = _substitute(defaultval, sformat, replacement_callback)
+        finalstring = _substitute(defaultval, sformat, self.replacement_callback)
         return {'name': title, 'type': ftype, 'contents': finalstring}
 
     def _get_user_picture(self, user_id):
@@ -113,6 +112,7 @@ class Sheet(object):
                         fobj.close()
                     except Exception:
                         qtui_data = ''
+                    qtui_data = _substitute('', qtui_data, self.replacement_callback)
                     self.fields[sheetpart] = {'10': {'name': 'qtui',
                                                      'contents': qtui_data}}
             else:
