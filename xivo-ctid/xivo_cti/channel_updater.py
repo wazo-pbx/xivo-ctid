@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+from pprint import pformat
 
 from xivo_cti.ioc.context import context
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 def parse_userevent(event):
     if event['UserEvent'] == 'ReverseLookup':
+        logger.debug('ReverseLookup\n%s', pformat(event))
         channel = event.get('CHANNEL')
         updater = context.get('channel_updater')
         updater.reverse_lookup_result(channel, event)
@@ -41,6 +43,7 @@ def parse_hold(event):
 
 
 def parse_inherit(event):
+    logger.debug('Inherit:\n%s', pformat(event))
     updater = context.get('channel_updater')
     updater.inherit_channels(event['Parent'], event['Child'])
 

@@ -20,6 +20,7 @@ import random
 import string
 import time
 
+from pprint import pformat
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
@@ -55,7 +56,9 @@ class AMI_1_8(object):
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
 
     def ami_hangup(self, event):
+        logger.debug('Hangup:\n%s', pformat(event))
         channel = event['Channel']
+        logger.debug('Extra data:\n%s', pformat(self.innerdata.channels[channel].extra_data))
         uniqueid = event['Uniqueid']
         #  0 - Unknown
         #  3 - No route to destination
@@ -72,6 +75,7 @@ class AMI_1_8(object):
         self.innerdata.hangup(channel)
 
     def ami_dial(self, event):
+        logger.debug('Dial\n%s', pformat(event))
         channel = event['Channel']
         subevent = event['SubEvent']
         uniqueid = event['UniqueID']
@@ -83,6 +87,7 @@ class AMI_1_8(object):
                     phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
                     if phone:
                         self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
+                        logger.debug('Setting destinations %s: user %s', channel, str(phone['iduserfeatures']))
                 except LookupError:
                     logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'
@@ -105,6 +110,7 @@ class AMI_1_8(object):
         if event['Bridgestate'] != 'Link':
             return
 
+        logger.debug('Bridge\n%s', pformat(event))
         channel_1 = self.innerdata.channels.get(event['Channel1'])
         channel_2 = self.innerdata.channels.get(event['Channel2'])
         uniqueid = event['Uniqueid1']
@@ -130,6 +136,7 @@ class AMI_1_8(object):
         self.innerdata.update(channel.channel)
 
     def ami_masquerade(self, event):
+        logger.debug('Masquerade\n%s', pformat(event))
         original = event['Original']
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
@@ -178,6 +185,7 @@ class AMI_1_8(object):
             self.innerdata.channels[channel].unsetparking()
 
     def userevent_user(self, chanprops, event):
+        logger.debug('User\n%s', pformat(event))
         xivo_userid = event.get('XIVO_USERID')
         userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
         xivo_srcnum = event.get('XIVO_SRCNUM')
@@ -192,6 +200,7 @@ class AMI_1_8(object):
 
         chanprops.set_extra_data('xivo', 'desttype', 'user')
         chanprops.set_extra_data('xivo', 'destid', destination_user_id)
+        logger.debug('Setting destinations %s: user %s', chanprops.channel, destination_user_id)
         chanprops.set_extra_data('xivo', 'userid', xivo_userid)
         chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
         chanprops.set_extra_data('xivo', 'direction', 'internal')
@@ -206,6 +215,7 @@ class AMI_1_8(object):
         self._call_form_dispatch_filter.handle_user(uniqueid, channel_name)
 
     def userevent_queue(self, chanprops, event):
+        logger.debug('Queue\n%s', pformat(event))
         callerid_name = event.get('XIVO_CALLERIDNAME')
         callerid_number = event.get('XIVO_CALLERIDNUMBER')
 
@@ -226,6 +236,7 @@ class AMI_1_8(object):
         self._call_form_dispatch_filter.handle_queue(uniqueid, chanprops.channel)
 
     def userevent_group(self, chanprops, event):
+        logger.debug('Group\n%s', pformat(event))
         group_id = int(event['XIVO_DSTID'])
         group_name, group_number = group_dao.get_name_number(group_id)
 
@@ -238,6 +249,7 @@ class AMI_1_8(object):
         self._call_form_dispatch_filter.handle_group(uniqueid, chanprops.channel)
 
     def userevent_did(self, chanprops, event):
+        logger.debug('Did\n%s', pformat(event))
         calleridnum = event.get('XIVO_SRCNUM')
         calleridname = event.get('XIVO_SRCNAME')
         calleridton = event.get('XIVO_SRCTON')
@@ -255,6 +267,7 @@ class AMI_1_8(object):
         if incall:
             chanprops.set_extra_data('xivo', 'desttype', incall.action)
             chanprops.set_extra_data('xivo', 'destid', incall.actionarg1)
+            logger.debug('Setting destination %s: %s %s', chanprops.channel, incall.action, incall.actionarg1)
         uniqueid = event['Uniqueid']
         self._call_form_dispatch_filter.handle_did(uniqueid, chanprops.channel)
 
