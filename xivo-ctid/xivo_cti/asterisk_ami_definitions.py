@@ -82,7 +82,6 @@ event_others['extra'] = [
     'Atxfer',  # (patch to fetch ?)
     'ActionRequest',  # (xivo)
 
-    'Inherit',  # (xivo) to track Local/;1 etc ... channels creation
     'HangupRequest',  # (xivo) to know who 'ordered' the hangup (patch submitted to digium in #0018226)
     'SoftHangupRequest',  # (xivo) to know when the hangup was requested from the CLI (patch submitted to digium in #0018226)
 ]

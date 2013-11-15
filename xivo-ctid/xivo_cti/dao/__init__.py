@@ -22,6 +22,7 @@ from xivo_cti.dao.meetme_dao import MeetmeDAO
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.dao.voicemail_dao import VoicemailDAO
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
+from xivo_cti.ioc.context import context
 
 agent = None
 channel = None
@@ -36,7 +37,7 @@ def instanciate_dao(innerdata_obj, queue_member_manager):
     global agent
     agent = AgentDAO(innerdata_obj, queue_member_manager)
     global channel
-    channel = ChannelDAO(innerdata_obj)
+    channel = ChannelDAO(innerdata_obj, context.get('call_form_variable_aggregator'))
     global queue
     queue = QueueDAO(innerdata_obj)
     global meetme

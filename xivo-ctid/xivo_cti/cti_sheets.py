@@ -22,6 +22,8 @@ import urllib2
 import zlib
 import re
 
+from xivo_cti.ioc.context import context
+
 logger = logging.getLogger('sheet')
 
 USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
@@ -30,10 +32,10 @@ LINE_TEMPLATE = '<internal name="%s"><![CDATA[%s]]></internal>'
 
 class Sheet(object):
 
-    def __init__(self, where, ipbxid, channel):
+    def __init__(self, where, ipbxid, uid):
         self.internaldata = {'where': where,
                              'ipbxid': ipbxid,
-                             'channel': channel}
+                             'uid': uid}
         # config items
         self.options = {}
         self.displays = {}
@@ -41,6 +43,7 @@ class Sheet(object):
         self.fields = {}
         # output
         self.linestosend = []
+        self._variables = context.get('call_form_variable_aggregator').get(uid)
 
     def setoptions(self, options):
         if options:
@@ -59,7 +62,7 @@ class Sheet(object):
             return {}
 
         title, ftype, defaultval, sformat = lineprops[:4]
-        data = self.channelprops.extra_data
+        data = self._variables
 
         def replacement_callback(variable_name):
             try:
@@ -160,14 +163,14 @@ class Sheet(object):
     def setconditions(self, conditions):
         self.conditions = conditions
 
-    def checkdest(self, channelprops):
-        self.channelprops = channelprops
+    def checkdest(self):
         whom = self.conditions.get('whom')
 
         tomatch = {}
-        if whom == 'dest':
-            tomatch['desttype'] = channelprops.extra_data['xivo'].get('desttype')
-            tomatch['destid'] = channelprops.extra_data['xivo'].get('destid')
+        data = self._variables
+        if whom == 'dest' and 'desttype' in data['xivo']:
+            tomatch['desttype'] = data['xivo']['desttype']
+            tomatch['destid'] = data['xivo']['destid']
 
         return tomatch
 

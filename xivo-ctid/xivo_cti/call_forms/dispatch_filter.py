@@ -24,32 +24,34 @@ class DispatchFilter(object):
         self._linked_calls = []
 
     def handle_agent_complete(self, uniqueid, channel_name):
-        self._dispatch('unlink', channel_name)
+        self._dispatch('unlink', uniqueid)
 
     def handle_agent_connect(self, uniqueid, channel_name):
-        self._dispatch('link', channel_name)
+        self._dispatch('link', uniqueid)
 
     def handle_bridge(self, uniqueid, channel_name):
         if self._is_calling_a_user(uniqueid) and not self._is_already_linked(uniqueid):
             self._linked_calls.append(uniqueid)
-            self._dispatch('link', channel_name)
+            self._dispatch('link', uniqueid)
 
     def handle_dial(self, uniqueid, channel_name):
         if self._is_calling_a_user(uniqueid):
-            self._dispatch('dial', channel_name)
+            self._dispatch('dial', uniqueid)
 
     def handle_did(self, uniqueid, channel_name):
-        self._dispatch('incomingdid', channel_name)
+        self._dispatch('incomingdid', uniqueid)
 
     def handle_group(self, uniqueid, channel_name):
-        self._dispatch('dial', channel_name)
+        self._dispatch('dial', uniqueid)
 
     def handle_hangup(self, uniqueid, channel_name):
         self._clean_uniqueid(uniqueid)
-        self._dispatch('hangup', channel_name)
+        if 'agentcallback' in channel_name:
+            return
+        self._dispatch('hangup', uniqueid)
 
     def handle_queue(self, uniqueid, channel_name):
-        self._dispatch('dial', channel_name)
+        self._dispatch('dial', uniqueid)
 
     def handle_user(self, uniqueid, channel_name):
         self._calls_to_user[uniqueid] = True
@@ -60,8 +62,8 @@ class DispatchFilter(object):
         if uniqueid in self._calls_to_user:
             del self._calls_to_user[uniqueid]
 
-    def _dispatch(self, event_name, channel_name):
-        self._innerdata.sheetsend(event_name, channel_name)
+    def _dispatch(self, event_name, uniqueid):
+        self._innerdata.sheetsend(event_name, uniqueid)
 
     def _is_already_linked(self, uniqueid):
         return uniqueid in self._linked_calls

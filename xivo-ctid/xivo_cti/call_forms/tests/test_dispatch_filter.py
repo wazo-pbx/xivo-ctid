@@ -36,15 +36,15 @@ class TestDispatchFilter(unittest.TestCase):
     def test_dispatch(self):
         dispatch_filter = DispatchFilter(self._innerdata)
 
-        dispatch_filter._dispatch(sentinel.ev, sentinel.chan)
+        dispatch_filter._dispatch(sentinel.ev, sentinel.uid)
 
-        self._innerdata.sheetsend.assert_called_once_with(sentinel.ev, sentinel.chan)
+        self._innerdata.sheetsend.assert_called_once_with(sentinel.ev, sentinel.uid)
 
     def test_handle_dial_to_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
         self._df.handle_dial(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_dial_to_queue(self):
         self._df.handle_queue(sentinel.uid, sentinel.chan_queue)
@@ -56,17 +56,17 @@ class TestDispatchFilter(unittest.TestCase):
     def test_handle_did(self):
         self._df.handle_did(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('incomingdid', sentinel.chan)
+        self._dispatch.assert_called_once_with('incomingdid', sentinel.uid)
 
     def test_handle_group(self):
         self._df.handle_group(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_queue(self):
         self._df.handle_queue(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
@@ -77,7 +77,7 @@ class TestDispatchFilter(unittest.TestCase):
         self._df.handle_user(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('link', sentinel.chan)
+        self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_bridge_call_to_user_hold_resume(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
@@ -85,29 +85,29 @@ class TestDispatchFilter(unittest.TestCase):
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('link', sentinel.chan)
+        self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_bridge_call_to_queue(self):
         self._df.handle_queue(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_bridge_call_to_group(self):
         self._df.handle_group(sentinel.uid, sentinel.chan)
         self._df.handle_bridge(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('dial', sentinel.chan)
+        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_agent_connect(self):
         self._df.handle_agent_connect(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('link', sentinel.chan)
+        self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_agent_complete(self):
         self._df.handle_agent_complete(sentinel.uid, sentinel.chan)
 
-        self._dispatch.assert_called_once_with('unlink', sentinel.chan)
+        self._dispatch.assert_called_once_with('unlink', sentinel.uid)
 
     def test_handle_hangup(self):
         self._df._linked_calls = [sentinel.uid, sentinel.uid2]
@@ -115,9 +115,15 @@ class TestDispatchFilter(unittest.TestCase):
             sentinel.uid: True,
             sentinel.uid2: True,
         }
-        self._df.handle_hangup(sentinel.uid, sentinel.chan)
+        chan = 'SCCP/12432@notdefault-2334'
+        self._df.handle_hangup(sentinel.uid, chan)
 
-        self._dispatch.assert_called_once_with('hangup', sentinel.chan)
+        self._dispatch.assert_called_once_with('hangup', sentinel.uid)
 
         assert_that(self._df._linked_calls, only_contains(sentinel.uid2))
         assert_that(self._df._calls_to_user, equal_to({sentinel.uid2: True}))
+
+    def test_hangle_hangup_agent_callback(self):
+        self._df.handle_hangup(sentinel.uid, 'Local/id-1@agentcallback-54354;1')
+
+        assert_that(self._dispatch.call_count, equal_to(0))

@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-from pprint import pformat
 
+from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_cti.ioc.context import context
 
 logger = logging.getLogger(__name__)
@@ -25,27 +25,19 @@ logger = logging.getLogger(__name__)
 
 def parse_userevent(event):
     if event['UserEvent'] == 'ReverseLookup':
-        logger.debug('ReverseLookup\n%s', pformat(event))
-        channel = event.get('CHANNEL')
         updater = context.get('channel_updater')
-        updater.reverse_lookup_result(channel, event)
+        uniqueid = event['Uniqueid']
+        updater.reverse_lookup_result(uniqueid, event)
 
 
 def parse_new_caller_id(event):
     updater = context.get('channel_updater')
-    updater.new_caller_id(event['Channel'], event['CallerIDName'], event['CallerIDNum'])
+    updater.new_caller_id(event['Uniqueid'], event['CallerIDName'], event['CallerIDNum'])
 
 
 def parse_hold(event):
-    logger.debug('Parse hold %s', event)
     updater = context.get('channel_updater')
     updater.set_hold(event['Channel'], event['Status'] == 'On')
-
-
-def parse_inherit(event):
-    logger.debug('Inherit:\n%s', pformat(event))
-    updater = context.get('channel_updater')
-    updater.inherit_channels(event['Parent'], event['Child'])
 
 
 def assert_has_channel(func):
@@ -67,46 +59,23 @@ def notify_clients(func):
 
 class ChannelUpdater(object):
 
-    def __init__(self, innerdata):
+    def __init__(self, innerdata, call_form_variable_aggregator):
         self.innerdata = innerdata
+        self._aggregator = call_form_variable_aggregator
 
-    @assert_has_channel
-    def new_caller_id(self, channel_name, name, number):
-        logger.debug('New caller ID received on channel %s: "%s" <%s>', channel_name, name, number)
-        channel = self.innerdata.channels[channel_name]
+    def new_caller_id(self, uid, name, number):
+        logger.debug('New caller ID received on channel %s: "%s" <%s>', uid, name, number)
         if name:
-            channel.set_extra_data('xivo', 'calleridname', name)
-        channel.set_extra_data('xivo', 'calleridnum', number)
+            self._aggregator.set(uid, Var('xivo', 'calleridname', name))
+        self._aggregator.set(uid, Var('xivo', 'calleridnum', number))
 
-    @assert_has_channel
-    def reverse_lookup_result(self, channel_name, event):
-        channel = self.innerdata.channels[channel_name]
+    def reverse_lookup_result(self, uid, event):
         for key, value in event.iteritems():
             if key.startswith('db-'):
                 key = key.split('-', 1)[-1]
-                channel.set_extra_data('db', key, value)
+                self._aggregator.set(uid, Var('db', key, value))
 
     @assert_has_channel
     @notify_clients
     def set_hold(self, channel_name, status):
         self.innerdata.channels[channel_name].properties['holded'] = status
-
-    def inherit_channels(self, parent_name, child_name):
-        if parent_name not in self.innerdata.channels:
-            logger.warning('Received inherit event on untracked parent channel')
-            return
-
-        child_names = [child_name]
-        if child_name.startswith('Local'):
-            end = child_name[-1]
-            other_end = '1' if end == '2' else '2'
-            other_channel = child_name[:-1] + other_end
-            child_names.append(other_channel)
-
-        parent = self.innerdata.channels[parent_name]
-        for child_name in child_names:
-            if child_name not in self.innerdata.channels:
-                logger.warning('Received inherit event on untracked child channel')
-                continue
-            child = self.innerdata.channels[child_name]
-            child.inherit(parent)

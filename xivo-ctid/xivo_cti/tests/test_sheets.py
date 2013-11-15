@@ -18,13 +18,15 @@
 import unittest
 
 from mock import Mock
+from mock import patch
 from xivo_cti import cti_sheets
-from xivo_cti.channel import Channel
+from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 
 
 class TestSheets(unittest.TestCase):
 
-    def setUp(self):
+    @patch('xivo_cti.ioc.context.context.get')
+    def setUp(self, mocked_context_get):
         self.title = 'My Test Sheet Title'
         self.field_type = 'text'
         self.default_value = 'my_default_value'
@@ -38,7 +40,7 @@ class TestSheets(unittest.TestCase):
                                 self.disabled]
 
         self.sheet = cti_sheets.Sheet(None, None, None)
-        self.sheet.channelprops = Mock(Channel)
+        mocked_context_get.return_value = self._va = VariableAggregator()
 
     def test_resolv_line_content_no_substitution_with_default(self):
         data = {}
@@ -161,7 +163,7 @@ class TestSheets(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def _substitute_via_resolv_line_content(self, data, default_value, display_value):
-        self.sheet.channelprops.extra_data = data
+        self.sheet._variables = data
 
         result = self.sheet.resolv_line_content(('title', 'ftype', default_value, display_value))
 
@@ -170,7 +172,7 @@ class TestSheets(unittest.TestCase):
     def test_resolv_line_content_callerpicture(self):
         user_id = '6'
         encoded_picture = 'my picture base 64 encoding'
-        self.sheet.channelprops.extra_data = {'xivo': {'userid': user_id}}
+        self.sheet._variables = {'xivo': {'userid': user_id}}
         self.sheet._get_user_picture = Mock(return_value=encoded_picture)
         expected = {'name': self.title,
                     'type': self.field_type,

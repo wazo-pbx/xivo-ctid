@@ -24,6 +24,7 @@ import Queue
 
 from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
+from xivo_cti.call_forms.variable_aggregator import CallFormVariable
 from xivo_cti.channel import Channel
 from xivo_cti.directory import directory
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
@@ -166,6 +167,8 @@ class Safe(object):
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _channel_extra_vars_agent_linked_unlinked(self, event):
+        uniqueid = event['Uniqueid']
+        _set = self._get_set_fn(uniqueid)
         channel_name = event['Channel']
         channel = self.channels.get(channel_name)
         if not channel:
@@ -173,7 +176,7 @@ class Safe(object):
         proto, agent_number = event['MemberName'].split('/', 1)
         try:
             if proto == 'Agent':
-                channel.set_extra_data('xivo', 'agentnumber', agent_number)
+                _set('agentnumber', agent_number)
                 data_type = 'agent'
                 data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
             else:
@@ -183,8 +186,8 @@ class Safe(object):
                     return
                 user = user_dao.get_main_user_by_line_id(phone_id)
                 data_id = str(user.id)
-            channel.set_extra_data('xivo', 'desttype', data_type)
-            channel.set_extra_data('xivo', 'destid', data_id)
+            _set('desttype', data_type)
+            _set('destid', data_id)
         except ElementNotExistsError:
             raise
         except (AttributeError, LookupError) as e:
@@ -539,7 +542,7 @@ class Safe(object):
         except (LookupError, ValueError):
             return None
 
-    def sheetsend(self, where, channel):
+    def sheetsend(self, where, uid):
         if 'sheets' not in self._config.getconfig():
             return
         bsheets = self._config.getconfig('sheets')
@@ -550,8 +553,7 @@ class Safe(object):
         if where not in self.sheetevents:
             return
 
-        if channel not in self.channels and not channel.startswith('special'):
-            return
+        _set = self._get_set_fn(uid)
 
         for se in self.sheetevents[where]:
             display_id = se.get('display')
@@ -561,15 +563,13 @@ class Safe(object):
             if not self.sheetdisplays.get(display_id):
                 continue
 
-            channelprops = self.channels[channel]
-            channelprops.set_extra_data('xivo', 'time', time.strftime('%H:%M:%S', time.localtime()))
-            channelprops.set_extra_data('xivo', 'date', time.strftime('%Y-%m-%d', time.localtime()))
-            channelprops.set_extra_data('xivo', 'where', where)
-            channelprops.set_extra_data('xivo', 'channel', channel)
-            channelprops.set_extra_data('xivo', 'context', channelprops.context)
-            channelprops.set_extra_data('xivo', 'uniqueid', channelprops.unique_id)
-            channelprops.set_extra_data('xivo', 'ipbxid', self.ipbxid)
-            sheet = cti_sheets.Sheet(where, self.ipbxid, channel)
+            _set('time', time.strftime('%H:%M:%S', time.localtime()))
+            _set('date', time.strftime('%Y-%m-%d', time.localtime()))
+            _set('where', where)
+            _set('uniqueid', uid)
+            _set('ipbxid', self.ipbxid)
+            channel = context.get('call_form_variable_aggregator').get(uid)['xivo']['channel']
+            sheet = cti_sheets.Sheet(where, self.ipbxid, uid)
             sheet.setoptions(self.sheetoptions.get(option_id))
             sheet.setdisplays(self.sheetdisplays.get(display_id))
             sheet.setconditions(self.sheetconditions.get(condition_id))
@@ -577,7 +577,7 @@ class Safe(object):
             # 1. whom / userinfos : according to outdest or destlist to update in Channel structure
             #    + according to conditions
             #    final 'whom' description should be clearly written in order to send across 'any path'
-            tomatch = sheet.checkdest(channelprops)
+            tomatch = sheet.checkdest()
             tosendlist = self._ctiserver.get_connected(tomatch)
 
             # 2. make an extra call to a db if requested ? could be done elsewhere (before) also ...
@@ -679,3 +679,11 @@ class Safe(object):
         headers = directory_dao.get_directory_headers(SWITCHBOARD_DIRECTORY_CONTEXT)
         return 'message', {'class': 'directory_headers',
                            'headers': headers}
+
+    def _get_set_fn(self, uniqueid):
+        aggregator = context.get('call_form_variable_aggregator')
+
+        def _set(var_name, var_value):
+            aggregator.set(uniqueid, CallFormVariable('xivo', var_name, var_value))
+
+        return _set

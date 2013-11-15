@@ -23,6 +23,8 @@ from hamcrest import equal_to
 
 from xivo_cti import innerdata
 from xivo_cti import channel_updater
+from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
+from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel import Channel
 from xivo_cti.channel_updater import assert_has_channel
 
@@ -55,67 +57,45 @@ class TestChannelUpdater(unittest.TestCase):
     def setUp(self):
         self.innerdata = Mock(innerdata.Safe)
         self.innerdata.channels = {}
-        self.updater = channel_updater.ChannelUpdater(self.innerdata)
+        self._va = VariableAggregator()
+        self.updater = channel_updater.ChannelUpdater(self.innerdata, self._va)
 
     def test_new_caller_id(self):
-        channel_1 = {
-            'name': 'SIP/abc-124',
-            'context': 'test',
-            'unique_id': 12798734.33
-        }
-        self.innerdata.channels = {
-            channel_1['name']: Channel(channel_1['name'],
-                                       channel_1['context'],
-                                       channel_1['unique_id'])
-        }
+        uid = 127984.33
+        self._va.set(uid, Var('xivo', 'calleridname', 'Paul'))
+        self._va.set(uid, Var('xivo', 'calleridnum', '666'))
 
-        self.updater.new_caller_id(channel_1['name'],
-                                   'Alice',
-                                   '1234')
+        self.updater.new_caller_id(uid, sentinel.name, sentinel.num)
 
-        channel = self.innerdata.channels[channel_1['name']]
-        self.assertEqual(channel.extra_data['xivo']['calleridname'], 'Alice')
-        self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
+        assert_that(self._va.get(uid)['xivo']['calleridname'], equal_to(sentinel.name))
+        assert_that(self._va.get(uid)['xivo']['calleridnum'], equal_to(sentinel.num))
 
     def test_new_caller_id_no_cid_name(self):
-        original_name = 'alice'
-        channel_1 = {
-            'name': 'SIP/abc-124',
-            'context': 'test',
-            'unique_id': 12798734.33,
-        }
-        self.innerdata.channels = {
-            channel_1['name']: Channel(channel_1['name'],
-                                       channel_1['context'],
-                                       channel_1['unique_id'])
-        }
-        self.innerdata.channels[channel_1['name']].extra_data = {'xivo': {'calleridname': original_name}}
+        uid = 127984.33
+        self._va.set(uid, Var('xivo', 'calleridname', sentinel.name))
+        self._va.set(uid, Var('xivo', 'calleridnum', '666'))
 
-        self.updater.new_caller_id(channel_1['name'], '', '1234')
+        self.updater.new_caller_id(uid, '', sentinel.num)
 
-        channel = self.innerdata.channels[channel_1['name']]
-        self.assertEqual(channel.extra_data['xivo']['calleridname'], original_name)
-        self.assertEqual(channel.extra_data['xivo']['calleridnum'], '1234')
+        assert_that(self._va.get(uid)['xivo']['calleridname'], equal_to(sentinel.name))
+        assert_that(self._va.get(uid)['xivo']['calleridnum'], equal_to(sentinel.num))
 
     def test_reverse_lookup_result(self):
-        channel_name = 'SIP/abc'
+        uid = 2378634.55
         event = {
             'db-reverse': 'rev',
             'db-fullname': 'Pierre Laroche',
             'db-mail': 'pierre@home.com',
             'dp-not-db': 'lol',
         }
-        channel = Mock(Channel)
-        self.innerdata.channels = {
-            channel_name: channel,
-        }
 
-        self.updater.reverse_lookup_result(channel_name, event)
+        self.updater.reverse_lookup_result(uid, event)
 
-        channel.set_extra_data.assert_any_call('db', 'reverse', 'rev')
-        channel.set_extra_data.assert_any_call('db', 'fullname', 'Pierre Laroche')
-        channel.set_extra_data.assert_any_call('db', 'mail', 'pierre@home.com')
-        assert_that(channel.set_extra_data.call_count, equal_to(3), 'set_extra_data call count')
+        assert_that(self._va.get(uid)['db'], equal_to({
+            'reverse': 'rev',
+            'fullname': 'Pierre Laroche',
+            'mail': 'pierre@home.com',
+        }))
 
     def test_new_caller_id_unknown_channel(self):
         self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
@@ -137,35 +117,3 @@ class TestChannelUpdater(unittest.TestCase):
                     call('empty_stack')]
 
         assert_that(calls, equal_to(expected), 'handle_cti_stack calls')
-
-    def test_inherit_channels(self):
-        parent_name = 'SIP/parent_channel-0'
-        parent = Mock(Channel)
-        self.innerdata.channels[parent_name] = parent
-        child_name = 'SIP/child_channel-0'
-        child = Mock(Channel)
-        self.innerdata.channels[child_name] = child
-
-        self.updater.inherit_channels(parent_name, child_name)
-
-        new_child = self.innerdata.channels[child_name]
-        new_child.inherit.assert_called_once_with(parent)
-
-    def test_inherit_channels_local_channel_child(self):
-        parent_name = 'SIP/parent_channel-0'
-        parent = Mock(Channel)
-        self.innerdata.channels[parent_name] = parent
-        child_name_1 = 'Local-abc@324545;1'
-        child_name_2 = 'Local-abc@324545;2'
-        child_1 = Mock(Channel)
-        child_2 = Mock(Channel)
-        self.innerdata.channels[child_name_1] = child_1
-        self.innerdata.channels[child_name_2] = child_2
-
-        self.updater.inherit_channels(parent_name, child_name_1)
-
-        new_child_1 = self.innerdata.channels[child_name_1]
-        new_child_1.inherit.assert_called_once_with(parent)
-
-        new_child_2 = self.innerdata.channels[child_name_2]
-        new_child_2.inherit.assert_called_once_with(parent)
