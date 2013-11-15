@@ -261,15 +261,6 @@ class Command(object):
                                                'text': chitchattext}})
         return reply
 
-    def regcommand_actionfiche(self):
-        reply = {}
-        infos = self._commanddict.get('infos')
-        self.rinnerdata.fill_user_ctilog(self.ruserid,
-                                         'cticommand:actionfiche',
-                                         infos.get('buttonname'))
-        logger.info('Received from client : %s' % infos.get('variables'))
-        return reply
-
     def regcommand_history(self):
         try:
             phone = dao.user.get_line(self.ruserid)
