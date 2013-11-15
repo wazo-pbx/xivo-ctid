@@ -21,7 +21,8 @@ import logging
 import os
 import time
 import Queue
-from xivo_cti import cti_config, cti_sheets, db_connection_manager
+
+from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.channel import Channel
 from xivo_cti.directory import directory
