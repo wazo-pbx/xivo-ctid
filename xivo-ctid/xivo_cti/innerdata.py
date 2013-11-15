@@ -54,8 +54,6 @@ SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 class Safe(object):
 
-    permission_kinds = ['regcommands', 'userstatus']
-
     def __init__(self, config, cti_server, queue_member_cti_adapter):
         self._config = config
         self._ctiserver = cti_server
