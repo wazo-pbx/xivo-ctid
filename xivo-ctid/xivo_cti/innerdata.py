@@ -19,7 +19,6 @@ import copy
 import hashlib
 import logging
 import os
-import string
 import time
 import Queue
 from xivo_cti import cti_config, cti_sheets, db_connection_manager
@@ -48,7 +47,6 @@ from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
 
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
 SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 
