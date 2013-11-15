@@ -19,10 +19,10 @@ import copy
 import hashlib
 import logging
 import os
-import string
 import time
 import Queue
-from xivo_cti import cti_config, cti_sheets, db_connection_manager
+
+from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.channel import Channel
 from xivo_cti.directory import directory
@@ -48,13 +48,10 @@ from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
 
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
 SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 
 class Safe(object):
-
-    permission_kinds = ['regcommands', 'userstatus']
 
     def __init__(self, config, cti_server, queue_member_cti_adapter):
         self._config = config
@@ -565,23 +562,6 @@ class Safe(object):
         except (LookupError, ValueError):
             return None
 
-    def fill_user_ctilog(self, userid, what, options='', callduration=None):
-        request = "INSERT INTO ctilog (${columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        columns = ('eventdate', 'loginclient', 'company', 'status',
-                   'action', 'arguments', 'callduration')
-        datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        user = old_user_dao.get(userid)
-        userstatus = self.xod_status.get('users').get(userid).get('availstate')
-        arguments = (datetime,
-                     user.loginclient,
-                     user.entityid,
-                     userstatus,
-                     what, options, callduration)
-
-        with db_connection_manager.DbConnectionPool(cti_config.DB_URI) as connection:
-            connection['cur'].query(request, columns, arguments)
-            connection['conn'].commit()
-
     def sheetsend(self, where, channel):
         if 'agentcallback' in channel and where != 'link':
             return
@@ -738,13 +718,3 @@ class Safe(object):
         headers = directory_dao.get_directory_headers(SWITCHBOARD_DIRECTORY_CONTEXT)
         return 'message', {'class': 'directory_headers',
                            'headers': headers}
-
-
-def split_channel(channel):
-    protocol, end = channel.split('/', 1)
-    if protocol.lower() in ['iax', 'sip', 'sccp', 'local']:
-        name = '-'.join(end.split('-')[0:end.count('-')])
-    else:
-        protocol = 'custom'
-        name = '/'.join(channel.split('/')[0:channel.count('/')])
-    return protocol, name

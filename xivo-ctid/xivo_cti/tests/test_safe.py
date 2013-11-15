@@ -27,7 +27,6 @@ from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti import cti_config
-from xivo_cti import innerdata
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
@@ -65,30 +64,6 @@ class TestSafe(unittest.TestCase):
         ret = self.safe.handle_getlist_list_id('not_a_list', '1')
 
         self.assertEqual(ret, None)
-
-    def test_split_channel(self):
-        sip_trunk_channel = 'SIP/test-ha-1-03745898564'
-
-        proto, name = innerdata.split_channel(sip_trunk_channel)
-
-        self.assertEqual(proto, 'SIP')
-        self.assertEqual(name, 'test-ha-1')
-
-    def test_split_channel_local(self):
-        sip_trunk_channel = 'Local/1105@default-3d0f;2'
-
-        proto, name = innerdata.split_channel(sip_trunk_channel)
-
-        self.assertEqual(proto, 'Local')
-        self.assertEqual(name, '1105@default')
-
-    def test_split_channel_dahdi(self):
-        dahdi_trunk_channel = 'DAHDI/i1/0612345678-577'
-
-        proto, name = innerdata.split_channel(dahdi_trunk_channel)
-
-        self.assertEqual(proto, 'custom')
-        self.assertEqual(name, 'DAHDI/i1')
 
     def assert_callback_registered(self, cls, fn):
         found = False
