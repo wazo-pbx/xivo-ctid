@@ -168,9 +168,9 @@ class Sheet(object):
 
         tomatch = {}
         data = self._variables
-        if whom == 'dest' and 'desttype' in data['xivo']:
-            tomatch['desttype'] = data['xivo']['desttype']
-            tomatch['destid'] = data['xivo']['destid']
+        if whom == 'dest':
+            tomatch['desttype'] = data['xivo'].get('desttype')
+            tomatch['destid'] = data['xivo'].get('destid')
 
         return tomatch
 
