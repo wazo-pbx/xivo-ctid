@@ -74,19 +74,16 @@ class TestVariableSubstituter(TestCase):
 
         assert_that(result, equal_to('abc value def'))
 
+    @patch('urllib2.urlopen', new_callable=mock_open, read_data='picture_content')
     @patch('base64.b64encode')
-    def test_substitute_picture(self, base64):
-        file_content = Mock()
-        mock_urllib2 = mock_open(read_data=file_content)
-        with patch('urllib2.urlopen', mock_urllib2, create=True) as urllib2:
-            base64_string = base64.return_value = 'abcdef'
+    def test_substitute_picture(self, base64, urlopen):
+        base64_string = base64.return_value = 'abcdef'
+        string_containing_variables = '{xivo-callerpicture}'
+        variables = {'xivo-userid': '12'}
 
-            string_containing_variables = '{xivo-callerpicture}'
-            variables = {'xivo-userid': '12'}
+        result = substituter.substitute(string_containing_variables,
+                                        variables)
 
-            result = substituter.substitute(string_containing_variables,
-                                            variables)
-
-            assert_that(result, equal_to(base64_string))
-            urllib2.assert_called_once_with(substituter.USER_PICTURE_URL % '12')
-            base64.assert_called_once_with(file_content)
+        assert_that(result, equal_to(base64_string))
+        urlopen.assert_called_once_with(substituter.USER_PICTURE_URL % '12')
+        base64.assert_called_once_with('picture_content')
