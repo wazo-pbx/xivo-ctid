@@ -20,13 +20,13 @@ import logging
 import struct
 import urllib2
 import zlib
-import re
+
+from xivo_cti.tools import variable_substituter as substituter
 
 from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('sheet')
 
-USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 LINE_TEMPLATE = '<internal name="%s"><![CDATA[%s]]></internal>'
 
 
@@ -56,43 +56,18 @@ class Sheet(object):
     def addinternal(self, varname, varvalue):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
-    def replacement_callback(self, variable_name):
-        try:
-            family, name = variable_name.split('-', 1)
-        except ValueError:
-            logger.warning('Invalid variable %r', variable_name)
-            return None
-        else:
-            try:
-                data = self._variables
-                if family == 'xivo' and name == 'callerpicture':
-                    user_id = data['xivo']['userid']
-                    return self._get_user_picture(user_id)
-                else:
-                    try:
-                        value = data[family][name]
-                    except KeyError:
-                        logger.warning('No value for variable %r', variable_name)
-                        return None
-                    else:
-                        return value if value else None
-            except Exception as e:
-                logger.warning('Could not replace variable %r: %s', variable_name, e)
-                return None
-
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
         if disabled:
             return {}
 
-        title, ftype, defaultval, sformat = lineprops[:4]
-        finalstring = _substitute(defaultval, sformat, self.replacement_callback)
-        return {'name': title, 'type': ftype, 'contents': finalstring}
+        title, ftype, default_value, value_to_substitute = lineprops[:4]
 
-    def _get_user_picture(self, user_id):
-        url = USER_PICTURE_URL % user_id
-        picture_data = urllib2.urlopen(url).read()
-        return base64.b64encode(picture_data)
+        variable_values = self.channelprops.extra_data
+        finalstring = substituter.substitute_with_default(value_to_substitute,
+                                                          default_value,
+                                                          variable_values)
+        return {'name': title, 'type': ftype, 'contents': finalstring}
 
     def setfields(self):
         for sheetpart, v in self.displays.iteritems():
@@ -112,7 +87,8 @@ class Sheet(object):
                         fobj.close()
                     except Exception:
                         qtui_data = ''
-                    qtui_data = _substitute('', qtui_data, self.replacement_callback)
+                    qtui_data = substituter.substitute(qtui_data,
+                                                       self._variables)
                     self.fields[sheetpart] = {'10': {'name': 'qtui',
                                                      'contents': qtui_data}}
             else:
@@ -173,39 +149,3 @@ class Sheet(object):
             tomatch['destid'] = data['xivo'].get('destid')
 
         return tomatch
-
-
-def _substitute(default_value, display_value, replacement_callback):
-    substituer = _Substituer(replacement_callback)
-    return substituer.substitute(default_value, display_value)
-
-
-class _Substituer(object):
-
-    _VARIABLE_NAME_REGEX = re.compile(r'\{([^}]+)\}')
-
-    def __init__(self, replacement_callback):
-        self._nb_substitutions = 0
-        self._nb_failed_substitutions = 0
-        self._replacement_callback = replacement_callback
-
-    def substitute(self, default_value, display_value):
-        substitution_result = self._VARIABLE_NAME_REGEX.sub(self._regex_callback, display_value)
-        if self._nb_substitutions == 0:
-            return display_value
-        elif self._nb_failed_substitutions == self._nb_substitutions:
-            return default_value if default_value else display_value
-        else:
-            return substitution_result
-
-    def _regex_callback(self, m):
-        variable_name = m.group(1)
-        variable_value = self._replacement_callback(variable_name)
-        self._nb_substitutions += 1
-        if variable_value is None:
-            self._nb_failed_substitutions += 1
-            return ''
-        else:
-            if not isinstance(variable_value, basestring):
-                variable_value = str(variable_value)
-            return variable_value
