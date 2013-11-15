@@ -22,6 +22,8 @@ import urllib2
 
 logger = logging.getLogger('sheet')
 
+USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
+
 
 def substitute_with_default(string_containing_variables,
                             default_string,
@@ -37,7 +39,6 @@ def substitute(string_containing_variables, variable_values):
 class _Substituer(object):
 
     _VARIABLE_NAME_REGEX = re.compile(r'\{([^}]+)\}')
-    USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 
     def __init__(self, variables):
         self._nb_substitutions = 0
@@ -62,36 +63,25 @@ class _Substituer(object):
         self._nb_substitutions += 1
         if variable_value is None:
             self._nb_failed_substitutions += 1
-            return ''
+            return m.group(0)
         else:
             if not isinstance(variable_value, basestring):
                 variable_value = str(variable_value)
             return variable_value
 
     def _get_user_picture(self, user_id):
-        url = self.USER_PICTURE_URL % user_id
-        picture_data = urllib2.urlopen(url).read()
+        url = USER_PICTURE_URL % user_id
+        with urllib2.urlopen(url) as picture_file:
+            picture_data = picture_file.read()
         return base64.b64encode(picture_data)
 
     def _replace_variable(self, variable_name):
-        try:
-            family, name = variable_name.split('-', 1)
-        except ValueError:
-            logger.warning('Invalid variable %r', variable_name)
-            return None
-        else:
-            try:
-                if family == 'xivo' and name == 'callerpicture':
-                    user_id = self.variables['xivo']['userid']
-                    return self._get_user_picture(user_id)
-                else:
-                    try:
-                        value = self.variables[family][name]
-                    except KeyError:
-                        logger.warning('No value for variable %r', variable_name)
-                        return None
-                    else:
-                        return value if value else None
-            except Exception as e:
-                logger.warning('Could not replace variable %r: %s', variable_name, e)
-                return None
+        if variable_name == 'xivo-callerpicture' and 'xivo-userid' in self.variables:
+            user_id = self.variables['xivo-userid']
+            return self._get_user_picture(user_id)
+
+        if variable_name in self.variables:
+            return self.variables[variable_name]
+
+        logger.warning('Could not replace variable %r', variable_name)
+        return None
