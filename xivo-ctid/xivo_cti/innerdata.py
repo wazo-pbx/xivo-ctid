@@ -718,13 +718,3 @@ class Safe(object):
         headers = directory_dao.get_directory_headers(SWITCHBOARD_DIRECTORY_CONTEXT)
         return 'message', {'class': 'directory_headers',
                            'headers': headers}
-
-
-def split_channel(channel):
-    protocol, end = channel.split('/', 1)
-    if protocol.lower() in ['iax', 'sip', 'sccp', 'local']:
-        name = '-'.join(end.split('-')[0:end.count('-')])
-    else:
-        protocol = 'custom'
-        name = '/'.join(channel.split('/')[0:channel.count('/')])
-    return protocol, name
