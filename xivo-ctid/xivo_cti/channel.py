@@ -20,15 +20,6 @@ import time
 
 class Channel(object):
 
-    extra_vars = {'xivo': ['agentnumber', 'calledidname', 'calledidnum',
-                           'calleridname', 'calleridnum', 'calleridrdnis',
-                           'calleridton', 'channel', 'context', 'date',
-                           'destid', 'desttype', 'did', 'direction',
-                           'directory', 'ipbxid', 'origin', 'queuename', 'time',
-                           'uniqueid', 'userid', 'where'],
-                  'dp': [],
-                  'db': []}
-
     def __init__(self, channel, context, unique_id=None):
         self.channel = channel
         self.peerchannel = None
@@ -48,7 +39,6 @@ class Channel(object):
             'state': 'Unknown',
         }
         self.relations = []
-        self.extra_data = {}
 
     def setparking(self, exten, parkinglot):
         self.properties['parked'] = True
@@ -76,24 +66,3 @@ class Channel(object):
         self.state = state
         if description:
             self.properties['state'] = description
-
-    # extra dialplan data that may be reachable from sheets
-
-    def set_extra_data(self, family, varname, varvalue):
-        if family not in self.extra_vars:
-            return
-        if family not in self.extra_data:
-            self.extra_data[family] = {}
-        if family == 'xivo':
-            if varname in self.extra_vars.get(family):
-                self.extra_data[family][varname] = varvalue
-        else:
-            self.extra_data[family][varname] = varvalue
-
-    def has_extra_data(self, family, varname):
-        return family in self.extra_data and varname in self.extra_data[family]
-
-    def inherit(self, parent_channel):
-        for (parent_key, parent_value) in parent_channel.extra_data.iteritems():
-            for parent_subkey, parent_subvalue in parent_value.iteritems():
-                self.set_extra_data(parent_key, parent_subkey, parent_subvalue)

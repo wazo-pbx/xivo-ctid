@@ -15,21 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+
 class ChannelDAO(object):
 
-    def __init__(self, innerdata):
+    def __init__(self, innerdata, call_form_variable_aggregator):
         self.innerdata = innerdata
+        self._call_form_variable_aggregator = call_form_variable_aggregator
 
     def get_caller_id_name_number(self, channel):
         if channel not in self.innerdata.channels:
             raise LookupError('Unknown channe %s' % channel)
 
-        channel = self.innerdata.channels[channel]
-
-        caller_id_name = channel.extra_data['xivo'].get('calleridname', '')
-        caller_id_number = channel.extra_data['xivo'].get('calleridnum', '')
-
-        return caller_id_name, caller_id_number
+        uid = self.innerdata.channels[channel].unique_id
+        return self._get(uid, 'calleridname'), self._get(uid, 'calleridnum')
 
     def get_channel_from_unique_id(self, unique_id):
         for channel_id, channel in self.innerdata.channels.iteritems():
@@ -37,3 +35,7 @@ class ChannelDAO(object):
                 continue
             return channel_id
         raise LookupError('No channel with unique id %s' % unique_id)
+
+    def _get(self, uid, var):
+        channel_data = self._call_form_variable_aggregator.get(uid)
+        return channel_data['xivo'].get(var, '')

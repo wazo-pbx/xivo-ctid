@@ -25,10 +25,10 @@ event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          'Reload', 'Shutdown', 'ModuleLoadReport',
                          'FullyBooted',  # (1.8)
                          'DNDState', 'MobileStatus', 'Registry',
-                         'ChannelReload', 'ChannelUpdate', 'LogChannel'
+                         'ChannelReload', 'LogChannel'
                          ]
 
-event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename', 'Unlink',
+event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
                        'Bridge', 'BridgeExec', 'BridgeAction',
                        'Transfer',  # only in chan_sip
                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
@@ -82,7 +82,6 @@ event_others['extra'] = [
     'Atxfer',  # (patch to fetch ?)
     'ActionRequest',  # (xivo)
 
-    'Inherit',  # (xivo) to track Local/;1 etc ... channels creation
     'HangupRequest',  # (xivo) to know who 'ordered' the hangup (patch submitted to digium in #0018226)
     'SoftHangupRequest',  # (xivo) to know when the hangup was requested from the CLI (patch submitted to digium in #0018226)
 ]

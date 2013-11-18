@@ -20,7 +20,7 @@ import random
 import string
 import time
 
-from xivo_dao import agent_dao
+from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
@@ -35,16 +35,17 @@ class AMI_1_8(object):
 
     userevents = ('Feature',
                   'dialplan2cti',
-                  'Agent',
                   'User',
                   'Queue',
                   'Group',
                   'Did')
 
-    def __init__(self, cti_server, innerdata, interface_ami):
+    def __init__(self, cti_server, innerdata, interface_ami, call_form_dispatch_filter, call_form_variable_aggregator):
         self._ctiserver = cti_server
         self.innerdata = innerdata
         self.interface_ami = interface_ami
+        self._call_form_dispatch_filter = call_form_dispatch_filter
+        self._aggregator = call_form_variable_aggregator
 
     def ami_newchannel(self, event):
         channel = event['Channel']
@@ -53,35 +54,35 @@ class AMI_1_8(object):
         context = event['Context']
         unique_id = event['Uniqueid']
 
+        _set = self._get_set_fn(unique_id)
+        _set('calleridname', event['CallerIDName'])
+        _set('calleridnum', event['CallerIDNum'])
+        _set('channel', event['Channel'])
+        _set('context', context)
+
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
 
     def ami_hangup(self, event):
         channel = event['Channel']
-        #  0 - Unknown
-        #  3 - No route to destination
-        # 16 - Normal Clearing
-        # 17 - User busy (see Orig #5)
-        # 18 - No user responding (see Orig #1)
-        # 19 - User alerting, no answer (see Orig #8, Orig #3, Orig #1 (soft hup))
-        # 21 - Call rejected (attempting *8 when noone to intercept)
-        # 24 - "lost" Call suspended
-        # 27 - Destination out of order
-        # 28 - Invalid number format (incomplete number)
-        # 34 - Circuit/channel congestion
-        self.innerdata.sheetsend('hangup', channel)
+        uniqueid = event['Uniqueid']
+
+        self._call_form_dispatch_filter.handle_hangup(uniqueid, channel)
         self.innerdata.hangup(channel)
+        self._aggregator.clean(uniqueid)
 
     def ami_dial(self, event):
         channel = event['Channel']
         subevent = event['SubEvent']
+        uniqueid = event['UniqueID']
+        _set = self._get_set_fn(uniqueid)
         if subevent == 'Begin' and 'Destination' in event:
             destination = event['Destination']
             if channel in self.innerdata.channels:
                 try:
-                    self.innerdata.channels[channel].set_extra_data('xivo', 'desttype', 'user')
+                    _set('desttype', 'user')
                     phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
                     if phone:
-                        self.innerdata.channels[channel].set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
+                        _set('destid', str(phone['iduserfeatures']))
                 except LookupError:
                     logger.exception('Could not set user id for dial')
                 self.innerdata.channels[channel].properties['direction'] = 'out'
@@ -95,7 +96,7 @@ class AMI_1_8(object):
                 self.innerdata.channels[destination].properties['timestamp'] = time.time()
                 self.innerdata.setpeerchannel(destination, channel)
                 self.innerdata.update(destination)
-            self.innerdata.sheetsend('dial', channel)
+            self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):
         self.innerdata.updatehint(event['Hint'], event['Status'])
@@ -106,6 +107,8 @@ class AMI_1_8(object):
 
         channel_1 = self.innerdata.channels.get(event['Channel1'])
         channel_2 = self.innerdata.channels.get(event['Channel2'])
+        uniqueid = event['Uniqueid1']
+        channel_name = event['Channel1']
 
         if channel_1:
             self._update_connected_channel(channel_1, channel_2)
@@ -115,10 +118,7 @@ class AMI_1_8(object):
             self._update_connected_channel(channel_2, channel_1)
             channel_2.properties['commstatus'] = 'linked-called'
 
-        if 'agentcallback' in channel_1.channel or 'agentcallback' in channel_2.channel:
-            logger.debug('A call has been bridged to an agent, not sending the link event now')
-        else:
-            self._trigger_link_event(channel_2)
+        self._call_form_dispatch_filter.handle_bridge(uniqueid, channel_name)
 
     def _update_connected_channel(self, channel, peer_channel):
         channel.properties.update({
@@ -129,33 +129,10 @@ class AMI_1_8(object):
         self.innerdata.setpeerchannel(channel.channel, peer_channel.channel)
         self.innerdata.update(channel.channel)
 
-    def _trigger_link_event(self, channel):
-        phone = self.innerdata.xod_config['phones'].find_phone_by_channel(channel.channel)
-        if not phone:
-            return
-
-        channel.set_extra_data('xivo', 'desttype', 'user')
-        channel.set_extra_data('xivo', 'destid', str(phone['iduserfeatures']))
-
-        self.innerdata.sheetsend('link', channel.channel)
-
-    def ami_unlink(self, event):
-        self.innerdata.sheetsend('unlink', event['Channel1'])
-
     def ami_masquerade(self, event):
         original = event['Original']
         clone = event['Clone']
         self.innerdata.masquerade(original, clone)
-
-    def ami_channelupdate(self, event):
-        # could be especially useful when there is a trunk : links callno-remote and callno-local
-        # when the call is outgoing, one never receives the callno-remote
-        channeltype = event['Channeltype']
-        if channeltype == 'IAX2':
-            logger.info('ami_channelupdate %s : %s - %s : %s',
-                        channeltype, event['IAX2-callno-local'],
-                        event['IAX2-callno-remote'],
-                        event)
 
     def ami_originateresponse(self, event):
         channel = event['Channel']
@@ -200,93 +177,74 @@ class AMI_1_8(object):
         if channel in self.innerdata.channels:
             self.innerdata.channels[channel].unsetparking()
 
-    def userevent_agent(self, chanprops, event):
-        agent_id = int(event['XIVO_AGENT_ID'])
-        try:
-            agent_number = agent_dao.agent_number(agent_id)
-
-            # chanprops is the ";2" channel of a "Local channel", but we need
-            # to set the extra_data information on the ";1" channel
-            semicolon1_channel = chanprops.channel[:-1] + '1'
-            semicolon1_chanprops = self.innerdata.channels[semicolon1_channel]
-            semicolon1_chanprops.set_extra_data('xivo', 'agentnumber', agent_number)
-        except Exception:
-            logger.warning('Could not set extra data in userevent agent', exc_info=True)
-
     def userevent_user(self, chanprops, event):
+        uniqueid = event['Uniqueid']
+        _set = self._get_set_fn(uniqueid)
         xivo_userid = event.get('XIVO_USERID')
-        userprops = self.innerdata.xod_config.get('users').keeplist.get(xivo_userid)
-        xivo_srcnum = event.get('XIVO_SRCNUM')
         destination_user_id = int(event['XIVO_DSTID'])
+        channel_name = event['CHANNEL']
         destination_name, destination_number = user_dao.get_name_number(destination_user_id)
-        if userprops is not None:
-            usersummary_src = {'fullname': userprops.get('fullname'),
-                               'phonenumber': xivo_srcnum}
-        else:
-            usersummary_src = {'fullname': xivo_srcnum,
-                               'phonenumber': xivo_srcnum}
 
-        chanprops.set_extra_data('xivo', 'desttype', 'user')
-        chanprops.set_extra_data('xivo', 'destid', destination_user_id)
-        chanprops.set_extra_data('xivo', 'userid', xivo_userid)
-        chanprops.set_extra_data('xivo', 'origin', event.get('XIVO_CALLORIGIN', 'internal'))
-        chanprops.set_extra_data('xivo', 'direction', 'internal')
-        if not chanprops.has_extra_data('xivo', 'calleridname'):
-            chanprops.set_extra_data('xivo', 'calleridname', usersummary_src.get('fullname'))
-        if not chanprops.has_extra_data('xivo', 'calleridnum'):
-            chanprops.set_extra_data('xivo', 'calleridnum', usersummary_src.get('phonenumber'))
-        chanprops.set_extra_data('xivo', 'calledidnum', destination_number)
-        chanprops.set_extra_data('xivo', 'calledidname', destination_name)
+        _set('desttype', 'user')
+        _set('destid', destination_user_id)
+        _set('userid', xivo_userid)
+        _set('origin', event.get('XIVO_CALLORIGIN', 'internal'))
+        _set('direction', 'internal')
+        _set('calledidnum', destination_number)
+        _set('calledidname', destination_name)
+        self._call_form_dispatch_filter.handle_user(uniqueid, channel_name)
 
     def userevent_queue(self, chanprops, event):
-        callerid_name = event.get('XIVO_CALLERIDNAME')
-        callerid_number = event.get('XIVO_CALLERIDNUMBER')
-
+        uniqueid = event['Uniqueid']
+        _set = self._get_set_fn(uniqueid)
         queue_id = int(event['XIVO_DSTID'])
+        channel_name = event['CHANNEL']
         queue_name, queue_number = queue_dao.get_display_name_number(queue_id)
 
-        chanprops.set_extra_data('xivo', 'desttype', 'queue')
-        chanprops.set_extra_data('xivo', 'destid', queue_id)
-        chanprops.set_extra_data('xivo', 'calledidname', queue_name)
-        chanprops.set_extra_data('xivo', 'queuename', queue_name)
-        chanprops.set_extra_data('xivo', 'calledidnum', queue_number)
-        if not chanprops.has_extra_data('xivo', 'calleridname'):
-            chanprops.set_extra_data('xivo', 'calleridname', callerid_name)
-        if not chanprops.has_extra_data('xivo', 'calleridnum'):
-            chanprops.set_extra_data('xivo', 'calleridnum', callerid_number)
+        _set('desttype', 'queue')
+        _set('destid', queue_id)
+        _set('calledidname', queue_name)
+        _set('queuename', queue_name)
+        _set('calledidnum', queue_number)
 
-        self.innerdata.sheetsend('dial', chanprops.channel)
+        self._call_form_dispatch_filter.handle_queue(uniqueid, channel_name)
 
     def userevent_group(self, chanprops, event):
+        uniqueid = event['Uniqueid']
+        _set = self._get_set_fn(uniqueid)
         group_id = int(event['XIVO_DSTID'])
+        channel_name = event['CHANNEL']
         group_name, group_number = group_dao.get_name_number(group_id)
 
-        chanprops.set_extra_data('xivo', 'desttype', 'group')
-        chanprops.set_extra_data('xivo', 'destid', group_id)
-        chanprops.set_extra_data('xivo', 'calledidname', group_name)
-        chanprops.set_extra_data('xivo', 'calledidnum', group_number)
+        _set('desttype', 'group')
+        _set('destid', group_id)
+        _set('calledidname', group_name)
+        _set('calledidnum', group_number)
 
-        self.innerdata.sheetsend('dial', chanprops.channel)
+        self._call_form_dispatch_filter.handle_group(uniqueid, channel_name)
 
     def userevent_did(self, chanprops, event):
+        uniqueid = event['Uniqueid']
+        _set = self._get_set_fn(uniqueid)
         calleridnum = event.get('XIVO_SRCNUM')
         calleridname = event.get('XIVO_SRCNAME')
         calleridton = event.get('XIVO_SRCTON')
         calleridrdnis = event.get('XIVO_SRCRDNIS')
         didnumber = event.get('XIVO_EXTENPATTERN')
 
-        chanprops.set_extra_data('xivo', 'origin', 'did')
-        chanprops.set_extra_data('xivo', 'direction', 'incoming')
-        chanprops.set_extra_data('xivo', 'did', didnumber)
-        chanprops.set_extra_data('xivo', 'calleridnum', calleridnum)
-        chanprops.set_extra_data('xivo', 'calleridname', calleridname)
-        chanprops.set_extra_data('xivo', 'calleridrdnis', calleridrdnis)
-        chanprops.set_extra_data('xivo', 'calleridton', calleridton)
+        _set('origin', 'did')
+        _set('direction', 'incoming')
+        _set('did', didnumber)
+        _set('calleridnum', calleridnum)
+        _set('calleridname', calleridname)
+        _set('calleridrdnis', calleridrdnis)
+        _set('calleridton', calleridton)
+        _set('channel', chanprops.channel)
         incall = incall_dao.get_by_exten(didnumber)
         if incall:
-            chanprops.set_extra_data('xivo', 'desttype', incall.action)
-            chanprops.set_extra_data('xivo', 'destid', incall.actionarg1)
-        self.innerdata.sheetsend('incomingdid', chanprops.channel)
+            _set('desttype', incall.action)
+            _set('destid', incall.actionarg1)
+        self._call_form_dispatch_filter.handle_did(uniqueid, chanprops.channel)
 
     def userevent_feature(self, chanprops, ev):
         reply = {}
@@ -328,9 +286,10 @@ class AMI_1_8(object):
         # - variables declarations are not always done with Set (Read(), AGI(), ...)
         # - if there is a need for extra useful data (XIVO_USERID, ...)
         # - (future ?) multiple settings at once
+        uniqueid = event['Uniqueid']
         cti_varname = event.get('VARIABLE')
         dp_value = event.get('VALUE')
-        chanprops.set_extra_data('dp', cti_varname, dp_value)
+        self._aggregator.set(uniqueid, Var('dp', cti_varname, dp_value))
 
     def ami_userevent(self, event):
         eventname = event['UserEvent']
@@ -415,6 +374,11 @@ class AMI_1_8(object):
         hint = event.get('Hint')
         if hint:
             self.innerdata.updatehint(hint, event['Status'])
+
+    def _get_set_fn(self, uniqueid):
+        def _set(var_name, var_value):
+            self._aggregator.set(uniqueid, Var('xivo', var_name, var_value))
+        return _set
 
     @staticmethod
     def timeconvert(duration):

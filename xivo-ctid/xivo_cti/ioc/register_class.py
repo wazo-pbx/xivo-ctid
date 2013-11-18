@@ -21,6 +21,8 @@ from xivo_bus.resources.agent.client import AgentClient
 from xivo_cti import cti_config
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
+from xivo_cti.call_forms.dispatch_filter import DispatchFilter
+from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ctiserver import CTIServer
@@ -91,7 +93,9 @@ def setup():
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
     context.register('bus_client', BusCtlClient)
+    context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
+    context.register('call_form_variable_aggregator', VariableAggregator)
     context.register('call_notifier', CallNotifier)
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)

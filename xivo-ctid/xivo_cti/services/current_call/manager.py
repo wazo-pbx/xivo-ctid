@@ -17,7 +17,7 @@
 
 import time
 import logging
-from xivo_dao import user_dao, user_line_dao
+from xivo_dao import user_line_dao
 from xivo_cti import dao
 
 

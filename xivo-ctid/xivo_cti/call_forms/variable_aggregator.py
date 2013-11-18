@@ -15,19 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import unittest
+from collections import namedtuple
+from collections import defaultdict
 
-from xivo_cti.channel import Channel
+
+CallFormVariable = namedtuple('CallFormVariable', ['type', 'name', 'value'])
 
 
-class TestChannel(unittest.TestCase):
+class VariableAggregator(object):
 
-    def test_update_state(self):
-        state = 'Ringing'
+    def __init__(self):
+        self._vars = defaultdict(lambda: defaultdict(dict))
 
-        channel = Channel('1001@my-ctx-00000', 'my-ctx', '1234567.33')
+    def clean(self, uid):
+        if uid in self._vars:
+            del self._vars[uid]
 
-        channel.update_state(5, state)
+    def get(self, uid):
+        return self._vars[uid]
 
-        self.assertEqual(channel.state, 5)
-        self.assertEqual(channel.properties['state'], state)
+    def set(self, uid, var):
+        self._vars[uid][var.type][var.name] = var.value
