@@ -28,7 +28,8 @@ USER_PICTURE_URL = 'http://127.0.0.1/getatt.php?id=%s&obj=user'
 def substitute_with_default(string_containing_variables,
                             default_string,
                             variable_values):
-    pass
+    substituter = _Substituer(variable_values)
+    return substituter.substitute_with_default(default_string, string_containing_variables)
 
 
 def substitute(string_containing_variables, variable_values):
