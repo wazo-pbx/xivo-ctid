@@ -56,6 +56,9 @@ class Sheet(object):
     def addinternal(self, varname, varvalue):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
+    def variable_values(self):
+        pass
+
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
         if disabled:
@@ -63,7 +66,7 @@ class Sheet(object):
 
         title, ftype, default_value, value_to_substitute = lineprops[:4]
 
-        variable_values = self.channelprops.extra_data
+        variable_values = self.variable_values()
         finalstring = substituter.substitute_with_default(value_to_substitute,
                                                           default_value,
                                                           variable_values)
