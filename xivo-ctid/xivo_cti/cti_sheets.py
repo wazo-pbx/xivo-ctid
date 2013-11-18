@@ -96,7 +96,7 @@ class Sheet(object):
                     except Exception:
                         qtui_data = ''
                     qtui_data = substituter.substitute(qtui_data,
-                                                       self._variables)
+                                                       self.variable_values())
                     self.fields[sheetpart] = {'10': {'name': 'qtui',
                                                      'contents': qtui_data}}
             else:
