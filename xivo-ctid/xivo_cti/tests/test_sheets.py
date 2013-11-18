@@ -30,6 +30,7 @@ class TestSheets(unittest.TestCase):
         self.field_type = 'text'
         self.default_value = 'my_default_value'
         self.sheet = cti_sheets.Sheet(None, None, None)
+        self.sheet.channelprops = Mock(Channel)
 
     @patch('xivo_cti.tools.variable_substituter.substitute_with_default')
     def test_resolv_line_content(self, substitute):
@@ -48,3 +49,34 @@ class TestSheets(unittest.TestCase):
         assert_that(result, has_entries({'name': self.title,
                                          'type': self.field_type,
                                          'contents': value_substituted}))
+
+    def test_variable_values_empty(self):
+        self.sheet.channelprops.extra_data = {}
+
+        result = self.sheet.variable_values()
+
+        assert_that(result, has_length(0))
+
+    def test_variable_values_with_xivo_variables(self):
+        self.sheet.channelprops.extra_data = {'xivo': {'variable1': 'value1',
+                                                       'variable2': 'value2'}}
+
+        result = self.sheet.variable_values()
+
+        assert_that(result, has_length(2))
+        assert_that(result, has_entries({'xivo-variable1': 'value1',
+                                         'xivo-variable2': 'value2'}))
+
+    def test_variable_values_with_two_variable_types(self):
+        self.sheet.channelprops.extra_data = {'xivo': {'variable1': 'value1',
+                                                       'variable2': 'value2'},
+                                              'db': {'variable3': 'value3',
+                                                     'variable4': 'value4'}}
+
+        result = self.sheet.variable_values()
+
+        assert_that(result, has_length(4))
+        assert_that(result, has_entries({'xivo-variable1': 'value1',
+                                         'xivo-variable2': 'value2',
+                                         'db-variable3': 'value3',
+                                         'db-variable4': 'value4'}))

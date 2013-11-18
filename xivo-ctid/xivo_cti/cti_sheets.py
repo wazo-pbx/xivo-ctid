@@ -57,7 +57,12 @@ class Sheet(object):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
     def variable_values(self):
-        pass
+        result = {}
+        for variable_type, variables in self.channelprops.extra_data.iteritems():
+            for variable_name, value in variables.iteritems():
+                full_variable_name = '%s-%s' % (variable_type, variable_name)
+                result[full_variable_name] = value
+        return result
 
     def resolv_line_content(self, lineprops):
         disabled = lineprops[4] if len(lineprops) == 5 else 0
