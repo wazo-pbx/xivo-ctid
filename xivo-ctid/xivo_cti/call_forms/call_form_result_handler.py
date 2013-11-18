@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class CallFormResultHandler(object):
 
-    _variable_pattern = re.compile(r'XIVOFORM_(\w+)')
+    _variable_pattern = re.compile(r'XIVOFORM_([\w_]+)')
 
     def __init__(self, bus_client):
         self._bus_client = bus_client
