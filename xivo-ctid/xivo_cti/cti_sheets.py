@@ -88,17 +88,15 @@ class Sheet(object):
                     if line:
                         self.fields[sheetpart][order] = line
             elif sheetpart == 'sheet_qtui':
-                for order, vv in v.iteritems():
+                for _, ui_file_path in v.iteritems():
                     try:
-                        fobj = urllib2.urlopen(vv)
-                        qtui_data = fobj.read().decode('utf8')
-                        fobj.close()
-                    except Exception:
-                        qtui_data = ''
-                    qtui_data = substituter.substitute(qtui_data,
-                                                       self.variable_values())
-                    self.fields[sheetpart] = {'10': {'name': 'qtui',
-                                                     'contents': qtui_data}}
+                        ui_file = urllib2.urlopen(ui_file_path)
+                        qtui_data = ui_file.read().decode('utf8')
+                        ui_file.close()
+                        qtui_data = substituter.substitute(qtui_data, self.variable_values())
+                        self.fields[sheetpart] = {'10': {'name': 'qtui', 'contents': qtui_data}}
+                    except urllib2.URLError as e:
+                        logger.error('Could not read UI file %s: %s', ui_file_path, unicode(str(e), 'utf8'))
             else:
                 logger.warning('sheetpart %s contents %s', sheetpart, v)
 
