@@ -18,19 +18,17 @@
 import unittest
 
 from hamcrest import assert_that, has_length, has_entries
-from mock import Mock, patch
+from mock import Mock, patch, sentinel
 from xivo_cti import cti_sheets
 
 
 class TestSheets(unittest.TestCase):
 
-    @patch('xivo_cti.ioc.context.context.get', Mock())
     def setUp(self):
         self.title = 'My Test Sheet Title'
         self.field_type = 'text'
         self.default_value = 'my_default_value'
-        self.sheet = cti_sheets.Sheet(None, None, None)
-        self.sheet.channelprops = Mock(Channel)
+        self.sheet = cti_sheets.Sheet(None, None, sentinel.uid)
 
     @patch('xivo_cti.tools.variable_substituter.substitute_with_default')
     def test_resolv_line_content(self, substitute):
@@ -50,28 +48,36 @@ class TestSheets(unittest.TestCase):
                                          'type': self.field_type,
                                          'contents': value_substituted}))
 
-    def test_variable_values_empty(self):
-        self.sheet.channelprops.extra_data = {}
+    @patch('xivo_cti.ioc.context.context.get')
+    def test_variable_values_empty(self, context):
+        variable_aggregator = context.return_value
+        variable_aggregator.get.return_value = {}
 
         result = self.sheet.variable_values()
 
         assert_that(result, has_length(0))
+        variable_aggregator.get.assert_called_once_with(sentinel.uid)
 
-    def test_variable_values_with_xivo_variables(self):
-        self.sheet.channelprops.extra_data = {'xivo': {'variable1': 'value1',
-                                                       'variable2': 'value2'}}
+    @patch('xivo_cti.ioc.context.context.get')
+    def test_variable_values_with_xivo_variables(self, context):
+        variable_aggregator = context.return_value
+        variable_aggregator.get.return_value = {'xivo': {'variable1': 'value1',
+                                                         'variable2': 'value2'}}
 
         result = self.sheet.variable_values()
 
         assert_that(result, has_length(2))
         assert_that(result, has_entries({'xivo-variable1': 'value1',
                                          'xivo-variable2': 'value2'}))
+        variable_aggregator.get.assert_called_once_with(sentinel.uid)
 
-    def test_variable_values_with_two_variable_types(self):
-        self.sheet.channelprops.extra_data = {'xivo': {'variable1': 'value1',
-                                                       'variable2': 'value2'},
-                                              'db': {'variable3': 'value3',
-                                                     'variable4': 'value4'}}
+    @patch('xivo_cti.ioc.context.context.get')
+    def test_variable_values_with_two_variable_types(self, context):
+        variable_aggregator = context.return_value
+        variable_aggregator.get.return_value = {'xivo': {'variable1': 'value1',
+                                                         'variable2': 'value2'},
+                                                'db': {'variable3': 'value3',
+                                                       'variable4': 'value4'}}
 
         result = self.sheet.variable_values()
 
@@ -80,3 +86,4 @@ class TestSheets(unittest.TestCase):
                                          'xivo-variable2': 'value2',
                                          'db-variable3': 'value3',
                                          'db-variable4': 'value4'}))
+        variable_aggregator.get.assert_called_once_with(sentinel.uid)

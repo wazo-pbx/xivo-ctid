@@ -43,7 +43,6 @@ class Sheet(object):
         self.fields = {}
         # output
         self.linestosend = []
-        self._variables = context.get('call_form_variable_aggregator').get(uid)
 
     def setoptions(self, options):
         if options:
@@ -57,8 +56,9 @@ class Sheet(object):
         self.linestosend.append(LINE_TEMPLATE % (varname, varvalue))
 
     def variable_values(self):
+        variables = context.get('call_form_variable_aggregator').get(self.internaldata['uid'])
         result = {}
-        for variable_type, variables in self.channelprops.extra_data.iteritems():
+        for variable_type, variables in variables.iteritems():
             for variable_name, value in variables.iteritems():
                 full_variable_name = '%s-%s' % (variable_type, variable_name)
                 result[full_variable_name] = value
@@ -149,9 +149,9 @@ class Sheet(object):
         whom = self.conditions.get('whom')
 
         tomatch = {}
-        data = self._variables
+        data = self.variable_values()
         if whom == 'dest':
-            tomatch['desttype'] = data['xivo'].get('desttype')
-            tomatch['destid'] = data['xivo'].get('destid')
+            tomatch['desttype'] = data.get('xivo-desttype')
+            tomatch['destid'] = data.get('xivo-destid')
 
         return tomatch
