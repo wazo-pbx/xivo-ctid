@@ -45,7 +45,13 @@ class TestSnomController(unittest.TestCase):
         snom_controller.answer(device)
 
         snom_controller._get_answerer.assert_called_once_with(device.ip, 'guest', 'guest')
-        answerer.answer.assert_called_once_with()
+        self._assert_answerer_called_once(answerer)
+
+    def _assert_answerer_called_once(self, answerer):
+        start = time.time()
+        while answerer.answer.call_count == 0:
+            if time.time() - start > 1:
+                raise AssertionError('answerer.answer was not called')
 
     def test_answer_blocking(self):
         device = Device(ip='127.0.0.1')
