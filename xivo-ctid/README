@@ -1,6 +1,0 @@
-Dependencies :
-
-apt-get install python-tz python-cjson
-
-For unit tests :
-pip install pyhamcrest
