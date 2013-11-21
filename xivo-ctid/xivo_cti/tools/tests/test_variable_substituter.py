@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import urllib2
+
 from hamcrest import assert_that, equal_to
 from mock import Mock, mock_open, patch
 from unittest import TestCase
@@ -23,11 +25,6 @@ from .. import variable_substituter as substituter
 
 
 class TestVariableSubstituter(TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_substitute_empty_string(self):
         string_containing_variables = ''
@@ -87,6 +84,14 @@ class TestVariableSubstituter(TestCase):
         assert_that(result, equal_to(base64_string))
         urlopen.assert_called_once_with(substituter.USER_PICTURE_URL % '12')
         base64.assert_called_once_with('picture_content')
+
+    @patch('urllib2.urlopen', Mock(side_effect=urllib2.HTTPError('', 404, 'Not found', None, None)))
+    def test_substitute_picture_invalid_http_request(self):
+        string_containing_variables = '{xivo-callerpicture}'
+        variables = {'xivo-userid': '12'}
+
+        substituter.substitute(string_containing_variables, variables)
+        # No exception
 
     def test_substitute_with_default_with_empty_string(self):
         string_containing_variables = ''

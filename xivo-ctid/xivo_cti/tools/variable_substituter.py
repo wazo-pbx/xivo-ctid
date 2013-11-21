@@ -73,9 +73,12 @@ class _Substituer(object):
 
     def _get_user_picture(self, user_id):
         url = USER_PICTURE_URL % user_id
-        with contextlib.closing(urllib2.urlopen(url)) as picture_file:
-            picture_data = picture_file.read()
-        return base64.b64encode(picture_data)
+        try:
+            with contextlib.closing(urllib2.urlopen(url)) as picture_file:
+                picture_data = picture_file.read()
+            return base64.b64encode(picture_data)
+        except urllib2.HTTPError:
+            logger.warning('Could not load picture from %s', url)
 
     def _replace_variable(self, variable_name):
         if variable_name == 'xivo-callerpicture' and 'xivo-userid' in self.variables:
