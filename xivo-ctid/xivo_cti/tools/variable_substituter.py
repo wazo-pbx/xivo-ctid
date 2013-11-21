@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import base64
+import contextlib
 import logging
 import re
 import urllib2
@@ -72,7 +73,7 @@ class _Substituer(object):
 
     def _get_user_picture(self, user_id):
         url = USER_PICTURE_URL % user_id
-        with urllib2.urlopen(url) as picture_file:
+        with contextlib.closing(urllib2.urlopen(url)) as picture_file:
             picture_data = picture_file.read()
         return base64.b64encode(picture_data)
 
