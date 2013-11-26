@@ -27,13 +27,13 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
 
     def test_decode_results(self):
         ldap_results = [('dn=someóne,dn=somewhere', {'cn': ['anó nymous'],
-                                                     'sn': ['nymous']}),
+                                                      'sn': ['nymous']}),
                         ('dn=somebódy,dn=someplace', {'cn': ['jóhn doe'],
-                                                      'sn': ['dóe']})]
+                                                       'sn': ['dóe']})]
         expected_result = [(u'dn=someóne,dn=somewhere', {u'cn': [u'anó nymous'],
-                                                         u'sn': [u'nymous']}),
+                                                          u'sn': [u'nymous']}),
                            (u'dn=somebódy,dn=someplace', {u'cn': [u'jóhn doe'],
-                                                          u'sn': [u'dóe']})]
+                                                           u'sn': [u'dóe']})]
         decode_entry = Mock()
         returns = iter(expected_result)
         decode_entry.side_effect = lambda index: returns.next()
@@ -47,9 +47,9 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
 
     def test_decode_entry(self):
         entry = ('dn=someóne,dn=somewhere', {'cn': ['anó nymous'],
-                                             'sn': ['nymous']})
+                                              'sn': ['nymous']})
         expected_result = (u'dn=someóne,dn=somewhere', {u'cn': [u'anó nymous'],
-                                                        u'sn': [u'nymous']})
+                                                         u'sn': [u'nymous']})
         decode_attributes = Mock()
         decode_attributes.return_value = expected_result[1]
         self._ldap._decode_attributes = decode_attributes
