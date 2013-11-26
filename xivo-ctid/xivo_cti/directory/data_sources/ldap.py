@@ -158,5 +158,5 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
     @classmethod
     def _get_ldap_config(cls, uri):
         _, sep, filter_name = uri.partition('ldapfilter://')
-        ldap_config = ldap_dao.find_ldapinfo_from_ldapfilter(filter_name)
+        ldap_config = ldap_dao.build_ldapinfo_from_ldapfilter(filter_name)
         return ldap_config

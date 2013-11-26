@@ -84,15 +84,15 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    @patch('xivo_dao.ldap_dao.find_ldapinfo_from_ldapfilter')
-    def test_get_ldap_config(self, find_ldapinfo_from_ldapfilter):
+    @patch('xivo_dao.ldap_dao.build_ldapinfo_from_ldapfilter')
+    def test_get_ldap_config(self, build_ldapinfo_from_ldapfilter):
         uri = "ldapfilter://filtername"
-        ldapinfo = find_ldapinfo_from_ldapfilter.return_value = Mock()
+        ldapinfo = build_ldapinfo_from_ldapfilter.return_value = Mock()
 
         result = LDAPDirectoryDataSource._get_ldap_config(uri)
 
         self.assertEqual(result, ldapinfo)
-        find_ldapinfo_from_ldapfilter.assert_called_once_with("filtername")
+        build_ldapinfo_from_ldapfilter.assert_called_once_with("filtername")
 
     @patch('xivo_cti.directory.data_sources.ldap.XivoLDAP')
     def test_try_connect(self, XivoLDAP):
