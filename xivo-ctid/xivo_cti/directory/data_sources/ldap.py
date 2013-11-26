@@ -19,6 +19,7 @@ import logging
 from itertools import imap
 from xivo_dird.directory.data_sources.directory_data_source import DirectoryDataSource
 from xivo_dird.ldap import XivoLDAP
+from xivo_dao import ldap_dao
 
 logger = logging.getLogger('ldap directory')
 
@@ -27,8 +28,8 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
 
     ldap_encoding = 'utf-8'
 
-    def __init__(self, uri, key_mapping):
-        self._uri = uri
+    def __init__(self, config, key_mapping):
+        self._ldap_config = config
         self._key_mapping = key_mapping
         self._map_fun = self._new_map_fun()
         self._xivo_ldap = None
@@ -111,7 +112,7 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
     def _try_connect(self):
         # Try to connect/reconnect to the LDAP if necessary
         if self._xivo_ldap is None:
-            ldapid = XivoLDAP(self._uri)
+            ldapid = XivoLDAP(self._ldap_config)
             if ldapid.ldapobj is not None:
                 self._xivo_ldap = ldapid
         else:
@@ -150,5 +151,12 @@ class LDAPDirectoryDataSource(DirectoryDataSource):
     @classmethod
     def new_from_contents(cls, ctid, contents):
         uri = contents['uri']
+        config = cls._get_ldap_config(uri)
         key_mapping = cls._get_key_mapping(contents)
-        return cls(uri, key_mapping)
+        return cls(config, key_mapping)
+
+    @classmethod
+    def _get_ldap_config(cls, uri):
+        _, sep, filter_name = uri.partition('ldapfilter://')
+        ldap_config = ldap_dao.find_ldapinfo_from_ldapfilter(filter_name)
+        return ldap_config
