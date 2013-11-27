@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock
+from mock import Mock, patch
 from xivo_cti.directory.data_sources.ldap import LDAPDirectoryDataSource
 
 
@@ -27,13 +27,13 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
 
     def test_decode_results(self):
         ldap_results = [('dn=someóne,dn=somewhere', {'cn': ['anó nymous'],
-                                                     'sn': ['nymous']}),
+                                                      'sn': ['nymous']}),
                         ('dn=somebódy,dn=someplace', {'cn': ['jóhn doe'],
-                                                      'sn': ['dóe']})]
+                                                       'sn': ['dóe']})]
         expected_result = [(u'dn=someóne,dn=somewhere', {u'cn': [u'anó nymous'],
-                                                         u'sn': [u'nymous']}),
+                                                          u'sn': [u'nymous']}),
                            (u'dn=somebódy,dn=someplace', {u'cn': [u'jóhn doe'],
-                                                          u'sn': [u'dóe']})]
+                                                           u'sn': [u'dóe']})]
         decode_entry = Mock()
         returns = iter(expected_result)
         decode_entry.side_effect = lambda index: returns.next()
@@ -47,9 +47,9 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
 
     def test_decode_entry(self):
         entry = ('dn=someóne,dn=somewhere', {'cn': ['anó nymous'],
-                                             'sn': ['nymous']})
+                                              'sn': ['nymous']})
         expected_result = (u'dn=someóne,dn=somewhere', {u'cn': [u'anó nymous'],
-                                                        u'sn': [u'nymous']})
+                                                         u'sn': [u'nymous']})
         decode_attributes = Mock()
         decode_attributes.return_value = expected_result[1]
         self._ldap._decode_attributes = decode_attributes
@@ -83,3 +83,40 @@ class TestLDAPDirectoryDataSource(unittest.TestCase):
         result = self._ldap._decode_values(values)
 
         self.assertEqual(result, expected_result)
+
+    @patch('xivo_dao.ldap_dao.build_ldapinfo_from_ldapfilter')
+    def test_get_ldap_config(self, build_ldapinfo_from_ldapfilter):
+        uri = "ldapfilter://filtername"
+        ldapinfo = build_ldapinfo_from_ldapfilter.return_value = Mock()
+
+        result = LDAPDirectoryDataSource._get_ldap_config(uri)
+
+        self.assertEqual(result, ldapinfo)
+        build_ldapinfo_from_ldapfilter.assert_called_once_with("filtername")
+
+    @patch('xivo_cti.directory.data_sources.ldap.XivoLDAP')
+    def test_try_connect(self, XivoLDAP):
+        ldap_config = Mock()
+        directory = LDAPDirectoryDataSource(ldap_config, None)
+
+        directory._try_connect()
+
+        XivoLDAP.assert_called_once_with(ldap_config)
+
+    @patch.object(LDAPDirectoryDataSource, '_get_ldap_config')
+    @patch.object(LDAPDirectoryDataSource, '_get_key_mapping')
+    @patch('xivo_cti.directory.data_sources.ldap.LDAPDirectoryDataSource.__init__')
+    def test_new_from_contents(self, constructor, get_key_mapping, get_ldap_config):
+        key_mapping = get_key_mapping.return_value = Mock()
+        ldap_config = get_ldap_config.return_value = Mock()
+        constructor.return_value = None
+
+        contents = {
+            'uri': 'ldapfilter://filtername',
+        }
+
+        LDAPDirectoryDataSource.new_from_contents(None, contents)
+
+        get_key_mapping.assert_called_once_with(contents)
+        get_ldap_config.assert_called_once_with(contents['uri'])
+        constructor.assert_called_once_with(ldap_config, key_mapping)

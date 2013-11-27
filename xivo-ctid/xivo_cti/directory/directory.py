@@ -282,8 +282,7 @@ class DirectoriesMgr(object):
         'file': CSVFileDirectoryDataSource,
         'http': HTTPDirectoryDataSource,
         'internal': InternalDirectoryDataSource,
-        'ldap': LDAPDirectoryDataSource,
-        'ldaps': LDAPDirectoryDataSource,
+        'ldapfilter': LDAPDirectoryDataSource,
         'phonebook': PhonebookDirectoryDataSource,
     }
 
