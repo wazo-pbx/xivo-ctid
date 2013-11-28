@@ -31,56 +31,34 @@ def get_history(user_id, mode, size):
     try:
         phone = dao.user.get_line(user_id)
     except (NoSuchUserException, NoSuchLineException):
-        reply = _format_history_reply(mode, None)
+        history = None
     else:
         history = _get_history_for_phone(phone, mode, size)
-        reply = _format_history_reply(mode, history)
-    return reply
 
-
-def _get_history_for_phone(phone, mode, limit):
-    try:
-        if mode == HistoryMode.outgoing:
-            return _get_outgoing_history_for_phone(phone, limit)
-        elif mode == HistoryMode.answered:
-            return _get_answered_history_for_phone(phone, limit)
-        elif mode == HistoryMode.missed:
-            return _get_missed_history_for_phone(phone, limit)
-    except UnsupportedLineProtocolException:
-        logger.warning('Could not get history for phone: %s', phone['name'])
-    return None
-
-
-def _get_outgoing_history_for_phone(phone, limit):
-    result = []
-    for sent_call in manager.outgoing_calls_for_phone(phone, limit):
-        result.append({'calldate': sent_call.date.isoformat(),
-                       'duration': sent_call.duration,
-                       # XXX this is not fullname, this is just an extension number like in 1.1
-                       'fullname': sent_call.extension})
-    return result
-
-
-def _get_answered_history_for_phone(phone, limit):
-    result = []
-    for received_call in manager.answered_calls_for_phone(phone, limit):
-        result.append({'calldate': received_call.date.isoformat(),
-                       'duration': received_call.duration,
-                       'fullname': received_call.caller_name})
-    return result
-
-
-def _get_missed_history_for_phone(phone, limit):
-    result = []
-    for received_call in manager.missed_calls_for_phone(phone, limit):
-        result.append({'calldate': received_call.date.isoformat(),
-                       'duration': received_call.duration,
-                       'fullname': received_call.caller_name})
-    return result
-
-
-def _format_history_reply(mode, history):
     if history is None:
         return 'message', {}
     else:
         return 'message', {'class': 'history', 'mode': mode, 'history': history}
+
+
+def _get_history_for_phone(phone, mode, limit):
+    result = []
+    try:
+        if mode == HistoryMode.outgoing:
+            for sent_call in manager.outgoing_calls_for_phone(phone, limit):
+                result.append({'calldate': sent_call.date.isoformat(),
+                               'duration': sent_call.duration,
+                               'fullname': sent_call.extension})
+        elif mode == HistoryMode.answered:
+            for received_call in manager.answered_calls_for_phone(phone, limit):
+                result.append({'calldate': received_call.date.isoformat(),
+                               'duration': received_call.duration,
+                               'fullname': received_call.caller_name})
+        elif mode == HistoryMode.missed:
+            for received_call in manager.missed_calls_for_phone(phone, limit):
+                result.append({'calldate': received_call.date.isoformat(),
+                               'duration': received_call.duration,
+                               'fullname': received_call.caller_name})
+    except UnsupportedLineProtocolException:
+        logger.warning('Could not get history for phone: %s', phone['name'])
+    return result
