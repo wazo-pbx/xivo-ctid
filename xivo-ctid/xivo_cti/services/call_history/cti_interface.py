@@ -31,16 +31,12 @@ def get_history(user_id, mode, size):
     except (NoSuchUserException, NoSuchLineException):
         return 'message', {}
 
-    history = _get_history_for_phone(phone, mode, size)
-    return 'message', {'class': 'history', 'mode': mode, 'history': history}
+    calls = manager.history_for_phone(phone, mode, size)
 
-
-def _get_history_for_phone(phone, mode, limit):
-    calls = manager.history_for_phone(phone, mode, limit)
-
-    result = []
+    history = []
     for call in calls:
-        result.append({'calldate': call.date.isoformat(),
-                       'duration': call.duration,
-                       'fullname': call.display_other_end()})
-    return result
+        history.append({'calldate': call.date.isoformat(),
+                        'duration': call.duration,
+                        'fullname': call.display_other_end()})
+
+    return 'message', {'class': 'history', 'mode': mode, 'history': history}
