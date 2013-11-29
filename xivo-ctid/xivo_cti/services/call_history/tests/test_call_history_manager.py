@@ -16,9 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock
+from hamcrest import assert_that, contains, equal_to, same_instance
+from mock import Mock, sentinel
 from mock import patch
 from datetime import datetime
+from xivo_cti.cti.commands.history import HistoryMode
 from xivo_cti.services.call_history.manager import ReceivedCall, SentCall
 from xivo_cti.services.call_history import manager as call_history_manager
 
@@ -39,6 +41,57 @@ class CallHistoryMgrTest(unittest.TestCase):
     def tearDown(self):
         mock_channels_for_phone.reset()
         mock_caller_id_by_unique_id.reset()
+
+    @patch('xivo_cti.services.call_history.manager.outgoing_calls_for_phone')
+    def test_history_for_phone_outgoing(self, outgoing_calls):
+        mode = HistoryMode.outgoing
+        outgoing_calls.return_value = sentinel.calls
+
+        result = call_history_manager.history_for_phone(sentinel.phone,
+                                                        mode,
+                                                        sentinel.limit)
+
+        outgoing_calls.assert_called_once_with(sentinel.phone, sentinel.limit)
+        assert_that(result, same_instance(sentinel.calls))
+
+    @patch('xivo_cti.services.call_history.manager.answered_calls_for_phone')
+    def test_history_for_phone_answered(self, answered_calls):
+        mode = HistoryMode.answered
+        answered_calls.return_value = sentinel.calls
+
+        result = call_history_manager.history_for_phone(sentinel.phone,
+                                                        mode,
+                                                        sentinel.limit)
+
+        answered_calls.assert_called_once_with(sentinel.phone, sentinel.limit)
+        assert_that(result, same_instance(sentinel.calls))
+
+    @patch('xivo_cti.services.call_history.manager.missed_calls_for_phone')
+    def test_history_for_phone_missed(self, missed_calls):
+        mode = HistoryMode.missed
+        missed_calls.return_value = sentinel.calls
+
+        result = call_history_manager.history_for_phone(sentinel.phone,
+                                                        mode,
+                                                        sentinel.limit)
+
+        missed_calls.assert_called_once_with(sentinel.phone, sentinel.limit)
+        assert_that(result, same_instance(sentinel.calls))
+
+    @patch('xivo_cti.services.call_history.manager.outgoing_calls_for_phone')
+    @patch('xivo_cti.services.call_history.manager.answered_calls_for_phone')
+    @patch('xivo_cti.services.call_history.manager.missed_calls_for_phone')
+    def test_history_for_phone_unknown(self, missed_calls, answered_calls, outgoing_calls):
+        mode = 'unknown'
+
+        result = call_history_manager.history_for_phone(sentinel.phone,
+                                                        mode,
+                                                        sentinel.limit)
+
+        assert_that(outgoing_calls.call_count, equal_to(0))
+        assert_that(answered_calls.call_count, equal_to(0))
+        assert_that(missed_calls.call_count, equal_to(0))
+        assert_that(result, contains())
 
     @patch('xivo_dao.cel_dao.channels_for_phone', mock_channels_for_phone)
     @patch('xivo_dao.cel_dao.caller_id_by_unique_id', mock_caller_id_by_unique_id)

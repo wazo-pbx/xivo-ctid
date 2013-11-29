@@ -18,9 +18,7 @@
 import logging
 
 from xivo_cti import dao
-from xivo_cti.cti.commands.history import HistoryMode
 from xivo_cti.exception import NoSuchUserException, NoSuchLineException
-from xivo_dao.cel_dao import UnsupportedLineProtocolException
 
 from . import manager
 
@@ -38,16 +36,7 @@ def get_history(user_id, mode, size):
 
 
 def _get_history_for_phone(phone, mode, limit):
-    calls = []
-    try:
-        if mode == HistoryMode.outgoing:
-            calls = manager.outgoing_calls_for_phone(phone, limit)
-        elif mode == HistoryMode.answered:
-            calls = manager.answered_calls_for_phone(phone, limit)
-        elif mode == HistoryMode.missed:
-            calls = manager.missed_calls_for_phone(phone, limit)
-    except UnsupportedLineProtocolException:
-        logger.warning('Could not get history for phone: %s', phone['name'])
+    calls = manager.history_for_phone(phone, mode, limit)
 
     result = []
     for call in calls:

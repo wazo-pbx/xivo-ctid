@@ -15,9 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
+from xivo_cti.cti.commands.history import HistoryMode
 from xivo_dao import cel_dao
+from xivo_dao.cel_dao import UnsupportedLineProtocolException
 
 from .calls import ReceivedCall, SentCall
+
+logger = logging.getLogger(__name__)
+
+
+def history_for_phone(phone, mode, limit):
+    calls = []
+    try:
+        if mode == HistoryMode.outgoing:
+            calls = outgoing_calls_for_phone(phone, limit)
+        elif mode == HistoryMode.answered:
+            calls = answered_calls_for_phone(phone, limit)
+        elif mode == HistoryMode.missed:
+            calls = missed_calls_for_phone(phone, limit)
+    except UnsupportedLineProtocolException:
+        logger.warning('Could not get history for phone: %s', phone['name'])
+    return calls
 
 
 def answered_calls_for_phone(phone, limit):
