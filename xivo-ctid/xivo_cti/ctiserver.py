@@ -44,6 +44,7 @@ from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
 from xivo_cti.cti.commands.hangup import Hangup
+from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.queue_add import QueueAdd
@@ -61,6 +62,7 @@ from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
 from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
     EnableRecording, DisableRecording
 from xivo_cti.services.funckey import manager as funckey_manager
+from xivo_cti.services.call_history import cti_interface as call_history_cti_interface
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
 from xivo_cti.interfaces import interface_webi
@@ -283,6 +285,10 @@ class CTIServer(object):
         UnholdSwitchboard.register_callback_params(
             context.get('current_call_manager').switchboard_unhold,
             ['user_id', 'unique_id', 'cti_connection'],
+        )
+        History.register_callback_params(
+            call_history_cti_interface.get_history,
+            ['user_id', 'mode', 'size']
         )
 
     def _register_ami_callbacks(self):

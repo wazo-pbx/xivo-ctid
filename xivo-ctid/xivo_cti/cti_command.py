@@ -23,11 +23,8 @@ import time
 
 from xivo_cti import cti_fax, dao
 from xivo_cti.ioc.context import context as cti_context
-from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
-from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao import extensions_dao
-from xivo_dao.cel_dao import UnsupportedLineProtocolException
 
 logger = logging.getLogger('cti_command')
 
@@ -260,62 +257,6 @@ class Command(object):
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
                                                'text': chitchattext}})
         return reply
-
-    def regcommand_history(self):
-        try:
-            phone = dao.user.get_line(self.ruserid)
-        except (NoSuchUserException, NoSuchLineException):
-            reply = self._format_history_reply(None)
-        else:
-            history = self._get_history_for_phone(phone)
-            reply = self._format_history_reply(history)
-        return reply
-
-    def _get_history_for_phone(self, phone):
-        mode = int(self._commanddict['mode'])
-        limit = int(self._commanddict['size'])
-        try:
-            if mode == 0:
-                return self._get_outgoing_history_for_phone(phone, limit)
-            elif mode == 1:
-                return self._get_answered_history_for_phone(phone, limit)
-            elif mode == 2:
-                return self._get_missed_history_for_phone(phone, limit)
-        except UnsupportedLineProtocolException:
-            logger.warning('Could not get history for phone: %s', phone['name'])
-        return None
-
-    def _get_outgoing_history_for_phone(self, phone, limit):
-        result = []
-        for sent_call in call_history_manager.outgoing_calls_for_phone(phone, limit):
-            result.append({'calldate': sent_call.date.isoformat(),
-                           'duration': sent_call.duration,
-                           # XXX this is not fullname, this is just an extension number like in 1.1
-                           'fullname': sent_call.extension})
-        return result
-
-    def _get_answered_history_for_phone(self, phone, limit):
-        result = []
-        for received_call in call_history_manager.answered_calls_for_phone(phone, limit):
-            result.append({'calldate': received_call.date.isoformat(),
-                           'duration': received_call.duration,
-                           'fullname': received_call.caller_name})
-        return result
-
-    def _get_missed_history_for_phone(self, phone, limit):
-        result = []
-        for received_call in call_history_manager.missed_calls_for_phone(phone, limit):
-            result.append({'calldate': received_call.date.isoformat(),
-                           'duration': received_call.duration,
-                           'fullname': received_call.caller_name})
-        return result
-
-    def _format_history_reply(self, history):
-        if history is None:
-            return {}
-        else:
-            mode = int(self._commanddict['mode'])
-            return {'mode': mode, 'history': history}
 
     def regcommand_logfromclient(self):
         logger.warning('logfromclient from user %s (level %s) : %s : %s',
