@@ -15,12 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from collections import namedtuple
 from xivo_dao import cel_dao
 
-
-ReceivedCall = namedtuple('ReceivedCall', ['date', 'duration', 'caller_name'])
-SentCall = namedtuple('SentCall', ['date', 'duration', 'extension'])
+from .calls import ReceivedCall, SentCall
 
 
 def answered_calls_for_phone(phone, limit):

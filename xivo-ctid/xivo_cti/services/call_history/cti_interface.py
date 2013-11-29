@@ -31,34 +31,27 @@ def get_history(user_id, mode, size):
     try:
         phone = dao.user.get_line(user_id)
     except (NoSuchUserException, NoSuchLineException):
-        history = None
-    else:
-        history = _get_history_for_phone(phone, mode, size)
-
-    if history is None:
         return 'message', {}
-    else:
-        return 'message', {'class': 'history', 'mode': mode, 'history': history}
+
+    history = _get_history_for_phone(phone, mode, size)
+    return 'message', {'class': 'history', 'mode': mode, 'history': history}
 
 
 def _get_history_for_phone(phone, mode, limit):
-    result = []
+    calls = []
     try:
         if mode == HistoryMode.outgoing:
-            for sent_call in manager.outgoing_calls_for_phone(phone, limit):
-                result.append({'calldate': sent_call.date.isoformat(),
-                               'duration': sent_call.duration,
-                               'fullname': sent_call.extension})
+            calls = manager.outgoing_calls_for_phone(phone, limit)
         elif mode == HistoryMode.answered:
-            for received_call in manager.answered_calls_for_phone(phone, limit):
-                result.append({'calldate': received_call.date.isoformat(),
-                               'duration': received_call.duration,
-                               'fullname': received_call.caller_name})
+            calls = manager.answered_calls_for_phone(phone, limit)
         elif mode == HistoryMode.missed:
-            for received_call in manager.missed_calls_for_phone(phone, limit):
-                result.append({'calldate': received_call.date.isoformat(),
-                               'duration': received_call.duration,
-                               'fullname': received_call.caller_name})
+            calls = manager.missed_calls_for_phone(phone, limit)
     except UnsupportedLineProtocolException:
         logger.warning('Could not get history for phone: %s', phone['name'])
+
+    result = []
+    for call in calls:
+        result.append({'calldate': call.date.isoformat(),
+                       'duration': call.duration,
+                       'fullname': call.display_other_end()})
     return result
