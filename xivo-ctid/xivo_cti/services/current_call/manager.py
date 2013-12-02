@@ -17,6 +17,7 @@
 
 import time
 import logging
+from xivo.asterisk.line_identity import identity_from_channel
 from xivo_dao import user_line_dao
 from xivo_cti import dao
 
@@ -46,7 +47,7 @@ class CurrentCallManager(object):
         self._bridge_channels_oriented(channel_2, channel_1)
 
     def _bridge_channels_oriented(self, channel, other_channel):
-        line = self._identity_from_channel(channel)
+        line = identity_from_channel(channel)
         if line not in self._calls_per_line:
             self._calls_per_line[line] = [
                 {PEER_CHANNEL: other_channel,
@@ -73,7 +74,7 @@ class CurrentCallManager(object):
 
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)
-        line_from_old = self._identity_from_channel(old)
+        line_from_old = identity_from_channel(old)
         if line_from_old not in self._calls_per_line:
             logger.debug('No masquerade done for channel %s %s', old, new)
             return
@@ -82,10 +83,10 @@ class CurrentCallManager(object):
         self._execute_masquerade(old, new)
         self._execute_masquerade(old_2, new_2)
 
-        line_from_new = self._identity_from_channel(new)
+        line_from_new = identity_from_channel(new)
         self._current_call_notifier.publish_current_call(line_from_new)
 
-        line_from_new_2 = self._identity_from_channel(new_2)
+        line_from_new_2 = identity_from_channel(new_2)
         self._current_call_notifier.publish_current_call(line_from_new_2)
 
     def _execute_masquerade(self, old, new):
@@ -137,7 +138,7 @@ class CurrentCallManager(object):
             self._current_call_notifier.publish_current_call(line)
 
     def set_transfer_channel(self, channel, transfer_channel):
-        line = self._identity_from_channel(channel)
+        line = identity_from_channel(channel)
 
         if line not in self._calls_per_line:
             return
@@ -264,12 +265,12 @@ class CurrentCallManager(object):
             return ongoing_calls[0]
 
     def _change_hold_status(self, channel, new_status):
-        line = self._identity_from_channel(channel)
+        line = identity_from_channel(channel)
         if line not in self._calls_per_line:
             logger.warning('No line associated to channel %s to set hold to %s',
                            channel, new_status)
             return
-        peer_lines = [self._identity_from_channel(c[PEER_CHANNEL]) for c in self._calls_per_line[line]]
+        peer_lines = [identity_from_channel(c[PEER_CHANNEL]) for c in self._calls_per_line[line]]
         for peer_line in peer_lines:
             for call in self._calls_per_line[peer_line]:
                 if line not in call[PEER_CHANNEL].lower():
@@ -281,12 +282,3 @@ class CurrentCallManager(object):
         channel_order = local_channel[-1]
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
-
-    @staticmethod
-    def _identity_from_channel(channel):
-        last_dash = channel.rfind('-')
-        if channel.startswith('Local/'):
-            end = channel[-2:]
-        else:
-            end = ''
-        return channel[:last_dash].lower() + end
