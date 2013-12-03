@@ -56,7 +56,7 @@ class DaoList(object):
         except LookupError:
             return {}
         except AttributeError:
-            raise UnknownListName()
+            raise UnknownListName(name)
 
     def _get_users(self):
         return user_dao.get_users_config()
