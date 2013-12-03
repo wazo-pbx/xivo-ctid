@@ -455,19 +455,6 @@ class TestCurrentCallManager(unittest.TestCase):
 
         self.assertEquals(calls, [])
 
-    def test_line_identity_from_channel(self):
-        result = self.manager._identity_from_channel(self.channel_1)
-
-        self.assertEqual(result, self.line_1)
-
-    def test_line_identity_from_channel_local_channels(self):
-        local_chan = u'Local/id-292@agentcallback-0000000f;1'
-        expected = u'Local/id-292@agentcallback;1'.lower()
-
-        result = self.manager._identity_from_channel(local_chan)
-
-        self.assertEqual(result, expected)
-
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_hangup(self, mock_get_line_identity):
         user_id = 5
