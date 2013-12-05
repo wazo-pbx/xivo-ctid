@@ -18,8 +18,8 @@
 import logging
 
 from xivo_cti.cti.commands.history import HistoryMode
-from xivo_dao import cel_dao
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
+from xivo_dao.data_handler.call_log import dao as call_log_dao
 
 from .calls import ReceivedCall, SentCall
 
@@ -27,65 +27,59 @@ logger = logging.getLogger(__name__)
 
 
 def history_for_phone(phone, mode, limit):
+    identifier = _phone_to_identifier(phone)
     calls = []
     try:
         if mode == HistoryMode.outgoing:
-            calls = outgoing_calls_for_phone(phone, limit)
+            calls = outgoing_calls_for_phone(identifier, limit)
         elif mode == HistoryMode.answered:
-            calls = answered_calls_for_phone(phone, limit)
+            calls = answered_calls_for_phone(identifier, limit)
         elif mode == HistoryMode.missed:
-            calls = missed_calls_for_phone(phone, limit)
+            calls = missed_calls_for_phone(identifier, limit)
     except UnsupportedLineProtocolException:
         logger.warning('Could not get history for phone: %s', phone['name'])
     return calls
 
 
-def answered_calls_for_phone(phone, limit):
-    channels = cel_dao.channels_for_phone(phone, limit)
-    answering_channels = [channel
-                          for channel in channels
-                          if not channel.is_caller()
-                          and channel.is_answered()]
-    received_calls = _convert_incoming_channels(answering_channels, limit)
-    return received_calls
+def answered_calls_for_phone(identifier, limit):
+    call_logs = call_log_dao.find_all_answered_for_phone(identifier, limit)
+    return _convert_incoming_call_logs(call_logs)
 
 
-def missed_calls_for_phone(phone, limit):
-    channels = cel_dao.channels_for_phone(phone, limit)
-    missed_channels = [channel
-                       for channel in channels
-                       if not channel.is_caller()
-                       and not channel.is_answered()]
-    received_calls = _convert_incoming_channels(missed_channels, limit)
-    return received_calls
+def missed_calls_for_phone(identifier, limit):
+    call_logs = call_log_dao.find_all_missed_for_phone(identifier, limit)
+    return _convert_incoming_call_logs(call_logs)
 
 
-def outgoing_calls_for_phone(phone, limit):
-    channels = cel_dao.channels_for_phone(phone, limit)
-    outgoing_channels = [channel
-                         for channel in channels
-                         if channel.is_caller()]
-    sent_calls = _convert_outgoing_channels(outgoing_channels, limit)
-    return sent_calls
+def outgoing_calls_for_phone(identifier, limit):
+    call_logs = call_log_dao.find_all_outgoing_for_phone(identifier, limit)
+    return _convert_outgoing_call_logs(call_logs)
 
 
-def _convert_incoming_channels(incoming_channels, limit):
+def _convert_incoming_call_logs(call_logs):
     received_calls = []
-    for incoming_channel in incoming_channels[:limit]:
-        call_id = incoming_channel.linked_id()
-        caller_id = cel_dao.caller_id_by_unique_id(call_id)
-        received_call = ReceivedCall(incoming_channel.channel_start_time(),
-                                     incoming_channel.answer_duration(),
+    for call_log in call_logs:
+        caller_id = '"%s" <%s>' % (call_log.source_name, call_log.source_exten)
+        received_call = ReceivedCall(call_log.date,
+                                     int(round(_timedelta_total_seconds(call_log.duration))),
                                      caller_id)
         received_calls.append(received_call)
     return received_calls
 
 
-def _convert_outgoing_channels(outgoing_channels, limit):
+def _convert_outgoing_call_logs(call_logs):
     sent_calls = []
-    for outgoing_channel in outgoing_channels[:limit]:
-        sent_call = SentCall(outgoing_channel.channel_start_time(),
-                             outgoing_channel.answer_duration(),
-                             outgoing_channel.exten())
+    for call_log in call_logs:
+        sent_call = SentCall(call_log.date,
+                             int(round(_timedelta_total_seconds(call_log.duration))),
+                             call_log.destination_exten)
         sent_calls.append(sent_call)
     return sent_calls
+
+
+def _phone_to_identifier(phone):
+    return u'%s/%s' % (phone['protocol'], phone['name'])
+
+
+def _timedelta_total_seconds(delta):
+    return delta.days * 86400 + delta.seconds + delta.microseconds / 1000000.0
