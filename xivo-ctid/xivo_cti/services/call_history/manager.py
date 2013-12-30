@@ -61,7 +61,7 @@ def _convert_incoming_call_logs(call_logs):
     for call_log in call_logs:
         caller_id = '"%s" <%s>' % (call_log.source_name, call_log.source_exten)
         received_call = ReceivedCall(call_log.date,
-                                     int(round(_timedelta_total_seconds(call_log.duration))),
+                                     int(round(call_log.duration.total_seconds())),
                                      caller_id)
         received_calls.append(received_call)
     return received_calls
@@ -71,7 +71,7 @@ def _convert_outgoing_call_logs(call_logs):
     sent_calls = []
     for call_log in call_logs:
         sent_call = SentCall(call_log.date,
-                             int(round(_timedelta_total_seconds(call_log.duration))),
+                             int(round(call_log.duration.total_seconds())),
                              call_log.destination_exten)
         sent_calls.append(sent_call)
     return sent_calls
@@ -79,7 +79,3 @@ def _convert_outgoing_call_logs(call_logs):
 
 def _phone_to_identifier(phone):
     return u'%s/%s' % (phone['protocol'], phone['name'])
-
-
-def _timedelta_total_seconds(delta):
-    return delta.days * 86400 + delta.seconds + delta.microseconds / 1000000.0
