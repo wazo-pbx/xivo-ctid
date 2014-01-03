@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import fnmatch
+import os
+
 from distutils.core import setup
+
+packages = [
+    package for package, _, _ in os.walk('xivo_cti')
+    if not fnmatch.fnmatch(package, '*tests')
+]
 
 setup(
     name='xivo-ctid',
@@ -10,34 +18,6 @@ setup(
     author='Avencall',
     author_email='xivo-dev@lists.proformatique.com',
     url='http://wiki.xivo.fr/',
-    packages=['xivo_cti',
-              'xivo_cti.ami',
-              'xivo_cti.ami.actions',
-              'xivo_cti.call_forms',
-              'xivo_cti.cti',
-              'xivo_cti.cti.commands',
-              'xivo_cti.dao',
-              'xivo_cti.directory',
-              'xivo_cti.directory.data_sources',
-              'xivo_cti.interfaces',
-              'xivo_cti.ioc',
-              'xivo_cti.lists',
-              'xivo_cti.model',
-              'xivo_cti.services',
-              'xivo_cti.services.agent',
-              'xivo_cti.services.call',
-              'xivo_cti.services.call_history',
-              'xivo_cti.services.current_call',
-              'xivo_cti.services.device',
-              'xivo_cti.services.device.controller',
-              'xivo_cti.services.funckey',
-              'xivo_cti.services.meetme',
-              'xivo_cti.services.presence',
-              'xivo_cti.services.queue',
-              'xivo_cti.services.queue_member',
-              'xivo_cti.services.queue_member.cti',
-              'xivo_cti.services.user',
-              'xivo_cti.statistics',
-              'xivo_cti.tools'],
+    packages=packages,
     scripts=['bin/xivo-ctid'],
 )
