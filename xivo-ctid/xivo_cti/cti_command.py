@@ -65,7 +65,6 @@ IPBXCOMMANDS = [
     'record',
 ]
 
-XIVOVERSION_NAME = 'skaro'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 
