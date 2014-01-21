@@ -6,10 +6,13 @@ import os
 
 from distutils.core import setup
 
-packages = [
-    package for package, _, _ in os.walk('xivo_cti')
-    if not fnmatch.fnmatch(package, '*tests')
-]
+
+def is_package(path):
+    is_svn_dir = fnmatch.fnmatch(path, '*/.svn/*')
+    is_test_module = fnmatch.fnmatch(path, '*tests')
+    return not (is_svn_dir or is_test_module)
+
+packages = [p for p, _, _ in os.walk('xivo_cti') if is_package(p)]
 
 setup(
     name='xivo-ctid',
