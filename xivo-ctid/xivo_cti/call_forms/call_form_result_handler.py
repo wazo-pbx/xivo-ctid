@@ -39,7 +39,10 @@ class CallFormResultHandler(object):
     def _send_call_form_result(self, user_id, variables):
         logger.debug('Call form result received for user %s with variables\n%s',
                      user_id, pprint.pformat(variables))
-        self._bus_client.publish_cti_event(CallFormResultEvent(user_id, variables))
+        exchange = 'xivo-cti'
+        binding_key = 'call_form_result'
+        event = CallFormResultEvent(user_id, variables)
+        self._bus_client.publish_event(exchange, binding_key, event)
 
     def _clean_variables(self, variables):
         return dict(

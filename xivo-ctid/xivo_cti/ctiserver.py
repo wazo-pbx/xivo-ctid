@@ -396,7 +396,7 @@ class CTIServer(object):
         bus_client = context.get('bus_client')
         if not bus_client.connected:
             bus_client.connect()
-        bus_client.declare_cti_exchange()
+        bus_client.declare_exchange('xivo-cti', 'direct', durable=True)
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')

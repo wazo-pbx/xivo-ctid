@@ -71,5 +71,5 @@ class TestCallFormResultHandler(unittest.TestCase):
 
         handler._send_call_form_result(user_id, variables)
 
-        bus_client.publish_cti_event.assert_called_once_with(sentinel)
+        bus_client.publish_event.assert_called_once_with('xivo-cti', 'call_form_result', sentinel)
         CallFormResultEvent.assert_called_once_with(user_id, variables)
