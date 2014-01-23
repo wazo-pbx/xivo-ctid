@@ -274,7 +274,8 @@ class ContextAwareAnyList(AnyList):
     def _remove_from_by_context_dict(self, item_id):
         item_context = self.keeplist[item_id]['context']
         item_ids = self._item_ids_by_context[item_context]
-        item_ids.remove(item_id)
+        if item_id in item_ids:
+            item_ids.remove(item_id)
         if not item_ids:
             del self._item_ids_by_context[item_context]
 
