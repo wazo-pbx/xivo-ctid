@@ -22,4 +22,4 @@ class HTTPDirectoryDataSource(http.HTTPDirectoryDataSource):
 
     @classmethod
     def new_from_contents(cls, ctid, contents):
-        super(cls, cls).new_from_contents(contents)
+        return super(cls, cls).new_from_contents(contents)
