@@ -37,6 +37,10 @@ XIVOIP = 'localhost'
 CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
+BUS_EXCHANGE_NAME = 'xivo-cti'
+BUS_EXCHANGE_TYPE = 'direct'
+BUS_BINDING_KEY = 'call_form_result'
+BUS_EXCHANGE_DURABLE = True
 
 
 class Config(object):
@@ -110,4 +114,4 @@ class Config(object):
         return ret
 
     def part_context(self):
-        return self.xc_json['main']['context_separation'] == True
+        return self.xc_json['main']['context_separation'] is True

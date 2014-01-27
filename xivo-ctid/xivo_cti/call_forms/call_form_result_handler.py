@@ -19,6 +19,7 @@ import logging
 import pprint
 import re
 from xivo_bus.resources.cti.event import CallFormResultEvent
+from xivo_cti import cti_config
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +40,10 @@ class CallFormResultHandler(object):
     def _send_call_form_result(self, user_id, variables):
         logger.debug('Call form result received for user %s with variables\n%s',
                      user_id, pprint.pformat(variables))
-        exchange = 'xivo-cti'
-        binding_key = 'call_form_result'
         event = CallFormResultEvent(user_id, variables)
-        self._bus_client.publish_event(exchange, binding_key, event)
+        self._bus_client.publish_event(cti_config.BUS_EXCHANGE_NAME,
+                                       cti_config.BUS_BINDING_KEY,
+                                       event)
 
     def _clean_variables(self, variables):
         return dict(
