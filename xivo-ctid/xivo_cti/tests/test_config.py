@@ -26,13 +26,13 @@ class TestConfig(unittest.TestCase):
         config = Config()
 
         config.xc_json = {
-            'main': {'context_separation': True}
+            'main': {'context_separation': 1}
         }
 
         self.assertTrue(config.part_context)
 
         config.xc_json = {
-            'main': {'context_separation': False}
+            'main': {'context_separation': 0}
         }
 
         self.assertFalse(config.part_context())
