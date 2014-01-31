@@ -114,4 +114,4 @@ class Config(object):
         return ret
 
     def part_context(self):
-        return self.xc_json['main']['context_separation'] is True
+        return bool(self.xc_json['main']['context_separation'])
