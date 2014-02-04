@@ -244,12 +244,11 @@ class CurrentCallManager(object):
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
             channel = dao.channel.get_channel_from_unique_id(action_id)
-            cid_name, cid_number = dao.channel.get_caller_id_name_number(channel)
+            cid_name, cid_num = dao.channel.get_caller_id_name_number(channel)
         except LookupError:
             raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
         else:
-            caller_id = '"%s" <%s>' % (cid_name, cid_number)
-            self.ami.bridge_originate(user_line, channel, caller_id, True, False)
+            self.ami.switchboard_unhold(user_line, channel, cid_name, cid_num)
             self.schedule_answer(client_connection.answer_cb, 0.25)
 
     def _get_current_call(self, user_id):

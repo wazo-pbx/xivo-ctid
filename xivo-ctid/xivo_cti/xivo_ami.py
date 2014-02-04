@@ -134,26 +134,6 @@ class AMIClass(object):
     def sendmeetmelist(self):
         return self._exec_command('MeetMeList', [])
 
-    def bridge_originate(self, line_interface, channel, caller_id,
-                         allow_calling_party_transfer, continue_dialplan):
-        options = ''
-        if allow_calling_party_transfer:
-            options += 'T'
-        if not continue_dialplan:
-            options += 'x'
-
-        if not options:
-            application_data = channel
-        else:
-            application_data = '%s,%s' % (channel, options)
-
-        self._exec_command('Originate',
-                           [('Channel', line_interface),
-                            ('Application', 'Bridge'),
-                            ('Data', application_data),
-                            ('CallerID', caller_id),
-                            ('Async', 'true')])
-
     # \brief Logins to the AMI.
     def login(self):
         if self.events:
@@ -365,6 +345,17 @@ class AMIClass(object):
                                                  ('Exten', extension),
                                                  ('Context', context),
                                                  ('Priority', '1')])
+
+    def switchboard_unhold(self, line_interface, channel, cid_name, cid_num):
+        self._exec_command('Originate',
+                           [('Channel', line_interface),
+                            ('Exten', 's'),
+                            ('Context', 'xivo_switchboard_unhold'),
+                            ('Priority', '1'),
+                            ('Variable', 'XIVO_CID_NUM=%s' % cid_name),
+                            ('Variable', 'XIVO_CID_NAME=%s' % cid_num),
+                            ('Variable', 'XIVO_CHANNEL=%s' % channel),
+                            ('Async', 'true')])
 
     def txfax(self, faxpath, userid, callerid, number, context):
         # originate a call btw src and dst
