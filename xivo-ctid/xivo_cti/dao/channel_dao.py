@@ -24,7 +24,7 @@ class ChannelDAO(object):
 
     def get_caller_id_name_number(self, channel):
         if channel not in self.innerdata.channels:
-            raise LookupError('Unknown channe %s' % channel)
+            raise LookupError('Unknown channel %s' % channel)
 
         uid = self.innerdata.channels[channel].unique_id
         return self._get(uid, 'calleridname'), self._get(uid, 'calleridnum')
