@@ -11,7 +11,7 @@ Homepage: http://xivo.fr/
 Package: xivo-ctid
 Architecture: all
 Pre-Depends: xivo-bus, 
-             xivo-libctid (= ${binary:Version}),
+             xivo-libctid (>= ${binary:Version}),
              xivo-libdao,
              xivo-libdird,
              xivo-lib-python
