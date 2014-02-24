@@ -178,6 +178,12 @@ class CTI(interfaces.Interfaces):
 
         innerdata = self._ctiserver.safe
         user_dict = innerdata.xod_config.get('users').finduser(login)
+        if not user_dict:
+            return 'error', {
+                'error_string': 'login_password',
+                'class': 'login_id',
+            }
+
         user_id = user_dict.get('id')
 
         if user_dict:
