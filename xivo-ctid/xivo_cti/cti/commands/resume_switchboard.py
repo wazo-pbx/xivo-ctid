@@ -22,5 +22,5 @@ def _parse(msg, command):
     command.unique_id = msg['unique_id']
 
 
-UnholdSwitchboard = CTICommandClass('unhold_switchboard', None, _parse)
-UnholdSwitchboard.add_to_registry()
+ResumeSwitchboard = CTICommandClass('resume_switchboard', None, _parse)
+ResumeSwitchboard.add_to_registry()

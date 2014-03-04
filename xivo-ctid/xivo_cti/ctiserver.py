@@ -54,7 +54,7 @@ from xivo_cti.cti.commands.subscribe import SubscribeCurrentCalls, \
     SubscribeMeetmeUpdate, SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
 from xivo_cti.cti.commands.hold_switchboard import HoldSwitchboard
-from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
+from xivo_cti.cti.commands.resume_switchboard import ResumeSwitchboard
 from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     DisableNoAnswerForward, DisableUnconditionalForward, EnableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
@@ -281,8 +281,8 @@ class CTIServer(object):
             context.get('current_call_manager').switchboard_hold,
             ['user_id', 'queue_name']
         )
-        UnholdSwitchboard.register_callback_params(
-            context.get('current_call_manager').switchboard_unhold,
+        ResumeSwitchboard.register_callback_params(
+            context.get('current_call_manager').switchboard_resume,
             ['user_id', 'unique_id', 'cti_connection'],
         )
         History.register_callback_params(

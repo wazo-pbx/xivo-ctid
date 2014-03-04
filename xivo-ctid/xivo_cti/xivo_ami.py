@@ -346,11 +346,11 @@ class AMIClass(object):
                                                  ('Context', context),
                                                  ('Priority', '1')])
 
-    def switchboard_unhold(self, line_interface, channel, cid_name, cid_num):
+    def switchboard_resume(self, line_interface, channel, cid_name, cid_num):
         self._exec_command('Originate',
                            [('Channel', line_interface),
                             ('Exten', 's'),
-                            ('Context', 'xivo_switchboard_unhold'),
+                            ('Context', 'xivo_switchboard_resume'),
                             ('Priority', '1'),
                             ('Variable', 'XIVO_CID_NUM=%s' % cid_name),
                             ('Variable', 'XIVO_CID_NAME=%s' % cid_num),
