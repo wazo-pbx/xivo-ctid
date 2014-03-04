@@ -614,7 +614,7 @@ class CTIServer(object):
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
                 interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
                                                        ({'action': 'ctilogin',
-                                                       'properties': socketobject},))
+                                                         'properties': socketobject},))
                 interface.logintimer.start()
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
