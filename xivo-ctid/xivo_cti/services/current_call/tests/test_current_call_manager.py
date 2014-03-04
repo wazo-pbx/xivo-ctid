@@ -675,11 +675,14 @@ class TestCurrentCallManager(unittest.TestCase):
         dao.channel.get_channel_from_unique_id.side_effect = LookupError()
         mock_get_line_identity.return_value = user_line
         client_connection = Mock(CTI)
+        self.manager.schedule_answer = Mock()
 
-        self.assertRaises(
-            LookupError,
-            self.manager.switchboard_resume, user_id, unique_id, client_connection
-        )
+        self.manager.switchboard_resume(user_id, unique_id, client_connection)
+
+        call_count_resume = self.manager.ami.switchboard_resume.call_count
+        self.assertEqual(call_count_resume, 0)
+        call_count_schedule = self.manager.schedule_answer.call_count
+        self.assertEqual(call_count_schedule, 0)
 
     def test_schedule_answer(self):
         delay = 0.25
