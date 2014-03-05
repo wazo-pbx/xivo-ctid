@@ -352,6 +352,7 @@ class AMIClass(object):
                             ('Exten', 's'),
                             ('Context', 'xivo_switchboard_unhold'),
                             ('Priority', '1'),
+                            ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
                             ('Variable', 'XIVO_CID_NUM=%s' % cid_name),
                             ('Variable', 'XIVO_CID_NAME=%s' % cid_num),
                             ('Variable', 'XIVO_CHANNEL=%s' % channel),
