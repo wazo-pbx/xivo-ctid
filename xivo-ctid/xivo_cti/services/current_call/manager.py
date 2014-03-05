@@ -239,19 +239,19 @@ class CurrentCallManager(object):
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
             self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
-    def switchboard_retrieve_waiting_call(self, user_id, action_id, client_connection):
-        logger.info('Switchboard %s retrieved channel %s', user_id, action_id)
+    def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
+        logger.info('Switchboard %s retrieved channel %s', user_id, unique_id)
 
         if self._get_ongoing_calls(user_id):
             return
 
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
-            channel_to_retrieve = dao.channel.get_channel_from_unique_id(action_id)
+            channel_to_retrieve = dao.channel.get_channel_from_unique_id(unique_id)
             cid_name, cid_num = dao.channel.get_caller_id_name_number(channel_to_retrieve)
             ringing_channels = dao.channel.channels_from_identity(user_line)
         except LookupError:
-            raise LookupError('Missing information for the switchboard to retrieve channel %s' % action_id)
+            raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
             map(self.ami.hangup, ringing_channels)
             self.ami.switchboard_unhold(user_line, channel_to_retrieve, cid_name, cid_num)
