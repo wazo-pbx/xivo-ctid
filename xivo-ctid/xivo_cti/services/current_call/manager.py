@@ -254,7 +254,7 @@ class CurrentCallManager(object):
             raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
             map(self.ami.hangup, ringing_channels)
-            self.ami.switchboard_unhold(user_line, channel_to_retrieve, cid_name, cid_num)
+            self.ami.switchboard_retrieve(user_line, channel_to_retrieve, cid_name, cid_num)
             self.schedule_answer(client_connection.answer_cb, 0.25)
 
     def _get_current_call(self, user_id):

@@ -649,7 +649,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
         self.manager.ami.hangup.assert_called_once_with(ringing_channel)
-        self.manager.ami.switchboard_unhold.assert_called_once_with(
+        self.manager.ami.switchboard_retrieve.assert_called_once_with(
             user_line, channel_to_intercept, cid_name, cid_number)
         self.manager.schedule_answer.assert_called_once_with(client_connection.answer_cb, delay)
 
@@ -681,7 +681,7 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
         assert_that(self.ami_class.hangup.call_count, equal_to(0))
-        assert_that(self.ami_class.switchboard_unhold.call_count, equal_to(0))
+        assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
         assert_that(self.manager.schedule_answer.call_count, equal_to(0))
 
     def test_schedule_answer(self):
