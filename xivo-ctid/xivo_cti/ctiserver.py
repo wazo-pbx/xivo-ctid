@@ -191,7 +191,6 @@ class CTIServer(object):
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
-        Answer.register_callback_params(self._user_service_manager.pickup_the_phone, ['cti_connection'])
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )
@@ -282,7 +281,11 @@ class CTIServer(object):
             ['user_id', 'queue_name']
         )
         UnholdSwitchboard.register_callback_params(
-            context.get('current_call_manager').switchboard_unhold,
+            context.get('current_call_manager').switchboard_retrieve_waiting_call,
+            ['user_id', 'unique_id', 'cti_connection'],
+        )
+        Answer.register_callback_params(
+            context.get('current_call_manager').switchboard_retrieve_waiting_call,
             ['user_id', 'unique_id', 'cti_connection'],
         )
         History.register_callback_params(

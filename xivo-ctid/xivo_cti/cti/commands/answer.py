@@ -18,5 +18,8 @@
 from xivo_cti.cti.cti_command import CTICommandClass
 
 
-Answer = CTICommandClass('answer', None, None)
+def _parse(msg, command):
+    command.unique_id = msg['unique_id']
+
+Answer = CTICommandClass('answer', None, _parse)
 Answer.add_to_registry()
