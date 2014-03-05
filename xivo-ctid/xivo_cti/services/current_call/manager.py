@@ -240,9 +240,10 @@ class CurrentCallManager(object):
             self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
-        logger.info('Switchboard %s retrieved channel %s', user_id, unique_id)
+        logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)
 
         if self._get_ongoing_calls(user_id):
+            logger.info('Switchboard %s may not retrieve channel %s because he has ongoing calls', user_id, unique_id)
             return
 
         try:
