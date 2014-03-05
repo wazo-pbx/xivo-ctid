@@ -241,19 +241,29 @@ class CurrentCallManager(object):
 
     def switchboard_retrieve_waiting_call(self, user_id, action_id, client_connection):
         logger.info('Switchboard %s retrieved channel %s', user_id, action_id)
+
+        if self._get_ongoing_calls(user_id):
+            return
+
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
             channel_to_retrieve = dao.channel.get_channel_from_unique_id(action_id)
             cid_name, cid_num = dao.channel.get_caller_id_name_number(channel_to_retrieve)
-            ongoing_channels = dao.channel.channels_from_identity(user_line)
+            ringing_channels = dao.channel.channels_from_identity(user_line)
         except LookupError:
             raise LookupError('Missing information for the switchboard to retrieve channel %s' % action_id)
         else:
-            map(self.ami.hangup, ongoing_channels)
+            map(self.ami.hangup, ringing_channels)
             self.ami.switchboard_unhold(user_line, channel_to_retrieve, cid_name, cid_num)
             self.schedule_answer(client_connection.answer_cb, 0.25)
 
     def _get_current_call(self, user_id):
+        ongoing_calls = self._get_ongoing_calls(user_id)
+        if not ongoing_calls:
+            raise LookupError('User %s has no ongoing calls' % user_id)
+        return ongoing_calls[0]
+
+    def _get_ongoing_calls(self, user_id):
         try:
             line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
         except LookupError:
@@ -261,9 +271,7 @@ class CurrentCallManager(object):
         else:
             calls = self._calls_per_line.get(line, [])
             ongoing_calls = [call for call in calls if call[ON_HOLD] is False]
-            if not ongoing_calls:
-                raise LookupError('User %s has no ongoing calls' % user_id)
-            return ongoing_calls[0]
+            return ongoing_calls
 
     def _change_hold_status(self, channel, new_status):
         line = identity_from_channel(channel)
