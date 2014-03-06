@@ -353,8 +353,8 @@ class AMIClass(object):
                             ('Context', 'xivo_switchboard_retrieve'),
                             ('Priority', '1'),
                             ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
-                            ('Variable', 'XIVO_CID_NUM=%s' % cid_name),
-                            ('Variable', 'XIVO_CID_NAME=%s' % cid_num),
+                            ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
+                            ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
                             ('Variable', 'XIVO_CHANNEL=%s' % channel),
                             ('Async', 'true')])
 
