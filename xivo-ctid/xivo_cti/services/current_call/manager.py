@@ -239,17 +239,21 @@ class CurrentCallManager(object):
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
             self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
-    def switchboard_unhold(self, user_id, action_id, client_connection):
-        logger.info('Switchboard %s unholded channel %s', user_id, action_id)
+    def switchboard_resume(self, user_id, action_id, client_connection):
+        try:
+            channel = dao.channel.get_channel_from_unique_id(action_id)
+        except LookupError:
+            logger.warning('Switchboard %s tried to resume non-existent channel %s', user_id, action_id)
+            return
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
-            channel = dao.channel.get_channel_from_unique_id(action_id)
             cid_name, cid_num = dao.channel.get_caller_id_name_number(channel)
         except LookupError:
-            raise LookupError('Missing information to complete switchboard unhold on channel %s' % action_id)
+            raise LookupError('Missing information to complete switchboard resume on channel %s' % action_id)
         else:
-            self.ami.switchboard_unhold(user_line, channel, cid_name, cid_num)
+            self.ami.switchboard_resume(user_line, channel, cid_name, cid_num)
             self.schedule_answer(client_connection.answer_cb, 0.25)
+            logger.info('Switchboard %s resumed channel %s', user_id, action_id)
 
     def _get_current_call(self, user_id):
         try:

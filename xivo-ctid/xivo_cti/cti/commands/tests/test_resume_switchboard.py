@@ -17,21 +17,21 @@
 
 import unittest
 
-from xivo_cti.cti.commands.unhold_switchboard import UnholdSwitchboard
+from xivo_cti.cti.commands.resume_switchboard import ResumeSwitchboard
 
 
-class TestUnholdSwitchboard(unittest.TestCase):
+class TestResumeSwitchboard(unittest.TestCase):
 
     def setUp(self):
         self.commandid = 125731893
-        self.unhold_switchboard_message = {
-            'class': 'unhold_switchboard',
+        self.resume_switchboard_message = {
+            'class': 'resume_switchboard',
             'unique_id': '123456.66',
             'commandid': self.commandid,
         }
 
     def test_from_dict(self):
-        unhold_switchboard = UnholdSwitchboard.from_dict(self.unhold_switchboard_message)
+        resume_switchboard = ResumeSwitchboard.from_dict(self.resume_switchboard_message)
 
-        self.assertEqual(unhold_switchboard.commandid, self.commandid)
-        self.assertEqual(unhold_switchboard.unique_id, self.unhold_switchboard_message['unique_id'])
+        self.assertEqual(resume_switchboard.commandid, self.commandid)
+        self.assertEqual(resume_switchboard.unique_id, self.resume_switchboard_message['unique_id'])
