@@ -352,8 +352,8 @@ class AMIClass(object):
                             ('Exten', 's'),
                             ('Context', 'xivo_switchboard_resume'),
                             ('Priority', '1'),
-                            ('Variable', 'XIVO_CID_NUM=%s' % cid_name),
-                            ('Variable', 'XIVO_CID_NAME=%s' % cid_num),
+                            ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
+                            ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
                             ('Variable', 'XIVO_CHANNEL=%s' % channel),
                             ('Async', 'true')])
 
