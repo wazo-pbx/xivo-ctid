@@ -239,23 +239,36 @@ class CurrentCallManager(object):
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
             self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
 
-    def switchboard_resume(self, user_id, action_id, client_connection):
+    def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
+        logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)
+
+        if self._get_ongoing_calls(user_id):
+            logger.info('Switchboard %s may not retrieve channel %s because he has ongoing calls', user_id, unique_id)
+            return
+
         try:
-            channel = dao.channel.get_channel_from_unique_id(action_id)
+            channel_to_retrieve = dao.channel.get_channel_from_unique_id(unique_id)
         except LookupError:
-            logger.warning('Switchboard %s tried to resume non-existent channel %s', user_id, action_id)
+            logger.warning('Switchboard %s tried to retrieve non-existent channel %s', user_id, unique_id)
             return
         try:
             user_line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
-            cid_name, cid_num = dao.channel.get_caller_id_name_number(channel)
+            cid_name, cid_num = dao.channel.get_caller_id_name_number(channel_to_retrieve)
+            ringing_channels = dao.channel.channels_from_identity(user_line)
         except LookupError:
-            raise LookupError('Missing information to complete switchboard resume on channel %s' % action_id)
+            raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
-            self.ami.switchboard_resume(user_line, channel, cid_name, cid_num)
+            map(self.ami.hangup, ringing_channels)
+            self.ami.switchboard_retrieve(user_line, channel_to_retrieve, cid_name, cid_num)
             self.schedule_answer(client_connection.answer_cb, 0.25)
-            logger.info('Switchboard %s resumed channel %s', user_id, action_id)
 
     def _get_current_call(self, user_id):
+        ongoing_calls = self._get_ongoing_calls(user_id)
+        if not ongoing_calls:
+            raise LookupError('User %s has no ongoing calls' % user_id)
+        return ongoing_calls[0]
+
+    def _get_ongoing_calls(self, user_id):
         try:
             line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
         except LookupError:
@@ -263,9 +276,7 @@ class CurrentCallManager(object):
         else:
             calls = self._calls_per_line.get(line, [])
             ongoing_calls = [call for call in calls if call[ON_HOLD] is False]
-            if not ongoing_calls:
-                raise LookupError('User %s has no ongoing calls' % user_id)
-            return ongoing_calls[0]
+            return ongoing_calls
 
     def _change_hold_status(self, channel, new_status):
         line = identity_from_channel(channel)

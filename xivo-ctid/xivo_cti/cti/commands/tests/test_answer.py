@@ -17,21 +17,21 @@
 
 import unittest
 
+from mock import sentinel
 from xivo_cti.cti.commands.answer import Answer
 
 
 class TestAnswer(unittest.TestCase):
 
     def setUp(self):
-        self.commandid = 125731893
         self.answer_message = {
             'class': 'answer',
-            'commandid': self.commandid,
-            'ipbxid': 'xivo',
-            'userid': '1'
+            'commandid': sentinel.commandid,
+            'unique_id': sentinel.unique_id,
         }
 
     def test_from_dict(self):
         answer = Answer.from_dict(self.answer_message)
 
-        self.assertEqual(answer.commandid, self.commandid)
+        self.assertEqual(answer.commandid, sentinel.commandid)
+        self.assertEqual(answer.unique_id, sentinel.unique_id)

@@ -43,11 +43,19 @@ class TestChannelDAO(unittest.TestCase):
         channel_2 = Channel(self.channel_2['id'],
                             self.channel_2['context'],
                             self.channel_2['unique_id'])
+        self.channel_3 = {'id': 'SCCP/123-9643244',
+                          'context': 'testctx',
+                          'cid_number': '6543',
+                          'unique_id': 987654.32}
+        channel_3 = Channel(self.channel_3['id'],
+                            self.channel_3['context'],
+                            self.channel_3['unique_id'])
 
         self.innerdata = Mock(innerdata.Safe)
         self.innerdata.channels = {
             self.channel_1['id']: channel_1,
             self.channel_2['id']: channel_2,
+            self.channel_3['id']: channel_3,
         }
         self.call_form_variable_aggregator = VariableAggregator()
         self.call_form_variable_aggregator.set(
@@ -86,3 +94,18 @@ class TestChannelDAO(unittest.TestCase):
 
     def test_get_channel_from_unique_id_unknown(self):
         self.assertRaises(LookupError, self._channel_dao.get_channel_from_unique_id, 'Unknown')
+
+    def test_channels_from_identity_when_no_channels(self):
+        result = self._channel_dao.channels_from_identity('sip/unknown-identity')
+
+        self.assertEqual(result, [])
+
+    def test_channels_from_identity_when_one_channel(self):
+        result = self._channel_dao.channels_from_identity('sip/abcdef')
+
+        self.assertEqual(result, [self.channel_1['id']])
+
+    def test_channels_from_identity_when_two_channels(self):
+        result = self._channel_dao.channels_from_identity('sccp/123')
+
+        self.assertEqual(result, [self.channel_2['id'], self.channel_3['id']])

@@ -40,22 +40,23 @@ class TestXivoAMI(unittest.TestCase):
         ami_class._exec_command = Mock()
         self.ami_class = ami_class
 
-    def test_switchboard_resume(self):
+    def test_switchboard_retrieve(self):
         line_interface = sentinel.line_interface
         channel = 'SIP/abcd-1234'
         cid_name = 'Alice'
         cid_num = '555'
 
-        self.ami_class.switchboard_resume(line_interface, channel, cid_name, cid_num)
+        self.ami_class.switchboard_retrieve(line_interface, channel, cid_name, cid_num)
 
         self.ami_class._exec_command.assert_called_once_with(
             'Originate',
             [('Channel', line_interface),
              ('Exten', 's'),
-             ('Context', 'xivo_switchboard_resume'),
+             ('Context', 'xivo_switchboard_retrieve'),
              ('Priority', '1'),
-             ('Variable', 'XIVO_CID_NUM=555'),
-             ('Variable', 'XIVO_CID_NAME=Alice'),
+             ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
+             ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
+             ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
              ('Variable', 'XIVO_CHANNEL=%s' % channel),
              ('Async', 'true')])
 

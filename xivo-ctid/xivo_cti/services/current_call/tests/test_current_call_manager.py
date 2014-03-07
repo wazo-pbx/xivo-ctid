@@ -19,6 +19,7 @@ import time
 import unittest
 
 from hamcrest import assert_that
+from hamcrest import equal_to
 from hamcrest import only_contains
 from mock import Mock
 from mock import patch
@@ -628,10 +629,11 @@ class TestCurrentCallManager(unittest.TestCase):
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_switchboard_resume(self, mock_get_line_identity):
+    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
         user_line = 'sccp/12345'
+        ringing_channel = 'sccp/12345-0000001'
         channel_to_intercept = 'SIP/acbdf-348734'
         cid_name, cid_number = 'Alice', '5565'
         delay = 0.25
@@ -640,36 +642,54 @@ class TestCurrentCallManager(unittest.TestCase):
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
         dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
+        dao.channel.channels_from_identity.return_value = [ringing_channel]
         mock_get_line_identity.return_value = user_line
         self.manager.schedule_answer = Mock()
 
-        self.manager.switchboard_resume(user_id, unique_id, client_connection)
+        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
-        self.manager.ami.switchboard_resume.assert_called_once_with(
+        self.manager.ami.hangup.assert_called_once_with(ringing_channel)
+        self.manager.ami.switchboard_retrieve.assert_called_once_with(
             user_line, channel_to_intercept, cid_name, cid_number)
         self.manager.schedule_answer.assert_called_once_with(client_connection.answer_cb, delay)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_switchboard_resume_no_line(self, mock_get_line_identity):
-        unique_id = '1234567.44'
-        user_id = 5
-        channel_to_intercept = 'SIP/acbdf-348734'
-
-        dao.channel = Mock(channel_dao.ChannelDAO)
-        dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
-        mock_get_line_identity.side_effect = LookupError('No such line')
-        client_connection = Mock(CTI)
-
-        self.assertRaises(
-            LookupError,
-            self.manager.switchboard_resume, user_id, unique_id, client_connection
-        )
-
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_switchboard_resume_no_channel(self, mock_get_line_identity):
+    def test_switchboard_retrieve_waiting_call_when_talking_then_do_nothing(self, mock_get_line_identity):
         unique_id = '1234567.44'
         user_id = 5
         user_line = 'sccp/12345'
+        talking_channel = 'sccp/12345-0000001'
+        channel_to_intercept = 'SIP/acbdf-348734'
+        cid_name, cid_number = 'Alice', '5565'
+        client_connection = Mock(CTI)
+        self.manager._calls_per_line = {
+            user_line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: talking_channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+
+        dao.channel = Mock(channel_dao.ChannelDAO)
+        dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
+        dao.channel.channels_from_identity.return_value = [talking_channel]
+        mock_get_line_identity.return_value = user_line
+        self.manager.schedule_answer = Mock()
+
+        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
+
+        assert_that(self.ami_class.hangup.call_count, equal_to(0))
+        assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
+        assert_that(self.manager.schedule_answer.call_count, equal_to(0))
+
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
+    def test_switchboard_retrieve_waiting_call_when_no_channel_then_return(self, mock_get_line_identity):
+        unique_id = '1234567.44'
+        user_id = 5
+        user_line = 'sccp/12345'
+        channel_to_intercept = 'SIP/acbdf-348734'
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.side_effect = LookupError()
@@ -677,10 +697,10 @@ class TestCurrentCallManager(unittest.TestCase):
         client_connection = Mock(CTI)
         self.manager.schedule_answer = Mock()
 
-        self.manager.switchboard_resume(user_id, unique_id, client_connection)
+        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
-        call_count_resume = self.manager.ami.switchboard_resume.call_count
-        self.assertEqual(call_count_resume, 0)
+        call_count_retrieve = self.manager.ami.switchboard_retrieve.call_count
+        self.assertEqual(call_count_retrieve, 0)
         call_count_schedule = self.manager.schedule_answer.call_count
         self.assertEqual(call_count_schedule, 0)
 

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo.asterisk.line_identity import identity_from_channel
+
 
 class ChannelDAO(object):
 
@@ -35,6 +37,10 @@ class ChannelDAO(object):
                 continue
             return channel_id
         raise LookupError('No channel with unique id %s' % unique_id)
+
+    def channels_from_identity(self, identity):
+        return [channel for channel in self.innerdata.channels
+                if identity_from_channel(channel) == identity]
 
     def _get(self, uid, var):
         channel_data = self._call_form_variable_aggregator.get(uid)
