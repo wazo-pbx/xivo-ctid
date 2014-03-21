@@ -22,6 +22,14 @@ class Call(object):
         self.source = source
         self.destination = destination
 
+    def __repr__(self):
+        info = {
+            'name': self.__class__.__name__,
+            'source': self.source.extension,
+            'destination': self.destination.extension,
+        }
+        return '%(name)s from %(source)s to %(destination)s' % info
+
     @property
     def is_internal(self):
         return self.source.is_internal and self.destination.is_internal
