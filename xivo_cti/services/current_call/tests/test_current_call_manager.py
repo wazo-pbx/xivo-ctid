@@ -636,7 +636,7 @@ class TestCurrentCallManager(unittest.TestCase):
         ringing_channel = 'sccp/12345-0000001'
         channel_to_intercept = 'SIP/acbdf-348734'
         cid_name, cid_number = 'Alice', '5565'
-        delay = 0.25
+        delay = 0.5
         client_connection = Mock(CTI)
 
         dao.channel = Mock(channel_dao.ChannelDAO)
