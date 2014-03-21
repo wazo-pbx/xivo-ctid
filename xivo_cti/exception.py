@@ -30,6 +30,10 @@ class MissingFieldException(Exception):
         super(MissingFieldException, self).__init__(msg)
 
 
+class NoSuchCallException(Exception):
+    pass
+
+
 class NoSuchExtensionError(Exception):
     pass
 
