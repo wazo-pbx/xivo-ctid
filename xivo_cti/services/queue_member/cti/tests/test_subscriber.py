@@ -16,44 +16,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from mock import Mock, patch
 from xivo_cti.services.queue_member.cti.subscriber import QueueMemberCTISubscriber
 
 
+@patch('xivo_cti.services.queue_member.cti.subscriber.CTIMessageFormatter')
 class TestQueueMemberCTISubscriber(unittest.TestCase):
 
     def setUp(self):
-        self.cti_message_formatter = Mock(CTIMessageFormatter)
         self.send_cti_event = Mock()
-        self.queue_member_cti_subscriber = QueueMemberCTISubscriber(self.cti_message_formatter)
+        self.queue_member_cti_subscriber = QueueMemberCTISubscriber()
         self.queue_member_cti_subscriber.send_cti_event = self.send_cti_event
 
-    def test_on_queue_member_added(self):
+    def test_on_queue_member_added(self, message_formatter):
         queue_member = Mock()
         queue_member.id = 'someid'
-        self.cti_message_formatter.add_queue_members.return_value = 'add_msg'
+        message_formatter.add_queue_members.return_value = 'add_msg'
 
         self.queue_member_cti_subscriber.on_queue_member_added(queue_member)
 
-        self.cti_message_formatter.add_queue_members.assert_called_once_with([queue_member.id])
+        message_formatter.add_queue_members.assert_called_once_with([queue_member.id])
         self.send_cti_event.assert_called_once_with('add_msg')
 
-    def test_on_queue_member_updated(self):
+    def test_on_queue_member_updated(self, message_formatter):
         queue_member = Mock()
-        self.cti_message_formatter.update_queue_member_config.return_value = 'update_msg'
+        message_formatter.update_queue_member_config.return_value = 'update_msg'
 
         self.queue_member_cti_subscriber.on_queue_member_updated(queue_member)
 
-        self.cti_message_formatter.update_queue_member_config.assert_called_once_with(queue_member)
+        message_formatter.update_queue_member_config.assert_called_once_with(queue_member)
         self.send_cti_event.assert_called_once_with('update_msg')
 
-    def test_on_queue_member_removed(self):
+    def test_on_queue_member_removed(self, message_formatter):
         queue_member = Mock()
         queue_member.id = 'someid'
-        self.cti_message_formatter.delete_queue_members.return_value = 'delete_msg'
+        message_formatter.delete_queue_members.return_value = 'delete_msg'
 
         self.queue_member_cti_subscriber.on_queue_member_removed(queue_member)
 
-        self.cti_message_formatter.delete_queue_members.assert_called_once_with([queue_member.id])
+        message_formatter.delete_queue_members.assert_called_once_with([queue_member.id])
         self.send_cti_event.assert_called_once_with('delete_msg')

@@ -24,7 +24,6 @@ from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
@@ -104,7 +103,6 @@ def setup():
     context.register('channel_updater', ChannelUpdater)
     context.register('config', cti_config.Config())
     context.register('cti_server', CTIServer)
-    context.register('cti_message_formatter', CTIMessageFormatter)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)
     context.register('current_call_notifier', CurrentCallNotifier)

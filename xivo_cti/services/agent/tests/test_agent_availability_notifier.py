@@ -19,20 +19,18 @@ import unittest
 from mock import Mock, patch
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.status import AgentStatus
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ctiserver import CTIServer
 
 
 class TestAgentAvailabilityNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.cti_message_formatter = Mock(CTIMessageFormatter)
         self.cti_server = Mock(CTIServer)
-        self.availability_notifier = AgentAvailabilityNotifier(self.cti_server,
-                                                               self.cti_message_formatter)
+        self.availability_notifier = AgentAvailabilityNotifier(self.cti_server)
 
+    @patch('xivo_cti.services.agent.availability_notifier.CTIMessageFormatter')
     @patch('xivo_cti.dao.agent')
-    def test_notify(self, agent_dao):
+    def test_notify(self, agent_dao, message_formatter):
         agent_id = 42
         new_agent_status = {
             'availability': AgentStatus.logged_out,
@@ -47,10 +45,10 @@ class TestAgentAvailabilityNotifier(unittest.TestCase):
             'tid': agent_id,
             'status': new_agent_status
         }
-        self.cti_message_formatter.update_agent_status.return_value = cti_message
+        message_formatter.update_agent_status.return_value = cti_message
 
         self.availability_notifier.notify(agent_id)
 
-        self.cti_message_formatter.update_agent_status.assert_called_once_with(agent_id,
-                                                                               new_agent_status)
+        message_formatter.update_agent_status.assert_called_once_with(agent_id,
+                                                                      new_agent_status)
         self.cti_server.send_cti_event.assert_called_once_with(cti_message)

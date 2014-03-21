@@ -15,24 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+
 
 class QueueMemberCTISubscriber(object):
 
-    def __init__(self, cti_message_formatter):
-        self._cti_message_formatter = cti_message_formatter
-
     def on_queue_member_added(self, queue_member):
         queue_member_ids = [queue_member.id]
-        message = self._cti_message_formatter.add_queue_members(queue_member_ids)
+        message = CTIMessageFormatter.add_queue_members(queue_member_ids)
         self.send_cti_event(message)
 
     def on_queue_member_updated(self, queue_member):
-        message = self._cti_message_formatter.update_queue_member_config(queue_member)
+        message = CTIMessageFormatter.update_queue_member_config(queue_member)
         self.send_cti_event(message)
 
     def on_queue_member_removed(self, queue_member):
         queue_member_ids = [queue_member.id]
-        message = self._cti_message_formatter.delete_queue_members(queue_member_ids)
+        message = CTIMessageFormatter.delete_queue_members(queue_member_ids)
         self.send_cti_event(message)
 
     def subscribe_to_queue_member(self, queue_member_notifier):

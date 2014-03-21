@@ -18,7 +18,8 @@
 
 class CTIMessageFormatter(object):
 
-    def add_queue_members(self, queue_member_ids):
+    @staticmethod
+    def add_queue_members(queue_member_ids):
         return {
             'class': 'getlist',
             'listname': 'queuemembers',
@@ -34,7 +35,8 @@ class CTIMessageFormatter(object):
             'exten': exten,
         }
 
-    def delete_queue_members(self, queue_member_ids):
+    @staticmethod
+    def delete_queue_members(queue_member_ids):
         return {
             'class': 'getlist',
             'listname': 'queuemembers',
@@ -43,7 +45,8 @@ class CTIMessageFormatter(object):
             'list': list(queue_member_ids),
         }
 
-    def update_agent_status(self, agent_id, agent_status):
+    @staticmethod
+    def update_agent_status(agent_id, agent_status):
         return {'class': 'getlist',
                 'listname': 'agents',
                 'function': 'updatestatus',
@@ -51,7 +54,8 @@ class CTIMessageFormatter(object):
                 'tid': agent_id,
                 'status': agent_status}
 
-    def update_queue_member_config(self, queue_member):
+    @staticmethod
+    def update_queue_member_config(queue_member):
         return {
             'class': 'getlist',
             'listname': 'queuemembers',
