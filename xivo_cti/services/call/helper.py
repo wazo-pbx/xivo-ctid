@@ -40,9 +40,10 @@ def channel_state_to_status(channel_state):
 
 def get_extension_from_channel(channel):
     protocol_interface = protocol_interface_from_channel(channel)
+
     try:
         extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
                                                                    protocol_interface.interface)
-    except LookupError:
+    except (LookupError, ValueError):
         extension = Extension(number='', context='', is_internal=False)
     return extension
