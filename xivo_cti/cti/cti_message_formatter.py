@@ -27,6 +27,13 @@ class CTIMessageFormatter(object):
             'list': list(queue_member_ids),
         }
 
+    @staticmethod
+    def dial_success(exten):
+        return {
+            'class': 'dial_success',
+            'exten': exten,
+        }
+
     def delete_queue_members(self, queue_member_ids):
         return {
             'class': 'getlist',

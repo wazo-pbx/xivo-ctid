@@ -179,12 +179,16 @@ class UserServiceManager(object):
     def _on_originate_response_callback(self, client_connection, user_id, exten, result):
         response = result.get(RESPONSE)
         if response == SUCCESS:
-            self._on_originate_success(client_connection.answer_cb)
+            self._on_originate_success(client_connection, exten)
         else:
             self._on_originate_error(client_connection, user_id, exten, result.get(MESSAGE))
 
-    def _on_originate_success(self, answer_fn):
-        context.get('current_call_manager').schedule_answer(answer_fn, ORIGINATE_AUTO_ANSWER_DELAY)
+    def _on_originate_success(self, client_connection, exten):
+        context.get('current_call_manager').schedule_answer(
+            client_connection.answer_cb, ORIGINATE_AUTO_ANSWER_DELAY)
+
+        dial_success_message = CTIMessageFormatter.dial_success(exten)
+        client_connection.send_message(dial_success_message)
 
     def _on_originate_error(self, client_connection, user_id, exten, message):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)

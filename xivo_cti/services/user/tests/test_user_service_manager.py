@@ -25,6 +25,8 @@ from hamcrest import assert_that
 from hamcrest import equal_to
 
 import xivo_cti.services.user.manager as user_service_manager
+
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ioc.context import context
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
@@ -105,8 +107,6 @@ class TestUserServiceManager(unittest.TestCase):
         callback.assert_called_once_with(connection, user_id, exten, response)
 
     def test_on_originate_response_callback_success(self):
-        user_id = 1
-        exten = '543'
         connection = Mock(CTI)
         connection.answer_cb = sentinel
         response = {
@@ -117,10 +117,11 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager._on_originate_success = Mock()
 
         self.user_service_manager._on_originate_response_callback(
-            connection, user_id, exten, response,
+            connection, sentinel.user_id, sentinel.exten, response,
         )
 
-        self.user_service_manager._on_originate_success.assert_called_once_with(connection.answer_cb)
+        self.user_service_manager._on_originate_success.assert_called_once_with(
+            connection, sentinel.exten)
 
     def test_on_originate_response_callback_error(self):
         user_id = 1
@@ -141,12 +142,14 @@ class TestUserServiceManager(unittest.TestCase):
     def test_on_originate_success(self):
         context.register('current_call_manager', Mock, CurrentCallManager)
         mock_current_call_manager = context.get('current_call_manager')
-        user_id = sentinel
+        client_connection = Mock(CTI)
 
-        self.user_service_manager._on_originate_success(user_id)
+        self.user_service_manager._on_originate_success(client_connection, sentinel.exten)
 
         mock_current_call_manager.schedule_answer.assert_called_once_with(
-            user_id, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+            client_connection.answer_cb, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
+        client_connection.send_message.assert_called_once_with(
+            CTIMessageFormatter.dial_success(sentinel.exten))
 
     def test_on_originate_error(self):
         user_id, exten = '42', '1234'

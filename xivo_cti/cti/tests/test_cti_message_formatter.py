@@ -19,6 +19,7 @@ import unittest
 
 from hamcrest import assert_that
 from hamcrest import equal_to
+from mock import sentinel
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -53,3 +54,13 @@ class TestCTIMessageFormatter(unittest.TestCase):
         result = CTIMessageFormatter.ipbxcommand_error(msg)
 
         assert_that(result, equal_to(expected), 'Error message')
+
+    def test_dial_success(self):
+        expected = {
+            'class': 'dial_success',
+            'exten': sentinel.exten,
+        }
+
+        result = CTIMessageFormatter.dial_success(sentinel.exten)
+
+        assert_that(result, equal_to(expected))
