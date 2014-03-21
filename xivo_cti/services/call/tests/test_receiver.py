@@ -17,9 +17,12 @@
 
 import unittest
 
-from mock import patch, Mock
+from functools import partial
+from hamcrest import assert_that, equal_to
+from mock import patch, Mock, sentinel
 from xivo.asterisk.extension import Extension
 from xivo.asterisk.protocol_interface import InvalidChannelError
+from xivo_cti.services.call.call import _Channel
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.model.endpoint_status import EndpointStatus
@@ -27,9 +30,22 @@ from xivo_cti.model.endpoint_status import EndpointStatus
 
 NUMBER = '3573'
 CONTEXT = 'my_context'
-EXTENSION = Mock(number=NUMBER, context=CONTEXT)
+EXTENSION = Extension(number=NUMBER, context=CONTEXT, is_internal=True)
+EMPTY_EXTENSION = Extension(number='', context='', is_internal=False)
 CHANNEL = 'SIP/abcd-00001'
 UNIQUEID = '5765887387.56'
+DEST_UNIQUEID = '123456789.56'
+
+RINGING = EndpointStatus.ringing
+AVAILABLE = EndpointStatus.available
+
+patch_get_extension_from_channel = partial(
+    patch, 'xivo_cti.services.call.helper.get_extension_from_channel',
+)
+
+patch_channel_state_status = partial(
+    patch, 'xivo_cti.services.call.helper.channel_state_to_status',
+)
 
 
 class TestCallReceiver(unittest.TestCase):
@@ -38,199 +54,195 @@ class TestCallReceiver(unittest.TestCase):
         self.call_storage = Mock(CallStorage)
         self.call_receiver = CallReceiver(self.call_storage)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_newstate(self, channel_state_to_status, get_extension_from_channel):
-        call_status = EndpointStatus.ringing
-
-        get_extension_from_channel.return_value = EXTENSION
-        channel_state_to_status.return_value = call_status
-
-        ami_event = {
-            'Event': 'Newstate',
-            'ChannelState': '5',
-            'Channel': CHANNEL,
-        }
+    @patch_get_extension_from_channel(Mock(return_value=EXTENSION))
+    @patch_channel_state_status(Mock(return_value=RINGING))
+    def test_handle_newstate(self):
+        ami_event = self._mk_new_state_event(state='5')
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, RINGING)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_newstate_ignored(self, channel_state_to_status, get_extension_from_channel):
-        get_extension_from_channel.return_value = EXTENSION
-        channel_state_to_status.return_value = None
-
-        ami_event = {
-            'Event': 'Newstate',
-            'ChannelState': '42',
-            'Channel': CHANNEL,
-        }
+    @patch_get_extension_from_channel(Mock(return_value=EXTENSION))
+    @patch_channel_state_status(Mock(return_value=None))
+    def test_handle_newstate_ignored(self):
+        ami_event = self._mk_new_state_event()
 
         self.call_receiver.handle_newstate(ami_event)
 
         self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_newstate_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
-        invalid_channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannelError(invalid_channel)
-        ami_event = {
-            'Event': 'Newstate',
-            'ChannelState': '42',
-            'Channel': invalid_channel
-        }
+    @patch_get_extension_from_channel(
+        Mock(side_effect=InvalidChannelError(sentinel.invalid_channel)))
+    def test_handle_newstate_invalid_channel(self):
+        ami_event = self._mk_new_state_event(sentinel.invalid_channel)
 
         self.call_receiver.handle_newstate(ami_event)
 
         self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_newstate_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension(number='', context='', is_internal=False)
-        call_status = EndpointStatus.ringing
-        get_extension_from_channel.return_value = extension
-        channel_state_to_status.return_value = call_status
-        ami_event = {
-            'Event': 'Newstate',
-            'ChannelState': '5',
-            'Channel': CHANNEL
-        }
+    @patch_get_extension_from_channel(Mock(return_value=EMPTY_EXTENSION))
+    @patch_channel_state_status(Mock(return_value=RINGING))
+    def test_handle_newstate_no_extension(self):
+        ami_event = self._mk_new_state_event(state='5')
 
         self.call_receiver.handle_newstate(ami_event)
 
-        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(EMPTY_EXTENSION, RINGING)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_hangup(self, channel_state_to_status, get_extension_from_channel):
-        call_status = EndpointStatus.available
-
-        get_extension_from_channel.return_value = EXTENSION
-        channel_state_to_status.return_value = call_status
-
-        ami_event = {
-            'Event': 'Hangup',
-            'Channel': CHANNEL,
-        }
+    @patch_get_extension_from_channel(Mock(return_value=EXTENSION))
+    @patch_channel_state_status(Mock(return_value=AVAILABLE))
+    def test_handle_hangup(self):
+        ami_event = self._mk_hangup_event()
 
         self.call_receiver.handle_hangup(ami_event)
 
-        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, call_status)
+        self.call_storage.update_endpoint_status.assert_called_once_with(EXTENSION, AVAILABLE)
+        self.call_storage.end_call.assert_called_once_with(UNIQUEID)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_hangup_invalid_channel(self, channel_state_to_status, get_extension_from_channel):
-        invalid_channel = 'aslkdjfas;ldfh'
-        get_extension_from_channel.side_effect = InvalidChannelError(invalid_channel)
-        ami_event = {
-            'Event': 'Hangup',
-            'Channel': CHANNEL,
-        }
+    @patch_get_extension_from_channel(
+        Mock(side_effect=InvalidChannelError(sentinel.invalid_channel)))
+    def test_handle_hangup_invalid_channel(self):
+        ami_event = self._mk_hangup_event()
 
         self.call_receiver.handle_hangup(ami_event)
 
         self.assertEquals(self.call_storage.update_endpoint_status.call_count, 0)
+        self.call_storage.end_call.assert_called_once_with(UNIQUEID)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    @patch('xivo_cti.services.call.helper.channel_state_to_status')
-    def test_handle_hangup_no_extension(self, channel_state_to_status, get_extension_from_channel):
-        extension = Extension(number='', context='', is_internal=False)
-        call_status = EndpointStatus.available
-        get_extension_from_channel.return_value = extension
-        channel_state_to_status.return_value = call_status
-        ami_event = {
-            'Event': 'Hangup',
-            'Channel': CHANNEL
-        }
-
-        self.call_receiver.handle_hangup(ami_event)
-
-        self.call_storage.update_endpoint_status.assert_called_once_with(extension, call_status)
-
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
+    @patch_get_extension_from_channel()
     def test_handle_dial_begin(self, get_extension_from_channel):
-        channel_source = 'SIP/abcdef-0001'
-        channel_destination = 'SIP/ghijk-0002'
-
-        ami_event = {
-            'Event': 'Dial',
-            'SubEvent': 'Begin',
-            'Channel': channel_source,
-            'Destination': channel_destination,
-            'UniqueID': UNIQUEID,
+        ami_event = self._mk_dial_begin_event()
+        extens = {
+            sentinel.channel_source: sentinel.source,
+            sentinel.channel_destination: sentinel.destination,
         }
-
-        source = Mock(number=NUMBER, context=CONTEXT)
-        destination = Mock(number=NUMBER, context=CONTEXT)
-
-        side_effect = lambda channel: source if channel == channel_source else destination
-        get_extension_from_channel.side_effect = side_effect
+        get_extension_from_channel.side_effect = lambda channel: extens[channel]
 
         self.call_receiver.handle_dial(ami_event)
 
-        self.call_storage.new_call.assert_called_once_with(uniqueid=UNIQUEID,
-                                                           source=source,
-                                                           destination=destination)
+        self.call_storage.new_call.assert_called_once_with(
+            UNIQUEID,
+            DEST_UNIQUEID,
+            _Channel(sentinel.source, sentinel.channel_source),
+            _Channel(sentinel.destination, sentinel.channel_destination),
+        )
 
-        get_extension_from_channel.assert_any_call(channel_source)
-        get_extension_from_channel.assert_any_call(channel_destination)
-        self.assertEquals(get_extension_from_channel.call_count, 2)
-
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    def test_handle_dial_begin_invalid_channel(self, get_extension_from_channel):
-        channel_source = 'SIP/abcdef-0001'
-        channel_destination = 'SIP/ghijk-0002'
-
-        ami_event = {
-            'Event': 'Dial',
-            'SubEvent': 'Begin',
-            'Channel': channel_source,
-            'Destination': channel_destination,
-            'UniqueID': UNIQUEID,
-        }
-
-        get_extension_from_channel.side_effect = InvalidChannelError(channel_source)
+    @patch_get_extension_from_channel(Mock(side_effect=InvalidChannelError))
+    def test_handle_dial_begin_invalid_channel(self):
+        ami_event = self._mk_dial_begin_event()
 
         self.call_receiver.handle_dial(ami_event)
 
         self.assertEquals(self.call_storage.new_call.call_count, 0)
 
-    @patch('xivo_cti.services.call.helper.get_extension_from_channel')
-    def test_handle_dial_begin_extension_does_not_exist(self, get_extension_from_channel):
-        channel_source = 'SIP/abcdef-0001'
-        channel_destination = 'SIP/ghijk-0002'
-        source_extension = Extension(number='', context='', is_internal=False)
-        destination_extension = Mock(number=NUMBER, context=CONTEXT)
-
-        ami_event = {
-            'Event': 'Dial',
-            'SubEvent': 'Begin',
-            'Channel': channel_source,
-            'Destination': channel_destination,
-            'UniqueID': UNIQUEID,
+    @patch_get_extension_from_channel()
+    def test_handle_bridge_link(self, get_extension_from_channel):
+        event = self._mk_bridge_event()
+        extens = {
+            sentinel.channel_source: sentinel.source,
+            sentinel.channel_destination: sentinel.destination,
         }
+        get_extension_from_channel.side_effect = lambda channel: extens[channel]
 
-        get_extension_from_channel.side_effect = [source_extension,
-                                                  destination_extension]
+        self.call_receiver.handle_bridge(event)
 
-        self.call_receiver.handle_dial(ami_event)
+        self.call_storage.new_call.assert_called_once_with(
+            UNIQUEID,
+            DEST_UNIQUEID,
+            _Channel(sentinel.source, sentinel.channel_source),
+            _Channel(sentinel.destination, sentinel.channel_destination),
+        )
 
-        self.call_storage.new_call.assert_called_once_with(uniqueid=UNIQUEID,
-                                                           source=source_extension,
-                                                           destination=destination_extension)
+    @patch_get_extension_from_channel(Mock(side_effect=InvalidChannelError))
+    def test_handle_bridge_link_invalid_channel(self):
+        ami_event = self._mk_bridge_event()
 
-    def test_handle_dial_end(self):
-        ami_event = {
-            'Event': 'Dial',
-            'SubEvent': 'End',
-            'Channel': CHANNEL,
-            'UniqueID': UNIQUEID,
-        }
+        self.call_receiver.handle_bridge(ami_event)
 
-        self.call_receiver.handle_dial(ami_event)
+        self.assertEquals(self.call_storage.new_call.call_count, 0)
+
+    def test_handle_bridge_unlink_channel(self):
+        ami_event = self._mk_bridge_event(state='Unlink')
+
+        self.call_receiver.handle_bridge(ami_event)
 
         self.call_storage.end_call.assert_called_once_with(UNIQUEID)
+
+    def test_handle_bridge_unknown(self):
+        ami_event = {'Event': 'Bridge',
+                     'Bridgestate': 'Unknown'}
+
+        self.call_receiver.handle_bridge(ami_event)
+
+        assert_that(self.call_storage.end_call.call_count, equal_to(0))
+        assert_that(self.call_storage.new_call.call_count, equal_to(0))
+
+    @patch_get_extension_from_channel()
+    def test_handle_new_channel(self, get_extension_from_channel):
+        get_extension_from_channel.return_value = sentinel.source_exten
+        event = self._mk_new_channel_event()
+
+        self.call_receiver.handle_new_channel(event)
+
+        self.call_storage.new_call.assert_called_once_with(
+            UNIQUEID,
+            '',
+            _Channel(sentinel.source_exten, sentinel.channel),
+            _Channel(Extension('', '', True), '')
+        )
+
+    def _mk_new_channel_event(self, channel=sentinel.channel, uniqueid=UNIQUEID):
+        return {
+            'Event': 'NewChannel',
+            'Channel': channel,
+            'Uniqueid': uniqueid,
+        }
+
+    def _mk_bridge_event(self, destination_channel=sentinel.channel_destination,
+                         source_channel=sentinel.channel_source,
+                         uniqueid1=UNIQUEID, uniqueid2=DEST_UNIQUEID,
+                         state='Link'):
+        return {
+            'Event': 'Bridge',
+            'Bridgestate': state,
+            'Channel1': destination_channel,
+            'Channel2': source_channel,
+            'Uniqueid1': uniqueid1,
+            'Uniqueid2': uniqueid2,
+        }
+
+    def _mk_hangup_event(self, channel=CHANNEL, uniqueid=UNIQUEID):
+        return {
+            'Event': 'Hangup',
+            'Channel': channel,
+            'Uniqueid': uniqueid,
+        }
+
+    def _mk_new_state_event(self, channel=CHANNEL, state=42):
+        return {
+            'Event': 'Newstate',
+            'ChannelState': state,
+            'Channel': channel,
+        }
+
+    def _mk_dial_begin_event(self, uniqueid=UNIQUEID,
+                             dest_uniqueid=DEST_UNIQUEID,
+                             source=sentinel.channel_source,
+                             destination=sentinel.channel_destination):
+        return {
+            'Event': 'Dial',
+            'SubEvent': 'Begin',
+            'Channel': source,
+            'Destination': destination,
+            'UniqueID': uniqueid,
+            'DestUniqueID': dest_uniqueid,
+        }
+
+    def _mk_dial_end_event(self, uniqueid=UNIQUEID, channel=CHANNEL):
+        return {
+            'Event': 'Dial',
+            'SubEvent': 'End',
+            'Channel': channel,
+            'UniqueID': uniqueid,
+        }
