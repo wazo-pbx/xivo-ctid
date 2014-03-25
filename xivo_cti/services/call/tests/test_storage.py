@@ -276,7 +276,7 @@ class TestMergeLocalChannels(_BaseTestCase):
         self.storage.merge_local_channels('Local/102@default-00000006;')
 
         expected = {
-            u'1395685236.26': Call(
+            u'1395685237.28': Call(
                 _Channel(Extension('1009', 'default', True), 'SIP/1uzh6d-0000000e'),
                 _Channel(Extension('1002', 'default', True), 'SIP/8o5zja-0000000f'),
             ),

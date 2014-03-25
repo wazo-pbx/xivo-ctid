@@ -136,28 +136,22 @@ class TestCallReceiver(unittest.TestCase):
 
         self.assertEquals(self.call_storage.new_call.call_count, 0)
 
-    def test_bridge_with_local_channels(self):
+    def test_handle_masquerade(self):
+        local_chan = 'Local/102@default-00000009;1'
         event = {
-            u'Bridgestate': u'Link',
-            u'Bridgetype': u'core',
-            u'CallerID1': u'1009',
-            u'CallerID2': u'1002',
-            u'Channel1': u'Local/102@default-00000006;2',
-            u'Channel2': u'SIP/8o5zja-0000000f',
-            u'Event': u'Bridge',
-            u'Privilege': u'call,all',
-            u'Uniqueid1': u'1395685237.28',
-            u'Uniqueid2': u'1395685237.29',
+            'Event': 'Masquerade',
+            'Clone': 'SIP/8o5zja-00000020',
+            'CloneState': 'Up',
+            'Original': local_chan,
+            'OriginalState': 'Up',
         }
 
-        self.call_receiver.handle_bridge(event)
+        self.call_receiver.handle_masquerade(event)
 
-        self.call_storage.merge_local_channels.assert_called_once_with(
-            u'Local/102@default-00000006;2',
-        )
+        self.call_storage.merge_local_channels.assert_called_once_with(local_chan)
 
     @patch_get_extension_from_channel()
-    def test_that_bridge_add_a_new_call_when_not_a_local_chan(self, get_extension_from_channel):
+    def test_that_bridge_add_a_new_call(self, get_extension_from_channel):
         source_channel = 'SCCP/1002'
         destination_channel = 'SIP/abc'
         exten1 = Mock(Extension)

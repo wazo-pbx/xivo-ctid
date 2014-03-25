@@ -45,8 +45,9 @@ class CallStorage(object):
             destination_uid = self._find_call_with_source_starting_with(non_unique_part)
         except LookupError:
             return
-        self._calls[source_uid].destination = self._calls[destination_uid].destination
-        self._calls.pop(destination_uid)
+
+        self._calls[destination_uid].source = self._calls[source_uid].source
+        del self._calls[source_uid]
 
     def _find_call_with_destination_starting_with(self, term):
         uid, call = self._find_call_matching(

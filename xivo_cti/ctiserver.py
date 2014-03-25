@@ -319,6 +319,7 @@ class CTIServer(object):
         callback_handler.register_callback('Dial', call_receiver.handle_dial)
         callback_handler.register_callback('Bridge', call_receiver.handle_bridge)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
+        callback_handler.register_callback('Masquerade', call_receiver.handle_masquerade)
 
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
