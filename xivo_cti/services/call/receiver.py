@@ -62,11 +62,14 @@ class CallReceiver(object):
         uniqueid_1 = event.get('Uniqueid1')
 
         if event['Bridgestate'] == 'Link':
-            channel_source = event['Channel2']
-            channel_destination = event['Channel1']
-            uniqueid_2 = event['Uniqueid2']
-
-            self._add_channel(channel_source, channel_destination, uniqueid_1, uniqueid_2)
+            c1 = event['Channel1']
+            c2 = event['Channel2']
+            if c1.startswith('Local/'):
+                self._call_storage.merge_local_channels(c1)
+            elif c2.startswith('Local/'):
+                self._call_storage.merge_local_channels(c2)
+            else:
+                self._add_channel(c2, c1, uniqueid_1, event['Uniqueid2'])
         elif event['Bridgestate'] == 'Unlink':
             self._call_storage.end_call(uniqueid_1)
 

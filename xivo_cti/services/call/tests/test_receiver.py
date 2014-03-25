@@ -136,31 +136,46 @@ class TestCallReceiver(unittest.TestCase):
 
         self.assertEquals(self.call_storage.new_call.call_count, 0)
 
-    @patch_get_extension_from_channel()
-    def test_handle_bridge_link(self, get_extension_from_channel):
-        event = self._mk_bridge_event()
-        extens = {
-            sentinel.channel_source: sentinel.source,
-            sentinel.channel_destination: sentinel.destination,
+    def test_bridge_with_local_channels(self):
+        event = {
+            u'Bridgestate': u'Link',
+            u'Bridgetype': u'core',
+            u'CallerID1': u'1009',
+            u'CallerID2': u'1002',
+            u'Channel1': u'Local/102@default-00000006;2',
+            u'Channel2': u'SIP/8o5zja-0000000f',
+            u'Event': u'Bridge',
+            u'Privilege': u'call,all',
+            u'Uniqueid1': u'1395685237.28',
+            u'Uniqueid2': u'1395685237.29',
         }
-        get_extension_from_channel.side_effect = lambda channel: extens[channel]
 
         self.call_receiver.handle_bridge(event)
 
-        self.call_storage.new_call.assert_called_once_with(
-            UNIQUEID,
-            DEST_UNIQUEID,
-            _Channel(sentinel.source, sentinel.channel_source),
-            _Channel(sentinel.destination, sentinel.channel_destination),
+        self.call_storage.merge_local_channels.assert_called_once_with(
+            u'Local/102@default-00000006;2',
         )
 
-    @patch_get_extension_from_channel(Mock(side_effect=InvalidChannelError))
-    def test_handle_bridge_link_invalid_channel(self):
-        ami_event = self._mk_bridge_event()
+    @patch_get_extension_from_channel()
+    def test_that_bridge_add_a_new_call_when_not_a_local_chan(self, get_extension_from_channel):
+        source_channel = 'SCCP/1002'
+        destination_channel = 'SIP/abc'
+        exten1 = Mock(Extension)
+        exten2 = Mock(Extension)
+        channel1 = _Channel(exten1, source_channel)
+        channel2 = _Channel(exten2, destination_channel)
+        get_extension_from_channel.side_effect = (
+            lambda c: exten1 if c == source_channel else exten2)
+
+        ami_event = self._mk_bridge_event(
+            destination_channel=destination_channel,
+            source_channel=source_channel,
+        )
 
         self.call_receiver.handle_bridge(ami_event)
 
-        self.assertEquals(self.call_storage.new_call.call_count, 0)
+        self.call_storage.new_call.assert_called_once_with(
+            UNIQUEID, DEST_UNIQUEID, channel1, channel2)
 
     def test_handle_bridge_unlink_channel(self):
         ami_event = self._mk_bridge_event(state='Unlink')
