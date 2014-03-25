@@ -38,6 +38,35 @@ class CallStorage(object):
                   if call.source.extension == extension or call.destination.extension == extension]
         return result
 
+    def merge_local_channels(self, local_channel):
+        non_unique_part = local_channel.split(';', 1)[0]
+        try:
+            source_uid = self._find_call_with_destination_starting_with(non_unique_part)
+            destination_uid = self._find_call_with_source_starting_with(non_unique_part)
+        except LookupError:
+            return
+        self._calls[source_uid].destination = self._calls[destination_uid].destination
+        self._calls.pop(destination_uid)
+
+    def _find_call_with_destination_starting_with(self, term):
+        uid, call = self._find_call_matching(
+            lambda uid, call: call.destination._channel.startswith(term))
+
+        return uid
+
+    def _find_call_with_source_starting_with(self, term):
+        uid, call = self._find_call_matching(
+            lambda uid, call: call.source._channel.startswith(term))
+
+        return uid
+
+    def _find_call_matching(self, predicate):
+        for uid, call in self._calls.iteritems():
+            if predicate(uid, call):
+                return uid, call
+
+        raise LookupError('Could not match a call to the given predicate')
+
     def update_endpoint_status(self, extension, status):
         if self._need_to_update(extension, status):
             self._update(extension, status)
