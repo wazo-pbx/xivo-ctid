@@ -30,7 +30,7 @@ class _Channel(object):
         return self.extension == other.extension and self._channel == other._channel
 
     def __repr__(self):
-        return '<_Channel %s>' % self.extension
+        return '<_Channel %(extension)s>' % {'extension': self.extension}
 
 
 class Call(object):

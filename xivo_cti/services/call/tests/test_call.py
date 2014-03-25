@@ -24,6 +24,7 @@ from hamcrest import has_property
 from hamcrest import is_not
 from mock import Mock
 from mock import sentinel
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.call.call import Call
 from xivo_cti.services.call.call import _Channel
 
@@ -47,7 +48,8 @@ class TestChannel(unittest.TestCase):
         ))
 
     def test_repr(self):
-        assert_that(repr(_Channel('myextension', 'mychannel')), equal_to('<_Channel myextension>'))
+        e = Extension('1001', 'default', True)
+        assert_that(repr(_Channel(e, 'mychannel')), equal_to('<_Channel 1001@default>'))
 
 
 class TestCall(unittest.TestCase):
