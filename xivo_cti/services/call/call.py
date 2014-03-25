@@ -16,15 +16,41 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
+class _Channel(object):
+    """
+    The _Channel class is package private to the call package and it's _private
+    fields should not be used outside the package
+    """
+
+    def __init__(self, extension, channel):
+        self.extension = extension
+        self._channel = channel
+
+    def __eq__(self, other):
+        return self.extension == other.extension and self._channel == other._channel
+
+    def __repr__(self):
+        return '<_Channel %(extension)s>' % {'extension': self.extension}
+
+
 class Call(object):
 
     def __init__(self, source, destination):
         self.source = source
         self.destination = destination
 
+    def __repr__(self):
+        info = {
+            'name': self.__class__.__name__,
+            'source': self.source,
+            'destination': self.destination,
+        }
+        return '%(name)s from %(source)s to %(destination)s' % info
+
     @property
     def is_internal(self):
-        return self.source.is_internal and self.destination.is_internal
+        return (self.source.extension.is_internal
+                and self.destination.extension.is_internal)
 
     def __eq__(self, compared_call):
         return self._is_equal(compared_call)

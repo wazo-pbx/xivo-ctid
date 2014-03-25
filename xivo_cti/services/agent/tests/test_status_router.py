@@ -18,10 +18,13 @@
 import unittest
 
 from mock import Mock
+from mock import sentinel
+from xivo.asterisk.extension import Extension
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_router import AgentStatusRouter
 from xivo_cti.services.call.direction import CallDirection
 from xivo_cti.services.call.storage import Call
+from xivo_cti.services.call.call import _Channel
 from xivo_cti.model.endpoint_event import EndpointEvent
 from xivo_cti.model.endpoint_status import EndpointStatus
 
@@ -60,11 +63,13 @@ class TestStatusRouter(unittest.TestCase):
 
     def test_route_device_in_use_incoming_internal(self):
         is_internal = True
-        extension = Mock(number=NUMBER, context=CONTEXT, is_internal=is_internal)
+        extension = Extension(number=NUMBER, context=CONTEXT, is_internal=is_internal)
         expected_direction = CallDirection.incoming
         expected_is_internal = is_internal
         status = EndpointStatus.talking
-        calls = [Call(source=Mock(Call), destination=extension)]
+        source_channel = _Channel(Mock(Extension, is_internal=True), sentinel.source_channel)
+        destination_channel = _Channel(extension, sentinel.destination_channel)
+        calls = [Call(source_channel, destination_channel)]
         event = EndpointEvent(extension, status, calls)
 
         self.router.route(AGENT_ID, event)
@@ -73,11 +78,13 @@ class TestStatusRouter(unittest.TestCase):
 
     def test_route_device_in_use_outgoing_external(self):
         is_internal = False
-        extension = Mock(number=NUMBER, context=CONTEXT, is_internal=is_internal)
+        extension = Extension(number=NUMBER, context=CONTEXT, is_internal=is_internal)
         expected_is_internal = is_internal
         expected_direction = CallDirection.outgoing
         status = EndpointStatus.talking
-        calls = [Call(source=extension, destination=Mock())]
+        source_channel = _Channel(extension, sentinel.source_channel)
+        destination_channel = _Channel(Mock(Extension), sentinel.destination_channel)
+        calls = [Call(source_channel, destination_channel)]
         event = EndpointEvent(extension, status, calls)
 
         self.router.route(AGENT_ID, event)

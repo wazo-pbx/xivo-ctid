@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import patch, Mock
+from mock import Mock, patch, sentinel
 from xivo.asterisk.extension import Extension
 from xivo_cti.services.call import helper
 from xivo_cti.services.call.helper import ChannelState
@@ -84,4 +84,14 @@ class TestCallHelper(unittest.TestCase):
         result = helper.get_extension_from_channel(channel)
 
         dao_get_extension.assert_called_once_with('SIP', 'asdlkfj')
+        self.assertEquals(expected_extension, result)
+
+    @patch('xivo_dao.line_dao.get_extension_from_protocol_interface',
+           Mock(side_effect=ValueError('Invalid proto')))
+    def test_get_extension_from_local_channel(self):
+        channel = 'Local/id-5@agentcallback-38974358734;2'
+        expected_extension = Extension('', '', False)
+
+        result = helper.get_extension_from_channel(channel)
+
         self.assertEquals(expected_extension, result)

@@ -40,9 +40,9 @@ class AgentStatusRouter(object):
 
     def _get_call_direction(self, extension, calls):
         call = self._considered_call(calls)
-        if extension == call.destination:
+        if extension == call.destination.extension:
             return CallDirection.incoming
-        elif extension == call.source:
+        elif extension == call.source.extension:
             return CallDirection.outgoing
 
     def _is_call_internal(self, calls):

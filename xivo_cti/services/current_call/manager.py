@@ -17,6 +17,9 @@
 
 import time
 import logging
+from xivo_cti.exception import NoSuchCallException
+from xivo_cti.exception import NoSuchLineException
+from xivo.asterisk.extension import Extension
 from xivo.asterisk.line_identity import identity_from_channel
 from xivo_dao import user_line_dao
 from xivo_cti import dao
@@ -34,13 +37,17 @@ TRANSFER_CHANNEL = 'transfer_channel'
 
 class CurrentCallManager(object):
 
-    def __init__(self, current_call_notifier, current_call_formatter, ami_class, scheduler, device_manager):
+    def __init__(self, current_call_notifier, current_call_formatter,
+                 ami_class, scheduler, device_manager, call_manager,
+                 call_storage):
         self._calls_per_line = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
         self.ami = ami_class
         self.scheduler = scheduler
         self.device_manager = device_manager
+        self._call_manager = call_manager
+        self._call_storage = call_storage
 
     def bridge_channels(self, channel_1, channel_2):
         self._bridge_channels_oriented(channel_1, channel_2)
@@ -173,12 +180,11 @@ class CurrentCallManager(object):
 
     def hangup(self, user_id):
         try:
-            current_call = self._get_current_call(user_id)
-        except LookupError:
-            logger.warning('User %s tried to hangup but has no line', user_id)
+            call = self._get_active_call(user_id)
+        except NoSuchCallException as e:
+            logger.warning('Cannot hangup: %s', e)
         else:
-            logger.info('Switchboard %s is hanging up his current call', user_id)
-            self.ami.hangup(current_call[PEER_CHANNEL])
+            self._call_manager.hangup(call)
 
     def complete_transfer(self, user_id):
         try:
@@ -296,3 +302,20 @@ class CurrentCallManager(object):
         channel_order = local_channel[-1]
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
+
+    def _get_active_call(self, user_id):
+        try:
+            line_dict = dao.user.get_line(user_id)
+        except NoSuchLineException:
+            raise NoSuchCallException('user has no line')
+
+        for fieldname in ['number', 'context']:
+            if fieldname not in line_dict:
+                raise NoSuchCallException('line with no %s' % fieldname)
+
+        extension = Extension(line_dict['number'], line_dict['context'], True)
+
+        for call in self._call_storage.find_all_calls_for_extension(extension):
+            return call
+
+        raise NoSuchCallException('No call on {0}'.format(extension))

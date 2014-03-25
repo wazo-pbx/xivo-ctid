@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,40 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-
-class ExtensionInUseError(Exception):
-    pass
+import logging
 
 
-class NotAQueueException(Exception):
-    pass
+logger = logging.getLogger(__name__)
 
 
-class MissingFieldException(Exception):
+class CallManager(object):
 
-    def __init__(self, msg):
-        super(MissingFieldException, self).__init__(msg)
+    def __init__(self, ami_class):
+        self._ami = ami_class
 
-
-class NoSuchCallException(Exception):
-    pass
-
-
-class NoSuchExtensionError(Exception):
-    pass
-
-
-class NoSuchLineException(Exception):
-    pass
-
-
-class NoSuchQueueException(Exception):
-    pass
-
-
-class NoSuchUserException(Exception):
-    pass
-
-
-class NoSuchAgentException(Exception):
-    pass
+    def hangup(self, call):
+        logger.debug('Hanging up %s', call)
+        self._ami.hangup(call.source._channel)
