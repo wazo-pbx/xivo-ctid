@@ -1,4 +1,3 @@
-# svn urls are used here to be able to change directory
 git+https://github.com/xivo-pbx/xivo-dao.git
 git+https://github.com/xivo-pbx/xivo-dird.git
 git+https://github.com/xivo-pbx/xivo-lib-python.git
