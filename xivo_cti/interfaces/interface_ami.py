@@ -227,11 +227,8 @@ class AMI(object):
             methodname = ami_def.evfunction_to_method_name.get(evfunction)
             if hasattr(ami_18, methodname):
                 functions.append(getattr(ami_18, methodname))
-        for function in functions:
-            try:
-                function(event)
-            except KeyError:
-                logger.exception('Missing fields to handle this event: %s', event)
+
+        self._run_functions_with_event(functions, event)
 
     def amiresponse_success(self, event):
         actionid = event.get('ActionID')
@@ -342,6 +339,13 @@ class AMI(object):
                 self.innerdata.voicemailupdate(fullmailbox,
                                                event['NewMessages'],
                                                event['OldMessages'])
+
+    def _run_functions_with_event(self, functions, event):
+        for function in functions:
+            try:
+                function(event)
+            except Exception:
+                logger.exception('Exception caught in callback list for event: %s', event)
 
     @classmethod
     def make_actionid(cls):

@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import Mock, patch
+from mock import Mock, patch, sentinel
 from xivo_cti.interfaces.interface_ami import AMI
 
 
@@ -104,3 +104,29 @@ class TestInterfaceAMI(unittest.TestCase):
 
         instance.get_callbacks.assert_called_with(event)
         callback.assert_called_with(event)
+
+    def test_run_functions_with_one_param(self):
+        f1, f2, f3 = functions = [
+            Mock(),
+            Mock(),
+            Mock(),
+        ]
+
+        self.ami._run_functions_with_event(functions, sentinel.param)
+
+        f1.assert_called_once_with(sentinel.param)
+        f2.assert_called_once_with(sentinel.param)
+        f3.assert_called_once_with(sentinel.param)
+
+    def test_run_functions_with_exceptions_in_function(self):
+        f1, f2, f3 = functions = [
+            Mock(),
+            Mock(side_effect=Exception),
+            Mock(),
+        ]
+
+        self.ami._run_functions_with_event(functions, sentinel.param)
+
+        f1.assert_called_once_with(sentinel.param)
+        f2.assert_called_once_with(sentinel.param)
+        f3.assert_called_once_with(sentinel.param)
