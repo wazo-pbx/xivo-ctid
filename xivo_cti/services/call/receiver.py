@@ -77,11 +77,18 @@ class CallReceiver(object):
         self._add_channel(channel_source, channel_destination, uniqueid, destination_uniqueid)
 
     def handle_new_channel(self, event):
-        source_exten = helper.get_extension_from_channel(event['Channel'])
+        try:
+            channel = event['Channel']
+            unique_id = event['Uniqueid']
+            source_exten = helper.get_extension_from_channel(channel)
+        except (InvalidChannelError, KeyError):
+            logger.debug('ignoring %s', event)
+            return
+
         self._call_storage.new_call(
-            event['Uniqueid'],
+            unique_id,
             '',
-            _Channel(source_exten, event['Channel']),
+            _Channel(source_exten, channel),
             _Channel(Extension('', '', True), ''),
         )
 
