@@ -204,12 +204,16 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_new_channel_with_a_missing_field(self):
         self.call_receiver.handle_new_channel({})
 
+        assert_that(self.call_storage.new_call.call_count, equal_to(0))
+
     @patch_get_extension_from_channel()
     def test_handle_new_channel_with_an_invalid_channel(self, get_extension_from_channel):
         get_extension_from_channel.side_effect = InvalidChannelError
         event = self._mk_new_channel_event()
 
         self.call_receiver.handle_new_channel(event)
+
+        assert_that(self.call_storage.new_call.call_count, equal_to(0))
 
     def _mk_new_channel_event(self, channel=sentinel.channel, uniqueid=UNIQUEID):
         return {
