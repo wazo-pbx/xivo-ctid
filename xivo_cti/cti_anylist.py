@@ -167,22 +167,14 @@ class AnyList(object):
         self.add_notifier(id)
 
     def add_notifier(self, id):
-        message = {'class': 'getlist',
-                   'listname': self.listname,
-                   'function': 'addconfig',
-                   'tipbxid': self.ipbxid,
-                   'list': [id]}
-
-        if not cti_context.get('config').part_context():
-            self._ctiserver.send_cti_event(message)
-        else:
-            if self.listname == 'users':
-                item_context = self.get_contexts(id)
-            else:
-                item_context = [self.keeplist[id].get('context')]
-            connection_list = self._ctiserver.get_connected({'contexts': item_context})
-            for connection in connection_list:
-                connection.append_msg(message)
+        message = {
+           'class': 'getlist',
+           'listname': self.listname,
+           'function': 'addconfig',
+           'tipbxid': self.ipbxid,
+           'list': [id]
+        }
+        self._send_message(message, id)
         logger.debug('%s(%s) successfully added', self.listname, id)
 
     def edit(self, id):
@@ -196,22 +188,28 @@ class AnyList(object):
             if p in self.props_config.get(self.listname):
                 newc[p] = props[p]
         if newc:
-            message = {'class': 'getlist',
-                       'listname': self.listname,
-                       'function': 'updateconfig',
-                       'tipbxid': self.ipbxid,
-                       'tid': id,
-                       'config': newc}
-            self._ctiserver.send_cti_event(message)
+            message = {
+               'class': 'getlist',
+               'listname': self.listname,
+               'function': 'updateconfig',
+               'tipbxid': self.ipbxid,
+               'tid': id,
+               'config': newc
+            }
+            self._send_message(message, id)
+
         logger.debug('%s(%s) successfully updated', self.listname, id)
 
     def delete(self, id):
         del self.keeplist[id]
-        self._ctiserver.send_cti_event({'class': 'getlist',
-                                        'listname': self.listname,
-                                        'function': 'delconfig',
-                                        'tipbxid': self.ipbxid,
-                                        'list': [id]})
+        message = {
+            'class': 'getlist',
+            'listname': self.listname,
+            'function': 'delconfig',
+            'tipbxid': self.ipbxid,
+            'list': [id]
+        }
+        self._send_message(message, id)
         logger.debug('%s(%s) successfully deleted', self.listname, id)
 
     def get_item_config(self, item_id, user_contexts):
@@ -238,6 +236,20 @@ class AnyList(object):
 
     def get_item_in_contexts(self, item_id, contexts):
         return self.keeplist.get(item_id)
+
+    def _send_message(self, message, id):
+        if not cti_context.get('config').part_context():
+            self._ctiserver.send_cti_event(message)
+        else:
+            if self.listname == 'users':
+                item_context = self.get_contexts(id)
+            else:
+                item_context = [self.keeplist[id].get('context')]
+
+            connections = self._ctiserver.get_connected({'contexts': item_context})
+
+            for connection in connections:
+                connection.append_msg(message)
 
 
 class ContextAwareAnyList(AnyList):

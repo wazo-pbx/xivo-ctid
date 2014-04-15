@@ -16,12 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.cti_anylist import ContextAwareAnyList
 
-from mock import Mock
-
+from mock import Mock, patch
 from hamcrest import assert_that
 from hamcrest import equal_to
+
+from xivo_cti.cti_anylist import ContextAwareAnyList
 
 
 class ConcreteContextAwareAnyList(ContextAwareAnyList):
@@ -57,29 +57,34 @@ class TestContextAwareAnyList(unittest.TestCase):
 
         assert_that(self.list._item_ids_by_context, equal_to(self.item_ids_by_context))
 
-    def test_add_update_item_ids_by_context(self):
-        self.listname_obj.get_list.return_value = {}
-        self.listname_obj.get.return_value = self.keeplist
+    @patch('xivo_cti.cti_anylist.AnyList.add')
+    def test_add_update_item_ids_by_context(self, mock_anylist_add):
+        self.listname_obj.get_list.return_value = self.keeplist
 
         self.list.init_data()
         self.list.add(self.item_id)
 
         assert_that(self.list._item_ids_by_context, equal_to(self.item_ids_by_context))
+        mock_anylist_add.assert_called_once_with(self.item_id)
 
-    def test_add_update_item_ids_by_context_twice(self):
-        self.listname_obj.get_list.return_value = {}
-        self.listname_obj.get.return_value = self.keeplist
+    @patch('xivo_cti.cti_anylist.AnyList.add')
+    def test_add_update_item_ids_by_context_twice(self, mock_anylist_add):
+        self.listname_obj.get_list.return_value = self.keeplist
 
         self.list.init_data()
         self.list.add(self.item_id)
         self.list.add(self.item_id)
 
         assert_that(self.list._item_ids_by_context, equal_to(self.item_ids_by_context))
+        mock_anylist_add.count_calls = 2
+        mock_anylist_add.assert_called_with(self.item_id)
 
-    def test_remove_update_item_ids_by_context(self):
+    @patch('xivo_cti.cti_anylist.AnyList.delete')
+    def test_remove_update_item_ids_by_context(self, mock_anylist_delete):
         self.listname_obj.get_list.return_value = self.keeplist
 
         self.list.init_data()
         self.list.delete(self.item_id)
 
         assert_that(self.list._item_ids_by_context, equal_to({}))
+        mock_anylist_delete.assert_called_once_with(self.item_id)
