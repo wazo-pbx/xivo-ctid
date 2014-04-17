@@ -266,7 +266,7 @@ class CurrentCallManager(object):
         else:
             map(self.ami.hangup, ringing_channels)
             self.ami.switchboard_retrieve(user_line, channel_to_retrieve, cid_name, cid_num)
-            self.schedule_answer(client_connection.answer_cb, 0.5)
+            self._call_manager.answer_next_ringing_call(client_connection, user_line)
 
     def _get_current_call(self, user_id):
         ongoing_calls = self._get_ongoing_calls(user_id)

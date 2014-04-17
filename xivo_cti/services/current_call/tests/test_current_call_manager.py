@@ -618,8 +618,7 @@ class TestCurrentCallManager(_BaseTestCase):
         ringing_channel = 'sccp/12345-0000001'
         channel_to_intercept = 'SIP/acbdf-348734'
         cid_name, cid_number = 'Alice', '5565'
-        delay = 0.5
-        client_connection = Mock(CTI)
+        conn = Mock(CTI)
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
@@ -628,12 +627,12 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_get_line_identity.return_value = user_line
         self.manager.schedule_answer = Mock()
 
-        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
+        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
         self.manager.ami.hangup.assert_called_once_with(ringing_channel)
         self.manager.ami.switchboard_retrieve.assert_called_once_with(
             user_line, channel_to_intercept, cid_name, cid_number)
-        self.manager.schedule_answer.assert_called_once_with(client_connection.answer_cb, delay)
+        self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, user_line)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_talking_then_do_nothing(self, mock_get_line_identity):
