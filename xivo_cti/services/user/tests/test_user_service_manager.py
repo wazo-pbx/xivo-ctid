@@ -24,11 +24,9 @@ from mock import patch
 from hamcrest import assert_that
 from hamcrest import equal_to
 
-import xivo_cti.services.user.manager as user_service_manager
-
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ioc.context import context
-from xivo_cti.services.current_call.manager import CurrentCallManager
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
@@ -42,7 +40,7 @@ from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 
 
-class TestUserServiceManager(unittest.TestCase):
+class _BaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.agent_service_manager = Mock(AgentServiceManager)
@@ -52,6 +50,7 @@ class TestUserServiceManager(unittest.TestCase):
         self.funckey_manager = Mock(FunckeyManager)
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.ami_class = Mock(AMIClass)
+        self._ami_cb_handler = Mock(AMICallbackHandler)
         self.user_service_manager = UserServiceManager(
             self.user_service_notifier,
             self.agent_service_manager,
@@ -59,10 +58,14 @@ class TestUserServiceManager(unittest.TestCase):
             self.funckey_manager,
             self.device_manager,
             self.ami_class,
+            self._ami_cb_handler,
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
         context.reset()
+
+
+class TestUserServiceManager(_BaseTestCase):
 
     def test_call_destination_url(self):
         user_id = sentinel
@@ -115,13 +118,14 @@ class TestUserServiceManager(unittest.TestCase):
             'Message': 'Originate successfully queued',
         }
         self.user_service_manager._on_originate_success = Mock()
+        self.user_service_manager.dao.user.get_line = Mock(return_value=sentinel.line)
 
         self.user_service_manager._on_originate_response_callback(
             connection, sentinel.user_id, sentinel.exten, response,
         )
 
         self.user_service_manager._on_originate_success.assert_called_once_with(
-            connection, sentinel.exten)
+            connection, sentinel.exten, sentinel.line)
 
     def test_on_originate_response_callback_error(self):
         user_id = 1
@@ -140,16 +144,15 @@ class TestUserServiceManager(unittest.TestCase):
         self.user_service_manager._on_originate_error.assert_called_once_with(connection, user_id, exten, msg)
 
     def test_on_originate_success(self):
-        context.register('current_call_manager', Mock, CurrentCallManager)
-        mock_current_call_manager = context.get('current_call_manager')
-        client_connection = Mock(CTI)
+        fn = Mock()
+        connection = Mock(CTI)
+        self.user_service_manager._build_answer_fn = Mock(return_value=fn)
 
-        self.user_service_manager._on_originate_success(client_connection, sentinel.exten)
+        self.user_service_manager._on_originate_success(connection, sentinel.exten, sentinel.line)
 
-        mock_current_call_manager.schedule_answer.assert_called_once_with(
-            client_connection.answer_cb, user_service_manager.ORIGINATE_AUTO_ANSWER_DELAY)
-        client_connection.send_message.assert_called_once_with(
-            CTIMessageFormatter.dial_success(sentinel.exten))
+        self._ami_cb_handler.register_callback.assert_called_once_with('ExtensionStatus', fn)
+        expected_message = CTIMessageFormatter.dial_success(sentinel.exten)
+        connection.send_message.assert_called_once_with(expected_message)
 
     def test_on_originate_error(self):
         user_id, exten = '42', '1234'
@@ -480,3 +483,46 @@ class TestUserServiceManager(unittest.TestCase):
 
         mock_disable_recording.assert_called_once_with(target)
         self.user_service_notifier.recording_disabled.assert_called_once_with(target)
+
+
+class TestBuildAnswerFunction(_BaseTestCase):
+
+    def setUp(self):
+        super(TestBuildAnswerFunction, self).setUp()
+        self._client_connection = Mock()
+
+    def test_not_ringing_is_not_handled(self):
+        fn = self.user_service_manager._build_answer_fn(Mock(), self._client_connection)
+
+        fn({'Status': '1'})
+
+        self._assert_nothing_was_called()
+
+    def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
+        line = {'protocol': 'sip', 'name': 'bcde'}
+        fn = self.user_service_manager._build_answer_fn(
+            line, self._client_connection
+        )
+
+        fn({
+            'Status': '8',
+            'Hint': 'SIP/bcde',
+        })
+
+        self._ami_cb_handler.unregister_callback.assert_called_once_with('ExtensionStatus', fn)
+        self._client_connection.answer_cb.assert_called_once_with()
+
+    def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
+        line = {'protocol': 'sip', 'name': 'bcde'}
+        fn = self.user_service_manager._build_answer_fn(line, self._client_connection)
+
+        fn({
+            'Status': '8',
+            'Hint': 'SIP/bad',
+        })
+
+        self._assert_nothing_was_called()
+
+    def _assert_nothing_was_called(self):
+        assert_that(self._ami_cb_handler.unregister_callback.call_count, equal_to(0))
+        assert_that(self._client_connection.answer_cb.call_count, equal_to(0))

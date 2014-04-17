@@ -19,6 +19,7 @@ from xivo.pubsub import Pubsub
 from xivo_bus.ctl.client import BusCtlClient
 from xivo_bus.resources.agent.client import AgentClient
 from xivo_cti import cti_config
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
@@ -82,6 +83,7 @@ from xivo_cti.xivo_ami import AMIClass
 def setup():
     context.register('interface_ami', AMI)
     context.register('ami_18', AMI_1_8)
+    context.register('ami_callback_handler', AMICallbackHandler.get_instance())
     context.register('ami_class', AMIClass)
     context.register('agent_availability_computer', AgentAvailabilityComputer)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
