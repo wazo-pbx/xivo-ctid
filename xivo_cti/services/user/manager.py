@@ -32,9 +32,6 @@ RESPONSE = 'Response'
 SUCCESS = 'Success'
 MESSAGE = 'Message'
 
-# see include/asterisk/pbx.h for more definitions
-AST_EXTENSION_STATE_RINGING = 1 << 3
-
 
 class UserServiceManager(object):
 
@@ -45,7 +42,8 @@ class UserServiceManager(object):
                  funckey_manager,
                  device_manager,
                  ami_class,
-                 ami_callback_handler):
+                 ami_callback_handler,
+                 call_manager):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
@@ -54,6 +52,7 @@ class UserServiceManager(object):
         self.dao = dao
         self.ami_class = ami_class
         self._ami_callback_handler = ami_callback_handler
+        self._call_manager = call_manager
 
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
@@ -188,25 +187,11 @@ class UserServiceManager(object):
             self._on_originate_error(client_connection, user_id, exten, result.get(MESSAGE))
 
     def _on_originate_success(self, client_connection, exten, line):
-        fn = self._build_answer_fn(line, client_connection)
-        self._ami_callback_handler.register_callback('ExtensionStatus', fn)
+        interface = '%(protocol)s/%(name)s' % line
+        self._call_manager.answer_next_ringing_call(client_connection, interface)
         client_connection.send_message(CTIMessageFormatter.dial_success(exten))
 
     def _on_originate_error(self, client_connection, user_id, exten, message):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
         formatted_msg = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
         client_connection.send_message(formatted_msg)
-
-    def _build_answer_fn(self, line, client_connection):
-        def fn(event):
-            if not int(event['Status']) & AST_EXTENSION_STATE_RINGING:
-                return
-
-            expected_hint = '%(protocol)s/%(name)s' % line
-            if event['Hint'].lower() != expected_hint:
-                return
-
-            self._ami_callback_handler.unregister_callback('ExtensionStatus', fn)
-            client_connection.answer_cb()
-
-        return fn

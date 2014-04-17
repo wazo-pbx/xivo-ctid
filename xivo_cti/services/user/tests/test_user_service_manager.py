@@ -27,6 +27,7 @@ from hamcrest import equal_to
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
+from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
@@ -51,6 +52,7 @@ class _BaseTestCase(unittest.TestCase):
         self.user_service_notifier = Mock(UserServiceNotifier)
         self.ami_class = Mock(AMIClass)
         self._ami_cb_handler = Mock(AMICallbackHandler)
+        self._call_manager = Mock(CallManager)
         self.user_service_manager = UserServiceManager(
             self.user_service_notifier,
             self.agent_service_manager,
@@ -59,6 +61,7 @@ class _BaseTestCase(unittest.TestCase):
             self.device_manager,
             self.ami_class,
             self._ami_cb_handler,
+            self._call_manager,
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
@@ -144,13 +147,12 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager._on_originate_error.assert_called_once_with(connection, user_id, exten, msg)
 
     def test_on_originate_success(self):
-        fn = Mock()
         connection = Mock(CTI)
-        self.user_service_manager._build_answer_fn = Mock(return_value=fn)
+        line = {'protocol': 'SCCP', 'name': 'zzzz'}
 
-        self.user_service_manager._on_originate_success(connection, sentinel.exten, sentinel.line)
+        self.user_service_manager._on_originate_success(connection, sentinel.exten, line)
 
-        self._ami_cb_handler.register_callback.assert_called_once_with('ExtensionStatus', fn)
+        self._call_manager.answer_next_ringing_call.assert_called_once_with(connection, 'SCCP/zzzz')
         expected_message = CTIMessageFormatter.dial_success(sentinel.exten)
         connection.send_message.assert_called_once_with(expected_message)
 
@@ -483,46 +485,3 @@ class TestUserServiceManager(_BaseTestCase):
 
         mock_disable_recording.assert_called_once_with(target)
         self.user_service_notifier.recording_disabled.assert_called_once_with(target)
-
-
-class TestBuildAnswerFunction(_BaseTestCase):
-
-    def setUp(self):
-        super(TestBuildAnswerFunction, self).setUp()
-        self._client_connection = Mock()
-
-    def test_not_ringing_is_not_handled(self):
-        fn = self.user_service_manager._build_answer_fn(Mock(), self._client_connection)
-
-        fn({'Status': '1'})
-
-        self._assert_nothing_was_called()
-
-    def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
-        line = {'protocol': 'sip', 'name': 'bcde'}
-        fn = self.user_service_manager._build_answer_fn(
-            line, self._client_connection
-        )
-
-        fn({
-            'Status': '8',
-            'Hint': 'SIP/bcde',
-        })
-
-        self._ami_cb_handler.unregister_callback.assert_called_once_with('ExtensionStatus', fn)
-        self._client_connection.answer_cb.assert_called_once_with()
-
-    def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
-        line = {'protocol': 'sip', 'name': 'bcde'}
-        fn = self.user_service_manager._build_answer_fn(line, self._client_connection)
-
-        fn({
-            'Status': '8',
-            'Hint': 'SIP/bad',
-        })
-
-        self._assert_nothing_was_called()
-
-    def _assert_nothing_was_called(self):
-        assert_that(self._ami_cb_handler.unregister_callback.call_count, equal_to(0))
-        assert_that(self._client_connection.answer_cb.call_count, equal_to(0))

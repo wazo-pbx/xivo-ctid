@@ -15,20 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import unittest
+
+from hamcrest import assert_that
+from hamcrest import equal_to
 from mock import Mock
 from mock import sentinel
-from unittest import TestCase
+from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.services.call.call import Call
 from xivo_cti.services.call.call import _Channel
 from xivo_cti.services.call.manager import CallManager
 
 
-class TestCallManager(TestCase):
+class _BaseTest(unittest.TestCase):
 
     def setUp(self):
-        self.ami = Mock(AMIClass)
-        self.manager = CallManager(self.ami)
+        self._ami = Mock(AMIClass)
+        self._ami_cb_handler = Mock(AMICallbackHandler)
+        self._connection = Mock(CTI)
+
+        self.manager = CallManager(self._ami, self._ami_cb_handler)
+
+
+class TestCallManager(_BaseTest):
 
     def test_when_hangup_then_hangup_destination(self):
         call = Call(
@@ -38,4 +49,47 @@ class TestCallManager(TestCase):
 
         self.manager.hangup(call)
 
-        self.ami.hangup.assert_called_once_with(sentinel.source_channel)
+        self._ami.hangup.assert_called_once_with(sentinel.source_channel)
+
+    def test_answer_next_ringing_call(self):
+        self.manager._get_answer_on_exten_status_fn = Mock(return_value=sentinel.fn)
+
+        self.manager.answer_next_ringing_call(self._connection, sentinel.interface)
+
+        self._ami_cb_handler.register_callback.assert_called_once_with(
+            'ExtensionStatus', sentinel.fn)
+
+
+class TestGetAnswerOnExtenStatus(_BaseTest):
+
+    def test_not_ringing_is_not_handled(self):
+        fn = self.manager._get_answer_on_exten_status_fn(self._connection, sentinel.interface)
+
+        fn({'Status': '1'})
+
+        self._assert_nothing_was_called()
+
+    def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
+        fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
+
+        fn({
+            'Status': '8',
+            'Hint': 'SIP/bcde',
+        })
+
+        self._ami_cb_handler.unregister_callback.assert_called_once_with('ExtensionStatus', fn)
+        self._connection.answer_cb.assert_called_once_with()
+
+    def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
+        fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
+
+        fn({
+            'Status': '8',
+            'Hint': 'SIP/bad',
+        })
+
+        self._assert_nothing_was_called()
+
+    def _assert_nothing_was_called(self):
+        assert_that(self._ami_cb_handler.unregister_callback.call_count, equal_to(0))
+        assert_that(self._connection.answer_cb.call_count, equal_to(0))
