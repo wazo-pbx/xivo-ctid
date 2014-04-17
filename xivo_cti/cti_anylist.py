@@ -168,11 +168,11 @@ class AnyList(object):
 
     def add_notifier(self, id):
         message = {
-           'class': 'getlist',
-           'listname': self.listname,
-           'function': 'addconfig',
-           'tipbxid': self.ipbxid,
-           'list': [id]
+            'class': 'getlist',
+            'listname': self.listname,
+            'function': 'addconfig',
+            'tipbxid': self.ipbxid,
+            'list': [id]
         }
         self._send_message(message, id)
         logger.debug('%s(%s) successfully added', self.listname, id)
@@ -189,12 +189,12 @@ class AnyList(object):
                 newc[p] = props[p]
         if newc:
             message = {
-               'class': 'getlist',
-               'listname': self.listname,
-               'function': 'updateconfig',
-               'tipbxid': self.ipbxid,
-               'tid': id,
-               'config': newc
+                'class': 'getlist',
+                'listname': self.listname,
+                'function': 'updateconfig',
+                'tipbxid': self.ipbxid,
+                'tid': id,
+                'config': newc
             }
             self._send_message(message, id)
 
