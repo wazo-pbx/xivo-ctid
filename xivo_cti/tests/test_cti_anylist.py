@@ -22,6 +22,7 @@ from hamcrest import assert_that
 from hamcrest import equal_to
 
 from xivo_cti.cti_anylist import ContextAwareAnyList
+from xivo_cti.ioc.context import context as cti_context
 
 
 class ConcreteContextAwareAnyList(ContextAwareAnyList):
@@ -31,6 +32,7 @@ class ConcreteContextAwareAnyList(ContextAwareAnyList):
         super(ConcreteContextAwareAnyList, self).__init__('')
         self.add_notifier = Mock()
         self.edit_notifier = Mock()
+        self.get_contexts = Mock()
 
 
 class TestContextAwareAnyList(unittest.TestCase):
@@ -88,3 +90,55 @@ class TestContextAwareAnyList(unittest.TestCase):
 
         assert_that(self.list._item_ids_by_context, equal_to({}))
         mock_anylist_delete.assert_called_once_with(self.item_id)
+
+    def test_given_no_context_separation_when_send_message_then_send_cti_event(self):
+        self.listname_obj.get_list.return_value = self.keeplist
+        self.list._ctiserver = Mock()
+        cti_config = Mock()
+        cti_config.return_value.part_context.return_value = False
+        cti_context.reset()
+        cti_context.register('config', cti_config)
+
+        message_id = 3
+        message = {
+            'class': 'getlist',
+            'listname': 'test-list',
+            'function': 'addconfig',
+            'tipbxid': 1,
+            'list': [message_id]
+        }
+
+        self.list.init_data()
+        self.list._send_message(message, message_id)
+
+        self.list._ctiserver.send_cti_event.assert_called_once_with(message)
+
+    def test_given_users_listname_when_send_message_then_get_contexts(self):
+        self.listname_obj.get_list.return_value = self.keeplist
+        self.list._ctiserver = Mock()
+        mock_connection = Mock()
+        self.list._ctiserver.get_connected.return_value = [mock_connection]
+        context = 'testing'
+        self.list.get_contexts.return_value = context
+        cti_config = Mock()
+        cti_config.return_value.part_context.return_value = True
+        cti_context.reset()
+        cti_context.register('config', cti_config)
+
+        message_id = 3
+        message = {
+            'class': 'getlist',
+            'listname': 'users',
+            'function': 'addconfig',
+            'tipbxid': 1,
+            'list': [message_id]
+        }
+        self.list.listname = 'users'
+
+        self.list.init_data()
+        self.list._send_message(message, message_id)
+
+
+        self.list.get_contexts.assert_called_once_with(message_id)
+        self.list._ctiserver.get_connected.assert_called_once_with({'contexts': context})
+        mock_connection.append_msg.assert_called_once_with(message)
