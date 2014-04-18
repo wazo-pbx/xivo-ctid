@@ -21,11 +21,6 @@ from xivo_cti.services.device.controller.snom import SnomController
 from xivo_dao.data_handler.device import services as device_services
 from xivo_dao.data_handler.exception import ElementNotExistsError
 
-POPC_DEVICES = {
-    'Aastra': ['6731i', '6757i', '6755i'],
-    'Snom': ['720'],
-}
-
 
 class DeviceManager(object):
 
@@ -40,15 +35,10 @@ class DeviceManager(object):
         except ElementNotExistsError:
             device = None
 
-        if not self._is_supported_device(device):
-            return lambda: self._base_controller.answer(device)
+        if device and device.is_switchboard():
+            if device.vendor == 'Aastra':
+                return lambda: self._aastra_controller.answer(device)
+            elif device.vendor == 'Snom':
+                return lambda: self._snom_controller.answer(device)
 
-        if device.vendor == 'Aastra':
-            return lambda: self._aastra_controller.answer(device)
-        elif device.vendor == 'Snom':
-            return lambda: self._snom_controller.answer(device)
-
-    def _is_supported_device(self, device):
-        if device and device.plugin and 'switchboard' in device.plugin:
-            return device.model in POPC_DEVICES.get(device.vendor, [])
-        return False
+        return lambda: self._base_controller.answer(device)
