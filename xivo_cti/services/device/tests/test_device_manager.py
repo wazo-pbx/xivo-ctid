@@ -24,7 +24,6 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
-from xivo_dao.data_handler.device.model import Device
 from xivo_dao.data_handler.exception import ElementNotExistsError
 from xivo_cti.xivo_ami import AMIClass
 
@@ -38,102 +37,6 @@ class TestDeviceManager(unittest.TestCase):
         self._snom_controller = Mock(SnomController)
         self.manager = DeviceManager(self.ami_class)
 
-    def test_is_supported_device_6731i(self):
-        device = Device(
-            id=13,
-            vendor='Aastra',
-            model='6731i',
-            plugin='xivo-aastra-switchboard',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, True)
-
-    def test_is_supported_device_not_switchboard(self):
-        device = Device(
-            id=13,
-            vendor='Aastra',
-            model='6731i',
-            plugin='xivo-aastra-3.2.2-SP3',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, False)
-
-    def test_is_supported_device_6757i(self):
-        device = Device(
-            id=13,
-            vendor='Aastra',
-            model='6757i',
-            plugin='xivo-aastra-switchboard',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, True)
-
-    def test_is_supported_device_6755i(self):
-        device = Device(
-            id=13,
-            vendor='Aastra',
-            model='6755i',
-            plugin='xivo-aastra-switchboard',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, True)
-
-    def test_is_supported_device_snom_720(self):
-        device = Device(
-            id=42,
-            vendor='Snom',
-            model='720',
-            plugin='xivo-snom-switchboard',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, True)
-
-    def test_is_not_supported_device(self):
-        device = Device(
-            id=13,
-            vendor='Cisco',
-            model='1234',
-            plugin='xivo-aastra-plugin',
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, False)
-
-    def test_is_not_supported_device_missing_field(self):
-        device = Device(
-            id=13,
-        )
-
-        result = self.manager._is_supported_device(device)
-
-        self.assertEqual(result, False)
-
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_not_supported(self, mock_device_service_get):
-        device = Device(
-            id=42,
-            vendor='Cisco',
-            model='1234',
-            plugin='xivo-aastra-plugin',
-        )
-        mock_device_service_get.return_value = device
-        self.manager._base_controller = self._base_controller
-
-        self.manager.get_answer_fn(device.id)()
-
-        self._base_controller.answer.assert_called_once_with(device)
-
     @patch('xivo_dao.data_handler.device.services.get',
            Mock(side_effect=ElementNotExistsError('Not found')))
     def test_get_answer_fn_no_device(self):
@@ -144,13 +47,34 @@ class TestDeviceManager(unittest.TestCase):
         self._base_controller.answer.assert_called_once_with(None)
 
     @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_not_supported(self, mock_device_service_get):
+        device = Mock()
+        device.is_switchboard.return_value = False
+        mock_device_service_get.return_value = device
+        self.manager._base_controller = self._base_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._base_controller.answer.assert_called_once_with(device)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_switchboard_but_unknown_vendor(self, mock_device_service_get):
+        device = Mock()
+        device.is_switchboard.return_value = True
+        device.vendor = 'BMW'
+        mock_device_service_get.return_value = device
+        self.manager._base_controller = self._base_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._base_controller.answer.assert_called_once_with(device)
+
+    @patch('xivo_dao.data_handler.device.services.get')
     def test_get_answer_fn_aastra_switchboard(self, mock_device_service_get):
-        device = Device(
-            id=13,
-            vendor='Aastra',
-            model='6755i',
-            plugin='xivo-aastra-switchboard',
-        )
+        device = Mock()
+        device.is_switchboard.return_value = True
+        device.vendor = 'Aastra'
+        device.model = '6755i'
         mock_device_service_get.return_value = device
         self.manager._aastra_controller = self._aastra_controller
 
@@ -160,12 +84,10 @@ class TestDeviceManager(unittest.TestCase):
 
     @patch('xivo_dao.data_handler.device.services.get')
     def test_get_answer_fn_snom_switchboard(self, mock_device_service_get):
-        device = Device(
-            id=13,
-            vendor='Snom',
-            model='720',
-            plugin='xivo-snom-switchboard',
-        )
+        device = Mock()
+        device.is_switchboard.return_value = True
+        device.vendor = 'Snom'
+        device.model = '720'
         mock_device_service_get.return_value = device
         self.manager._snom_controller = self._snom_controller
 
