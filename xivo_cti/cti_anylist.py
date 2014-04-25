@@ -201,7 +201,6 @@ class AnyList(object):
         logger.debug('%s(%s) successfully updated', self.listname, id)
 
     def delete(self, id):
-        del self.keeplist[id]
         message = {
             'class': 'getlist',
             'listname': self.listname,
@@ -210,6 +209,7 @@ class AnyList(object):
             'list': [id]
         }
         self._send_message(message, id)
+        del self.keeplist[id]
         logger.debug('%s(%s) successfully deleted', self.listname, id)
 
     def get_item_config(self, item_id, user_contexts):
