@@ -159,8 +159,9 @@ class Safe(object):
         SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
         GetSwitchboardDirectoryHeaders.register_callback_params(self.get_switchboard_directory_headers)
+        people_adapter = context.get('people_cti_adapter')
         PeopleSearch.register_callback_params(self.people_search, ('user_id', 'pattern'))
-        PeopleHeaders.register_callback_params(self.people_headers, ('user_id',))
+        PeopleHeaders.register_callback_params(people_adapter.get_headers, ['user_id'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()

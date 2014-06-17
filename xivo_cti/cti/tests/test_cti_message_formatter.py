@@ -108,3 +108,18 @@ class TestCTIMessageFormatter(unittest.TestCase):
         result = CTIMessageFormatter.dial_success(sentinel.exten)
 
         assert_that(result, equal_to(expected))
+
+    def test_people_headers_result(self):
+        headers = {
+            'column_headers': sentinel.headers,
+            'column_types': sentinel.types
+        }
+        expected = {
+            'class': 'people_headers_result',
+            'column_headers': sentinel.headers,
+            'column_types': sentinel.types
+        }
+
+        result = CTIMessageFormatter.people_headers_result(headers)
+
+        assert_that(result, equal_to(expected))
