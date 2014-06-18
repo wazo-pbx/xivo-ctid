@@ -41,6 +41,7 @@ def _parse_args(args):
 def _new_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-f', '--foreground', action='store_true')
     parser.add_argument('-p', '--pidfile')
     parser.add_argument('-l', '--logfile')
     parser.add_argument('-P', '--portdelta', type=int)
@@ -50,6 +51,8 @@ def _new_parser():
 def _process_parsed_args(parsed_args):
     if parsed_args.debug:
         cti_config.DEBUG_MODE = parsed_args.debug
+    if parsed_args.foreground:
+        cti_config.FOREGROUND_MODE = parsed_args.foreground
     if parsed_args.pidfile:
         cti_config.PIDFILE = parsed_args.pidfile
     if parsed_args.logfile:
