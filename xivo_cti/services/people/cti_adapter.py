@@ -19,7 +19,7 @@ from xivo_cti import dao
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 
-class PeopleCTIAdapter:
+class PeopleCTIAdapter(object):
 
     def __init__(self, dird, cti_server):
         self._dird = dird
