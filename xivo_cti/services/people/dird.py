@@ -22,7 +22,7 @@ import requests
 logger = logging.getLogger()
 
 
-class Dird:
+class Dird(object):
 
     def __init__(self):
         pass  # ioc context needs default constructor
