@@ -29,6 +29,7 @@ logger = logging.getLogger('cti_config')
 DAEMONNAME = 'xivo-ctid'
 BUFSIZE_LARGE = 262144
 DEBUG_MODE = False
+FOREGROUND_MODE = False
 LOGFILENAME = '/var/log/%s.log' % DAEMONNAME
 PIDFILE = '/var/run/%s.pid' % DAEMONNAME
 PORTDELTA = 0

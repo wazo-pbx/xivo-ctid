@@ -27,6 +27,7 @@ import time
 import threading
 
 from xivo import daemonize
+from xivo.xivo_logging import setup_logging
 from xivo_cti import cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
@@ -110,23 +111,10 @@ class CTIServer(object):
         self.askedtoquit = False
 
     def _set_logger(self):
-        file_handler = logging.FileHandler(cti_config.LOGFILENAME)
-        file_formatter = logging.Formatter(
-            '%%(asctime)s %s[%%(process)d] (%%(levelname)s) (%%(name)s): %%(message)s'
-            % cti_config.DAEMONNAME)
-        file_handler.setFormatter(file_formatter)
-        root_logger = logging.getLogger()
-        root_logger.addHandler(file_handler)
-        root_logger.setLevel(logging.INFO)
-        if cti_config.DEBUG_MODE:
-            stream_handler = logging.StreamHandler()
-            stream_formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s: %(message)s')
-            stream_handler.setFormatter(stream_formatter)
-            root_logger.addHandler(stream_handler)
-            root_logger.setLevel(logging.DEBUG)
+        setup_logging(cti_config.LOGFILENAME, cti_config.FOREGROUND_MODE, cti_config.DEBUG_MODE)
 
     def _daemonize(self):
-        if not cti_config.DEBUG_MODE:
+        if not cti_config.FOREGROUND_MODE:
             daemonize.daemonize()
         daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
 
