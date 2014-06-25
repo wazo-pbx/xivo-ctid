@@ -37,11 +37,13 @@ class TestDird(TestCase):
         user_id = 12
         expected_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'.format(profile=profile)
         headers, types = ["Fìrstname", "Làstname", "Phòne number"], [None, None, "office"]
-        http_get.return_value = json.dumps(
-            {
-                "column_headers": headers,
-                "column_types": types
-            }
+        http_get.return_value = Mock(
+            text=json.dumps(
+                {
+                    "column_headers": headers,
+                    "column_types": types
+                }
+            )
         )
         decoded_result = {
             "column_headers": _unicode_list(headers),

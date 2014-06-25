@@ -29,7 +29,7 @@ class Dird(object):
 
     def headers(self, profile, callback, user_id):
         url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'.format(profile=profile)
-        result = requests.get(url)
-        result = json.loads(result)
+        response = requests.get(url)
+        result = json.loads(response.text)
         logger.debug('calling %s with %s', callback, (user_id, result))
         callback(user_id, result)
