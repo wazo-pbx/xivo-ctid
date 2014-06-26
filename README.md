@@ -9,8 +9,8 @@ the server with the [XiVO CTI client](https://github.com/xivo-pbx/xivo-client-qt
 Installing XiVO CTI
 -------------------
 
-The server is already provided as a part of [XiVO](http://documentation.xivo.fr).
-Please refer to [the documentation](ttp://documentation.xivo.fr/production/installation/installsystem.html) for
+The server is already provided as a part of [XiVO](http://documentation.xivo.io).
+Please refer to [the documentation](ttp://documentation.xivo.io/production/installation/installsystem.html) for
 further details on installing one.
 
 Running unit tests

@@ -20,7 +20,7 @@ setup(
     description='XiVO CTI Server Daemon',
     author='Avencall',
     author_email='xivo-dev@lists.proformatique.com',
-    url='http://wiki.xivo.fr/',
+    url='http://wiki.xivo.io/',
     packages=packages,
     scripts=['bin/xivo-ctid'],
 )
