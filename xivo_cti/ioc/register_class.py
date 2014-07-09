@@ -52,6 +52,8 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
+from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
+from xivo_cti.services.people.dird import Dird
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.queue.manager import QueueServiceManager
@@ -109,11 +111,13 @@ def setup():
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
+    context.register('dird', Dird)
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
+    context.register('people_cti_adapter', PeopleCTIAdapter)
     context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
     context.register('pubsub', Pubsub)

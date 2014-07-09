@@ -52,6 +52,8 @@ class TestSafe(unittest.TestCase):
         self.assertEqual(self.safe._ctiserver, self._ctiserver)
 
     def test_register_cti_handlers(self):
+        context.register('people_cti_adapter', Mock())
+
         self.safe.register_cti_handlers()
 
         self.assert_callback_registered(ListID, self.safe.handle_getlist_list_id)

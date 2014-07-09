@@ -71,3 +71,11 @@ class CTIMessageFormatter(object):
             'class': 'ipbxcommand',
             'error_string': msg,
         }
+
+    @staticmethod
+    def people_headers_result(headers):
+        return {
+            'class': 'people_headers_result',
+            'column_headers': headers['column_headers'],
+            'column_types': headers['column_types']
+        }
