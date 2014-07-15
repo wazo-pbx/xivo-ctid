@@ -88,5 +88,5 @@ class _Substituer(object):
         if variable_name in self.variables:
             return self.variables[variable_name]
 
-        logger.warning('Could not replace variable %r', variable_name)
+        logger.debug('Could not replace variable %r', variable_name)
         return None
