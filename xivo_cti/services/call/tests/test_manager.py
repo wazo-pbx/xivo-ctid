@@ -52,7 +52,7 @@ class TestCallManager(_BaseTest):
         self._ami.hangup.assert_called_once_with(sentinel.source_channel)
 
     def test_answer_next_ringing_call(self):
-        self.manager._get_answer_on_exten_status_fn = Mock(return_value=sentinel.fn)
+        self.manager._get_answer_on_sip_ringing_fn = Mock(return_value=sentinel.fn)
 
         self.manager.answer_next_ringing_call(self._connection, sentinel.interface)
 
@@ -63,7 +63,7 @@ class TestCallManager(_BaseTest):
 class TestGetAnswerOnSIPRinging(_BaseTest):
 
     def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
-        fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
+        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'SIP/bcde')
 
         fn({
             'Peer': 'SIP/bcde',
@@ -74,7 +74,7 @@ class TestGetAnswerOnSIPRinging(_BaseTest):
         self._connection.answer_cb.assert_called_once_with()
 
     def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
-        fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
+        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'SIP/bcde')
 
         fn({
             'Peer': 'SIP/bad',
