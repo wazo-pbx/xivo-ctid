@@ -20,11 +20,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# see include/asterisk/pbx.h for more definitions
-AST_EXTENSION_STATE_RINGING = 1 << 3
-
 
 class CallManager(object):
+
+    _answer_trigering_event = 'SIPRinging'
 
     def __init__(self, ami_class, ami_callback_handler):
         self._ami = ami_class
@@ -36,17 +35,15 @@ class CallManager(object):
 
     def answer_next_ringing_call(self, connection, interface):
         fn = self._get_answer_on_exten_status_fn(connection, interface)
-        self._ami_cb_handler.register_callback('ExtensionStatus', fn)
+        self._ami_cb_handler.register_callback(self._answer_trigering_event, fn)
 
     def _get_answer_on_exten_status_fn(self, connection, interface):
-        def answer_if_ringing(event):
-            if not int(event['Status']) & AST_EXTENSION_STATE_RINGING:
+        def answer_if_matching_peer(event):
+            if event['Peer'].lower() != interface.lower():
                 return
 
-            if event['Hint'].lower() != interface.lower():
-                return
-
-            self._ami_cb_handler.unregister_callback('ExtensionStatus', answer_if_ringing)
+            self._ami_cb_handler.unregister_callback(self._answer_trigering_event,
+                                                     answer_if_matching_peer)
             connection.answer_cb()
 
-        return answer_if_ringing
+        return answer_if_matching_peer

@@ -57,35 +57,27 @@ class TestCallManager(_BaseTest):
         self.manager.answer_next_ringing_call(self._connection, sentinel.interface)
 
         self._ami_cb_handler.register_callback.assert_called_once_with(
-            'ExtensionStatus', sentinel.fn)
+            self.manager._answer_trigering_event, sentinel.fn)
 
 
-class TestGetAnswerOnExtenStatus(_BaseTest):
-
-    def test_not_ringing_is_not_handled(self):
-        fn = self.manager._get_answer_on_exten_status_fn(self._connection, sentinel.interface)
-
-        fn({'Status': '1'})
-
-        self._assert_nothing_was_called()
+class TestGetAnswerOnSIPRinging(_BaseTest):
 
     def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
         fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
 
         fn({
-            'Status': '8',
-            'Hint': 'SIP/bcde',
+            'Peer': 'SIP/bcde',
         })
 
-        self._ami_cb_handler.unregister_callback.assert_called_once_with('ExtensionStatus', fn)
+        self._ami_cb_handler.unregister_callback.assert_called_once_with(
+            self.manager._answer_trigering_event, fn)
         self._connection.answer_cb.assert_called_once_with()
 
     def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
         fn = self.manager._get_answer_on_exten_status_fn(self._connection, 'SIP/bcde')
 
         fn({
-            'Status': '8',
-            'Hint': 'SIP/bad',
+            'Peer': 'SIP/bad',
         })
 
         self._assert_nothing_was_called()
