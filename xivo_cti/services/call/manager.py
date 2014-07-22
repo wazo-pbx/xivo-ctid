@@ -37,7 +37,7 @@ class CallManager(object):
         fn = self._get_answer_on_exten_status_fn(connection, interface)
         self._ami_cb_handler.register_callback(self._answer_trigering_event, fn)
 
-    def _get_answer_on_exten_status_fn(self, connection, interface):
+    def _get_answer_on_sip_ringing_fn(self, connection, interface):
         def answer_if_matching_peer(event):
             if event['Peer'].lower() != interface.lower():
                 return
