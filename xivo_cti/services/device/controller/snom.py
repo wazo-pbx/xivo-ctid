@@ -17,6 +17,7 @@
 
 import base64
 import logging
+import os
 import threading
 import time
 import urllib
@@ -44,9 +45,10 @@ class _SnomAnswerer(object):
     _auth_string = u'%(username)s:%(password)s'
     _command_url = u'http://%(hostname)s/command.htm'
     _data = {'key': 'P1'}
-    _warm_up_time = 0.25
+    _answer_delay = float(os.getenv('SNOM_SB_ANSWER_DELAY', 0.25))
 
     def __init__(self, hostname, username, password):
+        logger.debug('SNOM switchboard answer delay is %s', self._answer_delay)
         self._hostname = hostname
         self._username = username
         self._password = password
@@ -57,7 +59,7 @@ class _SnomAnswerer(object):
 
     def answer(self):
         req = self._get_request()
-        time.sleep(self._warm_up_time)
+        time.sleep(self._answer_delay)
         try:
             urllib2.urlopen(req)
         except urllib2.URLError:
