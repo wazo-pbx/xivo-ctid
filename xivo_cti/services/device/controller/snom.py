@@ -45,7 +45,7 @@ class _SnomAnswerer(object):
     _auth_string = u'%(username)s:%(password)s'
     _command_url = u'http://%(hostname)s/command.htm'
     _data = {'key': 'P1'}
-    _answer_delay = float(os.getenv('SNOM_SB_ANSWER_DELAY', 0.25))
+    _answer_delay = float(os.getenv('SNOM_SB_ANSWER_DELAY', 0.5))
 
     def __init__(self, hostname, username, password):
         logger.debug('SNOM switchboard answer delay is %s', self._answer_delay)
