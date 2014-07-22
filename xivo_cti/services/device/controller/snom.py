@@ -18,6 +18,7 @@
 import base64
 import logging
 import threading
+import time
 import urllib
 import urllib2
 
@@ -43,6 +44,7 @@ class _SnomAnswerer(object):
     _auth_string = u'%(username)s:%(password)s'
     _command_url = u'http://%(hostname)s/command.htm'
     _data = {'key': 'P1'}
+    _warm_up_time = 0.25
 
     def __init__(self, hostname, username, password):
         self._hostname = hostname
@@ -55,6 +57,7 @@ class _SnomAnswerer(object):
 
     def answer(self):
         req = self._get_request()
+        time.sleep(self._warm_up_time)
         try:
             urllib2.urlopen(req)
         except urllib2.URLError:
