@@ -10,11 +10,7 @@ Homepage: http://xivo.io/
 
 Package: xivo-ctid
 Architecture: all
-Pre-Depends: xivo-bus, 
-             xivo-libctid (>= ${binary:Version}),
-             xivo-libdao,
-             xivo-libdird,
-             xivo-lib-python
+Pre-Depends: xivo-libctid (>= ${binary:Version})
 Depends: ${python:Depends}, ${misc:Depends}
 Provides: pf-xivo-cti-server
 Replaces: pf-xivo-cti-server
@@ -30,7 +26,13 @@ Description: XiVO CTI server
 
 Package: xivo-libctid
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-requests
+Depends: ${python:Depends},
+         ${misc:Depends},
+         python-requests,
+         xivo-bus,
+         xivo-libdao,
+         xivo-libdird,
+         xivo-lib-python
 Description: XiVO CTI server library
  XiVO is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
