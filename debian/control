@@ -28,6 +28,7 @@ Package: xivo-libctid
 Architecture: all
 Depends: ${python:Depends},
          ${misc:Depends},
+         file,
          python-requests,
          xivo-bus,
          xivo-libdao,
