@@ -29,6 +29,7 @@ from xivo.asterisk.extension import Extension
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
 from xivo_cti.dao import user_dao
+
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces.interface_cti import CTI
@@ -173,6 +174,39 @@ class TestCurrentCallManager(_BaseTestCase):
         self.manager.bridge_channels(transferer_channel, transferee_channel)
 
         self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
+
+    def test_masquerade_with_the_same_local_channel(self):
+        line_1 = u'local/6000@pomme;1'
+        line_2 = u'local/6000@pomme;2'
+        local_line_1 = u'local/6000@pomme;1'
+        local_line_2 = u'local/6000@pomme;2'
+
+        line_1_channel = u'Local/6000@pomme-00000023;1'
+        line_2_channel = u'Local/6000@pomme-00000022;1'
+        local_line_1_channel = u'Local/6000@pomme-00000023;1'
+
+        self.manager._calls_per_line = {
+            local_line_1: [{BRIDGE_TIME: 1358197027.3219039,
+                            PEER_CHANNEL: line_2_channel,
+                            LINE_CHANNEL: local_line_1_channel,
+                            ON_HOLD: False}],
+            local_line_2: [{BRIDGE_TIME: 1358197027.242239,
+                            PEER_CHANNEL: line_1_channel,
+                            LINE_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
+                            ON_HOLD: False}],
+            line_1: [{BRIDGE_TIME: 1358197027.2422481,
+                      PEER_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
+                      LINE_CHANNEL: line_1_channel,
+                      ON_HOLD: False}],
+            line_2: [{BRIDGE_TIME: 1358197027.3218949,
+                      PEER_CHANNEL: local_line_1_channel,
+                      LINE_CHANNEL: line_2_channel,
+                      ON_HOLD: False}]}
+
+        self.manager.masquerade(local_line_1_channel, local_line_1_channel)
+
+        # It is expected not to freeze here
+        # TODO find something better to expect from this kind of scenario
 
     @patch('time.time')
     def test_bridge_channels_transfer_answered_not_tracked(self, mock_time):
