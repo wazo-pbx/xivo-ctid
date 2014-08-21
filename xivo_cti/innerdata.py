@@ -44,7 +44,7 @@ from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
 from xivo_dao import user_dao as old_user_dao
 from xivo_dao.data_handler.user import dao as user_dao
-from xivo_dao.data_handler.exception import ElementNotExistsError
+from xivo_dao.data_handler.exception import NotFoundError
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
 from collections import defaultdict
@@ -192,7 +192,7 @@ class Safe(object):
                 data_id = str(user.id)
             _set('desttype', data_type)
             _set('destid', data_id)
-        except ElementNotExistsError:
+        except NotFoundError:
             raise
         except (AttributeError, LookupError) as e:
             logger.exception(e)
@@ -318,8 +318,8 @@ class Safe(object):
             '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
             for channel_start in potential_channel_start:
                 if (channel_key.lower().startswith(channel_start.lower())
-                    and self.channels[channel_key].peerchannel
-                    and not self.channels[channel_key].properties['holded']):
+                        and self.channels[channel_key].peerchannel
+                        and not self.channels[channel_key].properties['holded']):
                     return True
 
         return filter(channel_filter, self.channels)
