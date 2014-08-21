@@ -101,28 +101,26 @@ class CurrentCallManager(object):
         self._substitute_calls_channel(old, new)
 
     def _substitute_calls_channel(self, old, new):
-        while True:
-            line, position = self._find_line_and_position(old, PEER_CHANNEL)
-            if not line:
-                break
+        for line, position in self._find_line_and_position(old, PEER_CHANNEL):
             self._calls_per_line[line][position][PEER_CHANNEL] = new
 
     def _remove_calls_with_line_channel(self, channel):
-        while True:
-            line, position = self._find_line_and_position(channel, LINE_CHANNEL)
-            if not line:
-                break
+        to_remove = []
+
+        for line, position in self._find_line_and_position(channel, LINE_CHANNEL):
             self._calls_per_line[line].pop(position)
 
             if not self._calls_per_line[line]:
-                self._calls_per_line.pop(line)
+                to_remove.append(line)
+
+        for line in to_remove:
+            self._calls_per_line.pop(line)
 
     def _find_line_and_position(self, channel, field=PEER_CHANNEL):
         for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):
                 if field in call and call[field] == channel:
-                    return line, index
-        return None, None
+                    yield line, index
 
     def end_call(self, channel):
         to_remove = []
@@ -138,10 +136,8 @@ class CurrentCallManager(object):
             self._current_call_notifier.publish_current_call(line)
 
     def remove_transfer_channel(self, channel):
-        line, position = self._find_line_and_position(channel, TRANSFER_CHANNEL)
-        if line:
+        for line, position in self._find_line_and_position(channel, TRANSFER_CHANNEL):
             self._calls_per_line[line][position].pop(TRANSFER_CHANNEL)
-
             self._current_call_notifier.publish_current_call(line)
 
     def set_transfer_channel(self, channel, transfer_channel):
