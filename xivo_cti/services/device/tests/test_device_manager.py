@@ -24,7 +24,7 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
-from xivo_dao.data_handler.exception import ElementNotExistsError
+from xivo_dao.data_handler.exception import NotFoundError
 from xivo_cti.xivo_ami import AMIClass
 
 
@@ -38,7 +38,7 @@ class TestDeviceManager(unittest.TestCase):
         self.manager = DeviceManager(self.ami_class)
 
     @patch('xivo_dao.data_handler.device.services.get',
-           Mock(side_effect=ElementNotExistsError('Not found')))
+           Mock(side_effect=NotFoundError()))
     def test_get_answer_fn_no_device(self):
         self.manager._base_controller = self._base_controller
 

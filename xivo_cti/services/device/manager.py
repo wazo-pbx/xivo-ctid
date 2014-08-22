@@ -19,7 +19,7 @@ from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
 from xivo_dao.data_handler.device import services as device_services
-from xivo_dao.data_handler.exception import ElementNotExistsError
+from xivo_dao.data_handler.exception import NotFoundError
 
 
 class DeviceManager(object):
@@ -32,7 +32,7 @@ class DeviceManager(object):
     def get_answer_fn(self, device_id):
         try:
             device = device_services.get(device_id)
-        except ElementNotExistsError:
+        except NotFoundError:
             device = None
 
         if device and device.is_switchboard():
