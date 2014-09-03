@@ -20,7 +20,7 @@ import unittest
 from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock, patch, sentinel
-from xivo_bus.ctl.client import BusCtlClient
+from xivo_bus.ctl.producer import BusProducer
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 
 
@@ -66,7 +66,7 @@ class TestCallFormResultHandler(unittest.TestCase):
         user_id = 42
         variables = {'a': 'b'}
         CallFormResultEvent.return_value = sentinel
-        bus_client = Mock(BusCtlClient)
+        bus_client = Mock(BusProducer)
         handler = CallFormResultHandler(bus_client)
 
         handler._send_call_form_result(user_id, variables)

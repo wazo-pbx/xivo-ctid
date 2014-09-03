@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo.pubsub import Pubsub
-from xivo_bus.ctl.client import BusCtlClient
+from xivo_bus.ctl.producer import BusProducer
 from xivo_bus.resources.agent.client import AgentClient
 from xivo_cti import cti_config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -96,7 +96,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
-    context.register('bus_client', BusCtlClient)
+    context.register('bus_client', BusProducer)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)
