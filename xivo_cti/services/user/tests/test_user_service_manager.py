@@ -263,7 +263,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_unc')
     def test_enable_unconditional_fwd(self, mock_get_dest_unc):
         user_id = 543321
         destination = '234'
@@ -282,12 +282,9 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.assertEquals(calls, expected_calls)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
-    def test_disable_unconditional_fwd(self, mock_get_dest_unc):
+    def test_disable_unconditional_fwd(self):
         user_id = 543
         destination = '1234'
-        fwd_key_dest = '102'
-        mock_get_dest_unc.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_unconditional_fwd(user_id, destination)
 
@@ -295,7 +292,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_notifier.unconditional_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd.assert_called_once_with(user_id)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_rna')
     def test_enable_rna_fwd(self, mock_get_dest_rna):
         user_id = 2345
         destination = '3456'
@@ -308,12 +305,9 @@ class TestUserServiceManager(_BaseTestCase):
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
         self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
-    def test_disable_rna_fwd(self, mock_get_dest_rna):
+    def test_disable_rna_fwd(self):
         user_id = 2345
         destination = '3456'
-        fwd_key_dest = '987'
-        mock_get_dest_rna.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_rna_fwd(user_id, destination)
 
@@ -321,7 +315,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_notifier.rna_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_busy')
     def test_enable_busy_fwd(self, mock_get_dest_busy):
         user_id = 2345
         destination = '3456'
@@ -335,12 +329,9 @@ class TestUserServiceManager(_BaseTestCase):
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
         self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, True)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
-    def test_disable_busy_fwd(self, mock_get_dest_busy):
+    def test_disable_busy_fwd(self):
         user_id = 2345
         destination = '3456'
-        fwd_key_dest = '666'
-        mock_get_dest_busy.return_value = [fwd_key_dest]
 
         self.user_service_manager.disable_busy_fwd(user_id, destination)
 
@@ -348,7 +339,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_notifier.busy_fwd_disabled.assert_called_once_with(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_busy')
     def test_enable_busy_fwd_not_funckey(self, mock_get_dest_busy):
         user_id = 2345
         destination = '3456'
