@@ -16,7 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo import xivo_helpers
-from xivo_dao import extensions_dao, user_dao, phonefunckey_dao
+from xivo_dao import extensions_dao, user_dao
+
+from xivo_dao.data_handler.func_key import services as func_key_services
 
 
 class FunckeyManager(object):
@@ -66,17 +68,17 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def disable_all_unconditional_fwd(self, user_id):
-        for destination in phonefunckey_dao.get_dest_unc(user_id):
+        for destination in func_key_services.find_all_fwd_unc(user_id):
             if destination:
                 self.unconditional_fwd_in_use(user_id, destination, False)
 
     def disable_all_rna_fwd(self, user_id):
-        for destination in phonefunckey_dao.get_dest_rna(user_id):
+        for destination in func_key_services.find_all_fwd_rna(user_id):
             if destination:
                 self.rna_fwd_in_use(user_id, destination, False)
 
     def disable_all_busy_fwd(self, user_id):
-        for destination in phonefunckey_dao.get_dest_busy(user_id):
+        for destination in func_key_services.find_all_fwd_busy(user_id):
             if destination:
                 self.busy_fwd_in_use(user_id, destination, False)
 

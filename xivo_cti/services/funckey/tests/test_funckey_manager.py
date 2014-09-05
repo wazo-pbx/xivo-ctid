@@ -124,7 +124,7 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.assertEqual(calls, expected_calls)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_unc')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_unc')
     def test_disable_all_fwd_unc(self, mock_get_dest_unc):
         unc_dest = ['123', '666', '', '012']
         fn = Mock()
@@ -132,12 +132,13 @@ class TestFunckeyManager(unittest.TestCase):
         mock_get_dest_unc.return_value = unc_dest
 
         self.manager.disable_all_unconditional_fwd(self.user_id)
+        mock_get_dest_unc.assert_called_once_with(self.user_id)
 
         for dest in unc_dest:
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_rna')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_rna')
     def test_disable_all_fwd_rna(self, mock_get_dest_rna):
         rna_dest = ['123', '666', '', '012']
         fn = Mock()
@@ -145,12 +146,13 @@ class TestFunckeyManager(unittest.TestCase):
         mock_get_dest_rna.return_value = rna_dest
 
         self.manager.disable_all_rna_fwd(self.user_id)
+        mock_get_dest_rna.assert_called_once_with(self.user_id)
 
         for dest in rna_dest:
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    @patch('xivo_dao.phonefunckey_dao.get_dest_busy')
+    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_busy')
     def test_disable_all_fwd_busy(self, mock_get_dest_busy):
         busy_dest = ['123', '666', '', '012']
         fn = Mock()
@@ -158,6 +160,7 @@ class TestFunckeyManager(unittest.TestCase):
         mock_get_dest_busy.return_value = busy_dest
 
         self.manager.disable_all_busy_fwd(self.user_id)
+        mock_get_dest_busy.assert_called_once_with(self.user_id)
 
         for dest in busy_dest:
             if dest:

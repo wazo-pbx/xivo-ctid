@@ -21,7 +21,7 @@ from functools import partial
 
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_dao import user_dao
-from xivo_dao import phonefunckey_dao
+from xivo_dao.data_handler.func_key import services as func_key_services
 from xivo_cti import dao
 from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
@@ -93,9 +93,8 @@ class UserServiceManager(object):
         self.dao.user.enable_unconditional_fwd(user_id, destination)
         self.user_service_notifier.unconditional_fwd_enabled(user_id, destination)
         self.funckey_manager.disable_all_unconditional_fwd(user_id)
-        destinations = phonefunckey_dao.get_dest_unc(user_id)
         self.funckey_manager.unconditional_fwd_in_use(user_id, '', True)
-        if destination in destinations:
+        if destination in func_key_services.find_all_fwd_unc(user_id):
             self.funckey_manager.unconditional_fwd_in_use(user_id, destination, True)
 
     def disable_unconditional_fwd(self, user_id, destination):
@@ -107,7 +106,7 @@ class UserServiceManager(object):
         self.dao.user.enable_rna_fwd(user_id, destination)
         self.user_service_notifier.rna_fwd_enabled(user_id, destination)
         self.funckey_manager.disable_all_rna_fwd(user_id)
-        if destination in phonefunckey_dao.get_dest_rna(user_id):
+        if destination in func_key_services.find_all_fwd_rna(user_id):
             self.funckey_manager.rna_fwd_in_use(user_id, destination, True)
 
     def disable_rna_fwd(self, user_id, destination):
@@ -119,7 +118,7 @@ class UserServiceManager(object):
         self.dao.user.enable_busy_fwd(user_id, destination)
         self.user_service_notifier.busy_fwd_enabled(user_id, destination)
         self.funckey_manager.disable_all_busy_fwd(user_id)
-        if destination in phonefunckey_dao.get_dest_busy(user_id):
+        if destination in func_key_services.find_all_fwd_busy(user_id):
             self.funckey_manager.busy_fwd_in_use(user_id, destination, True)
 
     def disable_busy_fwd(self, user_id, destination):
