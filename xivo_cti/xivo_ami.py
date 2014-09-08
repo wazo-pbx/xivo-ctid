@@ -176,7 +176,7 @@ class AMIClass(object):
         if phoneproto == 'custom':
             channel = phonesrcname.replace('\\', '')
         else:
-            channel = '%s/%s' % (phoneproto, phonesrcname)
+            channel = '%s/%s' % (phoneproto.upper(), phonesrcname)
         command_details = [('Channel', channel),
                            ('Exten', phonedst),
                            ('Context', locext),
