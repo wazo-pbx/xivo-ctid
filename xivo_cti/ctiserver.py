@@ -387,12 +387,12 @@ class CTIServer(object):
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
 
         logger.info('Connecting to bus')
-        bus_client = context.get('bus_client')
-        if not bus_client.connected:
-            bus_client.connect()
-        bus_client.declare_exchange(cti_config.BUS_EXCHANGE_NAME,
-                                    cti_config.BUS_EXCHANGE_TYPE,
-                                    durable=cti_config.BUS_EXCHANGE_DURABLE)
+        bus_producer = context.get('bus_producer')
+        if not bus_producer.connected:
+            bus_producer.connect()
+        bus_producer.declare_exchange(name=cti_config.BUS_EXCHANGE_NAME,
+                                      exchange_type=cti_config.BUS_EXCHANGE_TYPE,
+                                      durable=cti_config.BUS_EXCHANGE_DURABLE)
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')

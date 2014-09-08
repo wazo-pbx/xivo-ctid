@@ -46,7 +46,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
                        "ON extensions.type = 'user' AND userfeatures.id = CAST(extensions.typeval as integer) "
                        'WHERE ')
         request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
-        if cti_context.get('config').part_context():
+        if cti_context.get('cti_config').part_context():
             if contexts:
                 request_contexts = ' OR '.join("extensions.context = '%s'" % context for context in contexts)
             else:

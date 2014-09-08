@@ -96,7 +96,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
-    context.register('bus_client', BusProducer)
+    context.register('bus_producer', BusProducer)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)

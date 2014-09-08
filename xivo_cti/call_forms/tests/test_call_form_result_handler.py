@@ -66,10 +66,10 @@ class TestCallFormResultHandler(unittest.TestCase):
         user_id = 42
         variables = {'a': 'b'}
         CallFormResultEvent.return_value = sentinel
-        bus_client = Mock(BusProducer)
-        handler = CallFormResultHandler(bus_client)
+        bus_producer = Mock(BusProducer)
+        handler = CallFormResultHandler(bus_producer)
 
         handler._send_call_form_result(user_id, variables)
 
-        bus_client.publish_event.assert_called_once_with('xivo-cti', 'call_form_result', sentinel)
+        bus_producer.publish_event.assert_called_once_with('xivo-cti', 'call_form_result', sentinel)
         CallFormResultEvent.assert_called_once_with(user_id, variables)
