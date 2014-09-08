@@ -59,7 +59,7 @@ class WEBI(interfaces.Interfaces):
     def __init__(self, ctiserver, queue_member_updater):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._queue_member_updater = queue_member_updater
-        self._config = context.get('config')
+        self._config = context.get('cti_config')
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)

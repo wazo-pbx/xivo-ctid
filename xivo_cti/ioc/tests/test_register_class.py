@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
     def test_get_context(self):
         register_class.setup()
 
-        config = context.get('config')
+        config = context.get('cti_config')
         config.xc_json = {
             'main': {
                 'live_reload_conf': True

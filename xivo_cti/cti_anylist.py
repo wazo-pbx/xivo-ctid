@@ -238,7 +238,7 @@ class AnyList(object):
         return self.keeplist.get(item_id)
 
     def _send_message(self, message, id):
-        if not cti_context.get('config').part_context():
+        if not cti_context.get('cti_config').part_context():
             self._ctiserver.send_cti_event(message)
         else:
             if self.listname == 'users':
@@ -292,7 +292,7 @@ class ContextAwareAnyList(AnyList):
             del self._item_ids_by_context[item_context]
 
     def list_ids_in_contexts(self, contexts):
-        if not cti_context.get('config').part_context():
+        if not cti_context.get('cti_config').part_context():
             return self.keeplist.keys()
         elif not contexts:
             return []
@@ -310,7 +310,7 @@ class ContextAwareAnyList(AnyList):
         except KeyError:
             return None
         else:
-            if not cti_context.get('config').part_context():
+            if not cti_context.get('cti_config').part_context():
                 return item
             elif not contexts:
                 return None

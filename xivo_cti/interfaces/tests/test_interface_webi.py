@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         mock_config = NonCallableMock(Config)
         mock_config.getconfig.return_value = {'live_reload_conf': True}
-        context.register('config', mock_config)
+        context.register('cti_config', mock_config)
         self._ctiserver = Mock(CTIServer)
         self._queue_member_updater = Mock(QueueMemberUpdater)
         self._interface_webi = WEBI(self._ctiserver, self._queue_member_updater)

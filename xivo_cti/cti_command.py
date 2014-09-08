@@ -70,7 +70,7 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 class Command(object):
     def __init__(self, connection, thiscommand):
-        self._config = cti_context.get('config')
+        self._config = cti_context.get('cti_config')
         self._connection = connection
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand

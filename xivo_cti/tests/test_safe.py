@@ -39,8 +39,8 @@ class TestSafe(unittest.TestCase):
 
     @patch('xivo_dao.trunk_dao.get_ids')
     def setUp(self, mock_get_ids):
-        context.register('config', cti_config.Config())
-        config = context.get('config')
+        context.register('cti_config', cti_config.Config())
+        config = context.get('cti_config')
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
         self._ctiserver = CTIServer(config)
         config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}

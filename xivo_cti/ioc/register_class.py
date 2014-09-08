@@ -81,7 +81,6 @@ from xivo_cti.xivo_ami import AMIClass
 
 
 def setup():
-    context.register('interface_ami', AMI)
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
     context.register('ami_class', AMIClass)
@@ -105,7 +104,7 @@ def setup():
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
     context.register('channel_updater', ChannelUpdater)
-    context.register('config', cti_config.Config())
+    context.register('cti_config', cti_config.Config())
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)
@@ -117,6 +116,7 @@ def setup():
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
+    context.register('interface_ami', AMI)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('people_cti_adapter', PeopleCTIAdapter)

@@ -56,8 +56,8 @@ SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 class Safe(object):
 
-    def __init__(self, config, cti_server, queue_member_cti_adapter):
-        self._config = config
+    def __init__(self, cti_config, cti_server, queue_member_cti_adapter):
+        self._config = cti_config
         self._ctiserver = cti_server
         self.queue_member_cti_adapter = queue_member_cti_adapter
         self.ipbxid = 'xivo'

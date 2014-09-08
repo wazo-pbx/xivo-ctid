@@ -82,7 +82,7 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self, config):
+    def __init__(self, cti_config):
         self.start_time = time.time()
         self.mycti = {}
         self.myipbxid = 'xivo'
@@ -90,7 +90,7 @@ class CTIServer(object):
         self.timeout_queue = None
         self.update_config_list = []
         self.pipe_queued_threads = os.pipe()
-        self._config = config
+        self._config = cti_config
         self._cti_events = Queue.Queue()
 
     def _set_signal_handlers(self):
@@ -419,6 +419,7 @@ class CTIServer(object):
 
         logger.info('Local AMI socket connection')
         self.interface_ami.init_connection()
+
         self.ami_sock = self.interface_ami.connect()
         if not self.ami_sock:
             self._on_ami_down()

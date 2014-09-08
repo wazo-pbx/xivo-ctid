@@ -34,7 +34,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.notifier.ipbx_id = self.ipbx_id
         self.config = NonCallableMock(Config)
         self.config.part_context.return_value = False
-        context.register('config', self.config)
+        context.register('cti_config', self.config)
 
     def tearDown(self):
         context.reset()

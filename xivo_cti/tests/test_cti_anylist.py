@@ -97,7 +97,7 @@ class TestContextAwareAnyList(unittest.TestCase):
         cti_config = Mock()
         cti_config.return_value.part_context.return_value = False
         cti_context.reset()
-        cti_context.register('config', cti_config)
+        cti_context.register('cti_config', cti_config)
 
         message_id = 3
         message = {
@@ -123,7 +123,7 @@ class TestContextAwareAnyList(unittest.TestCase):
         cti_config = Mock()
         cti_config.return_value.part_context.return_value = True
         cti_context.reset()
-        cti_context.register('config', cti_config)
+        cti_context.register('cti_config', cti_config)
 
         message_id = 3
         message = {
