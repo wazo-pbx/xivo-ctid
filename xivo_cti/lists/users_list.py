@@ -29,13 +29,6 @@ class UsersList(ContextAwareAnyList):
             if userinfo and userinfo.get('enableclient') and userinfo.get('loginclient') == userid:
                 return userinfo
 
-    def connected_users(self):
-        lst = {}
-        for username, userinfo in self.keeplist.iteritems():
-            if 'login' in userinfo:
-                lst[username] = userinfo
-        return lst
-
     def get_contexts(self, user_id):
         try:
             user = self.keeplist[user_id]
