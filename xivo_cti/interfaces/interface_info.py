@@ -204,13 +204,6 @@ class INFO(interfaces.Interfaces):
                     else:
                         clireply.append('argument : astid value')
 
-                elif usefulmsg == 'show_logged':
-                    for user, info in self._ami_18.connected_users().iteritems():
-                        try:
-                            clireply.append('%s %s' % (user.encode('latin1'), info))
-                        except Exception:
-                            logger.exception('INFO %s', usefulmsg)
-
                 elif usefulmsg == 'fdlist':
                     for k, v in self._ctiserver.fdlist_listen_cti.iteritems():
                         clireply.append('  listen TCP : %s %s' % (k, v))
