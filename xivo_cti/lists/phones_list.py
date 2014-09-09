@@ -89,28 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_dial(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
-        if phoneidsrc in self.keeplist:
-            infos = {'thischannel': puidsrc.get('channel'),
-                     'peerchannel': puidsrc.get('dial'),
-                     'status': 'calling',
-                     'time-dial': 0,
-                     'timestamp-dial': time.time(),
-                     # 'calleridname' : puidsrc.get('calleridname'),
-                     'calleridnum': puidsrc.get('extension')
-                     }
-            self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
-        if phoneiddst in self.keeplist:
-            infos = {'thischannel': puiddst.get('channel'),
-                     'peerchannel': puiddst.get('dial'),
-                     'status': 'ringing',
-                     'time-dial': 0,
-                     'timestamp-dial': time.time(),
-                     'calleridname': puidsrc.get('calleridname'),
-                     'calleridnum': puidsrc.get('calleridnum')
-                     }
-            self.__createorupdate_comm__(phoneiddst, uiddst, infos)
-
     def ami_link(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst):
         logger.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                      phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst)
