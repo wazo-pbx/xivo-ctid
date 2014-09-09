@@ -89,11 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_newchannel(self, phoneid, uid, channel):
-        # we could store the "callerid" in order to use it later.
-        self.__createorupdate_comm__(phoneid, uid, {'thischannel': channel,
-                                                    'calleridname': '<unknown>'})
-
     def ami_newstate(self, phoneid, uid, channel, status):
         self.__createorupdate_comm__(phoneid, uid, {'status': status})
 
