@@ -89,44 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_link(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst):
-        logger.debug(u'phonelist::ami_link(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                     phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst, clidsrc, cliddst, clidnamesrc, clidnamedst)
-        if phoneidsrc in self.keeplist:
-            infos = {'time-link': 0,
-                     'peerchannel': puidsrc['link'],
-                     'status': 'linked-caller',
-                     'timestamp-link': time.time()
-                     }
-            if clidnamedst is not None:
-                infos['calleridname'] = clidnamedst
-            if cliddst is not None:
-                infos['calleridnum'] = cliddst
-            if uidsrc in self.keeplist[phoneidsrc]['comms']:
-                self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
-            else:
-                infos['thischannel'] = puidsrc['channel']
-                self.__createorupdate_comm__(phoneidsrc, uidsrc, infos)
-                logger.debug('phonelist::ami_link %s not found (src)', uidsrc)
-            logger.debug('phonelist::ami_link gruik %s %s', phoneidsrc, self.keeplist[phoneidsrc]['comms'])
-        if phoneiddst in self.keeplist:
-            infos = {'time-link': 0,
-                     'peerchannel': puiddst['link'],
-                     'status': 'linked-called',
-                     'timestamp-link': time.time()
-                     }
-            if clidnamesrc is not None:
-                infos['calleridname'] = clidnamesrc
-            if clidsrc is not None:
-                infos['calleridnum'] = clidsrc
-            if uiddst in self.keeplist[phoneiddst]['comms']:
-                self.__createorupdate_comm__(phoneiddst, uiddst, infos)
-            else:
-                infos['thischannel'] = puiddst['channel']
-                self.__createorupdate_comm__(phoneiddst, uiddst, infos)
-                logger.debug('phonelist::ami_link %s not found (dst)', uiddst)
-            logger.debug('phonelist::ami_link gruik %s %s', phoneiddst, self.keeplist[phoneiddst]['comms'])
-
     def ami_unlink(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
         if phoneidsrc in self.keeplist:
             if uidsrc in self.keeplist[phoneidsrc]['comms']:
