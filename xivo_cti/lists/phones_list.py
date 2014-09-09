@@ -89,9 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_newstate(self, phoneid, uid, channel, status):
-        self.__createorupdate_comm__(phoneid, uid, {'status': status})
-
     def ami_dial(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
         if phoneidsrc in self.keeplist:
             infos = {'thischannel': puidsrc.get('channel'),
