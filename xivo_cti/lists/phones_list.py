@@ -89,20 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_unlink(self, phoneidsrc, phoneiddst, uidsrc, uiddst, puidsrc, puiddst):
-        if phoneidsrc in self.keeplist:
-            if uidsrc in self.keeplist[phoneidsrc]['comms']:
-                infos = {'status': 'unlinked-caller',
-                         'time-link': 0,
-                         'timestamp-link': time.time()}
-                self.keeplist[phoneidsrc]['comms'][uidsrc].update(infos)
-        if phoneiddst in self.keeplist:
-            if uiddst in self.keeplist[phoneiddst]['comms']:
-                infos = {'status': 'unlinked-called',
-                         'time-link': 0,
-                         'timestamp-link': time.time()}
-                self.keeplist[phoneiddst]['comms'][uiddst].update(infos)
-
     def ami_rename(self, oldphoneid, newphoneid, oldname, newname, uid):
         # rename channels
         for v in self.keeplist.itervalues():
