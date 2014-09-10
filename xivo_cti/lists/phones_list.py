@@ -60,22 +60,6 @@ class PhonesList(ContextAwareAnyList):
         proto_and_name = phone['protocol'] + phone['name']
         del self._phone_id_by_proto_and_name[proto_and_name]
 
-    def setlinenum(self, phoneid, commid):
-        """
-        Define a line number for the phone, according to the currently 'busy'
-        channels/uniqueids.
-        This can not (at the time being, at least) be directly related
-        to the line numbers on the physical phones.
-        """
-        usedlines = []
-        for cinfo in self.keeplist[phoneid]['comms'].itervalues():
-            if 'linenum' in cinfo:
-                usedlines.append(cinfo['linenum'])
-        linenum = 1
-        while (linenum in usedlines):
-            linenum += 1
-        self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
-
     def clear(self, uid):
         phoneidlist = []
         for phoneid, phoneprops in self.keeplist.iteritems():
