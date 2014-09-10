@@ -101,18 +101,6 @@ class PhonesList(ContextAwareAnyList):
     def setdisplayhints(self, dh):
         self.display_hints = dh
 
-    def ami_extstatus(self, phoneid, status):
-        if phoneid in self.keeplist:
-            if status not in self.display_hints:
-                status = '-2'
-            # changed = not (self.keeplist[phoneid]['hintstatus'] == self.display_hints.get(status))
-            changed = not isinstance(self.keeplist[phoneid]['hintstatus'], dict) or not (self.keeplist[phoneid]['hintstatus'].get('code') == status)
-            if changed:
-                self.keeplist[phoneid]['hintstatus'] = self.display_hints.get(status)
-                self.keeplist[phoneid]['hintstatus']['code'] = status
-            return changed
-        return False
-
     def ami_parkedcall(self, phoneid, uid, ctuid, exten):
         if phoneid in self.keeplist:
             # write "parque" in unicode !
