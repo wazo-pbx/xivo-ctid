@@ -101,39 +101,6 @@ class PhonesList(ContextAwareAnyList):
     def setdisplayhints(self, dh):
         self.display_hints = dh
 
-    def ami_parkedcall(self, phoneid, uid, ctuid, exten):
-        if phoneid in self.keeplist:
-            # write "parque" in unicode !
-            infos = {'status': 'linked-caller',
-                     'time-link': 0,
-                     'timestamp-link': time.time(),
-                     'calleridnum': exten,
-                     'calleridname': '<parked>'}
-            self.__createorupdate_comm__(phoneid, uid, infos)
-
-    def ami_unparkedcall(self, phoneid, uid, ctuid):
-        if phoneid in self.keeplist:
-            logger.debug('phone::ami_unparkedcall %s %s %s', phoneid, uid, ctuid)
-            if uid in self.keeplist[phoneid]['comms']:
-                # parked channel
-                infos = {'status': 'linked-called',
-                         'thischannel': ctuid['channel'],
-                         'peerchannel': ctuid['peerchannel'],
-                         'time-link': 0,
-                         # 'calleridnum' : ctuid['parkexten-callback'],
-                         'timestamp-link': time.time()}
-                self.keeplist[phoneid]['comms'][uid].update(infos)
-            else:
-                # cfrom
-                infos = {'status': 'linked-caller',
-                         'thischannel': ctuid['channel'],
-                         'peerchannel': ctuid['peerchannel'],
-                         'time-link': 0,
-                         # 'calleridnum' : ctuid['parkexten-callback']
-                         'timestamp-link': time.time()}
-                self.keeplist[phoneid]['comms'][uid] = infos
-                self.setlinenum(phoneid, uid)
-
     def status(self, phoneid):
         tosend = {}
         if phoneid in self.keeplist:
