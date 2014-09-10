@@ -89,26 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_hold(self, phoneid, uid):
-        if phoneid in self.keeplist:
-            if uid in self.keeplist[phoneid]['comms']:
-                self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
-            else:
-                logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
-        else:
-            logger.warning('ami_hold : no phoneid %s', phoneid)
-
-    def ami_unhold(self, phoneid, uid):
-        if phoneid in self.keeplist:
-            if uid in self.keeplist[phoneid]['comms']:
-                if 'time-hold' in self.keeplist[phoneid]['comms'][uid]:
-                    del self.keeplist[phoneid]['comms'][uid]['time-hold']
-                self.keeplist[phoneid]['comms'][uid]['time-hold'] = time.time()
-            else:
-                logger.warning('ami_hold : no uid %s for phoneid %s', uid, phoneid)
-        else:
-            logger.warning('ami_hold : no phoneid %s', phoneid)
-
     def ami_hangup(self, uid):
         phoneidlist = []
         for phoneid, phoneprops in self.keeplist.iteritems():
