@@ -60,19 +60,6 @@ class PhonesList(ContextAwareAnyList):
         proto_and_name = phone['protocol'] + phone['name']
         del self._phone_id_by_proto_and_name[proto_and_name]
 
-    def __createorupdate_comm__(self, phoneid, commid, infos):
-        comms = self.keeplist[phoneid]['comms']
-        if commid in self.keeplist[phoneid]['comms']:
-            if 'calleridnum' in infos and comms[commid].get('calleridnum') != infos['calleridnum']:
-                logger.debug('  __createorupdate_comm__ changed calleridnum[%s %s] %s => %s',
-                             commid, comms[commid].get('thischannel'), comms[commid].get('calleridnum'), infos['calleridnum'])
-            self.keeplist[phoneid]['comms'][commid].update(infos)
-        elif 'calleridnum' in infos:
-            logger.debug('  __createorupdate_comm__ new calleridnum[%s %s] : %s',
-                         commid, infos.get('thischannel'), infos['calleridnum'])
-            self.keeplist[phoneid]['comms'][commid] = infos
-            self.setlinenum(phoneid, commid)
-
     def setlinenum(self, phoneid, commid):
         """
         Define a line number for the phone, according to the currently 'busy'
