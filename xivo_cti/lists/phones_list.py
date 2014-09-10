@@ -60,15 +60,6 @@ class PhonesList(ContextAwareAnyList):
         proto_and_name = phone['protocol'] + phone['name']
         del self._phone_id_by_proto_and_name[proto_and_name]
 
-    def clear(self, uid):
-        phoneidlist = []
-        for phoneid, phoneprops in self.keeplist.iteritems():
-            if uid in phoneprops['comms']:
-                del phoneprops['comms'][uid]
-                if phoneid not in phoneidlist:
-                    phoneidlist.append(phoneid)
-        return phoneidlist
-
     def setdisplayhints(self, dh):
         self.display_hints = dh
 
