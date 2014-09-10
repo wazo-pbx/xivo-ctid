@@ -89,15 +89,6 @@ class PhonesList(ContextAwareAnyList):
             linenum += 1
         self.keeplist[phoneid]['comms'][commid]['linenum'] = linenum
 
-    def ami_hangup(self, uid):
-        phoneidlist = []
-        for phoneid, phoneprops in self.keeplist.iteritems():
-            if uid in phoneprops['comms']:
-                phoneprops['comms'][uid]['status'] = 'hangup'
-                if phoneid not in phoneidlist:
-                    phoneidlist.append(phoneid)
-        return phoneidlist
-
     def clear(self, uid):
         phoneidlist = []
         for phoneid, phoneprops in self.keeplist.iteritems():
