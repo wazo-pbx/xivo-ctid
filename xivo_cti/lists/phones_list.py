@@ -111,14 +111,6 @@ class PhonesList(ContextAwareAnyList):
                       'status': self.keeplist[phoneid]}
         return tosend
 
-    def ami_meetmejoin(self, phoneid, uid, meetmenum):
-        if phoneid in self.keeplist:
-            if uid in self.keeplist[phoneid]['comms']:
-                infos = {'timestamp-link': time.time(),
-                         'calleridname': '<meetme>',
-                         'calleridnum': meetmenum}
-                self.keeplist[phoneid]['comms'][uid].update(infos)
-
     def find_phone_by_channel(self, channel):
         try:
             proto_iface = protocol_interface.protocol_interface_from_channel(channel)
