@@ -60,9 +60,6 @@ class PhonesList(ContextAwareAnyList):
         proto_and_name = phone['protocol'] + phone['name']
         del self._phone_id_by_proto_and_name[proto_and_name]
 
-    def setdisplayhints(self, dh):
-        self.display_hints = dh
-
     def status(self, phoneid):
         tosend = {}
         if phoneid in self.keeplist:
