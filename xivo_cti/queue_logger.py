@@ -18,8 +18,8 @@
 import time
 import logging
 
-from xivo_cti import db_connection_manager, cti_config
 from xivo_cti.ami import ami_callback_handler
+from xivo_dao import queue_info_dao
 
 logger = logging.getLogger('XiVO queue logger')
 
@@ -33,15 +33,13 @@ UNIQUEID = 'Uniqueid'
 
 
 class QueueLogger(object):
-    _uri = None
-    last_transaction = None
+
     cache = None
     cache_threshold = 10  # Time to wait in sec before removing from the
                             # from the cache when a call is not answered
 
     @classmethod
     def init(cls):
-        cls.last_transaction = time.time()
         cls.cache = {}
         cls._register_ami_callbacks()
 
@@ -52,12 +50,6 @@ class QueueLogger(object):
         ami_handler.register_callback('Leave', cls.Leave)
         ami_handler.register_callback('AgentConnect', cls.AgentConnect)
         ami_handler.register_callback('AgentComplete', cls.AgentComplete)
-
-    @classmethod
-    def _store_in_db(cls, sql):
-        with db_connection_manager.DbConnectionPool(cti_config.DB_URI) as connection:
-            connection['cur'].query(str(sql))
-            connection['conn'].commit()
 
     @classmethod
     def _trace_event(cls, ev):
@@ -101,62 +93,42 @@ class QueueLogger(object):
 
     @classmethod
     def Join(cls, ev):
-        ev[CALLTIME] = time.time()
-
-        sql = '''INSERT INTO queue_info (call_time_t, queue_name, ''' \
-              '''caller, caller_uniqueid) ''' \
-              '''VALUES (%d, '%s', '%s', '%s');''' % (
-                  ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
+        ev[CALLTIME] = int(time.time())
 
         cls._trace_event(ev)
-        cls._store_in_db(sql)
+
+        queue_info_dao.add_entry(ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
 
     @classmethod
     def AgentConnect(cls, ev):
         if not cls._is_traced_event(ev):
-            return ""
+            return
 
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
-        sql = '''UPDATE queue_info '''\
-              '''SET call_picker = '%s', hold_time = %s '''\
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
-                  ev[MEMBER], ev[HOLDTIME], ct, ev[UNIQUEID])
-
         cls._trace_event(ev)
-        cls._store_in_db(sql)
+        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME], ev[MEMBER])
 
     @classmethod
     def AgentComplete(cls, ev):
         if not cls._is_traced_event(ev):
-            return ""
+            return
 
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
-        sql = '''UPDATE queue_info ''' \
-              '''SET talk_time = %s ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
-                  ev[TALKTIME], ct, ev[UNIQUEID])
-
         del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
-
-        cls._store_in_db(sql)
+        queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
 
     @classmethod
     def Leave(cls, ev):
         if not cls._is_traced_event(ev):
-            return ""
+            return
 
-        ev[HOLDTIME] = time.time() - cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
+        ev[HOLDTIME] = int(time.time()) - cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
-        sql = '''UPDATE queue_info ''' \
-              '''SET hold_time = %d ''' \
-              '''WHERE call_time_t = %d and caller_uniqueid = '%s'; ''' % (
-                  ev[HOLDTIME], ct, ev[UNIQUEID])
-
         cls._trace_event(ev)
-        cls._store_in_db(sql)
+        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME])
 
         # if the patch to get the reason is not applied, the cache is cleaned
         # manually
