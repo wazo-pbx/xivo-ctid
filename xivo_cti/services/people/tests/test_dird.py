@@ -18,6 +18,7 @@
 import json
 
 from mock import Mock, patch
+from mock import ANY
 from unittest import TestCase
 from xivo_cti.scheduler import Scheduler
 
@@ -31,31 +32,18 @@ class TestDird(TestCase):
         self.scheduler = Scheduler()
         self.scheduler.setup(Mock())
         self.dird = Dird(self.scheduler)
+        self.dird.executor = Mock()
 
     @patch('requests.get')
     def test_headers(self, http_get):
         callback = Mock()
         profile = 'my_profile'
         expected_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'.format(profile=profile)
-        headers, types = ["Fìrstname", "Làstname", "Phòne number"], [None, None, "office"]
-        http_get.return_value = Mock(
-            content=json.dumps(
-                {
-                    "column_headers": headers,
-                    "column_types": types
-                }
-            )
-        )
-        decoded_result = {
-            "column_headers": _unicode_list(headers),
-            "column_types": _unicode_list(types)
-        }
 
         self.dird.headers(profile, callback)
 
-        self.dird.executor.shutdown(wait=True)
-        http_get.assert_called_once_with(expected_url)
-        callback.assert_called_once_with(decoded_result)
+        self.dird.executor.submit.assert_called_once_with(http_get, expected_url)
+        self.dird.executor.submit.return_value.add_done_callback.assert_called_once_with(ANY)
 
 
 def _unicode_list(binary_list):
