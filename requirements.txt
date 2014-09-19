@@ -11,3 +11,4 @@ python-cjson
 python-ldap
 pyhamcrest
 requests
+futures

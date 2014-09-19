@@ -28,14 +28,14 @@ class Dird(object):
 
     _headers_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'
 
-    def __init__(self):
-        pass  # ioc context needs default constructor
+    def __init__(self, scheduler):
+        self.executor = futures.ThreadPoolExecutor(max_workers=5)
+        self._scheduler = scheduler
 
     def headers(self, profile, callback):
         def response_to_dict(f):
-            return callback(json.loads(f.result().content))
+            self._scheduler.execute_callback(callback, json.loads(f.result().content))
 
         url = self._headers_url.format(profile=profile)
-        with futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future = executor.submit(requests.get, url)
-            future.add_done_callback(response_to_dict)
+        future = self.executor.submit(requests.get, url)
+        future.add_done_callback(response_to_dict)

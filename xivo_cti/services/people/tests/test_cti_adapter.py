@@ -17,6 +17,7 @@
 
 
 from mock import Mock, patch, sentinel as s
+from mock import ANY
 from unittest import TestCase
 
 from xivo_cti import dao
@@ -37,7 +38,7 @@ class TestCTIAdapter(TestCase):
 
         self.cti_adapter.get_headers(s.user_id)
 
-        self.dird.headers.assert_called_once_with(s.profile, self.cti_adapter.send_headers_result, s.user_id)
+        self.dird.headers.assert_called_once_with(s.profile, ANY)
 
     def test_send_headers_result(self):
         user_id = 12
@@ -46,7 +47,7 @@ class TestCTIAdapter(TestCase):
             'column_types': Mock(),
         }
 
-        self.cti_adapter.send_headers_result(user_id, headers)
+        self.cti_adapter._send_headers_result(user_id, headers)
 
         self.cti_server.send_to_cti_client.assert_called_once_with(
             'xivo/12',
