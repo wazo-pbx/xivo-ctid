@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
-
-from mock import Mock, patch
 from mock import ANY
+from mock import Mock
+from mock import patch
 from unittest import TestCase
 from xivo_cti.scheduler import Scheduler
 
