@@ -188,7 +188,7 @@ class AMIClass(object):
                            ('Async', 'true')]
         if switch_originates:
             if (phonedst.startswith('#')):
-                command_details.append(('CallerID', '"%s"' % cidnamedst))
+                command_details.append(('CallerID', '"%s" <>' % cidnamedst))
             else:
                 command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
         else:
