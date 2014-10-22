@@ -644,11 +644,19 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line_identity):
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
+    @patch('xivo_cti.dao.user.get_line')
+    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line):
         unique_id = '1234567.44'
         user_id = 5
-        user_line = 'sccp/12345'
+        line_identity = 'sccp/12345'
+        line_cid_name = 'John'
+        line_cid_number = '123'
+        line_callerid = '"%s" <%s>' % (line_cid_name, line_cid_number)
+        line = {
+            'identity': line_identity,
+            'callerid': line_callerid,
+        }
         ringing_channel = 'sccp/12345-0000001'
         channel_to_intercept = 'SIP/acbdf-348734'
         cid_name, cid_number = 'Alice', '5565'
@@ -658,15 +666,15 @@ class TestCurrentCallManager(_BaseTestCase):
         dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
         dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         dao.channel.channels_from_identity.return_value = [ringing_channel]
-        mock_get_line_identity.return_value = user_line
+        mock_get_line.return_value = line
         self.manager.schedule_answer = Mock()
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
         self.manager.ami.hangup.assert_called_once_with(ringing_channel)
         self.manager.ami.switchboard_retrieve.assert_called_once_with(
-            user_line, channel_to_intercept, cid_name, cid_number)
-        self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, user_line)
+            line_identity, channel_to_intercept, cid_name, cid_number, line_cid_name, line_cid_number)
+        self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, line_identity)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_talking_then_do_nothing(self, mock_get_line_identity):
@@ -817,6 +825,26 @@ class TestCurrentCallManager(_BaseTestCase):
         result = self.manager._local_channel_peer(peer)
 
         self.assertEqual(result, mine)
+
+    def test_get_cid_name_and_number(self):
+        line = {
+            'callerid': '"John" <123>',
+        }
+
+        cid_name, cid_num = self.manager._get_cid_name_and_number_from_line(line)
+
+        self.assertEqual(cid_name, 'John')
+        self.assertEqual(cid_num, '123')
+
+    def test_get_cid_name_and_number_on_error(self):
+        line = {
+            'callerid': 'foobar',
+        }
+
+        cid_name, cid_num = self.manager._get_cid_name_and_number_from_line(line)
+
+        self.assertEqual(cid_name, '')
+        self.assertEqual(cid_num, '')
 
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]

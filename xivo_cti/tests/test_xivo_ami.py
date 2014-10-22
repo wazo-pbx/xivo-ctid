@@ -45,8 +45,10 @@ class TestXivoAMI(unittest.TestCase):
         channel = 'SIP/abcd-1234'
         cid_name = 'Alice'
         cid_num = '555'
+        cid_name_src = 'Bob'
+        cid_num_src = '444'
 
-        self.ami_class.switchboard_retrieve(line_interface, channel, cid_name, cid_num)
+        self.ami_class.switchboard_retrieve(line_interface, channel, cid_name, cid_num, cid_name_src, cid_num_src)
 
         self.ami_class._exec_command.assert_called_once_with(
             'Originate',
@@ -57,6 +59,8 @@ class TestXivoAMI(unittest.TestCase):
              ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
              ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
              ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
+             ('Variable', 'XIVO_ORIG_CID_NUM=%s' % cid_num_src),
+             ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cid_name_src),
              ('Variable', 'XIVO_CHANNEL=%s' % channel),
              ('Async', 'true')])
 

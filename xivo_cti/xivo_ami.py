@@ -346,7 +346,7 @@ class AMIClass(object):
                                                  ('Context', context),
                                                  ('Priority', '1')])
 
-    def switchboard_retrieve(self, line_interface, channel, cid_name, cid_num):
+    def switchboard_retrieve(self, line_interface, channel, cid_name, cid_num, cid_name_src, cid_num_src):
         self._exec_command('Originate',
                            [('Channel', line_interface),
                             ('Exten', 's'),
@@ -355,6 +355,8 @@ class AMIClass(object):
                             ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
                             ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
                             ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
+                            ('Variable', 'XIVO_ORIG_CID_NUM=%s' % cid_num_src),
+                            ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cid_name_src),
                             ('Variable', 'XIVO_CHANNEL=%s' % channel),
                             ('Async', 'true')])
 
