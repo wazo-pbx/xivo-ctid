@@ -256,16 +256,16 @@ class CurrentCallManager(object):
             return
         try:
             line = dao.user.get_line(user_id)
-            user_line = line['identity'].lower()
+            line_identity = line['identity'].lower()
             cid_name, cid_num = dao.channel.get_caller_id_name_number(channel_to_retrieve)
             cid_name_src, cid_num_src = self._get_cid_name_and_number_from_line(line)
-            ringing_channels = dao.channel.channels_from_identity(user_line)
+            ringing_channels = dao.channel.channels_from_identity(line_identity)
         except LookupError:
             raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
             map(self.ami.hangup, ringing_channels)
-            self.ami.switchboard_retrieve(user_line, channel_to_retrieve, cid_name, cid_num, cid_name_src, cid_num_src)
-            self._call_manager.answer_next_ringing_call(client_connection, user_line)
+            self.ami.switchboard_retrieve(line_identity, channel_to_retrieve, cid_name, cid_num, cid_name_src, cid_num_src)
+            self._call_manager.answer_next_ringing_call(client_connection, line_identity)
 
     def _get_cid_name_and_number_from_line(self, line):
         try:
