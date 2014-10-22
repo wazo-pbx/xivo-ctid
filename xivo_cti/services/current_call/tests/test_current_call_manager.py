@@ -644,9 +644,9 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
     @patch('xivo_cti.dao.user.get_line')
-    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line, mock_get_line_identity):
+    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line):
         unique_id = '1234567.44'
         user_id = 5
         line_identity = 'sccp/12345'
