@@ -20,7 +20,9 @@ Asterisk AMI utilities.
 """
 
 import logging
+import os
 import socket
+import subprocess
 import time
 import errno
 
@@ -50,15 +52,38 @@ class AMIClass(object):
 
     def connect(self):
         self.actionid = None
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sockret = self.sock.connect_ex((self.ipaddress, self.ipport))
+        if os.environ.get('XIVO_CTID_AMI_PROXY'):
+            logger.info('Connecting to AMI through ami-proxy...')
+            try:
+                self.sock = self._new_connection_with_ami_proxy()
+            except Exception:
+                logger.exception('Could not connect to AMI through ami-proxy')
+                self.sock = self._new_connection()
+        else:
+            self.sock = self._new_connection()
+        self.sock.settimeout(30)
+        self.fd = self.sock.fileno()
+
+    def _new_connection(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sockret = sock.connect_ex((self.ipaddress, self.ipport))
         if sockret:
             logger.warning('unable to connect to %s:%d - reason %d',
                            self.ipaddress, self.ipport, sockret)
             raise self.AMIError('failed to connect')
-        else:
-            self.sock.settimeout(30)
-            self.fd = self.sock.fileno()
+        return sock
+
+    def _new_connection_with_ami_proxy(self):
+        sock1, sock2 = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            subprocess.Popen(['ami-proxy', self.ipaddress, str(self.ipport)], stdin=sock2, stdout=sock2, close_fds=True)
+        except Exception:
+            sock1.close()
+            sock2.close()
+            raise
+
+        sock2.close()
+        return sock1
 
     def sendcommand(self, action, args, loopnum=0):
         ret = False

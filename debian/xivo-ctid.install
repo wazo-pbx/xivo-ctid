@@ -1,1 +1,2 @@
 debian/tmp/usr/bin/xivo-ctid usr/bin/
+debian/tmp/usr/bin/ami-proxy usr/bin/
