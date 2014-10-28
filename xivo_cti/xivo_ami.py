@@ -50,15 +50,18 @@ class AMIClass(object):
 
     def connect(self):
         self.actionid = None
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sockret = self.sock.connect_ex((self.ipaddress, self.ipport))
+        self.sock = self._new_connection()
+        self.sock.settimeout(30)
+        self.fd = self.sock.fileno()
+
+    def _new_connection(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sockret = sock.connect_ex((self.ipaddress, self.ipport))
         if sockret:
             logger.warning('unable to connect to %s:%d - reason %d',
                            self.ipaddress, self.ipport, sockret)
             raise self.AMIError('failed to connect')
-        else:
-            self.sock.settimeout(30)
-            self.fd = self.sock.fileno()
+        return sock
 
     def sendcommand(self, action, args, loopnum=0):
         ret = False
