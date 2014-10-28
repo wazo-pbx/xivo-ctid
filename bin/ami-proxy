@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2014 Avencall
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+import argparse
+import collections
+import os
+import select
+import socket
+import sys
+
+KiB = 1024
+MiB = 1024 * KiB
+
+BUFSIZE = 4096
+DEFAULT_MAX_SIZE = 10 * MiB
+
+
+def main():
+    parsed_args = parse_args()
+
+    sock = connect(parsed_args.hostname, parsed_args.port)
+
+    local_endpoint = Endpoint(sys.stdin.fileno(), sys.stdout.fileno())
+    remote_endpoint = Endpoint(sock.fileno(), sock.fileno())
+
+    duplex_transfer(local_endpoint, remote_endpoint, parsed_args.max_size)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--max-size', type=int, default=DEFAULT_MAX_SIZE,
+                        help='maximum size in bytes of data that can be buffered')
+    parser.add_argument('hostname')
+    parser.add_argument('port', type=int)
+
+    return parser.parse_args()
+
+
+def connect(hostname, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((hostname, port))
+    sock.setblocking(0)
+    return sock
+
+
+Endpoint = collections.namedtuple('Endpoint', ['r', 'w'])
+
+
+def duplex_transfer(endpoint1, endpoint2, max_size):
+    endpoint1_buf = ''  # buffer of data to send to endpoint1
+    endpoint2_buf = ''  # buffer of data to send to endpoint2
+
+    rlist = [endpoint1.r, endpoint2.r]
+    while True:
+        wlist = []
+        if endpoint2_buf:
+            wlist.append(endpoint2.w)
+        if endpoint1_buf:
+            wlist.append(endpoint1.w)
+
+        r_rlist, r_wlist, _ = select.select(rlist, wlist, [])
+        for cur_fd in r_wlist:
+            if cur_fd == endpoint1.w:
+                n = os.write(cur_fd, endpoint1_buf)
+                endpoint1_buf = endpoint1_buf[n:]
+            elif cur_fd == endpoint2.w:
+                n = os.write(cur_fd, endpoint2_buf)
+                endpoint2_buf = endpoint2_buf[n:]
+
+        for cur_fd in r_rlist:
+            if cur_fd == endpoint1.r:
+                buf = os.read(cur_fd, BUFSIZE)
+                if not buf:
+                    return
+                endpoint2_buf += buf
+                if len(endpoint2_buf) > max_size:
+                    print >>sys.stderr, 'Max pending size for endpoint2 reached (%d)' % len(endpoint2_buf)
+                    sys.exit(1)
+            elif cur_fd == endpoint2.r:
+                buf = os.read(cur_fd, BUFSIZE)
+                if not buf:
+                    return
+                endpoint1_buf += buf
+                if len(endpoint1_buf) > max_size:
+                    print >>sys.stderr, 'Max pending size for endpoint1 reached (%d)' % len(endpoint1_buf)
+                    sys.exit(1)
+
+
+main()

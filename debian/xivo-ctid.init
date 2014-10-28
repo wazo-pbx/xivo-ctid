@@ -23,6 +23,10 @@ XIVO_DEFAULT_FILE="/etc/default/xivo"
 
 test -x $DAEMON || exit 0
 
+if [ -r /etc/default/$DAEMONNAME ]; then
+    . /etc/default/$DAEMONNAME
+fi
+
 is_enabled() {
     # Check if startup variable is set to 1, if not we exit.
     if [ -f $XIVO_DEFAULT_FILE ]; then

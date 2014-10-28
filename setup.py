@@ -37,5 +37,5 @@ setup(
     author_email='xivo-dev@lists.proformatique.com',
     url='http://wiki.xivo.io/',
     packages=packages,
-    scripts=['bin/xivo-ctid'],
+    scripts=['bin/ami-proxy', 'bin/xivo-ctid'],
 )
