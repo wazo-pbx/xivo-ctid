@@ -190,13 +190,6 @@ class Command(object):
         self.head = 'LOGIN SUCCESSFUL'
         logger.info('%s for %s', self.head, cdetails)
 
-        if self.userid.startswith('cs:'):
-            notifyremotelogin = threading.Timer(2, self._ctiserver.cb_timer,
-                                                ({'action': 'xivoremote',
-                                                  'properties': None}))
-            notifyremotelogin.setName('Thread-xivo-%s' % self.userid)
-            notifyremotelogin.start()
-
         cti_profile_id = self.user_keeplist['cti_profile_id']
         profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
 
