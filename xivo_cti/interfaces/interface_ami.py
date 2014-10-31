@@ -16,11 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import os
 import random
-import Queue
 import string
-import threading
 import time
 
 from xivo_cti import asterisk_ami_definitions as ami_def
@@ -51,12 +48,10 @@ class AMI(object):
         self.innerdata = innerdata
         self.amiclass = ami_class
         self._input_buffer = ''
-        self.waiting_actionid = {}
         self.actionids = {}
         self.originate_actionids = {}
 
     def init_connection(self):
-        self.timeout_queue = Queue.Queue()
         ami_logger.AMILogger.register_callbacks()
         ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
         ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
@@ -88,40 +83,6 @@ class AMI(object):
                 return self.amiclass.sock.getpeername()
             except Exception:
                 return None
-
-    def cb_timer(self, *args):
-        try:
-            self.timeout_queue.put(args)
-            os.write(self._ctiserver.pipe_queued_threads[1], 'ami:%s\n' %
-                     self._ctiserver.myipbxid)
-        except Exception:
-            logger.exception('cb_timer %s', args)
-
-    def checkqueue(self):
-        ncount = 0
-        while self.timeout_queue.qsize() > 0:
-            ncount += 1
-            (toload,) = self.timeout_queue.get()
-            action = toload.get('action')
-            if action == 'commandrequest':
-                actionid = toload.get('properties')
-                if actionid in self.waiting_actionid:
-                    sockparams = self.waiting_actionid.get(actionid)
-                    sockparams.makereply_close(actionid, 'timeout')
-                    del self.waiting_actionid[actionid]
-        return ncount
-
-    def delayed_action(self, usefulmsg, replyto=None):
-        actionid = self.make_actionid()
-        self.amiclass.sendcommand('Command', [('Command', usefulmsg),
-                                              ('ActionID', actionid)])
-        if replyto is not None:
-            self.waiting_actionid[actionid] = replyto
-            replyto.replytimer = threading.Timer(2, self.cb_timer,
-                                                 ({'action': 'commandrequest',
-                                                   'properties': actionid},))
-            replyto.replytimer.setName('Thread-ami-%s' % actionid)
-            replyto.replytimer.start()
 
     def decode_raw_event(self, raw_event):
         return raw_event.decode('utf8', 'replace')
@@ -171,24 +132,6 @@ class AMI(object):
                 response = event['Response']
                 if (response == 'Follows' and 'Privilege' in event
                         and event['Privilege'] == 'Command'):
-                    reply = []
-                    try:
-                        for line in nocolon:
-                            to_ignore = ('', '--END COMMAND--')
-                            args = [a for a in line.split('\n') if a not in to_ignore]
-                            reply.extend(args)
-
-                        if 'ActionID' in event:
-                            actionid = event['ActionID']
-                            if actionid in self.waiting_actionid:
-                                connreply = self.waiting_actionid[actionid]
-                                if connreply is not None:
-                                    connreply.replytimer.cancel()
-                                    connreply.makereply_close(actionid, 'OK', reply)
-                                del self.waiting_actionid[actionid]
-
-                    except Exception:
-                        logger.exception('(command reply)')
                     try:
                         self.amiresponse_follows(event)
                     except Exception:
@@ -201,14 +144,6 @@ class AMI(object):
                         logger.exception('response_success (%s) (%s)', event, nocolon)
 
                 elif response == 'Error':
-                    if 'ActionID' in event:
-                        actionid = event['ActionID']
-                        if actionid in self.waiting_actionid:
-                            connreply = self.waiting_actionid.get(actionid)
-                            if connreply is not None:
-                                connreply.replytimer.cancel()
-                                connreply.makereply_close(actionid, 'KO')
-                            del self.waiting_actionid[actionid]
                     try:
                         self.amiresponse_error(event)
                     except Exception:

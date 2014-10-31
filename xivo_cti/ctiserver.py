@@ -663,7 +663,6 @@ class CTIServer(object):
             del self.fdlist_established[sel_i]
 
     def _socket_pipe_queue_read(self, sel_i):
-        # try:
         pipebuf = os.read(sel_i, 1024)
         if not pipebuf:
             logger.warning('pipe_queued_threads has been closed')
@@ -672,17 +671,13 @@ class CTIServer(object):
                 if not pb:
                     continue
                 [kind, where] = pb.split(':')
-                if kind in ['main', 'innerdata', 'ami']:
+                if kind in ['main', 'innerdata']:
                     if kind == 'main':
                         self.checkqueue()
                     elif kind == 'innerdata':
                         self.safe.checkqueue()
-                    elif kind == 'ami':
-                        self.interface_ami.checkqueue()
                 else:
                     logger.warning('unknown kind for %s', pb)
-        # except Exception:
-        #    logger.exception('[pipe_queued_threads]')
 
     def _update_safe_list(self):
         if self.update_config_list:
