@@ -76,7 +76,6 @@ class asyncActionsThread(threading.Thread):
 
     def run(self):
         self.decodefile()
-        self.notify_step('file_decoded')
         self.converttotiff()
         self.notify_step('file_converted')
 
@@ -122,14 +121,6 @@ class Fax(object):
 
     def step(self, stepname):
         removeme = False
-        try:
-            self.requester.reply({'class': 'faxsend',
-                                  'fileid': self.fileid,
-                                  'step': stepname})
-        except Exception:
-            # when requester is not connected any more ...
-            pass
-
         if stepname == 'file_converted':
             removeme = True
 
