@@ -358,9 +358,7 @@ class CTIServer(object):
         return closemenow
 
     def checkqueue(self):
-        ncount = 0
-        while self.timeout_queue.qsize() > 0:
-            ncount += 1
+        while not self.timeout_queue.empty():
             (toload,) = self.timeout_queue.get()
             action = toload.get('action')
             if action == 'ctilogin':
@@ -370,12 +368,9 @@ class CTIServer(object):
                     del self.fdlist_established[connc]
             else:
                 logger.warning('checkqueue : unknown action received : %s', action)
-        return ncount
 
     def cb_timer(self, *args):
         try:
-            tname = threading.currentThread()
-            tname.setName('Thread-main')
             self.timeout_queue.put(args)
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:

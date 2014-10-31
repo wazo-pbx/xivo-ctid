@@ -18,7 +18,6 @@
 import logging
 import random
 import string
-import threading
 import time
 
 from xivo_cti import cti_fax, dao

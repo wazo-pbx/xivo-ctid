@@ -605,9 +605,7 @@ class Safe(object):
     # Timers/Synchro stuff - begin
 
     def checkqueue(self):
-        ncount = 0
-        while self.timeout_queue.qsize() > 0:
-            ncount += 1
+        while not self.timeout_queue.empty():
             received = self.timeout_queue.get()
             (toload,) = received
             action = toload.get('action')
@@ -621,9 +619,6 @@ class Safe(object):
                     actionid = fileid
                     self._ctiserver.interface_ami.execute_and_track(actionid, params)
                     del self.faxes[fileid]
-
-            # other cases to handle : login, agentlogoff (would that still be true ?)
-        return ncount
 
     def cb_timer(self, *args):
         try:
