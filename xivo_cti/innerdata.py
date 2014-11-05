@@ -165,19 +165,19 @@ class Safe(object):
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
+        ami_handler.register_callback('AgentCalled', self.handle_agent_called)
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
         ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
-    def _channel_extra_vars_agent_linked_unlinked(self, event):
+    def _set_channel_extra_vars_agent(self, event, channel_name, member_name):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        channel_name = event['Channel']
         channel = self.channels.get(channel_name)
         if not channel:
             return
-        proto, agent_number = event['MemberName'].split('/', 1)
+        proto, agent_number = member_name.split('/', 1)
         try:
             if proto == 'Agent':
                 _set('agentnumber', agent_number)
@@ -198,18 +198,25 @@ class Safe(object):
             logger.exception(e)
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
-    def handle_agent_linked(self, event):
-        # Will be called when joining a group/queue with an agent or user member
-        self._channel_extra_vars_agent_linked_unlinked(event)
-        channel_name = event['Channel']
+    def handle_agent_called(self, event):
+        channel_name = event['DestinationChannel']
+        member_name = event['AgentName']
         uniqueid = event['Uniqueid']
+        self._set_channel_extra_vars_agent(event, channel_name, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_called(uniqueid, channel_name)
+
+    def handle_agent_linked(self, event):
+        channel_name = event['Channel']
+        member_name = event['MemberName']
+        uniqueid = event['Uniqueid']
+        self._set_channel_extra_vars_agent(event, channel_name, member_name)
         context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid, channel_name)
 
     def handle_agent_unlinked(self, event):
-        # Will be called when leaving a group/queue with an agent or user member
-        self._channel_extra_vars_agent_linked_unlinked(event)
-        uniqueid = event['Uniqueid']
         channel_name = event['Channel']
+        member_name = event['MemberName']
+        uniqueid = event['Uniqueid']
+        self._set_channel_extra_vars_agent(event, channel_name, member_name)
         context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid, channel_name)
 
     def handle_agent_login(self, event):

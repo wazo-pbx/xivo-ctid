@@ -23,6 +23,9 @@ class DispatchFilter(object):
         self._calls_to_user = {}
         self._linked_calls = []
 
+    def handle_agent_called(self, uniqueid, _channel_name):
+        self._dispatch('dial', uniqueid)
+
     def handle_agent_complete(self, uniqueid, _channel_name):
         self._dispatch('unlink', uniqueid)
 
@@ -41,17 +44,11 @@ class DispatchFilter(object):
     def handle_did(self, uniqueid, _channel_name):
         self._dispatch('incomingdid', uniqueid)
 
-    def handle_group(self, uniqueid, _channel_name):
-        self._dispatch('dial', uniqueid)
-
     def handle_hangup(self, uniqueid, channel_name):
         self._clean_uniqueid(uniqueid)
         if 'agentcallback' in channel_name:
             return
         self._dispatch('hangup', uniqueid)
-
-    def handle_queue(self, uniqueid, _channel_name):
-        self._dispatch('dial', uniqueid)
 
     def handle_user(self, uniqueid, _channel_name):
         self._calls_to_user[uniqueid] = True

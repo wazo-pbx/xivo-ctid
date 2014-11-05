@@ -46,27 +46,10 @@ class TestDispatchFilter(unittest.TestCase):
 
         self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
-    def test_handle_dial_to_queue(self):
-        self._df.handle_queue(sentinel.uid, sentinel.chan_queue)
-        self._dispatch.reset_mock()
-        self._df.handle_dial(sentinel.uid, sentinel.chan_dial)
-
-        assert_that(self._dispatch.call_count, equal_to(0))
-
     def test_handle_did(self):
         self._df.handle_did(sentinel.uid, sentinel.chan)
 
         self._dispatch.assert_called_once_with('incomingdid', sentinel.uid)
-
-    def test_handle_group(self):
-        self._df.handle_group(sentinel.uid, sentinel.chan)
-
-        self._dispatch.assert_called_once_with('dial', sentinel.uid)
-
-    def test_handle_queue(self):
-        self._df.handle_queue(sentinel.uid, sentinel.chan)
-
-        self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
@@ -87,15 +70,8 @@ class TestDispatchFilter(unittest.TestCase):
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
-    def test_handle_bridge_call_to_queue(self):
-        self._df.handle_queue(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
-
-        self._dispatch.assert_called_once_with('dial', sentinel.uid)
-
-    def test_handle_bridge_call_to_group(self):
-        self._df.handle_group(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
+    def test_handle_agent_called(self):
+        self._df.handle_agent_called(sentinel.uid, sentinel.chan)
 
         self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
