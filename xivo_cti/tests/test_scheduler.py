@@ -23,9 +23,8 @@ from xivo_cti.scheduler import Scheduler
 class TestScheduler(unittest.TestCase):
 
     def setUp(self):
-        self.scheduler = Scheduler()
-        self.mock_pipe = Mock()
-        self.scheduler.setup(self.mock_pipe)
+        self.task_queue = Mock()
+        self.scheduler = Scheduler(self.task_queue)
 
     @patch('threading.Timer')
     def test_schedule(self, mock_timer):
@@ -37,7 +36,7 @@ class TestScheduler(unittest.TestCase):
         self.scheduler.schedule(timeout, mock_callback)
 
         mock_timer.assert_called_once_with(timeout,
-                                           self.scheduler.execute_callback,
+                                           self.task_queue.put,
                                            [mock_callback])
         mock_timer_instance.start.assert_called_once_with()
 
@@ -54,16 +53,6 @@ class TestScheduler(unittest.TestCase):
         self.scheduler.schedule(timeout, mock_callback, 1, 2, 'three')
 
         mock_timer.assert_called_once_with(timeout,
-                                           self.scheduler.execute_callback,
+                                           self.task_queue.put,
                                            expected_timer_arguments)
         mock_timer_instance.start.assert_called_once_with()
-
-    @patch('os.write')
-    def test_execute_callback(self, mock_os_write):
-        callback_function = Mock()
-        callback_args = ('arg1', 'arg2')
-
-        self.scheduler.execute_callback(callback_function, *callback_args)
-
-        callback_function.assert_called_once_with(*callback_args)
-        mock_os_write.assert_called_once_with(self.mock_pipe, 'scheduler:callback\n')

@@ -598,10 +598,6 @@ class Safe(object):
                                              'compressed': sheet.compressed,
                                              'payload': sheet.payload})
 
-    def queue_task(self, function, *args):
-        # This function should not be used in new code. Only there as a "compatibility layer".
-        self._ctiserver.queue_task(function, *args)
-
     def send_fax(self, step, fileid):
         removeme = self.faxes[fileid].step(step)
         if removeme:

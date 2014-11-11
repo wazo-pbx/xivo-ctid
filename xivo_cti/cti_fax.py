@@ -21,6 +21,8 @@ import logging
 import os
 import threading
 
+from xivo_cti.ioc.context import context
+
 logger = logging.getLogger('async')
 
 PATH_SPOOL_ASTERISK = '/var/spool/asterisk'
@@ -34,6 +36,7 @@ class asyncActionsThread(threading.Thread):
         threading.Thread.__init__(self)
         self.setName(name)
         self.params = params
+        self._task_queue = context.get('task_queue')
 
     def decodefile(self):
         decodedfile = base64.b64decode(self.params.get('rawfile').strip())
@@ -70,7 +73,7 @@ class asyncActionsThread(threading.Thread):
     def notify_step(self, stepname):
         innerdata = self.params.get('innerdata')
         fileid = self.params.get('fileid')
-        innerdata.queue_task(innerdata.send_fax, stepname, fileid)
+        self._task_queue.put(innerdata.send_fax, stepname, fileid)
 
     def run(self):
         self.decodefile()

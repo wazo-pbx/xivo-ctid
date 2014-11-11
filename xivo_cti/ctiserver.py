@@ -73,7 +73,6 @@ from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
-from xivo_cti.task import new_task
 from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('main')
@@ -88,9 +87,7 @@ class CTIServer(object):
         self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
-        self._task_queue = None
         self.update_config_list = []
-        self.pipe_queued_threads = os.pipe()
         self._config = cti_config
         self._cti_events = Queue.Queue()
 
@@ -124,7 +121,6 @@ class CTIServer(object):
         self._daemonize()
         QueueLogger.init()
         self._config.update()
-        self._task_queue = Queue.Queue()
         self._set_signal_handlers()
 
         self.interface_ami = context.get('interface_ami')
@@ -151,8 +147,7 @@ class CTIServer(object):
         self._queue_statistics_manager = context.get('queue_statistics_manager')
         self._queue_entry_notifier = context.get('queue_entry_notifier')
 
-        scheduler = context.get('scheduler')
-        scheduler.setup(self.pipe_queued_threads[1])
+        self._task_queue = context.get('task_queue')
 
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_service_cti_parser = context.get('agent_service_cti_parser')
@@ -358,19 +353,6 @@ class CTIServer(object):
             logger.warning('unknown connection kind %s', kind)
         return closemenow
 
-    def _run_tasks(self):
-        while not self._task_queue.empty():
-            task = self._task_queue.get()
-            task()
-
-    def queue_task(self, function, *args):
-        task = new_task(function, args)
-        try:
-            self._task_queue.put(task)
-            os.write(self.pipe_queued_threads[1], 'main:\n')
-        except Exception:
-            logger.exception('queue_task %s', task)
-
     def _on_cti_login_auth_timeout(self, connc):
         connc.close()
         if connc in self.fdlist_established:
@@ -380,6 +362,8 @@ class CTIServer(object):
         self.askedtoquit = False
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
+
+        self._task_queue.clear()
 
         logger.info('Connecting to bus')
         bus_producer = context.get('bus_producer')
@@ -519,7 +503,7 @@ class CTIServer(object):
                 del self.fdlist_established[cn]
 
             self.fdlist_full = []
-            self.fdlist_full.append(self.pipe_queued_threads[0])
+            self.fdlist_full.append(self._task_queue)
             self.fdlist_full.append(self.ami_sock)
             self.fdlist_full.extend(self.fdlist_listen_cti)
             self.fdlist_full.extend(self.fdlist_established)
@@ -602,7 +586,7 @@ class CTIServer(object):
         if socketobject:
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
-                interface.logintimer = threading.Timer(logintimeout, self.queue_task,
+                interface.logintimer = threading.Timer(logintimeout, self._task_queue.put,
                                                        (self._on_cti_login_auth_timeout, socketobject))
                 interface.logintimer.start()
             elif kind == 'INFO':
@@ -656,13 +640,6 @@ class CTIServer(object):
             sel_i.close()
             del self.fdlist_established[sel_i]
 
-    def _socket_pipe_queue_read(self, sel_i):
-        pipebuf = os.read(sel_i, 1024)
-        if not pipebuf:
-            logger.warning('pipe_queued_threads has been closed')
-        else:
-            self._run_tasks()
-
     def _update_safe_list(self):
         if self.update_config_list:
             try:
@@ -707,9 +684,9 @@ class CTIServer(object):
                 # incoming TCP connections (CTI, WEBI, INFO)
                 elif sel_i in self.fdlist_established:
                     self._socket_established_read(sel_i)
-                # local pipe fd
-                elif self.pipe_queued_threads[0] == sel_i:
-                    self._socket_pipe_queue_read(sel_i)
+                # task queue
+                elif sel_i == self._task_queue:
+                    self._task_queue.run()
 
                 self._update_safe_list()
                 self._empty_cti_events_queue()

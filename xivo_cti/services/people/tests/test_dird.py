@@ -28,8 +28,7 @@ from ..dird import Dird
 class TestDird(TestCase):
 
     def setUp(self):
-        self.scheduler = Scheduler()
-        self.scheduler.setup(Mock())
+        self.scheduler = Scheduler(Mock())
         self.dird = Dird(self.scheduler)
         self.dird.executor = Mock()
 
