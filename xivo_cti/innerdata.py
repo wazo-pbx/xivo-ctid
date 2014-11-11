@@ -18,9 +18,7 @@
 import copy
 import hashlib
 import logging
-import os
 import time
-import Queue
 
 from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
@@ -66,8 +64,6 @@ class Safe(object):
         self.channels = {}
         self.faxes = {}
         self.ctistack = []
-
-        self.timeout_queue = Queue.Queue()
 
         self.displays_mgr = directory.DisplaysMgr()
         self.contexts_mgr = directory.ContextsMgr()
@@ -602,30 +598,17 @@ class Safe(object):
                                              'compressed': sheet.compressed,
                                              'payload': sheet.payload})
 
-    # Timers/Synchro stuff - begin
+    def queue_task(self, function, *args):
+        # This function should not be used in new code. Only there as a "compatibility layer".
+        self._ctiserver.queue_task(function, *args)
 
-    def checkqueue(self):
-        while not self.timeout_queue.empty():
-            received = self.timeout_queue.get()
-            (toload,) = received
-            action = toload.get('action')
-            if action == 'fax':
-                properties = toload.get('properties')
-                step = properties.get('step')
-                fileid = properties.get('fileid')
-                removeme = self.faxes[fileid].step(step)
-                if removeme:
-                    params = self.faxes[fileid].getparams()
-                    actionid = fileid
-                    self._ctiserver.interface_ami.execute_and_track(actionid, params)
-                    del self.faxes[fileid]
-
-    def cb_timer(self, *args):
-        try:
-            self.timeout_queue.put(args)
-            os.write(self._ctiserver.pipe_queued_threads[1], 'innerdata:%s\n' % self.ipbxid)
-        except Exception:
-            logger.exception('cb_timer %s', args)
+    def send_fax(self, step, fileid):
+        removeme = self.faxes[fileid].step(step)
+        if removeme:
+            params = self.faxes[fileid].getparams()
+            actionid = fileid
+            self._ctiserver.interface_ami.execute_and_track(actionid, params)
+            del self.faxes[fileid]
 
     def update_directories(self):
         # This function must be called after a certain amount of initialization

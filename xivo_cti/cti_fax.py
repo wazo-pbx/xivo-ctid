@@ -70,9 +70,7 @@ class asyncActionsThread(threading.Thread):
     def notify_step(self, stepname):
         innerdata = self.params.get('innerdata')
         fileid = self.params.get('fileid')
-        innerdata.cb_timer({'action': 'fax',
-                            'properties': {'step': stepname,
-                                           'fileid': fileid}},)
+        innerdata.queue_task(innerdata.send_fax, stepname, fileid)
 
     def run(self):
         self.decodefile()

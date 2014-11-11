@@ -73,6 +73,7 @@ from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.meetme import service_manager as meetme_service_manager_module
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics import queue_statistics_producer
+from xivo_cti.task import new_task
 from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('main')
@@ -87,7 +88,7 @@ class CTIServer(object):
         self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
-        self.timeout_queue = None
+        self._task_queue = None
         self.update_config_list = []
         self.pipe_queued_threads = os.pipe()
         self._config = cti_config
@@ -123,7 +124,7 @@ class CTIServer(object):
         self._daemonize()
         QueueLogger.init()
         self._config.update()
-        self.timeout_queue = Queue.Queue()
+        self._task_queue = Queue.Queue()
         self._set_signal_handlers()
 
         self.interface_ami = context.get('interface_ami')
@@ -357,24 +358,23 @@ class CTIServer(object):
             logger.warning('unknown connection kind %s', kind)
         return closemenow
 
-    def checkqueue(self):
-        while not self.timeout_queue.empty():
-            (toload,) = self.timeout_queue.get()
-            action = toload.get('action')
-            if action == 'ctilogin':
-                connc = toload.get('properties')
-                connc.close()
-                if connc in self.fdlist_established:
-                    del self.fdlist_established[connc]
-            else:
-                logger.warning('checkqueue : unknown action received : %s', action)
+    def _run_tasks(self):
+        while not self._task_queue.empty():
+            task = self._task_queue.get()
+            task()
 
-    def cb_timer(self, *args):
+    def queue_task(self, function, *args):
+        task = new_task(function, args)
         try:
-            self.timeout_queue.put(args)
+            self._task_queue.put(task)
             os.write(self.pipe_queued_threads[1], 'main:\n')
         except Exception:
-            logger.exception('cb_timer %s', args)
+            logger.exception('queue_task %s', task)
+
+    def _on_cti_login_auth_timeout(self, connc):
+        connc.close()
+        if connc in self.fdlist_established:
+            del self.fdlist_established[connc]
 
     def main_loop(self):
         self.askedtoquit = False
@@ -602,9 +602,8 @@ class CTIServer(object):
         if socketobject:
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
-                interface.logintimer = threading.Timer(logintimeout, self.cb_timer,
-                                                       ({'action': 'ctilogin',
-                                                         'properties': socketobject},))
+                interface.logintimer = threading.Timer(logintimeout, self.queue_task,
+                                                       (self._on_cti_login_auth_timeout, socketobject))
                 interface.logintimer.start()
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
@@ -662,17 +661,7 @@ class CTIServer(object):
         if not pipebuf:
             logger.warning('pipe_queued_threads has been closed')
         else:
-            for pb in pipebuf.split('\n'):
-                if not pb:
-                    continue
-                [kind, where] = pb.split(':')
-                if kind in ['main', 'innerdata']:
-                    if kind == 'main':
-                        self.checkqueue()
-                    elif kind == 'innerdata':
-                        self.safe.checkqueue()
-                else:
-                    logger.warning('unknown kind for %s', pb)
+            self._run_tasks()
 
     def _update_safe_list(self):
         if self.update_config_list:
