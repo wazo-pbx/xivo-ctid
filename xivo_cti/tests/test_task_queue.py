@@ -18,7 +18,7 @@
 import select
 import unittest
 from mock import Mock, sentinel
-from xivo_cti.queue import new_task_queue, _PollableQueue, _SignallableFileDescriptor
+from xivo_cti.task_queue import new_task_queue, _PollableQueue, _SignallableFileDescriptor
 
 
 class TestTaskQueue(unittest.TestCase):

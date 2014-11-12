@@ -29,7 +29,6 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
-from xivo_cti.queue import new_task_queue
 from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
@@ -77,6 +76,7 @@ from xivo_cti.statistics.queue_statistics_producer import \
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.statistics_producer_initializer import \
     StatisticsProducerInitializer
+from xivo_cti.task_queue import new_task_queue
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.xivo_ami import AMIClass
 
