@@ -19,7 +19,6 @@ from mock import ANY
 from mock import Mock
 from mock import patch
 from unittest import TestCase
-from xivo_cti.scheduler import Scheduler
 
 from ..dird import Dird
 
@@ -28,8 +27,7 @@ from ..dird import Dird
 class TestDird(TestCase):
 
     def setUp(self):
-        self.scheduler = Scheduler(Mock())
-        self.dird = Dird(self.scheduler)
+        self.dird = Dird(Mock())
         self.dird.executor = Mock()
 
     @patch('requests.get')
