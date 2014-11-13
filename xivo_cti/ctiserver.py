@@ -694,8 +694,11 @@ class CTIServer(object):
                     self._task_queue.run()
 
                 self._update_safe_list()
-                self._empty_cti_events_queue()
         except Exception:
             logger.exception('Socket Reader')
 
-        self._task_scheduler.run()
+        try:
+            self._task_scheduler.run()
+            self._empty_cti_events_queue()
+        except Exception:
+            logger.exception('error')
