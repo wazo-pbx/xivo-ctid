@@ -68,9 +68,6 @@ class CTI(interfaces.Interfaces):
     def answer_cb(self):
         pass
 
-    def connected(self, connid):
-        interfaces.Interfaces.connected(self, connid)
-
     def user_id(self):
         try:
             user_id = self.connection_details['userid']
@@ -159,14 +156,6 @@ class CTI(interfaces.Interfaces):
 
     def send_message(self, msg):
         self.connid.append_queue(self.serial.encode(msg) + '\n')
-
-    def loginko(self, errorstring):
-        logger.warning('user can not connect (%s) : sending %s',
-                       self.connection_details, errorstring)
-        # self.logintimer.cancel() + close
-        tosend = {'class': 'loginko',
-                  'error_string': errorstring}
-        return self.serial.encode(tosend)
 
     def receive_login_id(self, login, version, connection):
         if connection != self:
