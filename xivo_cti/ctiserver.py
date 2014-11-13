@@ -658,7 +658,6 @@ class CTIServer(object):
                 while self.update_config_list:
                     msg = self.update_config_list.pop()
                     self.safe.update_config_list('%ss' % msg['object_name'], msg['state'], msg['id'])
-                    self._empty_cti_events_queue()
             except Exception:
                 logger.exception('Config reload (computed timeout)')
 
@@ -692,13 +691,12 @@ class CTIServer(object):
                 # task queue
                 elif sel_i == self._task_queue:
                     self._task_queue.run()
-
-                self._update_safe_list()
         except Exception:
             logger.exception('Socket Reader')
 
         try:
             self._task_scheduler.run()
+            self._update_safe_list()
             self._empty_cti_events_queue()
         except Exception:
             logger.exception('error')
