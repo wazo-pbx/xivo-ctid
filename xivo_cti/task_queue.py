@@ -19,7 +19,7 @@ import fcntl
 import os
 import threading
 
-from xivo_cti.task import new_task
+from xivo_cti.task import Task
 
 
 def new_task_queue():
@@ -38,17 +38,11 @@ class _TaskQueue(object):
         self._pollable_queue.get_all()
 
     def put(self, function, *args):
-        self.put_task(new_task(function, args))
-
-    def put_task(self, task):
-        self._pollable_queue.put(task)
+        self._pollable_queue.put(Task(function, args))
 
     def run(self):
         for task in self._pollable_queue.get_all():
-            # XXX if there's more than 1 task and a non-last task raise an
-            #     exception, than right now the remaining tasks will never be
-            #     run, which could be quite bad
-            task()
+            task.run()
 
     def fileno(self):
         return self._pollable_queue.fileno()

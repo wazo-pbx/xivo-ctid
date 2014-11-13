@@ -31,14 +31,11 @@ class TestTaskQueue(unittest.TestCase):
 
     def test_run(self):
         function = Mock()
-        task = Mock()
 
         self.task_queue.put(function, sentinel.args1)
-        self.task_queue.put_task(task)
         self.task_queue.run()
 
         function.assert_called_once_with(sentinel.args1)
-        task.assert_called_once_with()
 
 
 class TestPollableQueue(unittest.TestCase):

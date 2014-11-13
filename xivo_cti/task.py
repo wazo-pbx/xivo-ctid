@@ -15,16 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 
-def new_task(function, args):
-    return _Task(function, args)
+logger = logging.getLogger(__name__)
 
 
-class _Task(object):
+class Task(object):
 
     def __init__(self, function, args):
         self._function = function
         self._args = args
 
-    def __call__(self):
-        self._function(*self._args)
+    def run(self):
+        try:
+            self._function(*self._args)
+        except Exception:
+            logger.exception('Unexpected exception raised while running task')
