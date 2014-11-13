@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import collections
 import logging
 import os
-import Queue
 import select
 import signal
 import socket
@@ -89,7 +89,7 @@ class CTIServer(object):
         self.interface_ami = None
         self.update_config_list = []
         self._config = cti_config
-        self._cti_events = Queue.Queue()
+        self._cti_events = collections.deque()
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -462,12 +462,12 @@ class CTIServer(object):
             k.reply(payload)
 
     def send_cti_event(self, event):
-        self._cti_events.put(event)
+        self._cti_events.append(event)
         message_hook.run_hooks(event)
 
     def _empty_cti_events_queue(self):
-        while self._cti_events.qsize() > 0:
-            msg = self._cti_events.get()
+        while self._cti_events:
+            msg = self._cti_events.popleft()
             for interface_obj in self.fdlist_established.itervalues():
                 if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
                     interface_obj.append_msg(msg)

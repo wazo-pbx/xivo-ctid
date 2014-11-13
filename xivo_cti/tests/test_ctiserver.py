@@ -29,7 +29,7 @@ class TestCTIServer(unittest.TestCase):
 
         server.send_cti_event(event)
 
-        self.assertTrue(server._cti_events.qsize() > 0)
-        result = server._cti_events.get()
+        self.assertEqual(len(server._cti_events), 1)
+        result = server._cti_events.popleft()
 
         self.assertEqual(result, event)
