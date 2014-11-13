@@ -218,7 +218,7 @@ class Command(object):
                  'capas': capastruct}
 
         self._connection.connection_details['logged'] = True
-        self._connection.logintimer.cancel()
+        self._connection.login_task.cancel()
         return reply
 
     def __check_capa_connection__(self, capaid):

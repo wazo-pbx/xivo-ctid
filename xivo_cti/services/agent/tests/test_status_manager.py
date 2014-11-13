@@ -23,7 +23,7 @@ from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.call.direction import CallDirection
 from xivo_cti import dao
 from xivo_cti.dao.agent_dao import AgentDAO, AgentCallStatus
-from xivo_cti.scheduler import Scheduler
+from xivo_cti.task_scheduler import _TaskScheduler
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
 
 AGENT_ID = 13
@@ -35,8 +35,8 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent = Mock(AgentDAO)
         self.agent_availability_computer = Mock(AgentAvailabilityComputer)
         dao.innerdata = Mock(InnerdataDAO)
-        self.scheduler = Mock(Scheduler)
-        self.agent_status_manager = AgentStatusManager(self.agent_availability_computer, self.scheduler)
+        self.task_scheduler = Mock(_TaskScheduler)
+        self.agent_status_manager = AgentStatusManager(self.agent_availability_computer, self.task_scheduler)
 
     def test_agent_logged_in(self):
         self.agent_status_manager.agent_logged_in(AGENT_ID)
@@ -105,7 +105,7 @@ class TestAgentStatusManager(unittest.TestCase):
         dao.agent.set_on_call_acd.assert_called_once_with(AGENT_ID, expected_on_call_acd)
         dao.agent.set_on_wrapup.assert_called_once_with(AGENT_ID, expected_in_wrapup)
         self.agent_availability_computer.compute.assert_called_once_with(AGENT_ID)
-        self.scheduler.schedule.assert_called_once_with(wrapup_time, self.agent_status_manager.agent_wrapup_completed, AGENT_ID)
+        self.task_scheduler.schedule.assert_called_once_with(wrapup_time, self.agent_status_manager.agent_wrapup_completed, AGENT_ID)
 
     def test_agent_wrapup_completed(self):
         expected_in_wrapup = False

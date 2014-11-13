@@ -83,7 +83,7 @@ class CTI(interfaces.Interfaces):
 
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
-        self.logintimer.cancel()
+        self.login_task.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         else:
@@ -104,7 +104,7 @@ class CTI(interfaces.Interfaces):
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
-                self.logintimer.cancel()
+                self.login_task.cancel()
                 logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
                 faxobj.setbuffer(msg)
                 faxobj.launchasyncs()

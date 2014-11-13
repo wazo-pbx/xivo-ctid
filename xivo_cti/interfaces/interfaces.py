@@ -29,7 +29,6 @@ class Interfaces(object):
 
     def __init__(self, ctiserver):
         self._ctiserver = ctiserver
-        self.logintimer = None
         self.connid = None
         self.requester = None
 

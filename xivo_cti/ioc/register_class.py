@@ -29,7 +29,6 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
-from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
@@ -77,6 +76,7 @@ from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.statistics_producer_initializer import \
     StatisticsProducerInitializer
 from xivo_cti.task_queue import new_task_queue
+from xivo_cti.task_scheduler import new_task_scheduler
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.xivo_ami import AMIClass
 
@@ -137,8 +137,8 @@ def setup():
     context.register('queue_member_notifier', QueueMemberNotifier)
     context.register('queue_member_updater', QueueMemberUpdater)
     context.register('statistics_notifier', StatisticsNotifier)
-    context.register('scheduler', Scheduler)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
     context.register('task_queue', new_task_queue)
+    context.register('task_scheduler', new_task_scheduler)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)

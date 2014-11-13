@@ -148,6 +148,7 @@ class CTIServer(object):
         self._queue_entry_notifier = context.get('queue_entry_notifier')
 
         self._task_queue = context.get('task_queue')
+        self._task_scheduler = context.get('task_scheduler')
 
         self._agent_availability_updater = context.get('agent_availability_updater')
         self._agent_service_cti_parser = context.get('agent_service_cti_parser')
@@ -364,6 +365,7 @@ class CTIServer(object):
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
 
         self._task_queue.clear()
+        self._task_scheduler.clear()
 
         logger.info('Connecting to bus')
         bus_producer = context.get('bus_producer')
@@ -512,8 +514,13 @@ class CTIServer(object):
             for iconn, kind in self.fdlist_established.iteritems():
                 if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
                     writefds.append(iconn)
-            sels_i, sels_o, sels_e = select.select(self.fdlist_full, writefds, [])
-            return (sels_i, sels_o, sels_e)
+
+            timeout = self._task_scheduler.timeout()
+            if timeout is None:
+                result = select.select(self.fdlist_full, writefds, [])
+            else:
+                result = select.select(self.fdlist_full, writefds, [], timeout)
+            return result
 
         except Exception:
             logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
@@ -586,9 +593,7 @@ class CTIServer(object):
         if socketobject:
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
-                interface.logintimer = threading.Timer(logintimeout, self._task_queue.put,
-                                                       (self._on_cti_login_auth_timeout, socketobject))
-                interface.logintimer.start()
+                interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
             elif kind == 'WEBI':
@@ -692,3 +697,5 @@ class CTIServer(object):
                 self._empty_cti_events_queue()
         except Exception:
             logger.exception('Socket Reader')
+
+        self._task_scheduler.run()
