@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 class AgentStatusManager(object):
 
-    def __init__(self, agent_availability_computer, scheduler):
+    def __init__(self, agent_availability_computer, task_scheduler):
         self._agent_availability_computer = agent_availability_computer
-        self.scheduler = scheduler
+        self.task_scheduler = task_scheduler
 
     def agent_logged_in(self, agent_id):
         self._agent_availability_computer.compute(agent_id)
@@ -56,9 +56,9 @@ class AgentStatusManager(object):
 
     def agent_in_wrapup(self, agent_id, wrapup_time):
         dao.agent.set_on_wrapup(agent_id, True)
-        self.scheduler.schedule(wrapup_time,
-                                self.agent_wrapup_completed,
-                                agent_id)
+        self.task_scheduler.schedule(wrapup_time,
+                                     self.agent_wrapup_completed,
+                                     agent_id)
 
         dao.agent.set_on_call_acd(agent_id, False)
         self._agent_availability_computer.compute(agent_id)

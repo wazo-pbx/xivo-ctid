@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,21 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import unittest
-from xivo_cti.ctiserver import CTIServer
-from mock import Mock
-from xivo_cti.cti_config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class TestCTIServer(unittest.TestCase):
+class Task(object):
 
-    def test_send_cti_event(self):
-        event = {'event': 'My test event'}
-        server = CTIServer(Mock(Config))
+    def __init__(self, function, args):
+        self._function = function
+        self._args = args
 
-        server.send_cti_event(event)
-
-        self.assertEqual(len(server._cti_events), 1)
-        result = server._cti_events.popleft()
-
-        self.assertEqual(result, event)
+    def run(self):
+        try:
+            self._function(*self._args)
+        except Exception:
+            logger.exception('Unexpected exception raised while running task')

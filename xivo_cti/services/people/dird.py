@@ -16,25 +16,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import json
-import logging
 import requests
 
 from concurrent import futures
-
-logger = logging.getLogger()
 
 
 class Dird(object):
 
     _headers_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'
 
-    def __init__(self, scheduler):
+    def __init__(self, task_queue):
         self.executor = futures.ThreadPoolExecutor(max_workers=5)
-        self._scheduler = scheduler
+        self._task_queue = task_queue
 
     def headers(self, profile, callback):
         def response_to_dict(f):
-            self._scheduler.execute_callback(callback, json.loads(f.result().content))
+            self._task_queue.put(callback, json.loads(f.result().content))
 
         url = self._headers_url.format(profile=profile)
         future = self.executor.submit(requests.get, url)

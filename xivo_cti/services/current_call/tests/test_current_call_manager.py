@@ -33,7 +33,6 @@ from xivo_cti.dao import user_dao
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.scheduler import Scheduler
 from xivo_cti.services.call.call import Call
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.storage import CallStorage
@@ -52,7 +51,6 @@ from xivo_cti import xivo_ami
 class _BaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.scheduler = Mock(Scheduler)
         self.device_manager = Mock(DeviceManager)
         self.notifier = Mock(notifier.CurrentCallNotifier)
         self.formatter = Mock(formatter.CurrentCallFormatter)
@@ -64,7 +62,6 @@ class _BaseTestCase(unittest.TestCase):
             self.notifier,
             self.formatter,
             self.ami_class,
-            self.scheduler,
             self.device_manager,
             self.call_manager,
             self.call_storage,
@@ -667,7 +664,6 @@ class TestCurrentCallManager(_BaseTestCase):
         dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         dao.channel.channels_from_identity.return_value = [ringing_channel]
         mock_get_line.return_value = line
-        self.manager.schedule_answer = Mock()
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
@@ -699,13 +695,11 @@ class TestCurrentCallManager(_BaseTestCase):
         dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         dao.channel.channels_from_identity.return_value = [talking_channel]
         mock_get_line_identity.return_value = user_line
-        self.manager.schedule_answer = Mock()
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
         assert_that(self.ami_class.hangup.call_count, equal_to(0))
         assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
-        assert_that(self.manager.schedule_answer.call_count, equal_to(0))
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_no_channel_then_return(self, mock_get_line_identity):
@@ -718,22 +712,11 @@ class TestCurrentCallManager(_BaseTestCase):
         dao.channel.get_channel_from_unique_id.side_effect = LookupError()
         mock_get_line_identity.return_value = user_line
         client_connection = Mock(CTI)
-        self.manager.schedule_answer = Mock()
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
         call_count_retrieve = self.manager.ami.switchboard_retrieve.call_count
         self.assertEqual(call_count_retrieve, 0)
-        call_count_schedule = self.manager.schedule_answer.call_count
-        self.assertEqual(call_count_schedule, 0)
-
-    def test_schedule_answer(self):
-        delay = 0.25
-        answer_fn = Mock()
-
-        self.manager.schedule_answer(answer_fn, delay)
-
-        self.scheduler.schedule.assert_called_once_with(delay, answer_fn)
 
     def test_set_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()

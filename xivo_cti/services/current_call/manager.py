@@ -39,13 +39,11 @@ TRANSFER_CHANNEL = 'transfer_channel'
 class CurrentCallManager(object):
 
     def __init__(self, current_call_notifier, current_call_formatter,
-                 ami_class, scheduler, device_manager, call_manager,
-                 call_storage):
+                 ami_class, device_manager, call_manager, call_storage):
         self._calls_per_line = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
         self.ami = ami_class
-        self.scheduler = scheduler
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
@@ -76,9 +74,6 @@ class CurrentCallManager(object):
             if line_call[TRANSFER_CHANNEL] == channel_transferee:
                 return True
         return False
-
-    def schedule_answer(self, answer_fn, delay):
-        self.scheduler.schedule(delay, answer_fn)
 
     def masquerade(self, old, new):
         old_2 = self._local_channel_peer(old)

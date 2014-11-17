@@ -153,12 +153,6 @@ class AMIClass(object):
                                   [('Exten', exten),
                                    ('Context', context)])
 
-    def sendparkedcalls(self):
-        return self._exec_command('ParkedCalls', [])
-
-    def sendmeetmelist(self):
-        return self._exec_command('MeetMeList', [])
-
     # \brief Logins to the AMI.
     def login(self):
         if self.events:

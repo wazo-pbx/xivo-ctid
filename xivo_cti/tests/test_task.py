@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,20 +16,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.ctiserver import CTIServer
-from mock import Mock
-from xivo_cti.cti_config import Config
+from mock import Mock, sentinel
+from xivo_cti.task import Task
 
 
-class TestCTIServer(unittest.TestCase):
+class TestTask(unittest.TestCase):
 
-    def test_send_cti_event(self):
-        event = {'event': 'My test event'}
-        server = CTIServer(Mock(Config))
+    def test_run(self):
+        function = Mock()
 
-        server.send_cti_event(event)
+        task = Task(function, (sentinel.args1, sentinel.args2))
+        task.run()
 
-        self.assertEqual(len(server._cti_events), 1)
-        result = server._cti_events.popleft()
+        function.assert_called_once_with(sentinel.args1, sentinel.args2)
 
-        self.assertEqual(result, event)
+    def test_run_with_exception(self):
+        function = Mock(side_effect=Exception('foobar'))
+
+        task = Task(function, ())
+        task.run()
+
+        function.assert_called_once_with()

@@ -18,9 +18,7 @@
 import copy
 import hashlib
 import logging
-import os
 import time
-import Queue
 
 from xivo_cti import cti_sheets
 from xivo_cti.ami import ami_callback_handler
@@ -66,8 +64,6 @@ class Safe(object):
         self.channels = {}
         self.faxes = {}
         self.ctistack = []
-
-        self.timeout_queue = Queue.Queue()
 
         self.displays_mgr = directory.DisplaysMgr()
         self.contexts_mgr = directory.ContextsMgr()
@@ -602,35 +598,13 @@ class Safe(object):
                                              'compressed': sheet.compressed,
                                              'payload': sheet.payload})
 
-    # Timers/Synchro stuff - begin
-
-    def checkqueue(self):
-        ncount = 0
-        while self.timeout_queue.qsize() > 0:
-            ncount += 1
-            received = self.timeout_queue.get()
-            (toload,) = received
-            action = toload.get('action')
-            if action == 'fax':
-                properties = toload.get('properties')
-                step = properties.get('step')
-                fileid = properties.get('fileid')
-                removeme = self.faxes[fileid].step(step)
-                if removeme:
-                    params = self.faxes[fileid].getparams()
-                    actionid = fileid
-                    self._ctiserver.interface_ami.execute_and_track(actionid, params)
-                    del self.faxes[fileid]
-
-            # other cases to handle : login, agentlogoff (would that still be true ?)
-        return ncount
-
-    def cb_timer(self, *args):
-        try:
-            self.timeout_queue.put(args)
-            os.write(self._ctiserver.pipe_queued_threads[1], 'innerdata:%s\n' % self.ipbxid)
-        except Exception:
-            logger.exception('cb_timer %s', args)
+    def send_fax(self, step, fileid):
+        removeme = self.faxes[fileid].step(step)
+        if removeme:
+            params = self.faxes[fileid].getparams()
+            actionid = fileid
+            self._ctiserver.interface_ami.execute_and_track(actionid, params)
+            del self.faxes[fileid]
 
     def update_directories(self):
         # This function must be called after a certain amount of initialization

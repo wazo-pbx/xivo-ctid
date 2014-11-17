@@ -68,9 +68,6 @@ class CTI(interfaces.Interfaces):
     def answer_cb(self):
         pass
 
-    def connected(self, connid):
-        interfaces.Interfaces.connected(self, connid)
-
     def user_id(self):
         try:
             user_id = self.connection_details['userid']
@@ -86,7 +83,7 @@ class CTI(interfaces.Interfaces):
 
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
-        self.logintimer.cancel()
+        self.login_task.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         else:
@@ -107,7 +104,7 @@ class CTI(interfaces.Interfaces):
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
                 faxobj = self.transferconnection.get('faxobj')
-                self.logintimer.cancel()
+                self.login_task.cancel()
                 logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
                 faxobj.setbuffer(msg)
                 faxobj.launchasyncs()
@@ -159,14 +156,6 @@ class CTI(interfaces.Interfaces):
 
     def send_message(self, msg):
         self.connid.append_queue(self.serial.encode(msg) + '\n')
-
-    def loginko(self, errorstring):
-        logger.warning('user can not connect (%s) : sending %s',
-                       self.connection_details, errorstring)
-        # self.logintimer.cancel() + close
-        tosend = {'class': 'loginko',
-                  'error_string': errorstring}
-        return self.serial.encode(tosend)
 
     def receive_login_id(self, login, version, connection):
         if connection != self:
