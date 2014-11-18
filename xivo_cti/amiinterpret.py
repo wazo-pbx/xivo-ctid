@@ -195,33 +195,27 @@ class AMI_1_8(object):
         self._call_form_dispatch_filter.handle_user(uniqueid, channel_name)
 
     def userevent_queue(self, chanprops, event):
+        # This function does not trigger a "sheet send"; it is only used to update the
+        # internal variables available on further sheet send (i.e. on link and unlink events)
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
         queue_id = int(event['XIVO_DSTID'])
-        channel_name = event['CHANNEL']
         queue_name, queue_number = queue_dao.get_display_name_number(queue_id)
 
-        _set('desttype', 'queue')
-        _set('destid', queue_id)
         _set('calledidname', queue_name)
         _set('queuename', queue_name)
         _set('calledidnum', queue_number)
 
-        self._call_form_dispatch_filter.handle_queue(uniqueid, channel_name)
-
     def userevent_group(self, chanprops, event):
+        # This function does not trigger a "sheet send"; it is only used to update the
+        # internal variables available on further sheet send (i.e. on link and unlink events)
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
         group_id = int(event['XIVO_DSTID'])
-        channel_name = event['CHANNEL']
         group_name, group_number = group_dao.get_name_number(group_id)
 
-        _set('desttype', 'group')
-        _set('destid', group_id)
         _set('calledidname', group_name)
         _set('calledidnum', group_number)
-
-        self._call_form_dispatch_filter.handle_group(uniqueid, channel_name)
 
     def userevent_did(self, chanprops, event):
         uniqueid = event['Uniqueid']
