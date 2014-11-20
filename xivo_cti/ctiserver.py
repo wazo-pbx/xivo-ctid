@@ -84,7 +84,6 @@ class CTIServer(object):
 
     def __init__(self, cti_config):
         self.start_time = time.time()
-        self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []

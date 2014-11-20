@@ -53,9 +53,6 @@ class INFO(interfaces.Interfaces):
         self.innerdata = context.get('innerdata')
         self._ami_18 = context.get('ami_18')
 
-    def connected(self, connid):
-        interfaces.Interfaces.connected(self, connid)
-
     def disconnected(self, cause):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), cause))
         interfaces.Interfaces.disconnected(self, cause)
