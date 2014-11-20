@@ -36,11 +36,6 @@ infohelptext = ['',
                 'loglevel set <level>         : changes the syslog output level',
                 'show_varsizes <astid>        : gives the number of items of some variables',
                 'show_var <astid> <varname>   : outputs the contents of one such variable',
-                'dumpami enable               : enables the line-by-line display of all AMI events',
-                'dumpami enable Dial,Hangup   : enables the line-by-line display of these 2 AMI events',
-                'dumpami disable              : disables the line-by-line display of all AMI events',
-                'dumpami disable Dial,Hangup  : enables the line-by-line display of all but these 2 AMI events',
-                'dumpami                      : shows the current settings of this line-by-line display',
                 '-- slightly advanced features --',
                 'disc <ip> <port>             : closes the socket linked to <ip>:<port> if present',
                 'ami <astid> <command> <args> : executes the CTI-defined AMI function on <astid>',
@@ -55,8 +50,6 @@ class INFO(interfaces.Interfaces):
 
     def __init__(self, ctiserver):
         interfaces.Interfaces.__init__(self, ctiserver)
-        self.dumpami_enable = []
-        self.dumpami_disable = []
         self.innerdata = context.get('innerdata')
         self._ami_18 = context.get('ami_18')
 
@@ -93,33 +86,6 @@ class INFO(interfaces.Interfaces):
                                time_uptime)
                     clireply.append(reply)
                     # clireply.append('server capabilities = %s' % (','.join()))
-
-                elif usefulmsg.startswith('dumpami'):
-                    command_args = usefulmsg.split()
-                    if len(command_args) > 1:
-                        action = command_args[1]
-                        if action == 'enable':
-                            if len(command_args) > 2:
-                                self.dumpami_enable = command_args[2].split(',')
-                                self.dumpami_disable = []
-                            else:
-                                self.dumpami_enable = ['all']
-                                self.dumpami_disable = []
-                        elif action == 'disable':
-                            if len(command_args) > 2:
-                                self.dumpami_enable = ['all']
-                                self.dumpami_disable = command_args[2].split(',')
-                            else:
-                                self.dumpami_enable = []
-                                self.dumpami_disable = []
-                        else:
-                            clireply.append('dumpami status : enable (%s) disable (%s)'
-                                            % (','.join(self.dumpami_enable),
-                                               ','.join(self.dumpami_disable)))
-                    else:
-                        clireply.append('dumpami status : enable (%s) disable (%s)'
-                                        % (','.join(self.dumpami_enable),
-                                           ','.join(self.dumpami_disable)))
 
                 elif usefulmsg.startswith('loglevel '):
                     command_args = usefulmsg.split()
