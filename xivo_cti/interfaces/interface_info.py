@@ -19,27 +19,15 @@ from xivo_cti.interfaces import interfaces
 
 import logging
 import time
-from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('interface_info')
 
 infohelptext = ['',
                 'help                     : this help',
-                '-- general purpose commands --',
-                'show_infos               : gives a few informations about the server (version, uptime)',
                 '-- informations about misc lists --',
                 'showlist [listname [id]] : show all lists or the specified list'
-                '-- selective lists --',
-                'show_logged              : only the logged users',
-                'show_logged_ip           : the human-readable IPs of logged users',
-                '-- for debugging purposes --',
-                'loglevel set <level>         : changes the syslog output level',
-                'show_varsizes <astid>        : gives the number of items of some variables',
-                'show_var <astid> <varname>   : outputs the contents of one such variable',
                 '-- slightly advanced features --',
                 'disc <ip> <port>             : closes the socket linked to <ip>:<port> if present',
-                'ami <astid> <command> <args> : executes the CTI-defined AMI function on <astid>',
-                'reverse <dirname> <number>   : lookup the number in the given directory',
                 '']
 
 
@@ -47,11 +35,6 @@ class INFO(interfaces.Interfaces):
 
     kind = 'INFO'
     sep = '\n'
-
-    def __init__(self, ctiserver):
-        interfaces.Interfaces.__init__(self, ctiserver)
-        self.innerdata = context.get('innerdata')
-        self._ami_18 = context.get('ami_18')
 
     def disconnected(self, cause):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), cause))
@@ -74,43 +57,6 @@ class INFO(interfaces.Interfaces):
                 if usefulmsg == 'help':
                     clireply.extend(infohelptext)
 
-                elif usefulmsg == 'show_infos':
-                    time_uptime = int(time.time() - time.mktime(self._ctiserver.time_start))
-                    reply = 'infos=' \
-                            'commandset=%s;' \
-                            'uptime=%d s' \
-                            % (self._ctiserver.servername,
-                               time_uptime)
-                    clireply.append(reply)
-                    # clireply.append('server capabilities = %s' % (','.join()))
-
-                elif usefulmsg.startswith('loglevel '):
-                    command_args = usefulmsg.split()
-                    if len(command_args) > 2:
-                        action = command_args[1]
-                        levelname = command_args[2]
-                        levels = {
-                            'debug': logging.DEBUG,
-                            'info': logging.INFO,
-                            'warning': logging.WARNING,
-                            'error': logging.ERROR
-                        }
-                        if action == 'set':
-                            if levelname in levels:
-                                newlevel = levels[levelname]
-                                logger.setLevel(logging.INFO)
-                                logger.info('=== setting loglevel to %s (%s) ===', levelname, newlevel)
-                                logger.setLevel(newlevel)
-                                logging.getLogger('xivocti').setLevel(newlevel)
-                                logging.getLogger('xivo_ami').setLevel(newlevel)
-                                clireply.append('loglevel set to %s (%s)' % (levelname, newlevel))
-                            else:
-                                clireply.append('unknown level name <%s> to set' % levelname)
-                        elif action == 'get':
-                            pass
-                        else:
-                            clireply.append('unknown action <%s> for loglevel : try set or get' % action)
-
                 elif usefulmsg.startswith('showlist'):
                     args = usefulmsg.split()
                     safe = self._ctiserver.safe
@@ -132,48 +78,6 @@ class INFO(interfaces.Interfaces):
                             except KeyError:
                                 clireply.append('        status: None')
 
-                elif usefulmsg.startswith('show_var '):
-                    command_args = usefulmsg.split()
-                    if len(command_args) > 2:
-                        astid = command_args[1]
-                        varname = command_args[2]
-                        if hasattr(self._ami_18, varname):
-                            tvar = getattr(self._ami_18, varname)
-                            if astid in tvar:
-                                clireply.append('%s on %s' % (varname, astid))
-                                for ag, agp in tvar[astid].iteritems():
-                                    clireply.append('%s %s' % (ag, agp))
-                            else:
-                                clireply.append('no such astid %s' % astid)
-                        else:
-                            clireply.append('no such variable %s' % varname)
-                    else:
-                        clireply.append('first argument : astid value')
-                        clireply.append('second argument : one of %s' % self._ami_18.astid_vars)
-
-                elif usefulmsg.startswith('show_varsizes '):
-                    command_args = usefulmsg.split()
-                    if len(command_args) > 1:
-                        astid = command_args[1]
-                        for varname in self._ami_18.astid_vars:
-                            if hasattr(self._ami_18, varname):
-                                tvar = getattr(self._ami_18, varname)
-                                if astid in tvar:
-                                    clireply.append('%s on %s: %d' % (varname, astid, len(tvar[astid])))
-                                else:
-                                    clireply.append('no such astid %s' % astid)
-                            else:
-                                clireply.append('no such variable %s' % varname)
-                    else:
-                        clireply.append('argument : astid value')
-
-                elif usefulmsg == 'fdlist':
-                    for k, v in self._ctiserver.fdlist_listen_cti.iteritems():
-                        clireply.append('  listen TCP : %s %s' % (k, v))
-                    for k, v in self._ctiserver.fdlist_established.iteritems():
-                        clireply.append('  conn   TCP : %s %s' % (k, v))
-                    clireply.append('  full : %s' % self._ctiserver.fdlist_full)
-
                 elif usefulmsg.startswith('disc '):
                     command_args = usefulmsg.split()
                     if len(command_args) > 2:
@@ -190,28 +94,6 @@ class INFO(interfaces.Interfaces):
                             del self._ctiserver.fdlist_established[socktoremove]
                         else:
                             clireply.append('nobody disconnected')
-
-                elif usefulmsg == 'show_ami':
-                    for astid, ami in self._ctiserver.amilist.ami.iteritems():
-                        clireply.append('commands : %s : %s' % (astid, ami))
-
-                elif usefulmsg.startswith('ami inits '):
-                    g = usefulmsg[10:]
-                    self._ctiserver.interface_ami.initrequest(g)
-
-                elif usefulmsg.startswith('ami '):
-                    amicmd = usefulmsg.split()[1:]
-                    if amicmd:
-                        clireply.append('ami request %s' % amicmd)
-                        if len(amicmd) > 1:
-                            astid = amicmd[0]
-                            cmd = amicmd[1]
-                            cmdargs = amicmd[2:]
-                            self._ctiserver.amilist.execute(astid, cmd, *cmdargs)
-
-                elif usefulmsg.startswith('reload '):
-                    listname = usefulmsg[7:]
-                    self.innerdata.update_config_list(listname)
 
                 else:
                     retstr = 'KO'
