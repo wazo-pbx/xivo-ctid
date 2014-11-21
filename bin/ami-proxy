@@ -18,6 +18,7 @@
 
 import argparse
 import collections
+import fcntl
 import os
 import select
 import socket
@@ -35,7 +36,7 @@ def main():
 
     sock = connect(parsed_args.hostname, parsed_args.port)
 
-    local_endpoint = Endpoint(sys.stdin.fileno(), sys.stdout.fileno())
+    local_endpoint = new_stdio_endpoint()
     remote_endpoint = Endpoint(sock.fileno(), sock.fileno())
 
     duplex_transfer(local_endpoint, remote_endpoint, parsed_args.max_size)
@@ -56,6 +57,18 @@ def connect(hostname, port):
     sock.connect((hostname, port))
     sock.setblocking(0)
     return sock
+
+
+def new_stdio_endpoint():
+    _set_non_blocking(sys.stdin.fileno())
+    _set_non_blocking(sys.stdout.fileno())
+    return Endpoint(sys.stdin.fileno(), sys.stdout.fileno())
+
+
+def _set_non_blocking(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    flags = flags | os.O_NONBLOCK
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 
 
 Endpoint = collections.namedtuple('Endpoint', ['r', 'w'])
