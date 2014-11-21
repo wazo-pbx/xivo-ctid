@@ -28,7 +28,7 @@ KiB = 1024
 MiB = 1024 * KiB
 
 BUFSIZE = 4096
-DEFAULT_MAX_SIZE = 10 * MiB
+DEFAULT_MAX_SIZE = 20 * MiB
 
 
 def main():
