@@ -19,7 +19,6 @@
 class EndpointNotifier(object):
 
     def __init__(self, pubsub):
-        self._callbacks = {}
         self._pubsub = pubsub
 
     def notify(self, event):
