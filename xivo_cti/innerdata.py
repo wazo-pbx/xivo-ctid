@@ -689,9 +689,3 @@ class Safe(object):
                 }
             ]
         }
-
-    def people_headers(self, user_id):
-        logger.debug('people_headers {user_id}'.format(user_id=user_id))
-        return 'message', {'class': 'people_headers_result',
-                           'column_headers': ["Name", "Number", "Agent"],
-                           'column_types': ["name", "number_office", "relation_agent"]}
