@@ -23,7 +23,7 @@ from concurrent import futures
 
 class Dird(object):
 
-    _headers_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'
+    _headers_url = 'http://localhost:9489/0.1/directories/lookup/{profile}/headers'
 
     def __init__(self, task_queue):
         self.executor = futures.ThreadPoolExecutor(max_workers=5)
