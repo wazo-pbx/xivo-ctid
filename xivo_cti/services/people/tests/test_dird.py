@@ -34,7 +34,7 @@ class TestDird(TestCase):
     def test_headers(self, http_get):
         callback = Mock()
         profile = 'my_profile'
-        expected_url = 'http://localhost:50060/0.1/directories/lookup/{profile}/headers'.format(profile=profile)
+        expected_url = 'http://localhost:9489/0.1/directories/lookup/{profile}/headers'.format(profile=profile)
 
         self.dird.headers(profile, callback)
 
