@@ -47,6 +47,8 @@ from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
+from xivo_cti.cti.commands.people import PeopleHeaders
+from xivo_cti.cti.commands.people import PeopleSearch
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_remove import QueueRemove
@@ -176,6 +178,9 @@ class CTIServer(object):
         self._register_message_hooks()
 
     def _register_cti_callbacks(self):
+        people_adapter = context.get('people_cti_adapter')
+        PeopleSearch.register_callback_params(people_adapter.search, ('user_id', 'pattern'))
+        PeopleHeaders.register_callback_params(people_adapter.get_headers, ['user_id'])
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )

@@ -29,9 +29,9 @@ Architecture: all
 Depends: ${python:Depends},
          ${misc:Depends},
          file,
-         python-requests,
          python-concurrent.futures,
          xivo-bus,
+         xivo-dird-client,
          xivo-libdao,
          xivo-libdird,
          xivo-lib-python

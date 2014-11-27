@@ -57,3 +57,32 @@ class TestCTIAdapter(TestCase):
                 'column_types': headers['column_types']
             }
         )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_lookup(self):
+        dao.user.get_context = Mock(return_value=s.profile)
+        self.cti_adapter.search(s.user_id, s.term)
+
+        self.dird.lookup.assert_called_once_with(s.profile, s.term, ANY)
+
+    def test_send_lookup_result(self):
+        user_id = 12
+        results = {
+            'term': s.term,
+            'column_headers': s.column_headers,
+            'column_types': s.column_types,
+            'results': s.results,
+        }
+
+        self.cti_adapter._send_lookup_result(user_id, results)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_search_result',
+                'term': s.term,
+                'column_headers': s.column_headers,
+                'column_types': s.column_types,
+                'results': s.results,
+            }
+        )

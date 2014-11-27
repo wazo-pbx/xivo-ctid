@@ -15,24 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
-import requests
+import logging
 
 from concurrent import futures
+from xivo_dird_client import Client
+
+logger = logging.getLogger(__name__)
 
 
-class Dird(object):
-
-    _headers_url = 'http://localhost:9489/0.1/directories/lookup/{profile}/headers'
+class AsyncDirdClient(object):
 
     def __init__(self, task_queue):
         self.executor = futures.ThreadPoolExecutor(max_workers=5)
         self._task_queue = task_queue
 
-    def headers(self, profile, callback):
-        def response_to_dict(f):
-            self._task_queue.put(callback, json.loads(f.result().content))
+    @property
+    def _client(self):
+        return Client(host='localhost', port=9489, version='0.1')
 
-        url = self._headers_url.format(profile=profile)
-        future = self.executor.submit(requests.get, url)
-        future.add_done_callback(response_to_dict)
+    def headers(self, profile, callback):
+        logger.debug('requesting directory headers on profile %s', profile)
+        self._exec_async(callback, self._client.directories.headers, profile=profile)
+
+    def lookup(self, profile, term, callback):
+        logger.debug('requesting directory lookup for %s on profile %s', term, profile)
+        self._exec_async(callback, self._client.directories.lookup, profile=profile, term=term)
+
+    def _exec_async(self, cb, fn, *args, **kwargs):
+        def response_from_future(f):
+            self._task_queue.put(cb, f.result())
+
+        future = self.executor.submit(fn, *args, **kwargs)
+        future.add_done_callback(response_from_future)

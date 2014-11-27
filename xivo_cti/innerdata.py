@@ -30,7 +30,6 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
-from xivo_cti.cti.commands.people import PeopleHeaders, PeopleSearch
 from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
@@ -155,9 +154,6 @@ class Safe(object):
         SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
         GetSwitchboardDirectoryHeaders.register_callback_params(self.get_switchboard_directory_headers)
-        people_adapter = context.get('people_cti_adapter')
-        PeopleSearch.register_callback_params(self.people_search, ('user_id', 'pattern'))
-        PeopleHeaders.register_callback_params(people_adapter.get_headers, ['user_id'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -669,23 +665,3 @@ class Safe(object):
             aggregator.set(uniqueid, CallFormVariable('xivo', var_name, var_value))
 
         return _set
-
-    def people_search(self, user_id, pattern):
-        logger.debug('people_search {user_id} {pattern}'.format(user_id=user_id, pattern=pattern))
-        return 'message', {
-            'class': 'people_search_result',
-            'term': pattern,
-            'column_headers': ['Name', 'Number', 'Agent'],
-            'column_types': ['name', 'number_office', 'relation_agent'],
-            'results': [
-                {
-                    "column_values": ["Bob Marley", "5555555", None],
-                    "relations": {
-                        "agent_id": None,
-                        "user_id": None,
-                        "endpoint_id": None
-                    },
-                    "source": "my_ldap_directory"
-                }
-            ]
-        }
