@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import ssl
+import string
 
 __all__ = []
 
@@ -25,3 +26,4 @@ BUFSIZE_LARGE = 262144
 CTI_PROTOCOL_VERSION = '1.2'
 DAEMONNAME = 'xivo-ctid'
 SSLPROTO = ssl.PROTOCOL_TLSv1
+ALPHANUMS = string.uppercase + string.lowercase + string.digits

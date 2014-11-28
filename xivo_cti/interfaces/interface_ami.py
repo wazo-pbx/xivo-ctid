@@ -17,9 +17,9 @@
 
 import logging
 import random
-import string
 import time
 
+from xivo_cti import ALPHANUMS
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami import ami_logger
@@ -41,7 +41,6 @@ class AMI(object):
     LINE_SEPARATOR = '\r\n'
     EVENT_SEPARATOR = '\r\n\r\n'
     FIELD_SEPARATOR = ': '
-    ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
     def __init__(self, cti_server, innerdata, ami_class):
         self._ctiserver = cti_server
@@ -284,4 +283,4 @@ class AMI(object):
 
     @classmethod
     def make_actionid(cls):
-        return ''.join(random.sample(cls.ALPHANUMS, 10))
+        return ''.join(random.sample(ALPHANUMS, 10))

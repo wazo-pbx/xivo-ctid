@@ -22,7 +22,7 @@ import random
 
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
-from xivo_cti.cti_config import ALPHANUMS
+from xivo_cti import ALPHANUMS
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.cti_command_runner import CTICommandRunner

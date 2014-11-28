@@ -17,7 +17,6 @@
 
 import argparse
 import logging
-import string
 import time
 import xivo_cti
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
@@ -25,8 +24,6 @@ from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
 
 logger = logging.getLogger('cti_config')
-
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 default_config = {
     'debug': False,
