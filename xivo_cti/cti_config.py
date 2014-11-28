@@ -19,6 +19,7 @@ import logging
 import ssl
 import string
 import time
+import xivo_cti
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
@@ -37,10 +38,17 @@ XIVOIP = 'localhost'
 CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
-BUS_EXCHANGE_NAME = 'xivo-cti'
-BUS_EXCHANGE_TYPE = 'direct'
-BUS_BINDING_KEY = 'call_form_result'
-BUS_EXCHANGE_DURABLE = True
+
+default_config = {
+    'bus': {
+        'exchange_name': 'xivo-cti',
+        'exchange_type': 'direct',
+        'exchange_durable': True,
+        'binding_key': 'call_form_result',
+    },
+}
+
+xivo_cti.config = default_config
 
 
 class Config(object):

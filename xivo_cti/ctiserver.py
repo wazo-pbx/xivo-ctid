@@ -28,6 +28,7 @@ import threading
 
 from xivo import daemonize
 from xivo.xivo_logging import setup_logging
+from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
@@ -376,9 +377,9 @@ class CTIServer(object):
         bus_producer = context.get('bus_producer')
         if not bus_producer.connected:
             bus_producer.connect()
-        bus_producer.declare_exchange(name=cti_config.BUS_EXCHANGE_NAME,
-                                      exchange_type=cti_config.BUS_EXCHANGE_TYPE,
-                                      durable=cti_config.BUS_EXCHANGE_DURABLE)
+        bus_producer.declare_exchange(name=config['bus']['exchange_name'],
+                                      exchange_type=config['bus']['exchange_type'],
+                                      durable=config['bus']['exchange_durable'])
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')

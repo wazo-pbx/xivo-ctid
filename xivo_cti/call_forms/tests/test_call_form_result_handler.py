@@ -62,6 +62,9 @@ class TestCallFormResultHandler(unittest.TestCase):
         assert_that(handler._clean_variables(variables), equal_to(expected_variables))
 
     @patch('xivo_cti.call_forms.call_form_result_handler.CallFormResultEvent')
+    @patch('xivo_cti.call_forms.call_form_result_handler.config',
+           {'bus': {'exchange_name': 'xivo-cti',
+                    'binding_key': 'call_form_result'}})
     def test_send_call_form_result(self, CallFormResultEvent):
         user_id = 42
         variables = {'a': 'b'}
