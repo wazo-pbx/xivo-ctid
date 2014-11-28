@@ -44,7 +44,6 @@ def _new_parser():
     parser.add_argument('-f', '--foreground', action='store_true')
     parser.add_argument('-p', '--pidfile')
     parser.add_argument('-l', '--logfile')
-    parser.add_argument('-P', '--portdelta', type=int)
     return parser
 
 
@@ -57,8 +56,6 @@ def _process_parsed_args(parsed_args):
         cti_config.PIDFILE = parsed_args.pidfile
     if parsed_args.logfile:
         cti_config.LOGFILENAME = parsed_args.logfile
-    if parsed_args.portdelta:
-        cti_config.PORTDELTA = parsed_args.portdelta
 
 
 if __name__ == '__main__':

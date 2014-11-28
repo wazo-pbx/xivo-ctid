@@ -435,7 +435,7 @@ class CTIServer(object):
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
-            trueport = int(port) + cti_config.PORTDELTA
+            trueport = int(port)
             gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
             if not gai:
                 return
