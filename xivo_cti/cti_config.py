@@ -27,7 +27,6 @@ from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
 
 logger = logging.getLogger('cti_config')
 
-BUFSIZE_LARGE = 262144
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits

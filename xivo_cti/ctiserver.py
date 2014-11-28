@@ -29,6 +29,7 @@ import threading
 from xivo import daemonize
 from xivo.xivo_logging import setup_logging
 from xivo_cti import config
+from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
 from xivo_cti import dao
 from xivo_cti import message_hook
@@ -563,7 +564,7 @@ class CTIServer(object):
                 s.close()
 
     def _socket_ami_read(self, sel_i):
-        buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
+        buf = sel_i.recv(BUFSIZE_LARGE)
         if not buf:
             self._on_ami_down()
         else:
@@ -627,7 +628,7 @@ class CTIServer(object):
                     del self.fdlist_established[sel_i]
             else:
                 try:
-                    msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
+                    msg = sel_i.recv(BUFSIZE_LARGE, socket.MSG_DONTWAIT)
                 except socket.error:
                     logger.exception('connection to %s (%s)', requester, interface_obj)
                     msg = ''

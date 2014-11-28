@@ -19,8 +19,7 @@ import socket
 import errno
 import ssl
 from collections import deque
-
-BUFSIZE_LARGE = 262144
+from xivo_cti import BUFSIZE_LARGE
 
 
 class ClientConnection(object):
