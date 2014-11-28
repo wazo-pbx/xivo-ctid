@@ -112,12 +112,12 @@ class CTIServer(object):
         self.askedtoquit = False
 
     def _set_logger(self):
-        setup_logging(cti_config.LOGFILENAME, cti_config.FOREGROUND_MODE, cti_config.DEBUG_MODE)
+        setup_logging(config['logfile'], config['foreground'], config['debug'])
 
     def _daemonize(self):
-        if not cti_config.FOREGROUND_MODE:
+        if not config['foreground']:
             daemonize.daemonize()
-        daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
+        daemonize.lock_pidfile_or_die(config['pidfile'])
 
     def setup(self):
         self._set_logger()
@@ -544,7 +544,7 @@ class CTIServer(object):
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (stop) killing thread <%s>' % t.getName()
                     t._Thread__stop()
-                daemonize.unlock_pidfile(cti_config.PIDFILE)
+                daemonize.unlock_pidfile(config['pidfile'])
                 sys.exit(5)
             else:
                 self.askedtoquit = True

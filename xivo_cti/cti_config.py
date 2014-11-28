@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import argparse
 import logging
 import ssl
 import string
@@ -29,10 +30,6 @@ logger = logging.getLogger('cti_config')
 
 DAEMONNAME = 'xivo-ctid'
 BUFSIZE_LARGE = 262144
-DEBUG_MODE = False
-FOREGROUND_MODE = False
-LOGFILENAME = '/var/log/%s.log' % DAEMONNAME
-PIDFILE = '/var/run/%s.pid' % DAEMONNAME
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
 CTI_PROTOCOL_VERSION = '1.2'
@@ -40,6 +37,10 @@ ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 default_config = {
+    'debug': False,
+    'foreground': False,
+    'pidfile': '/var/run/%s.pid' % DAEMONNAME,
+    'logfile': '/var/log/%s.log' % DAEMONNAME,
     'bus': {
         'exchange_name': 'xivo-cti',
         'exchange_type': 'direct',
@@ -47,8 +48,42 @@ default_config = {
         'binding_key': 'call_form_result',
     },
 }
-
 cli_config = {}
+
+
+def init(args):
+    global config
+
+    parser = _new_parser()
+    parsed_args = parser.parse_args(args)
+    _process_parsed_args(parsed_args)
+
+    config = ChainMap(default_config, cli_config)
+
+    # TODO: read the config file here
+    # TODO: add the config file config to the config chainmap
+
+
+def _new_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-f', '--foreground', action='store_true')
+    parser.add_argument('-p', '--pidfile')
+    parser.add_argument('-l', '--logfile')
+    return parser
+
+
+def _process_parsed_args(parsed_args):
+    global cli_config
+
+    if parsed_args.debug:
+        cli_config['debug'] = parsed_args.debug
+    if parsed_args.foreground:
+        cli_config['foreground'] = parsed_args.foreground
+    if parsed_args.pidfile:
+        cli_config['pidfile'] = parsed_args.pidfile
+    if parsed_args.logfile:
+        cli_config['logfile'] = parsed_args.logfile
 
 
 class ChainMap(object):
