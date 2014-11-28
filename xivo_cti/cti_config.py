@@ -27,8 +27,6 @@ from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
 
 logger = logging.getLogger('cti_config')
 
-
-DAEMONNAME = 'xivo-ctid'
 BUFSIZE_LARGE = 262144
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
@@ -38,8 +36,8 @@ DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 default_config = {
     'debug': False,
     'foreground': False,
-    'pidfile': '/var/run/%s.pid' % DAEMONNAME,
-    'logfile': '/var/log/%s.log' % DAEMONNAME,
+    'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
+    'logfile': '/var/log/%s.log' % xivo_cti.DAEMONNAME,
     'bus': {
         'exchange_name': 'xivo-cti',
         'exchange_type': 'direct',

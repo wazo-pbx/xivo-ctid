@@ -20,3 +20,4 @@ __all__ = []
 config = {}
 
 CTI_PROTOCOL_VERSION = '1.2'
+DAEMONNAME = 'xivo-ctid'
