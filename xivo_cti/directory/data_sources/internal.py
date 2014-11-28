@@ -18,7 +18,8 @@
 import logging
 
 from itertools import izip
-from xivo_cti import db_connection_manager, cti_config
+from xivo_cti import config
+from xivo_cti import db_connection_manager
 from xivo_cti.ioc.context import context as cti_context
 from xivo_dird.directory.data_sources.directory_data_source import DirectoryDataSource
 
@@ -57,7 +58,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
         params = ('%' + string + '%',) * len(test_columns)
         columns = tuple(self._key_mapping.itervalues())
 
-        conn_mgr = db_connection_manager.DbConnectionPool(cti_config.DB_URI)
+        conn_mgr = db_connection_manager.DbConnectionPool(config['db_uri'])
         connection = conn_mgr.get()
         try:
             cursor = connection['cur']

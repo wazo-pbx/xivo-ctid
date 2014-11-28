@@ -29,13 +29,13 @@ logger = logging.getLogger('cti_config')
 
 SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
-DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
 default_config = {
     'debug': False,
     'foreground': False,
     'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
     'logfile': '/var/log/%s.log' % xivo_cti.DAEMONNAME,
+    'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
     'bus': {
         'exchange_name': 'xivo-cti',
         'exchange_type': 'direct',
