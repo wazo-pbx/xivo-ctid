@@ -32,7 +32,6 @@ DAEMONNAME = 'xivo-ctid'
 BUFSIZE_LARGE = 262144
 SSLPROTO = ssl.PROTOCOL_TLSv1
 XIVOIP = 'localhost'
-CTI_PROTOCOL_VERSION = '1.2'
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
 
