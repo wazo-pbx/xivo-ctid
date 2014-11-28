@@ -48,7 +48,33 @@ default_config = {
     },
 }
 
-xivo_cti.config = default_config
+cli_config = {}
+
+
+class ChainMap(object):
+
+    def __init__(self, *dicts):
+        self._dicts = list(dicts)
+
+    def __getitem__(self, key):
+        v = self.get(key)
+        if v is None:
+            raise KeyError('{key} not found'.format(key=key))
+
+        return v
+
+    def get(self, key, default=None):
+        for d in self._dicts:
+            if key in d:
+                return d[key]
+
+        return default
+
+    def push_at(self, i, d):
+        self._dicts.insert(i, d)
+
+
+xivo_cti.config = ChainMap(cli_config, default_config)
 
 
 class Config(object):
