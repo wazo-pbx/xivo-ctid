@@ -17,7 +17,6 @@
 
 import argparse
 import logging
-import ssl
 import string
 import time
 import xivo_cti
@@ -27,7 +26,6 @@ from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
 
 logger = logging.getLogger('cti_config')
 
-SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 default_config = {

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import ssl
+
 __all__ = []
 
 config = {}
@@ -22,3 +24,4 @@ config = {}
 BUFSIZE_LARGE = 262144
 CTI_PROTOCOL_VERSION = '1.2'
 DAEMONNAME = 'xivo-ctid'
+SSLPROTO = ssl.PROTOCOL_TLSv1

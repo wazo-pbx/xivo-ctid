@@ -30,7 +30,7 @@ from xivo import daemonize
 from xivo.xivo_logging import setup_logging
 from xivo_cti import config
 from xivo_cti import BUFSIZE_LARGE
-from xivo_cti import cti_config
+from xivo_cti import SSLPROTO
 from xivo_cti import dao
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
@@ -586,7 +586,7 @@ class CTIServer(object):
                                              server_side=True,
                                              certfile=certfile,
                                              keyfile=keyfile,
-                                             ssl_version=cti_config.SSLPROTO)
+                                             ssl_version=SSLPROTO)
                 socketobject = ClientConnection(connstream, address, ctiseparator)
                 interface = interface_cti.CTIS(self)
             except ssl.SSLError:
