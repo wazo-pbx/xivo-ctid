@@ -18,7 +18,6 @@
 from xivo.pubsub import Pubsub
 from xivo_bus.ctl.producer import BusProducer
 from xivo_bus.resources.agent.client import AgentClient
-from xivo_cti import cti_config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
@@ -105,7 +104,6 @@ def setup():
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
     context.register('channel_updater', ChannelUpdater)
-    context.register('cti_config', cti_config.Config())
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)

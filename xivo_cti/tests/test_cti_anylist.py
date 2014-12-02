@@ -91,13 +91,10 @@ class TestContextAwareAnyList(unittest.TestCase):
         assert_that(self.list._item_ids_by_context, equal_to({}))
         mock_anylist_delete.assert_called_once_with(self.item_id)
 
+    @patch('xivo_cti.cti_anylist.config', {'main': {'context_separation': False}})
     def test_given_no_context_separation_when_send_message_then_send_cti_event(self):
         self.listname_obj.get_list.return_value = self.keeplist
         self.list._ctiserver = Mock()
-        cti_config = Mock()
-        cti_config.return_value.part_context.return_value = False
-        cti_context.reset()
-        cti_context.register('cti_config', cti_config)
 
         message_id = 3
         message = {
@@ -113,6 +110,7 @@ class TestContextAwareAnyList(unittest.TestCase):
 
         self.list._ctiserver.send_cti_event.assert_called_once_with(message)
 
+    @patch('xivo_cti.cti_anylist.config', {'main': {'context_separation': True}})
     def test_given_users_listname_when_send_message_then_get_contexts(self):
         self.listname_obj.get_list.return_value = self.keeplist
         self.list._ctiserver = Mock()
@@ -120,10 +118,6 @@ class TestContextAwareAnyList(unittest.TestCase):
         self.list._ctiserver.get_connected.return_value = [mock_connection]
         context = 'testing'
         self.list.get_contexts.return_value = context
-        cti_config = Mock()
-        cti_config.return_value.part_context.return_value = True
-        cti_context.reset()
-        cti_context.register('cti_config', cti_config)
 
         message_id = 3
         message = {
@@ -137,7 +131,6 @@ class TestContextAwareAnyList(unittest.TestCase):
 
         self.list.init_data()
         self.list._send_message(message, message_id)
-
 
         self.list.get_contexts.assert_called_once_with(message_id)
         self.list._ctiserver.get_connected.assert_called_once_with({'contexts': context})

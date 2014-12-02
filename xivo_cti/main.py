@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+
 from xivo_cti.ioc.context import context
 from xivo_cti.ioc import register_class
 from xivo_cti import cti_config

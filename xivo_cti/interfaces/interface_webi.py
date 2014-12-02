@@ -20,6 +20,7 @@ WEBI Interface
 """
 
 import re
+from xivo_cti import config
 from xivo_cti.ioc.context import context
 from xivo_cti.interfaces import interfaces
 
@@ -59,7 +60,6 @@ class WEBI(interfaces.Interfaces):
     def __init__(self, ctiserver, queue_member_updater):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._queue_member_updater = queue_member_updater
-        self._config = context.get('cti_config')
 
     def connected(self, connid):
         interfaces.Interfaces.connected(self, connid)
@@ -87,7 +87,7 @@ class WEBI(interfaces.Interfaces):
         clireply = []
         closemenow = True
 
-        live_reload_conf = self._config.getconfig('main')['live_reload_conf']
+        live_reload_conf = config['main']['live_reload_conf']
 
         if not live_reload_conf:
             logger.info('WEBI command received (%s) but live reload configuration has been disabled', msg)

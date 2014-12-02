@@ -21,6 +21,7 @@ import logging
 import time
 
 from xivo_cti import cti_sheets
+from xivo_cti import config
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable
 from xivo_cti.channel import Channel
@@ -53,8 +54,7 @@ SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 class Safe(object):
 
-    def __init__(self, cti_config, cti_server, queue_member_cti_adapter):
-        self._config = cti_config
+    def __init__(self, cti_server, queue_member_cti_adapter):
         self._ctiserver = cti_server
         self.queue_member_cti_adapter = queue_member_cti_adapter
         self.ipbxid = 'xivo'
@@ -331,7 +331,7 @@ class Safe(object):
 
     def user_get_userstatuskind(self, userid):
         cti_profile_id = old_user_dao.get_profile(userid)
-        zz = self._config.getconfig('profiles').get(cti_profile_id)
+        zz = config['profiles'].get(cti_profile_id)
         return zz.get('userstatus')
 
     def new_state(self, event):
@@ -546,13 +546,14 @@ class Safe(object):
             return None
 
     def sheetsend(self, where, uid):
-        if 'sheets' not in self._config.getconfig():
+        sheets = config.get('sheets')
+        if not sheets:
             return
-        bsheets = self._config.getconfig('sheets')
-        self.sheetevents = bsheets.get('events')
-        self.sheetdisplays = bsheets.get('displays')
-        self.sheetoptions = bsheets.get('options')
-        self.sheetconditions = bsheets.get('conditions')
+
+        self.sheetevents = sheets.get('events')
+        self.sheetdisplays = sheets.get('displays')
+        self.sheetoptions = sheets.get('options')
+        self.sheetconditions = sheets.get('conditions')
         if where not in self.sheetevents:
             return
 
@@ -613,13 +614,13 @@ class Safe(object):
         # This function must be called after a certain amount of initialization
         # went by in the _ctiserver object since some of the directories depends on
         # some information which is not available during this Safe __init__
-        display_contents = self._config.getconfig('displays')
+        display_contents = config['displays']
         self.displays_mgr.update(display_contents)
 
-        directories_contents = self._config.getconfig('directories')
+        directories_contents = config['directories']
         self.directories_mgr.update(self._ctiserver, directories_contents)
 
-        contexts_contents = self._config.getconfig('contexts')
+        contexts_contents = config['contexts']
         self.contexts_mgr.update(self.displays_mgr.displays,
                                  self.directories_mgr.directories,
                                  contexts_contents)

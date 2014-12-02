@@ -20,7 +20,6 @@ import logging
 from itertools import izip
 from xivo_cti import config
 from xivo_cti import db_connection_manager
-from xivo_cti.ioc.context import context as cti_context
 from xivo_dird.directory.data_sources.directory_data_source import DirectoryDataSource
 
 
@@ -47,7 +46,7 @@ class InternalDirectoryDataSource(DirectoryDataSource):
                        "ON extensions.type = 'user' AND userfeatures.id = CAST(extensions.typeval as integer) "
                        'WHERE ')
         request_end = ' OR '.join('%s ILIKE %%s' % column for column in test_columns)
-        if cti_context.get('cti_config').part_context():
+        if bool(config['main']['context_separation']):
             if contexts:
                 request_contexts = ' OR '.join("extensions.context = '%s'" % context for context in contexts)
             else:

@@ -47,9 +47,9 @@ def init(args):
     parser = _new_parser()
     parsed_args = parser.parse_args(args)
     _process_parsed_args(parsed_args)
-
-    config = ChainMap(default_config, cli_config)
-
+    db_config = _DbConfig()
+    db_config.update()
+    config = ChainMap(cli_config, db_config.getconfig(), default_config)
     # TODO: read the config file here
     # TODO: add the config file config to the config chainmap
 
@@ -102,7 +102,7 @@ class ChainMap(object):
 xivo_cti.config = ChainMap(cli_config, default_config)
 
 
-class Config(object):
+class _DbConfig(object):
 
     def __init__(self):
         self.xc_json = {}
@@ -171,6 +171,3 @@ class Config(object):
         else:
             ret = self.xc_json
         return ret
-
-    def part_context(self):
-        return bool(self.xc_json['main']['context_separation'])

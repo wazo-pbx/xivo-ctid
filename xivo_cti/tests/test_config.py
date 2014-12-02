@@ -19,7 +19,7 @@ import operator
 import unittest
 
 from ..cti_config import ChainMap
-from xivo_cti.cti_config import Config
+from xivo_cti.cti_config import _DbConfig as Config
 from hamcrest import assert_that
 from hamcrest import equal_to
 from hamcrest import is_
@@ -67,21 +67,6 @@ class TestChainMap(unittest.TestCase):
 
 
 class TestConfig(unittest.TestCase):
-
-    def test_part_context(self):
-        config = Config()
-
-        config.xc_json = {
-            'main': {'context_separation': 1}
-        }
-
-        self.assertTrue(config.part_context)
-
-        config.xc_json = {
-            'main': {'context_separation': 0}
-        }
-
-        self.assertFalse(config.part_context())
 
     @patch('xivo_dao.cti_service_dao.get_services')
     def test_get_services(self, mock_get_services_dao):

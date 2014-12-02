@@ -86,13 +86,12 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self, cti_config):
+    def __init__(self):
         self.start_time = time.time()
         self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []
-        self._config = cti_config
         self._cti_events = collections.deque()
 
     def _set_signal_handlers(self):
@@ -124,7 +123,6 @@ class CTIServer(object):
         self._set_logger()
         self._daemonize()
         QueueLogger.init()
-        self._config.update()
         self._set_signal_handlers()
 
         self.interface_ami = context.get('interface_ami')
@@ -413,7 +411,7 @@ class CTIServer(object):
             self._on_ami_down()
 
         logger.info('Listening sockets')
-        xivoconf_general = self._config.getconfig('main')
+        xivoconf_general = config['main']
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)
 
@@ -579,8 +577,8 @@ class CTIServer(object):
             socketobject = ClientConnection(socketobject, address, ctiseparator)
             interface = interface_cti.CTI(self)
         elif kind == 'CTIS':
-            certfile = self._config.getconfig('main')['certfile']
-            keyfile = self._config.getconfig('main')['keyfile']
+            certfile = config['main']['certfile']
+            keyfile = config['main']['keyfile']
             try:
                 connstream = ssl.wrap_socket(socketobject,
                                              server_side=True,
@@ -599,7 +597,7 @@ class CTIServer(object):
 
         if socketobject:
             if kind in ['CTI', 'CTIS']:
-                logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
+                logintimeout = int(config['main'].get('logintimeout', 5))
                 interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
@@ -656,7 +654,7 @@ class CTIServer(object):
         if self.update_config_list:
             try:
                 if 'xivo[cticonfig,update]' in self.update_config_list:
-                    self._config.update()
+                    # TODO update db_config
                     self.safe.update_directories()
                     self.update_config_list.pop(self.update_config_list.index('xivo[cticonfig,update]'))
             except Exception:
