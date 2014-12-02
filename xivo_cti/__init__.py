@@ -20,10 +20,12 @@ import string
 
 __all__ = []
 
-config = {}
-
 BUFSIZE_LARGE = 262144
 CTI_PROTOCOL_VERSION = '1.2'
 DAEMONNAME = 'xivo-ctid'
 SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
+
+from xivo_cti.cti_config import make_config
+
+config = make_config()

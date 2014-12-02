@@ -23,7 +23,8 @@ from xivo_cti import cti_config
 
 
 def main():
-    cti_config.init(sys.argv[1:])
+    cti_config.init_cli_config(sys.argv[1:])
+    cti_config.update_db_config()
 
     register_class.setup()
 

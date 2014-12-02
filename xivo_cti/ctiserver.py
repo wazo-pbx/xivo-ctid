@@ -30,6 +30,7 @@ from xivo import daemonize
 from xivo.xivo_logging import setup_logging
 from xivo_cti import config
 from xivo_cti import BUFSIZE_LARGE
+from xivo_cti import cti_config
 from xivo_cti import SSLPROTO
 from xivo_cti import dao
 from xivo_cti import message_hook
@@ -120,6 +121,7 @@ class CTIServer(object):
         daemonize.lock_pidfile_or_die(config['pidfile'])
 
     def setup(self):
+        cti_config.update_db_config()
         self._set_logger()
         self._daemonize()
         QueueLogger.init()
@@ -654,7 +656,7 @@ class CTIServer(object):
         if self.update_config_list:
             try:
                 if 'xivo[cticonfig,update]' in self.update_config_list:
-                    # TODO update db_config
+                    cti_config.update_db_config()
                     self.safe.update_directories()
                     self.update_config_list.pop(self.update_config_list.index('xivo[cticonfig,update]'))
             except Exception:

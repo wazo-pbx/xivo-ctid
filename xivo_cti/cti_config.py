@@ -25,7 +25,7 @@ from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
 
 logger = logging.getLogger('cti_config')
 
-default_config = {
+_default_config = {
     'debug': False,
     'foreground': False,
     'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
@@ -38,20 +38,24 @@ default_config = {
         'binding_key': 'call_form_result',
     },
 }
-cli_config = {}
+_cli_config = {}
+_db_config = {}
 
 
-def init(args):
-    global config
-
+def init_cli_config(args):
     parser = _new_parser()
     parsed_args = parser.parse_args(args)
     _process_parsed_args(parsed_args)
+    xivo_cti.config.replace_at(0, _cli_config)
+
+
+def update_db_config():
+    global _db_config
+
     db_config = _DbConfig()
     db_config.update()
-    config = ChainMap(cli_config, db_config.getconfig(), default_config)
-    # TODO: read the config file here
-    # TODO: add the config file config to the config chainmap
+    _db_config = db_config.getconfig()
+    xivo_cti.config.replace_at(1, _db_config)
 
 
 def _new_parser():
@@ -64,16 +68,16 @@ def _new_parser():
 
 
 def _process_parsed_args(parsed_args):
-    global cli_config
+    global _cli_config
 
     if parsed_args.debug:
-        cli_config['debug'] = parsed_args.debug
+        _cli_config['debug'] = parsed_args.debug
     if parsed_args.foreground:
-        cli_config['foreground'] = parsed_args.foreground
+        _cli_config['foreground'] = parsed_args.foreground
     if parsed_args.pidfile:
-        cli_config['pidfile'] = parsed_args.pidfile
+        _cli_config['pidfile'] = parsed_args.pidfile
     if parsed_args.logfile:
-        cli_config['logfile'] = parsed_args.logfile
+        _cli_config['logfile'] = parsed_args.logfile
 
 
 class ChainMap(object):
@@ -98,8 +102,8 @@ class ChainMap(object):
     def push_at(self, i, d):
         self._dicts.insert(i, d)
 
-
-xivo_cti.config = ChainMap(cli_config, default_config)
+    def replace_at(self, i, d):
+        self._dicts[i] = d
 
 
 class _DbConfig(object):
@@ -171,3 +175,7 @@ class _DbConfig(object):
         else:
             ret = self.xc_json
         return ret
+
+
+def make_config():
+    return ChainMap(_cli_config, _db_config, _default_config)
