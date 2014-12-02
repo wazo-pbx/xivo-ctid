@@ -216,12 +216,8 @@ class _DbConfig(object):
             res[new_preference_key] = new_preference_value
         return res
 
-    def getconfig(self, key=None):
-        if key:
-            ret = self.xc_json.get(key, {})
-        else:
-            ret = self.xc_json
-        return ret
+    def getconfig(self):
+        return self.xc_json
 
 
 def update_config():
