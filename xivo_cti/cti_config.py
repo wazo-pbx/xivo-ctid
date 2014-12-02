@@ -15,10 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from __future__ import print_function
+
 import argparse
 import logging
+import os
 import time
+import sys
 import xivo_cti
+import yaml
 
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
@@ -32,6 +37,8 @@ _default_config = {
     'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
     'logfile': '/var/log/%s.log' % xivo_cti.DAEMONNAME,
     'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
+    'config_file': '/etc/xivo-ctid/config.yml',
+    'extra_config_files': '/etc/xivo-ctid/conf.d/',
     'bus': {
         'exchange_name': 'xivo-cti',
         'exchange_type': 'direct',
@@ -46,6 +53,40 @@ _default_config = {
 }
 _cli_config = {}
 _db_config = {}
+_file_config = {}
+
+
+# TODO move this function to lib-python
+def _parse_config_file(config_file_name):
+    try:
+        with open(config_file_name) as config_file:
+            return yaml.load(config_file)
+    except IOError as e:
+        print('Could not read config file {}: {}'.format(config_file_name, e), file=sys.stderr)
+        return {}
+
+
+def init_config_file():
+    global _file_config
+
+    # The priority of files is based on the file name alphabetical order
+    main_config_filename = xivo_cti.config['config_file']
+    main_config = _parse_config_file(main_config_filename)
+
+    # the main config file could override the extra config directory
+    _file_config = main_config
+    update_config()
+
+    extra_config_file_directory = xivo_cti.config['extra_config_files']
+    try:
+        extra_config_filenames = os.listdir(extra_config_file_directory)
+    except OSError:
+        extra_config_filenames = []
+    configs = [_parse_config_file(f) for f in sorted(extra_config_filenames)]
+    configs.append(main_config)
+
+    _file_config = ChainMap(*configs)
+    update_config()
 
 
 def init_cli_config(args):
@@ -70,6 +111,7 @@ def _new_parser():
     parser.add_argument('-f', '--foreground', action='store_true')
     parser.add_argument('-p', '--pidfile')
     parser.add_argument('-l', '--logfile')
+    parser.add_argument('-c', '--config-file', action='store')
     return parser
 
 
@@ -84,6 +126,8 @@ def _process_parsed_args(parsed_args):
         _cli_config['pidfile'] = parsed_args.pidfile
     if parsed_args.logfile:
         _cli_config['logfile'] = parsed_args.logfile
+    if parsed_args.config_file:
+        _cli_config['config_file'] = parsed_args.config_file
 
 
 class ChainMap(object):
@@ -181,4 +225,4 @@ class _DbConfig(object):
 
 
 def update_config():
-    xivo_cti.config.data = ChainMap(_cli_config, _db_config, _default_config)
+    xivo_cti.config.data = ChainMap(_cli_config, _file_config, _db_config, _default_config)
