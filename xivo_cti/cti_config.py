@@ -25,6 +25,7 @@ import sys
 import xivo_cti
 import yaml
 
+from xivo.chain_map import ChainMap
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
@@ -128,29 +129,6 @@ def _process_parsed_args(parsed_args):
         _cli_config['logfile'] = parsed_args.logfile
     if parsed_args.config_file:
         _cli_config['config_file'] = parsed_args.config_file
-
-
-class ChainMap(object):
-
-    def __init__(self, *dicts):
-        self._dicts = list(dicts)
-
-    def __getitem__(self, key):
-        v = self.get(key)
-        if v is None:
-            raise KeyError('{key} not found'.format(key=key))
-
-        return v
-
-    def __contains__(self, key):
-        return self.get(key) is not None
-
-    def get(self, key, default=None):
-        for d in self._dicts:
-            if key in d:
-                return d[key]
-
-        return default
 
 
 class _DbConfig(object):

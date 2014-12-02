@@ -15,46 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import operator
 import unittest
 
-from ..cti_config import ChainMap
 from xivo_cti.cti_config import _DbConfig as Config
-from hamcrest import assert_that
-from hamcrest import equal_to
-from hamcrest import is_
-from hamcrest import none
 from mock import patch
-
-
-class TestChainMap(unittest.TestCase):
-
-    def test_access_no_result(self):
-        m = ChainMap({}, {})
-
-        self.assertRaises(KeyError, operator.getitem, m, 'key')
-        assert_that(m.get('key'), is_(none()))
-        assert_that(m.get('key', 'default_value'), equal_to('default_value'))
-
-    def test_lookup_order(self):
-        cli_config = {}
-        environment_config = {'key': 2}
-        file_config = {'key': 3,
-                       'test': 42}
-        default_config = {'key': 4}
-
-        m = ChainMap(cli_config, environment_config, file_config, default_config)
-
-        assert_that(m['key'], equal_to(2))
-        assert_that(m['test'], equal_to(42))
-
-    def test_contains(self):
-        cli_config = {}
-        environment_config = {'key': 2}
-
-        m = ChainMap(cli_config, environment_config)
-
-        assert_that('key' in m, is_(True))
 
 
 class TestConfig(unittest.TestCase):
