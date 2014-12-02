@@ -19,11 +19,11 @@ from __future__ import print_function
 
 import argparse
 import logging
-import os
 import time
 import xivo_cti
 
 from xivo.chain_map import ChainMap
+from xivo.config_helper import parse_config_dir
 from xivo.config_helper import parse_config_file
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
@@ -68,11 +68,7 @@ def init_config_file():
     update_config()
 
     extra_config_file_directory = xivo_cti.config['extra_config_files']
-    try:
-        extra_config_filenames = os.listdir(extra_config_file_directory)
-    except OSError:
-        extra_config_filenames = []
-    configs = [parse_config_file(f) for f in sorted(extra_config_filenames)]
+    configs = parse_config_dir(extra_config_file_directory)
     configs.append(main_config)
 
     _file_config = ChainMap(*configs)
