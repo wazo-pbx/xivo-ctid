@@ -38,6 +38,11 @@ _default_config = {
         'exchange_durable': True,
         'binding_key': 'call_form_result',
     },
+    'dird': {
+        'host': 'localhost',
+        'port': 9489,
+        'version': 0.1,
+    },
 }
 _cli_config = {}
 _db_config = {}
