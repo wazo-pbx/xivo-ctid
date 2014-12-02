@@ -18,6 +18,8 @@
 import ssl
 import string
 
+from UserDict import UserDict
+
 __all__ = []
 
 BUFSIZE_LARGE = 262144
@@ -26,6 +28,6 @@ DAEMONNAME = 'xivo-ctid'
 SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
-from xivo_cti.cti_config import make_config
-
-config = make_config()
+config = UserDict()
+from xivo_cti.cti_config import update_config
+update_config()

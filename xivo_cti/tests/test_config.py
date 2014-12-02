@@ -25,7 +25,6 @@ from hamcrest import equal_to
 from hamcrest import is_
 from hamcrest import none
 from mock import patch
-from mock import sentinel
 
 
 class TestChainMap(unittest.TestCase):
@@ -49,32 +48,13 @@ class TestChainMap(unittest.TestCase):
         assert_that(m['key'], equal_to(2))
         assert_that(m['test'], equal_to(42))
 
-    def test_push_at(self):
-        cli_config = {'file': sentinel.filename}
-        environment_config = {}
-        default_config = {'file': sentinel.default_filename,
-                          'debug': False}
+    def test_contains(self):
+        cli_config = {}
+        environment_config = {'key': 2}
 
-        m = ChainMap(cli_config, environment_config, default_config)
+        m = ChainMap(cli_config, environment_config)
 
-        assert_that(m['debug'], equal_to(False))
-
-        file_config = {'debug': True}
-
-        m.push_at(2, file_config)
-
-        assert_that(m['debug'], equal_to(True))
-
-    def test_replace_at(self):
-        c1 = {'not_test': 'one'}
-        c2 = {'test': 'two'}
-        c3 = {'test': 'tree'}
-
-        m = ChainMap(c1, c2, c3)
-
-        m.replace_at(1, {'test': 'four'})
-
-        assert_that(m['test'], equal_to('four'))
+        assert_that('key' in m, is_(True))
 
 
 class TestConfig(unittest.TestCase):
