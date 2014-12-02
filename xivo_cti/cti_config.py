@@ -21,11 +21,10 @@ import argparse
 import logging
 import os
 import time
-import sys
 import xivo_cti
-import yaml
 
 from xivo.chain_map import ChainMap
+from xivo.config_helper import parse_config_file
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
@@ -57,22 +56,12 @@ _db_config = {}
 _file_config = {}
 
 
-# TODO move this function to lib-python
-def _parse_config_file(config_file_name):
-    try:
-        with open(config_file_name) as config_file:
-            return yaml.load(config_file)
-    except IOError as e:
-        print('Could not read config file {}: {}'.format(config_file_name, e), file=sys.stderr)
-        return {}
-
-
 def init_config_file():
     global _file_config
 
     # The priority of files is based on the file name alphabetical order
     main_config_filename = xivo_cti.config['config_file']
-    main_config = _parse_config_file(main_config_filename)
+    main_config = parse_config_file(main_config_filename)
 
     # the main config file could override the extra config directory
     _file_config = main_config
@@ -83,7 +72,7 @@ def init_config_file():
         extra_config_filenames = os.listdir(extra_config_file_directory)
     except OSError:
         extra_config_filenames = []
-    configs = [_parse_config_file(f) for f in sorted(extra_config_filenames)]
+    configs = [parse_config_file(f) for f in sorted(extra_config_filenames)]
     configs.append(main_config)
 
     _file_config = ChainMap(*configs)
