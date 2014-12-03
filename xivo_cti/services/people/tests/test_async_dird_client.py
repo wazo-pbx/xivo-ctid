@@ -43,7 +43,7 @@ class TestDird(TestCase):
 
         async_dird_client.headers('my-profile', sentinel.cb)
 
-        async_dird_client.executor.shutdown(wait=True)
+        async_dird_client._executor.shutdown(wait=True)
 
         self.task_queue.put.assert_called_once_with(sentinel.cb, 'my-headers')
         MockedClient.return_value.directories.headers.assert_called_once_with(profile='my-profile')
@@ -55,7 +55,7 @@ class TestDird(TestCase):
 
         async_dird_client.lookup('my-profile', 'alice', sentinel.cb)
 
-        async_dird_client.executor.shutdown(wait=True)
+        async_dird_client._executor.shutdown(wait=True)
 
         self.task_queue.put.assert_called_once_with(sentinel.cb, 'my-results')
         MockedClient.return_value.directories.lookup.assert_called_once_with(
