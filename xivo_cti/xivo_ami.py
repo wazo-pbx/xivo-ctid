@@ -47,7 +47,6 @@ class AMIClass(object):
         self.ipport = int(ipbxconfig.get('ipport', 5038))
         self.loginname = ipbxconfig.get('username', 'xivouser')
         self.password = ipbxconfig.get('password', 'xivouser')
-        self.events = True
         self.actionid = None
 
     def connect(self):
@@ -155,14 +154,9 @@ class AMIClass(object):
 
     # \brief Logins to the AMI.
     def login(self):
-        if self.events:
-            onoff = 'on'
-        else:
-            onoff = 'off'
         return self._exec_command('Login',
                                   [('Username', self.loginname),
-                                   ('Secret', self.password),
-                                   ('Events', onoff)])
+                                   ('Secret', self.password)])
 
     def hangup(self, channel, channel_peer=None):
         ret = 0
