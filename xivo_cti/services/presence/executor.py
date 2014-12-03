@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+
+from xivo_cti import config
 from xivo_dao import user_dao
 
 logger = logging.getLogger('PresenceServiceExecutor')
@@ -41,16 +43,13 @@ class PresenceServiceExecutor(object):
     def __init__(self,
                  user_service_manager,
                  agent_service_manager,
-                 cti_config,
                  innerdata):
         self.user_service_manager = user_service_manager
         self.agent_service_manager = agent_service_manager
-        self.config = cti_config
         self._innerdata = innerdata
 
     def execute_actions(self, user_id, presence):
         user_profile = user_dao.get_profile(user_id)
-        config = self.config.getconfig()
         presence_group_name = config['profiles'][user_profile]['userstatus']
         presence_group = config['userstatus'][presence_group_name]
 

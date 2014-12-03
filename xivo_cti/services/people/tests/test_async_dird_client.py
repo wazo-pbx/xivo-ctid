@@ -31,6 +31,8 @@ class TestDird(TestCase):
     def setUp(self):
         self.task_queue = Mock()
 
+    @patch('xivo_cti.services.people.async_dird_client.config',
+           {'dird': {'host': 'localhost', 'port': 9489, 'version': '0.1'}})
     def test_client(self, MockedClient):
         async_dird_client = AsyncDirdClient(self.task_queue)
         assert_that(async_dird_client._client, equal_to(MockedClient.return_value))

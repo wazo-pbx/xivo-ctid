@@ -16,7 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
 from mock import Mock
+from mock import patch
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
 from xivo_cti.innerdata import Safe
 from xivo_cti.exception import NotAQueueException
@@ -63,19 +65,13 @@ class TestInnerdataDAO(unittest.TestCase):
 
         inner_queue_list.get_queues.assert_called_once_with()
 
+    @patch('xivo_cti.dao.innerdata_dao.config', {'profiles': {'client': {'userstatus': 2}},
+                                                 'userstatus': {
+                                                     2: {'available': {},
+                                                         'disconnected': {}}}})
     def test_get_presences(self):
         profile = 'client'
         expected_result = ['available', 'disconnected']
-        get_config_return = {
-            'profiles': {'client': {'userstatus': 2}},
-            'userstatus': {
-                2: {'available': {},
-                    'disconnected': {}}
-            }
-        }
-        self.innerdata_dao.innerdata._config = Mock()
-        side_effect = lambda get_config_argument: get_config_return[get_config_argument]
-        self.innerdata_dao.innerdata._config.getconfig.side_effect = side_effect
 
         result = self.innerdata_dao.get_presences(profile)
 

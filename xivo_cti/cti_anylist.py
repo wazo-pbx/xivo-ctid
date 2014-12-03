@@ -19,6 +19,7 @@ import time
 import copy
 import logging
 from collections import defaultdict
+from xivo_cti import config
 from xivo_cti import cti_daolist
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.ioc.context import context as cti_context
@@ -238,7 +239,7 @@ class AnyList(object):
         return self.keeplist.get(item_id)
 
     def _send_message(self, message, id):
-        if not cti_context.get('cti_config').part_context():
+        if not self._part_context():
             self._ctiserver.send_cti_event(message)
         else:
             if self.listname == 'users':
@@ -250,6 +251,9 @@ class AnyList(object):
 
             for connection in connections:
                 connection.append_msg(message)
+
+    def _part_context(self):
+        return bool(config['main']['context_separation'])
 
 
 class ContextAwareAnyList(AnyList):
@@ -292,7 +296,7 @@ class ContextAwareAnyList(AnyList):
             del self._item_ids_by_context[item_context]
 
     def list_ids_in_contexts(self, contexts):
-        if not cti_context.get('cti_config').part_context():
+        if not self._part_context():
             return self.keeplist.keys()
         elif not contexts:
             return []
@@ -310,7 +314,7 @@ class ContextAwareAnyList(AnyList):
         except KeyError:
             return None
         else:
-            if not cti_context.get('cti_config').part_context():
+            if not self._part_context():
                 return item
             elif not contexts:
                 return None

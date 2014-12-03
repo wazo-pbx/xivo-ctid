@@ -28,7 +28,10 @@ import threading
 
 from xivo import daemonize
 from xivo.xivo_logging import setup_logging
+from xivo_cti import config
+from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
+from xivo_cti import SSLPROTO
 from xivo_cti import dao
 from xivo_cti import message_hook
 from xivo_cti.ami import ami_callback_handler
@@ -84,13 +87,12 @@ class CTIServer(object):
 
     servername = 'XiVO CTI Server'
 
-    def __init__(self, cti_config):
+    def __init__(self):
         self.start_time = time.time()
         self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []
-        self._config = cti_config
         self._cti_events = collections.deque()
 
     def _set_signal_handlers(self):
@@ -111,18 +113,18 @@ class CTIServer(object):
         self.askedtoquit = False
 
     def _set_logger(self):
-        setup_logging(cti_config.LOGFILENAME, cti_config.FOREGROUND_MODE, cti_config.DEBUG_MODE)
+        setup_logging(config['logfile'], config['foreground'], config['debug'])
 
     def _daemonize(self):
-        if not cti_config.FOREGROUND_MODE:
+        if not config['foreground']:
             daemonize.daemonize()
-        daemonize.lock_pidfile_or_die(cti_config.PIDFILE)
+        daemonize.lock_pidfile_or_die(config['pidfile'])
 
     def setup(self):
+        cti_config.update_db_config()
         self._set_logger()
         self._daemonize()
         QueueLogger.init()
-        self._config.update()
         self._set_signal_handlers()
 
         self.interface_ami = context.get('interface_ami')
@@ -376,9 +378,9 @@ class CTIServer(object):
         bus_producer = context.get('bus_producer')
         if not bus_producer.connected:
             bus_producer.connect()
-        bus_producer.declare_exchange(name=cti_config.BUS_EXCHANGE_NAME,
-                                      exchange_type=cti_config.BUS_EXCHANGE_TYPE,
-                                      durable=cti_config.BUS_EXCHANGE_DURABLE)
+        bus_producer.declare_exchange(name=config['bus']['exchange_name'],
+                                      exchange_type=config['bus']['exchange_type'],
+                                      durable=config['bus']['exchange_durable'])
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')
@@ -411,7 +413,7 @@ class CTIServer(object):
             self._on_ami_down()
 
         logger.info('Listening sockets')
-        xivoconf_general = self._config.getconfig('main')
+        xivoconf_general = config['main']
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)
 
@@ -435,7 +437,7 @@ class CTIServer(object):
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
-            trueport = int(port) + cti_config.PORTDELTA
+            trueport = int(port)
             gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
             if not gai:
                 return
@@ -543,7 +545,7 @@ class CTIServer(object):
                 for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
                     print '--- (stop) killing thread <%s>' % t.getName()
                     t._Thread__stop()
-                daemonize.unlock_pidfile(cti_config.PIDFILE)
+                daemonize.unlock_pidfile(config['pidfile'])
                 sys.exit(5)
             else:
                 self.askedtoquit = True
@@ -562,7 +564,7 @@ class CTIServer(object):
                 s.close()
 
     def _socket_ami_read(self, sel_i):
-        buf = sel_i.recv(cti_config.BUFSIZE_LARGE)
+        buf = sel_i.recv(BUFSIZE_LARGE)
         if not buf:
             self._on_ami_down()
         else:
@@ -577,14 +579,14 @@ class CTIServer(object):
             socketobject = ClientConnection(socketobject, address, ctiseparator)
             interface = interface_cti.CTI(self)
         elif kind == 'CTIS':
-            certfile = self._config.getconfig('main')['certfile']
-            keyfile = self._config.getconfig('main')['keyfile']
+            certfile = config['main']['certfile']
+            keyfile = config['main']['keyfile']
             try:
                 connstream = ssl.wrap_socket(socketobject,
                                              server_side=True,
                                              certfile=certfile,
                                              keyfile=keyfile,
-                                             ssl_version=cti_config.SSLPROTO)
+                                             ssl_version=SSLPROTO)
                 socketobject = ClientConnection(connstream, address, ctiseparator)
                 interface = interface_cti.CTIS(self)
             except ssl.SSLError:
@@ -597,7 +599,7 @@ class CTIServer(object):
 
         if socketobject:
             if kind in ['CTI', 'CTIS']:
-                logintimeout = int(self._config.getconfig('main').get('logintimeout', 5))
+                logintimeout = int(config['main'].get('logintimeout', 5))
                 interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
@@ -626,7 +628,7 @@ class CTIServer(object):
                     del self.fdlist_established[sel_i]
             else:
                 try:
-                    msg = sel_i.recv(cti_config.BUFSIZE_LARGE, socket.MSG_DONTWAIT)
+                    msg = sel_i.recv(BUFSIZE_LARGE, socket.MSG_DONTWAIT)
                 except socket.error:
                     logger.exception('connection to %s (%s)', requester, interface_obj)
                     msg = ''
@@ -654,7 +656,7 @@ class CTIServer(object):
         if self.update_config_list:
             try:
                 if 'xivo[cticonfig,update]' in self.update_config_list:
-                    self._config.update()
+                    cti_config.update_db_config()
                     self.safe.update_directories()
                     self.update_config_list.pop(self.update_config_list.index('xivo[cticonfig,update]'))
             except Exception:

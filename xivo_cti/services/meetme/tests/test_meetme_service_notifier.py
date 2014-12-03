@@ -17,14 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock, call, patch, NonCallableMock
+
+from hamcrest import assert_that
+from hamcrest import equal_to
+from mock import Mock, call, patch
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.cti_config import Config
-from xivo_cti.ioc.context import context
 
 
+@patch('xivo_cti.services.meetme.service_notifier.config',
+       {'main': {'context_separation': False}})
 class TestMeetmeServiceNotifier(unittest.TestCase):
 
     def setUp(self):
@@ -32,12 +35,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.notifier = MeetmeServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
-        self.config = NonCallableMock(Config)
-        self.config.part_context.return_value = False
-        context.register('cti_config', self.config)
-
-    def tearDown(self):
-        context.reset()
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     @patch('xivo_dao.user_dao.get_reachable_contexts')
@@ -141,40 +138,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         self.assertFalse(client_connection_1.send_message.called)
         self.assertFalse(client_connection_2.send_message.called)
-
-    def test_publish_meetme_update_context_separation(self):
-        self.config.part_context.return_value = True
-
-        client_connection_1 = Mock(CTI)
-        client_connection_2 = Mock(CTI)
-
-        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
-                                                              'contexts': ['test'],
-                                                              'channel_start': 'sip/abcd',
-                                                              'membership': []},
-                                        client_connection_2: {'client_connection': client_connection_2,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/bcde',
-                                                              'membership': []}}
-        msg = {'800': {'number': '800',
-                       'name': 'test_conf',
-                       'pin_required': True,
-                       'start_time': 12345.123,
-                       'context': 'default',
-                       'members': {1: {'join_order': 1,
-                                       'join_time': 12345.123,
-                                       'number': '1002',
-                                       'name': 'Tester 1',
-                                       'channel': 'sip/bcde',
-                                       'muted': True}}}}
-
-        _push_to_client = Mock()
-        self.notifier._push_to_client = _push_to_client
-        self.notifier.publish_meetme_update(msg)
-
-        self.assertEqual(self.notifier._current_state, msg)
-        self.assertTrue(call(client_connection_1) in _push_to_client.call_args_list)
-        self.assertTrue(call(client_connection_2) in _push_to_client.call_args_list)
 
     def test_push_to_client_no_context_separation(self):
         client_connection = Mock(CTI)

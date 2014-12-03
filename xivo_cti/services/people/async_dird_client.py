@@ -18,6 +18,7 @@
 import logging
 
 from concurrent import futures
+from xivo_cti import config
 from xivo_dird_client import Client
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class AsyncDirdClient(object):
         self._client = self._new_client()
 
     def _new_client(self):
-        return Client(host='localhost', port=9489, version='0.1')
+        return Client(**config['dird'])
 
     def headers(self, profile, callback):
         logger.debug('requesting directory headers on profile %s', profile)
