@@ -17,9 +17,10 @@
 
 import logging
 import random
-import string
 
+from xivo_cti import ALPHANUMS
 from xivo_cti import cti_fax, dao
+from xivo_cti import config
 from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_dao import extensions_dao
@@ -55,12 +56,9 @@ IPBXCOMMANDS = [
     'meetme',
 ]
 
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
-
 
 class Command(object):
     def __init__(self, connection, thiscommand):
-        self._config = cti_context.get('cti_config')
         self._connection = connection
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
@@ -181,7 +179,7 @@ class Command(object):
         logger.info('%s for %s', self.head, cdetails)
 
         cti_profile_id = self.user_keeplist['cti_profile_id']
-        profilespecs = self._config.getconfig('profiles').get(cti_profile_id)
+        profilespecs = config['profiles'].get(cti_profile_id)
 
         capastruct = {}
         summarycapas = {}
@@ -191,7 +189,7 @@ class Command(object):
                              'userstatus', 'phonestatus']:
                 if profilespecs.get(capakind):
                     tt = profilespecs.get(capakind)
-                    cfg_capakind = self._config.getconfig(capakind)
+                    cfg_capakind = config[capakind]
                     if cfg_capakind:
                         details = cfg_capakind.get(tt)
                     else:
@@ -217,7 +215,7 @@ class Command(object):
         userid = cdetails.get('userid')
         capaid = int(capaid)
 
-        if capaid not in self._config.getconfig('profiles').keys():
+        if capaid not in config['profiles'].keys():
             return 'unknown cti_profile_id'
         if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['cti_profile_id']:
             return 'wrong cti_profile_id'

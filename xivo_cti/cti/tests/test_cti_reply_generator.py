@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.cti_config import CTI_PROTOCOL_VERSION
+from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti.cti.cti_reply_generator import CTIReplyGenerator
 from xivo_cti.cti.cti_command import CTICommandInstance
 

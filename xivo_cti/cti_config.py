@@ -15,36 +15,106 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from __future__ import print_function
+
+import argparse
 import logging
-import ssl
-import string
 import time
+import xivo_cti
+
+from xivo.chain_map import ChainMap
+from xivo.config_helper import parse_config_dir
+from xivo.config_helper import parse_config_file
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
 
 logger = logging.getLogger('cti_config')
 
+_default_config = {
+    'debug': False,
+    'foreground': False,
+    'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
+    'logfile': '/var/log/%s.log' % xivo_cti.DAEMONNAME,
+    'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
+    'config_file': '/etc/xivo-ctid/config.yml',
+    'extra_config_files': '/etc/xivo-ctid/conf.d/',
+    'bus': {
+        'exchange_name': 'xivo-cti',
+        'exchange_type': 'direct',
+        'exchange_durable': True,
+        'binding_key': 'call_form_result',
+    },
+    'dird': {
+        'host': 'localhost',
+        'port': 9489,
+        'version': 0.1,
+    },
+}
+_cli_config = {}
+_db_config = {}
+_file_config = {}
 
-DAEMONNAME = 'xivo-ctid'
-BUFSIZE_LARGE = 262144
-DEBUG_MODE = False
-FOREGROUND_MODE = False
-LOGFILENAME = '/var/log/%s.log' % DAEMONNAME
-PIDFILE = '/var/run/%s.pid' % DAEMONNAME
-PORTDELTA = 0
-SSLPROTO = ssl.PROTOCOL_TLSv1
-XIVOIP = 'localhost'
-CTI_PROTOCOL_VERSION = '1.2'
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
-DB_URI = 'postgresql://asterisk:proformatique@localhost/asterisk'
-BUS_EXCHANGE_NAME = 'xivo-cti'
-BUS_EXCHANGE_TYPE = 'direct'
-BUS_BINDING_KEY = 'call_form_result'
-BUS_EXCHANGE_DURABLE = True
+
+def init_config_file():
+    global _file_config
+
+    # The priority of files is based on the file name alphabetical order
+    main_config_filename = xivo_cti.config['config_file']
+    main_config = parse_config_file(main_config_filename)
+
+    # the main config file could override the extra config directory
+    _file_config = main_config
+    _update_config()
+
+    extra_config_file_directory = xivo_cti.config['extra_config_files']
+    configs = parse_config_dir(extra_config_file_directory)
+    configs.append(main_config)
+
+    _file_config = ChainMap(*configs)
+    _update_config()
 
 
-class Config(object):
+def init_cli_config(args):
+    parser = _new_parser()
+    parsed_args = parser.parse_args(args)
+    _process_parsed_args(parsed_args)
+    _update_config()
+
+
+def update_db_config():
+    global _db_config
+
+    db_config = _DbConfig()
+    db_config.update()
+    _db_config = db_config.getconfig()
+    _update_config()
+
+
+def _new_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-f', '--foreground', action='store_true')
+    parser.add_argument('-p', '--pidfile')
+    parser.add_argument('-l', '--logfile')
+    parser.add_argument('-c', '--config-file')
+    return parser
+
+
+def _process_parsed_args(parsed_args):
+    if parsed_args.debug:
+        _cli_config['debug'] = parsed_args.debug
+    if parsed_args.foreground:
+        _cli_config['foreground'] = parsed_args.foreground
+    if parsed_args.pidfile:
+        _cli_config['pidfile'] = parsed_args.pidfile
+    if parsed_args.logfile:
+        _cli_config['logfile'] = parsed_args.logfile
+    if parsed_args.config_file:
+        _cli_config['config_file'] = parsed_args.config_file
+
+
+class _DbConfig(object):
 
     def __init__(self):
         self.xc_json = {}
@@ -107,12 +177,9 @@ class Config(object):
             res[new_preference_key] = new_preference_value
         return res
 
-    def getconfig(self, key=None):
-        if key:
-            ret = self.xc_json.get(key, {})
-        else:
-            ret = self.xc_json
-        return ret
+    def getconfig(self):
+        return self.xc_json
 
-    def part_context(self):
-        return bool(self.xc_json['main']['context_separation'])
+
+def _update_config():
+    xivo_cti.config.data = ChainMap(_cli_config, _file_config, _db_config, _default_config)

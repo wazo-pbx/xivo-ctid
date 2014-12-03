@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+
+from xivo_cti import config
 from xivo_cti.exception import NotAQueueException
 
 logger = logging.getLogger("InnerdataDAO")
@@ -36,5 +38,5 @@ class InnerdataDAO(object):
         return self.innerdata.xod_config['queues'].get_queues()
 
     def get_presences(self, profile):
-        profile_id = self.innerdata._config.getconfig('profiles').get(profile).get('userstatus')
-        return self.innerdata._config.getconfig('userstatus').get(profile_id).keys()
+        profile_id = config['profiles'].get(profile).get('userstatus')
+        return config['userstatus'].get(profile_id).keys()

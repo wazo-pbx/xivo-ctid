@@ -16,25 +16,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock, NonCallableMock
+
+from mock import Mock
 from xivo_cti.interfaces.interface_webi import WEBI
-from xivo_cti.ctiserver import CTIServer
-from xivo_cti.ioc.context import context
-from xivo_cti.cti_config import Config
 from xivo_cti.services.queue_member.updater import QueueMemberUpdater
+from mock import patch
 
 
+@patch('xivo_cti.interfaces.interface_webi.config',
+       {'main': {'live_reload_conf': True}})
 class Test(unittest.TestCase):
+
     def setUp(self):
-        mock_config = NonCallableMock(Config)
-        mock_config.getconfig.return_value = {'live_reload_conf': True}
-        context.register('cti_config', mock_config)
-        self._ctiserver = Mock(CTIServer)
+        self._ctiserver = Mock()
         self._queue_member_updater = Mock(QueueMemberUpdater)
         self._interface_webi = WEBI(self._ctiserver, self._queue_member_updater)
-
-    def tearDown(self):
-        context.reset()
 
     def test_manage_connection_reload_daemon(self):
         raw_msg = 'xivo[daemon,reload]'

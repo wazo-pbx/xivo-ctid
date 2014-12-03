@@ -19,9 +19,9 @@
 import logging
 
 from copy import deepcopy
+from xivo_cti import config
 from xivo_cti.services.meetme import encoder
 from xivo_cti.client_connection import ClientConnection
-from xivo_cti.ioc.context import context
 from xivo_dao import user_dao, user_line_dao
 
 logger = logging.getLogger('meetme_service_notifier')
@@ -59,8 +59,8 @@ class MeetmeServiceNotifier(object):
         self._send_meetme_membership()
 
     def _send_meetme_membership(self):
-        for connection, config in self._subscriptions.iteritems():
-            chan_start = config['channel_start']
+        for connection, room_config in self._subscriptions.iteritems():
+            chan_start = room_config['channel_start']
             pairs = self._get_room_number_for_chan_start(chan_start)
             membership = encoder.encode_room_number_pairs(pairs)
             if self._subscriptions[connection]['membership'] != membership:
@@ -70,8 +70,8 @@ class MeetmeServiceNotifier(object):
     def _get_room_number_for_chan_start(self, chan_start):
         pairs = []
 
-        for room, config in self._current_state.iteritems():
-            for number, member in config['members'].iteritems():
+        for room, room_config in self._current_state.iteritems():
+            for number, member in room_config['members'].iteritems():
                 if chan_start.lower() in member['channel'].lower():
                     pairs.append((room, number))
 
@@ -89,7 +89,7 @@ class MeetmeServiceNotifier(object):
 
     def _push_to_client(self, client_connection):
         if self._current_state:
-            if context.get('cti_config').part_context():
+            if bool(config['main']['context_separation']):
                 user_id = client_connection.user_id()
                 reachable_contexts = user_dao.get_reachable_contexts(user_id)
                 msg = encoder.encode_update_for_contexts(self._current_state, reachable_contexts)

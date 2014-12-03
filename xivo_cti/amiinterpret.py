@@ -17,16 +17,14 @@
 
 import logging
 import random
-import string
 import time
 
+from xivo_cti import ALPHANUMS
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
 from xivo_dao import queue_dao
-
-ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 logger = logging.getLogger('AMI_1.8')
 

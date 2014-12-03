@@ -19,24 +19,15 @@ import unittest
 
 from xivo_cti.xivo_ami import AMIClass
 from mock import Mock
+from mock import patch
 from mock import sentinel
-from xivo_cti.cti_config import Config
 
 
 class TestXivoAMI(unittest.TestCase):
 
     def setUp(self):
-        ipbxconfig = {
-            'ipbx_connection': {
-                'ipaddress': '127.0.0.1',
-                'ipport': 5038,
-                'loginname': 'xivouser',
-                'password': 'xivouser'
-            }
-        }
-        config = Mock(Config)
-        config.getconfig.return_value = ipbxconfig
-        ami_class = AMIClass(config)
+        with patch('xivo_cti.xivo_ami.config', {'ipbx_connection': {}}):
+            ami_class = AMIClass()
         ami_class._exec_command = Mock()
         self.ami_class = ami_class
 

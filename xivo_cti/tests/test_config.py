@@ -16,26 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.cti_config import Config
+
+from xivo_cti.cti_config import _DbConfig as Config
 from mock import patch
 
 
 class TestConfig(unittest.TestCase):
-
-    def test_part_context(self):
-        config = Config()
-
-        config.xc_json = {
-            'main': {'context_separation': 1}
-        }
-
-        self.assertTrue(config.part_context)
-
-        config.xc_json = {
-            'main': {'context_separation': 0}
-        }
-
-        self.assertFalse(config.part_context())
 
     @patch('xivo_dao.cti_service_dao.get_services')
     def test_get_services(self, mock_get_services_dao):

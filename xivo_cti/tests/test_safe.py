@@ -26,7 +26,6 @@ from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
-from xivo_cti import cti_config
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.queue_member.cti.adapter import QueueMemberCTIAdapter
@@ -39,12 +38,9 @@ class TestSafe(unittest.TestCase):
 
     @patch('xivo_dao.trunk_dao.get_ids')
     def setUp(self, mock_get_ids):
-        context.register('cti_config', cti_config.Config())
-        config = context.get('cti_config')
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
-        self._ctiserver = CTIServer(config)
-        config.xc_json = {'ipbx': {'db_uri': 'sqlite://'}}
-        self.safe = Safe(config, self._ctiserver, queue_member_cti_adapter)
+        self._ctiserver = CTIServer()
+        self.safe = Safe(self._ctiserver, queue_member_cti_adapter)
         self.safe.user_service_manager = Mock(UserServiceManager)
         mock_get_ids.get_ids.return_value = []
 

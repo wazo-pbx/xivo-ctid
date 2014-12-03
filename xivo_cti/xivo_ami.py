@@ -28,6 +28,7 @@ import errno
 
 from copy import copy
 
+from xivo_cti import config
 from xivo_cti.tools.extension import normalize_exten
 from xivo_cti.interfaces.interface_ami import AMI
 
@@ -40,8 +41,9 @@ class AMIClass(object):
     class AMIError(Exception):
         pass
 
-    def __init__(self, cti_config):
-        ipbxconfig = cti_config.getconfig('ipbx_connection')
+    def __init__(self):
+        print config
+        ipbxconfig = config['ipbx_connection']
         self.ipbxid = 'xivo'
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))

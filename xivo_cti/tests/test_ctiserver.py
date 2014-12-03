@@ -16,16 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
 from xivo_cti.ctiserver import CTIServer
-from mock import Mock
-from xivo_cti.cti_config import Config
 
 
 class TestCTIServer(unittest.TestCase):
 
     def test_send_cti_event(self):
         event = {'event': 'My test event'}
-        server = CTIServer(Mock(Config))
+        server = CTIServer()
 
         server.send_cti_event(event)
 

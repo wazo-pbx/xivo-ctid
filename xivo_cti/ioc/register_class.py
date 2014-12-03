@@ -18,7 +18,6 @@
 from xivo.pubsub import Pubsub
 from xivo_bus.ctl.producer import BusProducer
 from xivo_bus.resources.agent.client import AgentClient
-from xivo_cti import cti_config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
@@ -53,7 +52,7 @@ from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
-from xivo_cti.services.people.dird import Dird
+from xivo_cti.services.people.async_dird_client import AsyncDirdClient
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.queue.manager import QueueServiceManager
@@ -105,7 +104,6 @@ def setup():
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
     context.register('channel_updater', ChannelUpdater)
-    context.register('cti_config', cti_config.Config())
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)
@@ -113,7 +111,7 @@ def setup():
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
-    context.register('dird', Dird)
+    context.register('async_dird_client', AsyncDirdClient)
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
