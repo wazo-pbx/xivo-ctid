@@ -65,21 +65,21 @@ def init_config_file():
 
     # the main config file could override the extra config directory
     _file_config = main_config
-    update_config()
+    _update_config()
 
     extra_config_file_directory = xivo_cti.config['extra_config_files']
     configs = parse_config_dir(extra_config_file_directory)
     configs.append(main_config)
 
     _file_config = ChainMap(*configs)
-    update_config()
+    _update_config()
 
 
 def init_cli_config(args):
     parser = _new_parser()
     parsed_args = parser.parse_args(args)
     _process_parsed_args(parsed_args)
-    update_config()
+    _update_config()
 
 
 def update_db_config():
@@ -88,7 +88,7 @@ def update_db_config():
     db_config = _DbConfig()
     db_config.update()
     _db_config = db_config.getconfig()
-    update_config()
+    _update_config()
 
 
 def _new_parser():
@@ -181,5 +181,5 @@ class _DbConfig(object):
         return self.xc_json
 
 
-def update_config():
+def _update_config():
     xivo_cti.config.data = ChainMap(_cli_config, _file_config, _db_config, _default_config)
