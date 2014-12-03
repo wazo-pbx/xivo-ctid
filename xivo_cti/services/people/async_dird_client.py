@@ -28,9 +28,9 @@ class AsyncDirdClient(object):
     def __init__(self, task_queue):
         self.executor = futures.ThreadPoolExecutor(max_workers=5)
         self._task_queue = task_queue
+        self._client = self._new_client()
 
-    @property
-    def _client(self):
+    def _new_client(self):
         return Client(host='localhost', port=9489, version='0.1')
 
     def headers(self, profile, callback):
