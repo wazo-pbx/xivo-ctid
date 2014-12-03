@@ -18,7 +18,6 @@
 import logging
 import random
 import string
-import time
 
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler

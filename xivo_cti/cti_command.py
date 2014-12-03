@@ -18,7 +18,6 @@
 import logging
 import random
 import string
-import time
 
 from xivo_cti import cti_fax, dao
 from xivo_cti.ioc.context import context as cti_context
