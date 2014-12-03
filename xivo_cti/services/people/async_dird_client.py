@@ -35,18 +35,16 @@ class AsyncDirdClient(object):
 
     def headers(self, profile, callback):
         logger.debug('requesting directory headers on profile %s', profile)
-        self._exec_async(callback, self._client.directories.headers, profile=profile)
+        self.executor.submit(self._exec_async, callback, self._client.directories.headers, profile=profile)
 
     def lookup(self, profile, term, callback):
         logger.debug('requesting directory lookup for %s on profile %s', term, profile)
-        self._exec_async(callback, self._client.directories.lookup, profile=profile, term=term)
+        self.executor.submit(self._exec_async, callback, self._client.directories.lookup, profile=profile, term=term)
 
-    def _exec_async(self, cb, fn, *args, **kwargs):
-        def response_from_future(f):
-            try:
-                self._task_queue.put(cb, f.result())
-            except Exception:
-                logger.warning('Failed to query xivo-dird')
-
-        future = self.executor.submit(fn, *args, **kwargs)
-        future.add_done_callback(response_from_future)
+    def _exec_async(self, response_callback, fn, *args, **kwargs):
+        try:
+            result = fn(*args, **kwargs)
+        except Exception:
+            logger.exception('Failed to query xivo-dird')
+        else:
+            self._task_queue.put(response_callback, result)
