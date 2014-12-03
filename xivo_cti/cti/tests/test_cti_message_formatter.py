@@ -123,3 +123,45 @@ class TestCTIMessageFormatter(unittest.TestCase):
         result = CTIMessageFormatter.people_headers_result(headers)
 
         assert_that(result, equal_to(expected))
+
+    def test_people_search_result(self):
+        search_result = {
+            "term": "Bob",
+            "column_headers": ["Firstname", "Lastname", "Phone number", "Mobile", "Fax", "Email", "Agent"],
+            "column_types": [None, "name", "number_office", "number_mobile", "fax", "email", "relation_agent"],
+            "results": [
+                {
+                    "column_values": ["Bob", "Marley", "5555555", "5556666", "5553333", "mail@example.com", None],
+                    "relations": {
+                        "agent": None,
+                        "user": None,
+                        "endpoint": None
+                    },
+                    "source": "my_ldap_directory"
+                }, {
+                    "column_values": ["Charlie", "Boblin", "5555556", "5554444", "5552222", "mail2@example.com", None],
+                    "relations": {
+                        "agent": {
+                            "id": 12,
+                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        },
+                        "user": {
+                            "id": 34,
+                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        },
+                        "endpoint": {
+                            "id": 56,
+                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        },
+                    },
+                    "source": "internal"
+                }
+            ]
+        }
+
+        result = CTIMessageFormatter.people_search_result(search_result)
+
+        expected = dict(search_result)
+        expected.update({'class': 'people_search_result'})
+
+        assert_that(result, equal_to(expected))

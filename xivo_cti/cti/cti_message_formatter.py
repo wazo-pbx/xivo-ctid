@@ -81,6 +81,11 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
-    def people_search_result(headers):
-        headers.update({'class': 'people_search_result'})
-        return headers
+    def people_search_result(search_result):
+        return {
+            'class': 'people_search_result',
+            'term': search_result['term'],
+            'column_headers': search_result['column_headers'],
+            'column_types': search_result['column_types'],
+            'results': search_result['results'],
+        }
