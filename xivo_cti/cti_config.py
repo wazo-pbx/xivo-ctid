@@ -79,7 +79,7 @@ def init_cli_config(args):
     parser = _new_parser()
     parsed_args = parser.parse_args(args)
     _process_parsed_args(parsed_args)
-    update_config
+    update_config()
 
 
 def update_db_config():
