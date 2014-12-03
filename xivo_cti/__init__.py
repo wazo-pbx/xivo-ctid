@@ -29,5 +29,3 @@ SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
 
 config = UserDict()
-from xivo_cti.cti_config import update_config
-update_config()
