@@ -229,15 +229,6 @@ class AMIClass(object):
         return self._exec_command('MeetmeUnmute', (('Meetme', meetme),
                                                    ('Usernum', usernum)))
 
-    def meetmemoderation(self, command, meetme, usernum, adminnum):
-        return self._exec_command(command, (('Meetme', meetme),
-                                            ('Usernum', usernum),
-                                            ('Adminnum', adminnum)))
-
-    def meetmepause(self, meetme, status):
-        return self._exec_command('MeetmePause', (('Meetme', meetme),
-                                                  ('Status', status)))
-
     def queueadd(self, queuename, interface, paused, skills=''):
         # it looks like not specifying Paused is the same as setting it to false
         return self._exec_command('QueueAdd', [('Queue', queuename),
@@ -296,18 +287,6 @@ class AMIClass(object):
         ret2 = self._exec_command('MailboxStatus', [('Mailbox', '%s@%s' % (phone, context))])
         ret = ret1 and ret2
         return ret
-
-    # \brief Starts monitoring a channel
-    def monitor(self, channel, filename, mixme='true'):
-        return self._exec_command('Monitor',
-                                  [('Channel', channel),
-                                   ('File', filename),
-                                   ('Mix', mixme)])
-
-    # \brief Stops monitoring a channel
-    def stopmonitor(self, channel):
-        return self._exec_command('StopMonitor',
-                                  [('Channel', channel)])
 
     # \brief Retrieves the value of Variable in a Channel
     def getvar(self, channel, varname):
