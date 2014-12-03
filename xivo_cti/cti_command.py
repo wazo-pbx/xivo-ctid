@@ -32,20 +32,15 @@ LOGINCOMMANDS = [
 ]
 
 REGCOMMANDS = [
-    'logout',
-
     'getipbxlist',
     'keepalive',
 
-    'history',
     'faxsend',
     'filetransfer',
     'chitchat',
 
     'logfromclient',
     'getqueuesstats',
-    'sheet',
-    'actionfiche',
 
     'ipbxcommand'
 ]
