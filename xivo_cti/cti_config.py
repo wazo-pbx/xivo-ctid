@@ -97,13 +97,11 @@ def _new_parser():
     parser.add_argument('-f', '--foreground', action='store_true')
     parser.add_argument('-p', '--pidfile')
     parser.add_argument('-l', '--logfile')
-    parser.add_argument('-c', '--config-file', action='store')
+    parser.add_argument('-c', '--config-file')
     return parser
 
 
 def _process_parsed_args(parsed_args):
-    global _cli_config
-
     if parsed_args.debug:
         _cli_config['debug'] = parsed_args.debug
     if parsed_args.foreground:
