@@ -39,7 +39,6 @@ REGCOMMANDS = [
     'filetransfer',
     'chitchat',
 
-    'logfromclient',
     'getqueuesstats',
 
     'ipbxcommand'
@@ -243,13 +242,6 @@ class Command(object):
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
                                                'text': chitchattext}})
         return reply
-
-    def regcommand_logfromclient(self):
-        logger.warning('logfromclient from user %s (level %s) : %s : %s',
-                       self.ruserid,
-                       self._commanddict.get('level'),
-                       self._commanddict.get('classmethod'),
-                       self._commanddict.get('message'))
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:
