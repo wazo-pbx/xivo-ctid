@@ -43,7 +43,10 @@ class AsyncDirdClient(object):
 
     def _exec_async(self, cb, fn, *args, **kwargs):
         def response_from_future(f):
-            self._task_queue.put(cb, f.result())
+            try:
+                self._task_queue.put(cb, f.result())
+            except Exception:
+                logger.warning('Failed to query xivo-dird')
 
         future = self.executor.submit(fn, *args, **kwargs)
         future.add_done_callback(response_from_future)
