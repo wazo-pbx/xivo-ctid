@@ -26,6 +26,27 @@ class TestQueuesList(unittest.TestCase):
         innerdata = Mock()
         self.queues_list = QueuesList(innerdata)
 
+    def test_idbyqueuename(self):
+        queue_id = 1
+        queue_name = 'foo'
+        self._set_keeplist({
+            str(queue_id): {
+                'id': queue_id,
+                'name': queue_name,
+            }
+        })
+
+        result = self.queues_list.idbyqueuename(queue_name)
+
+        self.assertEqual(result, str(queue_id))
+
+    def test_idbyqueuename_not_found(self):
+        self._set_keeplist({})
+
+        result = self.queues_list.idbyqueuename('foo')
+
+        self.assertTrue(result is None)
+
     def test_get_queue_by_name(self):
         queue_id = 1
         queue_name = 'foo'
