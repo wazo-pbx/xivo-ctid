@@ -88,6 +88,7 @@ class QueueStatisticsManager(object):
         self.get_queue_summary(queue_member.queue_name)
 
 
+# FIXME this class is currently unused
 class CachingQueueStatisticsManagerDecorator(object):
 
     _DEFAULT_CACHING_TIME = 5
