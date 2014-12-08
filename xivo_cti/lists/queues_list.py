@@ -58,5 +58,11 @@ class QueuesList(ContextAwareAnyList):
             if idx in self.keeplist:
                 return idx
 
+    def get_queue_by_name(self, queue_name):
+        queue_id = self.reverse_index.get(queue_name)
+        if queue_id is None:
+            return None
+        return self.keeplist[queue_id]
+
     def get_queues(self):
         return self.keeplist.keys()

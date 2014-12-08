@@ -38,20 +38,9 @@ class TestQueueDAO(unittest.TestCase):
         queue_number = '3001'
         queue_context = 'ctx'
         queue_name = '__switchboard'
-        queue_id = 7
-        self._queuelist.keeplist = {
-            '6': {
-                'number': '3006',
-                'context': 'ctx',
-                'name': '__switchboard_hold',
-                'displayname': 'Call on hold',
-            },
-            str(queue_id): {
-                'number': queue_number,
-                'context': queue_context,
-                'name': queue_name,
-                'displayname': 'Incoming calls',
-            }
+        self._queuelist.get_queue_by_name.return_value = {
+            'number': queue_number,
+            'context': queue_context,
         }
 
         result = self.dao.get_number_context_from_name(queue_name)
@@ -61,14 +50,7 @@ class TestQueueDAO(unittest.TestCase):
 
     def test_get_number_context_from_name_no_result(self):
         queue_name = '__switchboard'
-        self._queuelist.keeplist = {
-            '6': {
-                'number': '3006',
-                'context': 'ctx',
-                'name': '__switchboard_hold',
-                'displayname': 'Call on hold',
-            },
-        }
+        self._queuelist.get_queue_by_name.return_value = None
 
         self.assertRaises(LookupError, self.dao.get_number_context_from_name, queue_name)
 
@@ -95,24 +77,24 @@ class TestQueueDAO(unittest.TestCase):
     def test_get_id_from_name(self):
         queue_id = 6
         queue_name = 'test_name_queue'
-        self._queuelist.keeplist[str(queue_id)] = {
+        self._queuelist.get_queue_by_name.return_value = {
+            'id': queue_id,
             'number': '3006',
             'context': 'ctx',
             'name': queue_name,
             'displayname': 'Call on hold',
         }
+
         result = self.dao.get_id_from_name(queue_name)
 
         self.assertEqual(result, queue_id)
+        self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
 
     def test_get_id_from_name_not_found(self):
         queue_name = 'test_name_queue'
-        self._queuelist.keeplist['666'] = {
-            'number': '3006',
-            'context': 'ctx',
-            'name': 'test_name_another_queue',
-            'displayname': 'Call on hold',
-        }
+        self._queuelist.get_queue_by_name.return_value = None
+
         result = self.dao.get_id_from_name(queue_name)
 
         self.assertEqual(result, None)
+        self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
