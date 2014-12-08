@@ -17,6 +17,7 @@
 
 import unittest
 import time
+from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.statistics import queue_statistics_manager
 from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager, \
     CachingQueueStatisticsManagerDecorator
@@ -155,7 +156,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.queue_statistics_manager.get_queue_summary.assert_called_once_with(queue_name)
 
-    @patch('xivo_dao.queue_dao.is_a_queue', return_value=True)
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
     def test_on_queue_member_event(self, mock_is_a_queue):
         queue_member = Mock()
         queue_member.queue_name = 'foobar'
@@ -164,9 +165,10 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.ami_class.queuesummary.assert_was_called_with(queue_member.queue_name)
 
-    @patch('xivo_dao.queue_dao.is_a_queue', return_value=True)
-    def test_get_queue_summary(self, mock_is_a_queue):
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
+    def test_get_queue_summary(self, mock_queue_dao):
         queue_name = 'services'
+        mock_queue_dao.get_queue_from_name.return_value = True
 
         self.queue_statistics_manager.get_queue_summary(queue_name)
 

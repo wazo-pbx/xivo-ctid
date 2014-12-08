@@ -34,35 +34,72 @@ class TestQueueDAO(unittest.TestCase):
         }
         self.dao = QueueDAO(self._innerdata)
 
+    def test_get_queue_from_name(self):
+        queue_name = 'test_name_queue'
+        self._queuelist.get_queue_by_name.return_value = sentinel
+
+        result = self.dao.get_queue_from_name(queue_name)
+
+        self.assertEqual(result, sentinel)
+        self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
+
+    def test_get_id_from_name(self):
+        queue_id = 6
+        self._queuelist.get_queue_by_name.return_value = {
+            'id': queue_id,
+        }
+
+        result = self.dao.get_id_from_name('foo')
+
+        self.assertEqual(result, queue_id)
+
+    def test_get_id_from_name_not_found(self):
+        self._queuelist.get_queue_by_name.return_value = None
+
+        result = self.dao.get_id_from_name('foo')
+
+        self.assertEqual(result, None)
+
     def test_get_number_context_from_name(self):
         queue_number = '3001'
         queue_context = 'ctx'
-        queue_name = '__switchboard'
         self._queuelist.get_queue_by_name.return_value = {
             'number': queue_number,
             'context': queue_context,
         }
 
-        result = self.dao.get_number_context_from_name(queue_name)
+        result = self.dao.get_number_context_from_name('foo')
         expected = queue_number, queue_context
 
         self.assertEqual(result, expected)
 
-    def test_get_number_context_from_name_no_result(self):
-        queue_name = '__switchboard'
+    def test_get_number_context_from_name_not_found(self):
         self._queuelist.get_queue_by_name.return_value = None
 
-        self.assertRaises(LookupError, self.dao.get_number_context_from_name, queue_name)
+        self.assertRaises(LookupError, self.dao.get_number_context_from_name, 'foo')
+
+    def test_get_queue_from_id(self):
+        queue_id = '6'
+        self._queuelist.keeplist[queue_id] = sentinel
+
+        result = self.dao.get_queue_from_id(queue_id)
+
+        self.assertEqual(result, sentinel)
+
+    def test_get_queue_from_id_not_found(self):
+        queue_id = '6'
+
+        result = self.dao.get_queue_from_id(queue_id)
+
+        self.assertEqual(result, None)
 
     def test_get_name_from_id(self):
         queue_id = '6'
         queue_name = 'test_name_queue'
         self._queuelist.keeplist[queue_id] = {
-            'number': '3006',
-            'context': 'ctx',
             'name': queue_name,
-            'displayname': 'Call on hold',
         }
+
         result = self.dao.get_name_from_id(queue_id)
 
         self.assertEqual(result, queue_name)
@@ -73,31 +110,6 @@ class TestQueueDAO(unittest.TestCase):
         result = self.dao.get_name_from_id(queue_id)
 
         self.assertEqual(result, None)
-
-    def test_get_id_from_name(self):
-        queue_id = 6
-        queue_name = 'test_name_queue'
-        self._queuelist.get_queue_by_name.return_value = {
-            'id': queue_id,
-            'number': '3006',
-            'context': 'ctx',
-            'name': queue_name,
-            'displayname': 'Call on hold',
-        }
-
-        result = self.dao.get_id_from_name(queue_name)
-
-        self.assertEqual(result, queue_id)
-        self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
-
-    def test_get_id_from_name_not_found(self):
-        queue_name = 'test_name_queue'
-        self._queuelist.get_queue_by_name.return_value = None
-
-        result = self.dao.get_id_from_name(queue_name)
-
-        self.assertEqual(result, None)
-        self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
 
     def test_get_ids(self):
         self._queuelist.get_queues.return_value = sentinel
