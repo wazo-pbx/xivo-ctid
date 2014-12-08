@@ -21,6 +21,10 @@ class QueueDAO(object):
     def __init__(self, innerdata):
         self.innerdata = innerdata
 
+    def exists(self, queue_name):
+        queues_list = self.innerdata.xod_config['queues']
+        return queue_name in queues_list.queues_by_name
+
     def get_queue_from_name(self, queue_name):
         queues_list = self.innerdata.xod_config['queues']
         return queues_list.queues_by_name.get(queue_name)

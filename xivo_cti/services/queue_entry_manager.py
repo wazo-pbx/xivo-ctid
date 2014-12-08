@@ -17,6 +17,7 @@
 
 from collections import namedtuple
 from xivo_dao import queue_dao
+from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 
@@ -112,7 +113,7 @@ class QueueEntryManager(object):
         self._ami = ami_class
 
     def join(self, queue_name, pos, count, name, number, unique_id):
-        if not queue_dao.is_a_queue(queue_name):
+        if not dao.queue.exists(queue_name):
             return
         try:
             self.insert(queue_name, pos, name, number, unique_id, 0)
@@ -135,7 +136,7 @@ class QueueEntryManager(object):
             logger.exception('Failed to insert queue entry')
 
     def leave(self, queue_name, pos, count, unique_id):
-        if not queue_dao.is_a_queue(queue_name):
+        if not dao.queue.exists(queue_name):
             return
         try:
             assert(self._queue_entries[queue_name][unique_id].position == pos)

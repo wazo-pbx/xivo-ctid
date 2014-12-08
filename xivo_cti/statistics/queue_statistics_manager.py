@@ -73,7 +73,7 @@ class QueueStatisticsManager(object):
         return queue_statistic
 
     def get_queue_summary(self, queue_name):
-        if dao.queue.get_queue_from_name(queue_name):
+        if dao.queue.exists(queue_name):
             self._ami_class.queuesummary(queue_name)
 
     def get_all_queue_summary(self):

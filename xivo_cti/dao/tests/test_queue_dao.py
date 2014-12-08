@@ -35,6 +35,15 @@ class TestQueueDAO(unittest.TestCase):
         }
         self.dao = QueueDAO(self._innerdata)
 
+    def test_exists(self):
+        queue_name = 'foo'
+        self._queuelist.queues_by_name[queue_name] = sentinel
+
+        self.assertTrue(self.dao.exists(queue_name))
+
+    def test_exists_not_found(self):
+        self.assertFalse(self.dao.exists('foo'))
+
     def test_get_queue_from_name(self):
         queue_name = 'foo'
         self._queuelist.queues_by_name[queue_name] = sentinel
