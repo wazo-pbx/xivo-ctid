@@ -168,7 +168,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_removed(queue1_id, agentid)
 
-        self.queue_statistics_producer.notifier.on_stat_changed.assert_never_called()
+        self.assertFalse(self.queue_statistics_producer.notifier.on_stat_changed.called)
 
     def test_remove_unlogged_agent_from_one_queue_multiple_queues(self):
 

@@ -490,7 +490,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager.publish_all_realtime_stats(cti_connection)
 
-        self.manager._statistics_notifier.send_statistic.assert_never_called()
+        self.assertFalse(self.manager._statistics_notifier.send_statistic.called)
         self.assertTrue('service' not in self.manager._queue_entries)
 
     @patch('xivo_cti.dao.queue', spec=QueueDAO)

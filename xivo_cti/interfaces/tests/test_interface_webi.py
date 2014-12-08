@@ -50,5 +50,5 @@ class Test(unittest.TestCase):
 
         result = self._interface_webi.manage_connection(raw_msg)
 
-        self._interface_webi._send_ami_request.assert_never_called()
+        self.assertFalse(self._interface_webi._send_ami_request.called)
         self.assertEqual(expected_result, result)
