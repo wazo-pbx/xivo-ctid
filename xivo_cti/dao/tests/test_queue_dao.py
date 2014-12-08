@@ -64,6 +64,22 @@ class TestQueueDAO(unittest.TestCase):
 
         self.assertEqual(result, None)
 
+    def test_get_id_as_str_from_name(self):
+        queue_name = 'foo'
+        queue_id = 6
+        self._queuelist.queues_by_name[queue_name] = {
+            'id': queue_id,
+        }
+
+        result = self.dao.get_id_as_str_from_name(queue_name)
+
+        self.assertEqual(result, str(queue_id))
+
+    def test_get_id_as_str_from_name_not_found(self):
+        result = self.dao.get_id_as_str_from_name('foo')
+
+        self.assertEqual(result, None)
+
     def test_get_number_context_from_name(self):
         queue_name = 'foo'
         queue_number = '3001'

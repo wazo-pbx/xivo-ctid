@@ -313,7 +313,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'HoldTime': '7'}
         expected_counters = QueueCounters(available='5', EWT='7', Talking='1')
         mock_context.side_effect = self.mock_context
-        mock_queue_dao.get_id_from_name.return_value = queue_id
+        mock_queue_dao.get_id_as_str_from_name.return_value = queue_id
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
@@ -331,7 +331,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Talking': '1',
                               'HoldTime': '7'}
         mock_context.side_effect = self.mock_context
-        mock_queue_dao.get_id_from_name.return_value = None
+        mock_queue_dao.get_id_as_str_from_name.return_value = None
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
@@ -352,11 +352,11 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue_member = Mock()
         queue_member.is_agent.return_value = True
         queue_member.member_name = 'Agent/1'
-        mock_queue_dao.get_id_from_name.return_value = '2'
+        mock_queue_dao.get_id_as_str_from_name.return_value = '2'
 
         self.queue_statistics_producer.on_queue_member_added(queue_member)
 
-        mock_queue_dao.get_id_from_name.assert_called_once_with(queue_member.queue_name)
+        mock_queue_dao.get_id_as_str_from_name.assert_called_once_with(queue_member.queue_name)
 
     @patch('xivo_cti.dao.queue', spec=QueueDAO)
     def test_on_queue_member_removed(self, mock_queue_dao):
@@ -365,12 +365,12 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         queue_member = Mock()
         queue_member.is_agent.return_value = True
         queue_member.member_name = member_name
-        mock_queue_dao.get_id_from_name.return_value = queue_id
+        mock_queue_dao.get_id_as_str_from_name.return_value = queue_id
         self.queue_statistics_producer.queues_of_agent[member_name] = set([queue_id])
 
         self.queue_statistics_producer.on_queue_member_removed(queue_member)
 
-        mock_queue_dao.get_id_from_name.assert_called_once_with(queue_member.queue_name)
+        mock_queue_dao.get_id_as_str_from_name.assert_called_once_with(queue_member.queue_name)
 
     def _log_agent(self, agentid):
         self.queue_statistics_producer.on_agent_loggedon(agentid)

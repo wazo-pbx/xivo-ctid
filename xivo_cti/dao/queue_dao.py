@@ -31,6 +31,12 @@ class QueueDAO(object):
             return queue['id']
         return None
 
+    def get_id_as_str_from_name(self, queue_name):
+        queue = self.get_queue_from_name(queue_name)
+        if queue:
+            return str(queue['id'])
+        return None
+
     def get_number_context_from_name(self, queue_name):
         queue = self.get_queue_from_name(queue_name)
         if queue:

@@ -37,7 +37,7 @@ def register_events():
 
 def parse_queue_summary(queuesummary_event):
     queue_name = queuesummary_event['Queue']
-    queue_id = dao.queue.get_id_from_name(queue_name)
+    queue_id = dao.queue.get_id_as_str_from_name(queue_name)
     if queue_id is None:
         return
 
@@ -65,7 +65,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_added(self, queue_member):
         if queue_member.is_agent():
-            queueid = dao.queue.get_id_from_name(queue_member.queue_name)
+            queueid = dao.queue.get_id_as_str_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_added(queueid, agentid)
 
@@ -77,7 +77,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_removed(self, queue_member):
         if queue_member.is_agent():
-            queueid = dao.queue.get_id_from_name(queue_member.queue_name)
+            queueid = dao.queue.get_id_as_str_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_removed(queueid, agentid)
 
