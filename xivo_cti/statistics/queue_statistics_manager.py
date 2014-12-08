@@ -116,11 +116,3 @@ class CachingQueueStatisticsManagerDecorator(object):
 
     def __getattr__(self, name):
         return getattr(self._queue_stats_mgr, name)
-
-    @property
-    def ami_wrapper(self):
-        return self._queue_stats_mgr.ami_wrapper
-
-    @ami_wrapper.setter
-    def ami_wrapper(self, value):
-        self._queue_stats_mgr.ami_wrapper = value
