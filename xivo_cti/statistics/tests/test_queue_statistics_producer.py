@@ -17,7 +17,7 @@
 
 import unittest
 from mock import Mock, patch
-from xivo_cti.dao.innerdata_dao import InnerdataDAO
+from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
@@ -49,7 +49,6 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
     def setUp(self):
         self.queue_statistics_producer = QueueStatisticsProducer(Mock(StatisticsNotifier))
-        self.queue_statistics_producer.dao.innerdata = Mock(InnerdataDAO)
         self.dependencies = {
             'queue_statistics_producer': self.queue_statistics_producer,
         }
@@ -301,7 +300,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
             connection_cti
         )
 
-    @patch('xivo_cti.dao.queue')
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
     @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_summary(self, mock_context, mock_queue_dao):
         self.queue_statistics_producer.on_queue_summary = Mock()
@@ -320,7 +319,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 
-    @patch('xivo_cti.dao.queue')
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
     @patch('xivo_cti.ioc.context.context.get')
     def test_parse_queue_summary_not_a_queue(self, mock_context, mock_queue_dao):
         self.queue_statistics_producer.on_queue_summary = Mock()
@@ -347,6 +346,31 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with({
             queue_name: {'Xivo-AvailableAgents': event_content.available, 'Xivo-EWT': event_content.EWT, 'Xivo-TalkingAgents': event_content.Talking}
         })
+
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
+    def test_on_queue_member_added(self, mock_queue_dao):
+        queue_member = Mock()
+        queue_member.is_agent.return_value = True
+        queue_member.member_name = 'Agent/1'
+        mock_queue_dao.get_id_from_name.return_value = '2'
+
+        self.queue_statistics_producer.on_queue_member_added(queue_member)
+
+        mock_queue_dao.get_id_from_name.assert_called_once_with(queue_member.queue_name)
+
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
+    def test_on_queue_member_removed(self, mock_queue_dao):
+        member_name = 'Agent/1'
+        queue_id = '2'
+        queue_member = Mock()
+        queue_member.is_agent.return_value = True
+        queue_member.member_name = member_name
+        mock_queue_dao.get_id_from_name.return_value = queue_id
+        self.queue_statistics_producer.queues_of_agent[member_name] = set([queue_id])
+
+        self.queue_statistics_producer.on_queue_member_removed(queue_member)
+
+        mock_queue_dao.get_id_from_name.assert_called_once_with(queue_member.queue_name)
 
     def _log_agent(self, agentid):
         self.queue_statistics_producer.on_agent_loggedon(agentid)

@@ -50,7 +50,6 @@ class QueueStatisticsProducer(object):
 
     def __init__(self, statistics_notifier):
         self.notifier = statistics_notifier
-        self.dao = dao
         self.queues_of_agent = {}
         self.logged_agents = set()
         self.queues = set()
@@ -66,7 +65,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_added(self, queue_member):
         if queue_member.is_agent():
-            queueid = self.dao.innerdata.get_queue_id(queue_member.queue_name)
+            queueid = dao.queue.get_id_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_added(queueid, agentid)
 
@@ -78,7 +77,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_removed(self, queue_member):
         if queue_member.is_agent():
-            queueid = self.dao.innerdata.get_queue_id(queue_member.queue_name)
+            queueid = dao.queue.get_id_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_removed(queueid, agentid)
 
