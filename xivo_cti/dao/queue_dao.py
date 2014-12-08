@@ -49,4 +49,4 @@ class QueueDAO(object):
 
     def get_ids(self):
         queues_list = self.innerdata.xod_config['queues']
-        return queues_list.get_queues()
+        return queues_list.keeplist.keys()

@@ -60,6 +60,3 @@ class QueuesList(ContextAwareAnyList):
         if queue_id is None:
             return None
         return self.keeplist[queue_id]
-
-    def get_queues(self):
-        return self.keeplist.keys()

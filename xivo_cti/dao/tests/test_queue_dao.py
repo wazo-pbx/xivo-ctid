@@ -112,9 +112,11 @@ class TestQueueDAO(unittest.TestCase):
         self.assertEqual(result, None)
 
     def test_get_ids(self):
-        self._queuelist.get_queues.return_value = sentinel
+        self._queuelist.keeplist = {
+            '1': {},
+            '3': {},
+        }
 
         result = self.dao.get_ids()
 
-        self.assertEqual(result, sentinel)
-        self._queuelist.get_queues.assert_called_once_with()
+        self.assertEqual(result, ['1', '3'])
