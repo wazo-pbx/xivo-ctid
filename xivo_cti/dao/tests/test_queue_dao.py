@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, sentinel
 from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.queues_list import QueuesList
@@ -98,3 +98,11 @@ class TestQueueDAO(unittest.TestCase):
 
         self.assertEqual(result, None)
         self._queuelist.get_queue_by_name.assert_called_once_with(queue_name)
+
+    def test_get_ids(self):
+        self._queuelist.get_queues.return_value = sentinel
+
+        result = self.dao.get_ids()
+
+        self.assertEqual(result, sentinel)
+        self._queuelist.get_queues.assert_called_once_with()

@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_cti import dao
+
 
 class StatisticsProducerInitializer(object):
 
-    def __init__(self, queue_service_manager, queue_member_manager, agent_client):
-        self.queue_service_manager = queue_service_manager
+    def __init__(self, queue_member_manager, agent_client):
         self._queue_member_manager = queue_member_manager
         self.agent_client = agent_client
 
@@ -29,7 +30,7 @@ class StatisticsProducerInitializer(object):
         self._add_logged_agents(queue_statistics_producer)
 
     def _add_queues(self, queue_statistics_producer):
-        queue_ids = self.queue_service_manager.get_queue_ids()
+        queue_ids = dao.queue.get_ids()
         for queue_id in queue_ids:
             queue_statistics_producer.on_queue_added(queue_id)
 
