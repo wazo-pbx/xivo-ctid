@@ -28,12 +28,8 @@ from xivo_cti.model.queuestatistic import NO_VALUE
 class TestQueueStatisticsManager(unittest.TestCase):
 
     def setUp(self):
-        ami_class = Mock(AMIClass)
-        QueueStatisticsManager._instance = QueueStatisticsManager(ami_class)
-        self.queue_statistics_manager = QueueStatisticsManager(ami_class)
-
-    def tearDown(self):
-        QueueStatisticsManager._instance = None
+        self.ami_class = Mock(AMIClass)
+        self.queue_statistics_manager = QueueStatisticsManager(self.ami_class)
 
     @patch('xivo_dao.queue_statistic_dao.get_statistics')
     def test_getStatistics(self, mock_queue_statistic_dao):
@@ -163,31 +159,23 @@ class TestQueueStatisticsManager(unittest.TestCase):
     def test_on_queue_member_event(self, mock_is_a_queue):
         queue_member = Mock()
         queue_member.queue_name = 'foobar'
-        mock_ami_wrapper = Mock(AMIClass)
-        self.queue_statistics_manager.ami_wrapper = mock_ami_wrapper
 
         self.queue_statistics_manager._on_queue_member_event(queue_member)
 
-        mock_ami_wrapper.queuesummary.assert_was_called_with(queue_member.queue_name)
+        self.ami_class.queuesummary.assert_was_called_with(queue_member.queue_name)
 
     @patch('xivo_dao.queue_dao.is_a_queue', return_value=True)
     def test_get_queue_summary(self, mock_is_a_queue):
         queue_name = 'services'
 
-        mock_ami_wrapper = Mock(AMIClass)
-        self.queue_statistics_manager.ami_wrapper = mock_ami_wrapper
-
         self.queue_statistics_manager.get_queue_summary(queue_name)
 
-        mock_ami_wrapper.queuesummary.assert_called_once_with(queue_name)
+        self.ami_class.queuesummary.assert_called_once_with(queue_name)
 
     def test_get_all_queue_summary(self):
-        self.ami_wrapper = Mock(AMIClass)
-        self.queue_statistics_manager.ami_wrapper = self.ami_wrapper
-
         self.queue_statistics_manager.get_all_queue_summary()
 
-        self.ami_wrapper.queuesummary.assert_called_once_with()
+        self.ami_class.queuesummary.assert_called_once_with()
 
 
 class TestCachingQueueStatisticsManagerDecorator(unittest.TestCase):
