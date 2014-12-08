@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import time
 from xivo_cti.cti_anylist import ContextAwareAnyList
 from xivo.asterisk import protocol_interface
 from xivo.asterisk.protocol_interface import InvalidChannelError
