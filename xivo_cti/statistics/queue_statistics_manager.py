@@ -45,7 +45,7 @@ def parse_queue_member_status(event):
 class QueueStatisticsManager(object):
 
     def __init__(self, ami_class):
-        self.ami_wrapper = ami_class
+        self._ami_class = ami_class
 
     def get_statistics(self, queue_name, xqos, window):
         dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
@@ -74,10 +74,10 @@ class QueueStatisticsManager(object):
 
     def get_queue_summary(self, queue_name):
         if queue_dao.is_a_queue(queue_name):
-            self.ami_wrapper.queuesummary(queue_name)
+            self._ami_class.queuesummary(queue_name)
 
     def get_all_queue_summary(self):
-        self.ami_wrapper.queuesummary()
+        self._ami_class.queuesummary()
 
     def subscribe_to_queue_member(self, queue_member_notifier):
         queue_member_notifier.subscribe_to_queue_member_add(self._on_queue_member_event)
