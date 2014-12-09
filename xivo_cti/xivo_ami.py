@@ -42,7 +42,6 @@ class AMIClass(object):
         pass
 
     def __init__(self):
-        print config
         ipbxconfig = config['ipbx_connection']
         self.ipbxid = 'xivo'
         self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
