@@ -17,10 +17,9 @@
 
 import logging
 from collections import namedtuple
+from xivo_cti import dao
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ioc.context import context
-from xivo_cti import dao
-from xivo_cti.exception import NotAQueueException
 
 logger = logging.getLogger("QueueStatisticsProducer")
 QueueCounters = namedtuple('QueueCounters', ['available', 'EWT', 'Talking'])
@@ -38,22 +37,19 @@ def register_events():
 
 def parse_queue_summary(queuesummary_event):
     queue_name = queuesummary_event['Queue']
-    counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'], Talking=queuesummary_event['Talking'])
+    queue_id = dao.queue.get_id_as_str_from_name(queue_name)
+    if queue_id is None:
+        return
 
+    counters = QueueCounters(available=queuesummary_event['Available'], EWT=queuesummary_event['HoldTime'], Talking=queuesummary_event['Talking'])
     queue_statistics_producer = context.get('queue_statistics_producer')
-    queue_service_manager = context.get('queue_service_manager')
-    try:
-        queue_id = queue_service_manager.get_queue_id(queue_name)
-        queue_statistics_producer.on_queue_summary(queue_id, counters)
-    except NotAQueueException:
-        pass
+    queue_statistics_producer.on_queue_summary(queue_id, counters)
 
 
 class QueueStatisticsProducer(object):
 
     def __init__(self, statistics_notifier):
         self.notifier = statistics_notifier
-        self.dao = dao
         self.queues_of_agent = {}
         self.logged_agents = set()
         self.queues = set()
@@ -69,7 +65,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_added(self, queue_member):
         if queue_member.is_agent():
-            queueid = self.dao.innerdata.get_queue_id(queue_member.queue_name)
+            queueid = dao.queue.get_id_as_str_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_added(queueid, agentid)
 
@@ -81,7 +77,7 @@ class QueueStatisticsProducer(object):
 
     def on_queue_member_removed(self, queue_member):
         if queue_member.is_agent():
-            queueid = self.dao.innerdata.get_queue_id(queue_member.queue_name)
+            queueid = dao.queue.get_id_as_str_from_name(queue_member.queue_name)
             agentid = queue_member.member_name
             self._on_agent_removed(queueid, agentid)
 

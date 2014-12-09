@@ -17,12 +17,11 @@
 
 import unittest
 from mock import Mock, patch
-from xivo_cti.dao.innerdata_dao import InnerdataDAO
+from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.statistics import queue_statistics_producer
 from xivo_cti.statistics.queue_statistics_producer import QueueStatisticsProducer
 from xivo_cti.statistics.queue_statistics_producer import QueueCounters
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
-from xivo_cti.services.queue.manager import QueueServiceManager
 
 
 def _aQueueStat():
@@ -50,16 +49,10 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
     def setUp(self):
         self.queue_statistics_producer = QueueStatisticsProducer(Mock(StatisticsNotifier))
-        self.queue_statistics_producer.dao.innerdata = Mock(InnerdataDAO)
-        self.queue_service_manager = Mock(QueueServiceManager)
         self.dependencies = {
-            'queue_service_manager': self.queue_service_manager,
             'queue_statistics_producer': self.queue_statistics_producer,
         }
         self.mock_context = lambda module: self.dependencies[module]
-
-    def tearDown(self):
-        QueueStatisticsProducer._instance = None
 
     def test_log_one_agent(self):
 
@@ -175,7 +168,7 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer._on_agent_removed(queue1_id, agentid)
 
-        self.queue_statistics_producer.notifier.on_stat_changed.assert_never_called()
+        self.assertFalse(self.queue_statistics_producer.notifier.on_stat_changed.called)
 
     def test_remove_unlogged_agent_from_one_queue_multiple_queues(self):
 
@@ -307,11 +300,12 @@ class TestQueueStatisticsProducer(unittest.TestCase):
             connection_cti
         )
 
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
     @patch('xivo_cti.ioc.context.context.get')
-    def test_parse_queue_summary(self, mock_context):
+    def test_parse_queue_summary(self, mock_context, mock_queue_dao):
         self.queue_statistics_producer.on_queue_summary = Mock()
         queue_name = 'services'
-        queue_id = 12
+        queue_id = '12'
         queuesummary_event = {'Event': 'QueueSummary',
                               'Queue': queue_name,
                               'Available': '5',
@@ -319,14 +313,15 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'HoldTime': '7'}
         expected_counters = QueueCounters(available='5', EWT='7', Talking='1')
         mock_context.side_effect = self.mock_context
-        self.queue_service_manager.get_queue_id.return_value = queue_id
+        mock_queue_dao.get_id_as_str_from_name.return_value = queue_id
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
         self.queue_statistics_producer.on_queue_summary.assert_called_once_with(queue_id, expected_counters)
 
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
     @patch('xivo_cti.ioc.context.context.get')
-    def test_parse_queue_summary_not_a_queue(self, mock_context):
+    def test_parse_queue_summary_not_a_queue(self, mock_context, mock_queue_dao):
         self.queue_statistics_producer.on_queue_summary = Mock()
 
         queue_name = 'services'
@@ -336,10 +331,11 @@ class TestQueueStatisticsProducer(unittest.TestCase):
                               'Talking': '1',
                               'HoldTime': '7'}
         mock_context.side_effect = self.mock_context
+        mock_queue_dao.get_id_as_str_from_name.return_value = None
 
         queue_statistics_producer.parse_queue_summary(queuesummary_event)
 
-        self.queue_statistics_producer.on_queue_summary.assert_never_called()
+        self.assertFalse(self.queue_statistics_producer.on_queue_summary.called)
 
     def test_on_queue_summary(self):
         queue_name = 'services'
@@ -350,6 +346,31 @@ class TestQueueStatisticsProducer(unittest.TestCase):
         self.queue_statistics_producer.notifier.on_stat_changed.assert_called_once_with({
             queue_name: {'Xivo-AvailableAgents': event_content.available, 'Xivo-EWT': event_content.EWT, 'Xivo-TalkingAgents': event_content.Talking}
         })
+
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
+    def test_on_queue_member_added(self, mock_queue_dao):
+        queue_member = Mock()
+        queue_member.is_agent.return_value = True
+        queue_member.member_name = 'Agent/1'
+        mock_queue_dao.get_id_as_str_from_name.return_value = '2'
+
+        self.queue_statistics_producer.on_queue_member_added(queue_member)
+
+        mock_queue_dao.get_id_as_str_from_name.assert_called_once_with(queue_member.queue_name)
+
+    @patch('xivo_cti.dao.queue', spec=QueueDAO)
+    def test_on_queue_member_removed(self, mock_queue_dao):
+        member_name = 'Agent/1'
+        queue_id = '2'
+        queue_member = Mock()
+        queue_member.is_agent.return_value = True
+        queue_member.member_name = member_name
+        mock_queue_dao.get_id_as_str_from_name.return_value = queue_id
+        self.queue_statistics_producer.queues_of_agent[member_name] = set([queue_id])
+
+        self.queue_statistics_producer.on_queue_member_removed(queue_member)
+
+        mock_queue_dao.get_id_as_str_from_name.assert_called_once_with(queue_member.queue_name)
 
     def _log_agent(self, agentid):
         self.queue_statistics_producer.on_agent_loggedon(agentid)

@@ -17,8 +17,8 @@
 
 import logging
 import time
-from xivo_dao import queue_dao
 from xivo_dao import queue_statistic_dao
+from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -45,7 +45,7 @@ def parse_queue_member_status(event):
 class QueueStatisticsManager(object):
 
     def __init__(self, ami_class):
-        self.ami_wrapper = ami_class
+        self._ami_class = ami_class
 
     def get_statistics(self, queue_name, xqos, window):
         dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
@@ -73,11 +73,11 @@ class QueueStatisticsManager(object):
         return queue_statistic
 
     def get_queue_summary(self, queue_name):
-        if queue_dao.is_a_queue(queue_name):
-            self.ami_wrapper.queuesummary(queue_name)
+        if dao.queue.exists(queue_name):
+            self._ami_class.queuesummary(queue_name)
 
     def get_all_queue_summary(self):
-        self.ami_wrapper.queuesummary()
+        self._ami_class.queuesummary()
 
     def subscribe_to_queue_member(self, queue_member_notifier):
         queue_member_notifier.subscribe_to_queue_member_add(self._on_queue_member_event)
@@ -86,41 +86,3 @@ class QueueStatisticsManager(object):
 
     def _on_queue_member_event(self, queue_member):
         self.get_queue_summary(queue_member.queue_name)
-
-
-class CachingQueueStatisticsManagerDecorator(object):
-
-    _DEFAULT_CACHING_TIME = 5
-
-    def __init__(self, queue_stats_mgr, caching_time=None):
-        self._queue_stats_mgr = queue_stats_mgr
-        self._caching_time = self._compute_caching_time(caching_time)
-        self._cache = {}
-
-    def _compute_caching_time(self, caching_time):
-        if caching_time is None:
-            return self._DEFAULT_CACHING_TIME
-        else:
-            return caching_time
-
-    def get_statistics(self, queue_name, xqos, window):
-        current_time = time.time()
-        cache_key = (queue_name, xqos, window)
-        if cache_key in self._cache:
-            cache_time, cache_value = self._cache[cache_key]
-            if cache_time + self._caching_time > current_time:
-                return cache_value
-        new_value = self._queue_stats_mgr.get_statistics(queue_name, xqos, window)
-        self._cache[cache_key] = (current_time, new_value)
-        return new_value
-
-    def __getattr__(self, name):
-        return getattr(self._queue_stats_mgr, name)
-
-    @property
-    def ami_wrapper(self):
-        return self._queue_stats_mgr.ami_wrapper
-
-    @ami_wrapper.setter
-    def ami_wrapper(self, value):
-        self._queue_stats_mgr.ami_wrapper = value

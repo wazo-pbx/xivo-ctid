@@ -20,10 +20,6 @@ class ExtensionInUseError(Exception):
     pass
 
 
-class NotAQueueException(Exception):
-    pass
-
-
 class MissingFieldException(Exception):
 
     def __init__(self, msg):

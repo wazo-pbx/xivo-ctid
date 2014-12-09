@@ -84,7 +84,7 @@ class TestStatisticsNotifier(unittest.TestCase):
         cti_connection.reset_mock()
 
         self.notifier.on_stat_changed(statistic)
-        cti_connection.send_message.assert_never_called()
+        self.assertFalse(cti_connection.send_message.called)
 
     def test_send_statistic(self):
         cti_connection = Mock()

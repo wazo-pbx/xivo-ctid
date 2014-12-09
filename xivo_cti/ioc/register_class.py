@@ -55,7 +55,6 @@ from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
 from xivo_cti.services.people.async_dird_client import AsyncDirdClient
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
-from xivo_cti.services.queue.manager import QueueServiceManager
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
 from xivo_cti.services.queue_entry_manager import QueueEntryManager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
@@ -125,7 +124,6 @@ def setup():
     context.register('queue_entry_encoder', QueueEntryEncoder)
     context.register('queue_entry_manager', QueueEntryManager)
     context.register('queue_entry_notifier', QueueEntryNotifier)
-    context.register('queue_service_manager', QueueServiceManager)
     context.register('queue_statistics_manager', QueueStatisticsManager)
     context.register('queue_statistics_producer', QueueStatisticsProducer)
     context.register('queue_member_cti_subscriber', QueueMemberCTISubscriber)

@@ -22,7 +22,6 @@ from collections import defaultdict
 from xivo_cti import config
 from xivo_cti import cti_daolist
 from xivo_cti.services.agent.status import AgentStatus
-from xivo_cti.ioc.context import context as cti_context
 
 logger = logging.getLogger('anylist')
 

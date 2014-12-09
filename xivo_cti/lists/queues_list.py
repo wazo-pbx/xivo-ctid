@@ -37,26 +37,14 @@ class QueuesList(ContextAwareAnyList):
         super(QueuesList, self).delete(queue_id)
 
     def _init_reverse_dictionary(self):
-        self.reverse_index = {}
-        for queue_id, queue in self.keeplist.iteritems():
-            queue_name = queue['name']
-            self.reverse_index[queue_name] = queue_id
+        self.queues_by_name = dict((queue['name'], queue) for queue in self.keeplist.itervalues())
 
     def _add_to_reverse_dictionary(self, queue_id):
         queue = self.keeplist[queue_id]
         queue_name = queue['name']
-        self.reverse_index[queue_name] = queue_id
+        self.queues_by_name[queue_name] = queue
 
     def _remove_from_reverse_dictionary(self, queue_id):
         queue = self.keeplist[queue_id]
         queue_name = queue['name']
-        del self.reverse_index[queue_name]
-
-    def idbyqueuename(self, queuename):
-        if queuename in self.reverse_index:
-            idx = self.reverse_index[queuename]
-            if idx in self.keeplist:
-                return idx
-
-    def get_queues(self):
-        return self.keeplist.keys()
+        del self.queues_by_name[queue_name]
