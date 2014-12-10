@@ -326,11 +326,27 @@ class TestUserDAO(unittest.TestCase):
 
     def test_get_cti_profile_id(self):
         user_id = '206'
+        cti_profile_id = 4
         self._userlist.keeplist[user_id] = {
-            'firstname': 'toto',
-            'cti_profile_id': 4
+            'cti_profile_id': cti_profile_id
         }
 
         result = self.dao.get_cti_profile_id(user_id)
 
-        self.assertEqual(result, 4)
+        self.assertEqual(result, cti_profile_id)
+
+    def test_agent_id(self):
+        user_id = '206'
+        agent_id = 4
+        self._userlist.keeplist[user_id] = {
+            'agentid': agent_id,
+        }
+
+        result = self.dao.get_agent_id(user_id)
+
+        self.assertEqual(result, agent_id)
+
+    def test_agent_id_not_found(self):
+        result = self.dao.get_agent_id('206')
+
+        self.assertEqual(result, None)
