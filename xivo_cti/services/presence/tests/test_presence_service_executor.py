@@ -59,14 +59,13 @@ class TestPresenceServiceExecutor(unittest.TestCase):
             }
         }
 
-    @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.dao.user', spec=UserDAO)
-    def test_execute_actions_with_disconnected(self, mock_user_dao, mock_agent_id):
+    def test_execute_actions_with_disconnected(self, mock_user_dao):
         user_id = '64'
         agent_id = 33
         user_profile = 2
 
-        mock_agent_id.return_value = agent_id
+        mock_user_dao.get_agent_id.return_value = agent_id
         mock_user_dao.get_cti_profile_id.return_value = user_profile
 
         with patch('xivo_cti.services.presence.executor.config',
@@ -76,14 +75,13 @@ class TestPresenceServiceExecutor(unittest.TestCase):
 
         self.agent_service_manager.logoff.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.user_dao.agent_id')
     @patch('xivo_cti.dao.user', spec=UserDAO)
-    def test_execute_actions_with_available(self, mock_user_dao, mock_agent_id):
+    def test_execute_actions_with_available(self, mock_user_dao):
         user_id = '64'
         agent_id = 33
         user_profile = 2
 
-        mock_agent_id.return_value = agent_id
+        mock_user_dao.get_agent_id.return_value = agent_id
         mock_user_dao.get_cti_profile_id.return_value = user_profile
 
         with patch('xivo_cti.services.presence.executor.config',

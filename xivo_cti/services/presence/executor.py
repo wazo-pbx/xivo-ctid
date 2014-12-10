@@ -19,7 +19,6 @@ import logging
 
 from xivo_cti import dao
 from xivo_cti import config
-from xivo_dao import user_dao
 
 logger = logging.getLogger('PresenceServiceExecutor')
 
@@ -66,7 +65,7 @@ class PresenceServiceExecutor(object):
                 self._launch_presence_queue(user_id, action_name)
 
     def _launch_presence_queue(self, user_id, action_name):
-        agentid = user_dao.agent_id(user_id)
+        agentid = dao.user.get_agent_id(user_id)
         if agentid:
             if action_name == 'queuepause_all':
                 self.agent_service_manager.pause_agent_on_all_queues(agentid)
@@ -77,7 +76,7 @@ class PresenceServiceExecutor(object):
 
     def _launch_presence_service(self, user_id, action_name, params):
         if action_name == 'agentlogoff':
-            agentid = user_dao.agent_id(user_id)
+            agentid = dao.user.get_agent_id(user_id)
             if agentid:
                 self.agent_service_manager.logoff(agentid)
         elif action_name == 'enablednd':
