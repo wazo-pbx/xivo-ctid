@@ -63,7 +63,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     def test_execute_actions_with_disconnected(self, mock_get_profile, mock_agent_id):
         user_id = 64
         agent_id = 33
-        user_profile = 'client'
+        user_profile = 2
 
         mock_agent_id.return_value = agent_id
         mock_get_profile.return_value = user_profile
@@ -80,7 +80,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     def test_execute_actions_with_available(self, mock_get_profile, mock_agent_id):
         user_id = 64
         agent_id = 33
-        user_profile = 'client'
+        user_profile = 2
 
         mock_agent_id.return_value = agent_id
         mock_get_profile.return_value = user_profile
@@ -96,7 +96,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     @patch('xivo_dao.user_dao.get_profile')
     def test_execute_actions_unknown(self, mock_get_profile):
         user_id = 64
-        user_profile = 'client'
+        user_profile = 2
 
         mock_get_profile.return_value = user_profile
 
