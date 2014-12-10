@@ -28,9 +28,6 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
-    def tearDown(self):
-        pass
-
     def test_dnd_enabled(self):
         user_id = 34
         ipbx_id = 'xivo'
