@@ -16,15 +16,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.services.user.notifier import UserServiceNotifier
+
 from mock import Mock
+from mock import patch
+from xivo_cti.services.user.notifier import UserServiceNotifier
+from xivo_cti.services.user.notifier import UserStatusUpdateEvent
 
 
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.notifier = UserServiceNotifier()
+        self.bus_status_notifier = Mock()
+        self.notifier = UserServiceNotifier(self.bus_status_notifier)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
@@ -157,6 +161,9 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
+    @patch('xivo_cti.services.user.notifier.config', {'uuid': 'xivo-uuid',
+                                                      'status_notifier': {'exchange_name': 'xivo-status-updates',
+                                                                          'exchange_type': 'fanout'}})
     def test_presence_updated(self):
         user_id = 64
         expected = {"class": "getlist",
@@ -165,10 +172,16 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "listname": "users",
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
+        self.notifier._send_bus_event = Mock()
 
         self.notifier.presence_updated(user_id, 'available')
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
+        expected_msg = UserStatusUpdateEvent('xivo-uuid', user_id, 'available')
+        self.bus_status_notifier.publish_event.assert_called_once_with(
+            'xivo-status-updates', '#',
+            expected_msg,
+        )
 
     def test_recording_enabled(self):
         user_id = 42
