@@ -28,6 +28,8 @@ import threading
 
 from xivo import daemonize
 from xivo.xivo_logging import setup_logging
+from xivo_bus.ctl.config import BusConfig
+from xivo_bus.ctl.producer import BusProducer
 from xivo_cti import config
 from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
@@ -126,6 +128,7 @@ class CTIServer(object):
         self._daemonize()
         QueueLogger.init()
         self._set_signal_handlers()
+        context.register('bus_status_notifier', BusProducer(BusConfig(**config['status_notifier'])))
 
         self.interface_ami = context.get('interface_ami')
 
