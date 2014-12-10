@@ -17,6 +17,7 @@
 
 import logging
 
+from xivo_cti import dao
 from xivo_cti import config
 from xivo_dao import user_dao
 
@@ -49,7 +50,7 @@ class PresenceServiceExecutor(object):
         self._innerdata = innerdata
 
     def execute_actions(self, user_id, presence):
-        user_profile = user_dao.get_profile(user_id)
+        user_profile = dao.user.get_cti_profile_id(user_id)
         presence_group_name = config['profiles'][user_profile]['userstatus']
         presence_group = config['userstatus'][presence_group_name]
 
