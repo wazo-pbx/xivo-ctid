@@ -375,7 +375,7 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = 95
         presence = 'disconnected'
         expected_presence = 'disconnected'
-        user_profile = 'client'
+        user_profile = 42
         mock_get_profile.return_value = user_profile
         mock_is_agent.return_value = False
         self.presence_service_manager.is_valid_presence.return_value = True
@@ -395,7 +395,7 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = 95
         presence = 'disconnected'
         expected_presence = 'disconnected'
-        user_profile = 'client'
+        user_profile = 42
         mock_get_profile.return_value = user_profile
         mock_is_agent.return_value = False
         self.presence_service_manager.is_valid_presence.return_value = True
@@ -417,7 +417,7 @@ class TestUserServiceManager(_BaseTestCase):
         expected_agent_id = 10
         presence = 'disconnected'
         expected_presence = 'disconnected'
-        user_profile = 'client'
+        user_profile = 42
         mock_get_profile.return_value = user_profile
         mock_is_agent.return_value = True
         mock_agent_id.return_value = expected_agent_id
@@ -438,7 +438,7 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = 95
         presence = 'disconnected'
         expected_presence = 'disconnected'
-        user_profile = 'client'
+        user_profile = 42
         mock_get_profile.return_value = user_profile
         self.presence_service_manager.is_valid_presence.return_value = False
 
