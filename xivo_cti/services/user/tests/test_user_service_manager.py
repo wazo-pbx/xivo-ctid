@@ -369,14 +369,13 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
         self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected', action=False)
 
-    @patch('xivo_dao.user_dao.is_agent')
-    def test_set_valid_presence_no_agent(self, mock_is_agent):
-        user_id = 95
+    def test_set_valid_presence_no_agent(self):
+        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
         self.user_service_manager.dao.user.get_cti_profile_id.return_value = user_profile
-        mock_is_agent.return_value = False
+        self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
         self.user_service_manager.set_presence(user_id, presence)
@@ -385,17 +384,16 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        mock_is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
-    @patch('xivo_dao.user_dao.is_agent')
-    def test_set_valid_presence_no_agent_no_action(self, mock_is_agent):
-        user_id = 95
+    def test_set_valid_presence_no_agent_no_action(self):
+        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
         self.user_service_manager.dao.user.get_cti_profile_id.return_value = user_profile
-        mock_is_agent.return_value = False
+        self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
         self.user_service_manager.set_presence(user_id, presence, action=False)
@@ -404,20 +402,17 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.assertFalse(self.user_service_manager.presence_service_executor.execute_actions.called)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        mock_is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
-    @patch('xivo_dao.user_dao.agent_id')
-    @patch('xivo_dao.user_dao.is_agent')
-    def test_set_valid_presence_with_agent(self, mock_is_agent, mock_agent_id):
-        user_id = 95
+    def test_set_valid_presence_with_agent(self):
+        user_id = '95'
         expected_agent_id = 10
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
         self.user_service_manager.dao.user.get_cti_profile_id.return_value = user_profile
-        mock_is_agent.return_value = True
-        mock_agent_id.return_value = expected_agent_id
+        self.user_service_manager.dao.user.get_agent_id.return_value = expected_agent_id
         self.presence_service_manager.is_valid_presence.return_value = True
 
         self.user_service_manager.set_presence(user_id, presence)
@@ -426,12 +421,11 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        mock_is_agent.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(expected_agent_id, expected_presence)
 
-    @patch('xivo_dao.user_dao.is_agent')
-    def test_set_not_valid_presence(self, mock_is_agent):
-        user_id = 95
+    def test_set_not_valid_presence(self):
+        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
@@ -445,7 +439,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.assertEquals(self.user_service_manager.dao.user.set_presence.call_count, 0)
         self.assertEquals(self.user_service_manager.presence_service_executor.call_count, 0)
         self.assertEquals(self.user_service_notifier.presence_updated.call_count, 0)
-        self.assertEquals(mock_is_agent.call_count, 0)
+        self.assertEquals(self.user_service_manager.dao.user.get_agent_id.call_count, 0)
         self.assertEquals(self.user_service_manager.agent_service_manager.set_presence.call_count, 0)
 
     def test_pickup_the_phone(self):
