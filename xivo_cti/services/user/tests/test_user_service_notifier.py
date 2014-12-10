@@ -30,37 +30,29 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_dnd_enabled(self):
         user_id = 34
-        ipbx_id = 'xivo'
-        notifier = UserServiceNotifier()
-        notifier.send_cti_event = Mock()
-        notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablednd": True},
                     "function": "updateconfig",
                     "listname": "users",
                     "tid": user_id,
-                    "tipbxid": ipbx_id}
+                    "tipbxid": self.ipbx_id}
 
-        notifier.dnd_enabled(user_id)
+        self.notifier.dnd_enabled(user_id)
 
-        notifier.send_cti_event.assert_called_once_with(expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_dnd_disabled(self):
         user_id = 34
-        ipbx_id = 'xivo'
-        notifier = UserServiceNotifier()
-        notifier.send_cti_event = Mock()
-        notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablednd": False},
                     "function": "updateconfig",
                     "listname": "users",
                     "tid": user_id,
-                    "tipbxid": ipbx_id}
+                    "tipbxid": self.ipbx_id}
 
-        notifier.dnd_disabled(user_id)
+        self.notifier.dnd_disabled(user_id)
 
-        notifier.send_cti_event.assert_called_once_with(expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_filter_enabled(self):
         user_id = 32
@@ -180,34 +172,26 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_recording_enabled(self):
         user_id = 42
-        ipbx_id = 'xivo'
-        notifier = UserServiceNotifier()
-        notifier.send_cti_event = Mock()
-        notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablerecording": True},
                     "function": "updateconfig",
                     "listname": "users",
                     "tid": user_id,
-                    "tipbxid": ipbx_id}
+                    "tipbxid": self.ipbx_id}
 
-        notifier.recording_enabled(user_id)
+        self.notifier.recording_enabled(user_id)
 
-        notifier.send_cti_event.assert_called_once_with(expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
 
     def test_recording_disabled(self):
         user_id = 54
-        ipbx_id = 'xivo'
-        notifier = UserServiceNotifier()
-        notifier.send_cti_event = Mock()
-        notifier.ipbx_id = ipbx_id
         expected = {"class": "getlist",
                     "config": {"enablerecording": False},
                     "function": "updateconfig",
                     "listname": "users",
                     "tid": user_id,
-                    "tipbxid": ipbx_id}
+                    "tipbxid": self.ipbx_id}
 
-        notifier.recording_disabled(user_id)
+        self.notifier.recording_disabled(user_id)
 
-        notifier.send_cti_event.assert_called_once_with(expected)
+        self.notifier.send_cti_event.assert_called_once_with(expected)
