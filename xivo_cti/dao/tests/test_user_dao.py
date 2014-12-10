@@ -42,12 +42,11 @@ class TestUserDAO(unittest.TestCase):
         self.dao = UserDAO(self._innerdata)
 
     def test__phone(self):
-        line_id = 206
+        line_id = '206'
         self._phonelist.keeplist[line_id] = {
             'context': 'default',
             'protocol': 'sip',
             'number': '1234',
-            'iduserfeatures': 5,
         }
 
         result = self.dao._phone(line_id)
@@ -58,7 +57,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertRaises(NoSuchLineException, self.dao._phone, 206)
 
     def test__user(self):
-        user_id = 206
+        user_id = '206'
         self._userlist.keeplist[user_id] = {
             'firstname': 'toto'
         }
@@ -71,7 +70,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertRaises(NoSuchUserException, self.dao._user, 206)
 
     def test_fullname(self):
-        user_id = 123
+        user_id = '123'
         fullname = 'full'
         self._userlist.keeplist[user_id] = {'fullname': fullname}
 
@@ -81,7 +80,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.enable_dnd')
     def test_set_dnd(self, enable_dnd):
-        user_id = 1
+        user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': False}
 
         self.dao.enable_dnd(user_id)
@@ -91,7 +90,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.disable_dnd')
     def test_unset_dnd(self, disable_dnd):
-        user_id = 1
+        user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': True}
 
         self.dao.disable_dnd(user_id)
@@ -101,7 +100,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.enable_filter')
     def test_enable_filter(self, enable_filter):
-        user_id = 1
+        user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': False}
 
         self.dao.enable_filter(user_id)
@@ -111,7 +110,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.disable_filter')
     def test_disable_filter(self, disable_filter):
-        user_id = 1
+        user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': True}
 
         self.dao.disable_filter(user_id)
@@ -121,7 +120,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.enable_unconditional_fwd')
     def test_enable_unconditional_fwd(self, enable_unconditional_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '765'
         self._userlist.keeplist[user_id] = {'enableunc': False,
                                             'destunc': '964'}
@@ -134,7 +133,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.disable_unconditional_fwd')
     def test_unconditional_fwd_disabled(self, disable_unconditional_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '765'
         self._userlist.keeplist[user_id] = {'enableunc': True,
                                             'destunc': destination}
@@ -147,7 +146,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.enable_rna_fwd')
     def test_rna_fwd_enabled(self, enable_rna_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '4321'
         self._userlist.keeplist[user_id] = {'enablerna': False,
                                             'destrna': '656'}
@@ -160,7 +159,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.disable_rna_fwd')
     def test_rna_fwd_disabled(self, disable_rna_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '4321'
         self._userlist.keeplist[user_id] = {'enablerna': True,
                                             'destrna': destination}
@@ -173,7 +172,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.enable_busy_fwd')
     def test_busy_fwd_enabled(self, enable_busy_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '435'
         self._userlist.keeplist[user_id] = {'enablebusy': False,
                                             'destbusy': '876'}
@@ -186,7 +185,7 @@ class TestUserDAO(unittest.TestCase):
 
     @patch('xivo_dao.user_dao.disable_rna_fwd')
     def test_busy_fwd_disabled(self, disable_rna_fwd):
-        user_id = 1
+        user_id = '1'
         destination = '435'
         self._userlist.keeplist[user_id] = {'enablebusy': True,
                                             'destbusy': destination}
@@ -199,7 +198,7 @@ class TestUserDAO(unittest.TestCase):
 
     def test_disconnect(self):
         self.dao._innerdata = self._innerdata
-        user_id = 1
+        user_id = '1'
         self._userlist = {}
         self._userlist[user_id] = {'connection': True,
                                    'last-logouttimestamp': None}
@@ -216,7 +215,7 @@ class TestUserDAO(unittest.TestCase):
     def test_set_presence(self):
         self.dao._innerdata = self._innerdata
         presence = 'disconnected'
-        user_id = 1
+        user_id = '1'
         self._userlist = {}
         self._userlist[user_id] = {'availstate': 'available'}
         self.dao._innerdata.xod_status = {'users': self._userlist}
@@ -228,13 +227,12 @@ class TestUserDAO(unittest.TestCase):
         self.assertEqual(expected_userdata['availstate'], result['availstate'])
 
     def test_get_line_identity(self):
-        user_id = 206
-        line_id = 607
+        user_id = '206'
+        line_id = '607'
         self._phonelist.keeplist[line_id] = {
             'context': 'default',
             'protocol': 'sip',
             'number': '1234',
-            'iduserfeatures': user_id,
             'identity': 'sip\/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -249,13 +247,12 @@ class TestUserDAO(unittest.TestCase):
 
     def test_get_context(self):
         context = 'default'
-        user_id = 206
-        line_id = 607
+        user_id = '206'
+        line_id = '607'
         self._phonelist.keeplist[line_id] = {
             'context': context,
             'protocol': 'sip',
             'number': '1234',
-            'iduserfeatures': user_id,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -273,7 +270,7 @@ class TestUserDAO(unittest.TestCase):
     @patch('xivo_dao.user_dao.get_context')
     def test_get_context_no_line(self, mock_get_context):
         context = 'default'
-        user_id = 206
+        user_id = '206'
         self._userlist.keeplist[user_id] = {
         }
         mock_get_context.return_value = context
@@ -287,13 +284,12 @@ class TestUserDAO(unittest.TestCase):
     def test_get_line_no_linelist_field(self):
         # Happens when the CTI server is starting
         context = 'default'
-        user_id = 206
-        line_id = 607
+        user_id = '206'
+        line_id = '607'
         self._phonelist.keeplist[line_id] = {
             'context': context,
             'protocol': 'sip',
             'number': '1234',
-            'iduserfeatures': user_id,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -304,13 +300,12 @@ class TestUserDAO(unittest.TestCase):
         self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
 
     def test_get_line_user_not_exist(self):
-        user_id = 206
-        line_id = 607
+        user_id = '206'
+        line_id = '607'
         self._phonelist.keeplist[line_id] = {
             'context': 'default',
             'protocol': 'sip',
             'number': '1234',
-            'iduserfeatures': user_id,
             'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
@@ -320,8 +315,8 @@ class TestUserDAO(unittest.TestCase):
         self.assertRaises(NoSuchUserException, self.dao.get_line, user_id)
 
     def test_get_line_line_not_exist(self):
-        user_id = 206
-        line_id = 607
+        user_id = '206'
+        line_id = '607'
         self._phonelist.keeplist = {}
         self._userlist.keeplist[user_id] = {
             'linelist': [line_id]
@@ -330,7 +325,7 @@ class TestUserDAO(unittest.TestCase):
         self.assertRaises(NoSuchLineException, self.dao.get_line, user_id)
 
     def test_get_cti_profile_id(self):
-        user_id = 206
+        user_id = '206'
         self._userlist.keeplist[user_id] = {
             'firstname': 'toto',
             'cti_profile_id': 4
