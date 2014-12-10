@@ -135,7 +135,7 @@ class UserServiceManager(object):
         self.set_presence(user_id, 'disconnected', action=False)
 
     def set_presence(self, user_id, presence, action=True):
-        user_profile = user_dao.get_profile(user_id)
+        user_profile = self.dao.user.get_cti_profile_id(user_id)
         if self.presence_service_manager.is_valid_presence(user_profile, presence):
             self.dao.user.set_presence(user_id, presence)
             if action is True:
