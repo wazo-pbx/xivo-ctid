@@ -40,13 +40,9 @@ class PresenceServiceExecutor(object):
                            'queuepause_all',
                            'queueunpause_all']
 
-    def __init__(self,
-                 user_service_manager,
-                 agent_service_manager,
-                 innerdata):
+    def __init__(self, user_service_manager, agent_service_manager):
         self.user_service_manager = user_service_manager
         self.agent_service_manager = agent_service_manager
-        self._innerdata = innerdata
 
     def execute_actions(self, user_id, presence):
         user_profile = dao.user.get_cti_profile_id(user_id)
