@@ -23,8 +23,7 @@ import time
 import xivo_cti
 
 from xivo.chain_map import ChainMap
-from xivo.config_helper import parse_config_dir
-from xivo.config_helper import parse_config_file
+from xivo.config_helper import read_config_file_hierarchy
 from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
     cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
     cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
@@ -59,19 +58,8 @@ _file_config = {}
 def init_config_file():
     global _file_config
 
-    # The priority of files is based on the file name alphabetical order
-    main_config_filename = xivo_cti.config['config_file']
-    main_config = parse_config_file(main_config_filename)
+    _file_config = read_config_file_hierarchy(xivo_cti.config)
 
-    # the main config file could override the extra config directory
-    _file_config = main_config
-    _update_config()
-
-    extra_config_file_directory = xivo_cti.config['extra_config_files']
-    configs = parse_config_dir(extra_config_file_directory)
-    configs.append(main_config)
-
-    _file_config = ChainMap(*configs)
     _update_config()
 
 
