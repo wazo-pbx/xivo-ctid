@@ -9,6 +9,12 @@ extra_config_files: /etc/xivo-ctid/conf.d/
 # Change the log level to debug level.
 debug: false
 
+# Log file.
+logfile: /var/log/xivo-ctid.log
+
+# PID file.
+pidfile: /var/run/xivo-ctid.pid
+
 # Dird (Directory daemon) connection informations.
 dird:
   host: localhost
