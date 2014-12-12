@@ -34,8 +34,7 @@ class Test(unittest.TestCase):
 
     def test_manage_connection_reload_daemon(self):
         raw_msg = 'xivo[daemon,reload]'
-        expected_result = [{'message': [],
-                            'closemenow': True}]
+        expected_result = [{'closemenow': True}]
 
         result = self._interface_webi.manage_connection(raw_msg)
 
@@ -44,8 +43,7 @@ class Test(unittest.TestCase):
 
     def test_manage_connection_unknown_msg(self):
         raw_msg = 'command that does_not exist'
-        expected_result = [{'message': [],
-                            'closemenow': True}]
+        expected_result = [{'closemenow': True}]
         self._interface_webi._send_ami_request = Mock()
 
         result = self._interface_webi.manage_connection(raw_msg)
