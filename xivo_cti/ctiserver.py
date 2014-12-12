@@ -692,6 +692,9 @@ class CTIServer(object):
                 # these AMI connection are used in order to manage AMI commands and events
                 if sel_i == self.ami_sock:
                     self._socket_ami_read(sel_i)
+                # task queue
+                elif sel_i == self._task_queue:
+                    self._task_queue.run()
                 # the new TCP connections (CTI, WEBI, INFO) are catched here
                 elif sel_i in self.fdlist_listen_cti:
                     self._socket_detect_new_tcp_connection(sel_i)
@@ -707,9 +710,6 @@ class CTIServer(object):
                 elif sel_i in self.fdlist_interface_webi:
                     interface_obj = self.fdlist_interface_webi[sel_i]
                     self._socket_established_read(sel_i, interface_obj)
-                # task queue
-                elif sel_i == self._task_queue:
-                    self._task_queue.run()
         except Exception:
             logger.exception('Socket Reader')
 
