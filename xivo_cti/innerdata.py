@@ -454,9 +454,8 @@ class Safe(object):
                     self.appendcti('phones', 'updatestatus', termination_id)
 
     def updatehint(self, hint, status):
-        termination = self.ast_channel_to_termination(hint)
-        phone_id = self.zphones(termination.get('protocol'), termination.get('name'))
-        if phone_id:
+        try:
+            phone_id = dao.phone.get_phone_id_from_hint(hint)
             if dao.phone.update_status(phone_id, status):
                 self._ctiserver.send_cti_event({'class': 'getlist',
                                                 'listname': 'phones',
@@ -464,7 +463,7 @@ class Safe(object):
                                                 'tipbxid': self.ipbxid,
                                                 'tid': phone_id,
                                                 'status': {'hintstatus': status}})
-        else:
+        except NoSuchPhoneException:
             logger.warning('Failed to update phone status for %s', hint)
 
     def updaterelations(self, channel):
