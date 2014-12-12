@@ -34,7 +34,6 @@ class ClientConnection(object):
         self.sendqueue = deque()
         self.readbuff = ''
         self.isClosed = False
-        self.toClose = False
         self.separator = sep
 
     # useful for select

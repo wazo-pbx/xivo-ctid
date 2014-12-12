@@ -504,10 +504,6 @@ class CTIServer(object):
                 if isinstance(cn, ClientConnection):
                     if cn.isClosed and cn not in fdtodel:
                         fdtodel.append(cn)
-                    if cn.toClose and not cn.need_sending():
-                        cn.close()
-                        if cn not in fdtodel:
-                            fdtodel.append(cn)
             for cn in fdtodel:
                 del self.fdlist_established[cn]
 
