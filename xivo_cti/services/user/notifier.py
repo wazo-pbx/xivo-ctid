@@ -62,7 +62,7 @@ class UserServiceNotifier(object):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
         self._bus_status_notifier.publish_event(
             config['status_notifier']['exchange_name'],
-            '#',
+            config['status_notifier']['routing_keys']['user'],
             UserStatusUpdateEvent(config['uuid'], user_id, presence))
 
     def recording_enabled(self, user_id):

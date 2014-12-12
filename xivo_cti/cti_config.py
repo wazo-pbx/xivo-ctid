@@ -53,8 +53,11 @@ _default_config = {
     },
     'status_notifier': {
         'exchange_name': 'xivo-status-updates',
-        'exchange_type': 'fanout',
+        'exchange_type': 'direct',
         'exchange_durable': True,
+        'routing_keys': {
+            'user': 'status.user',
+        }
     }
 }
 _cli_config = {}

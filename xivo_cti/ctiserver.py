@@ -128,7 +128,9 @@ class CTIServer(object):
         self._daemonize()
         QueueLogger.init()
         self._set_signal_handlers()
-        context.register('bus_status_notifier', BusProducer(BusConfig(**config['status_notifier'])))
+        bus_status_notifier_cfg = dict(config['status_notifier'])
+        bus_status_notifier_cfg.pop('routing_keys')
+        context.register('bus_status_notifier', BusProducer(BusConfig(**bus_status_notifier_cfg)))
 
         self.interface_ami = context.get('interface_ami')
 
