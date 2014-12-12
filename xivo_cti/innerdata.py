@@ -453,19 +453,6 @@ class Safe(object):
                 if list_name == 'phones':
                     self.appendcti('phones', 'updatestatus', termination_id)
 
-    def updatehint(self, hint, status):
-        try:
-            phone_id = dao.phone.get_phone_id_from_hint(hint)
-            if dao.phone.update_status(phone_id, status):
-                self._ctiserver.send_cti_event({'class': 'getlist',
-                                                'listname': 'phones',
-                                                'function': 'updatestatus',
-                                                'tipbxid': self.ipbxid,
-                                                'tid': phone_id,
-                                                'status': {'hintstatus': status}})
-        except NoSuchPhoneException:
-            logger.warning('Failed to update phone status for %s', hint)
-
     def updaterelations(self, channel):
         self.channels[channel].relations = []
         if channel.startswith('SIPPeer/'):

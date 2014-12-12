@@ -53,6 +53,8 @@ from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
 from xivo_cti.services.current_call.parser import CurrentCallParser
 from xivo_cti.services.device.manager import DeviceManager
+from xivo_cti.services.endpoint.status_updater import StatusUpdater as EndpointStatusUpdater
+from xivo_cti.services.endpoint.status_notifier import StatusNotifier as EndpointStatusNotifier
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
@@ -118,6 +120,8 @@ def setup():
     context.register('current_call_parser', CurrentCallParser)
     context.register('delta_computer', DeltaComputer)
     context.register('device_manager', DeviceManager)
+    context.register('endpoint_status_notifier', EndpointStatusNotifier)
+    context.register('endpoint_status_updater', EndpointStatusUpdater)
     context.register('async_dird_client', AsyncDirdClient)
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('flusher', Flusher)
