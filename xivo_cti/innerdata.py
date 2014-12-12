@@ -22,6 +22,7 @@ import time
 
 from xivo_cti import cti_sheets
 from xivo_cti import config
+from xivo_cti import dao
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable
 from xivo_cti.channel import Channel
@@ -456,9 +457,7 @@ class Safe(object):
         termination = self.ast_channel_to_termination(hint)
         phone_id = self.zphones(termination.get('protocol'), termination.get('name'))
         if phone_id:
-            oldstatus = self.xod_status['phones'][phone_id]['hintstatus']
-            self.xod_status['phones'][phone_id]['hintstatus'] = status
-            if status != oldstatus:
+            if dao.phone.update_status(phone_id, status):
                 self._ctiserver.send_cti_event({'class': 'getlist',
                                                 'listname': 'phones',
                                                 'function': 'updatestatus',
