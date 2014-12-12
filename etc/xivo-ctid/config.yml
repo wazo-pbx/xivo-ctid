@@ -1,16 +1,32 @@
 # This file should not be modified as it may get changed by the maintainer.
 # Add extra configuration files in the extra_config_files directory to override
 # the content from this file
+
+# Extra configuration directory where the config files overriding this file
+# should be.
 extra_config_files: /etc/xivo-ctid/conf.d/
+
+# Change the log level to debug level.
 debug: false
-foreground: false
+
+# Log file.
+logfile: /var/log/xivo-ctid.log
+
+# PID file.
+pidfile: /var/run/xivo-ctid.pid
+
+# Dird (Directory daemon) connection informations.
 dird:
   host: localhost
   port: 9489
   version: 0.1
+
+# Event bus (AMQP) connection informations.
 bus:
   exchange_name: xivo-cti
   exchange_type: direct
   exchange_durable: true
   binding_key: call_form_result
+
+# Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk
