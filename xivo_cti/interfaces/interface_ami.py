@@ -106,18 +106,6 @@ class AMI(object):
 
             if 'Event' in event and event['Event'] is not None:
                 event_name = event['Event']
-                for ik, interface in self._ctiserver.fdlist_established.iteritems():
-                    if not isinstance(interface, str) and interface.kind == 'INFO' and interface.dumpami_enable:
-                        if interface.dumpami_enable == ['all'] or event_name in interface.dumpami_enable:
-                            doallow = True
-                            if interface.dumpami_disable and event_name in interface.dumpami_disable:
-                                doallow = False
-                            if doallow:
-                                ik.sendall('%.3f %s %s %s\n' %
-                                           (time.time(),
-                                            self._ctiserver.myipbxid,
-                                            event_name,
-                                            event))
                 self.handle_ami_function(event_name, event)
             elif 'Response' in event and event['Response'] is not None:
                 AMIResponseHandler.get_instance().handle_response(event)

@@ -363,8 +363,8 @@ class CTIServer(object):
 
     def _on_cti_login_auth_timeout(self, connc):
         connc.close()
-        if connc in self.fdlist_established:
-            del self.fdlist_established[connc]
+        if connc in self.fdlist_interface_cti:
+            del self.fdlist_interface_cti[connc]
 
     def main_loop(self):
         self.askedtoquit = False
@@ -417,7 +417,9 @@ class CTIServer(object):
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)
 
-        self.fdlist_established = {}
+        self.fdlist_interface_cti = {}
+        self.fdlist_interface_info = {}
+        self.fdlist_interface_webi = {}
         self.fdlist_listen_cti = {}
 
         incoming_tcp = xivoconf_general.get('incoming_tcp', {})
@@ -456,12 +458,11 @@ class CTIServer(object):
         sys.exit(2)
 
     def get_connected(self, tomatch):
-        clist = list()
-        for interface_obj in self.fdlist_established.itervalues():
-            if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
-                userid = interface_obj.connection_details.get('userid')
-                if self.safe.user_match(userid, tomatch):
-                    clist.append(interface_obj)
+        clist = []
+        for interface_cti in self.fdlist_interface_cti.itervalues():
+            userid = interface_cti.connection_details.get('userid')
+            if self.safe.user_match(userid, tomatch):
+                clist.append(interface_cti)
         return clist
 
     def sendsheettolist(self, tsl, payload):
@@ -475,47 +476,45 @@ class CTIServer(object):
     def _empty_cti_events_queue(self):
         while self._cti_events:
             msg = self._cti_events.popleft()
-            for interface_obj in self.fdlist_established.itervalues():
-                if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
-                    interface_obj.append_msg(msg)
+            for interface_cti in self.fdlist_interface_cti.itervalues():
+                interface_cti.append_msg(msg)
 
     def set_transfer_socket(self, faxobj, direction):
-        for iconn, kind in self.fdlist_established.iteritems():
-            if kind.kind in ['CTI', 'CTIS']:
-                peername = '%s:%d' % iconn.getpeername()
-                if peername == faxobj.socketref:
-                    kind.set_as_transfer(direction, faxobj)
-                    if direction == 's2c':
-                        sendbuffer = ''
-                        kind.reply(sendbuffer)
-                    break
+        for iconn, interface_cti in self.fdlist_interface_cti.iteritems():
+            peername = '%s:%d' % iconn.getpeername()
+            if peername == faxobj.socketref:
+                interface_cti.set_as_transfer(direction, faxobj)
+                if direction == 's2c':
+                    sendbuffer = ''
+                    interface_cti.reply(sendbuffer)
+                break
 
     def send_to_cti_client(self, who, what):
         (ipbxid, userid) = who.split('/')
-        for interface_obj in self.fdlist_established.itervalues():
-            if not isinstance(interface_obj, str) and interface_obj.kind in ['CTI', 'CTIS']:
-                if interface_obj.connection_details.get('userid') == userid:
-                    interface_obj.reply(what)
+        for interface_cti in self.fdlist_interface_cti.itervalues():
+            if interface_cti.connection_details.get('userid') == userid:
+                interface_cti.reply(what)
 
     def _init_socket(self):
         try:
             fdtodel = []
-            for cn in self.fdlist_established:
-                if isinstance(cn, ClientConnection):
-                    if cn.isClosed and cn not in fdtodel:
-                        fdtodel.append(cn)
+            for cn in self.fdlist_interface_cti:
+                if cn.isClosed and cn not in fdtodel:
+                    fdtodel.append(cn)
             for cn in fdtodel:
-                del self.fdlist_established[cn]
+                del self.fdlist_interface_cti[cn]
 
             self.fdlist_full = []
             self.fdlist_full.append(self._task_queue)
             self.fdlist_full.append(self.ami_sock)
             self.fdlist_full.extend(self.fdlist_listen_cti)
-            self.fdlist_full.extend(self.fdlist_established)
+            self.fdlist_full.extend(self.fdlist_interface_cti)
+            self.fdlist_full.extend(self.fdlist_interface_webi)
+            self.fdlist_full.extend(self.fdlist_interface_info)
 
             writefds = []
-            for iconn, kind in self.fdlist_established.iteritems():
-                if kind.kind in ['CTI', 'CTIS'] and iconn.need_sending():
+            for iconn in self.fdlist_interface_cti:
+                if iconn.need_sending():
                     writefds.append(iconn)
 
             timeout = self._task_scheduler.timeout()
@@ -528,8 +527,6 @@ class CTIServer(object):
         except Exception:
             logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
             logger.warning('(select) self.askedtoquit=%s fdlist_full=%s', self.askedtoquit, self.fdlist_full)
-            logger.warning('(select) current open TCP connections : (CTI, WEBI, INFO) %s', self.fdlist_established)
-            logger.warning('(select) current open TCP connections : (AMI) %s', self.ami_sock)
 
             self._socket_close_all()
 
@@ -550,12 +547,14 @@ class CTIServer(object):
                 return (None, None, None)
 
     def _socket_close_all(self):
+        cause = DisconnectCause.by_server_stop if self.askedtoquit else DisconnectCause.by_server_reload
         for s in self.fdlist_full:
-            if s in self.fdlist_established:
-                if self.askedtoquit:
-                    self.fdlist_established[s].disconnected(DisconnectCause.by_server_stop)
-                else:
-                    self.fdlist_established[s].disconnected(DisconnectCause.by_server_reload)
+            if s in self.fdlist_interface_cti:
+                self.fdlist_interface_cti[s].disconnected(cause)
+            elif s in self.fdlist_interface_info:
+                self.fdlist_interface_info[s].disconnected(cause)
+            elif s in self.fdlist_interface_webi:
+                self.fdlist_interface_webi[s].disconnected(cause)
             if not isinstance(s, int):
                 s.close()
 
@@ -597,20 +596,20 @@ class CTIServer(object):
             if kind in ['CTI', 'CTIS']:
                 logintimeout = int(config['main'].get('logintimeout', 5))
                 interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
+                self.fdlist_interface_cti[socketobject] = interface
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
+                self.fdlist_interface_info[socketobject] = interface
             elif kind == 'WEBI':
                 interface = interface_webi.WEBI(self, self._queue_member_updater)
+                self.fdlist_interface_webi[socketobject] = interface
 
             interface.connected(socketobject)
-
-            self.fdlist_established[socketobject] = interface
         else:
             logger.warning('socketobject is not defined ...')
 
-    def _socket_established_read(self, sel_i):
+    def _socket_established_read(self, sel_i, interface_obj):
         try:
-            interface_obj = self.fdlist_established[sel_i]
             requester = '%s:%d' % sel_i.getpeername()[:2]
             closemenow = False
             if isinstance(sel_i, ClientConnection):
@@ -621,7 +620,7 @@ class CTIServer(object):
                             closemenow = self.manage_tcp_connections(sel_i, line, interface_obj)
                 except ClientConnection.CloseException:
                     interface_obj.disconnected(DisconnectCause.broken_pipe)
-                    del self.fdlist_established[sel_i]
+                    self._remove_from_fdlist(sel_i)
             else:
                 try:
                     msg = sel_i.recv(BUFSIZE_LARGE, socket.MSG_DONTWAIT)
@@ -640,13 +639,21 @@ class CTIServer(object):
             if closemenow:
                 interface_obj.disconnected(DisconnectCause.by_client)
                 sel_i.close()
-                del self.fdlist_established[sel_i]
+                self._remove_from_fdlist(sel_i)
         except Exception:
             logger.exception('[%s] %s', interface_obj, sel_i)
             logger.warning('unexpected socket breakup')
             interface_obj.disconnected(DisconnectCause.broken_pipe)
             sel_i.close()
-            del self.fdlist_established[sel_i]
+            self._remove_from_fdlist(sel_i)
+
+    def _remove_from_fdlist(self, conn):
+        if conn in self.fdlist_interface_cti:
+            del self.fdlist_interface_cti[conn]
+        elif conn in self.fdlist_interface_info:
+            del self.fdlist_interface_info[conn]
+        elif conn in self.fdlist_interface_webi:
+            del self.fdlist_interface_webi[conn]
 
     def _update_safe_list(self):
         if self.update_config_list:
@@ -672,11 +679,11 @@ class CTIServer(object):
                 try:
                     sel_o.process_sending()
                 except ClientConnection.CloseException:
-                    if sel_o in self.fdlist_established:
-                        kind = self.fdlist_established[sel_o]
+                    if sel_o in self.fdlist_interface_cti:
+                        kind = self.fdlist_interface_cti[sel_o]
                         kind.disconnected(DisconnectCause.broken_pipe)
                         sel_o.close()
-                        del self.fdlist_established[sel_o]
+                        del self.fdlist_interface_cti[sel_o]
         except Exception:
             logger.exception('Socket writer')
 
@@ -688,9 +695,18 @@ class CTIServer(object):
                 # the new TCP connections (CTI, WEBI, INFO) are catched here
                 elif sel_i in self.fdlist_listen_cti:
                     self._socket_detect_new_tcp_connection(sel_i)
-                # incoming TCP connections (CTI, WEBI, INFO)
-                elif sel_i in self.fdlist_established:
-                    self._socket_established_read(sel_i)
+                # CTI
+                elif sel_i in self.fdlist_interface_cti:
+                    interface_obj = self.fdlist_interface_cti[sel_i]
+                    self._socket_established_read(sel_i, interface_obj)
+                # INFO
+                elif sel_i in self.fdlist_interface_info:
+                    interface_obj = self.fdlist_interface_info[sel_i]
+                    self._socket_established_read(sel_i, interface_obj)
+                # WEBI
+                elif sel_i in self.fdlist_interface_webi:
+                    interface_obj = self.fdlist_interface_webi[sel_i]
+                    self._socket_established_read(sel_i, interface_obj)
                 # task queue
                 elif sel_i == self._task_queue:
                     self._task_queue.run()

@@ -204,27 +204,20 @@ class INFO(interfaces.Interfaces):
                     else:
                         clireply.append('argument : astid value')
 
-                elif usefulmsg == 'fdlist':
-                    for k, v in self._ctiserver.fdlist_listen_cti.iteritems():
-                        clireply.append('  listen TCP : %s %s' % (k, v))
-                    for k, v in self._ctiserver.fdlist_established.iteritems():
-                        clireply.append('  conn   TCP : %s %s' % (k, v))
-                    clireply.append('  full : %s' % self._ctiserver.fdlist_full)
-
                 elif usefulmsg.startswith('disc '):
                     command_args = usefulmsg.split()
                     if len(command_args) > 2:
                         ipdef = tuple([command_args[1], int(command_args[2])])
                         socktoremove = None
-                        for sockid in self._ctiserver.fdlist_established.keys():
+                        for sockid in self._ctiserver.fdlist_interface_cti:
                             if ipdef == sockid.getpeername():
                                 socktoremove = sockid
                         if socktoremove:
                             clireply.append('disconnecting %s (%s)'
                                            % (socktoremove.getpeername(),
-                                              self._ctiserver.fdlist_established[socktoremove]))
+                                              self._ctiserver.fdlist_interface_cti[socktoremove]))
                             socktoremove.close()
-                            del self._ctiserver.fdlist_established[socktoremove]
+                            del self._ctiserver.fdlist_interface_cti[socktoremove]
                         else:
                             clireply.append('nobody disconnected')
 
