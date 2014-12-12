@@ -454,16 +454,16 @@ class Safe(object):
 
     def updatehint(self, hint, status):
         termination = self.ast_channel_to_termination(hint)
-        p = self.zphones(termination.get('protocol'), termination.get('name'))
-        if p:
-            oldstatus = self.xod_status['phones'][p]['hintstatus']
-            self.xod_status['phones'][p]['hintstatus'] = status
+        phone_id = self.zphones(termination.get('protocol'), termination.get('name'))
+        if phone_id:
+            oldstatus = self.xod_status['phones'][phone_id]['hintstatus']
+            self.xod_status['phones'][phone_id]['hintstatus'] = status
             if status != oldstatus:
                 self._ctiserver.send_cti_event({'class': 'getlist',
                                                 'listname': 'phones',
                                                 'function': 'updatestatus',
                                                 'tipbxid': self.ipbxid,
-                                                'tid': p,
+                                                'tid': phone_id,
                                                 'status': {'hintstatus': status}})
         else:
             logger.warning('Failed to update phone status for %s', hint)
