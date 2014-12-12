@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+
 
 class StatusNotifier(object):
 
@@ -22,12 +24,5 @@ class StatusNotifier(object):
         self._ctiserver = cti_server
 
     def notify(self, phone_id, status):
-        event = {
-            'class': 'getlist',
-            'listname': 'phones',
-            'function': 'updatestatus',
-            'tipbxid': 'xivo',
-            'tid': phone_id,
-            'status': {'hintstatus': status}
-        }
+        event = CTIMessageFormatter.phone_hintstatus_update(phone_id, status)
         self._ctiserver.send_cti_event(event)

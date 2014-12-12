@@ -165,3 +165,16 @@ class TestCTIMessageFormatter(unittest.TestCase):
         expected.update({'class': 'people_search_result'})
 
         assert_that(result, equal_to(expected))
+
+    def test_update_phone_hinstatus(self):
+        hint = 8
+        phone_id = '42'
+
+        result = CTIMessageFormatter.phone_hintstatus_update(phone_id, hint)
+
+        assert_that(result, equal_to({'class': 'getlist',
+                                      'listname': 'phones',
+                                      'function': 'updatestatus',
+                                      'tipbxid': 'xivo',
+                                      'tid': phone_id,
+                                      'status': {'hintstatus': hint}}))
