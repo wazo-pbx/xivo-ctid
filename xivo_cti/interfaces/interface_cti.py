@@ -63,7 +63,6 @@ class CTI(interfaces.Interfaces):
         self.serial = serialJson()
         self.transferconnection = {}
         self._cti_command_handler = CTICommandHandler(self)
-        self._cti_command_runner = CTICommandRunner()
         self._register_login_callbacks()
 
     def answer_cb(self):
