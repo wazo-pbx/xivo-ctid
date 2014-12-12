@@ -76,13 +76,6 @@ class AMI(object):
         logger.info('ami disconnected')
         self.amiclass.sock.close()
 
-    def connected(self):
-        if self.amiclass and self.amiclass.sock:
-            try:
-                return self.amiclass.sock.getpeername()
-            except Exception:
-                return None
-
     def decode_raw_event(self, raw_event):
         return raw_event.decode('utf8', 'replace')
 
