@@ -36,7 +36,6 @@ from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
-from xivo_cti import dao
 from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
