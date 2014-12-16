@@ -112,3 +112,15 @@ class CTIMessageFormatter(object):
                 'status': status,
             }
         }
+
+    @staticmethod
+    def user_status_update(key, status):
+        xivo_uuid, user_id = key
+        return {
+            'class': 'user_status_update',
+            'data': {
+                'xivo_uuid': xivo_uuid,
+                'user_id': user_id,
+                'status': status,
+            }
+        }
