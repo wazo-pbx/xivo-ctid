@@ -100,3 +100,15 @@ class CTIMessageFormatter(object):
             'tid': phone_id,
             'status': {'hintstatus': status},
         }
+
+    @staticmethod
+    def endpoint_status_update(key, status):
+        xivo_uuid, endpoint_id = key
+        return {
+            'class': 'endpoint_status_update',
+            'data': {
+                'xivo_uuid': xivo_uuid,
+                'endpoint_id': endpoint_id,
+                'status': status,
+            }
+        }

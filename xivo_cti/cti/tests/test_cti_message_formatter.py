@@ -178,3 +178,18 @@ class TestCTIMessageFormatter(unittest.TestCase):
                                       'tipbxid': 'xivo',
                                       'tid': phone_id,
                                       'status': {'hintstatus': hint}}))
+
+    def test_endpoint_status_update(self):
+        key = ('xivo-uuid', 42)
+        status = 0
+
+        result = CTIMessageFormatter.endpoint_status_update(key, status)
+
+        assert_that(result, equal_to({
+            'class': 'endpoint_status_update',
+            'data': {
+                'xivo_uuid': 'xivo-uuid',
+                'endpoint_id': 42,
+                'status': 0,
+            }
+        }))
