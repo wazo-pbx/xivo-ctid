@@ -209,6 +209,9 @@ class CTI(interfaces.Interfaces):
     def attach_observer(self, callback):
         self._observers.add(callback)
 
+    def detach_observer(self, callback):
+        self._observers.discard(callback)
+
     def _set_new_state(self, new_state):
         if self._state == new_state:
             return

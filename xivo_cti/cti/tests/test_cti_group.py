@@ -67,6 +67,17 @@ class TestCTIGroup(unittest.TestCase):
 
         self.assertFalse(self.interface_cti.send_encoded_message.called)
 
+    def test_remove(self):
+        self.cti_group.add(self.interface_cti)
+        self.cti_group.remove(self.interface_cti)
+        self.cti_group.send_message(self.msg)
+
+        self.interface_cti.detach_observer.assert_called_once_with(self.cti_group._on_interface_cti_update)
+        self.assertFalse(self.interface_cti.send_encoded_message.called)
+
+    def test_remove_doesnt_raise_on_unknown_interface(self):
+        self.cti_group.remove(self.interface_cti)
+
     def test_send_message_two_interfaces(self):
         interface_cti1 = mock.Mock(CTI)
         interface_cti2 = mock.Mock(CTI)

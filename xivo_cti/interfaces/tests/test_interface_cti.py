@@ -83,6 +83,20 @@ class TestCTI(unittest.TestCase):
 
         callback.assert_called_once_with(self._cti_connection, sentinel)
 
+    def test_detach_observer(self):
+        callback = Mock()
+
+        self._cti_connection.attach_observer(callback)
+        self._cti_connection.detach_observer(callback)
+        self._cti_connection._notify_observers(sentinel)
+
+        self.assertFalse(callback.called)
+
+    def test_detach_observer_doesnt_raise_on_unknown_observer(self):
+        callback = Mock()
+
+        self._cti_connection.detach_observer(callback)
+
     @patch('xivo_cti.ioc.context.context.get', Mock())
     def test_disconneted_notify_observers(self):
         callback = Mock()

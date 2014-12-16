@@ -35,6 +35,10 @@ class CTIGroup(object):
         interface_cti.attach_observer(self._on_interface_cti_update)
         self._interfaces.add(interface_cti)
 
+    def remove(self, interface_cti):
+        self._interfaces.discard(interface_cti)
+        interface_cti.detach_observer(self._on_interface_cti_update)
+
     def _on_interface_cti_update(self, interface_cti, state):
         if state == interface_cti.STATE_DISCONNECTED:
             self._interfaces.discard(interface_cti)
