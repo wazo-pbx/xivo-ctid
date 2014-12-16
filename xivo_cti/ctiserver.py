@@ -165,6 +165,8 @@ class CTIServer(object):
 
         self._broadcast_cti_group = context.get('broadcast_cti_group')
 
+        self._flusher = context.get('flusher')
+
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
 
@@ -708,6 +710,8 @@ class CTIServer(object):
                     self._socket_established_read(sel_i, interface_obj)
         except Exception:
             logger.exception('Socket Reader')
+
+        self._flusher.flush()
 
         try:
             self._task_scheduler.run()

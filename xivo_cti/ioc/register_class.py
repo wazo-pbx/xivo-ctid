@@ -27,6 +27,7 @@ from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.cti.cti_group import CTIGroupFactory
 from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
 from xivo_cti.ctiserver import CTIServer
+from xivo_cti.flusher import Flusher
 from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
@@ -117,6 +118,7 @@ def setup():
     context.register('device_manager', DeviceManager)
     context.register('async_dird_client', AsyncDirdClient)
     context.register('endpoint_notifier', EndpointNotifier)
+    context.register('flusher', Flusher)
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
     context.register('interface_ami', AMI)

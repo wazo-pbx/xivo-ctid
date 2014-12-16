@@ -17,6 +17,7 @@
 
 import logging
 
+from collections import deque
 from xivo_cti.client_connection import ClientConnection
 
 logger = logging.getLogger(__name__)
@@ -24,9 +25,11 @@ logger = logging.getLogger(__name__)
 
 class CTIGroup(object):
 
-    def __init__(self, cti_msg_encoder):
+    def __init__(self, cti_msg_encoder, flusher):
         self._cti_msg_encoder = cti_msg_encoder
+        self._flusher = flusher
         self._interfaces = set()
+        self._buffer = deque()
 
     def add(self, interface_cti):
         if interface_cti.state() == interface_cti.STATE_DISCONNECTED:
@@ -44,23 +47,35 @@ class CTIGroup(object):
             self._interfaces.discard(interface_cti)
 
     def send_message(self, msg):
-        data = self._cti_msg_encoder.encode(msg)
+        if not self._buffer:
+            self._flusher.add(self)
+
+        self._buffer.append(self._cti_msg_encoder.encode(msg))
+
+    def flush(self):
+        data = self._reset_buffer()
         closed_interfaces = []
-        for interface in self._interfaces:
+        for interface_cti in self._interfaces:
             try:
-                interface.send_encoded_message(data)
+                interface_cti.send_encoded_message(data)
             except ClientConnection.CloseException:
                 logger.warning('Error while calling send_encoded_message: connection closed', exc_info=True)
-                closed_interfaces.append(interface)
+                closed_interfaces.append(interface_cti)
 
         for closed_interface in closed_interfaces:
             self._interfaces.remove(closed_interface)
 
+    def _reset_buffer(self):
+        data = ''.join(self._buffer)
+        self._buffer.clear()
+        return data
+
 
 class CTIGroupFactory(object):
 
-    def __init__(self, cti_msg_encoder):
+    def __init__(self, cti_msg_encoder, flusher):
         self._cti_msg_encoder = cti_msg_encoder
+        self._flusher = flusher
 
     def new_cti_group(self):
-        return CTIGroup(self._cti_msg_encoder)
+        return CTIGroup(self._cti_msg_encoder, self._flusher)
