@@ -39,7 +39,7 @@ class TestSafe(unittest.TestCase):
     @patch('xivo_dao.trunk_dao.get_ids')
     def setUp(self, mock_get_ids):
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
-        self._ctiserver = CTIServer()
+        self._ctiserver = Mock(CTIServer)
         self.safe = Safe(self._ctiserver, queue_member_cti_adapter)
         self.safe.user_service_manager = Mock(UserServiceManager)
         mock_get_ids.get_ids.return_value = []

@@ -93,7 +93,6 @@ class CTIServer(object):
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []
-        self._cti_events = collections.deque()
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -163,6 +162,8 @@ class CTIServer(object):
 
         self._agent_client = context.get('agent_client')
         self._agent_client.connect()
+
+        self._broadcast_cti_group = context.get('broadcast_cti_group')
 
         context.get('user_service_notifier').send_cti_event = self.send_cti_event
         context.get('user_service_notifier').ipbx_id = self.myipbxid
@@ -470,14 +471,8 @@ class CTIServer(object):
             k.reply(payload)
 
     def send_cti_event(self, event):
-        self._cti_events.append(event)
+        self._broadcast_cti_group.send_message(event)
         message_hook.run_hooks(event)
-
-    def _empty_cti_events_queue(self):
-        while self._cti_events:
-            msg = self._cti_events.popleft()
-            for interface_cti in self.fdlist_interface_cti.itervalues():
-                interface_cti.append_msg(msg)
 
     def set_transfer_socket(self, faxobj, direction):
         for iconn, interface_cti in self.fdlist_interface_cti.iteritems():
@@ -597,6 +592,7 @@ class CTIServer(object):
                 logintimeout = int(config['main'].get('logintimeout', 5))
                 interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
                 self.fdlist_interface_cti[socketobject] = interface
+                self._broadcast_cti_group.add(interface)
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
                 self.fdlist_interface_info[socketobject] = interface
@@ -716,6 +712,5 @@ class CTIServer(object):
         try:
             self._task_scheduler.run()
             self._update_safe_list()
-            self._empty_cti_events_queue()
         except Exception:
             logger.exception('error')

@@ -24,6 +24,8 @@ from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
+from xivo_cti.cti.cti_group import CTIGroupFactory
+from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.interfaces.interface_ami import AMI
@@ -94,6 +96,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
+    context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('bus_producer', BusProducer)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
@@ -103,6 +106,8 @@ def setup():
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
     context.register('channel_updater', ChannelUpdater)
+    context.register('cti_group_factory', CTIGroupFactory)
+    context.register('cti_msg_encoder', CTIMessageEncoder)
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)
@@ -138,3 +143,7 @@ def setup():
     context.register('task_scheduler', new_task_scheduler)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
+
+
+def new_broadcast_cti_group(cti_group_factory):
+    return cti_group_factory.new_cti_group()

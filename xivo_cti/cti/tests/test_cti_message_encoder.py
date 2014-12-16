@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,23 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import json
+import mock
 import unittest
 
-from mock import Mock
-from xivo_cti.ctiserver import CTIServer
-from xivo_cti.cti.cti_group import CTIGroup
+from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
 
 
-class TestCTIServer(unittest.TestCase):
+class TestCTIMessageEncoder(unittest.TestCase):
 
     def setUp(self):
-        self.broadcast_cti_group = Mock(CTIGroup)
-        self.cti_server = CTIServer()
-        self.cti_server._broadcast_cti_group = self.broadcast_cti_group
+        self.time = 123
+        self.cti_msg_encoder = CTIMessageEncoder()
 
-    def test_send_cti_event(self):
-        event = {'event': 'My test event'}
+    @mock.patch('time.time')
+    def test_encode(self, mock_time):
+        mock_time.return_value = self.time
+        msg = {'class': 'foo'}
+        expected_msg = {'class': 'foo', 'timenow': self.time}
 
-        self.cti_server.send_cti_event(event)
+        encoded_msg = self.cti_msg_encoder.encode(msg)
 
-        self.broadcast_cti_group.send_message.assert_called_once_with(event)
+        self.assertTrue(encoded_msg.endswith('\n'))
+        self.assertEqual(expected_msg, json.loads(encoded_msg[:-1]))

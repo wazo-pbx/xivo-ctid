@@ -56,6 +56,9 @@ class CTI(interfaces.Interfaces):
     kind = 'CTI'
     sep = '\n'
 
+    STATE_NEW = 'new'
+    STATE_DISCONNECTED = 'disconnected'
+
     def __init__(self, ctiserver):
         interfaces.Interfaces.__init__(self, ctiserver)
         self.connection_details = {}
@@ -63,6 +66,8 @@ class CTI(interfaces.Interfaces):
         self.transferconnection = {}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
+        self._state = self.STATE_NEW
+        self._observers = set()
 
     def answer_cb(self):
         pass
@@ -82,6 +87,7 @@ class CTI(interfaces.Interfaces):
 
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
+        self._set_new_state(self.STATE_DISCONNECTED)
         self.login_task.cancel()
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
@@ -156,6 +162,9 @@ class CTI(interfaces.Interfaces):
     def send_message(self, msg):
         self.connid.append_queue(self.serial.encode(msg) + '\n')
 
+    def send_encoded_message(self, data):
+        self.connid.append_queue(data)
+
     def receive_login_id(self, login, version, connection):
         if connection != self:
             return []
@@ -193,6 +202,26 @@ class CTI(interfaces.Interfaces):
             return device_manager.get_answer_fn(device_id)
         except LookupError:
             return self.answer_cb
+
+    def state(self):
+        return self._state
+
+    def attach_observer(self, callback):
+        self._observers.add(callback)
+
+    def _set_new_state(self, new_state):
+        if self._state == new_state:
+            return
+
+        self._state = new_state
+        self._notify_observers(new_state)
+
+    def _notify_observers(self, new_state):
+        for observer in self._observers:
+            try:
+                observer(self, new_state)
+            except Exception:
+                logger.error('Error while calling observer', exc_info=True)
 
 
 class CTIS(CTI):

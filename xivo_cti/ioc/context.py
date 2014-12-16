@@ -140,6 +140,8 @@ def _getargspec(factory):
         if inspect.ismethod(factory):
             args, vargs, vkw, defaults = inspect.getargspec(factory)
             args = args[1:]
+        elif inspect.isfunction(factory):
+            args, vargs, vkw, defaults = inspect.getargspec(factory)
         else:
             args, defaults = [], None
         return args, defaults
