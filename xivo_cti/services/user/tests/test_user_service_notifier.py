@@ -163,7 +163,8 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     @patch('xivo_cti.services.user.notifier.config', {'uuid': 'xivo-uuid',
                                                       'status_notifier': {'exchange_name': 'xivo-status-updates',
-                                                                          'exchange_type': 'fanout'}})
+                                                                          'exchange_type': 'fanout',
+                                                                          'routing_keys': {'user': 'status.user'}}})
     def test_presence_updated(self):
         user_id = 64
         expected = {"class": "getlist",
@@ -179,7 +180,7 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.send_cti_event.assert_called_once_with(expected)
         expected_msg = UserStatusUpdateEvent('xivo-uuid', user_id, 'available')
         self.bus_status_notifier.publish_event.assert_called_once_with(
-            'xivo-status-updates', '#',
+            'xivo-status-updates', 'status.user',
             expected_msg,
         )
 
