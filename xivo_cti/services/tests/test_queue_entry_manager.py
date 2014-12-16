@@ -26,7 +26,6 @@ from xivo_cti.services.queue_entry_manager import QueueEntry
 from xivo_cti.services import queue_entry_manager
 from xivo_cti.services.queue_entry_notifier import QueueEntryNotifier
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
-from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.xivo_ami import AMIClass
 
@@ -341,23 +340,18 @@ class TestQueueEntryManager(unittest.TestCase):
         mock_queue_dao.exists.return_value = True
         msg = {'encoded': 'result'}
         self.manager._encoder = Mock(QueueEntryEncoder)
-        self.manager._notifier = QueueEntryNotifier()
         queue_dao.queue_name.return_value = QUEUE_NAME
         self.manager._encoder.encode.return_value = msg
         self._subscriber_called = False
 
-        handler = Mock(CTI)
-
         self._join_1()
         self._join_2()
         self._join_3()
-
-        self.manager._notifier.subscribe(handler, 10)
+        self.notifier.publish.reset_mock()
 
         self.manager.publish(QUEUE_NAME)
 
-        # Called twice because we get an update when subscribing
-        self.assertEqual(handler.send_message.call_count, 2)
+        self.notifier.publish.assert_called_once_with(QUEUE_NAME, msg)
 
     @patch('time.time', Mock(return_value=98797987))
     @patch('xivo_dao.queue_dao.id_from_name', return_value=QUEUE_ID)
