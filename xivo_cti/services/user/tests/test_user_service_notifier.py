@@ -163,7 +163,6 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     @patch('xivo_cti.services.user.notifier.config', {'uuid': 'xivo-uuid',
                                                       'status_notifier': {'exchange_name': 'xivo-status-updates',
-                                                                          'exchange_type': 'fanout',
                                                                           'routing_keys': {'user': 'status.user'}}})
     def test_presence_updated(self):
         user_id = 64
