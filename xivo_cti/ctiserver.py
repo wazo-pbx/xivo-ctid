@@ -89,7 +89,6 @@ class CTIServer(object):
 
     def __init__(self):
         self.start_time = time.time()
-        self.mycti = {}
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []
@@ -98,7 +97,6 @@ class CTIServer(object):
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
         signal.signal(signal.SIGTERM, self._sighandler)
-        signal.signal(signal.SIGHUP, self._sighandler_reload)
 
     def _sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
@@ -106,11 +104,6 @@ class CTIServer(object):
         for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
             t._Thread__stop()
         self.askedtoquit = True
-
-    def _sighandler_reload(self, signum, frame):
-        logger.warning('(sighandler_reload) signal %s lineno %s (atq = %s) received : reloads',
-                       signum, frame.f_lineno, self.askedtoquit)
-        self.askedtoquit = False
 
     def _set_logger(self):
         setup_logging(config['logfile'], config['foreground'], config['debug'])

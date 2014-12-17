@@ -17,7 +17,6 @@
 
 import logging
 import random
-import time
 
 from xivo_cti import ALPHANUMS
 from xivo_cti import cti_fax, dao
@@ -33,20 +32,14 @@ LOGINCOMMANDS = [
 ]
 
 REGCOMMANDS = [
-    'logout',
-
     'getipbxlist',
     'keepalive',
 
-    'history',
     'faxsend',
     'filetransfer',
     'chitchat',
 
-    'logfromclient',
     'getqueuesstats',
-    'sheet',
-    'actionfiche',
 
     'ipbxcommand'
 ]
@@ -59,10 +52,8 @@ IPBXCOMMANDS = [
     # hangup-like commands
     'hangup',
 
-    'sipnotify',
     'mailboxcount',
     'meetme',
-    'record',
 ]
 
 
@@ -246,13 +237,6 @@ class Command(object):
                                                'from': '%s/%s' % (self.ripbxid, self.ruserid),
                                                'text': chitchattext}})
         return reply
-
-    def regcommand_logfromclient(self):
-        logger.warning('logfromclient from user %s (level %s) : %s : %s',
-                       self.ruserid,
-                       self._commanddict.get('level'),
-                       self._commanddict.get('classmethod'),
-                       self._commanddict.get('message'))
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:
@@ -450,18 +434,6 @@ class Command(object):
         return [{'amicommand': self._commanddict['function'].lower(),
                  'amiargs': self._commanddict['functionargs']}]
 
-    def ipbxcommand_sipnotify(self):
-        if 'variables' in self._commanddict:
-            variables = self._commanddict.get('variables')
-        channel = self._commanddict.get('channel')
-        if channel == 'user:special:me':
-            uinfo = self.rinnerdata.xod_config['users'].keeplist[self.userid]
-            # TODO: Choose the appropriate line if more than one
-            line = self.rinnerdata.xod_config['phones'].keeplist[uinfo['linelist'][0]]
-            channel = line['identity'].replace('\\', '')
-        reply = {'amicommand': 'sipnotify', 'amiargs': (channel, variables)}
-        return [reply]
-
     def ipbxcommand_mailboxcount(self):
         """
         Send a MailboxCount ami command
@@ -532,41 +504,3 @@ class Command(object):
         rep = {'amicommand': 'hangup',
                'amiargs': [channel.get('id')]}
         return [rep, ]
-
-    def get_agent_info(self, command_dict):
-        if 'agentids' not in command_dict or command_dict['agentids'] == 'agent:special:me':
-            command_dict['agentids'] = self.innerdata.xod_config['users'].keeplist[self.userid]['agentid']
-        if '/' in command_dict['agentids']:
-            _, agent_id = command_dict['agentids'].split('/', 1)
-        else:
-            agent_id = command_dict['agentids']
-        innerdata = self._ctiserver.safe
-        if agent_id in innerdata.xod_config['agents'].keeplist:
-            agent = innerdata.xod_config['agents'].keeplist[agent_id]
-            status = innerdata.xod_status['agents'][agent_id]
-            return agent, status
-
-    def _get_agent_exten(self, command_dict, agent_id):
-        if 'agentphonenumber' in command_dict:
-            return command_dict['agentphonenumber']
-        user_ids = [user['id'] for user in self.innerdata.xod_config['users'].keeplist.itervalues() if user['agentid'] == str(agent_id)]
-        return self.innerdata.xod_config['phones'].get_main_line(user_ids[0])['number'] if user_ids else None
-
-    def ipbxcommand_record(self):
-        subcommand = self._commanddict.pop('subcommand')
-        channel = self._commanddict.pop('channel')
-        # XX take into account ipbxid
-        if subcommand == 'start':
-            datestring = time.strftime('%Y%m%d-%H%M%S', time.localtime())
-            # kind agent => channel = logged-on channel
-            # other kind => according to what is provided
-            kind = 'phone'
-            idv = '7'
-            filename = 'cti-monitor-%s-%s-%s' % (datestring, kind, idv)
-            rep = {'amicommand': 'monitor',
-                   'amiargs': (channel, filename, 'false')}
-            # wait the AMI event ack in order to fill status for channel
-        elif subcommand == 'stop':
-            rep = {'amicommand': 'stopmonitor',
-                   'amiargs': (channel,)}
-        return [rep]
