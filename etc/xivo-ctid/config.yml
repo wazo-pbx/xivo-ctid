@@ -28,5 +28,13 @@ bus:
   exchange_durable: true
   binding_key: call_form_result
 
+# Event bus (AMQP) connection informations for status updates
+status_notifier:
+  exchange_name: xivo-status-updates
+  exchange_type: direct
+  exchange_durable: True
+  routing_keys:
+    user: status.user
+
 # Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk

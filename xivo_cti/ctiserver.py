@@ -378,6 +378,13 @@ class CTIServer(object):
                                       exchange_type=config['bus']['exchange_type'],
                                       durable=config['bus']['exchange_durable'])
 
+        bus_status_notifier = context.get('bus_status_notifier')
+        if not bus_status_notifier.connected:
+            bus_status_notifier.connect()
+        bus_status_notifier.declare_exchange(name=config['status_notifier']['exchange_name'],
+                                             exchange_type=config['status_notifier']['exchange_type'],
+                                             durable=config['status_notifier']['exchange_durable'])
+
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')
         self.safe.user_service_manager = self._user_service_manager

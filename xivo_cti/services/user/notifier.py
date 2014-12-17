@@ -17,10 +17,16 @@
 
 import logging
 
+from xivo_bus.resources.cti.event import UserStatusUpdateEvent
+from xivo_cti import config
+
 logger = logging.getLogger('user_service_notifier')
 
 
 class UserServiceNotifier(object):
+
+    def __init__(self, bus_status_notifier):
+        self._bus_status_notifier = bus_status_notifier
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
@@ -54,6 +60,10 @@ class UserServiceNotifier(object):
 
     def presence_updated(self, user_id, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
+        self._bus_status_notifier.publish_event(
+            config['status_notifier']['exchange_name'],
+            config['status_notifier']['routing_keys']['user'],
+            UserStatusUpdateEvent(config['uuid'], user_id, presence))
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))
