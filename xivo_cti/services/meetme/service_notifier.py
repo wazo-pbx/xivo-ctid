@@ -36,14 +36,11 @@ class MeetmeServiceNotifier(object):
     def subscribe(self, client_connection):
         try:
             user_id = client_connection.user_id()
-            reachable_contexts = user_dao.get_reachable_contexts(user_id)
             channel_pattern = user_line_dao.get_line_identity_by_user_id(user_id)
         except LookupError:
             logger.warning('Meetme subscription failed')
         else:
-            self._subscriptions[client_connection] = {'client_connection': client_connection,
-                                                      'contexts': reachable_contexts,
-                                                      'channel_start': channel_pattern,
+            self._subscriptions[client_connection] = {'channel_start': channel_pattern,
                                                       'membership': []}
             try:
                 self._push_to_client(client_connection)
@@ -63,8 +60,8 @@ class MeetmeServiceNotifier(object):
             chan_start = room_config['channel_start']
             pairs = self._get_room_number_for_chan_start(chan_start)
             membership = encoder.encode_room_number_pairs(pairs)
-            if self._subscriptions[connection]['membership'] != membership:
-                self._subscriptions[connection]['membership'] = deepcopy(membership)
+            if room_config['membership'] != membership:
+                room_config['membership'] = deepcopy(membership)
                 connection.send_message(membership)
 
     def _get_room_number_for_chan_start(self, chan_start):

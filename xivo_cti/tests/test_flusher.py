@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2014 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,20 +18,29 @@
 import unittest
 
 from mock import Mock
-from xivo_cti.ctiserver import CTIServer
-from xivo_cti.cti.cti_group import CTIGroup
+from xivo_cti.flusher import Flusher
 
 
-class TestCTIServer(unittest.TestCase):
+class TestFlusher(unittest.TestCase):
 
     def setUp(self):
-        self.broadcast_cti_group = Mock(CTIGroup)
-        self.cti_server = CTIServer()
-        self.cti_server._broadcast_cti_group = self.broadcast_cti_group
+        self.flusher = Flusher()
+        self.flushable = Mock()
 
-    def test_send_cti_event(self):
-        event = {'event': 'My test event'}
+    def test_add(self):
+        self.flusher.add(self.flushable)
 
-        self.cti_server.send_cti_event(event)
+        self.assertFalse(self.flushable.flush.called)
 
-        self.broadcast_cti_group.send_message.assert_called_once_with(event)
+    def test_flush(self):
+        self.flusher.add(self.flushable)
+        self.flusher.flush()
+
+        self.flushable.flush.assert_called_once_with()
+
+    def test_flush_queue_is_empty_after_flush(self):
+        self.flusher.add(self.flushable)
+        self.flusher.flush()
+        self.flusher.flush()
+
+        self.flushable.flush.assert_called_once_with()

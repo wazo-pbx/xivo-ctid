@@ -17,28 +17,23 @@
 
 from collections import defaultdict
 from xivo_dao import queue_dao
-from xivo_cti.client_connection import ClientConnection
 
 
 class QueueEntryNotifier(object):
 
-    def __init__(self):
-        self._subscriptions = defaultdict(set)
-        self._cache = defaultdict(dict)
+    def __init__(self, cti_group_factory):
+        self._cti_groups = defaultdict(cti_group_factory.new_cti_group)
+        self._cache = {}
 
     def subscribe(self, client_connection, queue_id):
         queue_name = queue_dao.queue_name(queue_id)
-        self._subscriptions[queue_name].add(client_connection)
+        self._cti_groups[queue_name].add(client_connection)
         if queue_name in self._cache:
             client_connection.send_message(self._cache[queue_name])
 
     def publish(self, queue_name, new_state):
         self._cache[queue_name] = new_state
-        to_remove = []
-        for connection in self._subscriptions.get(queue_name, []):
-            try:
-                connection.send_message(new_state)
-            except ClientConnection.CloseException:
-                to_remove.append(connection)
-        for connection in to_remove:
-            self._subscriptions[queue_name].remove(connection)
+
+        cti_group = self._cti_groups.get(queue_name)
+        if cti_group is not None:
+            cti_group.send_message(new_state)

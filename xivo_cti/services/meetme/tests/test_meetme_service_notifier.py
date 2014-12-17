@@ -18,9 +18,7 @@
 
 import unittest
 
-from hamcrest import assert_that
-from hamcrest import equal_to
-from mock import Mock, call, patch
+from mock import Mock, patch
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.meetme import encoder
 from xivo_cti.interfaces.interface_cti import CTI
@@ -37,12 +35,9 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         self.notifier.ipbx_id = self.ipbx_id
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    @patch('xivo_dao.user_dao.get_reachable_contexts')
-    def test_subscribe_update(self, get_reachable_contexts, get_line_identity):
+    def test_subscribe_update(self, get_line_identity):
         user_id = 5
-        user_contexts = ['test_ctx']
         channel_pattern = 'SIP/abcde'
-        get_reachable_contexts.return_value = user_contexts
         get_line_identity.return_value = channel_pattern
 
         client_connection = Mock(CTI)
@@ -67,9 +62,7 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
 
         self.assertTrue(client_connection in self.notifier._subscriptions)
 
-        expected_subscription = {'client_connection': client_connection,
-                                 'contexts': user_contexts,
-                                 'channel_start': channel_pattern,
+        expected_subscription = {'channel_start': channel_pattern,
                                  'membership': []}
 
         self.assertEqual(self.notifier._subscriptions[client_connection], expected_subscription)
@@ -80,13 +73,9 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         client_connection_1 = Mock(CTI)
         client_connection_2 = Mock(CTI)
 
-        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/abcd',
+        self.notifier._subscriptions = {client_connection_1: {'channel_start': 'sip/abcd',
                                                               'membership': []},
-                                        client_connection_2: {'client_connection': client_connection_2,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/bcde',
+                                        client_connection_2: {'channel_start': 'sip/bcde',
                                                               'membership': []}}
         msg = {'800': {'number': '800',
                        'name': 'test_conf',
@@ -112,13 +101,9 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
         client_connection_1 = Mock(CTI)
         client_connection_2 = Mock(CTI)
 
-        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/abcd',
+        self.notifier._subscriptions = {client_connection_1: {'channel_start': 'sip/abcd',
                                                               'membership': []},
-                                        client_connection_2: {'client_connection': client_connection_2,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/bcde',
+                                        client_connection_2: {'channel_start': 'sip/bcde',
                                                               'membership': []}}
         msg = {'800': {'number': '800',
                        'name': 'test_conf',
@@ -175,13 +160,9 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def test_send_membership_info(self):
         client_connection_1 = Mock(CTI)
         client_connection_2 = Mock(CTI)
-        self.notifier._subscriptions = {client_connection_1: {'client_connection': client_connection_1,
-                                                              'contexts': ['test'],
-                                                              'channel_start': 'sip/abcd',
+        self.notifier._subscriptions = {client_connection_1: {'channel_start': 'sip/abcd',
                                                               'membership': []},
-                                        client_connection_2: {'client_connection': client_connection_2,
-                                                              'contexts': ['default'],
-                                                              'channel_start': 'sip/bcde',
+                                        client_connection_2: {'channel_start': 'sip/bcde',
                                                               'membership': []}}
 
         msg = {'800': {'number': '800',

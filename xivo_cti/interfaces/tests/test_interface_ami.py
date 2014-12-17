@@ -77,34 +77,6 @@ class TestInterfaceAMI(unittest.TestCase):
 
         instance.get_callbacks.assert_called_once_with(event)
 
-    def test_handle_event_decodes_badly_encoded_event(self):
-        _, instance, callback, _, _ = self.setup_handle_ami_function()
-
-        fdlist_established = {}
-        self.cti_server.fdlist_established = fdlist_established
-
-        raw_event = 'Event: Foobar\r\nCallerIDName: LASTNAME Firstnam\xe9\r\n\r\n\r\n'
-        event = {'Event': u'Foobar', 'CallerIDName': u'LASTNAME Firstnam\ufffd'}
-
-        self.ami.handle_event(raw_event)
-
-        instance.get_callbacks.assert_called_once_with(event)
-        callback.assert_called_once_with(event)
-
-    def test_handle_event_decodes_2_badly_encoded_event(self):
-        _, instance, callback, _, _ = self.setup_handle_ami_function()
-
-        fdlist_established = {}
-        self.cti_server.fdlist_established = fdlist_established
-
-        raw_event = 'Event: Foobar\r\nCallerIDName: LASTNAME Firstnam\xe9\r\n\r\n\r\nEvent: Foobar\r\nCallerIDName: LASTNAME Firstnam\xe9\r\n'
-        event = {'Event': u'Foobar', 'CallerIDName': u'LASTNAME Firstnam\ufffd'}
-
-        self.ami.handle_event(raw_event)
-
-        instance.get_callbacks.assert_called_with(event)
-        callback.assert_called_with(event)
-
     def test_run_functions_with_one_param(self):
         f1, f2, f3 = functions = [
             Mock(),

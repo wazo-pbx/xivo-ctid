@@ -15,10 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-"""
-WEBI Interface
-"""
-
 import re
 from xivo_cti import config
 from xivo_cti.ioc.context import context
@@ -27,8 +23,6 @@ from xivo_cti.interfaces import interfaces
 import logging
 
 logger = logging.getLogger('interface_webi')
-
-XIVO_CLI_WEBI_HEADER = 'XIVO-CLI-WEBI'
 
 _CMD_WEBI_PATTERN = re.compile('xivo\[(.+),(add|edit|delete|deleteall|enable|disable),(.*)\]')
 _OBJECTS = [
@@ -44,14 +38,6 @@ _OBJECTS = [
     'voicemail',
     'phonebook'
 ]
-STATES = [
-    'add',
-    'edit',
-    'delete',
-    'deleteall',
-    'enable',
-    'disable'
-]
 
 
 class WEBI(interfaces.Interfaces):
@@ -60,12 +46,6 @@ class WEBI(interfaces.Interfaces):
     def __init__(self, ctiserver, queue_member_updater):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._queue_member_updater = queue_member_updater
-
-    def connected(self, connid):
-        interfaces.Interfaces.connected(self, connid)
-
-    def disconnected(self, cause):
-        interfaces.Interfaces.disconnected(self, cause)
 
     def _object_request_cmd(self, sre_obj):
         object_name = sre_obj.group(1)
@@ -84,15 +64,13 @@ class WEBI(interfaces.Interfaces):
                 context.get('meetme_service_manager').initialize()
 
     def manage_connection(self, msg):
-        clireply = []
-        closemenow = True
+        response = [{'closemenow': True}]
 
         live_reload_conf = config['main']['live_reload_conf']
 
         if not live_reload_conf:
             logger.info('WEBI command received (%s) but live reload configuration has been disabled', msg)
-            return [{'message': clireply,
-                     'closemenow': closemenow}]
+            return response
 
         logger.info('WEBI command received: %s', msg)
 
@@ -109,28 +87,4 @@ class WEBI(interfaces.Interfaces):
         else:
             logger.warning('WEBI did an unexpected request %s', msg)
 
-        return [{'message': clireply,
-                 'closemenow': closemenow}]
-
-    def reply(self, replylines):
-        try:
-            for replyline in replylines:
-                self.connid.sendall('%s\n' % replyline)
-        except Exception:
-            logger.exception('WEBI connection [%s] : KO when sending to %s',
-                             replylines, self.requester)
-
-    def makereply_close(self, actionid, status, reply=[]):
-        if self.connid:
-            try:
-                self.connid.sendall('%s\n' % (XIVO_CLI_WEBI_HEADER))
-                for r in reply:
-                    self.connid.sendall('%s\n' % r)
-                self.connid.sendall('%s:%s\n' % (XIVO_CLI_WEBI_HEADER, status))
-            except Exception:
-                logger.warning('failed a WEBI reply %s for %s (disconnected)', status, actionid)
-            if self.connid in self._ctiserver.fdlist_established:
-                del self._ctiserver.fdlist_established[self.connid]
-            self.connid.close()
-        else:
-            logger.warning('failed a WEBI reply %s for %s (connid None)', status, actionid)
+        return response

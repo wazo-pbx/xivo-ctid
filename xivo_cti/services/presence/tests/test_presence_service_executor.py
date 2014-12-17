@@ -18,10 +18,10 @@
 import unittest
 from mock import Mock
 from mock import patch
+from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.agent.manager import AgentServiceManager
-from xivo_cti.innerdata import Safe
 
 
 class TestPresenceServiceExecutor(unittest.TestCase):
@@ -29,10 +29,8 @@ class TestPresenceServiceExecutor(unittest.TestCase):
     def setUp(self):
         self.user_service_manager = Mock(UserServiceManager)
         self.agent_service_manager = Mock(AgentServiceManager)
-        self.innerdata = Mock(Safe)
         self.presence_service_executor = PresenceServiceExecutor(self.user_service_manager,
-                                                                 self.agent_service_manager,
-                                                                 self.innerdata)
+                                                                 self.agent_service_manager)
 
     def _get_userstatus(self):
         return {
@@ -58,15 +56,14 @@ class TestPresenceServiceExecutor(unittest.TestCase):
             }
         }
 
-    @patch('xivo_dao.user_dao.agent_id')
-    @patch('xivo_dao.user_dao.get_profile')
-    def test_execute_actions_with_disconnected(self, mock_get_profile, mock_agent_id):
-        user_id = 64
+    @patch('xivo_cti.dao.user', spec=UserDAO)
+    def test_execute_actions_with_disconnected(self, mock_user_dao):
+        user_id = '64'
         agent_id = 33
-        user_profile = 'client'
+        user_profile = 2
 
-        mock_agent_id.return_value = agent_id
-        mock_get_profile.return_value = user_profile
+        mock_user_dao.get_agent_id.return_value = agent_id
+        mock_user_dao.get_cti_profile_id.return_value = user_profile
 
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
@@ -75,15 +72,14 @@ class TestPresenceServiceExecutor(unittest.TestCase):
 
         self.agent_service_manager.logoff.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.user_dao.agent_id')
-    @patch('xivo_dao.user_dao.get_profile')
-    def test_execute_actions_with_available(self, mock_get_profile, mock_agent_id):
-        user_id = 64
+    @patch('xivo_cti.dao.user', spec=UserDAO)
+    def test_execute_actions_with_available(self, mock_user_dao):
+        user_id = '64'
         agent_id = 33
-        user_profile = 'client'
+        user_profile = 2
 
-        mock_agent_id.return_value = agent_id
-        mock_get_profile.return_value = user_profile
+        mock_user_dao.get_agent_id.return_value = agent_id
+        mock_user_dao.get_cti_profile_id.return_value = user_profile
 
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
@@ -93,12 +89,12 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         self.user_service_manager.set_dnd.assert_called_once_with(user_id, False)
         self.agent_service_manager.unpause_agent_on_all_queues.assert_called_once_with(agent_id)
 
-    @patch('xivo_dao.user_dao.get_profile')
-    def test_execute_actions_unknown(self, mock_get_profile):
-        user_id = 64
-        user_profile = 'client'
+    @patch('xivo_cti.dao.user', spec=UserDAO)
+    def test_execute_actions_unknown(self, mock_user_dao):
+        user_id = '64'
+        user_profile = 2
 
-        mock_get_profile.return_value = user_profile
+        mock_user_dao.get_cti_profile_id.return_value = user_profile
 
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
