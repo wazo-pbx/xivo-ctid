@@ -18,6 +18,8 @@
 from xivo.pubsub import Pubsub
 from xivo_bus.ctl.producer import BusProducer
 from xivo_bus.resources.agent.client import AgentClient
+from xivo_bus.ctl.config import BusConfig
+from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
@@ -138,3 +140,7 @@ def setup():
     context.register('task_scheduler', new_task_scheduler)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
+
+    bus_status_notifier_cfg = dict(config['status_notifier'])
+    bus_status_notifier_cfg.pop('routing_keys')
+    context.register('bus_status_notifier', BusProducer(BusConfig(**bus_status_notifier_cfg)))
