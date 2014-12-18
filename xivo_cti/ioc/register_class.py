@@ -26,7 +26,7 @@ from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
-from xivo_cti.cti.cti_group import CTIGroupFactory
+from xivo_cti.cti.cti_group import CTIGroup, CTIGroupFactory
 from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.flusher import Flusher
@@ -99,7 +99,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
-    context.register('broadcast_cti_group', new_broadcast_cti_group)
+    context.register('broadcast_cti_group', CTIGroup)
     context.register('bus_producer', BusProducer)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
@@ -151,7 +151,3 @@ def setup():
     bus_status_notifier_cfg = dict(config['status_notifier'])
     bus_status_notifier_cfg.pop('routing_keys')
     context.register('bus_status_notifier', BusProducer(BusConfig(**bus_status_notifier_cfg)))
-
-
-def new_broadcast_cti_group(cti_group_factory):
-    return cti_group_factory.new_cti_group()
