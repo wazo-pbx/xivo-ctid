@@ -57,27 +57,23 @@ class ClientConnection(object):
 
     # to be called when the socket is ready for writing
     def process_sending(self):
-        data = self._reset_sendqueue()
-        try:
-            n = self.socket.send(data)
-            if n < len(data):
-                self.sendqueue.append(data[n:])
-        except socket.error, (_errno, string):
-            if _errno == errno.EAGAIN:
-                self.sendqueue.appendleft(data)  # try next time !
-                return
-            elif _errno in [errno.EPIPE, errno.ECONNRESET, errno.ENOTCONN, errno.ETIMEDOUT, errno.EHOSTUNREACH]:
-                self.close()
-                raise self.CloseException(_errno)
-            elif _errno in [errno.EBADF]:
-                raise self.CloseException(_errno)
-            else:
-                raise socket.error(_errno, string)
-
-    def _reset_sendqueue(self):
-        data = ''.join(self.sendqueue)
-        self.sendqueue.clear()
-        return data
+        while self.sendqueue:
+            data = self.sendqueue.popleft()
+            try:
+                n = self.socket.send(data)
+                if n < len(data):  # there is some data left to be sent
+                    self.sendqueue.appendleft(data[n:])
+            except socket.error, (_errno, string):
+                if _errno == errno.EAGAIN:
+                    self.sendqueue.appendleft(data)  # try next time !
+                    return
+                elif _errno in [errno.EPIPE, errno.ECONNRESET, errno.ENOTCONN, errno.ETIMEDOUT, errno.EHOSTUNREACH]:
+                    self.close()
+                    raise self.CloseException(_errno)
+                elif _errno in [errno.EBADF]:
+                    raise self.CloseException(_errno)
+                else:
+                    raise socket.error(_errno, string)
 
     # do we have some data to be sent ?
     def need_sending(self):
