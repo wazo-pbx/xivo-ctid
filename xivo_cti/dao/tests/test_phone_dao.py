@@ -19,12 +19,12 @@ import unittest
 
 from ..phone_dao import PhoneDAO
 from ..phone_dao import NoSuchPhoneException
-from xivo_cti.lists.phones_list import PhonesList
 from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock
 from mock import sentinel
 from xivo_cti.innerdata import Safe
+from xivo_cti.lists.phones_list import PhonesList
 
 
 class TestPhoneDAO(unittest.TestCase):
@@ -86,5 +86,10 @@ class TestPhoneDAO(unittest.TestCase):
         phones.get_phone_id_from_proto_and_name.return_value = None
 
         phone_id = self.dao.get_phone_id_from_hint('SCCP/notfound')
+
+        assert_that(phone_id, equal_to(None))
+
+    def test_get_phone_id_from_hint_with_a_none_phone_hint(self):
+        phone_id = self.dao.get_phone_id_from_hint('meetme:4001')
 
         assert_that(phone_id, equal_to(None))

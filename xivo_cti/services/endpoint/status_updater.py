@@ -30,7 +30,6 @@ class StatusUpdater(object):
     def update_status(self, hint, status):
         phone_id = dao.phone.get_phone_id_from_hint(hint)
         if not phone_id:
-            logger.warning('Failed to update phone status for {}'.format(hint))
             return
 
         changed = dao.phone.update_status(phone_id, status)

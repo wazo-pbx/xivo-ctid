@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo.asterisk.protocol_interface import InvalidChannelError
 from xivo.asterisk.protocol_interface import protocol_interface_from_hint
 
 
@@ -43,5 +44,8 @@ class PhoneDAO(object):
         return current_status != status
 
     def get_phone_id_from_hint(self, hint):
-        proto_name = protocol_interface_from_hint(hint.lower())
-        return self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(*proto_name)
+        try:
+            proto_name = protocol_interface_from_hint(hint.lower())
+            return self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(*proto_name)
+        except InvalidChannelError:
+            return None
