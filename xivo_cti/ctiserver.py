@@ -711,10 +711,10 @@ class CTIServer(object):
         except Exception:
             logger.exception('Socket Reader')
 
-        self._flusher.flush()
-
         try:
             self._task_scheduler.run()
             self._update_safe_list()
         except Exception:
             logger.exception('error')
+
+        self._flusher.flush()
