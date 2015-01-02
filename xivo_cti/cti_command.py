@@ -256,7 +256,6 @@ class Command(object):
         fileid = self._commanddict.get('fileid')
         if fileid:
             self.innerdata.faxes[fileid].setsocketref(socketref)
-            self.innerdata.faxes[fileid].setfileparameters(self._commanddict.get('file_size'))
             if function == 'put_announce':
                 self._ctiserver.set_transfer_socket(self.innerdata.faxes[fileid], 'c2s')
         else:
