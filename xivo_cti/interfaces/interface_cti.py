@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import cjson
 import logging
-import time
 import random
 
 from xivo_cti import cti_command
@@ -32,21 +30,6 @@ from xivo_dao import user_dao
 logger = logging.getLogger('interface_cti')
 
 
-class serialJson(object):
-
-    def decode(self, linein):
-        # Output of the cjson.decode is a Unicode object, even though the
-        # non-ASCII characters have not been decoded.
-        # Without the .decode('utf-8'), some Unicode character (try asian, not european)
-        # will not be interpreted correctly.
-        v = cjson.decode(linein.decode('utf-8').replace('\\/', '/'))
-        return v
-
-    def encode(self, obj):
-        obj['timenow'] = time.time()
-        return cjson.encode(obj)
-
-
 class NotLoggedException(StandardError):
     pass
 
@@ -58,11 +41,11 @@ class CTI(interfaces.Interfaces):
     STATE_NEW = 'new'
     STATE_DISCONNECTED = 'disconnected'
 
-    def __init__(self, ctiserver, cti_msg_decoder):
+    def __init__(self, ctiserver, cti_msg_decoder, cti_msg_encoder):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._cti_msg_decoder = cti_msg_decoder
+        self._cti_msg_encoder = cti_msg_encoder
         self.connection_details = {}
-        self.serial = serialJson()
         self.transferconnection = {}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
@@ -152,11 +135,11 @@ class CTI(interfaces.Interfaces):
 
     def reply(self, msg):
         if not self.transferconnection:
-            self.connid.append_queue(self.serial.encode(msg) + '\n')
+            self.connid.append_queue(self._cti_msg_encoder.encode(msg))
 
     def send_message(self, msg):
         if not self.transferconnection:
-            self.connid.append_queue(self.serial.encode(msg) + '\n')
+            self.connid.append_queue(self._cti_msg_encoder.encode(msg))
 
     def send_encoded_message(self, data):
         if not self.transferconnection:

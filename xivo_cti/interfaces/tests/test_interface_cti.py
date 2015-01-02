@@ -26,14 +26,15 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.interfaces.interface_cti import NotLoggedException
 from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder
+from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder,\
+    CTIMessageEncoder
 
 
 class TestCTI(unittest.TestCase):
 
     def setUp(self):
         self._ctiserver = Mock(CTIServer)
-        self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder())
+        self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
     def test_user_id_not_connected(self):
