@@ -54,13 +54,13 @@ class NotLoggedException(StandardError):
 class CTI(interfaces.Interfaces):
 
     kind = 'CTI'
-    sep = '\n'
 
     STATE_NEW = 'new'
     STATE_DISCONNECTED = 'disconnected'
 
-    def __init__(self, ctiserver):
+    def __init__(self, ctiserver, cti_msg_decoder):
         interfaces.Interfaces.__init__(self, ctiserver)
+        self._cti_msg_decoder = cti_msg_decoder
         self.connection_details = {}
         self.serial = serialJson()
         self.transferconnection = {}
@@ -106,19 +106,24 @@ class CTI(interfaces.Interfaces):
                 logger.warning('Called disconnected with no user_id')
 
     def manage_connection(self, msg):
+        replies = []
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
-                faxobj = self.transferconnection.get('faxobj')
-                self.login_task.cancel()
-                logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
-                faxobj.setbuffer(msg)
-                faxobj.launchasyncs()
+                if '\n' in msg:
+                    data = self.transferconnection['data']
+                    data += msg.split('\n', 1)[0]
+                    faxobj = self.transferconnection.get('faxobj')
+                    self.login_task.cancel()
+                    logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
+                    faxobj.setbuffer(data)
+                    faxobj.launchasyncs()
+                else:
+                    self.transferconnection['data'] += msg
         else:
-            multimsg = msg.split(self.sep)
-            for usefulmsgpart in multimsg:
-                cmd = self.serial.decode(usefulmsgpart)
-                return self._run_functions(cmd)
-        return []
+            commands = self._cti_msg_decoder.decode(msg)
+            for command in commands:
+                replies.extend(self._run_functions(command))
+        return replies
 
     def _is_authenticated(self):
         return self.connection_details.get('authenticated', False)
@@ -142,7 +147,8 @@ class CTI(interfaces.Interfaces):
     def set_as_transfer(self, direction, faxobj):
         logger.info('%s set_as_transfer %s', faxobj.fileid, direction)
         self.transferconnection = {'direction': direction,
-                                   'faxobj': faxobj}
+                                   'faxobj': faxobj,
+                                   'data': ''}
 
     def reply(self, msg):
         if not self.transferconnection:

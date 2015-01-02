@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import collections
 import logging
 import os
 import select
@@ -66,6 +65,7 @@ from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
 from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
     EnableRecording, DisableRecording
+from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder
 from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.services.call_history import cti_interface as call_history_cti_interface
 from xivo_cti.interfaces import interface_cti
@@ -563,10 +563,9 @@ class CTIServer(object):
         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
         [socketobject, address] = sel_i.accept()
 
-        ctiseparator = '\n'
         if kind == 'CTI':
-            socketobject = ClientConnection(socketobject, address, ctiseparator)
-            interface = interface_cti.CTI(self)
+            socketobject = ClientConnection(socketobject, address)
+            interface = interface_cti.CTI(self, CTIMessageDecoder())
         elif kind == 'CTIS':
             certfile = config['main']['certfile']
             keyfile = config['main']['keyfile']
@@ -576,8 +575,8 @@ class CTIServer(object):
                                              certfile=certfile,
                                              keyfile=keyfile,
                                              ssl_version=SSLPROTO)
-                socketobject = ClientConnection(connstream, address, ctiseparator)
-                interface = interface_cti.CTIS(self)
+                socketobject = ClientConnection(connstream, address)
+                interface = interface_cti.CTIS(self, CTIMessageDecoder())
             except ssl.SSLError:
                 logger.exception('%s:%s:%d cert=%s key=%s)',
                                  kind, address[0], address[1],
@@ -609,10 +608,8 @@ class CTIServer(object):
             closemenow = False
             if isinstance(sel_i, ClientConnection):
                 try:
-                    lines = sel_i.readlines()
-                    for line in lines:
-                        if line:
-                            closemenow = self.manage_tcp_connections(sel_i, line, interface_obj)
+                    msg = sel_i.recv(BUFSIZE_LARGE)
+                    closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
                 except ClientConnection.CloseException:
                     interface_obj.disconnected(DisconnectCause.broken_pipe)
                     self._remove_from_fdlist(sel_i)
