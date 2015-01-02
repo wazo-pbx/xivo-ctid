@@ -144,19 +144,17 @@ class CTI(interfaces.Interfaces):
         self.transferconnection = {'direction': direction,
                                    'faxobj': faxobj}
 
-    def append_msg(self, msg):
+    def reply(self, msg):
         if not self.transferconnection:
             self.connid.append_queue(self.serial.encode(msg) + '\n')
 
-    def reply(self, msg):
-        if not self.transferconnection:
-            self.send_message(msg)
-
     def send_message(self, msg):
-        self.connid.append_queue(self.serial.encode(msg) + '\n')
+        if not self.transferconnection:
+            self.connid.append_queue(self.serial.encode(msg) + '\n')
 
     def send_encoded_message(self, data):
-        self.connid.append_queue(data)
+        if not self.transferconnection:
+            self.connid.append_queue(data)
 
     def receive_login_id(self, login, version, connection):
         if connection != self:

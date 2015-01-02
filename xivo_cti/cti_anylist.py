@@ -249,7 +249,7 @@ class AnyList(object):
             connections = self._ctiserver.get_connected({'contexts': item_context})
 
             for connection in connections:
-                connection.append_msg(message)
+                connection.send_message(message)
 
     def _part_context(self):
         return bool(config['main']['context_separation'])

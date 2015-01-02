@@ -134,4 +134,4 @@ class TestContextAwareAnyList(unittest.TestCase):
 
         self.list.get_contexts.assert_called_once_with(message_id)
         self.list._ctiserver.get_connected.assert_called_once_with({'contexts': context})
-        mock_connection.append_msg.assert_called_once_with(message)
+        mock_connection.send_message.assert_called_once_with(message)
