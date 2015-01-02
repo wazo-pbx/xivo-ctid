@@ -145,18 +145,11 @@ class CTI(interfaces.Interfaces):
                                    'faxobj': faxobj}
 
     def append_msg(self, msg):
-        if self.transferconnection:
-            if self.transferconnection.get('direction') == 's2c':
-                self.connid.append_queue(msg)
-        else:
+        if not self.transferconnection:
             self.connid.append_queue(self.serial.encode(msg) + '\n')
 
     def reply(self, msg):
-        if self.transferconnection:
-            if self.transferconnection.get('direction') == 's2c':
-                self.connid.append_queue(msg)
-                logger.info('transfer connection %d sent', len(msg))
-        else:
+        if not self.transferconnection:
             self.send_message(msg)
 
     def send_message(self, msg):

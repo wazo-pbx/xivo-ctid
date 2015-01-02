@@ -481,9 +481,6 @@ class CTIServer(object):
             peername = '%s:%d' % iconn.getpeername()
             if peername == faxobj.socketref:
                 interface_cti.set_as_transfer(direction, faxobj)
-                if direction == 's2c':
-                    sendbuffer = ''
-                    interface_cti.reply(sendbuffer)
                 break
 
     def send_to_cti_client(self, who, what):
