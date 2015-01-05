@@ -23,7 +23,6 @@ from xivo_cti.services.queue_member.indexer import QueueMemberIndexer
 class TestQueueMemberIndexer(unittest.TestCase):
 
     def setUp(self):
-        self.send_cti_event = Mock()
         self.queue_member_cti_indexer = QueueMemberIndexer()
 
     @patch('xivo_cti.dao.queue')

@@ -23,6 +23,8 @@ from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.cti.cti_command import CTICommandInstance
+from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
+    CTIMessageEncoder
 
 
 class TestCTICommandHandler(unittest.TestCase):
@@ -32,7 +34,7 @@ class TestCTICommandHandler(unittest.TestCase):
                        "commandid": 737000717,
                        "invitee": "user:pcmdev/3"}
         self._ctiserver = Mock(CTIServer)
-        self._cti_connection = CTI(self._ctiserver)
+        self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
 
     def test_parse_message(self):
         cti_handler = CTICommandHandler(self._cti_connection)

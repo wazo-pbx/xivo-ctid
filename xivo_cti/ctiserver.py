@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import collections
 import logging
 import os
 import select
@@ -121,6 +120,7 @@ class CTIServer(object):
 
         self.interface_ami = context.get('interface_ami')
 
+        self._cti_msg_codec = context.get('cti_msg_codec')
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
@@ -481,9 +481,6 @@ class CTIServer(object):
             peername = '%s:%d' % iconn.getpeername()
             if peername == faxobj.socketref:
                 interface_cti.set_as_transfer(direction, faxobj)
-                if direction == 's2c':
-                    sendbuffer = ''
-                    interface_cti.reply(sendbuffer)
                 break
 
     def send_to_cti_client(self, who, what):
@@ -566,10 +563,9 @@ class CTIServer(object):
         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
         [socketobject, address] = sel_i.accept()
 
-        ctiseparator = '\n'
         if kind == 'CTI':
-            socketobject = ClientConnection(socketobject, address, ctiseparator)
-            interface = interface_cti.CTI(self)
+            socketobject = ClientConnection(socketobject, address)
+            interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
         elif kind == 'CTIS':
             certfile = config['main']['certfile']
             keyfile = config['main']['keyfile']
@@ -579,8 +575,8 @@ class CTIServer(object):
                                              certfile=certfile,
                                              keyfile=keyfile,
                                              ssl_version=SSLPROTO)
-                socketobject = ClientConnection(connstream, address, ctiseparator)
-                interface = interface_cti.CTIS(self)
+                socketobject = ClientConnection(connstream, address)
+                interface = interface_cti.CTIS(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
             except ssl.SSLError:
                 logger.exception('%s:%s:%d cert=%s key=%s)',
                                  kind, address[0], address[1],
@@ -612,10 +608,8 @@ class CTIServer(object):
             closemenow = False
             if isinstance(sel_i, ClientConnection):
                 try:
-                    lines = sel_i.readlines()
-                    for line in lines:
-                        if line:
-                            closemenow = self.manage_tcp_connections(sel_i, line, interface_obj)
+                    msg = sel_i.recv(BUFSIZE_LARGE)
+                    closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
                 except ClientConnection.CloseException:
                     interface_obj.disconnected(DisconnectCause.broken_pipe)
                     self._remove_from_fdlist(sel_i)
@@ -711,10 +705,10 @@ class CTIServer(object):
         except Exception:
             logger.exception('Socket Reader')
 
-        self._flusher.flush()
-
         try:
             self._task_scheduler.run()
             self._update_safe_list()
         except Exception:
             logger.exception('error')
+
+        self._flusher.flush()

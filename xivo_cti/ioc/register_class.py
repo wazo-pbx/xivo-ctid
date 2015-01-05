@@ -27,7 +27,7 @@ from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.cti.cti_group import CTIGroupFactory
-from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
+from xivo_cti.cti.cti_message_codec import CTIMessageCodec
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.flusher import Flusher
 from xivo_cti.innerdata import Safe
@@ -110,7 +110,7 @@ def setup():
     context.register('call_manager', CallManager)
     context.register('channel_updater', ChannelUpdater)
     context.register('cti_group_factory', CTIGroupFactory)
-    context.register('cti_msg_encoder', CTIMessageEncoder)
+    context.register('cti_msg_codec', CTIMessageCodec)
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)

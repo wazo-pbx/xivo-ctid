@@ -100,9 +100,6 @@ class Fax(object):
             phoneid = linelist[0]
             self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phoneid)
 
-    def setfileparameters(self, size):
-        self.size = size
-
     def setsocketref(self, socketref):
         self.socketref = socketref
 

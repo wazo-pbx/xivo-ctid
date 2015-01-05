@@ -19,7 +19,6 @@ import socket
 import errno
 import ssl
 from collections import deque
-from xivo_cti import BUFSIZE_LARGE
 
 
 class ClientConnection(object):
@@ -27,14 +26,12 @@ class ClientConnection(object):
         def __init__(self, errno= -1):
             self.args = (errno,)
 
-    def __init__(self, socket, address=None, sep='\n'):
+    def __init__(self, socket, address=None):
         self.socket = socket
         self.address = address
         self.socket.setblocking(0)
         self.sendqueue = deque()
-        self.readbuff = ''
         self.isClosed = False
-        self.separator = sep
 
     # useful for select
     def fileno(self):
@@ -80,13 +77,12 @@ class ClientConnection(object):
         return bool(self.sendqueue)
 
     # to be called when the socked is ready for reading
-    def recv(self):
+    def recv(self, bufsize):
         try:
-            s = self.socket.recv(BUFSIZE_LARGE)
+            s = self.socket.recv(bufsize)
             if s:
-                self.readbuff += s
+                return s
             else:
-                # remote host closed the connection
                 self.close()
                 raise self.CloseException()
         except ssl.SSLError as e:
@@ -101,27 +97,4 @@ class ClientConnection(object):
                 raise self.CloseException(_errno)
             elif _errno != errno.EAGAIN:  # really an error
                 raise
-
-    # return a line if available or None
-    # use the separator to split "lines"
-    def readline(self):
-        self.recv()
-        try:
-            k = self.readbuff.index(self.separator)
-            ret = self.readbuff[0:k + 1]
-            self.readbuff = self.readbuff[k + 1:]
-            return ret
-        except:
-            return None
-
-    # return lines if available, None otherwise
-    # use the separator to split "lines"
-    def readlines(self):
-        ret = list()
-        self.recv()
-        try:
-            ret = self.readbuff.split(self.separator)
-            self.readbuff = ret.pop()
-        except:
-            pass
-        return ret
+        return ''
