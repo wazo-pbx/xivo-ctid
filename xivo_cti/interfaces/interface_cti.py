@@ -47,6 +47,10 @@ class CTI(interfaces.Interfaces):
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
 
+    def __str__(self):
+        user_id = self.connection_details.get('userid') or 'Not logged'
+        return '<CTI connection to user {} at {}>'.format(user_id, id(self))
+
     def answer_cb(self):
         pass
 
