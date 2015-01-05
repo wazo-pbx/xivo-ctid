@@ -23,7 +23,7 @@ from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
 from xivo_cti.cti.cti_command import CTICommandInstance
-from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder,\
+from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
     CTIMessageEncoder
 
 

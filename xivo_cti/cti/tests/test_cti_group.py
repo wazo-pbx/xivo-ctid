@@ -20,7 +20,7 @@ import unittest
 
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.cti_group import CTIGroup, CTIGroupFactory
-from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder, CTIMessageCodec
+from xivo_cti.cti.cti_message_codec import CTIMessageEncoder, CTIMessageCodec
 from xivo_cti.flusher import Flusher
 from xivo_cti.interfaces.interface_cti import CTI
 

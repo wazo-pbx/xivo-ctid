@@ -27,7 +27,7 @@ from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
 from xivo_cti.channel_updater import ChannelUpdater
 from xivo_cti.cti.cti_group import CTIGroupFactory
-from xivo_cti.cti.cti_message_encoder import CTIMessageCodec
+from xivo_cti.cti.cti_message_codec import CTIMessageCodec
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.flusher import Flusher
 from xivo_cti.innerdata import Safe

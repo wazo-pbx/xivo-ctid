@@ -26,7 +26,7 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.interfaces.interface_cti import NotLoggedException
 from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder,\
+from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
     CTIMessageEncoder
 
 

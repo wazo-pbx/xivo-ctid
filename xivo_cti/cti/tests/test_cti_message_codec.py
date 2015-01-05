@@ -19,7 +19,7 @@ import json
 import mock
 import unittest
 
-from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder, CTIMessageEncoder, \
+from xivo_cti.cti.cti_message_codec import CTIMessageDecoder, CTIMessageEncoder, \
     CTIMessageCodec
 
 
