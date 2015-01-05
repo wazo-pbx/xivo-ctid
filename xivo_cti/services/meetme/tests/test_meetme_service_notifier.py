@@ -31,7 +31,6 @@ class TestMeetmeServiceNotifier(unittest.TestCase):
     def setUp(self):
         self.ipbx_id = 'xivo'
         self.notifier = MeetmeServiceNotifier()
-        self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
