@@ -65,7 +65,6 @@ from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
 from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
     EnableRecording, DisableRecording
-from xivo_cti.cti.cti_message_codec import CTIMessageDecoder
 from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.services.call_history import cti_interface as call_history_cti_interface
 from xivo_cti.interfaces import interface_cti
