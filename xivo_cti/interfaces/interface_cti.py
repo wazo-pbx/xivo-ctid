@@ -92,16 +92,13 @@ class CTI(interfaces.Interfaces):
         replies = []
         if self.transferconnection:
             if self.transferconnection.get('direction') == 'c2s':
-                if '\n' in msg:
-                    data = self.transferconnection['data']
-                    data += msg.split('\n', 1)[0]
-                    faxobj = self.transferconnection.get('faxobj')
-                    self.login_task.cancel()
-                    logger.info('%s transfer connection : %d received', faxobj.fileid, len(msg))
+                self.transferconnection['data'] += msg
+                if msg.endswith('\n'):
+                    data = self.transferconnection['data'][:-1]
+                    faxobj = self.transferconnection['faxobj']
+                    logger.info('%s transfer connection : %d received', faxobj.fileid, len(data))
                     faxobj.setbuffer(data)
                     faxobj.launchasyncs()
-                else:
-                    self.transferconnection['data'] += msg
         else:
             commands = self._cti_msg_decoder.decode(msg)
             for command in commands:
@@ -129,6 +126,7 @@ class CTI(interfaces.Interfaces):
 
     def set_as_transfer(self, direction, faxobj):
         logger.info('%s set_as_transfer %s', faxobj.fileid, direction)
+        self.login_task.cancel()
         self.transferconnection = {'direction': direction,
                                    'faxobj': faxobj,
                                    'data': ''}
