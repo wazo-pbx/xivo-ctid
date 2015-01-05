@@ -48,7 +48,7 @@ class CTI(interfaces.Interfaces):
         self._register_login_callbacks()
 
     def __str__(self):
-        user_id = self.connection_details.get('userid') or 'Not logged'
+        user_id = self.connection_details.get('userid', 'Not logged')
         return '<CTI connection to user {} at {}>'.format(user_id, id(self))
 
     def answer_cb(self):
