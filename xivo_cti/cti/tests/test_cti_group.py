@@ -35,9 +35,6 @@ class TestCTIGroup(unittest.TestCase):
         self.flusher = mock.Mock(Flusher)
         self.cti_group = CTIGroup(self.cti_msg_encoder, self.flusher)
         self.interface_cti = mock.Mock(CTI)
-        self.interface_cti.STATE_NEW = CTI.STATE_NEW
-        self.interface_cti.STATE_DISCONNECTED = CTI.STATE_DISCONNECTED
-        self.interface_cti.state.return_value = CTI.STATE_NEW
 
     def test_add_and_send_message(self):
         self.cti_group.add(self.interface_cti)
@@ -45,7 +42,6 @@ class TestCTIGroup(unittest.TestCase):
         self.cti_group.flush()
 
         self.cti_msg_encoder.encode.assert_called_once_with(self.msg)
-        self.interface_cti.attach_observer.assert_called_once_with(self.cti_group._on_interface_cti_update)
         self.interface_cti.send_encoded_message.assert_called_once_with(self.encoded_msg)
 
     def test_add_same_interface_twice(self):
@@ -56,27 +52,11 @@ class TestCTIGroup(unittest.TestCase):
 
         self.interface_cti.send_encoded_message.assert_called_once_with(self.encoded_msg)
 
-    def test_add_interface_in_state_disconnected(self):
-        self.interface_cti.state.return_value = CTI.STATE_DISCONNECTED
-
-        self.cti_group.add(self.interface_cti)
-        self.cti_group.send_message(self.msg)
-
-        self.assertFalse(self.interface_cti.send_encoded_message.called)
-
-    def test_on_interface_cti_update(self):
-        self.cti_group.add(self.interface_cti)
-        self.cti_group._on_interface_cti_update(self.interface_cti, self.interface_cti.STATE_DISCONNECTED)
-        self.cti_group.send_message(self.msg)
-
-        self.assertFalse(self.interface_cti.send_encoded_message.called)
-
     def test_remove(self):
         self.cti_group.add(self.interface_cti)
         self.cti_group.remove(self.interface_cti)
         self.cti_group.send_message(self.msg)
 
-        self.interface_cti.detach_observer.assert_called_once_with(self.cti_group._on_interface_cti_update)
         self.assertFalse(self.interface_cti.send_encoded_message.called)
 
     def test_remove_doesnt_raise_on_unknown_interface(self):

@@ -32,19 +32,10 @@ class CTIGroup(object):
         self._buffer = deque()
 
     def add(self, interface_cti):
-        if interface_cti.state() == interface_cti.STATE_DISCONNECTED:
-            return
-
-        interface_cti.attach_observer(self._on_interface_cti_update)
         self._interfaces.add(interface_cti)
 
     def remove(self, interface_cti):
         self._interfaces.discard(interface_cti)
-        interface_cti.detach_observer(self._on_interface_cti_update)
-
-    def _on_interface_cti_update(self, interface_cti, state):
-        if state == interface_cti.STATE_DISCONNECTED:
-            self._interfaces.discard(interface_cti)
 
     def send_message(self, msg):
         if not self._buffer:
@@ -59,7 +50,7 @@ class CTIGroup(object):
             try:
                 interface_cti.send_encoded_message(data)
             except ClientConnection.CloseException:
-                logger.warning('Error while calling send_encoded_message: connection closed', exc_info=True)
+                logger.info('could not send message to %s: connection closed', interface_cti)
                 closed_interfaces.append(interface_cti)
 
         for closed_interface in closed_interfaces:
