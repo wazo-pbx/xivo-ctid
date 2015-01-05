@@ -19,9 +19,19 @@ import cjson
 import time
 
 
+class CTIMessageCodec(object):
+
+    def __init__(self):
+        self._encoder = CTIMessageEncoder()
+
+    def new_decoder(self):
+        return CTIMessageDecoder()
+
+    def new_encoder(self):
+        return self._encoder
+
+
 class CTIMessageDecoder(object):
-    # Contrary to the CTIMessageEncoder, this is stateful, so an instance
-    # of this class can't be shared.
 
     def __init__(self):
         self._buf = ''
@@ -33,6 +43,7 @@ class CTIMessageDecoder(object):
         return [self._decode_line(line) for line in lines[:-1]]
 
     def _decode_line(self, line):
+        # This is the comment from the original serialJson class:
         # Output of the cjson.decode is a Unicode object, even though the
         # non-ASCII characters have not been decoded.
         # Without the .decode('utf-8'), some Unicode character (try asian, not european)

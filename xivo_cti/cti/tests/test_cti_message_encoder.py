@@ -19,7 +19,24 @@ import json
 import mock
 import unittest
 
-from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder, CTIMessageEncoder
+from xivo_cti.cti.cti_message_encoder import CTIMessageDecoder, CTIMessageEncoder, \
+    CTIMessageCodec
+
+
+class TestCTIMessageCodec(unittest.TestCase):
+
+    def setUp(self):
+        self.cti_msg_codec = CTIMessageCodec()
+
+    def test_new_decoder(self):
+        decoder = self.cti_msg_codec.new_decoder()
+
+        self.assertIsInstance(decoder, CTIMessageDecoder)
+
+    def test_new_encoder(self):
+        encoder = self.cti_msg_codec.new_encoder()
+
+        self.assertIsInstance(encoder, CTIMessageEncoder)
 
 
 class TestCTIMessageDecoder(unittest.TestCase):

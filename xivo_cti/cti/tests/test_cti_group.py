@@ -20,7 +20,7 @@ import unittest
 
 from xivo_cti.client_connection import ClientConnection
 from xivo_cti.cti.cti_group import CTIGroup, CTIGroupFactory
-from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder
+from xivo_cti.cti.cti_message_encoder import CTIMessageEncoder, CTIMessageCodec
 from xivo_cti.flusher import Flusher
 from xivo_cti.interfaces.interface_cti import CTI
 
@@ -134,11 +134,12 @@ class TestCTIGroup(unittest.TestCase):
 class TestCTIGroupFactory(unittest.TestCase):
 
     def setUp(self):
-        self.cti_msg_encoder = mock.Mock()
+        self.cti_msg_codec = mock.Mock(CTIMessageCodec)
         self.flusher = mock.Mock()
-        self.cti_group_factory = CTIGroupFactory(self.cti_msg_encoder, self.flusher)
+        self.cti_group_factory = CTIGroupFactory(self.cti_msg_codec, self.flusher)
 
     def test_new_cti_group(self):
         cti_group = self.cti_group_factory.new_cti_group()
 
+        self.cti_msg_codec.new_encoder.assert_called_once_with()
         self.assertIsInstance(cti_group, CTIGroup)

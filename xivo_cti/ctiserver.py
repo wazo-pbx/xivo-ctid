@@ -121,7 +121,7 @@ class CTIServer(object):
 
         self.interface_ami = context.get('interface_ami')
 
-        self._cti_msg_encoder = context.get('cti_msg_encoder')
+        self._cti_msg_codec = context.get('cti_msg_codec')
         self._user_service_manager = context.get('user_service_manager')
         self._funckey_manager = context.get('funckey_manager')
         self._agent_service_manager = context.get('agent_service_manager')
@@ -566,7 +566,7 @@ class CTIServer(object):
 
         if kind == 'CTI':
             socketobject = ClientConnection(socketobject, address)
-            interface = interface_cti.CTI(self, CTIMessageDecoder(), self._cti_msg_encoder)
+            interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
         elif kind == 'CTIS':
             certfile = config['main']['certfile']
             keyfile = config['main']['keyfile']
@@ -577,7 +577,7 @@ class CTIServer(object):
                                              keyfile=keyfile,
                                              ssl_version=SSLPROTO)
                 socketobject = ClientConnection(connstream, address)
-                interface = interface_cti.CTIS(self, CTIMessageDecoder(), self._cti_msg_encoder)
+                interface = interface_cti.CTIS(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
             except ssl.SSLError:
                 logger.exception('%s:%s:%d cert=%s key=%s)',
                                  kind, address[0], address[1],

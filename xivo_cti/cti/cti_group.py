@@ -73,9 +73,9 @@ class CTIGroup(object):
 
 class CTIGroupFactory(object):
 
-    def __init__(self, cti_msg_encoder, flusher):
-        self._cti_msg_encoder = cti_msg_encoder
+    def __init__(self, cti_msg_codec, flusher):
+        self._cti_msg_codec = cti_msg_codec
         self._flusher = flusher
 
     def new_cti_group(self):
-        return CTIGroup(self._cti_msg_encoder, self._flusher)
+        return CTIGroup(self._cti_msg_codec.new_encoder(), self._flusher)
