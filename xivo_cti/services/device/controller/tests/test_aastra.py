@@ -27,7 +27,8 @@ from xivo_dao.data_handler.device.model import Device
 class TestAastraController(unittest.TestCase):
 
     def setUp(self):
-        self._ami_class = Mock(AMIClass)
+        self.ami_class = Mock(AMIClass)
+        self.controller = AastraController(self.ami_class)
 
     @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer(self, mock_get_peer_name):
@@ -36,11 +37,12 @@ class TestAastraController(unittest.TestCase):
 
         mock_get_peer_name.return_value = peer
 
-        aastra_controller = AastraController(self._ami_class)
-        aastra_controller.answer(device)
+        self.controller.answer(device)
 
-        var_content = {'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
-                       'Event': 'aastra-xml',
-                       'Content-type': 'application/xml'}
+        var_content = {
+            'Content': r'<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>',
+            'Event': 'aastra-xml',
+            'Content-type': 'application/xml',
+        }
 
-        self._ami_class.sipnotify.assert_called_once_with(peer, var_content)
+        self.ami_class.sipnotify.assert_called_once_with(peer, var_content)

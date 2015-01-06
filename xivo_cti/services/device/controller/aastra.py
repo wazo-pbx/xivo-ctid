@@ -24,7 +24,7 @@ class AastraController(base.BaseController):
     def answer(self, device):
         peer = line_dao.get_peer_name(device.id)
         xml_content = {
-            'Content': '<AastraIPPhoneExecute><ExecuteItem URI=\\"Key:Line1\\"/></AastraIPPhoneExecute>',
+            'Content': r'<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>',
             'Event': 'aastra-xml',
             'Content-type': 'application/xml',
         }

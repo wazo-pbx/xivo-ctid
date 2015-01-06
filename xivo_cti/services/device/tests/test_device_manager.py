@@ -76,7 +76,6 @@ class TestDeviceManager(unittest.TestCase):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Aastra'
-        device.model = '6755i'
         mock_device_service_get.return_value = device
         self.manager._aastra_controller = self._aastra_controller
 
@@ -89,7 +88,6 @@ class TestDeviceManager(unittest.TestCase):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Snom'
-        device.model = '720'
         mock_device_service_get.return_value = device
         self.manager._snom_controller = self._snom_controller
 
