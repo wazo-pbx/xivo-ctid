@@ -18,6 +18,7 @@
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
+from xivo_cti.services.device.controller.yealink import YealinkController
 from xivo_dao.data_handler.device import services as device_services
 from xivo_dao.data_handler.exception import NotFoundError
 
@@ -28,6 +29,7 @@ class DeviceManager(object):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
         self._snom_controller = SnomController(ami_class)
+        self._yealink_controller = YealinkController(ami_class)
 
     def get_answer_fn(self, device_id):
         try:
@@ -40,5 +42,7 @@ class DeviceManager(object):
                 return lambda: self._aastra_controller.answer(device)
             elif device.vendor == 'Snom':
                 return lambda: self._snom_controller.answer(device)
+            elif device.vendor == 'Yealink':
+                return lambda: self._yealink_controller.answer(device)
 
         return lambda: self._base_controller.answer(device)
