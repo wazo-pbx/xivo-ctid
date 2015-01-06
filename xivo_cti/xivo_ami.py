@@ -159,17 +159,8 @@ class AMIClass(object):
                                   [('Username', self.loginname),
                                    ('Secret', self.password)])
 
-    def hangup(self, channel, channel_peer=None):
-        ret = 0
-        self._exec_command('Hangup',
-                           [('Channel', channel)])
-        ret += 1
-
-        if channel_peer:
-            self._exec_command('Hangup',
-                               [('Channel', channel_peer)])
-            ret += 2
-        return ret
+    def hangup(self, channel):
+        return self._exec_command('Hangup', [('Channel', channel)])
 
     def setvar(self, var, val, chan=None):
         if chan is None:
