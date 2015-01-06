@@ -45,7 +45,7 @@ class PhoneDAO(object):
 
     def get_phone_id_from_hint(self, hint):
         try:
-            proto_name = protocol_interface_from_hint(hint.lower())
-            return self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(*proto_name)
+            protocol, interface = protocol_interface_from_hint(hint.lower())
+            return self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, interface)
         except InvalidChannelError:
             return None
