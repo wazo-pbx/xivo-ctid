@@ -37,12 +37,17 @@ class DeviceManager(object):
         except NotFoundError:
             device = None
 
+        controller = self._get_controller(device)
+
+        return lambda: controller.answer(device)
+
+    def _get_controller(self, device):
         if device and device.is_switchboard():
             if device.vendor == 'Aastra':
-                return lambda: self._aastra_controller.answer(device)
+                return self._aastra_controller
             elif device.vendor == 'Snom':
-                return lambda: self._snom_controller.answer(device)
+                return self._snom_controller
             elif device.vendor == 'Yealink':
-                return lambda: self._yealink_controller.answer(device)
+                return self._yealink_controller
 
-        return lambda: self._base_controller.answer(device)
+        return self._base_controller
