@@ -667,7 +667,7 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
-        self.manager.ami.hangup.assert_called_once_with(ringing_channel)
+        self.manager.ami.hangup_with_cause_answered_elsewhere.assert_called_once_with(ringing_channel)
         self.manager.ami.switchboard_retrieve.assert_called_once_with(
             line_identity, channel_to_intercept, cid_name, cid_number, line_cid_name, line_cid_number)
         self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, line_identity)

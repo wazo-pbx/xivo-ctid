@@ -258,7 +258,7 @@ class CurrentCallManager(object):
         except LookupError:
             raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
-            map(self.ami.hangup, ringing_channels)
+            map(self.ami.hangup_with_cause_answered_elsewhere, ringing_channels)
             self.ami.switchboard_retrieve(line_identity, channel_to_retrieve, cid_name, cid_num, cid_name_src, cid_num_src)
             self._call_manager.answer_next_ringing_call(client_connection, line_identity)
 
