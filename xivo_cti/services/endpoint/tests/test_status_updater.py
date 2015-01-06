@@ -66,16 +66,3 @@ class TestStatusUpdater(unittest.TestCase):
         dao.phone.update_status.assert_called_once_with(phone_id, status)
         assert_that(self.notifier.notify.call_count, equal_to(0),
                     'The notifier should not be called')
-
-    @patch('xivo_cti.services.endpoint.status_updater.dao')
-    @patch('xivo_cti.services.endpoint.status_updater.logger')
-    def test_update_logs_a_warning_when_there_no_phone(self, logger, dao):
-        hint = 'SIP/g19gtv'
-        status = 1
-        dao.phone.get_phone_id_from_hint.return_value = None
-        dao.phone.update_status.side_effect = NoSuchPhoneException
-
-        self.updater.update_status(hint, status)
-
-        expected_msg = 'Failed to update phone status for {}'.format(hint)
-        logger.warning.assert_called_once_with(expected_msg)
