@@ -23,7 +23,6 @@ from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock
 from mock import patch
-from xivo_cti.dao.phone_dao import NoSuchPhoneException
 
 
 class TestStatusUpdater(unittest.TestCase):
