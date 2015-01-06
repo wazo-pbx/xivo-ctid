@@ -22,6 +22,7 @@ import time
 
 from xivo_cti import cti_sheets
 from xivo_cti import config
+from xivo_cti import dao
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable
 from xivo_cti.channel import Channel
@@ -35,7 +36,6 @@ from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
-from xivo_cti import dao
 from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
@@ -451,22 +451,6 @@ class Safe(object):
                 chanlist.remove(channel)
                 if list_name == 'phones':
                     self.appendcti('phones', 'updatestatus', termination_id)
-
-    def updatehint(self, hint, status):
-        termination = self.ast_channel_to_termination(hint)
-        p = self.zphones(termination.get('protocol'), termination.get('name'))
-        if p:
-            oldstatus = self.xod_status['phones'][p]['hintstatus']
-            self.xod_status['phones'][p]['hintstatus'] = status
-            if status != oldstatus:
-                self._ctiserver.send_cti_event({'class': 'getlist',
-                                                'listname': 'phones',
-                                                'function': 'updatestatus',
-                                                'tipbxid': self.ipbxid,
-                                                'tid': p,
-                                                'status': {'hintstatus': status}})
-        else:
-            logger.warning('Failed to update phone status for %s', hint)
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []

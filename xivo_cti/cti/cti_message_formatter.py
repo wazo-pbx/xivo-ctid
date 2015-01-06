@@ -89,3 +89,14 @@ class CTIMessageFormatter(object):
             'column_types': search_result['column_types'],
             'results': search_result['results'],
         }
+
+    @staticmethod
+    def phone_hintstatus_update(phone_id, status):
+        return {
+            'class': 'getlist',
+            'listname': 'phones',
+            'function': 'updatestatus',
+            'tipbxid': 'xivo',
+            'tid': phone_id,
+            'status': {'hintstatus': status},
+        }

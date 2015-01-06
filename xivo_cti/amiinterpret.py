@@ -38,12 +38,15 @@ class AMI_1_8(object):
                   'Group',
                   'Did')
 
-    def __init__(self, cti_server, innerdata, interface_ami, call_form_dispatch_filter, call_form_variable_aggregator):
+    def __init__(self, cti_server, innerdata, interface_ami,
+                 call_form_dispatch_filter, call_form_variable_aggregator,
+                 endpoint_status_updater):
         self._ctiserver = cti_server
         self.innerdata = innerdata
         self.interface_ami = interface_ami
         self._call_form_dispatch_filter = call_form_dispatch_filter
         self._aggregator = call_form_variable_aggregator
+        self._endpoint_status_updater = endpoint_status_updater
 
     def ami_newchannel(self, event):
         channel = event['Channel']
@@ -97,7 +100,7 @@ class AMI_1_8(object):
             self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):
-        self.innerdata.updatehint(event['Hint'], event['Status'])
+        self._endpoint_status_updater.update_status(event['Hint'], event['Status'])
 
     def ami_bridge(self, event):
         if event['Bridgestate'] != 'Link':
@@ -365,7 +368,7 @@ class AMI_1_8(object):
     def amiresponse_extensionstatus(self, event):
         hint = event.get('Hint')
         if hint:
-            self.innerdata.updatehint(hint, event['Status'])
+            self._endpoint_status_updater.update_status(hint, event['Status'])
 
     def _get_set_fn(self, uniqueid):
         def _set(var_name, var_value):

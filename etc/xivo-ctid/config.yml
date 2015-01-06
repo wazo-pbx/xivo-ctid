@@ -35,6 +35,7 @@ status_notifier:
   exchange_durable: True
   routing_keys:
     user: status.user
+    endpoint: status.endpoint
 
 # Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk
