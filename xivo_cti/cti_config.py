@@ -40,25 +40,21 @@ _default_config = {
     'config_file': '/etc/xivo-ctid/config.yml',
     'extra_config_files': '/etc/xivo-ctid/conf.d/',
     'bus': {
-        'exchange_name': 'xivo-cti',
-        'exchange_type': 'direct',
+        'exchange_name': 'xivo',
+        'exchange_type': 'topic',
         'exchange_durable': True,
-        'binding_key': 'call_form_result',
+        'routing_keys': {
+            'call_form_result': 'call_form_result',
+            'user_status': 'status.user',
+            'endpoint_status': 'status.endpoint',
+            'agent_status': 'status.agent',
+        }
     },
     'dird': {
         'host': 'localhost',
         'port': 9489,
         'version': 0.1,
     },
-    'status_notifier': {
-        'exchange_name': 'xivo-status-updates',
-        'exchange_type': 'direct',
-        'exchange_durable': True,
-        'routing_keys': {
-            'user': 'status.user',
-            'endpoint': 'status.endpoint',
-        }
-    }
 }
 _cli_config = {}
 _db_config = {}
