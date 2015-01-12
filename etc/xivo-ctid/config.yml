@@ -21,21 +21,20 @@ dird:
   port: 9489
   version: 0.1
 
-# Event bus (AMQP) connection informations.
+# Event bus (AMQP) connection informations
 bus:
-  exchange_name: xivo-cti
-  exchange_type: direct
-  exchange_durable: true
-  binding_key: call_form_result
-
-# Event bus (AMQP) connection informations for status updates
-status_notifier:
-  exchange_name: xivo-status-updates
-  exchange_type: direct
+  username: guest
+  password: guest
+  host: localhost
+  port: 5672
+  exchange_name: xivo
+  exchange_type: topic
   exchange_durable: True
   routing_keys:
-    user: status.user
-    endpoint: status.endpoint
+    user_status: status.user
+    endpoint_status: status.endpoint
+    agent_status: status.agent
+    call_form_result: call_form_result
 
 # Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk

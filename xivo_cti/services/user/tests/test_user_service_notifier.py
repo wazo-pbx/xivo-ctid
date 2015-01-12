@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.bus_status_notifier = Mock()
-        self.notifier = UserServiceNotifier(self.bus_status_notifier)
+        self.bus_producer = Mock()
+        self.notifier = UserServiceNotifier(self.bus_producer)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
@@ -162,8 +162,8 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
     @patch('xivo_cti.services.user.notifier.config', {'uuid': 'xivo-uuid',
-                                                      'status_notifier': {'exchange_name': 'xivo-status-updates',
-                                                                          'routing_keys': {'user': 'status.user'}}})
+                                                      'bus': {'exchange_name': 'xivo-status-updates',
+                                                              'routing_keys': {'user_status': 'status.user'}}})
     def test_presence_updated(self):
         user_id = 64
         expected = {"class": "getlist",
@@ -178,7 +178,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
         expected_msg = UserStatusUpdateEvent('xivo-uuid', user_id, 'available')
-        self.bus_status_notifier.publish_event.assert_called_once_with(
+        self.bus_producer.publish_event.assert_called_once_with(
             'xivo-status-updates', 'status.user',
             expected_msg,
         )

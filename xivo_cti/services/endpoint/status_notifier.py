@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,16 +22,16 @@ from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 class StatusNotifier(object):
 
-    def __init__(self, cti_server, bus_status_notifier):
+    def __init__(self, cti_server, bus_producer):
         self._ctiserver = cti_server
-        self._bus_status_notifier = bus_status_notifier
+        self._bus_producer = bus_producer
 
     def notify(self, phone_id, status):
         event = CTIMessageFormatter.phone_hintstatus_update(phone_id, status)
         self._ctiserver.send_cti_event(event)
         bus_event = EndpointStatusUpdateEvent(config['uuid'], phone_id, status)
-        self._bus_status_notifier.publish_event(
-            config['status_notifier']['exchange_name'],
-            config['status_notifier']['routing_keys']['endpoint'],
+        self._bus_producer.publish_event(
+            config['bus']['exchange_name'],
+            config['bus']['routing_keys']['endpoint_status'],
             bus_event,
         )

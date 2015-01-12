@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
-    def __init__(self, bus_status_notifier):
-        self._bus_status_notifier = bus_status_notifier
+    def __init__(self, bus_producer):
+        self._bus_producer = bus_producer
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
@@ -60,9 +60,9 @@ class UserServiceNotifier(object):
 
     def presence_updated(self, user_id, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
-        self._bus_status_notifier.publish_event(
-            config['status_notifier']['exchange_name'],
-            config['status_notifier']['routing_keys']['user'],
+        self._bus_producer.publish_event(
+            config['bus']['exchange_name'],
+            config['bus']['routing_keys']['user_status'],
             UserStatusUpdateEvent(config['uuid'], user_id, presence))
 
     def recording_enabled(self, user_id):

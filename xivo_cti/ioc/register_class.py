@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,13 +87,17 @@ from xivo_cti.xivo_ami import AMIClass
 
 
 def setup():
+    bus_cfg_dict = dict(config['bus'])
+    bus_cfg_dict.pop('routing_keys')
+    bus_cfg = BusConfig(**bus_cfg_dict)
+
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
     context.register('ami_class', AMIClass)
     context.register('agent_availability_computer', AgentAvailabilityComputer)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
-    context.register('agent_client', AgentClient)
+    context.register('agent_client', AgentClient(config=bus_cfg))
     context.register('agent_executor', AgentExecutor)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
@@ -102,7 +106,7 @@ def setup():
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
-    context.register('bus_producer', BusProducer)
+    context.register('bus_producer', BusProducer(bus_cfg))
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)
@@ -151,10 +155,6 @@ def setup():
     context.register('task_scheduler', new_task_scheduler)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
-
-    bus_status_notifier_cfg = dict(config['status_notifier'])
-    bus_status_notifier_cfg.pop('routing_keys')
-    context.register('bus_status_notifier', BusProducer(BusConfig(**bus_status_notifier_cfg)))
 
 
 def new_broadcast_cti_group(cti_group_factory):
