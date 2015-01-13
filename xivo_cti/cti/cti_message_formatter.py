@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -99,6 +99,18 @@ class CTIMessageFormatter(object):
             'tipbxid': 'xivo',
             'tid': phone_id,
             'status': {'hintstatus': status},
+        }
+
+    @staticmethod
+    def agent_status_update(key, status):
+        xivo_uuid, agent_id = key
+        return {
+            'class': 'agent_status_update',
+            'data': {
+                'xivo_uuid': xivo_uuid,
+                'agent_id': agent_id,
+                'status': status,
+            }
         }
 
     @staticmethod

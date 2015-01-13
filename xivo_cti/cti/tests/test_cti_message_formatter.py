@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -178,6 +178,21 @@ class TestCTIMessageFormatter(unittest.TestCase):
                                       'tipbxid': 'xivo',
                                       'tid': phone_id,
                                       'status': {'hintstatus': hint}}))
+
+    def test_agent_status_update(self):
+        key = ('xivo-uuid', 42)
+        status = 'logged_out'
+
+        result = CTIMessageFormatter.agent_status_update(key, status)
+
+        assert_that(result, equal_to({
+            'class': 'agent_status_update',
+            'data': {
+                'xivo_uuid': 'xivo-uuid',
+                'agent_id': 42,
+                'status': 'logged_out',
+            }
+        }))
 
     def test_endpoint_status_update(self):
         key = ('xivo-uuid', 42)
