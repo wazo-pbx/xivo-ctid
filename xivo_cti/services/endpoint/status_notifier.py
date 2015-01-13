@@ -30,8 +30,8 @@ class StatusNotifier(object):
         event = CTIMessageFormatter.phone_hintstatus_update(phone_id, status)
         self._ctiserver.send_cti_event(event)
         bus_event = EndpointStatusUpdateEvent(config['uuid'], phone_id, status)
-        self._bus_status_notifier.publish_event(
-            config['status_notifier']['exchange_name'],
-            config['status_notifier']['routing_keys']['endpoint'],
+        self._bus_producer.publish_event(
+            config['bus']['exchange_name'],
+            config['bus']['routing_keys']['endpoint_status'],
             bus_event,
         )

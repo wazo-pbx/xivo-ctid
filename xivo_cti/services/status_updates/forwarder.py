@@ -37,7 +37,7 @@ class ThreadedStatusListener(object):
 class StatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
-        notifier_config = dict(config['status_notifier'])
+        notifier_config = dict(config['bus'])
         routing_keys = notifier_config.pop('routing_keys')
         queue_name = 'xivo-status-updates'
         bus_config = BusConfig(
@@ -53,13 +53,13 @@ class StatusListener(object):
             self.queue_endpoint_status_update,
             queue_name,
             notifier_config['exchange_name'],
-            routing_keys['endpoint'],
+            routing_keys['endpoint_status'],
         )
         self._consumer.add_binding(
             self.queue_user_status_update,
             queue_name,
             notifier_config['exchange_name'],
-            routing_keys['user'],
+            routing_keys['user_status'],
         )
 
         self._consumer.run()
