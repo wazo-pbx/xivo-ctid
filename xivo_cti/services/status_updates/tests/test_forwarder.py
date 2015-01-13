@@ -168,17 +168,17 @@ class TestStatusListener(unittest.TestCase):
 
     def setUp(self):
         self.config = {
-            'status_notifier': {
+            'bus': {
                 'host': 'example.com',
                 'port': 5496,
                 'username': 'u1',
                 'password': 'secret',
-                'exchange_name': 'xivo-status-updates',
-                'exchange_type': 'direct',
+                'exchange_name': 'xivo',
+                'exchange_type': 'topic',
                 'exchange_durable': True,
                 'routing_keys': {
-                    'user': 'status.user',
-                    'endpoint': 'status.endpoint',
+                    'user_status': 'status.user',
+                    'endpoint_status': 'status.endpoint',
                 },
             },
         }
@@ -194,8 +194,8 @@ class TestStatusListener(unittest.TestCase):
             port=5496,
             username='u1',
             password='secret',
-            exchange_name='xivo-status-updates',
-            exchange_type='direct',
+            exchange_name='xivo',
+            exchange_type='topic',
             queue_name='xivo-status-updates',
         )
         BusConsumer.assert_called_once_with(expected_config)
@@ -208,7 +208,7 @@ class TestStatusListener(unittest.TestCase):
         expected_call = call(
             self.listener.queue_endpoint_status_update,
             'xivo-status-updates',
-            'xivo-status-updates',
+            'xivo',
             'status.endpoint',
         )
         assert_that(expected_call in consumer.add_binding.mock_calls)
@@ -221,7 +221,7 @@ class TestStatusListener(unittest.TestCase):
         expected_call = call(
             self.listener.queue_user_status_update,
             'xivo-status-updates',
-            'xivo-status-updates',
+            'xivo',
             'status.user',
         )
         assert_that(expected_call in consumer.add_binding.mock_calls)
