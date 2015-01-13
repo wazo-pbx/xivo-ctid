@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,15 +20,15 @@ import unittest
 from mock import patch
 from mock import Mock
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.services.device.controller.aastra import AastraController
+from xivo_cti.services.device.controller.yealink import YealinkController
 from xivo_dao.data_handler.device.model import Device
 
 
-class TestAastraController(unittest.TestCase):
+class TestYealinkController(unittest.TestCase):
 
     def setUp(self):
         self.ami_class = Mock(AMIClass)
-        self.controller = AastraController(self.ami_class)
+        self.controller = YealinkController(self.ami_class)
 
     @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer(self, mock_get_peer_name):
@@ -40,8 +40,8 @@ class TestAastraController(unittest.TestCase):
         self.controller.answer(device)
 
         var_content = {
-            'Content': r'<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>',
-            'Event': 'aastra-xml',
+            'Content': r'<?xml version=\"1.0\" encoding=\"UTF-8\"?><YealinkIPPhoneExecute Beep=\"no\"><ExecuteItem URI=\"Key:LINE1\"/></YealinkIPPhoneExecute>',
+            'Event': 'Yealink-xml',
             'Content-type': 'application/xml',
         }
 

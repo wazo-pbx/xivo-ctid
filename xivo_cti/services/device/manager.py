@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
+from xivo_cti.services.device.controller.yealink import YealinkController
 from xivo_dao.data_handler.device import services as device_services
 from xivo_dao.data_handler.exception import NotFoundError
 
@@ -28,6 +29,7 @@ class DeviceManager(object):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
         self._snom_controller = SnomController(ami_class)
+        self._yealink_controller = YealinkController(ami_class)
 
     def get_answer_fn(self, device_id):
         try:
@@ -35,10 +37,17 @@ class DeviceManager(object):
         except NotFoundError:
             device = None
 
+        controller = self._get_controller(device)
+
+        return lambda: controller.answer(device)
+
+    def _get_controller(self, device):
         if device and device.is_switchboard():
             if device.vendor == 'Aastra':
-                return lambda: self._aastra_controller.answer(device)
+                return self._aastra_controller
             elif device.vendor == 'Snom':
-                return lambda: self._snom_controller.answer(device)
+                return self._snom_controller
+            elif device.vendor == 'Yealink':
+                return self._yealink_controller
 
-        return lambda: self._base_controller.answer(device)
+        return self._base_controller

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
+from xivo_cti.services.device.controller.yealink import YealinkController
 from xivo_dao.data_handler.exception import NotFoundError
 from xivo_cti.xivo_ami import AMIClass
 
@@ -35,6 +36,7 @@ class TestDeviceManager(unittest.TestCase):
         self._base_controller = Mock(BaseController)
         self._aastra_controller = Mock(AastraController)
         self._snom_controller = Mock(SnomController)
+        self._yealink_controller = Mock(YealinkController)
         self.manager = DeviceManager(self.ami_class)
 
     @patch('xivo_dao.data_handler.device.services.get',
@@ -74,7 +76,6 @@ class TestDeviceManager(unittest.TestCase):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Aastra'
-        device.model = '6755i'
         mock_device_service_get.return_value = device
         self.manager._aastra_controller = self._aastra_controller
 
@@ -87,10 +88,21 @@ class TestDeviceManager(unittest.TestCase):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Snom'
-        device.model = '720'
         mock_device_service_get.return_value = device
         self.manager._snom_controller = self._snom_controller
 
         self.manager.get_answer_fn(device.id)()
 
         self._snom_controller.answer.assert_called_once_with(device)
+
+    @patch('xivo_dao.data_handler.device.services.get')
+    def test_get_answer_fn_yealink_switchboard(self, mock_device_service_get):
+        device = Mock()
+        device.is_switchboard.return_value = True
+        device.vendor = 'Yealink'
+        mock_device_service_get.return_value = device
+        self.manager._yealink_controller = self._yealink_controller
+
+        self.manager.get_answer_fn(device.id)()
+
+        self._yealink_controller.answer.assert_called_once_with(device)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -159,17 +159,20 @@ class AMIClass(object):
                                   [('Username', self.loginname),
                                    ('Secret', self.password)])
 
-    def hangup(self, channel, channel_peer=None):
-        ret = 0
-        self._exec_command('Hangup',
-                           [('Channel', channel)])
-        ret += 1
+    def hangup(self, channel):
+        return self._hangup(channel, None)
 
-        if channel_peer:
-            self._exec_command('Hangup',
-                               [('Channel', channel_peer)])
-            ret += 2
-        return ret
+    def hangup_with_cause_answered_elsewhere(self, channel):
+        # On most SIP phones, hanging up a ringing call with the cause
+        # "answered elsewhere" prevents the phone from displaying the call
+        # as a missed call.
+        return self._hangup(channel, '26')
+
+    def _hangup(self, channel, cause):
+        command_details = [('Channel', channel)]
+        if cause:
+            command_details.append(('Cause', cause))
+        return self._exec_command('Hangup', command_details)
 
     def setvar(self, var, val, chan=None):
         if chan is None:

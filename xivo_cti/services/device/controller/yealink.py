@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,13 +19,15 @@ from xivo_dao import line_dao
 from xivo_cti.services.device.controller import base
 
 
-class AastraController(base.BaseController):
+class YealinkController(base.BaseController):
 
     def answer(self, device):
         peer = line_dao.get_peer_name(device.id)
         xml_content = {
-            'Content': r'<AastraIPPhoneExecute><ExecuteItem URI=\"Key:Line1\"/></AastraIPPhoneExecute>',
-            'Event': 'aastra-xml',
+            'Content':
+                r'<?xml version=\"1.0\" encoding=\"UTF-8\"?>'
+                r'<YealinkIPPhoneExecute Beep=\"no\"><ExecuteItem URI=\"Key:LINE1\"/></YealinkIPPhoneExecute>',
+            'Event': 'Yealink-xml',
             'Content-type': 'application/xml',
         }
         self._ami.sipnotify(peer, xml_content)

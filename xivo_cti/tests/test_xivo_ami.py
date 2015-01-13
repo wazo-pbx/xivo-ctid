@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -77,7 +77,16 @@ class TestXivoAMI(unittest.TestCase):
 
     def test_hangup(self):
         channel = sentinel.channel_to_hangup
+
         self.ami_class.hangup(channel)
 
         self.ami_class._exec_command.assert_called_once_with(
             'Hangup', [('Channel', channel)])
+
+    def hangup_with_cause_answered_elsewhere(self):
+        channel = sentinel.channel_to_hangup
+
+        self.ami_class.hangup_with_cause_answered_elsewhere(channel)
+
+        self.ami_class._exec_command.assert_called_once_with(
+            'Hangup', [('Channel', channel), ('Cause', '26')])
