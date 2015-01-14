@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,9 +39,7 @@ class StatusListener(object):
     def __init__(self, config, task_queue, forwarder):
         notifier_config = dict(config['bus'])
         routing_keys = notifier_config.pop('routing_keys')
-        queue_name = 'xivo-status-updates'
         bus_config = BusConfig(
-            queue_name=queue_name,
             **notifier_config
         )
         self._forwarder = forwarder
@@ -50,14 +48,20 @@ class StatusListener(object):
         self._consumer.connect()
 
         self._consumer.add_binding(
+            self.queue_agent_status_update,
+            'agent-status-updates',
+            notifier_config['exchange_name'],
+            routing_keys['agent_status'],
+        )
+        self._consumer.add_binding(
             self.queue_endpoint_status_update,
-            queue_name,
+            'endpoint-status-updates',
             notifier_config['exchange_name'],
             routing_keys['endpoint_status'],
         )
         self._consumer.add_binding(
             self.queue_user_status_update,
-            queue_name,
+            'user-status-updates',
             notifier_config['exchange_name'],
             routing_keys['user_status'],
         )
@@ -66,6 +70,9 @@ class StatusListener(object):
 
     def __delete__(self):
         self._consumer.stop()
+
+    def queue_agent_status_update(self, event):
+        self._task_queue.put(self._forwarder.on_agent_status_update, event)
 
     def queue_endpoint_status_update(self, event):
         self._task_queue.put(self._forwarder.on_endpoint_status_update, event)
@@ -77,6 +84,7 @@ class StatusListener(object):
 class StatusForwarder(object):
 
     _id_field_map = {
+        'agent_status_update': 'agent_id',
         'endpoint_status_update': 'endpoint_id',
         'user_status_update': 'user_id',
     }
@@ -84,15 +92,24 @@ class StatusForwarder(object):
     def __init__(self,
                  cti_group_factory,
                  task_queue,
-                 endpoint_status=None,
-                 user_status_notifier=None):
+                 _agent_status_notifier=None,
+                 _endpoint_status_notifier=None,
+                 _user_status_notifier=None):
         logger.debug('StatusForwarder instantiation')
         self._task_queue = task_queue
-        self.endpoint_status_notifier = endpoint_status or _new_endpoint_notifier(cti_group_factory)
-        self._user_status_notifier = user_status_notifier or _new_user_notifier(cti_group_factory)
+        self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
+        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
+        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
 
     def run(self):
         self._listener = ThreadedStatusListener(config, self._task_queue, self)
+
+    def on_agent_status_update(self, event):
+        logger.debug('New agent status event: %s', event)
+        key = self._extract_key(event)
+        new_status = event['data']['status']
+
+        self.agent_status_notifier.update(key, new_status)
 
     def on_endpoint_status_update(self, event):
         logger.debug('New endpoint status event: %s', event)
@@ -106,7 +123,7 @@ class StatusForwarder(object):
         key = self._extract_key(event)
         new_status = event['data']['status']
 
-        self._user_status_notifier.update(key, new_status)
+        self.user_status_notifier.update(key, new_status)
 
     def _extract_key(self, event):
         id_field = self._id_field_map[event['name']]
@@ -145,6 +162,11 @@ class StatusNotifier(object):
 
         logger.debug('Sending %s', msg)
         subscription.send_message(msg)
+
+
+def _new_agent_notifier(cti_group_factory):
+    msg_factory = CTIMessageFormatter.agent_status_update
+    return StatusNotifier(cti_group_factory, msg_factory)
 
 
 def _new_endpoint_notifier(cti_group_factory):
