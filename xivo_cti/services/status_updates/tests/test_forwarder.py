@@ -108,11 +108,11 @@ class TestStatusForwarder(unittest.TestCase):
             (xivo_id, user_id), 'busy')
 
     @patch('xivo_cti.services.status_updates.forwarder.config', sentinel.config)
-    @patch('xivo_cti.services.status_updates.forwarder.ThreadedStatusListener')
-    def test_that_run_starts_a_listener_thread(self, ThreadedStatusListener):
+    @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
+    def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
         self.forwarder.run()
 
-        ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue, self.forwarder)
+        _ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue, self.forwarder)
 
 
 class TestStatusNotifier(unittest.TestCase):

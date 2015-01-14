@@ -27,7 +27,7 @@ from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 logger = logging.getLogger(__name__)
 
 
-class ThreadedStatusListener(object):
+class _ThreadedStatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
         self._thread = threading.Thread(target=_StatusListener, args=(config, task_queue, forwarder))
@@ -102,7 +102,7 @@ class StatusForwarder(object):
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
 
     def run(self):
-        self._listener = ThreadedStatusListener(config, self._task_queue, self)
+        self._listener = _ThreadedStatusListener(config, self._task_queue, self)
 
     def on_agent_status_update(self, event):
         logger.debug('New agent status event: %s', event)
