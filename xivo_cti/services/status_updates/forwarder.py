@@ -27,6 +27,55 @@ from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 logger = logging.getLogger(__name__)
 
 
+class StatusForwarder(object):
+
+    _id_field_map = {
+        'agent_status_update': 'agent_id',
+        'endpoint_status_update': 'endpoint_id',
+        'user_status_update': 'user_id',
+    }
+
+    def __init__(self,
+                 cti_group_factory,
+                 task_queue,
+                 _agent_status_notifier=None,
+                 _endpoint_status_notifier=None,
+                 _user_status_notifier=None):
+        logger.debug('StatusForwarder instantiation')
+        self._task_queue = task_queue
+        self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
+        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
+        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
+
+    def run(self):
+        self._listener = _ThreadedStatusListener(config, self._task_queue, self)
+
+    def on_agent_status_update(self, event):
+        logger.debug('New agent status event: %s', event)
+        key = self._extract_key(event)
+        new_status = event['data']['status']
+
+        self.agent_status_notifier.update(key, new_status)
+
+    def on_endpoint_status_update(self, event):
+        logger.debug('New endpoint status event: %s', event)
+        key = self._extract_key(event)
+        new_status = event['data']['status']
+
+        self.endpoint_status_notifier.update(key, new_status)
+
+    def on_user_status_update(self, event):
+        logger.debug('New user status event: %s', event)
+        key = self._extract_key(event)
+        new_status = event['data']['status']
+
+        self.user_status_notifier.update(key, new_status)
+
+    def _extract_key(self, event):
+        id_field = self._id_field_map[event['name']]
+        return event['data']['xivo_id'], event['data'][id_field]
+
+
 class _ThreadedStatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
@@ -79,55 +128,6 @@ class _StatusListener(object):
 
     def queue_user_status_update(self, event):
         self._task_queue.put(self._forwarder.on_user_status_update, event)
-
-
-class StatusForwarder(object):
-
-    _id_field_map = {
-        'agent_status_update': 'agent_id',
-        'endpoint_status_update': 'endpoint_id',
-        'user_status_update': 'user_id',
-    }
-
-    def __init__(self,
-                 cti_group_factory,
-                 task_queue,
-                 _agent_status_notifier=None,
-                 _endpoint_status_notifier=None,
-                 _user_status_notifier=None):
-        logger.debug('StatusForwarder instantiation')
-        self._task_queue = task_queue
-        self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
-        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
-        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
-
-    def run(self):
-        self._listener = _ThreadedStatusListener(config, self._task_queue, self)
-
-    def on_agent_status_update(self, event):
-        logger.debug('New agent status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
-
-        self.agent_status_notifier.update(key, new_status)
-
-    def on_endpoint_status_update(self, event):
-        logger.debug('New endpoint status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
-
-        self.endpoint_status_notifier.update(key, new_status)
-
-    def on_user_status_update(self, event):
-        logger.debug('New user status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
-
-        self.user_status_notifier.update(key, new_status)
-
-    def _extract_key(self, event):
-        id_field = self._id_field_map[event['name']]
-        return event['data']['xivo_id'], event['data'][id_field]
 
 
 class _StatusNotifier(object):
