@@ -20,14 +20,9 @@
 import fnmatch
 import os
 
-from distutils.core import setup
+from setuptools import setup
+from setuptools import find_packages
 
-
-def is_package(path):
-    is_test_module = fnmatch.fnmatch(path, '*tests')
-    return not is_test_module
-
-packages = [p for p, _, _ in os.walk('xivo_cti') if is_package(p)]
 
 setup(
     name='xivo-ctid',
@@ -36,6 +31,6 @@ setup(
     author='Avencall',
     author_email='xivo-dev@lists.proformatique.com',
     url='http://wiki.xivo.io/',
-    packages=packages,
+    packages=find_packages(),
     scripts=['bin/ami-proxy', 'bin/xivo-ctid'],
 )
