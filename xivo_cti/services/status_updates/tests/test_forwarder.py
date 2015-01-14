@@ -19,14 +19,12 @@ import unittest
 
 from ..forwarder import StatusForwarder
 from ..forwarder import _StatusListener
-from ..forwarder import _StatusNotifier
 from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
 from ..forwarder import CTIMessageFormatter
 from ..forwarder import BusConfig
 from hamcrest import assert_that
-from hamcrest import equal_to
 from mock import ANY
 from mock import call
 from mock import Mock
@@ -113,46 +111,6 @@ class TestStatusForwarder(unittest.TestCase):
         self.forwarder.run()
 
         _ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue, self.forwarder)
-
-
-class TestStatusNotifier(unittest.TestCase):
-
-    def setUp(self):
-        self.message_factory = Mock()
-        self.cti_group_factory = Mock()
-        self.notifier = _StatusNotifier(self.cti_group_factory, self.message_factory)
-
-    def test_register(self):
-        keys = [
-            ('xivo-1', 1),
-            ('xivo-1', 2),
-            ('xivo-2', 1),
-        ]
-        connection = Mock()
-
-        self.notifier.register(connection, keys)
-
-        assert_that(self.cti_group_factory.new_cti_group.call_count, equal_to(3))
-
-    def test_that_the_status_is_sent_on_registration(self):
-        keys = [
-            ('xivo-1', 1),
-        ]
-        connection_1 = Mock()
-
-        self.notifier.register(connection_1, keys)
-        self.notifier.update(keys[0], 1)
-
-        connection_2 = Mock()
-
-        self.notifier.register(connection_2, keys)
-
-        connection_2.send_message.assert_called_once_with(self.message_factory.return_value)
-        self.message_factory.assert_called_once_with(keys[0], 1)
-
-    def test_unregister(self):
-        # XXX find a test that is not a copy of the implementation...
-        pass
 
 
 class TestNewAgentNotifier(unittest.TestCase):
