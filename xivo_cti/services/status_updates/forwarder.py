@@ -130,7 +130,7 @@ class StatusForwarder(object):
         return event['data']['xivo_id'], event['data'][id_field]
 
 
-class StatusNotifier(object):
+class _StatusNotifier(object):
 
     def __init__(self, cti_group_factory, message_factory):
         self._subscriptions = defaultdict(cti_group_factory.new_cti_group)
@@ -166,14 +166,14 @@ class StatusNotifier(object):
 
 def _new_agent_notifier(cti_group_factory):
     msg_factory = CTIMessageFormatter.agent_status_update
-    return StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory)
 
 
 def _new_endpoint_notifier(cti_group_factory):
     msg_factory = CTIMessageFormatter.endpoint_status_update
-    return StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory)
 
 
 def _new_user_notifier(cti_group_factory):
     msg_factory = CTIMessageFormatter.user_status_update
-    return StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory)

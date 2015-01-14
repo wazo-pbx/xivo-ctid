@@ -19,7 +19,7 @@ import unittest
 
 from ..forwarder import StatusForwarder
 from ..forwarder import _StatusListener
-from ..forwarder import StatusNotifier
+from ..forwarder import _StatusNotifier
 from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
@@ -120,7 +120,7 @@ class TestStatusNotifier(unittest.TestCase):
     def setUp(self):
         self.message_factory = Mock()
         self.cti_group_factory = Mock()
-        self.notifier = StatusNotifier(self.cti_group_factory, self.message_factory)
+        self.notifier = _StatusNotifier(self.cti_group_factory, self.message_factory)
 
     def test_register(self):
         keys = [
@@ -157,47 +157,47 @@ class TestStatusNotifier(unittest.TestCase):
 
 class TestNewAgentNotifier(unittest.TestCase):
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_the_cti_group_factory_is_forwarded(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _notifier = _new_agent_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_agent_status_update_is_injected(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_agent_status_update_is_injected(self, _StatusNotifier):
         _notifier = _new_agent_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.agent_status_update)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.agent_status_update)
 
 
 class TestNewEndpointNotifier(unittest.TestCase):
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_the_cti_group_factory_is_forwarded(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _notifier = _new_endpoint_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_endpoint_status_update_is_injected(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_endpoint_status_update_is_injected(self, _StatusNotifier):
         _notifier = _new_endpoint_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.endpoint_status_update)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.endpoint_status_update)
 
 
 class TestNewUserNotifier(unittest.TestCase):
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_the_cti_group_factory_is_forwarded(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _notifier = _new_endpoint_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
 
-    @patch('xivo_cti.services.status_updates.forwarder.StatusNotifier')
-    def test_that_user_status_update_is_injected(self, StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_user_status_update_is_injected(self, _StatusNotifier):
         _notifier = _new_user_notifier(sentinel.cti_group_factory)
 
-        StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
 
 
 @patch('xivo_cti.services.status_updates.forwarder.BusConsumer')
