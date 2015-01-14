@@ -18,7 +18,7 @@
 import unittest
 
 from ..forwarder import StatusForwarder
-from ..forwarder import StatusListener
+from ..forwarder import _StatusListener
 from ..forwarder import StatusNotifier
 from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
@@ -225,7 +225,7 @@ class TestStatusListener(unittest.TestCase):
         self.forwarder = StatusForwarder(sentinel.cti_group_factory, sentinel.task_queue, Mock(), Mock(), Mock())
 
     def test_that_listener_instantiate_a_bus_consumer(self, BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         expected_config = BusConfig(
             host='example.com',
@@ -239,7 +239,7 @@ class TestStatusListener(unittest.TestCase):
         BusConsumer.assert_called_once_with(expected_config)
 
     def test_that_listener_instantiate_adds_agent_cb(self, BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         consumer = BusConsumer.return_value
 
@@ -252,7 +252,7 @@ class TestStatusListener(unittest.TestCase):
         assert_that(expected_call in consumer.add_binding.mock_calls)
 
     def test_that_listener_instantiate_adds_endpoint_cb(self, BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         consumer = BusConsumer.return_value
 
@@ -265,7 +265,7 @@ class TestStatusListener(unittest.TestCase):
         assert_that(expected_call in consumer.add_binding.mock_calls)
 
     def test_that_listener_instantiate_adds_users_cb_to_the_forwarder(self, BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         consumer = BusConsumer.return_value
 
@@ -278,7 +278,7 @@ class TestStatusListener(unittest.TestCase):
         assert_that(expected_call in consumer.add_binding.mock_calls)
 
     def test_that_listener_connect_and_run(self, BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         consumer = BusConsumer.return_value
 
@@ -286,21 +286,21 @@ class TestStatusListener(unittest.TestCase):
         consumer.run.assert_called_once_with()
 
     def test_that_queue_agent_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         self.listener.queue_agent_status_update(sentinel.event)
 
         self.task_queue.put.assert_called_once_with(self.forwarder.on_agent_status_update, sentinel.event)
 
     def test_that_queue_endpoint_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         self.listener.queue_endpoint_status_update(sentinel.event)
 
         self.task_queue.put.assert_called_once_with(self.forwarder.on_endpoint_status_update, sentinel.event)
 
     def test_that_queue_user_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = StatusListener(self.config, self.task_queue, self.forwarder)
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         self.listener.queue_user_status_update(sentinel.event)
 

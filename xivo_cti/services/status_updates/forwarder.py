@@ -30,11 +30,11 @@ logger = logging.getLogger(__name__)
 class ThreadedStatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
-        self._thread = threading.Thread(target=StatusListener, args=(config, task_queue, forwarder))
+        self._thread = threading.Thread(target=_StatusListener, args=(config, task_queue, forwarder))
         self._thread.start()
 
 
-class StatusListener(object):
+class _StatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
         notifier_config = dict(config['bus'])
