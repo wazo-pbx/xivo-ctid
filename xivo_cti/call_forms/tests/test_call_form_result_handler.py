@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -63,8 +63,8 @@ class TestCallFormResultHandler(unittest.TestCase):
 
     @patch('xivo_cti.call_forms.call_form_result_handler.CallFormResultEvent')
     @patch('xivo_cti.call_forms.call_form_result_handler.config',
-           {'bus': {'exchange_name': 'xivo-cti',
-                    'binding_key': 'call_form_result'}})
+           {'bus': {'exchange_name': 'xivo',
+                    'routing_keys': {'call_form_result': 'call_form_result'}}})
     def test_send_call_form_result(self, CallFormResultEvent):
         user_id = 42
         variables = {'a': 'b'}
@@ -74,5 +74,5 @@ class TestCallFormResultHandler(unittest.TestCase):
 
         handler._send_call_form_result(user_id, variables)
 
-        bus_producer.publish_event.assert_called_once_with('xivo-cti', 'call_form_result', sentinel)
+        bus_producer.publish_event.assert_called_once_with('xivo', 'call_form_result', sentinel)
         CallFormResultEvent.assert_called_once_with(user_id, variables)

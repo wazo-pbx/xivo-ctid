@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ class CallFormResultHandler(object):
                      user_id, pprint.pformat(variables))
         event = CallFormResultEvent(user_id, variables)
         self._bus_producer.publish_event(config['bus']['exchange_name'],
-                                         config['bus']['binding_key'],
+                                         config['bus']['routing_keys']['call_form_result'],
                                          event)
 
     def _clean_variables(self, variables):
