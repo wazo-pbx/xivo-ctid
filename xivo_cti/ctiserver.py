@@ -58,6 +58,9 @@ from xivo_cti.cti.commands.queue_unpause import QueueUnPause
 from xivo_cti.cti.commands.register_agent_status import RegisterAgentStatus
 from xivo_cti.cti.commands.register_endpoint_status import RegisterEndpointStatus
 from xivo_cti.cti.commands.register_user_status import RegisterUserStatus
+from xivo_cti.cti.commands.unregister_agent_status import UnregisterAgentStatus
+from xivo_cti.cti.commands.unregister_user_status import UnregisterUserStatus
+from xivo_cti.cti.commands.unregister_endpoint_status import UnregisterEndpointStatus
 from xivo_cti.cti.commands.subscribe import SubscribeCurrentCalls, \
     SubscribeMeetmeUpdate, SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
@@ -196,6 +199,18 @@ class CTIServer(object):
         RegisterUserStatus.register_callback_params(
             status_forwarder.user_status_notifier.register,
             ['cti_connection', 'user_ids'],
+        )
+        UnregisterAgentStatus.register_callback_params(
+            status_forwarder.agent_status_notifier.unregister,
+            ['cti_connection', 'agent_ids'],
+        )
+        UnregisterUserStatus.register_callback_params(
+            status_forwarder.user_status_notifier.unregister,
+            ['cti_connection', 'user_ids'],
+        )
+        UnregisterEndpointStatus.register_callback_params(
+            status_forwarder.endpoint_status_notifier.unregister,
+            ['cti_connection', 'endpoint_ids'],
         )
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
