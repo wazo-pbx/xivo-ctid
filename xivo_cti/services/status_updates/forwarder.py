@@ -19,7 +19,7 @@ import logging
 import json
 import threading
 
-from functools import partial
+from functools import wraps
 from kombu.mixins import ConsumerMixin
 from kombu import Exchange, Queue
 from kombu import Connection
@@ -87,6 +87,14 @@ class _ThreadedStatusListener(object):
         self._thread.start()
 
 
+def _loads_and_ack(f):
+    @wraps(f)
+    def wrapped(one_self, body, message):
+        f(one_self, json.loads(body))
+        message.ack()
+    return wrapped
+
+
 class _StatusWorker(ConsumerMixin):
 
     def __init__(self, connection, exchange, task_queue, forwarder):
@@ -101,25 +109,23 @@ class _StatusWorker(ConsumerMixin):
     def _make_queue(self, routing_key):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True, auto_delete=True)
 
-    def _on_message(self, fn, body, message):
-        logger.debug('New status received %s', body)
-        fn(json.loads(body))
-        message.ack()
-
     def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=self._agent_queue, accept=['json'],
-                         callbacks=[partial(self._on_message, self._on_agent_status)]),
-                Consumer(queues=self._user_queue, accept=['json'],
-                         callbacks=[partial(self._on_message, self._on_user_status)]),
-                Consumer(queues=self._endpoint_queue, accept=['json'],
-                         callbacks=[partial(self._on_message, self._on_endpoint_status)])]
+        return [Consumer(queues=self._agent_queue,
+                         callbacks=[self._on_agent_status]),
+                Consumer(queues=self._user_queue,
+                         callbacks=[self._on_user_status]),
+                Consumer(queues=self._endpoint_queue,
+                         callbacks=[self._on_endpoint_status])]
 
+    @_loads_and_ack
     def _on_agent_status(self, body):
         self._task_queue.put(self._forwarder.on_agent_status_update, body)
 
+    @_loads_and_ack
     def _on_user_status(self, body):
         self._task_queue.put(self._forwarder.on_user_status_update, body)
 
+    @_loads_and_ack
     def _on_endpoint_status(self, body):
         self._task_queue.put(self._forwarder.on_endpoint_status_update, body)
 
