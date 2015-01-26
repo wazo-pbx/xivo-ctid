@@ -43,11 +43,6 @@ class CTIMessageDecoder(object):
         return [self._decode_line(line) for line in lines[:-1]]
 
     def _decode_line(self, line):
-        # This is the comment from the original serialJson class:
-        # Output of the cjson.decode is a Unicode object, even though the
-        # non-ASCII characters have not been decoded.
-        # Without the .decode('utf-8'), some Unicode character (try asian, not european)
-        # will not be interpreted correctly.
         return json.loads(line.decode('utf-8').replace('\\/', '/'))
 
 
