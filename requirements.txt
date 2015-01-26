@@ -8,7 +8,6 @@ git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 pika
 sqlalchemy
 psycopg2
-python-cjson
 python-ldap
 pyhamcrest
 requests

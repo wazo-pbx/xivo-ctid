@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import cjson
+import json
 import time
 
 
@@ -48,11 +48,11 @@ class CTIMessageDecoder(object):
         # non-ASCII characters have not been decoded.
         # Without the .decode('utf-8'), some Unicode character (try asian, not european)
         # will not be interpreted correctly.
-        return cjson.decode(line.decode('utf-8').replace('\\/', '/'))
+        return json.loads(line.decode('utf-8').replace('\\/', '/'))
 
 
 class CTIMessageEncoder(object):
 
     def encode(self, msg):
         msg['timenow'] = time.time()
-        return cjson.encode(msg) + '\n'
+        return json.dumps(msg) + '\n'
