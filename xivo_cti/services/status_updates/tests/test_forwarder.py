@@ -23,7 +23,6 @@ from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
 from ..forwarder import CTIMessageFormatter
-from ..forwarder import BusConfig
 from hamcrest import assert_that
 from mock import ANY
 from mock import call
@@ -158,7 +157,7 @@ class TestNewUserNotifier(unittest.TestCase):
         _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
 
 
-@patch('xivo_cti.services.status_updates.forwarder.BusConsumer')
+@patch('xivo_cti.services.status_updates.forwarder.Connection')
 class TestStatusListener(unittest.TestCase):
 
     def setUp(self):
@@ -171,95 +170,20 @@ class TestStatusListener(unittest.TestCase):
                 'exchange_name': 'xivo',
                 'exchange_type': 'topic',
                 'exchange_durable': True,
-                'routing_keys': {
-                    'user_status': 'status.user',
-                    'endpoint_status': 'status.endpoint',
-                    'agent_status': 'status.agent',
-                },
             },
         }
 
         self.task_queue = Mock()
-        self.forwarder = StatusForwarder(sentinel.cti_group_factory, sentinel.task_queue, Mock(), Mock(), Mock())
+        self.forwarder = StatusForwarder(sentinel.cti_group_factory,
+                                         sentinel.task_queue,
+                                         Mock(),
+                                         Mock(),
+                                         Mock())
 
-    def test_that_listener_instantiate_a_bus_consumer(self, BusConsumer):
+    @patch('xivo_cti.services.status_updates.forwarder._StatusWorker', Mock())
+    def test_that_listener_connects_to_the_bus(self, Connection):
         self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
-        expected_config = BusConfig(
-            host='example.com',
-            port=5496,
-            username='u1',
-            password='secret',
-            exchange_name='xivo',
-            exchange_type='topic',
-            exchange_durable=True,
-        )
-        BusConsumer.assert_called_once_with(expected_config)
+        expected_url = 'amqp://u1:secret@example.com:5496//'
 
-    def test_that_listener_instantiate_adds_agent_cb(self, BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        consumer = BusConsumer.return_value
-
-        expected_call = call(
-            self.listener.queue_agent_status_update,
-            'agent-status-updates',
-            'xivo',
-            'status.agent',
-        )
-        assert_that(expected_call in consumer.add_binding.mock_calls)
-
-    def test_that_listener_instantiate_adds_endpoint_cb(self, BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        consumer = BusConsumer.return_value
-
-        expected_call = call(
-            self.listener.queue_endpoint_status_update,
-            'endpoint-status-updates',
-            'xivo',
-            'status.endpoint',
-        )
-        assert_that(expected_call in consumer.add_binding.mock_calls)
-
-    def test_that_listener_instantiate_adds_users_cb_to_the_forwarder(self, BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        consumer = BusConsumer.return_value
-
-        expected_call = call(
-            self.listener.queue_user_status_update,
-            'user-status-updates',
-            'xivo',
-            'status.user',
-        )
-        assert_that(expected_call in consumer.add_binding.mock_calls)
-
-    def test_that_listener_connect_and_run(self, BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        consumer = BusConsumer.return_value
-
-        consumer.connect.assert_called_once_with()
-        consumer.run.assert_called_once_with()
-
-    def test_that_queue_agent_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        self.listener.queue_agent_status_update(sentinel.event)
-
-        self.task_queue.put.assert_called_once_with(self.forwarder.on_agent_status_update, sentinel.event)
-
-    def test_that_queue_endpoint_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        self.listener.queue_endpoint_status_update(sentinel.event)
-
-        self.task_queue.put.assert_called_once_with(self.forwarder.on_endpoint_status_update, sentinel.event)
-
-    def test_that_queue_user_status_update_queues_a_task(self, _BusConsumer):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        self.listener.queue_user_status_update(sentinel.event)
-
-        self.task_queue.put.assert_called_once_with(self.forwarder.on_user_status_update, sentinel.event)
+        Connection.assert_called_once_with(expected_url)

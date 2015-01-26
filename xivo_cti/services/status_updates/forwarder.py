@@ -16,11 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+import json
 import threading
 
+from functools import partial
+from kombu.mixins import ConsumerMixin
+from kombu import Exchange, Queue
+from kombu import Connection
+
 from collections import defaultdict
-from xivo_bus.ctl.config import BusConfig
-from xivo_bus.ctl.consumer import BusConsumer
 from xivo_cti import config
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -83,51 +87,50 @@ class _ThreadedStatusListener(object):
         self._thread.start()
 
 
+class _StatusWorker(ConsumerMixin):
+
+    def __init__(self, connection, exchange, task_queue, forwarder):
+        self.connection = connection
+        self.exchange = exchange
+        self._task_queue = task_queue
+        self._forwarder = forwarder
+        self._agent_queue = self._make_queue('status.agent')
+        self._user_queue = self._make_queue('status.user')
+        self._endpoint_queue = self._make_queue('status.endpoint')
+
+    def _make_queue(self, routing_key):
+        return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True, auto_delete=True)
+
+    def _on_message(self, fn, body, message):
+        logger.debug('New status received %s', body)
+        fn(json.loads(body))
+        message.ack()
+
+    def get_consumers(self, Consumer, channel):
+        return [Consumer(queues=self._agent_queue, accept=['json'],
+                         callbacks=[partial(self._on_message, self._on_agent_status)]),
+                Consumer(queues=self._user_queue, accept=['json'],
+                         callbacks=[partial(self._on_message, self._on_user_status)]),
+                Consumer(queues=self._endpoint_queue, accept=['json'],
+                         callbacks=[partial(self._on_message, self._on_endpoint_status)])]
+
+    def _on_agent_status(self, body):
+        self._task_queue.put(self._forwarder.on_agent_status_update, body)
+
+    def _on_user_status(self, body):
+        self._task_queue.put(self._forwarder.on_user_status_update, body)
+
+    def _on_endpoint_status(self, body):
+        self._task_queue.put(self._forwarder.on_endpoint_status_update, body)
+
+
 class _StatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
-        notifier_config = dict(config['bus'])
-        routing_keys = notifier_config.pop('routing_keys')
-        bus_config = BusConfig(
-            **notifier_config
-        )
-        self._forwarder = forwarder
-        self._task_queue = task_queue
-        self._consumer = BusConsumer(bus_config)
-        self._consumer.connect()
-
-        self._consumer.add_binding(
-            self.queue_agent_status_update,
-            'agent-status-updates',
-            notifier_config['exchange_name'],
-            routing_keys['agent_status'],
-        )
-        self._consumer.add_binding(
-            self.queue_endpoint_status_update,
-            'endpoint-status-updates',
-            notifier_config['exchange_name'],
-            routing_keys['endpoint_status'],
-        )
-        self._consumer.add_binding(
-            self.queue_user_status_update,
-            'user-status-updates',
-            notifier_config['exchange_name'],
-            routing_keys['user_status'],
-        )
-
-        self._consumer.run()
-
-    def __delete__(self):
-        self._consumer.stop()
-
-    def queue_agent_status_update(self, event):
-        self._task_queue.put(self._forwarder.on_agent_status_update, event)
-
-    def queue_endpoint_status_update(self, event):
-        self._task_queue.put(self._forwarder.on_endpoint_status_update, event)
-
-    def queue_user_status_update(self, event):
-        self._task_queue.put(self._forwarder.on_user_status_update, event)
+        bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
+        exchange = Exchange('xivo', type='topic')
+        with Connection(bus_url) as conn:
+            _StatusWorker(conn, exchange, task_queue, forwarder).run()
 
 
 class _StatusNotifier(object):
