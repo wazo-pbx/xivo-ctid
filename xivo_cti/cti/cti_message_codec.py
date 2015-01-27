@@ -43,7 +43,7 @@ class CTIMessageDecoder(object):
         return [self._decode_line(line) for line in lines[:-1]]
 
     def _decode_line(self, line):
-        return json.loads(line.decode('utf-8').replace('\\/', '/'))
+        return json.loads(line)
 
 
 class CTIMessageEncoder(object):
