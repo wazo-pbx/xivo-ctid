@@ -97,14 +97,14 @@ def _loads_and_ack(f):
 
 class _StatusWorker(ConsumerMixin):
 
-    def __init__(self, connection, exchange, task_queue, forwarder):
+    def __init__(self, connection, exchange, task_queue, forwarder, routing_keys):
         self.connection = connection
         self.exchange = exchange
         self._task_queue = task_queue
         self._forwarder = forwarder
-        self._agent_queue = self._make_queue('status.agent')
-        self._user_queue = self._make_queue('status.user')
-        self._endpoint_queue = self._make_queue('status.endpoint')
+        self._agent_queue = self._make_queue(routing_keys['agent_status'])
+        self._user_queue = self._make_queue(routing_keys['user_status'])
+        self._endpoint_queue = self._make_queue(routing_keys['endpoint_status'])
 
     def _make_queue(self, routing_key):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True, auto_delete=True)
@@ -134,9 +134,9 @@ class _StatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
         bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
-        exchange = Exchange('xivo', type='topic')
+        exchange = Exchange(config['bus']['exchange_name'], type=config['bus']['exchange_type'])
         with Connection(bus_url) as conn:
-            _StatusWorker(conn, exchange, task_queue, forwarder).run()
+            _StatusWorker(conn, exchange, task_queue, forwarder, config['bus']['routing_keys']).run()
 
 
 class _StatusNotifier(object):

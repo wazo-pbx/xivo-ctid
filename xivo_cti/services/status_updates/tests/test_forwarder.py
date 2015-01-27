@@ -158,6 +158,7 @@ class TestNewUserNotifier(unittest.TestCase):
 
 
 @patch('xivo_cti.services.status_updates.forwarder.Connection')
+@patch('xivo_cti.services.status_updates.forwarder.Exchange')
 class TestStatusListener(unittest.TestCase):
 
     def setUp(self):
@@ -167,9 +168,14 @@ class TestStatusListener(unittest.TestCase):
                 'port': 5496,
                 'username': 'u1',
                 'password': 'secret',
-                'exchange_name': 'xivo',
+                'exchange_name': 'my-exchange',
                 'exchange_type': 'topic',
                 'exchange_durable': True,
+                'routing_keys': {
+                    'agent_status': 'status.agent',
+                    'user_status': 'status.user',
+                    'endpoint_status': 'status.endpoint',
+                },
             },
         }
 
@@ -181,9 +187,10 @@ class TestStatusListener(unittest.TestCase):
                                          Mock())
 
     @patch('xivo_cti.services.status_updates.forwarder._StatusWorker', Mock())
-    def test_that_listener_connects_to_the_bus(self, Connection):
+    def test_that_listener_connects_to_the_bus(self, Exchange, Connection):
         self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
 
         expected_url = 'amqp://u1:secret@example.com:5496//'
 
+        Exchange.assert_called_once_with('my-exchange', type='topic')
         Connection.assert_called_once_with(expected_url)
