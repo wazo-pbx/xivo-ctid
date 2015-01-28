@@ -106,7 +106,7 @@ class _StatusWorker(ConsumerMixin):
         self._endpoint_queue = self._make_queue(routing_keys['endpoint_status'])
 
     def _make_queue(self, routing_key):
-        return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True, auto_delete=True)
+        return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self._agent_queue,
