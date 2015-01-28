@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 def _parse(msg, command):
-    logger.debug('msg: %s', msg)
     command.endpoint_ids = [(xivo_uuid, endpoint_id) for (xivo_uuid, endpoint_id) in msg['endpoint_ids']]
 
 

@@ -45,7 +45,6 @@ class StatusForwarder(object):
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
-        logger.debug('StatusForwarder instantiation')
         self._task_queue = task_queue
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
         self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
@@ -153,14 +152,12 @@ class _StatusNotifier(object):
             status_msg = self._statuses.get(key)
             if status_msg:
                 connection.send_message(status_msg)
-        logger.debug('Subcriptions: %s', self._subscriptions.keys())
 
     def unregister(self, connection, keys):
         for key in keys:
             self._subscriptions[key].remove(connection)
 
     def update(self, key, new_status):
-        logger.debug('%s updated %s', key, new_status)
         msg = self._message_factory(key, new_status)
         self._statuses[key] = msg
 
@@ -169,7 +166,6 @@ class _StatusNotifier(object):
             logger.debug('No subscriptions for %s in %s', key, self._subscriptions.keys())
             return
 
-        logger.debug('Sending %s', msg)
         subscription.send_message(msg)
 
 
