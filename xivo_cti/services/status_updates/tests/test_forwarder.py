@@ -23,9 +23,7 @@ from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
 from ..forwarder import CTIMessageFormatter
-from hamcrest import assert_that
 from mock import ANY
-from mock import call
 from mock import Mock
 from mock import patch
 from mock import sentinel
