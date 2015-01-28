@@ -1,0 +1,194 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2014-2015 Avencall
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+import unittest
+
+from ..forwarder import StatusForwarder
+from ..forwarder import _StatusListener
+from ..forwarder import _new_agent_notifier
+from ..forwarder import _new_endpoint_notifier
+from ..forwarder import _new_user_notifier
+from ..forwarder import CTIMessageFormatter
+from mock import ANY
+from mock import Mock
+from mock import patch
+from mock import sentinel
+
+
+class TestStatusForwarder(unittest.TestCase):
+
+    def setUp(self):
+        self.agent_status_notifier = Mock()
+        self.endpoint_status_notifier = Mock()
+        self.user_status_notifier = Mock()
+        self.forwarder = StatusForwarder(sentinel.cti_group_factory,
+                                         sentinel.task_queue,
+                                         self.agent_status_notifier,
+                                         self.endpoint_status_notifier,
+                                         self.user_status_notifier)
+
+    @patch('xivo_cti.services.status_updates.forwarder._new_agent_notifier')
+    @patch('xivo_cti.services.status_updates.forwarder._new_endpoint_notifier')
+    @patch('xivo_cti.services.status_updates.forwarder._new_user_notifier')
+    def test_forwarder_without_arguments(self, new_user_notifier, new_endpoint_notifier, new_agent_notifier):
+        StatusForwarder(sentinel.cti_group_factory, sentinel.task_queue)
+
+        new_endpoint_notifier.assert_called_once_with(sentinel.cti_group_factory)
+        new_user_notifier.assert_called_once_with(sentinel.cti_group_factory)
+        new_agent_notifier.assert_called_once_with(sentinel.cti_group_factory)
+
+    def test_on_agent_status_update(self):
+        xivo_id = 'ca7f87e9-c2c8-5fad-ba1b-c3140ebb9be3'
+        agent_id = 42
+        event = {
+            'name': 'agent_status_update',
+            'data': {
+                'agent_id': agent_id,
+                'xivo_id': xivo_id,
+                'status': 'logged_in',
+            }
+        }
+
+        self.forwarder.on_agent_status_update(event)
+
+        self.agent_status_notifier.update.assert_called_once_with(
+            (xivo_id, agent_id), 'logged_in')
+
+    def test_on_endpoint_status_update(self):
+        xivo_id = 'ca7f87e9-c2c8-5fad-ba1b-c3140ebb9be3'
+        endpoint_id = 67
+        event = {
+            'name': 'endpoint_status_update',
+            'data': {
+                'endpoint_id': endpoint_id,
+                'xivo_id': xivo_id,
+                'status': 0,
+            }
+        }
+
+        self.forwarder.on_endpoint_status_update(event)
+
+        self.endpoint_status_notifier.update.assert_called_once_with(
+            (xivo_id, endpoint_id), 0)
+
+    def test_on_user_status_update(self):
+        xivo_id = 'ca7f87e9-c2c8-5fad-ba1b-c3140ebb9be3'
+        user_id = 67
+        event = {
+            'name': 'user_status_update',
+            'data': {
+                'user_id': user_id,
+                'xivo_id': xivo_id,
+                'status': 'busy',
+            }
+        }
+
+        self.forwarder.on_user_status_update(event)
+
+        self.user_status_notifier.update.assert_called_once_with(
+            (xivo_id, user_id), 'busy')
+
+    @patch('xivo_cti.services.status_updates.forwarder.config', sentinel.config)
+    @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
+    def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
+        self.forwarder.run()
+
+        _ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue, self.forwarder)
+
+
+class TestNewAgentNotifier(unittest.TestCase):
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
+        _new_agent_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_agent_status_update_is_injected(self, _StatusNotifier):
+        _new_agent_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.agent_status_update)
+
+
+class TestNewEndpointNotifier(unittest.TestCase):
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
+        _new_endpoint_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_endpoint_status_update_is_injected(self, _StatusNotifier):
+        _new_endpoint_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.endpoint_status_update)
+
+
+class TestNewUserNotifier(unittest.TestCase):
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
+        _new_endpoint_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(sentinel.cti_group_factory, ANY)
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
+    def test_that_user_status_update_is_injected(self, _StatusNotifier):
+        _new_user_notifier(sentinel.cti_group_factory)
+
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
+
+
+@patch('xivo_cti.services.status_updates.forwarder.Connection')
+@patch('xivo_cti.services.status_updates.forwarder.Exchange')
+class TestStatusListener(unittest.TestCase):
+
+    def setUp(self):
+        self.config = {
+            'bus': {
+                'host': 'example.com',
+                'port': 5496,
+                'username': 'u1',
+                'password': 'secret',
+                'exchange_name': 'my-exchange',
+                'exchange_type': 'topic',
+                'exchange_durable': True,
+                'routing_keys': {
+                    'agent_status': 'status.agent',
+                    'user_status': 'status.user',
+                    'endpoint_status': 'status.endpoint',
+                },
+            },
+        }
+
+        self.task_queue = Mock()
+        self.forwarder = StatusForwarder(sentinel.cti_group_factory,
+                                         sentinel.task_queue,
+                                         Mock(),
+                                         Mock(),
+                                         Mock())
+
+    @patch('xivo_cti.services.status_updates.forwarder._StatusWorker', Mock())
+    def test_that_listener_connects_to_the_bus(self, Exchange, Connection):
+        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
+
+        expected_url = 'amqp://u1:secret@example.com:5496//'
+
+        Exchange.assert_called_once_with('my-exchange', type='topic')
+        Connection.assert_called_once_with(expected_url)
