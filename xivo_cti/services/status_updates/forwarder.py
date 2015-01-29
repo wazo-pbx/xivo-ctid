@@ -83,6 +83,7 @@ class _ThreadedStatusListener(object):
 
     def __init__(self, config, task_queue, forwarder):
         self._thread = threading.Thread(target=_StatusListener, args=(config, task_queue, forwarder))
+        self._thread.daemon = True
         self._thread.start()
 
 
