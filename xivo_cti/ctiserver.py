@@ -403,14 +403,6 @@ class CTIServer(object):
         self._task_queue.clear()
         self._task_scheduler.clear()
 
-        logger.info('Connecting to bus')
-        bus_producer = context.get('bus_producer')
-        if not bus_producer.connected:
-            bus_producer.connect()
-        bus_producer.declare_exchange(name=config['bus']['exchange_name'],
-                                      exchange_type=config['bus']['exchange_type'],
-                                      durable=config['bus']['exchange_durable'])
-
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')
         self.safe.user_service_manager = self._user_service_manager
