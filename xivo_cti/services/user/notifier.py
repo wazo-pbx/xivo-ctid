@@ -28,8 +28,8 @@ class UserServiceNotifier(object):
 
     _marshaler = Marshaler()
 
-    def __init__(self, bus_producer):
-        self._bus_producer = bus_producer
+    def __init__(self, bus_publish):
+        self._publish_bus_msg = bus_publish
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
@@ -68,7 +68,7 @@ class UserServiceNotifier(object):
 
     def _send_bus_message(self, message):
         msg = self._marshaler.marshal_message(message)
-        self._bus_producer.publish(msg, routing_key=config['bus']['routing_keys']['user_status'])
+        self._publish_bus_msg(msg, routing_key=config['bus']['routing_keys']['user_status'])
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))

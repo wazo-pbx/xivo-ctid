@@ -30,7 +30,7 @@ class TestCallFormResultHandler(unittest.TestCase):
 
     def setUp(self):
         self._marshaler = Marshaler()
-        self._bus_producer = Mock()
+        self._bus_publish = Mock()
 
     def test_parse(self):
         user_id = 42
@@ -42,7 +42,7 @@ class TestCallFormResultHandler(unittest.TestCase):
             'firstname': 'Robert',
             'lastname': 'Lepage',
         }
-        handler = CallFormResultHandler(self._bus_producer)
+        handler = CallFormResultHandler(self._bus_publish)
         handler._send_call_form_result = Mock()
         handler.parse(user_id, variables)
 
@@ -63,7 +63,7 @@ class TestCallFormResultHandler(unittest.TestCase):
             'client_number': '1234',
         }
 
-        handler = CallFormResultHandler(self._bus_producer)
+        handler = CallFormResultHandler(self._bus_publish)
 
         assert_that(handler._clean_variables(variables), equal_to(expected_variables))
 
@@ -71,11 +71,11 @@ class TestCallFormResultHandler(unittest.TestCase):
            {'bus': {'routing_keys': {'call_form_result': sentinel.routing_key}}})
     def test_send_call_form_result(self):
         variables = {'foo': 'bar'}
-        handler = CallFormResultHandler(self._bus_producer)
+        handler = CallFormResultHandler(self._bus_publish)
         expected_msg = self._marshaler.marshal_message(
             CallFormResultEvent(42, variables))
 
         handler._send_call_form_result(42, variables)
 
-        self._bus_producer.publish.assert_called_once_with(expected_msg,
-                                                           routing_key=sentinel.routing_key)
+        self._bus_publish.assert_called_once_with(expected_msg,
+                                                  routing_key=sentinel.routing_key)
