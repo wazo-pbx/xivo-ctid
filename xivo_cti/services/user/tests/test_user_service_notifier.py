@@ -19,6 +19,9 @@ import unittest
 
 from mock import Mock
 from mock import patch
+
+from xivo_bus import Marshaler
+
 from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.services.user.notifier import UserStatusUpdateEvent
 
@@ -31,6 +34,7 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier = UserServiceNotifier(self.bus_producer)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
+        self._marshaler = Marshaler()
 
     def test_dnd_enabled(self):
         user_id = 34
@@ -177,10 +181,11 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.presence_updated(user_id, 'available')
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
-        expected_msg = UserStatusUpdateEvent('xivo-uuid', user_id, 'available')
-        self.bus_producer.publish_event.assert_called_once_with(
-            'xivo-status-updates', 'status.user',
+        expected_msg = self._marshaler.marshal_message(
+            UserStatusUpdateEvent('xivo-uuid', user_id, 'available'))
+        self.bus_producer.publish.assert_called_once_with(
             expected_msg,
+            routing_key='status.user',
         )
 
     def test_recording_enabled(self):

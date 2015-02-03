@@ -19,9 +19,6 @@ import logging
 import pprint
 import re
 
-from kombu import Connection
-from kombu import Producer
-
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import CallFormResultEvent
 from xivo_cti import config
@@ -34,8 +31,8 @@ class CallFormResultHandler(object):
     _marshaler = Marshaler()
     _variable_pattern = re.compile(r'XIVOFORM_([\w_]+)')
 
-    def __init__(self, bus_exchange):
-        self._exchange = bus_exchange
+    def __init__(self, bus_producer):
+        self._bus_producer = bus_producer
 
     def parse(self, user_id, variables):
         self._send_call_form_result(
@@ -47,10 +44,7 @@ class CallFormResultHandler(object):
         logger.debug('Call form result received for user %s with variables\n%s',
                      user_id, pprint.pformat(variables))
         msg = self._marshaler.marshal_message(CallFormResultEvent(user_id, variables))
-        bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
-        with Connection(bus_url) as conn:
-            producer = Producer(conn, exchange=self._exchange, auto_declare=True)
-            producer.publish(msg, routing_key=config['bus']['routing_keys']['call_form_result'])
+        self._bus_producer.publish(msg, routing_key=config['bus']['routing_keys']['call_form_result'])
 
     def _clean_variables(self, variables):
         return dict(

@@ -17,9 +17,6 @@
 
 import logging
 
-from kombu import Connection
-from kombu import Producer
-
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_cti import config
@@ -31,8 +28,8 @@ class UserServiceNotifier(object):
 
     _marshaler = Marshaler()
 
-    def __init__(self, bus_exchange):
-        self._exchange = bus_exchange
+    def __init__(self, bus_producer):
+        self._bus_producer = bus_producer
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
@@ -71,10 +68,7 @@ class UserServiceNotifier(object):
 
     def _send_bus_message(self, message):
         msg = self._marshaler.marshal_message(message)
-        bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
-        with Connection(bus_url) as conn:
-            producer = Producer(conn, exchange=self._exchange, auto_declare=True)
-            producer.publish(msg, routing_key=config['bus']['routing_keys']['user_status'])
+        self._bus_producer.publish(msg, routing_key=config['bus']['routing_keys']['user_status'])
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))

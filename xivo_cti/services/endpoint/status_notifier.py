@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from kombu import Connection
-from kombu import Producer
-
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import EndpointStatusUpdateEvent
 from xivo_cti import config
@@ -28,16 +25,13 @@ class StatusNotifier(object):
 
     _marshaler = Marshaler()
 
-    def __init__(self, cti_server, bus_exchange):
+    def __init__(self, cti_server, bus_producer):
         self._ctiserver = cti_server
-        self._exchange = bus_exchange
+        self._bus_producer = bus_producer
 
     def notify(self, phone_id, status):
         event = CTIMessageFormatter.phone_hintstatus_update(phone_id, status)
         self._ctiserver.send_cti_event(event)
         msg = self._marshaler.marshal_message(
             EndpointStatusUpdateEvent(config['uuid'], phone_id, status))
-        bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
-        with Connection(bus_url) as conn:
-            producer = Producer(conn, exchange=self._exchange, auto_declare=True)
-            producer.publish(msg, routing_key=config['bus']['routing_keys']['endpoint_status'])
+        self._bus_producer.publish(msg, routing_key=config['bus']['routing_keys']['endpoint_status'])

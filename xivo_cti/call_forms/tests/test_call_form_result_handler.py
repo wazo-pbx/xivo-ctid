@@ -20,11 +20,17 @@ import unittest
 from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock, patch, sentinel
-from xivo_bus.ctl.producer import BusProducer
-from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
+
+from xivo_bus import Marshaler
+
+from ..call_form_result_handler import CallFormResultHandler, CallFormResultEvent
 
 
 class TestCallFormResultHandler(unittest.TestCase):
+
+    def setUp(self):
+        self._marshaler = Marshaler()
+        self._bus_producer = Mock()
 
     def test_parse(self):
         user_id = 42
@@ -36,7 +42,7 @@ class TestCallFormResultHandler(unittest.TestCase):
             'firstname': 'Robert',
             'lastname': 'Lepage',
         }
-        handler = CallFormResultHandler(Mock())
+        handler = CallFormResultHandler(self._bus_producer)
         handler._send_call_form_result = Mock()
         handler.parse(user_id, variables)
 
@@ -57,22 +63,19 @@ class TestCallFormResultHandler(unittest.TestCase):
             'client_number': '1234',
         }
 
-        handler = CallFormResultHandler(Mock())
+        handler = CallFormResultHandler(self._bus_producer)
 
         assert_that(handler._clean_variables(variables), equal_to(expected_variables))
 
-    @patch('xivo_cti.call_forms.call_form_result_handler.CallFormResultEvent')
     @patch('xivo_cti.call_forms.call_form_result_handler.config',
-           {'bus': {'exchange_name': 'xivo',
-                    'routing_keys': {'call_form_result': 'call_form_result'}}})
-    def test_send_call_form_result(self, CallFormResultEvent):
-        user_id = 42
-        variables = {'a': 'b'}
-        CallFormResultEvent.return_value = sentinel
-        bus_producer = Mock(BusProducer)
-        handler = CallFormResultHandler(bus_producer)
+           {'bus': {'routing_keys': {'call_form_result': sentinel.routing_key}}})
+    def test_send_call_form_result(self):
+        variables = {'foo': 'bar'}
+        handler = CallFormResultHandler(self._bus_producer)
+        expected_msg = self._marshaler.marshal_message(
+            CallFormResultEvent(42, variables))
 
-        handler._send_call_form_result(user_id, variables)
+        handler._send_call_form_result(42, variables)
 
-        bus_producer.publish_event.assert_called_once_with('xivo', 'call_form_result', sentinel)
-        CallFormResultEvent.assert_called_once_with(user_id, variables)
+        self._bus_producer.publish.assert_called_once_with(expected_msg,
+                                                           routing_key=sentinel.routing_key)

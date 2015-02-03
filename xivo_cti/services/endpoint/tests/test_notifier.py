@@ -20,8 +20,7 @@ import unittest
 from ..status_notifier import StatusNotifier
 from ..status_notifier import EndpointStatusUpdateEvent
 from xivo_cti.ctiserver import CTIServer
-from mock import Mock
-from mock import patch
+from mock import Mock, patch
 
 
 @patch('xivo_cti.services.endpoint.status_notifier.config',
@@ -34,16 +33,15 @@ from mock import patch
 class TestStatusNotifier(unittest.TestCase):
 
     def setUp(self):
-        self._bus_producer = Mock()
         self._ctiserver = Mock(CTIServer)
+        self._bus_producer = Mock()
         self._notifier = StatusNotifier(self._ctiserver,
                                         self._bus_producer)
 
     def test_that_notify_calls_send_cti_event(self):
-        phone_id = '42'
-        new_status = 8
+        phone_id, status = '42', 8
 
-        self._notifier.notify(phone_id, new_status)
+        self._notifier.notify(phone_id, status)
 
         self._ctiserver.send_cti_event.assert_called_once_with(
             {'class': 'getlist',
@@ -51,7 +49,7 @@ class TestStatusNotifier(unittest.TestCase):
              'function': 'updatestatus',
              'tipbxid': 'xivo',
              'tid': phone_id,
-             'status': {'hintstatus': new_status},
+             'status': {'hintstatus': status},
             }
         )
 
@@ -63,8 +61,5 @@ class TestStatusNotifier(unittest.TestCase):
 
         expected_bus_msg = EndpointStatusUpdateEvent('xivo-uuid', phone_id, new_status)
 
-        self._bus_producer.publish_event.assert_called_once_with(
-            'configured-status-exchange',
-            'configured-endpoint-status-routing',
-            expected_bus_msg,
-        )
+        self._bus_producer.publish.asser_called_once_with(expected_bus_msg,
+                                                          routing_key='configured-endpoint-status-routing')

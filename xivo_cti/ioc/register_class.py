@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from kombu import Exchange
+from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
 from xivo_bus.resources.agent.client import AgentClient
@@ -92,8 +92,11 @@ def setup():
     bus_cfg_dict = dict(config['bus'])
     bus_cfg_dict.pop('routing_keys')
     bus_cfg = BusConfig(**bus_cfg_dict)
+    bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
+    bus_connection = Connection(bus_url)
     bus_exchange = Exchange(config['bus']['exchange_name'],
                             type=config['bus']['exchange_type'])
+    bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
 
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
@@ -109,7 +112,9 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
+    context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
+    context.register('bus_producer', bus_producer)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)

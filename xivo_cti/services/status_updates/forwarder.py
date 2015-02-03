@@ -22,7 +22,6 @@ import threading
 from functools import wraps
 from kombu.mixins import ConsumerMixin
 from kombu import Queue
-from kombu import Connection
 
 from collections import defaultdict
 from xivo_cti import config
@@ -42,18 +41,24 @@ class StatusForwarder(object):
     def __init__(self,
                  cti_group_factory,
                  task_queue,
+                 bus_connection,
                  bus_exchange,
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
         self._task_queue = task_queue
         self._exchange = bus_exchange
+        self._bus_connection = bus_connection
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
         self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
 
     def run(self):
-        self._listener = _ThreadedStatusListener(config, self._task_queue, self, self._exchange)
+        self._listener = _ThreadedStatusListener(config,
+                                                 self._task_queue,
+                                                 self._bus_connection,
+                                                 self,
+                                                 self._exchange)
 
     def on_agent_status_update(self, event):
         logger.debug('New agent status event: %s', event)
@@ -83,9 +88,9 @@ class StatusForwarder(object):
 
 class _ThreadedStatusListener(object):
 
-    def __init__(self, config, task_queue, forwarder, exchange):
+    def __init__(self, config, task_queue, connection, forwarder, exchange):
         self._thread = threading.Thread(target=_StatusListener,
-                                        args=(config, task_queue, forwarder, exchange))
+                                        args=(config, task_queue, connection, forwarder, exchange))
         self._thread.daemon = True
         self._thread.start()
 
@@ -135,10 +140,8 @@ class _StatusWorker(ConsumerMixin):
 
 class _StatusListener(object):
 
-    def __init__(self, config, task_queue, forwarder, exchange):
-        bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
-        with Connection(bus_url) as conn:
-            _StatusWorker(conn, exchange, task_queue, forwarder, config['bus']['routing_keys']).run()
+    def __init__(self, config, task_queue, connection, forwarder, exchange):
+        _StatusWorker(connection, exchange, task_queue, forwarder, config['bus']['routing_keys']).run()
 
 
 class _StatusNotifier(object):

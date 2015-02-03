@@ -37,6 +37,8 @@ class TestStatusForwarder(unittest.TestCase):
         self.user_status_notifier = Mock()
         self.forwarder = StatusForwarder(sentinel.cti_group_factory,
                                          sentinel.task_queue,
+                                         sentinel.bus_connection,
+                                         sentinel.bus_exchange,
                                          self.agent_status_notifier,
                                          self.endpoint_status_notifier,
                                          self.user_status_notifier)
@@ -45,7 +47,8 @@ class TestStatusForwarder(unittest.TestCase):
     @patch('xivo_cti.services.status_updates.forwarder._new_endpoint_notifier')
     @patch('xivo_cti.services.status_updates.forwarder._new_user_notifier')
     def test_forwarder_without_arguments(self, new_user_notifier, new_endpoint_notifier, new_agent_notifier):
-        StatusForwarder(sentinel.cti_group_factory, sentinel.task_queue)
+        StatusForwarder(sentinel.cti_group_factory, sentinel.task_queue,
+                        sentinel.bus_connection, sentinel.bus_exchange)
 
         new_endpoint_notifier.assert_called_once_with(sentinel.cti_group_factory)
         new_user_notifier.assert_called_once_with(sentinel.cti_group_factory)
@@ -107,7 +110,9 @@ class TestStatusForwarder(unittest.TestCase):
     def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
         self.forwarder.run()
 
-        _ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue, self.forwarder)
+        _ThreadedStatusListener.assert_called_once_with(sentinel.config, sentinel.task_queue,
+                                                        sentinel.bus_connection, self.forwarder,
+                                                        sentinel.bus_exchange)
 
 
 class TestNewAgentNotifier(unittest.TestCase):
@@ -153,42 +158,3 @@ class TestNewUserNotifier(unittest.TestCase):
         _new_user_notifier(sentinel.cti_group_factory)
 
         _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
-
-
-@patch('xivo_cti.services.status_updates.forwarder.Connection')
-@patch('xivo_cti.services.status_updates.forwarder.Exchange')
-class TestStatusListener(unittest.TestCase):
-
-    def setUp(self):
-        self.config = {
-            'bus': {
-                'host': 'example.com',
-                'port': 5496,
-                'username': 'u1',
-                'password': 'secret',
-                'exchange_name': 'my-exchange',
-                'exchange_type': 'topic',
-                'exchange_durable': True,
-                'routing_keys': {
-                    'agent_status': 'status.agent',
-                    'user_status': 'status.user',
-                    'endpoint_status': 'status.endpoint',
-                },
-            },
-        }
-
-        self.task_queue = Mock()
-        self.forwarder = StatusForwarder(sentinel.cti_group_factory,
-                                         sentinel.task_queue,
-                                         Mock(),
-                                         Mock(),
-                                         Mock())
-
-    @patch('xivo_cti.services.status_updates.forwarder._StatusWorker', Mock())
-    def test_that_listener_connects_to_the_bus(self, Exchange, Connection):
-        self.listener = _StatusListener(self.config, self.task_queue, self.forwarder)
-
-        expected_url = 'amqp://u1:secret@example.com:5496//'
-
-        Exchange.assert_called_once_with('my-exchange', type='topic')
-        Connection.assert_called_once_with(expected_url)
