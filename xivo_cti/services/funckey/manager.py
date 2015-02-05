@@ -60,16 +60,10 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def rna_fwd_in_use(self, user_id, destination, status):
-        device = self._device(user_id, 'fwdrna')
-        self._send(device, status)
-
         device = self._device(user_id, 'fwdrna', destination)
         self._send(device, status)
 
     def busy_fwd_in_use(self, user_id, destination, status):
-        device = self._device(user_id, 'fwdbusy')
-        self._send(device, status)
-
         device = self._device(user_id, 'fwdbusy', destination)
         self._send(device, status)
 
