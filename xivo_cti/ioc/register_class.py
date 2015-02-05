@@ -20,8 +20,8 @@ import logging
 from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
-from xivo_bus.resources.agent.client import AgentClient
-from xivo_bus.ctl.config import BusConfig
+from xivo_agent.ctl.client import AgentClient
+from xivo_agent.ctl.config import BusConfig
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
