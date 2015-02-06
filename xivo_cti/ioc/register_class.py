@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
+from kombu import Connection, Exchange, Producer
+
 from xivo.pubsub import Pubsub
-from xivo_bus.ctl.producer import BusProducer
-from xivo_bus.resources.agent.client import AgentClient
-from xivo_bus.ctl.config import BusConfig
+from xivo_agent.ctl.client import AgentClient
+from xivo_agent.ctl.config import BusConfig
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
@@ -87,10 +90,26 @@ from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.xivo_ami import AMIClass
 
 
+logger = logging.getLogger(__name__)
+
+
+def _on_bus_publish_error(exc, interval):
+    logger.error('Error: %s', exc, exc_info=1)
+    logger.info('Retry in %s seconds...', interval)
+
+
 def setup():
     bus_cfg_dict = dict(config['bus'])
     bus_cfg_dict.pop('routing_keys')
     bus_cfg = BusConfig(**bus_cfg_dict)
+    bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
+    bus_connection = Connection(bus_url)
+    bus_exchange = Exchange(config['bus']['exchange_name'],
+                            type=config['bus']['exchange_type'])
+    bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
+    bus_publish_fn = bus_connection.ensure(bus_producer, bus_producer.publish,
+                                           errback=_on_bus_publish_error, max_retries=1,
+                                           interval_start=1)
 
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
@@ -106,8 +125,10 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
+    context.register('bus_connection', bus_connection)
+    context.register('bus_exchange', lambda: bus_exchange)
+    context.register('bus_publish', lambda: bus_publish_fn)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
-    context.register('bus_producer', BusProducer(bus_cfg))
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)

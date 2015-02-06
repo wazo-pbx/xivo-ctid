@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,9 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
 from mock import Mock, call
-from xivo_bus.resources.agent import error
-from xivo_bus.resources.agent.exception import AgentClientError
+
+from xivo_agent.resources.agent import error
+from xivo_agent.exception import AgentClientError
+
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.executor import AgentExecutor
 from xivo_cti.xivo_ami import AMIClass
