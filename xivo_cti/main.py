@@ -16,15 +16,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+import xivo_dao
 
+from xivo_cti import config
+from xivo_cti import cti_config
 from xivo_cti.ioc.context import context
 from xivo_cti.ioc import register_class
-from xivo_cti import cti_config
 
 
 def main():
     cti_config.init_cli_config(sys.argv[1:])
     cti_config.init_config_file()
+    xivo_dao.init_db_from_config(config)
     cti_config.update_db_config()
 
     register_class.setup()
