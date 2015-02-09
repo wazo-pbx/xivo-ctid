@@ -1,6 +1,6 @@
 To run ctid in a docker please run it like :
 
-    docker run -i -p 5003:5003 -p 5004:5004 -v /config/ctid/:/etc/xivo-ctid/conf.d -t xivo-ctid /bin/bash
+    docker run -i -p 5003:5003 -p 5004:5004 -v /config/ctid/:/etc/xivo-ctid/conf.d -t xivo-ctid bash
 
 and launch the xivo-ctid
 
