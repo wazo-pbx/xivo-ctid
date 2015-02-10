@@ -17,7 +17,6 @@
 
 import logging
 
-from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_cti import config
 
@@ -26,10 +25,9 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
-    _marshaler = Marshaler()
-
-    def __init__(self, bus_publish):
+    def __init__(self, bus_publish, bus_marshaler):
         self._publish_bus_msg = bus_publish
+        self._marshaler = bus_marshaler
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))

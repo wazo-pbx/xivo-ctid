@@ -22,6 +22,7 @@ from kombu import Connection, Exchange, Producer
 from xivo.pubsub import Pubsub
 from xivo_agent.ctl.client import AgentClient
 from xivo_agent.ctl.config import BusConfig
+from xivo_bus import Marshaler
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
@@ -110,6 +111,7 @@ def setup():
     bus_publish_fn = bus_connection.ensure(bus_producer, bus_producer.publish,
                                            errback=_on_bus_publish_error, max_retries=1,
                                            interval_start=1)
+    bus_marshaler = Marshaler(config['uuid'])
 
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
@@ -128,6 +130,7 @@ def setup():
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
     context.register('bus_publish', lambda: bus_publish_fn)
+    context.register('bus_marshaler', lambda: bus_marshaler)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)

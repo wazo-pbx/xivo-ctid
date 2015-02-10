@@ -19,7 +19,6 @@ import logging
 import pprint
 import re
 
-from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import CallFormResultEvent
 from xivo_cti import config
 
@@ -28,11 +27,11 @@ logger = logging.getLogger(__name__)
 
 class CallFormResultHandler(object):
 
-    _marshaler = Marshaler()
     _variable_pattern = re.compile(r'XIVOFORM_([\w_]+)')
 
-    def __init__(self, bus_publish):
+    def __init__(self, bus_publish, bus_marshaler):
         self._publish_bus_msg = bus_publish
+        self._marshaler = bus_marshaler
 
     def parse(self, user_id, variables):
         self._send_call_form_result(
