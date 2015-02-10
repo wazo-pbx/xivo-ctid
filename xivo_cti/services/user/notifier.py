@@ -61,7 +61,7 @@ class UserServiceNotifier(object):
 
     def presence_updated(self, user_id, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
-        bus_message = UserStatusUpdateEvent(config['uuid'], user_id, presence)
+        bus_message = UserStatusUpdateEvent(user_id, presence)
         self._send_bus_message(bus_message)
 
     def _send_bus_message(self, message):

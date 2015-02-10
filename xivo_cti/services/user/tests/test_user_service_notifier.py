@@ -182,7 +182,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
         expected_msg = self._marshaler.marshal_message(
-            UserStatusUpdateEvent('xivo-uuid', user_id, 'available'))
+            UserStatusUpdateEvent(user_id, 'available'))
         self.bus_publish.assert_called_once_with(
             expected_msg,
             routing_key='status.user',

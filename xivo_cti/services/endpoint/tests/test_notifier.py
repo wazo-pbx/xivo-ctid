@@ -63,7 +63,7 @@ class TestStatusNotifier(unittest.TestCase):
 
         self._notifier.notify(phone_id, new_status)
 
-        expected_bus_msg = EndpointStatusUpdateEvent('xivo-uuid', phone_id, new_status)
+        expected_bus_msg = EndpointStatusUpdateEvent(phone_id, new_status)
 
         self._bus_producer.publish.asser_called_once_with(expected_bus_msg,
                                                           routing_key='configured-endpoint-status-routing')

@@ -83,7 +83,7 @@ class StatusForwarder(object):
 
     def _extract_key(self, event):
         id_field = self._id_field_map[event['name']]
-        return event['data']['xivo_id'], event['data'][id_field]
+        return event['origin_uuid'], event['data'][id_field]
 
 
 class _ThreadedStatusListener(object):
