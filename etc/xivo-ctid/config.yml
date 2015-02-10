@@ -20,6 +20,7 @@ dird:
   host: localhost
   port: 9489
   version: 0.1
+  timeout: 3
 
 # Event bus (AMQP) connection informations
 bus:
