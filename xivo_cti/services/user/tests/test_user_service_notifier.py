@@ -31,10 +31,10 @@ class TestUserServiceNotifier(unittest.TestCase):
     def setUp(self):
         self.ipbx_id = 'xivo'
         self.bus_publish = Mock()
-        self.notifier = UserServiceNotifier(self.bus_publish)
+        self._marshaler = Marshaler('my-uuid')
+        self.notifier = UserServiceNotifier(self.bus_publish, self._marshaler)
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
-        self._marshaler = Marshaler()
 
     def test_dnd_enabled(self):
         user_id = 34
@@ -182,7 +182,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
         expected_msg = self._marshaler.marshal_message(
-            UserStatusUpdateEvent('xivo-uuid', user_id, 'available'))
+            UserStatusUpdateEvent(user_id, 'available'))
         self.bus_publish.assert_called_once_with(
             expected_msg,
             routing_key='status.user',

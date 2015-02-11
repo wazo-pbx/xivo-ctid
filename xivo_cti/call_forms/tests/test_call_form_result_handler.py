@@ -29,8 +29,9 @@ from ..call_form_result_handler import CallFormResultHandler, CallFormResultEven
 class TestCallFormResultHandler(unittest.TestCase):
 
     def setUp(self):
-        self._marshaler = Marshaler()
+        self._marshaler = Marshaler('my-uuid')
         self._bus_publish = Mock()
+        self._handler = CallFormResultHandler(self._bus_publish, self._marshaler)
 
     def test_parse(self):
         user_id = 42
@@ -42,11 +43,10 @@ class TestCallFormResultHandler(unittest.TestCase):
             'firstname': 'Robert',
             'lastname': 'Lepage',
         }
-        handler = CallFormResultHandler(self._bus_publish)
-        handler._send_call_form_result = Mock()
-        handler.parse(user_id, variables)
+        self._handler._send_call_form_result = Mock()
+        self._handler.parse(user_id, variables)
 
-        handler._send_call_form_result.assert_called_once_with(
+        self._handler._send_call_form_result.assert_called_once_with(
             user_id,
             cleaned_up_variables,
         )
@@ -63,19 +63,17 @@ class TestCallFormResultHandler(unittest.TestCase):
             'client_number': '1234',
         }
 
-        handler = CallFormResultHandler(self._bus_publish)
-
-        assert_that(handler._clean_variables(variables), equal_to(expected_variables))
+        assert_that(self._handler._clean_variables(variables),
+                    equal_to(expected_variables))
 
     @patch('xivo_cti.call_forms.call_form_result_handler.config',
            {'bus': {'routing_keys': {'call_form_result': sentinel.routing_key}}})
     def test_send_call_form_result(self):
         variables = {'foo': 'bar'}
-        handler = CallFormResultHandler(self._bus_publish)
         expected_msg = self._marshaler.marshal_message(
             CallFormResultEvent(42, variables))
 
-        handler._send_call_form_result(42, variables)
+        self._handler._send_call_form_result(42, variables)
 
         self._bus_publish.assert_called_once_with(expected_msg,
                                                   routing_key=sentinel.routing_key)

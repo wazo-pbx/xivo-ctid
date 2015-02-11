@@ -18,7 +18,6 @@
 import unittest
 
 from ..forwarder import StatusForwarder
-from ..forwarder import _StatusListener
 from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
@@ -59,9 +58,9 @@ class TestStatusForwarder(unittest.TestCase):
         agent_id = 42
         event = {
             'name': 'agent_status_update',
+            'origin_uuid': xivo_id,
             'data': {
                 'agent_id': agent_id,
-                'xivo_id': xivo_id,
                 'status': 'logged_in',
             }
         }
@@ -76,9 +75,9 @@ class TestStatusForwarder(unittest.TestCase):
         endpoint_id = 67
         event = {
             'name': 'endpoint_status_update',
+            'origin_uuid': xivo_id,
             'data': {
                 'endpoint_id': endpoint_id,
-                'xivo_id': xivo_id,
                 'status': 0,
             }
         }
@@ -93,9 +92,9 @@ class TestStatusForwarder(unittest.TestCase):
         user_id = 67
         event = {
             'name': 'user_status_update',
+            'origin_uuid': xivo_id,
             'data': {
                 'user_id': user_id,
-                'xivo_id': xivo_id,
                 'status': 'busy',
             }
         }
