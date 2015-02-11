@@ -10,7 +10,7 @@ Installing XiVO CTI
 -------------------
 
 The server is already provided as a part of [XiVO](http://documentation.xivo.io).
-Please refer to [the documentation](ttp://documentation.xivo.io/production/installation/installsystem.html) for
+Please refer to [the documentation](http://documentation.xivo.io/en/stable/installation/installsystem.html) for
 further details on installing one.
 
 Running unit tests
