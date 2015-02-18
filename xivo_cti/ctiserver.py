@@ -105,9 +105,33 @@ class CTIServer(object):
     def _sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
                        signum, frame.f_lineno, self.askedtoquit)
+        self._stop(0)
+
+    def _stop(self, ret_code):
+        time_uptime = int(time.time() - time.mktime(self.time_start))
+        logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
+                    self.servername, os.getpid(),
+                    time_uptime, time.asctime(self.time_start))
+        self.askedtoquit = True
+
+        logger.debug('Stopping the status forwarder')
+        context.get('status_forwarder').stop()
+
+        logger.debug('Closing all sockets')
+        self._socket_close_all()
+
+        logger.debug('Cleaning the task queue')
+        self._task_queue.clear()
+
+        logger.debug('Cleaning the task scheduler')
+        self._task_scheduler.clear()
+
+        logger.debug('Stopping all remaining threads')
         for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
             t._Thread__stop()
-        self.askedtoquit = True
+
+        daemonize.unlock_pidfile(config['pidfile'])
+        sys.exit(ret_code)
 
     def _set_logger(self):
         setup_logging(config['logfile'], config['foreground'], config['debug'])
@@ -475,8 +499,7 @@ class CTIServer(object):
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
-        logger.info('shutting down xivo-ctid')
-        sys.exit(2)
+        self._stop(2)
 
     def get_connected(self, tomatch):
         clist = []
@@ -537,33 +560,20 @@ class CTIServer(object):
             return result
 
         except Exception:
-            logger.exception('(select) probably Ctrl-C or daemon stop or daemon restart ...')
             logger.warning('(select) self.askedtoquit=%s fdlist_full=%s', self.askedtoquit, self.fdlist_full)
-
-            self._socket_close_all()
-
-            if self.askedtoquit:
-                time_uptime = int(time.time() - time.mktime(self.time_start))
-                logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
-                            self.servername, os.getpid(),
-                            time_uptime, time.asctime(self.time_start))
-                for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
-                    print '--- (stop) killing thread <%s>' % t.getName()
-                    t._Thread__stop()
-                daemonize.unlock_pidfile(config['pidfile'])
-                sys.exit(5)
-            else:
-                self.askedtoquit = True
-                for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
-                    print '--- (reload) the thread <%s> remains' % t.getName()
-                return (None, None, None)
+            self._stop(5)
 
     def _socket_close_all(self):
         cause = DisconnectCause.by_server_stop if self.askedtoquit else DisconnectCause.by_server_reload
+
         for s in self.fdlist_full:
             if s in self.fdlist_interface_cti:
-                self.fdlist_interface_cti[s].disconnected(cause)
-            elif s in self.fdlist_interface_info:
+                interface_cti = self.fdlist_interface_cti[s]
+                self._broadcast_cti_group.remove(interface_cti)
+                interface_cti.disconnected(cause)
+
+        for s in self.fdlist_full:
+            if s in self.fdlist_interface_info:
                 self.fdlist_interface_info[s].disconnected(cause)
             elif s in self.fdlist_interface_webi:
                 self.fdlist_interface_webi[s].disconnected(cause)

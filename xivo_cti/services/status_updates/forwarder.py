@@ -60,6 +60,9 @@ class StatusForwarder(object):
                                                  self,
                                                  self._exchange)
 
+    def stop(self):
+        self._listener.stop()
+
     def on_agent_status_update(self, event):
         logger.debug('New agent status event: %s', event)
         key = self._extract_key(event)
@@ -89,10 +92,13 @@ class StatusForwarder(object):
 class _ThreadedStatusListener(object):
 
     def __init__(self, config, task_queue, connection, forwarder, exchange):
-        self._thread = threading.Thread(target=_StatusListener,
-                                        args=(config, task_queue, connection, forwarder, exchange))
-        self._thread.daemon = True
+        self._listener = _StatusListener(config, task_queue, connection, forwarder, exchange)
+        self._thread = threading.Thread(target=self._listener.start)
         self._thread.start()
+
+    def stop(self):
+        self._listener.stop()
+        self._thread.join()
 
 
 def _loads_and_ack(f):
@@ -141,7 +147,14 @@ class _StatusWorker(ConsumerMixin):
 class _StatusListener(object):
 
     def __init__(self, config, task_queue, connection, forwarder, exchange):
-        _StatusWorker(connection, exchange, task_queue, forwarder, config['bus']['routing_keys']).run()
+        self._worker = _StatusWorker(connection, exchange, task_queue,
+                                     forwarder, config['bus']['routing_keys'])
+
+    def start(self):
+        self._worker.run()
+
+    def stop(self):
+        self._worker.should_stop = True
 
 
 class _StatusNotifier(object):
