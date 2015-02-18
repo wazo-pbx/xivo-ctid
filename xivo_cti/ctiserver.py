@@ -97,6 +97,7 @@ class CTIServer(object):
         self.myipbxid = 'xivo'
         self.interface_ami = None
         self.update_config_list = []
+        self.fdlist_full = []
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
