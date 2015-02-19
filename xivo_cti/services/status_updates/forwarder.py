@@ -19,11 +19,14 @@ import logging
 import json
 import threading
 
+from collections import defaultdict
 from functools import wraps
+
 from kombu.mixins import ConsumerMixin
 from kombu import Queue
 
-from collections import defaultdict
+from xivo_ctid_client import Client as CtidClient
+
 from xivo_cti import config
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -186,6 +189,43 @@ class _StatusNotifier(object):
             return
 
         subscription.send_message(msg)
+
+
+class _EndpointStatusFetcher(object):
+
+    def __init__(self, status_forwarder):
+        self.forwarder = status_forwarder
+
+    def fetch(self, key):
+        uuid, endpoint_id = key
+        client_config = self._get_client_config(uuid)
+        if not client_config:
+            logger.warning('Could not fetch endpoint %s on %s, unknown uuid', endpoint_id, uuid)
+            return
+
+        client = CtidClient(**client_config)
+        # XXX blocking at the moment
+        try:
+            result = client.endpoints.get(endpoint_id)
+        except HTTPError:
+            logger.exception('Failed to fetch endpoint status for %s on %s', endpoint_id, uuid)
+            return
+
+        self._on_result(result)
+
+    def _get_client_config(self, uuid):
+        # XXX where do we get this info from? config, consul, other
+        if uuid == config['uuid']:
+            return {
+                'host': 'localhost',
+                'port': 5970,
+            }
+
+    def _on_result(self, result):
+        key = result['origin_uuid'], result['id']
+        status = result['status']
+
+        self.forwarder.on_endpoint_status_update(key, status)
 
 
 def _new_agent_notifier(cti_group_factory):

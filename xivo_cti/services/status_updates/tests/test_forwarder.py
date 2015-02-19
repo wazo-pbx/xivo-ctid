@@ -22,6 +22,8 @@ from ..forwarder import _new_agent_notifier
 from ..forwarder import _new_endpoint_notifier
 from ..forwarder import _new_user_notifier
 from ..forwarder import CTIMessageFormatter
+from ..forwarder import _EndpointStatusFetcher
+
 from mock import ANY
 from mock import Mock
 from mock import patch
@@ -157,3 +159,39 @@ class TestNewUserNotifier(unittest.TestCase):
         _new_user_notifier(sentinel.cti_group_factory)
 
         _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update)
+
+
+class TestEndpointStatusFetcher(unittest.TestCase):
+
+    def setUp(self):
+        self.uuid = 'some-uuid'
+        self.id_ = 42
+        self.key = (self.uuid, self.id_)
+
+    def test_that_on_response_calls_the_forwarder(self):
+        forwarder = Mock(StatusForwarder)
+
+        fetcher = _EndpointStatusFetcher(forwarder)
+
+        fetcher._on_result({
+            'id': self.id_,
+            'origin_uuid': self.uuid,
+            'status': 8,
+        })
+
+        forwarder.on_endpoint_status_update.assert_called_once_with(self.key, 8)
+
+    @patch('xivo_cti.services.status_updates.forwarder.CtidClient')
+    def test_that_fetch_get_from_a_client(self, CtidClient):
+        client = CtidClient.return_value = Mock()
+        forwarder = Mock(StatusForwarder)
+
+        fetcher = _EndpointStatusFetcher(forwarder)
+        fetcher._get_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
+        fetcher._on_result = Mock()
+
+        fetcher.fetch(self.key)
+
+        fetcher._get_client_config.assert_called_once_with(self.uuid)
+        CtidClient.assert_called_once_with(host='localhost', port=6666)
+        client.endpoints.get.assert_called_once_with(self.id_)
