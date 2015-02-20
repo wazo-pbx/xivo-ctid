@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2009-2014 Avencall
+# Copyright (C) 2009-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from mock import patch, Mock
+from mock import patch, Mock, sentinel
 from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
     NoSuchLineException
 from xivo_cti.innerdata import Safe
@@ -211,6 +211,17 @@ class TestUserDAO(unittest.TestCase):
         result = self.dao._innerdata.xod_status['users'][user_id]
         self.assertEqual(expected_userdata['connection'], result['connection'])
         self.assertTrue(expected_userdata['last-logouttimestamp'] > time.time() - 1)
+
+    def test_get_presence(self):
+        self.dao._innerdata = self._innerdata
+        self._userlist = {}
+        user_id = '42'
+        self._userlist[user_id] = {'availstate': sentinel.presence}
+        self.dao._innerdata.xod_status = {'users': self._userlist}
+
+        presence = self.dao.get_presence(user_id)
+
+        assert_that(presence, equal_to(sentinel.presence))
 
     def test_set_presence(self):
         self.dao._innerdata = self._innerdata
