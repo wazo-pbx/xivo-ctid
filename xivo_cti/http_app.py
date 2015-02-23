@@ -43,11 +43,22 @@ class Users(restful.Resource):
             return str(e), 404
 
 
+class Infos(restful.Resource):
+
+    def get(self):
+        uuid = self.main_thread_proxy.get_uuid()
+
+        return {
+            'uuid': uuid.get(),
+        }
+
+
 class HTTPInterface(object):
 
     VERSION = '0.1'
 
     _resources = [
+        (Infos, '/infos'),
         (Users, '/users/<int:user_id>'),
     ]
 
