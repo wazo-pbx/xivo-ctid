@@ -35,6 +35,7 @@ from xivo_cti.cti.cti_message_codec import CTIMessageCodec
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.flusher import Flusher
 from xivo_cti.innerdata import Safe
+from xivo_cti.main_thread_proxy import MainThreadProxy
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
@@ -157,6 +158,7 @@ def setup():
     context.register('funckey_manager', FunckeyManager)
     context.register('innerdata', Safe)
     context.register('interface_ami', AMI)
+    context.register('main_thread_proxy', MainThreadProxy)
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('people_cti_adapter', PeopleCTIAdapter)

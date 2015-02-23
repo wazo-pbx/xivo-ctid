@@ -33,6 +33,8 @@ from xivo_cti import cti_config
 from xivo_cti import SSLPROTO
 from xivo_cti import dao
 from xivo_cti import message_hook
+from xivo_cti import http_app
+
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti import channel_updater
 from xivo_cti.client_connection import ClientConnection
@@ -128,7 +130,8 @@ class CTIServer(object):
         self._task_scheduler.clear()
 
         logger.debug('Stopping all remaining threads')
-        for t in filter(lambda x: x.getName() != 'MainThread', threading.enumerate()):
+        for t in filter(lambda x: x.getName() not in
+                        ['MainThread', 'HTTPServerThread'], threading.enumerate()):
             t._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
@@ -450,6 +453,12 @@ class CTIServer(object):
         self._init_statistics_producers()
         self._init_agent_availability()
         self._queue_member_indexer.initialize(self._queue_member_manager)
+
+        logger.info('Listening for HTTP requests')
+        http_interface = http_app.HTTPInterface(config['rest_api']['listen'],
+                                                config['rest_api']['port'],
+                                                context.get('main_thread_proxy'))
+        http_interface.start()
 
         logger.info('Local AMI socket connection')
         self.interface_ami.init_connection()

@@ -1,6 +1,9 @@
 # This file should not be modified as it may get changed by the maintainer.
 # Add extra configuration files in the extra_config_files directory to override
 # the content from this file
+rest_api:
+  listen: 127.0.0.1
+  port: 9495
 
 # Extra configuration directory where the config files overriding this file
 # should be.
