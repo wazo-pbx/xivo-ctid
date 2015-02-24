@@ -28,6 +28,24 @@ from werkzeug.contrib.fixers import ProxyFix
 logger = logging.getLogger(__name__)
 
 
+class Endpoints(restful.Resource):
+
+    def get(self, endpoint_id):
+        uuid = self.main_thread_proxy.get_uuid()
+        endpoint_status = self.main_thread_proxy.get_endpoint_status(str(endpoint_id))
+
+        try:
+            return {
+                'id': endpoint_id,
+                'origin_uuid': uuid.get(),
+                'status': int(endpoint_status.get()),
+            }
+        except LookupError as e:
+            return {'reason': [str(e)],
+                    'timestamp': [time.time()],
+                    'status_code': 404}, 404
+
+
 class Users(restful.Resource):
 
     def get(self, user_id):
@@ -61,6 +79,7 @@ class HTTPInterface(object):
     VERSION = '0.1'
 
     _resources = [
+        (Endpoints, '/endpoints/<int:endpoint_id>'),
         (Infos, '/infos'),
         (Users, '/users/<int:user_id>'),
     ]
