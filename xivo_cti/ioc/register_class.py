@@ -17,6 +17,7 @@
 
 import logging
 
+from concurrent import futures
 from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
@@ -114,6 +115,8 @@ def setup():
                                            interval_start=1)
     bus_marshaler = Marshaler(config['uuid'])
 
+    thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
+
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
     context.register('ami_class', AMIClass)
@@ -181,6 +184,7 @@ def setup():
     context.register('status_forwarder', StatusForwarder)
     context.register('task_queue', new_task_queue)
     context.register('task_scheduler', new_task_scheduler)
+    context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
 

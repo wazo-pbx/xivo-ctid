@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 
 import logging
 
-from concurrent import futures
 from xivo_cti import config
 from xivo_dird_client import Client
 
@@ -26,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 class AsyncDirdClient(object):
 
-    def __init__(self, task_queue):
-        self._executor = futures.ThreadPoolExecutor(max_workers=5)
+    def __init__(self, task_queue, thread_pool_executor):
+        self._executor = thread_pool_executor
         self._task_queue = task_queue
         self._client = self._new_client()
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 from ..async_dird_client import AsyncDirdClient
 
+from concurrent import futures
 from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import patch
@@ -32,20 +33,21 @@ class TestDird(TestCase):
 
     def setUp(self):
         self.task_queue = Mock()
+        self.thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
 
     def test_client(self, MockedClient):
-        async_dird_client = AsyncDirdClient(self.task_queue)
+        async_dird_client = AsyncDirdClient(self.task_queue, self.thread_pool_executor)
         assert_that(async_dird_client._client, equal_to(MockedClient.return_value))
         MockedClient.assert_called_once_with(host='localhost', port=9489, version='0.1')
 
     def test_headers(self, MockedClient):
         MockedClient.return_value.directories.headers.return_value = 'my-headers'
 
-        async_dird_client = AsyncDirdClient(self.task_queue)
+        async_dird_client = AsyncDirdClient(self.task_queue, self.thread_pool_executor)
 
         async_dird_client.headers('my-profile', sentinel.cb)
 
-        async_dird_client._executor.shutdown(wait=True)
+        self.thread_pool_executor.shutdown(wait=True)
 
         self.task_queue.put.assert_called_once_with(sentinel.cb, 'my-headers')
         MockedClient.return_value.directories.headers.assert_called_once_with(profile='my-profile')
@@ -53,11 +55,11 @@ class TestDird(TestCase):
     def test_lookup(self, MockedClient):
         MockedClient.return_value.directories.lookup.return_value = 'my-results'
 
-        async_dird_client = AsyncDirdClient(self.task_queue)
+        async_dird_client = AsyncDirdClient(self.task_queue, self.thread_pool_executor)
 
         async_dird_client.lookup('my-profile', 'alice', sentinel.cb)
 
-        async_dird_client._executor.shutdown(wait=True)
+        self.thread_pool_executor.shutdown(wait=True)
 
         self.task_queue.put.assert_called_once_with(sentinel.cb, 'my-results')
         MockedClient.return_value.directories.lookup.assert_called_once_with(
