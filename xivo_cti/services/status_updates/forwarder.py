@@ -35,12 +35,6 @@ logger = logging.getLogger(__name__)
 
 class StatusForwarder(object):
 
-    _id_field_map = {
-        'agent_status_update': 'agent_id',
-        'endpoint_status_update': 'endpoint_id',
-        'user_status_update': 'user_id',
-    }
-
     def __init__(self,
                  cti_group_factory,
                  task_queue,
@@ -66,30 +60,16 @@ class StatusForwarder(object):
     def stop(self):
         self._listener.stop()
 
-    def on_agent_status_update(self, event):
-        logger.debug('New agent status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
+    def on_agent_status_update(self, key, status):
+        self.agent_status_notifier.update(key, status)
 
-        self.agent_status_notifier.update(key, new_status)
+    def on_endpoint_status_update(self, key, status):
+        self.endpoint_status_notifier.update(key, status)
 
-    def on_endpoint_status_update(self, event):
-        logger.debug('New endpoint status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
+    def on_user_status_update(self, key, status):
+        self.user_status_notifier.update(key, status)
 
-        self.endpoint_status_notifier.update(key, new_status)
 
-    def on_user_status_update(self, event):
-        logger.debug('New user status event: %s', event)
-        key = self._extract_key(event)
-        new_status = event['data']['status']
-
-        self.user_status_notifier.update(key, new_status)
-
-    def _extract_key(self, event):
-        id_field = self._id_field_map[event['name']]
-        return event['origin_uuid'], event['data'][id_field]
 
 
 class _ThreadedStatusListener(object):
@@ -114,6 +94,12 @@ def _loads_and_ack(f):
 
 class _StatusWorker(ConsumerMixin):
 
+    _id_field_map = {
+        'agent_status_update': 'agent_id',
+        'endpoint_status_update': 'endpoint_id',
+        'user_status_update': 'user_id',
+    }
+
     def __init__(self, connection, exchange, task_queue, forwarder, routing_keys):
         self.connection = connection
         self.exchange = exchange
@@ -136,15 +122,25 @@ class _StatusWorker(ConsumerMixin):
 
     @_loads_and_ack
     def _on_agent_status(self, body):
-        self._task_queue.put(self._forwarder.on_agent_status_update, body)
+        key = self._extract_key(body)
+        status = body['data']['status']
+        self._task_queue.put(self._forwarder.on_agent_status_update, key, status)
 
     @_loads_and_ack
     def _on_user_status(self, body):
-        self._task_queue.put(self._forwarder.on_user_status_update, body)
+        key = self._extract_key(body)
+        status = body['data']['status']
+        self._task_queue.put(self._forwarder.on_user_status_update, key, status)
 
     @_loads_and_ack
     def _on_endpoint_status(self, body):
-        self._task_queue.put(self._forwarder.on_endpoint_status_update, body)
+        key = self._extract_key(body)
+        status = body['data']['status']
+        self._task_queue.put(self._forwarder.on_endpoint_status_update, key, status)
+
+    def _extract_key(self, event):
+        id_field = self._id_field_map[event['name']]
+        return event['origin_uuid'], event['data'][id_field]
 
 
 class _StatusListener(object):
