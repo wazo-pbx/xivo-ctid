@@ -40,15 +40,18 @@ class StatusForwarder(object):
                  task_queue,
                  bus_connection,
                  bus_exchange,
+                 thread_pool_executor,
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
+        self._endpoint_status_fetcher = _EndpointStatusFetcher(self, thread_pool_executor)
+        self._user_status_fetcher = _UserStatusFetcher(self, thread_pool_executor)
         self._task_queue = task_queue
         self._exchange = bus_exchange
         self._bus_connection = bus_connection
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
-        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory)
-        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory)
+        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, self._endpoint_status_fetcher)
+        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, self._user_status_fetcher)
 
     def run(self):
         self._listener = _ThreadedStatusListener(config,
@@ -68,8 +71,6 @@ class StatusForwarder(object):
 
     def on_user_status_update(self, key, status):
         self.user_status_notifier.update(key, status)
-
-
 
 
 class _ThreadedStatusListener(object):
@@ -158,10 +159,11 @@ class _StatusListener(object):
 
 class _StatusNotifier(object):
 
-    def __init__(self, cti_group_factory, message_factory):
+    def __init__(self, cti_group_factory, message_factory, fetcher):
         self._subscriptions = defaultdict(cti_group_factory.new_cti_group)
         self._message_factory = message_factory
         self._statuses = {}
+        self._fetcher = fetcher
 
     def register(self, connection, keys):
         for key in keys:
@@ -170,6 +172,8 @@ class _StatusNotifier(object):
             status_msg = self._statuses.get(key)
             if status_msg:
                 connection.send_message(status_msg)
+            elif self._fetcher:
+                self._fetcher.fetch(key)
 
     def unregister(self, connection, keys):
         for key in keys:
@@ -187,12 +191,36 @@ class _StatusNotifier(object):
         subscription.send_message(msg)
 
 
-class _EndpointStatusFetcher(object):
+class _BaseStatusFetcher(object):
 
-    def __init__(self, status_forwarder):
+    def __init__(self, status_forwarder, thread_pool_executor):
         self.forwarder = status_forwarder
+        self._executor = thread_pool_executor
+
+    def _get_client_config(self, uuid):
+        # XXX where do we get this info from? config, consul, other
+        if uuid == config['uuid']:
+            return {
+                'host': 'localhost',
+                'port': 9495,
+            }
+
+    def exec_async(self, callback, fn, *args, **kwargs):
+        self._executor.submit(self._result_to_main_thread, callback, fn, *args, **kwargs)
+
+    def _result_to_main_thread(self, cb, fn, *args, **kwargs):
+        try:
+            result = fn(*args, **kwargs)
+        except Exception:
+            logger.exception()
+        else:
+            self._task_queue.put(cb, result)
+
+
+class _EndpointStatusFetcher(_BaseStatusFetcher):
 
     def fetch(self, key):
+        logger.debug('Fetching endpoint %s', key)
         uuid, endpoint_id = key
         client_config = self._get_client_config(uuid)
         if not client_config:
@@ -200,22 +228,7 @@ class _EndpointStatusFetcher(object):
             return
 
         client = CtidClient(**client_config)
-        # XXX blocking at the moment
-        try:
-            result = client.endpoints.get(endpoint_id)
-        except HTTPError:
-            logger.exception('Failed to fetch endpoint status for %s on %s', endpoint_id, uuid)
-            return
-
-        self._on_result(result)
-
-    def _get_client_config(self, uuid):
-        # XXX where do we get this info from? config, consul, other
-        if uuid == config['uuid']:
-            return {
-                'host': 'localhost',
-                'port': 5970,
-            }
+        self.exec_async(self._on_result, client.endpoints.get, endpoint_id)
 
     def _on_result(self, result):
         key = result['origin_uuid'], result['id']
@@ -224,16 +237,36 @@ class _EndpointStatusFetcher(object):
         self.forwarder.on_endpoint_status_update(key, status)
 
 
+class _UserStatusFetcher(_BaseStatusFetcher):
+
+    def fetch(self, key):
+        logger.debug('Fetching user %s', key)
+        uuid, user_id = key
+        client_config = self._get_client_config(uuid)
+        if not client_config:
+            logger.warning('Could not fetch endpoint %s on %s, unknown uuid', user_id, uuid)
+            return
+
+        client = CtidClient(**client_config)
+        self.exec_async(self._on_result, client.users.get, user_id)
+
+    def _on_result(self, result):
+        key = result['origin_uuid'], result['id']
+        status = result['presence']
+
+        self.forwarder.on_user_status_update(key, status)
+
+
 def _new_agent_notifier(cti_group_factory):
     msg_factory = CTIMessageFormatter.agent_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory, None)
 
 
-def _new_endpoint_notifier(cti_group_factory):
+def _new_endpoint_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.endpoint_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
 
 
-def _new_user_notifier(cti_group_factory):
+def _new_user_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.user_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
