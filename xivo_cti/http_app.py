@@ -17,6 +17,7 @@
 
 import os
 import logging
+import time
 import threading
 
 from cherrypy import wsgiserver
@@ -40,7 +41,19 @@ class Users(restful.Resource):
                 'presence': user_presence.get(),
             }
         except LookupError as e:
-            return str(e), 404
+            return {'reason': [str(e)],
+                    'timestamp': [time.time()],
+                    'status_code': 404}, 404
+
+
+class Infos(restful.Resource):
+
+    def get(self):
+        uuid = self.main_thread_proxy.get_uuid()
+
+        return {
+            'uuid': uuid.get(),
+        }
 
 
 class HTTPInterface(object):
@@ -48,6 +61,7 @@ class HTTPInterface(object):
     VERSION = '0.1'
 
     _resources = [
+        (Infos, '/infos'),
         (Users, '/users/<int:user_id>'),
     ]
 
