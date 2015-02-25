@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -107,6 +107,10 @@ class UserDAO(object):
         user_status = self._user_status(user_id)
         user_status['connection'] = None
         user_status['last-logouttimestamp'] = time.time()
+
+    def get_presence(self, user_id):
+        user_status = self._user_status(user_id)
+        return user_status['availstate']
 
     def set_presence(self, user_id, presence):
         user_status = self._user_status(user_id)

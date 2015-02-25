@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,13 +18,7 @@
 from xivo.asterisk.protocol_interface import InvalidChannelError
 from xivo.asterisk.protocol_interface import protocol_interface_from_hint
 
-
-class NoSuchPhoneException(LookupError):
-
-    def __init__(self, phone_id):
-        msg = 'No phone matching id {type}({value})'.format(
-            type=type(phone_id).__name__, value=phone_id)
-        super(NoSuchPhoneException, self).__init__(msg)
+from xivo_cti.exception import NoSuchPhoneException
 
 
 class PhoneDAO(object):

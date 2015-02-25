@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,6 +26,24 @@ class MissingFieldException(Exception):
         super(MissingFieldException, self).__init__(msg)
 
 
+class _BaseNoSuchResourceException(LookupError):
+
+    msg = 'No {resource} matching {type}({value})'
+
+    def __str__(self):
+        value = super(_BaseNoSuchResourceException, self).__str__()
+        return self.msg.format(
+            resource=self.resource,
+            type=type(value).__name__,
+            value=value,
+        )
+
+
+class NoSuchPhoneException(_BaseNoSuchResourceException):
+
+    resource = 'phone'
+
+
 class NoSuchCallException(Exception):
     pass
 
@@ -42,8 +60,9 @@ class NoSuchQueueException(Exception):
     pass
 
 
-class NoSuchUserException(Exception):
-    pass
+class NoSuchUserException(_BaseNoSuchResourceException):
+
+    resource = 'user'
 
 
 class NoSuchAgentException(Exception):
