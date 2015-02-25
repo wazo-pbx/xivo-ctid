@@ -7,6 +7,8 @@ git+https://github.com/xivo-pbx/xivo-bus.git
 git+https://github.com/xivo-pbx/xivo-dird-client.git
 git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 cherrypy
+flask
+flask-restful
 futures
 kombu
 pika
