@@ -37,7 +37,6 @@ bus:
   routing_keys:
     user_status: status.user
     endpoint_status: status.endpoint
-    agent_status: status.agent
     call_form_result: call_form_result
 
 # Database connection informations.

@@ -47,7 +47,6 @@ _default_config = {
             'call_form_result': 'call_form_result',
             'user_status': 'status.user',
             'endpoint_status': 'status.endpoint',
-            'agent_status': 'status.agent',
         }
     },
     'dird': {

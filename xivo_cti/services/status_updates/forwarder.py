@@ -24,6 +24,7 @@ from kombu.mixins import ConsumerMixin
 from kombu import Queue
 
 from collections import defaultdict
+from xivo_bus.resources.cti.event import AgentStatusUpdateEvent
 from xivo_cti import config
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -116,7 +117,7 @@ class _StatusWorker(ConsumerMixin):
         self.exchange = exchange
         self._task_queue = task_queue
         self._forwarder = forwarder
-        self._agent_queue = self._make_queue(routing_keys['agent_status'])
+        self._agent_queue = self._make_queue(AgentStatusUpdateEvent.routing_key)
         self._user_queue = self._make_queue(routing_keys['user_status'])
         self._endpoint_queue = self._make_queue(routing_keys['endpoint_status'])
 
