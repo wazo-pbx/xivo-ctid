@@ -42,7 +42,6 @@ _default_config = {
     'bus': {
         'exchange_name': 'xivo',
         'exchange_type': 'topic',
-        'exchange_durable': True,
         'routing_keys': {
             'call_form_result': 'call_form_result',
             'user_status': 'status.user',

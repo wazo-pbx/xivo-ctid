@@ -18,6 +18,11 @@ logfile: /var/log/xivo-ctid.log
 # PID file.
 pidfile: /var/run/xivo-ctid.pid
 
+# xivo-agentd connection informations.
+agentd:
+  host: localhost
+  timeout: 3
+
 # Dird (Directory daemon) connection informations.
 dird:
   host: localhost
@@ -33,7 +38,6 @@ bus:
   port: 5672
   exchange_name: xivo
   exchange_type: topic
-  exchange_durable: True
   routing_keys:
     user_status: status.user
     endpoint_status: status.endpoint
