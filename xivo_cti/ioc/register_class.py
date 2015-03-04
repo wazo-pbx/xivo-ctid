@@ -27,6 +27,7 @@ from xivo_bus import Marshaler
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
+from xivo_cti.async_runner import AsyncRunner
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -131,6 +132,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
+    context.register('async_runner', AsyncRunner)
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
     context.register('bus_publish', lambda: bus_publish_fn)
