@@ -17,8 +17,16 @@
 
 import logging
 
+from contextlib import contextmanager
+
 
 logger = logging.getLogger(__name__)
+
+@contextmanager
+def synchronize(runner):
+    yield
+    runner._thread_pool_executor.shutdown(wait=True)
+    runner._task_queue.run()
 
 
 class AsyncRunner(object):
@@ -32,10 +40,6 @@ class AsyncRunner(object):
 
     def run_with_cb(self, cb, function, *args, **kwargs):
         self._thread_pool_executor.submit(self._exec_with_cb, cb, function, *args, **kwargs)
-
-    def stop(self):
-        self._thread_pool_executor.shutdown(wait=True)
-        self._task_queue.run()
 
     def _exec(self, function, *args, **kwargs):
         try:

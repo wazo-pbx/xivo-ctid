@@ -21,7 +21,7 @@ from mock import Mock, patch, sentinel as s
 from unittest import TestCase
 
 from xivo_cti import dao
-from xivo_cti.async_runner import AsyncRunner
+from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.task_queue import new_task_queue
 
 from ..cti_adapter import PeopleCTIAdapter
@@ -41,9 +41,8 @@ class TestCTIAdapter(TestCase):
     def test_get_headers(self):
         dao.user.get_context = Mock(return_value=s.profile)
 
-        self.cti_adapter.get_headers(s.user_id)
-
-        self.async_runner.stop()
+        with synchronize(self.async_runner):
+            self.cti_adapter.get_headers(s.user_id)
 
         self.client.directories.headers.assert_called_once_with(profile=s.profile)
 
@@ -68,9 +67,9 @@ class TestCTIAdapter(TestCase):
     @patch('xivo_cti.dao.user', Mock())
     def test_lookup(self):
         dao.user.get_context = Mock(return_value=s.profile)
-        self.cti_adapter.search(s.user_id, s.term)
 
-        self.async_runner.stop()
+        with synchronize(self.async_runner):
+            self.cti_adapter.search(s.user_id, s.term)
 
         self.client.directories.lookup.assert_called_once_with(profile=s.profile, term=s.term)
 

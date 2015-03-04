@@ -21,7 +21,7 @@ from concurrent import futures
 from hamcrest import assert_that, equal_to
 from mock import Mock, patch, sentinel
 
-from ..async_runner import AsyncRunner
+from ..async_runner import AsyncRunner, synchronize
 from xivo_cti.task_queue import new_task_queue
 
 
@@ -38,9 +38,8 @@ class TestAsyncRunner(unittest.TestCase):
     def test_run_no_callback(self):
         function = Mock()
 
-        self.runner.run(function, 'a', 42, test='lol')
-
-        self.runner.stop()
+        with synchronize(self.runner):
+            self.runner.run(function, 'a', 42, test='lol')
 
         function.assert_called_once_with('a', 42, test='lol')
 
@@ -48,9 +47,8 @@ class TestAsyncRunner(unittest.TestCase):
         function = Mock(side_effect=RuntimeError)
 
         with patch('xivo_cti.async_runner.logger') as logger:
-            self.runner.run(function)
-
-            self.runner.stop()
+            with synchronize(self.runner):
+                self.runner.run(function)
 
             function.assert_called_once_with()
             assert_that(logger.exception.call_count, equal_to(1))
@@ -59,8 +57,7 @@ class TestAsyncRunner(unittest.TestCase):
         function = Mock(return_value=sentinel.result)
         cb = Mock()
 
-        self.runner.run_with_cb(cb, function)
-
-        self.runner.stop()
+        with synchronize(self.runner):
+            self.runner.run_with_cb(cb, function)
 
         cb.assert_called_once_with(sentinel.result)
