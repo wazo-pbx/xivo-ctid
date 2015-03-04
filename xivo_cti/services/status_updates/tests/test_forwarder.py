@@ -17,12 +17,6 @@
 
 import unittest
 
-from ..forwarder import StatusForwarder
-from ..forwarder import _new_agent_notifier
-from ..forwarder import _new_endpoint_notifier
-from ..forwarder import _new_user_notifier
-from ..forwarder import CTIMessageFormatter
-from ..forwarder import _EndpointStatusFetcher
 
 from concurrent import futures
 from hamcrest import assert_that, equal_to
@@ -30,6 +24,16 @@ from mock import ANY
 from mock import Mock
 from mock import patch
 from mock import sentinel as s
+
+from xivo_cti.async_runner import AsyncRunner, synchronize
+from xivo_cti.task_queue import new_task_queue
+
+from ..forwarder import StatusForwarder
+from ..forwarder import _new_agent_notifier
+from ..forwarder import _new_endpoint_notifier
+from ..forwarder import _new_user_notifier
+from ..forwarder import CTIMessageFormatter
+from ..forwarder import _EndpointStatusFetcher
 
 
 class TestStatusForwarder(unittest.TestCase):
@@ -152,12 +156,12 @@ class TestEndpointStatusFetcher(unittest.TestCase):
         self.uuid = 'some-uuid'
         self.id_ = 42
         self.key = (self.uuid, self.id_)
-        self.thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
 
     def test_that_on_response_calls_the_forwarder(self):
         forwarder = Mock(StatusForwarder)
 
-        fetcher = _EndpointStatusFetcher(forwarder, self.thread_pool_executor)
+        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner)
 
         fetcher._on_result({
             'id': self.id_,
@@ -172,13 +176,13 @@ class TestEndpointStatusFetcher(unittest.TestCase):
         client = CtidClient.return_value = Mock()
         forwarder = Mock(StatusForwarder)
 
-        fetcher = _EndpointStatusFetcher(forwarder, self.thread_pool_executor)
+        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner)
         fetcher._get_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
         fetcher._on_result = Mock()
 
-        fetcher.fetch(self.key)
+        with synchronize(self.async_runner):
+            fetcher.fetch(self.key)
 
-        self.thread_pool_executor.shutdown(wait=1)
         fetcher._get_client_config.assert_called_once_with(self.uuid)
         CtidClient.assert_called_once_with(host='localhost', port=6666)
         client.endpoints.get.assert_called_once_with(self.id_)

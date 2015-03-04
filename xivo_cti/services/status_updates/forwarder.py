@@ -40,12 +40,12 @@ class StatusForwarder(object):
                  task_queue,
                  bus_connection,
                  bus_exchange,
-                 thread_pool_executor,
+                 async_runner,
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
-        self._endpoint_status_fetcher = _EndpointStatusFetcher(self, thread_pool_executor)
-        self._user_status_fetcher = _UserStatusFetcher(self, thread_pool_executor)
+        self._endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner)
+        self._user_status_fetcher = _UserStatusFetcher(self, async_runner)
         self._task_queue = task_queue
         self._exchange = bus_exchange
         self._bus_connection = bus_connection
@@ -193,9 +193,9 @@ class _StatusNotifier(object):
 
 class _BaseStatusFetcher(object):
 
-    def __init__(self, status_forwarder, thread_pool_executor):
+    def __init__(self, status_forwarder, async_runner):
         self.forwarder = status_forwarder
-        self._executor = thread_pool_executor
+        self.async_runner = async_runner
 
     def _get_client_config(self, uuid):
         # XXX where do we get this info from? config, consul, other
@@ -204,17 +204,6 @@ class _BaseStatusFetcher(object):
                 'host': 'localhost',
                 'port': 9495,
             }
-
-    def exec_async(self, callback, fn, *args, **kwargs):
-        self._executor.submit(self._result_to_main_thread, callback, fn, *args, **kwargs)
-
-    def _result_to_main_thread(self, cb, fn, *args, **kwargs):
-        try:
-            result = fn(*args, **kwargs)
-        except Exception:
-            logger.exception()
-        else:
-            self._task_queue.put(cb, result)
 
 
 class _EndpointStatusFetcher(_BaseStatusFetcher):
@@ -228,7 +217,7 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
             return
 
         client = CtidClient(**client_config)
-        self.exec_async(self._on_result, client.endpoints.get, endpoint_id)
+        self.async_runner.run_with_cb(self._on_result, client.endpoints.get, endpoint_id)
 
     def _on_result(self, result):
         key = result['origin_uuid'], result['id']
@@ -248,7 +237,7 @@ class _UserStatusFetcher(_BaseStatusFetcher):
             return
 
         client = CtidClient(**client_config)
-        self.exec_async(self._on_result, client.users.get, user_id)
+        self.async_runner.run_with_cb(self._on_result, client.users.get, user_id)
 
     def _on_result(self, result):
         key = result['origin_uuid'], result['id']
