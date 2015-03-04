@@ -10,6 +10,7 @@ git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 cherrypy
 flask
 flask-restful
+flask-cors
 futures
 kombu
 psycopg2
