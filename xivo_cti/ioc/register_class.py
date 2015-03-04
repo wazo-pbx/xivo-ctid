@@ -157,7 +157,6 @@ def setup():
     context.register('device_manager', DeviceManager)
     context.register('endpoint_status_notifier', EndpointStatusNotifier)
     context.register('endpoint_status_updater', EndpointStatusUpdater)
-    context.register('async_dird_client', AsyncDirdClient)
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('flusher', Flusher)
     context.register('funckey_manager', FunckeyManager)

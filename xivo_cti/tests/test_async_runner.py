@@ -40,7 +40,7 @@ class TestAsyncRunner(unittest.TestCase):
 
         self.runner.run(function, 'a', 42, test='lol')
 
-        self.thread_pool_executor.shutdown(wait=True)
+        self.runner.stop()
 
         function.assert_called_once_with('a', 42, test='lol')
 
@@ -50,7 +50,7 @@ class TestAsyncRunner(unittest.TestCase):
         with patch('xivo_cti.async_runner.logger') as logger:
             self.runner.run(function)
 
-            self.thread_pool_executor.shutdown(wait=True)
+            self.runner.stop()
 
             function.assert_called_once_with()
             assert_that(logger.exception.call_count, equal_to(1))
@@ -61,7 +61,6 @@ class TestAsyncRunner(unittest.TestCase):
 
         self.runner.run_with_cb(cb, function)
 
-        self.thread_pool_executor.shutdown(wait=True)
-        self.task_queue.run()
+        self.runner.stop()
 
         cb.assert_called_once_with(sentinel.result)

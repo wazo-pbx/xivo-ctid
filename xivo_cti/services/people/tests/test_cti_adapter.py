@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,11 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
+from concurrent import futures
 from mock import Mock, patch, sentinel as s
-from mock import ANY
 from unittest import TestCase
 
 from xivo_cti import dao
+from xivo_cti.async_runner import AsyncRunner
+from xivo_cti.task_queue import new_task_queue
 
 from ..cti_adapter import PeopleCTIAdapter
 
@@ -28,9 +30,12 @@ from ..cti_adapter import PeopleCTIAdapter
 class TestCTIAdapter(TestCase):
 
     def setUp(self):
-        self.dird = Mock()
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
         self.cti_server = Mock()
-        self.cti_adapter = PeopleCTIAdapter(self.dird, self.cti_server)
+        with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
+            with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
+                self.cti_adapter = PeopleCTIAdapter(self.async_runner, self.cti_server)
+                self.client = Client.return_value
 
     @patch('xivo_cti.dao.user', Mock())
     def test_get_headers(self):
@@ -38,7 +43,9 @@ class TestCTIAdapter(TestCase):
 
         self.cti_adapter.get_headers(s.user_id)
 
-        self.dird.headers.assert_called_once_with(s.profile, ANY)
+        self.async_runner.stop()
+
+        self.client.directories.headers.assert_called_once_with(profile=s.profile)
 
     def test_send_headers_result(self):
         user_id = 12
@@ -63,7 +70,9 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
         self.cti_adapter.search(s.user_id, s.term)
 
-        self.dird.lookup.assert_called_once_with(s.profile, s.term, ANY)
+        self.async_runner.stop()
+
+        self.client.directories.lookup.assert_called_once_with(profile=s.profile, term=s.term)
 
     def test_send_lookup_result(self):
         user_id = 12
