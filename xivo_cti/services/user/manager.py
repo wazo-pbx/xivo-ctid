@@ -19,6 +19,8 @@ import logging
 
 from functools import partial
 
+from xivo import caller_id
+
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_dao import user_dao
 from xivo_dao.data_handler.func_key import services as func_key_services
@@ -55,13 +57,26 @@ class UserServiceManager(object):
         self._call_manager = call_manager
 
     def call_destination(self, client_connection, user_id, url_or_exten):
+        logger.debug('%s asked to call %s', user_id, url_or_exten)
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
+        elif self._is_caller_id(url_or_exten):
+            exten = caller_id.extract_number(url_or_exten)
         else:
             exten = url_or_exten
 
+        logger.debug('Calling %s', exten)
         action_id = self._dial(user_id, exten)
         self._register_originate_response_callback(action_id, client_connection, user_id, exten)
+
+    def _is_caller_id(self, potential_caller_id):
+        # XXX _complete_caller_id from xivo.caller_id should be public and used for this check
+        #     not changed at this time to avoid patching 2 daemons.
+        try:
+            caller_id.extract_number(potential_caller_id)
+            return True
+        except ValueError:
+            return False
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)
