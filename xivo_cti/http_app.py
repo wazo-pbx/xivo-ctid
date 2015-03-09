@@ -89,13 +89,19 @@ class HTTPInterface(object):
         app = Flask('xivo_ctid')
         app.wsgi_app = ProxyFix(app.wsgi_app)
         app.secret_key = os.urandom(24)
-        CORS(app, allow_headers='Content-Type')
+        self.load_cors(app, config)
         api = restful.Api(app, prefix='/{}'.format(self.VERSION))
         self._add_resources(api, main_thread_proxy)
         bind_addr = (config['listen'], config['port'])
         wsgi_app = wsgiserver.WSGIPathInfoDispatcher({'/': app})
         self._server = wsgiserver.CherryPyWSGIServer(bind_addr=bind_addr,
                                                      wsgi_app=wsgi_app)
+
+    def load_cors(self, app, config):
+        cors_config = dict(config.get('cors', {}))
+        enabled = cors_config.pop('enabled', False)
+        if enabled:
+            CORS(app, **cors_config)
 
     def start(self):
         self._thread = threading.Thread(target=self._start_async)
