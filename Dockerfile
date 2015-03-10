@@ -12,7 +12,7 @@ RUN apt-get -qq -y install \
      libpq-dev \
      libldap2-dev \
      libsasl2-dev \
-     libyaml-dev \
+     libyaml-dev \
      python-dev 
 
 WORKDIR /root/
