@@ -30,12 +30,16 @@ from ..cti_adapter import PeopleCTIAdapter
 class TestCTIAdapter(TestCase):
 
     def setUp(self):
-        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
+        self.task_queue = new_task_queue()
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
         self.cti_server = Mock()
         with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
             with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
                 self.cti_adapter = PeopleCTIAdapter(self.async_runner, self.cti_server)
                 self.client = Client.return_value
+
+    def tearDown(self):
+        self.task_queue.close()
 
     @patch('xivo_cti.dao.user', Mock())
     def test_get_headers(self):
