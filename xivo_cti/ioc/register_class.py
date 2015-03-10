@@ -66,7 +66,6 @@ from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
-from xivo_cti.services.people.async_dird_client import AsyncDirdClient
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
