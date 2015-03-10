@@ -43,10 +43,14 @@ class AsyncRunner(object):
 
     def _exec(self, function, *args, **kwargs):
         try:
-            return function(*args, **kwargs)
+            function(*args, **kwargs)
         except Exception:
             logger.exception('Exception in async function %s', function)
 
     def _exec_with_cb(self, cb, function, *args, **kwargs):
-        result = self._exec(function, *args, **kwargs)
-        self._task_queue.put(cb, result)
+        try:
+            result = function(*args, **kwargs)
+        except Exception:
+            logger.exception('Exception in async function %s', function)
+        else:
+            self._task_queue.put(cb, result)

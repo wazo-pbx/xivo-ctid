@@ -53,7 +53,7 @@ class TestAsyncRunner(unittest.TestCase):
             function.assert_called_once_with()
             assert_that(logger.exception.call_count, equal_to(1))
 
-    def test_run_with_call_back(self):
+    def test_run_with_callback(self):
         function = Mock(return_value=sentinel.result)
         cb = Mock()
 
@@ -61,3 +61,13 @@ class TestAsyncRunner(unittest.TestCase):
             self.runner.run_with_cb(cb, function)
 
         cb.assert_called_once_with(sentinel.result)
+
+    def test_run_with_callback_exception(self):
+        function = Mock(side_effect=RuntimeError)
+        cb = Mock()
+
+        with synchronize(self.runner):
+            self.runner.run_with_cb(cb, function)
+
+        function.assert_called_once_with()
+        self.assertFalse(cb.called)
