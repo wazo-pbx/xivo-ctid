@@ -1,4 +1,4 @@
-git+https://github.com/xivo-pbx/xivo-agent.git
+git+https://github.com/xivo-pbx/xivo-agentd-client.git
 git+https://github.com/xivo-pbx/xivo-dao.git
 git+https://github.com/xivo-pbx/xivo-dird.git
 git+https://github.com/xivo-pbx/xivo-lib-python.git
@@ -12,7 +12,6 @@ flask
 flask-restful
 futures
 kombu
-pika
 psycopg2
 pyaml
 pyhamcrest

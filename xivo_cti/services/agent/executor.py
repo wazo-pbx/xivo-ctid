@@ -17,9 +17,7 @@
 
 import logging
 
-from xivo_agent.resources.agent import error
-from xivo_agent.exception import AgentClientError
-
+from xivo_agentd_client import error
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
 logger = logging.getLogger(__name__)
@@ -27,14 +25,14 @@ logger = logging.getLogger(__name__)
 
 class AgentExecutor(object):
 
-    def __init__(self, agent_client, ami_class):
-        self._agent_client = agent_client
+    def __init__(self, agentd_client, ami_class):
+        self._agentd_client = agentd_client
         self.ami = ami_class
 
     def login(self, agent_id, exten, context):
         try:
-            self._agent_client.login_agent(agent_id, exten, context)
-        except AgentClientError as e:
+            self._agentd_client.agents.login_agent(agent_id, exten, context)
+        except error.AgentdClientError as e:
             if e.error == error.ALREADY_IN_USE:
                 raise ExtensionInUseError()
             elif e.error == error.ALREADY_LOGGED:
@@ -46,16 +44,16 @@ class AgentExecutor(object):
 
     def logoff(self, agent_id):
         try:
-            self._agent_client.logoff_agent(agent_id)
-        except AgentClientError as e:
+            self._agentd_client.agents.logoff_agent(agent_id)
+        except error.AgentdClientError as e:
             if e.error != error.NOT_LOGGED:
                 raise
 
     def add_to_queue(self, agent_id, queue_id):
-        self._agent_client.add_agent_to_queue(agent_id, queue_id)
+        self._agentd_client.agents.add_agent_to_queue(agent_id, queue_id)
 
     def remove_from_queue(self, agent_id, queue_id):
-        self._agent_client.remove_agent_from_queue(agent_id, queue_id)
+        self._agentd_client.agents.remove_agent_from_queue(agent_id, queue_id)
 
     def pause_on_queue(self, agent_interface, queue_name):
         self.ami.queuepause(queue_name, agent_interface, 'True')

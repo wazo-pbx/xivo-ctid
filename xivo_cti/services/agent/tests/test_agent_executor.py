@@ -19,8 +19,8 @@ import unittest
 
 from mock import Mock, call
 
-from xivo_agent.resources.agent import error
-from xivo_agent.exception import AgentClientError
+from xivo_agentd_client import error
+from xivo_agentd_client.error import AgentdClientError
 
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 from xivo_cti.services.agent.executor import AgentExecutor
@@ -30,9 +30,9 @@ from xivo_cti.xivo_ami import AMIClass
 class TestAgentExecutor(unittest.TestCase):
 
     def setUp(self):
-        self.agent_client = Mock()
+        self.agentd_client = Mock()
         ami_class = Mock(AMIClass)
-        self.executor = AgentExecutor(self.agent_client, ami_class)
+        self.executor = AgentExecutor(self.agentd_client, ami_class)
         self.ami = Mock(AMIClass)
         self.executor.ami = self.ami
 
@@ -40,7 +40,7 @@ class TestAgentExecutor(unittest.TestCase):
         agent_id = 42
         exten = '1001'
         context = 'default'
-        self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_LOGGED)
+        self.agentd_client.agents.login_agent.side_effect = AgentdClientError(error.ALREADY_LOGGED)
 
         self.executor.login(agent_id, exten, context)
 
@@ -48,7 +48,7 @@ class TestAgentExecutor(unittest.TestCase):
         agent_id = 42
         exten = '1001'
         context = 'default'
-        self.agent_client.login_agent.side_effect = AgentClientError(error.ALREADY_IN_USE)
+        self.agentd_client.agents.login_agent.side_effect = AgentdClientError(error.ALREADY_IN_USE)
 
         self.assertRaises(ExtensionInUseError, self.executor.login, agent_id, exten, context)
 
@@ -56,7 +56,7 @@ class TestAgentExecutor(unittest.TestCase):
         agent_id = 42
         exten = '1001'
         context = 'default'
-        self.agent_client.login_agent.side_effect = AgentClientError(error.NO_SUCH_EXTEN)
+        self.agentd_client.agents.login_agent.side_effect = AgentdClientError(error.NO_SUCH_EXTEN)
 
         self.assertRaises(NoSuchExtensionError, self.executor.login, agent_id, exten, context)
 
@@ -65,7 +65,7 @@ class TestAgentExecutor(unittest.TestCase):
 
         self.executor.logoff(agent_id)
 
-        self.agent_client.logoff_agent.assert_called_once_with(agent_id)
+        self.agentd_client.agents.logoff_agent.assert_called_once_with(agent_id)
 
     def test_add_to_queue(self):
         agent_id = 42
@@ -73,7 +73,7 @@ class TestAgentExecutor(unittest.TestCase):
 
         self.executor.add_to_queue(agent_id, queue_id)
 
-        self.agent_client.add_agent_to_queue.assert_called_once_with(agent_id, queue_id)
+        self.agentd_client.agents.add_agent_to_queue.assert_called_once_with(agent_id, queue_id)
 
     def test_remove_from_queue(self):
         agent_id = 42
@@ -81,7 +81,7 @@ class TestAgentExecutor(unittest.TestCase):
 
         self.executor.remove_from_queue(agent_id, queue_id)
 
-        self.agent_client.remove_agent_from_queue.assert_called_once_with(agent_id, queue_id)
+        self.agentd_client.agents.remove_agent_from_queue.assert_called_once_with(agent_id, queue_id)
 
     def test_pause_on_queue(self):
         queue_name = 'accueil'

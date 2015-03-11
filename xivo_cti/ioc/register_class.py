@@ -21,8 +21,7 @@ from concurrent import futures
 from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
-from xivo_agent.ctl.client import AgentClient
-from xivo_agent.ctl.config import BusConfig
+from xivo_agentd_client import Client as AgentdClient
 from xivo_bus import Marshaler
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -102,9 +101,6 @@ def _on_bus_publish_error(exc, interval):
 
 
 def setup():
-    bus_cfg_dict = dict(config['bus'])
-    bus_cfg_dict.pop('routing_keys')
-    bus_cfg = BusConfig(**bus_cfg_dict)
     bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
     bus_connection = Connection(bus_url)
     bus_exchange = Exchange(config['bus']['exchange_name'],
@@ -123,7 +119,6 @@ def setup():
     context.register('agent_availability_computer', AgentAvailabilityComputer)
     context.register('agent_availability_notifier', AgentAvailabilityNotifier)
     context.register('agent_availability_updater', AgentAvailabilityUpdater)
-    context.register('agent_client', AgentClient(config=bus_cfg))
     context.register('agent_executor', AgentExecutor)
     context.register('agent_service_cti_parser', AgentServiceCTIParser)
     context.register('agent_service_manager', AgentServiceManager)
@@ -132,6 +127,7 @@ def setup():
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
     context.register('async_runner', AsyncRunner)
+    context.register('agentd_client', AgentdClient(**config['agentd']))
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
     context.register('bus_publish', lambda: bus_publish_fn)
