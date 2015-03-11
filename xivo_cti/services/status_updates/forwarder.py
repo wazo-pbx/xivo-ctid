@@ -44,14 +44,14 @@ class StatusForwarder(object):
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
-        self._endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner)
-        self._user_status_fetcher = _UserStatusFetcher(self, async_runner)
+        endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner)
+        user_status_fetcher = _UserStatusFetcher(self, async_runner)
         self._task_queue = task_queue
         self._exchange = bus_exchange
         self._bus_connection = bus_connection
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
-        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, self._endpoint_status_fetcher)
-        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, self._user_status_fetcher)
+        self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, endpoint_status_fetcher)
+        self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, user_status_fetcher)
 
     def run(self):
         self._listener = _ThreadedStatusListener(config,
