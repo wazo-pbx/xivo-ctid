@@ -19,7 +19,7 @@ import unittest
 
 from hamcrest import assert_that
 from hamcrest import equal_to
-from mock import Mock, patch, sentinel
+from mock import Mock
 
 from xivo_bus import Marshaler
 
@@ -66,14 +66,11 @@ class TestCallFormResultHandler(unittest.TestCase):
         assert_that(self._handler._clean_variables(variables),
                     equal_to(expected_variables))
 
-    @patch('xivo_cti.call_forms.call_form_result_handler.config',
-           {'bus': {'routing_keys': {'call_form_result': sentinel.routing_key}}})
     def test_send_call_form_result(self):
         variables = {'foo': 'bar'}
-        expected_msg = self._marshaler.marshal_message(
-            CallFormResultEvent(42, variables))
+        event = CallFormResultEvent(42, variables)
+        expected_msg = self._marshaler.marshal_message(event)
 
         self._handler._send_call_form_result(42, variables)
 
-        self._bus_publish.assert_called_once_with(expected_msg,
-                                                  routing_key=sentinel.routing_key)
+        self._bus_publish.assert_called_once_with(expected_msg, routing_key=event.routing_key)

@@ -27,7 +27,8 @@ from kombu import Queue
 
 from xivo_ctid_client import Client as CtidClient
 
-from xivo_bus.resources.cti.event import AgentStatusUpdateEvent
+from xivo_bus.resources.cti.event import AgentStatusUpdateEvent,\
+    UserStatusUpdateEvent, EndpointStatusUpdateEvent
 from xivo_cti import config
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -55,8 +56,7 @@ class StatusForwarder(object):
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, user_status_fetcher)
 
     def run(self):
-        self._listener = _ThreadedStatusListener(config,
-                                                 self._task_queue,
+        self._listener = _ThreadedStatusListener(self._task_queue,
                                                  self._bus_connection,
                                                  self,
                                                  self._exchange)
@@ -76,8 +76,8 @@ class StatusForwarder(object):
 
 class _ThreadedStatusListener(object):
 
-    def __init__(self, config, task_queue, connection, forwarder, exchange):
-        self._listener = _StatusListener(config, task_queue, connection, forwarder, exchange)
+    def __init__(self, task_queue, connection, forwarder, exchange):
+        self._listener = _StatusListener(task_queue, connection, forwarder, exchange)
         self._thread = threading.Thread(target=self._listener.start)
         self._thread.start()
 
@@ -102,14 +102,14 @@ class _StatusWorker(ConsumerMixin):
         'user_status_update': 'user_id',
     }
 
-    def __init__(self, connection, exchange, task_queue, forwarder, routing_keys):
+    def __init__(self, connection, exchange, task_queue, forwarder):
         self.connection = connection
         self.exchange = exchange
         self._task_queue = task_queue
         self._forwarder = forwarder
         self._agent_queue = self._make_queue(AgentStatusUpdateEvent.routing_key)
-        self._user_queue = self._make_queue(routing_keys['user_status'])
-        self._endpoint_queue = self._make_queue(routing_keys['endpoint_status'])
+        self._user_queue = self._make_queue(UserStatusUpdateEvent.routing_key)
+        self._endpoint_queue = self._make_queue(EndpointStatusUpdateEvent.routing_key)
 
     def _make_queue(self, routing_key):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
@@ -147,9 +147,8 @@ class _StatusWorker(ConsumerMixin):
 
 class _StatusListener(object):
 
-    def __init__(self, config, task_queue, connection, forwarder, exchange):
-        self._worker = _StatusWorker(connection, exchange, task_queue,
-                                     forwarder, config['bus']['routing_keys'])
+    def __init__(self, task_queue, connection, forwarder, exchange):
+        self._worker = _StatusWorker(connection, exchange, task_queue, forwarder)
 
     def start(self):
         self._worker.run()

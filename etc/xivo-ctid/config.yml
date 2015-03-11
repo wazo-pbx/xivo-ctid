@@ -38,10 +38,6 @@ bus:
   port: 5672
   exchange_name: xivo
   exchange_type: topic
-  routing_keys:
-    user_status: status.user
-    endpoint_status: status.endpoint
-    call_form_result: call_form_result
 
 # Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk

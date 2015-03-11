@@ -22,16 +22,9 @@ from xivo_bus import Marshaler
 from ..status_notifier import StatusNotifier
 from ..status_notifier import EndpointStatusUpdateEvent
 from xivo_cti.ctiserver import CTIServer
-from mock import Mock, patch
+from mock import Mock
 
 
-@patch('xivo_cti.services.endpoint.status_notifier.config',
-       {'uuid': 'xivo-uuid',
-        'bus': {
-            'exchange_name': 'configured-status-exchange',
-            'exchange_type': 'direct',
-            'routing_keys': {
-                'endpoint_status': 'configured-endpoint-status-routing'}}})
 class TestStatusNotifier(unittest.TestCase):
 
     def setUp(self):
@@ -66,4 +59,4 @@ class TestStatusNotifier(unittest.TestCase):
         expected_bus_msg = EndpointStatusUpdateEvent(phone_id, new_status)
 
         self._bus_producer.publish.asser_called_once_with(expected_bus_msg,
-                                                          routing_key='configured-endpoint-status-routing')
+                                                          routing_key=expected_bus_msg.routing_key)

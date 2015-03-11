@@ -95,12 +95,11 @@ class TestStatusForwarder(unittest.TestCase):
         self.user_status_notifier.update.assert_called_once_with(
             (xivo_id, user_id), 'busy')
 
-    @patch('xivo_cti.services.status_updates.forwarder.config', s.config)
     @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
     def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
         self.forwarder.run()
 
-        _ThreadedStatusListener.assert_called_once_with(s.config, s.task_queue,
+        _ThreadedStatusListener.assert_called_once_with(s.task_queue,
                                                         s.bus_connection, self.forwarder,
                                                         s.bus_exchange)
 

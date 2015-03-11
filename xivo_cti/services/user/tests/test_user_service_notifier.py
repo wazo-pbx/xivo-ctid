@@ -18,7 +18,6 @@
 import unittest
 
 from mock import Mock
-from mock import patch
 
 from xivo_bus import Marshaler
 
@@ -165,9 +164,6 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    @patch('xivo_cti.services.user.notifier.config', {'uuid': 'xivo-uuid',
-                                                      'bus': {'exchange_name': 'xivo-status-updates',
-                                                              'routing_keys': {'user_status': 'status.user'}}})
     def test_presence_updated(self):
         user_id = 64
         expected = {"class": "getlist",
@@ -185,7 +181,7 @@ class TestUserServiceNotifier(unittest.TestCase):
             UserStatusUpdateEvent(user_id, 'available'))
         self.bus_publish.assert_called_once_with(
             expected_msg,
-            routing_key='status.user',
+            routing_key=UserStatusUpdateEvent.routing_key,
         )
 
     def test_recording_enabled(self):
