@@ -46,7 +46,7 @@ class TestStatusForwarder(unittest.TestCase):
                                          s.task_queue,
                                          s.bus_connection,
                                          s.bus_exchange,
-                                         s.thread_pool_executor,
+                                         s.async_runner,
                                          self.agent_status_notifier,
                                          self.endpoint_status_notifier,
                                          self.user_status_notifier)
@@ -59,7 +59,7 @@ class TestStatusForwarder(unittest.TestCase):
                         s.task_queue,
                         s.bus_connection,
                         s.bus_exchange,
-                        s.thread_pool_executor)
+                        s.async_runner)
 
         assert_that(new_endpoint_notifier.call_count, equal_to(1))
         assert_that(new_user_notifier.call_count, equal_to(1))
