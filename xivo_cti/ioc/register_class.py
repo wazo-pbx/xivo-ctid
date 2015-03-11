@@ -17,6 +17,7 @@
 
 import logging
 
+from concurrent import futures
 from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
@@ -26,6 +27,7 @@ from xivo_bus import Marshaler
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
+from xivo_cti.async_runner import AsyncRunner
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -64,7 +66,6 @@ from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
-from xivo_cti.services.people.async_dird_client import AsyncDirdClient
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
@@ -114,6 +115,8 @@ def setup():
                                            interval_start=1)
     bus_marshaler = Marshaler(config['uuid'])
 
+    thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
+
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
     context.register('ami_class', AMIClass)
@@ -128,6 +131,7 @@ def setup():
     context.register('agent_status_manager', AgentStatusManager)
     context.register('agent_status_parser', AgentStatusParser)
     context.register('agent_status_router', AgentStatusRouter)
+    context.register('async_runner', AsyncRunner)
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
     context.register('bus_publish', lambda: bus_publish_fn)
@@ -152,7 +156,6 @@ def setup():
     context.register('device_manager', DeviceManager)
     context.register('endpoint_status_notifier', EndpointStatusNotifier)
     context.register('endpoint_status_updater', EndpointStatusUpdater)
-    context.register('async_dird_client', AsyncDirdClient)
     context.register('endpoint_notifier', EndpointNotifier)
     context.register('flusher', Flusher)
     context.register('funckey_manager', FunckeyManager)
@@ -181,6 +184,7 @@ def setup():
     context.register('status_forwarder', StatusForwarder)
     context.register('task_queue', new_task_queue)
     context.register('task_scheduler', new_task_scheduler)
+    context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
 
