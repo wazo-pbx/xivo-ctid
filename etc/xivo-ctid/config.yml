@@ -1,9 +1,6 @@
 # This file should not be modified as it may get changed by the maintainer.
 # Add extra configuration files in the extra_config_files directory to override
 # the content from this file
-rest_api:
-  listen: 127.0.0.1
-  port: 9495
 
 # Extra configuration directory where the config files overriding this file
 # should be.
@@ -17,6 +14,25 @@ logfile: /var/log/xivo-ctid.log
 
 # PID file.
 pidfile: /var/run/xivo-ctid.pid
+
+
+# REST API server
+rest_api:
+
+  # Listening address
+  listen: 127.0.0.1
+
+  # Listening port
+  port: 9495
+
+  #CORS configuration. See Flask-CORS documentation for other values.
+  cors:
+
+    #Enabled by default
+    enabled: True
+
+    #Allow JSON preflight requests
+    allow_headers: Content-Type
 
 # xivo-agentd connection informations.
 agentd:

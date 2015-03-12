@@ -453,8 +453,7 @@ class CTIServer(object):
         self._queue_member_indexer.initialize(self._queue_member_manager)
 
         logger.info('Listening for HTTP requests')
-        http_interface = http_app.HTTPInterface(config['rest_api']['listen'],
-                                                config['rest_api']['port'],
+        http_interface = http_app.HTTPInterface(config['rest_api'],
                                                 context.get('main_thread_proxy'))
         http_interface.start()
 
