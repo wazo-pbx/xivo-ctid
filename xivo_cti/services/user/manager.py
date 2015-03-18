@@ -19,12 +19,13 @@ import logging
 
 from functools import partial
 
+from xivo import caller_id
+from xivo_cti import dao
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_dao import user_dao
 from xivo_dao.data_handler.func_key import services as func_key_services
-from xivo_cti import dao
-from xivo_cti.model.destination_factory import DestinationFactory
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,8 @@ class UserServiceManager(object):
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
+        elif caller_id.is_complete_caller_id(url_or_exten):
+            exten = caller_id.extract_number(url_or_exten)
         else:
             exten = url_or_exten
 

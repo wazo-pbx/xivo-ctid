@@ -100,6 +100,23 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
             action_id, connection, user_id, number)
 
+    def test_call_destination_caller_id(self):
+        user_id = sentinel.user_id
+        number = '1234'
+        caller_id = '"Alice Smith" <{}>'.format(number)
+        action_id = sentinel.action_id
+        connection = Mock(CTI)
+
+        self.user_service_manager._dial = Mock(return_value=sentinel.action_id)
+        self.user_service_manager._register_originate_response_callback = Mock()
+
+        self.user_service_manager.call_destination(connection, user_id, caller_id)
+
+        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
+            action_id, connection, user_id, number
+        )
+
     def test_register_originate_response_callback(self):
         action_id, user_id, exten = '8734534', '12', '324564'
         callback = Mock()
