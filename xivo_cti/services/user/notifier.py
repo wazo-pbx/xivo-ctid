@@ -18,7 +18,6 @@
 import logging
 
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
-from xivo_cti import config
 
 logger = logging.getLogger('user_service_notifier')
 
@@ -66,7 +65,7 @@ class UserServiceNotifier(object):
 
     def _send_bus_message(self, message):
         msg = self._marshaler.marshal_message(message)
-        self._publish_bus_msg(msg, routing_key=config['bus']['routing_keys']['user_status'])
+        self._publish_bus_msg(msg, routing_key=message.routing_key)
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))

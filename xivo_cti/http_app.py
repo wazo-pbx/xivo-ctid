@@ -23,6 +23,7 @@ import threading
 from cherrypy import wsgiserver
 from flask import Flask
 from flask.ext import restful
+from flask_cors import CORS
 from werkzeug.contrib.fixers import ProxyFix
 
 logger = logging.getLogger(__name__)
@@ -84,16 +85,23 @@ class HTTPInterface(object):
         (Users, '/users/<int:user_id>'),
     ]
 
-    def __init__(self, listen_addr, listen_port, main_thread_proxy):
+    def __init__(self, config, main_thread_proxy):
         app = Flask('xivo_ctid')
         app.wsgi_app = ProxyFix(app.wsgi_app)
         app.secret_key = os.urandom(24)
+        self.load_cors(app, config)
         api = restful.Api(app, prefix='/{}'.format(self.VERSION))
         self._add_resources(api, main_thread_proxy)
-        bind_addr = (listen_addr, listen_port)
+        bind_addr = (config['listen'], config['port'])
         wsgi_app = wsgiserver.WSGIPathInfoDispatcher({'/': app})
         self._server = wsgiserver.CherryPyWSGIServer(bind_addr=bind_addr,
                                                      wsgi_app=wsgi_app)
+
+    def load_cors(self, app, config):
+        cors_config = dict(config.get('cors', {}))
+        enabled = cors_config.pop('enabled', False)
+        if enabled:
+            CORS(app, **cors_config)
 
     def start(self):
         self._thread = threading.Thread(target=self._start_async)

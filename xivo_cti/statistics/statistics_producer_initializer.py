@@ -20,9 +20,9 @@ from xivo_cti import dao
 
 class StatisticsProducerInitializer(object):
 
-    def __init__(self, queue_member_manager, agent_client):
+    def __init__(self, queue_member_manager, agentd_client):
         self._queue_member_manager = queue_member_manager
-        self.agent_client = agent_client
+        self.agentd_client = agentd_client
 
     def init_queue_statistics_producer(self, queue_statistics_producer):
         self._add_queues(queue_statistics_producer)
@@ -39,7 +39,7 @@ class StatisticsProducerInitializer(object):
             queue_statistics_producer.on_queue_member_added(queue_member)
 
     def _add_logged_agents(self, queue_statistics_producer):
-        for agent_status in self.agent_client.get_agent_statuses():
+        for agent_status in self.agentd_client.agents.get_agent_statuses():
             if agent_status.logged:
                 agent_id = 'Agent/%s' % agent_status.number
                 queue_statistics_producer.on_agent_loggedon(agent_id)

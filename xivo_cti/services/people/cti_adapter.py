@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,9 @@
 import logging
 
 from functools import partial
+from xivo_dird_client import Client
+
+from xivo_cti import config
 from xivo_cti import dao
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -26,21 +29,22 @@ logger = logging.getLogger(__name__)
 
 class PeopleCTIAdapter(object):
 
-    def __init__(self, async_dird_client, cti_server):
-        self._dird = async_dird_client
+    def __init__(self, async_runner, cti_server):
+        self._client = Client(**config['dird'])
         self._cti_server = cti_server
+        self._runner = async_runner
 
     def get_headers(self, user_id):
         logger.debug('Get headers called')
         profile = dao.user.get_context(user_id)
         callback = partial(self._send_headers_result, user_id)
-        self._dird.headers(profile, callback)
+        self._runner.run_with_cb(callback, self._client.directories.headers, profile=profile)
 
     def search(self, user_id, term):
         logger.debug('Search called')
         profile = dao.user.get_context(user_id)
         callback = partial(self._send_lookup_result, user_id)
-        self._dird.lookup(profile, term, callback)
+        self._runner.run_with_cb(callback, self._client.directories.lookup, profile=profile, term=term)
 
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)

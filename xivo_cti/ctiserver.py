@@ -188,9 +188,7 @@ class CTIServer(object):
         self._statistics_producer_initializer = context.get('statistics_producer_initializer')
 
         self._agent_status_manager = context.get('agent_status_manager')
-
-        self._agent_client = context.get('agent_client')
-        self._agent_client.connect()
+        self._agentd_client = context.get('agentd_client')
 
         self._broadcast_cti_group = context.get('broadcast_cti_group')
 
@@ -379,7 +377,7 @@ class CTIServer(object):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
 
     def _init_agent_availability(self):
-        for agent_status in self._agent_client.get_agent_statuses():
+        for agent_status in self._agentd_client.agents.get_agent_statuses():
             if agent_status.logged:
                 agent_status_cti = AgentStatus.available
             else:
@@ -455,8 +453,7 @@ class CTIServer(object):
         self._queue_member_indexer.initialize(self._queue_member_manager)
 
         logger.info('Listening for HTTP requests')
-        http_interface = http_app.HTTPInterface(config['rest_api']['listen'],
-                                                config['rest_api']['port'],
+        http_interface = http_app.HTTPInterface(config['rest_api'],
                                                 context.get('main_thread_proxy'))
         http_interface.start()
 
