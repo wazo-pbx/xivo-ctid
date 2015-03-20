@@ -18,6 +18,7 @@
 import unittest
 
 from mock import Mock
+from mock import patch
 
 from xivo_cti.provd import CTIProvdClient
 from xivo_provd_client import NotFoundError
@@ -53,3 +54,40 @@ class TestCTIProvdClient(unittest.TestCase):
         device = self.cti_provd_client.find_device(self.device_id)
 
         self.assertIs(device, None)
+
+    @patch('xivo_cti.provd.new_provisioning_client')
+    def test_new_from_config_minimal(self, mock_new_provisioning_client):
+        provd_config = {}
+
+        cti_provd_client = CTIProvdClient.new_from_config(provd_config)
+
+        expected_url = 'http://localhost:8666/provd'
+        mock_new_provisioning_client.assert_called_once_with(expected_url, None)
+        self.assertIsInstance(cti_provd_client, CTIProvdClient)
+
+    @patch('xivo_cti.provd.new_provisioning_client')
+    def test_new_from_config_full(self, mock_new_provisioning_client):
+        provd_config = {
+            'host': 'example.org',
+            'port': 9999,
+            'username': 'foo',
+            'password': 'bar',
+            'https': True,
+        }
+
+        cti_provd_client = CTIProvdClient.new_from_config(provd_config)
+
+        expected_url = 'https://example.org:9999/provd'
+        expected_credentials = ('foo', 'bar')
+        mock_new_provisioning_client.assert_called_once_with(expected_url, expected_credentials)
+        self.assertIsInstance(cti_provd_client, CTIProvdClient)
+
+    @patch('xivo_cti.provd.logger')
+    def test_new_from_config_unknown_param(self, mock_logger):
+        provd_config = {
+            'foo': 'bar',
+        }
+
+        CTIProvdClient.new_from_config(provd_config)
+
+        self.assertTrue(mock_logger.warning.called)
