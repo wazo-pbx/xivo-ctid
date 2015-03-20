@@ -26,25 +26,26 @@ from hamcrest import less_than
 from mock import Mock
 from mock import patch
 from mock import sentinel
+from xivo_cti.model.device import Device
 from xivo_cti.services.device.controller.snom import SnomController
 from xivo_cti.services.device.controller.snom import _SnomAnswerer
-from xivo_dao.data_handler.device.model import Device
 
 
 class TestSnomController(unittest.TestCase):
 
     def setUp(self):
         self._ami_class = None
+        self.device = Device(2)
+        self.device.ip = '127.0.0.1'
 
     def test_answer(self):
-        device = Device(ip='127.0.0.1')
         snom_controller = SnomController(self._ami_class)
         answerer = Mock(_SnomAnswerer)
         snom_controller._get_answerer = Mock(return_value=answerer)
 
-        snom_controller.answer(device)
+        snom_controller.answer(self.device)
 
-        snom_controller._get_answerer.assert_called_once_with(device.ip, 'guest', 'guest')
+        snom_controller._get_answerer.assert_called_once_with(self.device.ip, 'guest', 'guest')
         self._assert_answerer_called_once(answerer)
 
     def _assert_answerer_called_once(self, answerer):
@@ -54,14 +55,13 @@ class TestSnomController(unittest.TestCase):
                 raise AssertionError('answerer.answer was not called')
 
     def test_answer_blocking(self):
-        device = Device(ip='127.0.0.1')
         snom_controller = SnomController(self._ami_class)
         answerer = Mock(_SnomAnswerer)
         snom_controller._get_answerer = Mock(return_value=answerer)
         answerer.answer.side_effect = lambda: time.sleep(0.2)
 
         call_time = time.time()
-        snom_controller.answer(device)
+        snom_controller.answer(self.device)
         return_time = time.time()
 
         elapsed_time = return_time - call_time

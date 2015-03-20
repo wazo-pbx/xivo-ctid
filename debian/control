@@ -38,7 +38,8 @@ Depends: ${python:Depends},
          xivo-dird-client,
          xivo-libdao,
          xivo-libdird,
-         xivo-lib-python
+         xivo-lib-python,
+         xivo-provd-client
 Description: XiVO CTI server library
  XiVO is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.

@@ -17,15 +17,14 @@
 
 import unittest
 
-from mock import patch
 from mock import Mock
 
+from xivo_cti.provd import CTIProvdClient
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
 from xivo_cti.services.device.controller.yealink import YealinkController
-from xivo_dao.data_handler.exception import NotFoundError
 from xivo_cti.xivo_ami import AMIClass
 
 
@@ -33,74 +32,70 @@ class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
         self.ami_class = Mock(AMIClass)
+        self.cti_provd_client = Mock(CTIProvdClient)
         self._base_controller = Mock(BaseController)
         self._aastra_controller = Mock(AastraController)
         self._snom_controller = Mock(SnomController)
         self._yealink_controller = Mock(YealinkController)
-        self.manager = DeviceManager(self.ami_class)
+        self.manager = DeviceManager(self.ami_class, self.cti_provd_client)
 
-    @patch('xivo_dao.data_handler.device.services.get',
-           Mock(side_effect=NotFoundError()))
     def test_get_answer_fn_no_device(self):
         self.manager._base_controller = self._base_controller
+        self.cti_provd_client.find_device.return_value = None
 
         self.manager.get_answer_fn(5)()
 
         self._base_controller.answer.assert_called_once_with(None)
 
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_not_supported(self, mock_device_service_get):
+    def test_get_answer_fn_not_supported(self):
         device = Mock()
         device.is_switchboard.return_value = False
-        mock_device_service_get.return_value = device
+        self.cti_provd_client.find_device.return_value = device
         self.manager._base_controller = self._base_controller
 
         self.manager.get_answer_fn(device.id)()
 
+        self.cti_provd_client.find_device.assert_called_once_with(device.id)
         self._base_controller.answer.assert_called_once_with(device)
 
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_switchboard_but_unknown_vendor(self, mock_device_service_get):
+    def test_get_answer_fn_switchboard_but_unknown_vendor(self):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'BMW'
-        mock_device_service_get.return_value = device
+        self.cti_provd_client.find_device.return_value = device
         self.manager._base_controller = self._base_controller
 
         self.manager.get_answer_fn(device.id)()
 
         self._base_controller.answer.assert_called_once_with(device)
 
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_aastra_switchboard(self, mock_device_service_get):
+    def test_get_answer_fn_aastra_switchboard(self):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Aastra'
-        mock_device_service_get.return_value = device
+        self.cti_provd_client.find_device.return_value = device
         self.manager._aastra_controller = self._aastra_controller
 
         self.manager.get_answer_fn(device.id)()
 
         self._aastra_controller.answer.assert_called_once_with(device)
 
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_snom_switchboard(self, mock_device_service_get):
+    def test_get_answer_fn_snom_switchboard(self):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Snom'
-        mock_device_service_get.return_value = device
+        self.cti_provd_client.find_device.return_value = device
         self.manager._snom_controller = self._snom_controller
 
         self.manager.get_answer_fn(device.id)()
 
         self._snom_controller.answer.assert_called_once_with(device)
 
-    @patch('xivo_dao.data_handler.device.services.get')
-    def test_get_answer_fn_yealink_switchboard(self, mock_device_service_get):
+    def test_get_answer_fn_yealink_switchboard(self):
         device = Mock()
         device.is_switchboard.return_value = True
         device.vendor = 'Yealink'
-        mock_device_service_get.return_value = device
+        self.cti_provd_client.find_device.return_value = device
         self.manager._yealink_controller = self._yealink_controller
 
         self.manager.get_answer_fn(device.id)()

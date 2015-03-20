@@ -19,9 +19,10 @@ import unittest
 
 from mock import patch
 from mock import Mock
-from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.model.device import Device
 from xivo_cti.services.device.controller.yealink import YealinkController
-from xivo_dao.data_handler.device.model import Device
+from xivo_cti.xivo_ami import AMIClass
+
 
 
 class TestYealinkController(unittest.TestCase):
@@ -33,7 +34,7 @@ class TestYealinkController(unittest.TestCase):
     @patch('xivo_dao.line_dao.get_peer_name')
     def test_answer(self, mock_get_peer_name):
         peer = 'SIP/1234'
-        device = Device(id=13)
+        device = Device(13)
 
         mock_get_peer_name.return_value = peer
 

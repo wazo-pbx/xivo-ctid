@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,25 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from hamcrest import assert_that
-from hamcrest import equal_to
-from mock import Mock
-from unittest import TestCase
-from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.services.device.controller import base
+import logging
+
+from xivo_cti.model.device import Device
+from xivo_provd_client import NotFoundError
+
+logger = logging.getLogger(__name__)
 
 
-class TestBaseController(TestCase):
+class CTIProvdClient(object):
 
-    def setUp(self):
-        self._ami = Mock(AMIClass)
+    def __init__(self, provd_client):
+        self._dev_mgr = provd_client.device_manager()
 
-    def test_base_controller_ami_field(self):
-        c = base.BaseController(self._ami)
+    def find_device(self, device_id):
+        try:
+            provd_device = self._dev_mgr.get(device_id)
+        except NotFoundError:
+            pass
+        except Exception as e:
+            logger.error('Unexpected error while retrieving device: %s', e)
+        else:
+            return Device.new_from_provd_device(provd_device)
 
-        assert_that(c._ami, equal_to(self._ami))
-
-    def test_answer_function_with_device_exists(self):
-        c = base.BaseController(self._ami)
-
-        c.answer(None)
+        return None

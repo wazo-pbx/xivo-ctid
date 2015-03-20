@@ -39,6 +39,7 @@ from xivo_cti.innerdata import Safe
 from xivo_cti.main_thread_proxy import MainThreadProxy
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
+from xivo_cti.provd import CTIProvdClient
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
@@ -90,6 +91,7 @@ from xivo_cti.task_queue import new_task_queue
 from xivo_cti.task_scheduler import new_task_scheduler
 from xivo_cti.tools.delta_computer import DeltaComputer
 from xivo_cti.xivo_ami import AMIClass
+from xivo_provd_client import new_provisioning_client
 
 
 logger = logging.getLogger(__name__)
@@ -143,6 +145,7 @@ def setup():
     context.register('channel_updater', ChannelUpdater)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
+    context.register('cti_provd_client', CTIProvdClient(new_provisioning_client('http://localhost:8666/provd')))
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)
