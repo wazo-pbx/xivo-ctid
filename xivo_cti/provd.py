@@ -42,13 +42,11 @@ class CTIProvdClient(object):
 
     @classmethod
     def new_from_config(cls, provd_config):
-        host = provd_config.pop('host', 'localhost')
-        port = provd_config.pop('port', 8666)
-        username = provd_config.pop('username', None)
-        password = provd_config.pop('password', None)
-        https = provd_config.pop('https', False)
-        if provd_config:
-            logger.warning('Ignored provd config parameters: %s', provd_config.keys())
+        host = provd_config.get('host', 'localhost')
+        port = provd_config.get('port', 8666)
+        username = provd_config.get('username')
+        password = provd_config.get('password')
+        https = provd_config.get('https', False)
 
         scheme = 'https' if https else 'http'
         uri = '{}://{}:{}/provd'.format(scheme, host, port)

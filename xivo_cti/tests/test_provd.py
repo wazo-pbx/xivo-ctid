@@ -81,13 +81,3 @@ class TestCTIProvdClient(unittest.TestCase):
         expected_credentials = ('foo', 'bar')
         mock_new_provisioning_client.assert_called_once_with(expected_url, expected_credentials)
         self.assertIsInstance(cti_provd_client, CTIProvdClient)
-
-    @patch('xivo_cti.provd.logger')
-    def test_new_from_config_unknown_param(self, mock_logger):
-        provd_config = {
-            'foo': 'bar',
-        }
-
-        CTIProvdClient.new_from_config(provd_config)
-
-        self.assertTrue(mock_logger.warning.called)
