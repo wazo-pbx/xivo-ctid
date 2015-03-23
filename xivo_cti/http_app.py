@@ -26,6 +26,8 @@ from flask.ext import restful
 from flask_cors import CORS
 from werkzeug.contrib.fixers import ProxyFix
 
+from xivo_cti.swagger.resource import SwaggerResource
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,6 +85,7 @@ class HTTPInterface(object):
         (Endpoints, '/endpoints/<int:endpoint_id>'),
         (Infos, '/infos'),
         (Users, '/users/<int:user_id>'),
+        (SwaggerResource, SwaggerResource.api_path),
     ]
 
     def __init__(self, config, main_thread_proxy):
