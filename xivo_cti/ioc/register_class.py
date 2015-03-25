@@ -39,6 +39,7 @@ from xivo_cti.innerdata import Safe
 from xivo_cti.main_thread_proxy import MainThreadProxy
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
+from xivo_cti.provd import CTIProvdClient
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
@@ -143,6 +144,7 @@ def setup():
     context.register('channel_updater', ChannelUpdater)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
+    context.register('cti_provd_client', CTIProvdClient.new_from_config(config['provd']))
     context.register('cti_server', CTIServer)
     context.register('current_call_formatter', CurrentCallFormatter)
     context.register('current_call_manager', CurrentCallManager)

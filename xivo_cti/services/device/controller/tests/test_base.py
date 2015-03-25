@@ -21,7 +21,6 @@ from mock import Mock
 from unittest import TestCase
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.services.device.controller import base
-from xivo_dao.data_handler.device.model import Device
 
 
 class TestBaseController(TestCase):
@@ -37,4 +36,4 @@ class TestBaseController(TestCase):
     def test_answer_function_with_device_exists(self):
         c = base.BaseController(self._ami)
 
-        c.answer(Device())
+        c.answer(None)

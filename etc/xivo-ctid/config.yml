@@ -46,6 +46,11 @@ dird:
   version: 0.1
   timeout: 3
 
+# xivo-provd connection informations.
+provd:
+  host: localhost
+  port: 8666
+
 # Event bus (AMQP) connection informations
 bus:
   username: guest

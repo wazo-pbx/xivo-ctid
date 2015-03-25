@@ -19,24 +19,19 @@ from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
 from xivo_cti.services.device.controller.snom import SnomController
 from xivo_cti.services.device.controller.yealink import YealinkController
-from xivo_dao.data_handler.device import services as device_services
-from xivo_dao.data_handler.exception import NotFoundError
 
 
 class DeviceManager(object):
 
-    def __init__(self, ami_class):
+    def __init__(self, ami_class, cti_provd_client):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
         self._snom_controller = SnomController(ami_class)
         self._yealink_controller = YealinkController(ami_class)
+        self._cti_provd_client = cti_provd_client
 
     def get_answer_fn(self, device_id):
-        try:
-            device = device_services.get(device_id)
-        except NotFoundError:
-            device = None
-
+        device = self._cti_provd_client.find_device(device_id)
         controller = self._get_controller(device)
 
         return lambda: controller.answer(device)
