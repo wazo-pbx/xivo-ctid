@@ -18,6 +18,7 @@
 import logging
 import json
 import threading
+import xivo_agentd_client
 
 from collections import defaultdict
 from functools import wraps
@@ -46,12 +47,13 @@ class StatusForwarder(object):
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
+        agent_status_fetcher = _AgentStatusFetcher(self, async_runner)
         endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner)
         user_status_fetcher = _UserStatusFetcher(self, async_runner)
         self._task_queue = task_queue
         self._exchange = bus_exchange
         self._bus_connection = bus_connection
-        self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory)
+        self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory, agent_status_fetcher)
         self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, endpoint_status_fetcher)
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, user_status_fetcher)
 
@@ -197,13 +199,39 @@ class _BaseStatusFetcher(object):
         self.forwarder = status_forwarder
         self.async_runner = async_runner
 
-    def _get_client_config(self, uuid):
+    def _get_client_config(self, uuid, port):
         # XXX where do we get this info from? config, consul, other
         if uuid == config['uuid']:
             return {
                 'host': 'localhost',
-                'port': 9495,
+                'port': port,
             }
+
+    def _get_agentd_client_config(self, uuid):
+        return self._get_client_config(uuid, xivo_agentd_client.DEFAULT_PORT)
+
+    def _get_ctid_client_config(self, uuid):
+        return self._get_client_config(uuid, 9495)
+
+
+class _AgentStatusFetcher(_BaseStatusFetcher):
+
+    def fetch(self, key):
+        logger.debug('Fetching agent %s', key)
+        uuid, agent_id = key
+        client_config = self._get_agentd_client_config(uuid)
+        if not client_config:
+            logger.warning('Could not fetch agent %s on %s, unknown uuid', agent_id, uuid)
+            return
+
+        client = xivo_agentd_client.Client(**client_config)
+        self.async_runner.run_with_cb(self._on_result, client.agents.get_agent_status, agent_id)
+
+    def _on_result(self, result):
+        key = result.origin_uuid, result.id
+        status = 'logged_in' if result.logged else 'logged_out'
+
+        self.forwarder.on_agent_status_update(key, status)
 
 
 class _EndpointStatusFetcher(_BaseStatusFetcher):
@@ -211,7 +239,7 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
     def fetch(self, key):
         logger.debug('Fetching endpoint %s', key)
         uuid, endpoint_id = key
-        client_config = self._get_client_config(uuid)
+        client_config = self._get_ctid_client_config(uuid)
         if not client_config:
             logger.warning('Could not fetch endpoint %s on %s, unknown uuid', endpoint_id, uuid)
             return
@@ -231,7 +259,7 @@ class _UserStatusFetcher(_BaseStatusFetcher):
     def fetch(self, key):
         logger.debug('Fetching user %s', key)
         uuid, user_id = key
-        client_config = self._get_client_config(uuid)
+        client_config = self._get_ctid_client_config(uuid)
         if not client_config:
             logger.warning('Could not fetch endpoint %s on %s, unknown uuid', user_id, uuid)
             return
@@ -246,9 +274,9 @@ class _UserStatusFetcher(_BaseStatusFetcher):
         self.forwarder.on_user_status_update(key, status)
 
 
-def _new_agent_notifier(cti_group_factory):
+def _new_agent_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.agent_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory, None)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
 
 
 def _new_endpoint_notifier(cti_group_factory, fetcher):
