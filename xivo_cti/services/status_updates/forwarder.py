@@ -199,19 +199,19 @@ class _BaseStatusFetcher(object):
         self.forwarder = status_forwarder
         self.async_runner = async_runner
 
-    def _get_client_config(self, uuid, port):
+    def _get_agentd_client_config(self, uuid):
+        if uuid == config['uuid']:
+            return config['agentd']
+        return None
+
+    def _get_ctid_client_config(self, uuid):
         # XXX where do we get this info from? config, consul, other
         if uuid == config['uuid']:
             return {
                 'host': 'localhost',
-                'port': port,
+                'port': 9495,
             }
-
-    def _get_agentd_client_config(self, uuid):
-        return self._get_client_config(uuid, xivo_agentd_client.DEFAULT_PORT)
-
-    def _get_ctid_client_config(self, uuid):
-        return self._get_client_config(uuid, 9495)
+        return None
 
 
 class _AgentStatusFetcher(_BaseStatusFetcher):
