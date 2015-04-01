@@ -219,6 +219,8 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
     def fetch(self, key):
         logger.debug('Fetching agent %s', key)
         uuid, agent_id = key
+        if not agent_id:
+            return
         client_config = self._get_agentd_client_config(uuid)
         if not client_config:
             logger.warning('Could not fetch agent %s on %s, unknown uuid', agent_id, uuid)
