@@ -184,7 +184,7 @@ class TestAgentStatusFetcher(unittest.TestCase):
 
         fetcher._get_agentd_client_config.assert_called_once_with(self.uuid)
         xivo_agentd_client.Client.assert_called_once_with(host='localhost', port=6666)
-        client.agents.get_agent_status.assert_called_once_with(42)
+        client.agents.get_agent_status.assert_called_once_with(self.id_)
 
 
 class TestEndpointStatusFetcher(unittest.TestCase):
