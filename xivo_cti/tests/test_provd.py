@@ -55,29 +55,11 @@ class TestCTIProvdClient(unittest.TestCase):
 
         self.assertIs(device, None)
 
-    @patch('xivo_cti.provd.new_provisioning_client')
-    def test_new_from_config_minimal(self, mock_new_provisioning_client):
+    @patch('xivo_cti.provd.new_provisioning_client_from_config')
+    def test_new_from_config(self, mock_new_provisioning_client_from_config):
         provd_config = {}
 
         cti_provd_client = CTIProvdClient.new_from_config(provd_config)
 
-        expected_url = 'http://localhost:8666/provd'
-        mock_new_provisioning_client.assert_called_once_with(expected_url, None)
-        self.assertIsInstance(cti_provd_client, CTIProvdClient)
-
-    @patch('xivo_cti.provd.new_provisioning_client')
-    def test_new_from_config_full(self, mock_new_provisioning_client):
-        provd_config = {
-            'host': 'example.org',
-            'port': 9999,
-            'username': 'foo',
-            'password': 'bar',
-            'https': True,
-        }
-
-        cti_provd_client = CTIProvdClient.new_from_config(provd_config)
-
-        expected_url = 'https://example.org:9999/provd'
-        expected_credentials = ('foo', 'bar')
-        mock_new_provisioning_client.assert_called_once_with(expected_url, expected_credentials)
+        mock_new_provisioning_client_from_config.assert_called_once_with(provd_config)
         self.assertIsInstance(cti_provd_client, CTIProvdClient)

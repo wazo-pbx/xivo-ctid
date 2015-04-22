@@ -18,7 +18,7 @@
 import logging
 
 from xivo_cti.model.device import Device
-from xivo_provd_client import new_provisioning_client, NotFoundError
+from xivo_provd_client import new_provisioning_client_from_config, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -42,17 +42,4 @@ class CTIProvdClient(object):
 
     @classmethod
     def new_from_config(cls, provd_config):
-        host = provd_config.get('host', 'localhost')
-        port = provd_config.get('port', 8666)
-        username = provd_config.get('username')
-        password = provd_config.get('password')
-        https = provd_config.get('https', False)
-
-        scheme = 'https' if https else 'http'
-        uri = '{}://{}:{}/provd'.format(scheme, host, port)
-        if username and password:
-            credentials = (username, password)
-        else:
-            credentials = None
-        provd_client = new_provisioning_client(uri, credentials)
-        return cls(provd_client)
+        return cls(new_provisioning_client_from_config(provd_config))
