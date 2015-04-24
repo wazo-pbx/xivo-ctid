@@ -25,10 +25,11 @@ class HistoryCall(object):
 
 
 class ReceivedCall(HistoryCall):
-    def __init__(self, date, duration, caller_name):
+    def __init__(self, date, duration, caller_name, extension):
         self.date = date
         self.duration = duration
         self.caller_name = caller_name
+        self.extension = extension
 
     def display_other_end(self):
         return self.caller_name
@@ -36,7 +37,8 @@ class ReceivedCall(HistoryCall):
     def __eq__(self, other):
         return (self.date == other.date
                 and self.duration == other.duration
-                and self.caller_name == other.caller_name)
+                and self.caller_name == other.caller_name
+                and self.exten == other.exten)
 
     def __ne__(self, other):
         return not self == other

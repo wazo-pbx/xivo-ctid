@@ -37,6 +37,7 @@ def get_history(user_id, mode, size):
     for call in calls:
         history.append({'calldate': call.date.isoformat(),
                         'duration': call.duration,
-                        'fullname': call.display_other_end()})
+                        'fullname': call.display_other_end(),
+                        'extension': call.extension})
 
     return 'message', {'class': 'history', 'mode': mode, 'history': history}

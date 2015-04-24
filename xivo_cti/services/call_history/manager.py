@@ -59,10 +59,12 @@ def outgoing_calls_for_phone(identifier, limit):
 def _convert_incoming_call_logs(call_logs):
     received_calls = []
     for call_log in call_logs:
-        caller_id = '"%s" <%s>' % (call_log.source_name, call_log.source_exten)
+        caller_id = call_log.source_name
+        extension = call_log.source_exten
         received_call = ReceivedCall(call_log.date,
                                      int(round(call_log.duration.total_seconds())),
-                                     caller_id)
+                                     caller_id,
+                                     extension)
         received_calls.append(received_call)
     return received_calls
 
