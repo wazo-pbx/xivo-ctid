@@ -21,62 +21,47 @@ from xivo_cti.cti.commands.history import HistoryMode
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_dao.data_handler.call_log import dao as call_log_dao
 
-from .calls import ReceivedCall, SentCall
+from .calls import AllCall
 
 logger = logging.getLogger(__name__)
 
 
-def history_for_phone(phone, mode, limit):
+def history_for_phone(phone, limit):
     identifier = _phone_to_identifier(phone)
-    calls = []
     try:
-        if mode == HistoryMode.outgoing:
-            calls = outgoing_calls_for_phone(identifier, limit)
-        elif mode == HistoryMode.answered:
-            calls = answered_calls_for_phone(identifier, limit)
-        elif mode == HistoryMode.missed:
-            calls = missed_calls_for_phone(identifier, limit)
+        calls = all_calls_for_phone(identifier, limit)
     except UnsupportedLineProtocolException:
         logger.warning('Could not get history for phone: %s', phone['name'])
     return calls
 
 
-def answered_calls_for_phone(identifier, limit):
-    call_logs = call_log_dao.find_all_answered_for_phone(identifier, limit)
-    return _convert_incoming_call_logs(call_logs)
+def all_calls_for_phone(identifier, limit):
+    call_logs = call_log_dao.find_all_history_for_phone(identifier, limit)
+    return _convert_all_call_logs(call_logs, identifier)
 
 
-def missed_calls_for_phone(identifier, limit):
-    call_logs = call_log_dao.find_all_missed_for_phone(identifier, limit)
-    return _convert_incoming_call_logs(call_logs)
-
-
-def outgoing_calls_for_phone(identifier, limit):
-    call_logs = call_log_dao.find_all_outgoing_for_phone(identifier, limit)
-    return _convert_outgoing_call_logs(call_logs)
-
-
-def _convert_incoming_call_logs(call_logs):
-    received_calls = []
+def _convert_all_call_logs(call_logs, identifier):
+    all_calls = []
     for call_log in call_logs:
-        caller_id = call_log.source_name
-        extension = call_log.source_exten
-        received_call = ReceivedCall(call_log.date,
-                                     int(round(call_log.duration.total_seconds())),
-                                     caller_id,
-                                     extension)
-        received_calls.append(received_call)
-    return received_calls
+        if call_log.destination_line_identity == identifier:
+            caller_id = call_log.source_name
+            extension = call_log.source_exten
+            if call_log.answered:
+                mode = HistoryMode.answered
+            else:
+                mode = HistoryMode.missed
+        else:
+            caller_id = call_log.destination_name
+            extension = call_log.destination_exten
+            mode = HistoryMode.outgoing
 
-
-def _convert_outgoing_call_logs(call_logs):
-    sent_calls = []
-    for call_log in call_logs:
-        sent_call = SentCall(call_log.date,
-                             int(round(call_log.duration.total_seconds())),
-                             call_log.destination_exten)
-        sent_calls.append(sent_call)
-    return sent_calls
+        all_call = AllCall(call_log.date,
+                           int(round(call_log.duration.total_seconds())),
+                           caller_id,
+                           extension,
+                           mode)
+        all_calls.append(all_call)
+    return all_calls
 
 
 def _phone_to_identifier(phone):

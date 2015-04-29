@@ -337,7 +337,7 @@ class CTIServer(object):
         )
         History.register_callback_params(
             call_history_cti_interface.get_history,
-            ['user_id', 'mode', 'size']
+            ['user_id', 'size']
         )
 
     def _register_ami_callbacks(self):

@@ -25,17 +25,7 @@ class HistoryMode(object):
 
 
 def _parse(msg, command):
-    command.mode = _mode(msg['mode'])
     command.size = int(msg['size'])
-
-
-def _mode(mode):
-    if mode == '0':
-        return HistoryMode.outgoing
-    elif mode == '1':
-        return HistoryMode.answered
-    elif mode == '2':
-        return HistoryMode.missed
 
 
 History = CTICommandClass('history', None, _parse)

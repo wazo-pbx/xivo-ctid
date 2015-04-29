@@ -24,39 +24,20 @@ class HistoryCall(object):
         raise NotImplementedError()
 
 
-class ReceivedCall(HistoryCall):
-    def __init__(self, date, duration, caller_name, extension):
+class AllCall(HistoryCall):
+    def __init__(self, date, duration, caller_name, extension, mode):
         self.date = date
         self.duration = duration
         self.caller_name = caller_name
         self.extension = extension
-
-    def display_other_end(self):
-        return self.caller_name
+        self.mode = mode
 
     def __eq__(self, other):
         return (self.date == other.date
                 and self.duration == other.duration
                 and self.caller_name == other.caller_name
-                and self.exten == other.exten)
-
-    def __ne__(self, other):
-        return not self == other
-
-
-class SentCall(HistoryCall):
-    def __init__(self, date, duration, extension):
-        self.date = date
-        self.duration = duration
-        self.extension = extension
-
-    def display_other_end(self):
-        return self.extension
-
-    def __eq__(self, other):
-        return (self.date == other.date
-                and self.duration == other.duration
-                and self.extension == other.extension)
+                and self.exten == other.exten
+                and self.mode == other.mode)
 
     def __ne__(self, other):
         return not self == other
