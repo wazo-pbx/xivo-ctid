@@ -17,39 +17,21 @@
 
 import unittest
 
-from xivo_cti.cti.commands.history import History, HistoryMode
+from xivo_cti.cti.commands.history import History
 
 
 class TestHistory(unittest.TestCase):
 
-    def test_from_dict_incoming(self):
-        message = self._build_message(mode='0', size='10')
+    def test_from_dict(self):
+        message = self._build_message(size='10')
 
         history = History.from_dict(message)
 
-        self.assertEqual(history.mode, HistoryMode.outgoing)
         self.assertEqual(history.size, 10)
 
-    def test_from_dict_missing(self):
-        message = self._build_message(mode='1', size='20')
-
-        history = History.from_dict(message)
-
-        self.assertEqual(history.mode, HistoryMode.answered)
-        self.assertEqual(history.size, 20)
-
-    def test_from_dict_outgoing(self):
-        message = self._build_message(mode='2', size='30')
-
-        history = History.from_dict(message)
-
-        self.assertEqual(history.mode, HistoryMode.missed)
-        self.assertEqual(history.size, 30)
-
-    def _build_message(self, mode, size):
+    def _build_message(self, size):
         return {
             'class': 'ipbxcommand',
             'command': 'history',
-            'mode': mode,
             'size': size,
         }

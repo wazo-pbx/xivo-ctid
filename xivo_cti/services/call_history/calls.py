@@ -36,7 +36,7 @@ class AllCall(HistoryCall):
         return (self.date == other.date
                 and self.duration == other.duration
                 and self.caller_name == other.caller_name
-                and self.exten == other.exten
+                and self.extension == other.extension
                 and self.mode == other.mode)
 
     def __ne__(self, other):
