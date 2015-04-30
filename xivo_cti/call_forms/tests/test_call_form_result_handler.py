@@ -21,17 +21,14 @@ from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock
 
-from xivo_bus import Marshaler
-
 from ..call_form_result_handler import CallFormResultHandler, CallFormResultEvent
 
 
 class TestCallFormResultHandler(unittest.TestCase):
 
     def setUp(self):
-        self._marshaler = Marshaler('my-uuid')
-        self._bus_publish = Mock()
-        self._handler = CallFormResultHandler(self._bus_publish, self._marshaler)
+        self._bus_publisher = Mock()
+        self._handler = CallFormResultHandler(self._bus_publisher)
 
     def test_parse(self):
         user_id = 42
@@ -68,9 +65,8 @@ class TestCallFormResultHandler(unittest.TestCase):
 
     def test_send_call_form_result(self):
         variables = {'foo': 'bar'}
-        event = CallFormResultEvent(42, variables)
-        expected_msg = self._marshaler.marshal_message(event)
+        expected_event = CallFormResultEvent(42, variables)
 
         self._handler._send_call_form_result(42, variables)
 
-        self._bus_publish.assert_called_once_with(expected_msg, routing_key=event.routing_key)
+        self._bus_publisher.publish.assert_called_once_with(expected_event)

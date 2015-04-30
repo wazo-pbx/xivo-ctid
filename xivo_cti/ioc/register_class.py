@@ -22,7 +22,7 @@ from kombu import Connection, Exchange, Producer
 
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
-from xivo_bus import Marshaler
+from xivo_bus import Marshaler, Publisher
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
@@ -96,21 +96,14 @@ from xivo_cti.xivo_ami import AMIClass
 logger = logging.getLogger(__name__)
 
 
-def _on_bus_publish_error(exc, interval):
-    logger.error('Error: %s', exc, exc_info=1)
-    logger.info('Retry in %s seconds...', interval)
-
-
 def setup():
     bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
     bus_connection = Connection(bus_url)
     bus_exchange = Exchange(config['bus']['exchange_name'],
                             type=config['bus']['exchange_type'])
     bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
-    bus_publish_fn = bus_connection.ensure(bus_producer, bus_producer.publish,
-                                           errback=_on_bus_publish_error, max_retries=1,
-                                           interval_start=1)
     bus_marshaler = Marshaler(config['uuid'])
+    bus_publisher = Publisher(bus_producer, bus_marshaler)
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
 
@@ -131,8 +124,7 @@ def setup():
     context.register('agentd_client', AgentdClient(**config['agentd']))
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
-    context.register('bus_publish', lambda: bus_publish_fn)
-    context.register('bus_marshaler', lambda: bus_marshaler)
+    context.register('bus_publisher', bus_publisher)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)

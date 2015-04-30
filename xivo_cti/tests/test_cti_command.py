@@ -23,7 +23,6 @@ from xivo_cti.statistics.queue_statistics_manager import QueueStatisticsManager
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 from xivo_cti.innerdata import Safe
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.lists.users_list import UsersList
 
 
 class Test(unittest.TestCase):

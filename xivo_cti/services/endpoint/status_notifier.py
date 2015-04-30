@@ -21,14 +21,12 @@ from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 class StatusNotifier(object):
 
-    def __init__(self, cti_server, bus_publish, bus_marshaler):
+    def __init__(self, cti_server, bus_publisher):
         self._ctiserver = cti_server
-        self._publish_bus_msg = bus_publish
-        self._marshaler = bus_marshaler
+        self._bus_publisher = bus_publisher
 
     def notify(self, phone_id, status):
         cti_event = CTIMessageFormatter.phone_hintstatus_update(phone_id, status)
         self._ctiserver.send_cti_event(cti_event)
         bus_event = EndpointStatusUpdateEvent(phone_id, status)
-        msg = self._marshaler.marshal_message(bus_event)
-        self._publish_bus_msg(msg, routing_key=bus_event.routing_key)
+        self._bus_publisher.publish(bus_event)

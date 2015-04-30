@@ -28,9 +28,8 @@ class CallFormResultHandler(object):
 
     _variable_pattern = re.compile(r'XIVOFORM_([\w_]+)')
 
-    def __init__(self, bus_publish, bus_marshaler):
-        self._publish_bus_msg = bus_publish
-        self._marshaler = bus_marshaler
+    def __init__(self, bus_publisher):
+        self._bus_publisher = bus_publisher
 
     def parse(self, user_id, variables):
         self._send_call_form_result(
@@ -42,8 +41,7 @@ class CallFormResultHandler(object):
         logger.debug('Call form result received for user %s with variables\n%s',
                      user_id, pprint.pformat(variables))
         event = CallFormResultEvent(user_id, variables)
-        msg = self._marshaler.marshal_message(event)
-        self._publish_bus_msg(msg, routing_key=event.routing_key)
+        self._bus_publisher.publish(event)
 
     def _clean_variables(self, variables):
         return dict(

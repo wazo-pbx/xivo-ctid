@@ -17,8 +17,6 @@
 
 import unittest
 
-from xivo_bus import Marshaler
-
 from ..status_notifier import StatusNotifier
 from ..status_notifier import EndpointStatusUpdateEvent
 from xivo_cti.ctiserver import CTIServer
@@ -29,11 +27,9 @@ class TestStatusNotifier(unittest.TestCase):
 
     def setUp(self):
         self._ctiserver = Mock(CTIServer)
-        self._bus_producer = Mock()
-        self._marshaler = Marshaler('my-uuid')
+        self._bus_publisher = Mock()
         self._notifier = StatusNotifier(self._ctiserver,
-                                        self._bus_producer,
-                                        self._marshaler)
+                                        self._bus_publisher)
 
     def test_that_notify_calls_send_cti_event(self):
         phone_id, status = '42', 8
@@ -56,7 +52,6 @@ class TestStatusNotifier(unittest.TestCase):
 
         self._notifier.notify(phone_id, new_status)
 
-        expected_bus_msg = EndpointStatusUpdateEvent(phone_id, new_status)
+        expected_event = EndpointStatusUpdateEvent(phone_id, new_status)
 
-        self._bus_producer.publish.asser_called_once_with(expected_bus_msg,
-                                                          routing_key=expected_bus_msg.routing_key)
+        self._bus_publisher.publish.assert_called_once_with(expected_event)
