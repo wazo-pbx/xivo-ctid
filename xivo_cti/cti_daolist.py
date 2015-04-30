@@ -17,7 +17,7 @@
 
 import logging
 from xivo_dao import group_dao, agent_dao, \
-    meetme_dao, queue_dao, voicemail_dao, context_dao, \
+    meetme_dao, queue_dao, voicemail_dao, \
     phonebook_dao, user_dao, trunk_dao, user_line_dao
 
 logger = logging.getLogger('daolist')
@@ -173,27 +173,6 @@ class DaoList(object):
         res[key] = voicemail.todict()
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
-        return res
-
-    def _get_contexts(self):
-        res = {}
-        contexts = context_dao.all()
-        for row in contexts:
-            context, contextnumbers, contexttype, contextinclude = row
-            res.update(self._format_context_data(context, contextnumbers, contexttype, contextinclude))
-        return res
-
-    def _get_context(self, id):
-        context, contextnumbers, contexttype, contextinclude = context_dao.get_join_elements(id)
-        return self._format_context_data(context, contextnumbers, contexttype, contextinclude)
-
-    def _format_context_data(self, context, contextnumbers, contexttype, contextinclude):
-        res = {}
-        key = str(context.name)
-        res[key]['context'] = context.todict()
-        res[key]['contextnumbers'] = contextnumbers.todict()
-        res[key]['contextinclude'] = contextinclude.todict() if contextinclude else False
-        res[key]['contexttype'] = contexttype.todict()
         return res
 
     def _get_phonebooks(self):

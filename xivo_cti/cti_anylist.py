@@ -85,7 +85,6 @@ class AnyList(object):
             'admin_moderationmode'
         ],
         'outcalls': [],
-        'contexts': [],
         'phonebooks': [],
         'queuemembers': [
             'queue_name',
@@ -139,7 +138,6 @@ class AnyList(object):
             'old': 0,
             'new': 0
         },
-        'contexts': {},
         'phonebooks': {}
     }
 

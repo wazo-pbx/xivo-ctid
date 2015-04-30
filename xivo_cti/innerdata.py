@@ -33,7 +33,7 @@ from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirect
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.ioc.context import context
-from xivo_cti.lists import agents_list, contexts_list, groups_list, meetmes_list, \
+from xivo_cti.lists import agents_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
 from xivo_dao import directory_dao
@@ -73,7 +73,6 @@ class Safe(object):
     def init_xod_config(self):
         self.xod_config = {
             'agents': agents_list.AgentsList(self),
-            'contexts': contexts_list.ContextsList(self),
             'groups': groups_list.GroupsList(self),
             'meetmes': meetmes_list.MeetmesList(self),
             'phonebooks': phonebooks_list.PhonebooksList(self),
