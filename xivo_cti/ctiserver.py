@@ -696,7 +696,7 @@ class CTIServer(object):
                     msg = self.update_config_list.pop()
                     self.safe.update_config_list('%ss' % msg['object_name'], msg['state'], msg['id'])
             except Exception:
-                logger.exception('Config reload (computed timeout)')
+                logger.exception('Config reload')
 
     def select_step(self):
         sels_i, sels_o, sels_e = self._init_socket()

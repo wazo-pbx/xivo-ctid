@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from xivo_cti.cti_daolist import DaoList, UnknownListName
+from xivo_cti.cti_daolist import DaoList, UnknownListName, NotFoundError
 from mock import Mock, patch, sentinel
 
 
@@ -88,9 +88,7 @@ class TestDaoList(unittest.TestCase):
         self.daolist._get_user = Mock()
         self.daolist._get_user.side_effect = LookupError
 
-        result = self.daolist.get(user_id)
-
-        self.assertEquals(result, {})
+        self.assertRaises(NotFoundError, self.daolist.get, user_id)
 
     def _generic_object(self, **variables):
         class generic(object):

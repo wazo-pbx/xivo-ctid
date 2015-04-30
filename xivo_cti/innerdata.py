@@ -32,6 +32,7 @@ from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
+from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
@@ -42,7 +43,6 @@ from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
 from xivo_dao import user_dao as old_user_dao
 from xivo_dao.data_handler.user import dao as user_dao
-from xivo_dao.data_handler.exception import NotFoundError
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
 from collections import defaultdict
@@ -91,7 +91,6 @@ class Safe(object):
             self.xod_status[name] = config.init_status()
 
     def update_config_list(self, listname, state, item_id):
-        start_time = time.time()
         try:
             if state == 'add':
                 self._update_config_list_add(listname, item_id)
@@ -99,12 +98,10 @@ class Safe(object):
                 self._update_config_list_change(listname, item_id)
             elif state == 'delete':
                 self._update_config_list_del(listname, item_id)
-        except KeyError:
-            logger.warning('id "%s" not exist for object %s', item_id, listname)
+        except NotFoundError:
+            logger.info('object %s %s not found', listname, item_id)
         except TypeError:
             logger.warning('id "%s" not set for object %s', item_id, listname)
-        end_time = time.time()
-        logger.debug('Getting %s in %.6f seconds', listname, (end_time - start_time))
 
     def _update_config_list_add(self, listname, item_id):
         self.xod_config[listname].add(item_id)

@@ -27,29 +27,36 @@ class UnknownListName(Exception):
     pass
 
 
+class NotFoundError(Exception):
+    pass
+
+
 class DaoList(object):
 
     def __init__(self, listname):
         self.listname = listname
 
     def get(self, id):
-        name = '_get_%s' % self.listname[0:-1]
-        return self._get(name, id)
+        method_suffix = self.listname[:-1]
+        method = self._get_method(method_suffix)
+        try:
+            return method(id)
+        except KeyError:
+            raise
+        except LookupError:
+            raise NotFoundError(self.listname, id)
 
     def get_list(self):
-        name = '_get_%s' % self.listname
-        return self._get(name)
+        method_suffix = self.listname
+        method = self._get_method(method_suffix)
+        return method()
 
-    def _get(self, name, id=None):
+    def _get_method(self, method_suffix):
+        name = '_get_%s' % method_suffix
         try:
-            if id:
-                return getattr(self, name)(id)
-            else:
-                return getattr(self, name)()
-        except LookupError:
-            return {}
+            return getattr(self, name)
         except AttributeError:
-            raise UnknownListName(name)
+            raise UnknownListName(self.listname)
 
     def _get_users(self):
         return user_dao.get_users_config()
