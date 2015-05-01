@@ -28,7 +28,6 @@ def encode_update(config):
         for user_number, user_config in config[conf_number]['members'].iteritems():
             tmp[conf_number]['members'][str(user_number)] = copy.deepcopy(user_config)
             tmp[conf_number]['members'][str(user_number)].pop('channel', None)
-    tmp = _swap_bool_to_yes_no(tmp)
 
     return {'class': 'meetme_update',
             'config': tmp}
@@ -50,22 +49,10 @@ def encode_user(conf_number, usernum):
             'usernum': usernum}
 
 
-def _swap_bool_to_yes_no(d):
-    for name, value in d.iteritems():
-        if not isinstance(value, dict):
-            if value is True:
-                d[name] = 'Yes'
-            elif value is False:
-                d[name] = 'No'
-        else:
-            _swap_bool_to_yes_no(value)
-    return d
-
-
 def encode_room_number_pairs(pairs):
     list = [{'room_number': room_number,
              'user_number': user_number}
-             for room_number, user_number in pairs]
+            for room_number, user_number in pairs]
 
     return {'class': 'meetme_user',
             'list': sorted(list)}

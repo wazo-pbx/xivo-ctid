@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -230,7 +230,7 @@ def _build_joining_member_status(join_seq, name, number, channel, is_muted):
 
 def _build_member_status(join_seq_number, name, number, channel, is_muted):
     return {'join_order': join_seq_number,
-            'join_time':-1,
+            'join_time': -1,
             'number': number,
             'name': name,
             'channel': channel,

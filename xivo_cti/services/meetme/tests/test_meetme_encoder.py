@@ -46,19 +46,19 @@ class TestMeetmeEncoder(unittest.TestCase):
         expected = {'class': 'meetme_update',
                     'config': {'800': {'number': '800',
                                        'name': 'my_test_conf',
-                                       'pin_required': 'Yes',
+                                       'pin_required': True,
                                        'start_time': 1234.1234,
                                        'member_count': 2,
                                        'members': {'1': {'join_order': 1,
-                                                       'join_time': 1234.1234,
-                                                       'number': '1002',
-                                                       'name': 'Tester 1',
-                                                       'muted': 'Yes'},
+                                                         'join_time': 1234.1234,
+                                                         'number': '1002',
+                                                         'name': 'Tester 1',
+                                                         'muted': True},
                                                    '2': {'join_order': 2,
-                                                       'join_time': 1239.1234,
-                                                       'number': '4181235555',
-                                                       'name': '4181235555',
-                                                       'muted': 'No'}}}}}
+                                                         'join_time': 1239.1234,
+                                                         'number': '4181235555',
+                                                         'name': '4181235555',
+                                                         'muted': False}}}}}
 
         self.assertEqual(result, expected)
 
@@ -97,7 +97,7 @@ class TestMeetmeEncoder(unittest.TestCase):
         self.assertEqual(result, {'class': 'meetme_update',
                                   'config': {'801': {'number': '801',
                                                      'name': 'conf 801',
-                                                     'pin_required': 'No',
+                                                     'pin_required': False,
                                                      'start_time': 0,
                                                      'member_count': 0,
                                                      'members': {}}}})
@@ -110,34 +110,6 @@ class TestMeetmeEncoder(unittest.TestCase):
                     'usernum': 2}
 
         self.assertEqual(expected, result)
-
-    def test_swap_bool_to_yes_no(self):
-        YES, NO = 'Yes', 'No'
-        start = {'one': True,
-                 'two': 1,
-                 'three': False,
-                 'four': 0,
-                 'five': '',
-                 'six': {True: True,
-                         False: False},
-                 'seven': {'nested_one': True,
-                           'nested_two': {'nested_three': True,
-                                          'nested_four': False}}}
-
-        expected = {'one': YES,
-                    'two': 1,
-                    'three': NO,
-                    'four': 0,
-                    'five': '',
-                    'six': {True: YES,
-                            False: NO},
-                    'seven': {'nested_one': YES,
-                              'nested_two': {'nested_three': YES,
-                                             'nested_four': NO}}}
-
-        result = encoder._swap_bool_to_yes_no(start)
-
-        self.assertEqual(result, expected)
 
     def test_encode_room_number_pairs(self):
         pairs = [('800', 1), ('802', 1)]
