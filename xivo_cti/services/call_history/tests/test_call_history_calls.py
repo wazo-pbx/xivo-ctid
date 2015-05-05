@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,37 +19,38 @@ from hamcrest import assert_that, equal_to
 from mock import sentinel
 from unittest import TestCase
 
-from ..calls import AllCall
+from ..calls import Call
 
 
-class TestAllCall(TestCase):
+class TestCall(TestCase):
+
     def test_equal(self):
-        call = AllCall(sentinel.date,
-                       sentinel.duration,
-                       sentinel.caller_name,
-                       sentinel.extension,
-                       sentinel.mode)
-        call_clone = AllCall(sentinel.date,
-                             sentinel.duration,
-                             sentinel.caller_name,
-                             sentinel.extension,
-                             sentinel.mode)
+        call = Call(sentinel.date,
+                    sentinel.duration,
+                    sentinel.caller_name,
+                    sentinel.extension,
+                    sentinel.mode)
+        call_clone = Call(sentinel.date,
+                          sentinel.duration,
+                          sentinel.caller_name,
+                          sentinel.extension,
+                          sentinel.mode)
 
         result = call == call_clone
 
         assert_that(result, equal_to(True))
 
     def test_not_equal(self):
-        call = AllCall(sentinel.date,
-                       sentinel.duration,
-                       sentinel.caller_name,
-                       sentinel.extension,
-                       sentinel.mode)
-        call_clone = AllCall(sentinel.date,
-                             sentinel.duration,
-                             sentinel.caller_name,
-                             sentinel.extension,
-                             sentinel.mode)
+        call = Call(sentinel.date,
+                    sentinel.duration,
+                    sentinel.caller_name,
+                    sentinel.extension,
+                    sentinel.mode)
+        call_clone = Call(sentinel.date,
+                          sentinel.duration,
+                          sentinel.caller_name,
+                          sentinel.extension,
+                          sentinel.mode)
 
         result = call != call_clone
 

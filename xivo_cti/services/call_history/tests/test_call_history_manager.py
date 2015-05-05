@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ from mock import Mock, sentinel
 from mock import patch
 from datetime import datetime, timedelta
 from xivo_cti.cti.commands.history import HistoryMode
-from xivo_cti.services.call_history.manager import AllCall
+from xivo_cti.services.call_history.manager import Call
 from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao.data_handler.call_log.model import CallLog
 
@@ -97,9 +97,9 @@ class CallHistoryMgrTest(unittest.TestCase):
 
         returned_call_logs = [call_log_1, call_log_2, call_log_3]
 
-        expected_all_calls = [AllCall(date1, duration1, caller_name1, extension1, mode1),
-                              AllCall(date2, duration2, caller_name2, extension2, mode2),
-                              AllCall(date3, duration3, caller_name3, extension3, mode3)]
+        expected_all_calls = [Call(date1, duration1, caller_name1, extension1, mode1),
+                              Call(date2, duration2, caller_name2, extension2, mode2),
+                              Call(date3, duration3, caller_name3, extension3, mode3)]
 
         mock_all_for_phone.return_value = returned_call_logs
 

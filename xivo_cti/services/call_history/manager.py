@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ from xivo_cti.cti.commands.history import HistoryMode
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_dao.data_handler.call_log import dao as call_log_dao
 
-from .calls import AllCall
+from .calls import Call
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +55,11 @@ def _convert_all_call_logs(call_logs, identifier):
             extension = call_log.destination_exten
             mode = HistoryMode.outgoing
 
-        all_call = AllCall(call_log.date,
-                           int(round(call_log.duration.total_seconds())),
-                           caller_id,
-                           extension,
-                           mode)
+        all_call = Call(call_log.date,
+                        int(round(call_log.duration.total_seconds())),
+                        caller_id,
+                        extension,
+                        mode)
         all_calls.append(all_call)
     return all_calls
 
