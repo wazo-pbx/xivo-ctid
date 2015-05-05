@@ -17,13 +17,18 @@
 
 import logging
 
-from xivo_cti.cti.commands.history import HistoryMode
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_dao.data_handler.call_log import dao as call_log_dao
 
 from .calls import Call
 
 logger = logging.getLogger(__name__)
+
+
+class HistoryMode(object):
+    answered = '1'
+    missed = '2'
+    outgoing = '0'
 
 
 def history_for_phone(phone, limit):

@@ -16,12 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
 from hamcrest import assert_that, same_instance
 from mock import Mock, sentinel
 from mock import patch
 from datetime import datetime, timedelta
-from xivo_cti.cti.commands.history import HistoryMode
-from xivo_cti.services.call_history.manager import Call
+from xivo_cti.services.call_history.manager import Call, HistoryMode
 from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao.data_handler.call_log.model import CallLog
 
