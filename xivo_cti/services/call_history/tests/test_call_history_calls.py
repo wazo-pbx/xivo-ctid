@@ -36,9 +36,7 @@ class TestCall(TestCase):
                           sentinel.extension,
                           sentinel.mode)
 
-        result = call == call_clone
-
-        assert_that(result, equal_to(True))
+        assert_that(call_clone, equal_to(call))
 
     def test_not_equal(self):
         call = Call(sentinel.date,
