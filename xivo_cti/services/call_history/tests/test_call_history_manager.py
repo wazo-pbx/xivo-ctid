@@ -17,30 +17,15 @@
 
 import unittest
 
-from hamcrest import assert_that, same_instance
-from mock import Mock, sentinel
-from mock import patch
+from hamcrest import assert_that, same_instance, equal_to
+from mock import sentinel, patch
 from datetime import datetime, timedelta
 from xivo_cti.services.call_history.manager import Call, HistoryMode
 from xivo_cti.services.call_history import manager as call_history_manager
 from xivo_dao.data_handler.call_log.model import CallLog
 
-mock_channels_for_phone = Mock()
-mock_caller_id_by_unique_id = Mock()
-
 
 class CallHistoryMgrTest(unittest.TestCase):
-
-    def setUp(self):
-        self.caller_ids = {}
-
-        def caller_id_by_unique_id_side_effect(unique_id):
-            return self.caller_ids[unique_id]
-        mock_caller_id_by_unique_id.side_effect = caller_id_by_unique_id_side_effect
-
-    def tearDown(self):
-        mock_channels_for_phone.reset()
-        mock_caller_id_by_unique_id.reset()
 
     @patch('xivo_cti.services.call_history.manager.all_calls_for_phone')
     def test_history_for_phone_all(self, all_calls):
@@ -106,4 +91,4 @@ class CallHistoryMgrTest(unittest.TestCase):
         all_calls = call_history_manager.all_calls_for_phone(identifier, 3)
 
         mock_all_for_phone.assert_called_once_with(identifier, 3)
-        self.assertEqual(expected_all_calls, all_calls)
+        assert_that(all_calls, equal_to(expected_all_calls))
