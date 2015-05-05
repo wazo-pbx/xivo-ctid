@@ -25,18 +25,20 @@ from . import manager
 logger = logging.getLogger(__name__)
 
 
-def get_history(user_id, mode, size):
+def get_history(user_id, size):
     try:
         phone = dao.user.get_line(user_id)
     except (NoSuchUserException, NoSuchLineException):
         return 'message', {}
 
-    calls = manager.history_for_phone(phone, mode, size)
+    calls = manager.history_for_phone(phone, size)
 
     history = []
     for call in calls:
         history.append({'calldate': call.date.isoformat(),
                         'duration': call.duration,
-                        'fullname': call.display_other_end()})
+                        'fullname': call.caller_name,
+                        'mode': call.mode,
+                        'extension': call.extension})
 
-    return 'message', {'class': 'history', 'mode': mode, 'history': history}
+    return 'message', {'class': 'history', 'history': history}

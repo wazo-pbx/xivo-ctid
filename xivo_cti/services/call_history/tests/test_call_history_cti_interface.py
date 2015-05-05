@@ -35,7 +35,6 @@ class TestCallHistoryCTIInterface(TestCase):
         user_dao.get_line.side_effect = NoSuchUserException()
 
         result = cti_interface.get_history(sentinel.user_id,
-                                           sentinel.mode,
                                            sentinel.size)
 
         assert_that(result, contains('message', {}))
@@ -45,7 +44,6 @@ class TestCallHistoryCTIInterface(TestCase):
         user_dao.get_line.side_effect = NoSuchLineException()
 
         result = cti_interface.get_history(sentinel.user_id,
-                                           sentinel.mode,
                                            sentinel.size)
 
         assert_that(result, contains('message', {}))
@@ -57,14 +55,12 @@ class TestCallHistoryCTIInterface(TestCase):
         history.return_value = []
 
         result = cti_interface.get_history(sentinel.user_id,
-                                           sentinel.mode,
                                            sentinel.size)
 
         assert_that(result, contains('message',
                                      has_entries({'class': 'history',
-                                                  'mode': sentinel.mode,
                                                   'history': []})))
-        history.assert_called_once_with(sentinel.phone, sentinel.mode, sentinel.size)
+        history.assert_called_once_with(sentinel.phone, sentinel.size)
 
     @patch('xivo_cti.dao.user')
     @patch('xivo_cti.services.call_history.manager.history_for_phone')
@@ -72,30 +68,38 @@ class TestCallHistoryCTIInterface(TestCase):
         user_dao.get_line.return_value = sentinel.phone
         history.return_value = [self._call(sentinel.date1,
                                            sentinel.duration1,
-                                           sentinel.other_end1),
+                                           sentinel.caller_name1,
+                                           sentinel.extension1,
+                                           sentinel.mode1),
                                 self._call(sentinel.date2,
                                            sentinel.duration2,
-                                           sentinel.other_end2)]
+                                           sentinel.caller_name2,
+                                           sentinel.extension2,
+                                           sentinel.mode2)]
         expected_history = [
             {'calldate': sentinel.date1,
              'duration': sentinel.duration1,
-             'fullname': sentinel.other_end1},
+             'fullname': sentinel.caller_name1,
+             'extension': sentinel.extension1,
+             'mode': sentinel.mode1},
             {'calldate': sentinel.date2,
              'duration': sentinel.duration2,
-             'fullname': sentinel.other_end2},
+             'fullname': sentinel.caller_name2,
+             'extension': sentinel.extension2,
+             'mode': sentinel.mode2},
         ]
 
         result = cti_interface.get_history(sentinel.user_id,
-                                           sentinel.mode,
                                            sentinel.size)
 
         assert_that(result, contains('message', {'class': 'history',
-                                                 'mode': sentinel.mode,
                                                  'history': expected_history}))
-        history.assert_called_once_with(sentinel.phone, sentinel.mode, sentinel.size)
+        history.assert_called_once_with(sentinel.phone, sentinel.size)
 
-    def _call(self, date, duration, other_end):
-        result = Mock(duration=duration)
+    def _call(self, date, duration, caller_name, extension, mode):
+        result = Mock(caller_name=caller_name,
+                      duration=duration,
+                      extension=extension,
+                      mode=mode)
         result.date.isoformat.return_value = date
-        result.display_other_end.return_value = other_end
         return result

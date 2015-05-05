@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,75 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from hamcrest import assert_that, equal_to, same_instance
+from hamcrest import assert_that, equal_to
 from mock import sentinel
 from unittest import TestCase
 
-from ..calls import ReceivedCall, SentCall
+from ..calls import Call
 
 
-class TestReceivedCall(TestCase):
-    def test_display_other_end(self):
-        call = ReceivedCall(sentinel.date,
-                            sentinel.duration,
-                            sentinel.caller_name)
-
-        result = call.display_other_end()
-
-        assert_that(result, same_instance(sentinel.caller_name))
+class TestCall(TestCase):
 
     def test_equal(self):
-        call = ReceivedCall(sentinel.date,
-                            sentinel.duration,
-                            sentinel.caller_name)
-        call_clone = ReceivedCall(sentinel.date,
-                                  sentinel.duration,
-                                  sentinel.caller_name)
+        call = Call(sentinel.date,
+                    sentinel.duration,
+                    sentinel.caller_name,
+                    sentinel.extension,
+                    sentinel.mode)
+        call_clone = Call(sentinel.date,
+                          sentinel.duration,
+                          sentinel.caller_name,
+                          sentinel.extension,
+                          sentinel.mode)
 
-        result = call == call_clone
-
-        assert_that(result, equal_to(True))
-
-    def test_not_equal(self):
-        call = ReceivedCall(sentinel.date,
-                            sentinel.duration,
-                            sentinel.caller_name)
-        call_clone = ReceivedCall(sentinel.date,
-                                  sentinel.duration,
-                                  sentinel.caller_name)
-
-        result = call != call_clone
-
-        assert_that(result, equal_to(False))
-
-
-class TestSentCall(TestCase):
-    def test_display_other_end(self):
-        call = SentCall(sentinel.date,
-                        sentinel.duration,
-                        sentinel.extension)
-
-        result = call.display_other_end()
-
-        assert_that(result, same_instance(sentinel.extension))
-
-    def test_equal(self):
-        call = SentCall(sentinel.date,
-                        sentinel.duration,
-                        sentinel.extension)
-        call_clone = SentCall(sentinel.date,
-                              sentinel.duration,
-                              sentinel.extension)
-
-        assert_that(call, equal_to(call_clone))
+        assert_that(call_clone, equal_to(call))
 
     def test_not_equal(self):
-        call = SentCall(sentinel.date,
-                        sentinel.duration,
-                        sentinel.caller_name)
-        call_clone = SentCall(sentinel.date,
-                              sentinel.duration,
-                              sentinel.caller_name)
+        call = Call(sentinel.date,
+                    sentinel.duration,
+                    sentinel.caller_name,
+                    sentinel.extension,
+                    sentinel.mode)
+        call_clone = Call(sentinel.date,
+                          sentinel.duration,
+                          sentinel.caller_name,
+                          sentinel.extension,
+                          sentinel.mode)
 
         result = call != call_clone
 

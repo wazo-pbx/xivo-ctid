@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,45 +16,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
-class HistoryCall(object):
-    def __init__(self):
-        raise NotImplementedError()
+class Call(object):
 
-    def display_other_end(self):
-        raise NotImplementedError()
-
-
-class ReceivedCall(HistoryCall):
-    def __init__(self, date, duration, caller_name):
+    def __init__(self, date, duration, caller_name, extension, mode):
         self.date = date
         self.duration = duration
         self.caller_name = caller_name
-
-    def display_other_end(self):
-        return self.caller_name
-
-    def __eq__(self, other):
-        return (self.date == other.date
-                and self.duration == other.duration
-                and self.caller_name == other.caller_name)
-
-    def __ne__(self, other):
-        return not self == other
-
-
-class SentCall(HistoryCall):
-    def __init__(self, date, duration, extension):
-        self.date = date
-        self.duration = duration
         self.extension = extension
-
-    def display_other_end(self):
-        return self.extension
+        self.mode = mode
 
     def __eq__(self, other):
         return (self.date == other.date
                 and self.duration == other.duration
-                and self.extension == other.extension)
+                and self.caller_name == other.caller_name
+                and self.extension == other.extension
+                and self.mode == other.mode)
 
     def __ne__(self, other):
         return not self == other
