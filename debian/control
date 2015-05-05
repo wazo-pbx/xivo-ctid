@@ -29,6 +29,7 @@ Architecture: all
 Depends: ${python:Depends},
          ${misc:Depends},
          file,
+         python-consul,
          python-concurrent.futures,
          python-kombu,
          python-flask-cors,
