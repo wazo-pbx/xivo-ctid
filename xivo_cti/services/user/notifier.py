@@ -24,9 +24,8 @@ logger = logging.getLogger('user_service_notifier')
 
 class UserServiceNotifier(object):
 
-    def __init__(self, bus_publish, bus_marshaler):
-        self._publish_bus_msg = bus_publish
-        self._marshaler = bus_marshaler
+    def __init__(self, bus_publisher):
+        self._bus_publisher = bus_publisher
 
     def dnd_enabled(self, user_id):
         self.send_cti_event(self._prepare_dnd_message(True, user_id))
@@ -64,8 +63,7 @@ class UserServiceNotifier(object):
         self._send_bus_message(bus_message)
 
     def _send_bus_message(self, message):
-        msg = self._marshaler.marshal_message(message)
-        self._publish_bus_msg(msg, routing_key=message.routing_key)
+        self._bus_publisher.publish(message)
 
     def recording_enabled(self, user_id):
         self.send_cti_event(self._prepare_recording_message(True, user_id))

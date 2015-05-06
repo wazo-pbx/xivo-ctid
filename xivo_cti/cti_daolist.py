@@ -17,7 +17,7 @@
 
 import logging
 from xivo_dao import group_dao, agent_dao, \
-    meetme_dao, queue_dao, voicemail_dao, context_dao, \
+    meetme_dao, queue_dao, voicemail_dao, \
     phonebook_dao, user_dao, trunk_dao, user_line_dao
 
 logger = logging.getLogger('daolist')
@@ -27,29 +27,36 @@ class UnknownListName(Exception):
     pass
 
 
+class NotFoundError(Exception):
+    pass
+
+
 class DaoList(object):
 
     def __init__(self, listname):
         self.listname = listname
 
     def get(self, id):
-        name = '_get_%s' % self.listname[0:-1]
-        return self._get(name, id)
+        method_suffix = self.listname[:-1]
+        method = self._get_method(method_suffix)
+        try:
+            return method(id)
+        except KeyError:
+            raise
+        except LookupError:
+            raise NotFoundError(self.listname, id)
 
     def get_list(self):
-        name = '_get_%s' % self.listname
-        return self._get(name)
+        method_suffix = self.listname
+        method = self._get_method(method_suffix)
+        return method()
 
-    def _get(self, name, id=None):
+    def _get_method(self, method_suffix):
+        name = '_get_%s' % method_suffix
         try:
-            if id:
-                return getattr(self, name)(id)
-            else:
-                return getattr(self, name)()
-        except LookupError:
-            return {}
+            return getattr(self, name)
         except AttributeError:
-            raise UnknownListName(name)
+            raise UnknownListName(self.listname)
 
     def _get_users(self):
         return user_dao.get_users_config()
@@ -173,27 +180,6 @@ class DaoList(object):
         res[key] = voicemail.todict()
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
-        return res
-
-    def _get_contexts(self):
-        res = {}
-        contexts = context_dao.all()
-        for row in contexts:
-            context, contextnumbers, contexttype, contextinclude = row
-            res.update(self._format_context_data(context, contextnumbers, contexttype, contextinclude))
-        return res
-
-    def _get_context(self, id):
-        context, contextnumbers, contexttype, contextinclude = context_dao.get_join_elements(id)
-        return self._format_context_data(context, contextnumbers, contexttype, contextinclude)
-
-    def _format_context_data(self, context, contextnumbers, contexttype, contextinclude):
-        res = {}
-        key = str(context.name)
-        res[key]['context'] = context.todict()
-        res[key]['contextnumbers'] = contextnumbers.todict()
-        res[key]['contextinclude'] = contextinclude.todict() if contextinclude else False
-        res[key]['contexttype'] = contexttype.todict()
         return res
 
     def _get_phonebooks(self):
