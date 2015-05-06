@@ -14,6 +14,7 @@
             "email": "dev@avencall.com"
         }
     },
+    "x-xivo-name": "ctid",
     "x-xivo-port": 9495,
     "schemes": [
         "http"
