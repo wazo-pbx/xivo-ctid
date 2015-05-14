@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
+from xivo_cti.dao.forward_dao import ForwardDAO
 from mock import patch, Mock
 import unittest
 
@@ -25,12 +26,15 @@ import unittest
 class TestFunckeyManager(unittest.TestCase):
 
     def setUp(self):
-        self.user_id = 123
-        ami_class = Mock(AMIClass)
-        self.manager = FunckeyManager(ami_class)
         xivo_helpers.fkey_extension = Mock()
+
+        self.user_id = 123
+        self.forward_dao = Mock(ForwardDAO)
+        self.dao = Mock(forward=self.forward_dao)
         self.ami = Mock(AMIClass)
-        self.manager.ami = self.ami
+
+        self.manager = FunckeyManager(self.ami)
+        self.manager.dao = self.dao
 
     @patch('xivo_dao.extensions_dao.exten_by_name', Mock(return_value='*735'))
     def test_dnd_in_use(self):
@@ -124,43 +128,40 @@ class TestFunckeyManager(unittest.TestCase):
 
         self.assertEqual(calls, expected_calls)
 
-    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_unc')
-    def test_disable_all_fwd_unc(self, mock_get_dest_unc):
+    def test_disable_all_fwd_unc(self):
         unc_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.unconditional_fwd_in_use = fn
-        mock_get_dest_unc.return_value = unc_dest
+        self.forward_dao.unc_destinations.return_value = unc_dest
 
         self.manager.disable_all_unconditional_fwd(self.user_id)
-        mock_get_dest_unc.assert_called_once_with(self.user_id)
+        self.forward_dao.unc_destinations.assert_called_once_with(self.user_id)
 
         for dest in unc_dest:
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_rna')
-    def test_disable_all_fwd_rna(self, mock_get_dest_rna):
+    def test_disable_all_fwd_rna(self):
         rna_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.rna_fwd_in_use = fn
-        mock_get_dest_rna.return_value = rna_dest
+        self.forward_dao.rna_destinations.return_value = rna_dest
 
         self.manager.disable_all_rna_fwd(self.user_id)
-        mock_get_dest_rna.assert_called_once_with(self.user_id)
+        self.forward_dao.rna_destinations.assert_called_once_with(self.user_id)
 
         for dest in rna_dest:
             if dest:
                 self.assertEqual(fn.call_count, 3)
 
-    @patch('xivo_dao.data_handler.func_key.services.find_all_fwd_busy')
-    def test_disable_all_fwd_busy(self, mock_get_dest_busy):
+    def test_disable_all_fwd_busy(self):
         busy_dest = ['123', '666', '', '012']
         fn = Mock()
         self.manager.busy_fwd_in_use = fn
-        mock_get_dest_busy.return_value = busy_dest
+        self.forward_dao.busy_destinations.return_value = busy_dest
 
         self.manager.disable_all_busy_fwd(self.user_id)
-        mock_get_dest_busy.assert_called_once_with(self.user_id)
+        self.forward_dao.busy_destinations.assert_called_once_with(self.user_id)
 
         for dest in busy_dest:
             if dest:
