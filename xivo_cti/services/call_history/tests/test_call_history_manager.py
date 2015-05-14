@@ -22,7 +22,7 @@ from mock import sentinel, patch
 from datetime import datetime, timedelta
 from xivo_cti.services.call_history.manager import Call, HistoryMode
 from xivo_cti.services.call_history import manager as call_history_manager
-from xivo_dao.data_handler.call_log.model import CallLog
+from xivo_dao.resources.call_log.model import CallLog
 
 
 class CallHistoryMgrTest(unittest.TestCase):
@@ -40,7 +40,7 @@ class CallHistoryMgrTest(unittest.TestCase):
         all_calls.assert_called_once_with(identifier, sentinel.limit)
         assert_that(result, same_instance(sentinel.calls))
 
-    @patch('xivo_dao.data_handler.call_log.dao.find_all_history_for_phone')
+    @patch('xivo_dao.resources.call_log.dao.find_all_history_for_phone')
     def test_all_calls_for_phone(self, mock_all_for_phone):
         now = datetime.now()
         identifier = u'sip/abcdef'

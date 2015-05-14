@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
 from xivo_dao import user_dao as old_user_dao
-from xivo_dao.data_handler.user import dao as user_dao
+from xivo_dao.resources.user import dao as user_dao
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
 from collections import defaultdict
