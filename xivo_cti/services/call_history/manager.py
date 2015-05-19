@@ -18,7 +18,7 @@
 import logging
 
 from xivo_dao.cel_dao import UnsupportedLineProtocolException
-from xivo_dao.data_handler.call_log import dao as call_log_dao
+from xivo_dao.resources.call_log import dao as call_log_dao
 
 from .calls import Call
 

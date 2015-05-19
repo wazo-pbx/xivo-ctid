@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo import xivo_helpers
-from xivo_dao import extensions_dao, user_dao
 
-from xivo_dao.data_handler.func_key import services as func_key_services
+from xivo_cti import dao
+from xivo_dao import extensions_dao, user_dao
 
 
 class FunckeyManager(object):
@@ -29,6 +29,7 @@ class FunckeyManager(object):
 
     def __init__(self, ami_class):
         self.ami = ami_class
+        self.dao = dao
 
     def _device(self, user_id, name, destination=''):
         funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')
@@ -68,17 +69,17 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def disable_all_unconditional_fwd(self, user_id):
-        for destination in func_key_services.find_all_fwd_unc(user_id):
+        for destination in self.dao.forward.unc_destinations(user_id):
             if destination:
                 self.unconditional_fwd_in_use(user_id, destination, False)
 
     def disable_all_rna_fwd(self, user_id):
-        for destination in func_key_services.find_all_fwd_rna(user_id):
+        for destination in self.dao.forward.rna_destinations(user_id):
             if destination:
                 self.rna_fwd_in_use(user_id, destination, False)
 
     def disable_all_busy_fwd(self, user_id):
-        for destination in func_key_services.find_all_fwd_busy(user_id):
+        for destination in self.dao.forward.busy_destinations(user_id):
             if destination:
                 self.busy_fwd_in_use(user_id, destination, False)
 
