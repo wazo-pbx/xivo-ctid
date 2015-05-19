@@ -8,9 +8,9 @@ git+https://github.com/xivo-pbx/xivo-ctid-client.git
 git+https://github.com/xivo-pbx/xivo-dird-client.git
 git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 cherrypy
-flask
+flask==0.10.1
 flask-restful
-flask-cors
+flask-cors==1.10.3
 futures
 kombu
 psycopg2
