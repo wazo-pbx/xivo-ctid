@@ -65,6 +65,12 @@ db_uri: postgresql://asterisk:proformatique@localhost/asterisk
 
 # Polycom switchboard configuration
 switchboard_polycom:
-	username: xivo_switchboard
-	password: xivo_switchboard
-	answer_delay: 0.4
+    username: xivo_switchboard
+    password: xivo_switchboard
+    answer_delay: 0.4
+
+# Snom switchboard configuration
+switchboard_snom:
+    username: guest
+    password: guest
+    answer_delay: 0.5

@@ -53,6 +53,11 @@ _default_config = {
        'password': 'xivo_switchboard',
        'answer_delay': 0.4,
     },
+   'switchboard_snom': {
+       'username': 'guest',
+       'password': 'guest',
+       'answer_delay': 0.5,
+    },
 }
 _cli_config = {}
 _db_config = {}

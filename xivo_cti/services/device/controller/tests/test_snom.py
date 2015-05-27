@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,131 +15,64 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import time
 import unittest
-import urllib2
 
-from base64 import standard_b64encode
 from hamcrest import assert_that
 from hamcrest import equal_to
-from hamcrest import less_than
-from mock import Mock
 from mock import patch
-from mock import sentinel
+from mock import ANY
 from xivo_cti.model.device import Device
-from xivo_cti.services.device.controller.snom import SnomController
-from xivo_cti.services.device.controller.snom import _SnomAnswerer
+from xivo_cti.services.device.controller.snom import SnomController, _SnomAnswerer
 
 
 class TestSnomController(unittest.TestCase):
 
     def setUp(self):
-        self._ami_class = None
+        self.username = 'foo'
+        self.password = 'bar'
+        self.answer_delay = 0.1
         self.device = Device(2)
         self.device.ip = '127.0.0.1'
+        self.controller = SnomController(self.username, self.password, self.answer_delay)
 
-    def test_answer(self):
-        snom_controller = SnomController(self._ami_class)
-        answerer = Mock(_SnomAnswerer)
-        snom_controller._get_answerer = Mock(return_value=answerer)
+    def test_new_answerer(self):
+        answerer = self.controller._new_answerer(self.device)
 
-        snom_controller.answer(self.device)
+        self.assertIsInstance(answerer, _SnomAnswerer)
 
-        snom_controller._get_answerer.assert_called_once_with(self.device.ip, 'guest', 'guest')
-        self._assert_answerer_called_once(answerer)
+    def test_new_from_config(self):
+        config = {
+            'switchboard_snom': {
+                'username': self.username,
+                'password': self.password,
+                'answer_delay': str(self.answer_delay),
+            }
+        }
 
-    def _assert_answerer_called_once(self, answerer):
-        start = time.time()
-        while answerer.answer.call_count == 0:
-            if time.time() - start > 1:
-                raise AssertionError('answerer.answer was not called')
+        with patch('xivo_cti.services.device.controller.snom.config', config):
+            controller = SnomController.new_from_config()
 
-    def test_answer_blocking(self):
-        snom_controller = SnomController(self._ami_class)
-        answerer = Mock(_SnomAnswerer)
-        snom_controller._get_answerer = Mock(return_value=answerer)
-        answerer.answer.side_effect = lambda: time.sleep(0.2)
-
-        call_time = time.time()
-        snom_controller.answer(self.device)
-        return_time = time.time()
-
-        elapsed_time = return_time - call_time
-        assert_that(elapsed_time, less_than(0.1), 'Time spent in a blocking answer in second')
-
-    def test_get_answerer(self):
-        ip = '127.0.0.1'
-        username = 'guest'
-        password = 'secret'
-
-        snom_controller = SnomController(self._ami_class)
-        answerer = snom_controller._get_answerer(ip, username, password)
-
-        expected_answerer = _SnomAnswerer(ip, username, password)
-        assert_that(answerer, equal_to(expected_answerer))
+        assert_that(controller._username, equal_to(self.username))
+        assert_that(controller._password, equal_to(self.password))
+        assert_that(controller._answer_delay, equal_to(self.answer_delay))
 
 
 class TestSnomAnswerer(unittest.TestCase):
 
     def setUp(self):
-        self._username = 'guest'
-        self._password = 'pword'
-        self._ip = '127.0.0.1'
+        self.hostname = '127.0.0.1'
+        self.username = 'foo'
+        self.password = 'bar'
+        self.answerer = _SnomAnswerer(self.hostname, self.username, self.password)
 
-        self._answerer = _SnomAnswerer(self._ip, self._username, self._password)
+    @patch('xivo_cti.services.device.controller.snom.requests')
+    def test_answer(self, mock_requests):
+        expected_url = 'http://{hostname}/command.htm?key=P1'.format(hostname=self.hostname)
+        expected_timeout = self.answerer._TIMEOUT
 
-    @patch('urllib2.urlopen')
-    def test_answer(self, mock_urlopen):
-        req = sentinel
-        self._answerer._get_request = Mock(return_value=req)
+        self.answerer.answer()
 
-        self._answerer.answer()
-
-        mock_urlopen.assert_called_once_with(req)
-
-    @patch('urllib2.urlopen', Mock(side_effect=urllib2.URLError('unexpected error')))
-    def test_answer_error_does_not_raise(self):
-        self._answerer._get_request = Mock(return_value=None)
-
-        self._answerer.answer()
-
-    def test_snom_answerer_auth(self):
-        encoded_auth = self._answerer._encoded_auth()
-
-        assert_that(encoded_auth, equal_to(self._encoded_auth()))
-
-    def test_get_url_string(self):
-        url = self._answerer._get_url_string()
-
-        expected_url = 'http://%s/command.htm' % self._ip
-        assert_that(url, equal_to(expected_url))
-
-    def test_get_headers(self):
-        headers = self._answerer._get_headers()
-
-        expected_headers = {'Authorization': 'Basic %s' % self._encoded_auth()}
-        assert_that(headers, equal_to(expected_headers))
-
-    def test_get_data(self):
-        data = self._answerer._get_data()
-
-        expected_data = 'key=P1'
-        assert_that(data, equal_to(expected_data))
-
-    def test_get_request(self):
-        url = 'http://example.com'
-        data = {'fruit': 'apple'}
-        headers = {}
-        self._answerer._get_data = Mock(return_value=data)
-        self._answerer._get_headers = Mock(return_value=headers)
-        self._answerer._get_url_string = Mock(return_value=url)
-
-        req = self._answerer._get_request()
-
-        expected_request = urllib2.Request(url, data, headers)
-        assert_that(req.get_host(), equal_to(expected_request.get_host()))
-        assert_that(req.get_data(), equal_to(expected_request.get_data()))
-        assert_that(req.headers, equal_to(expected_request.headers))
-
-    def _encoded_auth(self):
-        return standard_b64encode('%s:%s' % (self._username, self._password))
+        mock_requests.get.assert_called_once_with(expected_url,
+            auth=ANY,
+            timeout=expected_timeout,
+        )

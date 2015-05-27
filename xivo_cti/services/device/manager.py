@@ -28,7 +28,7 @@ class DeviceManager(object):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
         self._polycom_controller = PolycomController.new_from_config()
-        self._snom_controller = SnomController(ami_class)
+        self._snom_controller = SnomController.new_from_config()
         self._yealink_controller = YealinkController(ami_class)
         self._cti_provd_client = cti_provd_client
 
