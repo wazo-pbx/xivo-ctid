@@ -62,3 +62,9 @@ bus:
 
 # Database connection informations.
 db_uri: postgresql://asterisk:proformatique@localhost/asterisk
+
+# Polycom switchboard configuration
+switchboard_polycom:
+	username: xivo_switchboard
+	password: xivo_switchboard
+	answer_delay: 0.4

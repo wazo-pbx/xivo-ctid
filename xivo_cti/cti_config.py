@@ -48,6 +48,11 @@ _default_config = {
         'port': 9489,
         'version': 0.1,
     },
+   'switchboard_polycom': {
+       'username': 'xivo_switchboard',
+       'password': 'xivo_switchboard',
+       'answer_delay': 0.4,
+    },
 }
 _cli_config = {}
 _db_config = {}
