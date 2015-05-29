@@ -289,12 +289,10 @@ class AMI_1_8(object):
 
     def userevent_faxprogress(self, chanprops, event):
         userid = event['XIVO_USERID']
-        status = event.get('STATUS')
-        statusstr = event.get('STATUSSTR')
+        status = event['STATUS']
         pages = event.get('PAGES')
         event = {'class': 'faxprogress',
                  'status': status,
-                 'statusstr': statusstr,
                  'pages': pages}
         userxid = '{ipbxid}/{userid}'.format(ipbxid='xivo', userid=userid)
         self._ctiserver.send_to_cti_client(userxid, event)
