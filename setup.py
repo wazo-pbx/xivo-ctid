@@ -29,5 +29,8 @@ setup(
     author_email='xivo-dev@lists.proformatique.com',
     url='http://wiki.xivo.io/',
     packages=find_packages(),
+    package_data={
+        'xivo_cti.swagger': ['*.json'],
+    },
     scripts=['bin/ami-proxy', 'bin/xivo-ctid'],
 )

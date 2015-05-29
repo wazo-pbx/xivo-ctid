@@ -1,0 +1,194 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "XiVO CTId",
+        "description": "Computer Telephony Integration REST service",
+        "version": "0.1",
+        "license": {
+            "name": "GPL v3",
+            "url": "http://www.gnu.org/licenses/gpl.txt"
+        },
+        "contact": {
+            "name": "Dev Team",
+            "url": "http://xivo.io",
+            "email": "dev@avencall.com"
+        }
+    },
+    "x-xivo-name": "ctid",
+    "x-xivo-port": 9495,
+    "schemes": [
+        "http"
+    ],
+    "basePath": "/0.1",
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/infos": {
+            "get": {
+                "summary": "Server information",
+                "description": "Configuration information about the CTI service",
+                "operationId": "get_infos",
+                "responses": {
+                    "200": {
+                        "description": "Service information",
+                        "schema": {
+                            "$ref": "#/definitions/Info"
+                        }
+                    }
+                }
+            }
+        },
+        "/endpoints/{endpoint_id}": {
+            "get": {
+                "summary": "Find the current state of an Endpoint.",
+                "description": "An Endpoint represents any device that is connected to the server and can answer a phone call, like a VOIP phone or softphone",
+                "operationId": "get_endpoint",
+                "tags": [
+                    "endpoint"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Endpoint's state",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Endpoint does not exist",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "endpoint_id",
+                        "in": "path",
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "ID of the Endpoint",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/users/{user_id}": {
+            "get": {
+                "summary": "Find a user",
+                "description": "Find a user in the CTI",
+                "operationId": "get_user",
+                "tags": [
+                    "user"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    },
+                    "404": {
+                        "description": "User does not exist",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "ID of the user",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "Info": {
+            "title": "Info",
+            "description": "CTI configuration information",
+            "properties": {
+                "uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "descrption": "Unique ID for the XiVO server"
+                }
+            }
+        },
+        "Endpoint": {
+            "title": "Endpoint",
+            "description": "Information on the current state of an endpoint",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Unique ID"
+                },
+                "origin_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID of the server on which this endpoint is connected"
+                },
+                "status": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Numeric code representing the current status (a.k.a its state). The list of status codes and their meaning are defined in the CTI status configuration. (Configurable only via the web interface)"
+                }
+            }
+        },
+        "User": {
+            "title": "CTI User",
+            "description": "User information pertaining to the CTI",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Unique ID"
+                },
+                "origin_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID of the server on which this endpoint is connected"
+                },
+                "presence": {
+                    "type": "string",
+                    "description": "Current presence for the user. The list of presences and their meaning are defined in the CTI presence configuration. (Configurable only via the web interface)"
+                }
+            }
+        },
+        "Error": {
+            "title": "Error message",
+            "description": "Error information when the client issues an invalid request",
+            "properties": {
+                "timestamp": {
+                    "description": "Time at which the error occured",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "timestamp"
+                    }
+                },
+                "reason": {
+                    "description": "Human readable explanation of the error",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status_code": {
+                    "description": "HTTP status code",
+                    "type": "integer"
+                }
+            },
+            "type": "string"
+        }
+    }
+}
