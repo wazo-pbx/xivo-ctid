@@ -291,7 +291,7 @@ class AMI_1_8(object):
         userid = event['XIVO_USERID']
         status = event['STATUS']
         pages = event.get('PAGES')
-        event = {'class': 'faxprogress',
+        event = {'class': 'fax_progress',
                  'status': status,
                  'pages': pages}
         userxid = '{ipbxid}/{userid}'.format(ipbxid='xivo', userid=userid)
