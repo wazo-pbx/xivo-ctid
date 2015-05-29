@@ -7,7 +7,7 @@ class SwaggerResource(Resource):
 
     api_package = "xivo_cti.swagger"
     api_filename = "api.json"
-    api_path = "/doc/api.json"
+    api_path = "/api/api.json"
 
     @classmethod
     def add_resource(cls, api):
