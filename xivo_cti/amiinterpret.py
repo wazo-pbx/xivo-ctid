@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ class AMI_1_8(object):
                   'User',
                   'Queue',
                   'Group',
-                  'Did')
+                  'Did',
+                  'FaxProgress')
 
     def __init__(self, cti_server, innerdata, interface_ami,
                  call_form_dispatch_filter, call_form_variable_aggregator,
@@ -285,6 +286,16 @@ class AMI_1_8(object):
         cti_varname = event.get('VARIABLE')
         dp_value = event.get('VALUE')
         self._aggregator.set(uniqueid, Var('dp', cti_varname, dp_value))
+
+    def userevent_faxprogress(self, chanprops, event):
+        userid = event['XIVO_USERID']
+        status = event['STATUS']
+        pages = event.get('PAGES')
+        event = {'class': 'fax_progress',
+                 'status': status,
+                 'pages': pages}
+        userxid = '{ipbxid}/{userid}'.format(ipbxid='xivo', userid=userid)
+        self._ctiserver.send_to_cti_client(userxid, event)
 
     def ami_userevent(self, event):
         eventname = event['UserEvent']
