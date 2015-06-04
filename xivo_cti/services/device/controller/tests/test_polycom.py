@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@ from hamcrest import equal_to
 from mock import patch
 from mock import ANY
 from xivo_cti.model.device import Device
-from xivo_cti.services.device.controller.snom import SnomController, _SnomAnswerer
+from xivo_cti.services.device.controller.polycom import PolycomController, _PolycomAnswerer
 
 
-class TestSnomController(unittest.TestCase):
+class TestPolycomController(unittest.TestCase):
 
     def setUp(self):
         self.username = 'foo'
@@ -33,46 +33,50 @@ class TestSnomController(unittest.TestCase):
         self.answer_delay = 0.1
         self.device = Device(2)
         self.device.ip = '127.0.0.1'
-        self.controller = SnomController(self.username, self.password, self.answer_delay)
+        self.controller = PolycomController(self.username, self.password, self.answer_delay)
 
     def test_new_answerer(self):
         answerer = self.controller._new_answerer(self.device)
 
-        self.assertIsInstance(answerer, _SnomAnswerer)
+        self.assertIsInstance(answerer, _PolycomAnswerer)
 
     def test_new_from_config(self):
         config = {
-            'switchboard_snom': {
+            'switchboard_polycom': {
                 'username': self.username,
                 'password': self.password,
                 'answer_delay': str(self.answer_delay),
             }
         }
 
-        with patch('xivo_cti.services.device.controller.snom.config', config):
-            controller = SnomController.new_from_config()
+        with patch('xivo_cti.services.device.controller.polycom.config', config):
+            controller = PolycomController.new_from_config()
 
         assert_that(controller._username, equal_to(self.username))
         assert_that(controller._password, equal_to(self.password))
         assert_that(controller._answer_delay, equal_to(self.answer_delay))
 
 
-class TestSnomAnswerer(unittest.TestCase):
+class TestPolycomAnswerer(unittest.TestCase):
 
     def setUp(self):
         self.hostname = '127.0.0.1'
         self.username = 'foo'
         self.password = 'bar'
-        self.answerer = _SnomAnswerer(self.hostname, self.username, self.password)
+        self.answerer = _PolycomAnswerer(self.hostname, self.username, self.password)
 
-    @patch('xivo_cti.services.device.controller.snom.requests')
+    @patch('xivo_cti.services.device.controller.polycom.requests')
     def test_answer(self, mock_requests):
-        expected_url = 'http://{hostname}/command.htm?key=P1'.format(hostname=self.hostname)
+        expected_url = 'http://{hostname}/push'.format(hostname=self.hostname)
+        expected_headers = self.answerer._HEADERS
+        expected_data = self.answerer._DATA
         expected_timeout = self.answerer._TIMEOUT
 
         self.answerer.answer()
 
-        mock_requests.get.assert_called_once_with(expected_url,
+        mock_requests.post.assert_called_once_with(expected_url,
+            headers=expected_headers,
+            data=expected_data,
             auth=ANY,
             timeout=expected_timeout,
         )

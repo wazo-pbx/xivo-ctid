@@ -17,6 +17,7 @@
 
 from xivo_cti.services.device.controller.aastra import AastraController
 from xivo_cti.services.device.controller.base import BaseController
+from xivo_cti.services.device.controller.polycom import PolycomController
 from xivo_cti.services.device.controller.snom import SnomController
 from xivo_cti.services.device.controller.yealink import YealinkController
 
@@ -26,7 +27,8 @@ class DeviceManager(object):
     def __init__(self, ami_class, cti_provd_client):
         self._base_controller = BaseController(ami_class)
         self._aastra_controller = AastraController(ami_class)
-        self._snom_controller = SnomController(ami_class)
+        self._polycom_controller = PolycomController.new_from_config()
+        self._snom_controller = SnomController.new_from_config()
         self._yealink_controller = YealinkController(ami_class)
         self._cti_provd_client = cti_provd_client
 
@@ -40,6 +42,8 @@ class DeviceManager(object):
         if device and device.is_switchboard():
             if device.vendor == 'Aastra':
                 return self._aastra_controller
+            elif device.vendor == 'Polycom':
+                return self._polycom_controller
             elif device.vendor == 'Snom':
                 return self._snom_controller
             elif device.vendor == 'Yealink':
