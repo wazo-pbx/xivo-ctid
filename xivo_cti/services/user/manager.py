@@ -24,6 +24,7 @@ from xivo_cti import dao
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.model.destination_factory import DestinationFactory
+from xivo_cti.tools.extension import InvalidExtension
 from xivo_dao import user_dao
 
 logger = logging.getLogger(__name__)
@@ -62,8 +63,14 @@ class UserServiceManager(object):
         else:
             exten = url_or_exten
 
-        action_id = self._dial(user_id, exten)
-        self._register_originate_response_callback(action_id, client_connection, user_id, exten)
+        try:
+            action_id = self._dial(user_id, exten)
+            self._register_originate_response_callback(action_id, client_connection, user_id, exten)
+        except InvalidExtension as e:
+            self._on_originate_error(client_connection,
+                                     user_id,
+                                     exten,
+                                     "Invalid extension '{exten}'".format(exten=e.exten))
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)

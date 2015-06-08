@@ -17,6 +17,7 @@
 
 import unittest
 
+from mock import ANY
 from mock import Mock
 from mock import sentinel
 from mock import patch
@@ -24,22 +25,23 @@ from mock import patch
 from hamcrest import assert_that
 from hamcrest import equal_to
 
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
+from xivo_cti.ami.ami_response_handler import AMIResponseHandler
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.dao.forward_dao import ForwardDAO
+from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.ioc.context import context
+from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.call.manager import CallManager
-from xivo_cti.services.user.notifier import UserServiceNotifier
-from xivo_cti.services.user.manager import UserServiceManager
+from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
-from xivo_cti.services.agent.manager import AgentServiceManager
 from xivo_cti.services.presence.manager import PresenceServiceManager
-from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.dao.user_dao import UserDAO
-from xivo_cti.dao.forward_dao import ForwardDAO
+from xivo_cti.services.user.manager import UserServiceManager
+from xivo_cti.services.user.notifier import UserServiceNotifier
+from xivo_cti.tools.extension import InvalidExtension
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 
 
 class _BaseTestCase(unittest.TestCase):
@@ -119,6 +121,18 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
             action_id, connection, user_id, number
         )
+
+    def test_call_destination_invalid_exten(self):
+        user_id = sentinel.user_id
+        exten = ''
+        connection = Mock(CTI)
+
+        self.user_service_manager._dial = Mock(side_effect=InvalidExtension(''))
+
+        self.user_service_manager.call_destination(connection, user_id, exten)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
+        connection.send_message.assert_called_once_with(expected_message)
 
     def test_register_originate_response_callback(self):
         action_id, user_id, exten = '8734534', '12', '324564'
