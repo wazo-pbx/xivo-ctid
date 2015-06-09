@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,12 @@
 import unittest
 
 from xivo_cti.tools.extension import normalize_exten
+from xivo_cti.tools.extension import InvalidExtension
+
+
+class TestInvalidExtension(unittest.TestCase):
+    def test_exten_attribute(self):
+        self.assertEqual(InvalidExtension('1234').exten, '1234')
 
 
 class TestExtension(unittest.TestCase):
@@ -38,7 +44,7 @@ class TestExtension(unittest.TestCase):
 
     def test_normalize_exten_any_valid_char(self):
         exten = '-@%^& ":<>/?:";'
-        self.assertRaises(ValueError, normalize_exten, exten)
+        self.assertRaises(InvalidExtension, normalize_exten, exten)
 
     def test_normalize_exten_caller_id(self):
         exten = '"User 1" <1001>"'
