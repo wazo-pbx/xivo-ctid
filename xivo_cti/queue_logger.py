@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ UNIQUEID = 'Uniqueid'
 class QueueLogger(object):
 
     cache = None
-    cache_threshold = 10  # Time to wait in sec before removing from the
-                            # from the cache when a call is not answered
+    cache_threshold = 10    # Time to wait in sec before removing from the
+                            # cache when a call is not answered
 
     @classmethod
     def init(cls):
@@ -54,11 +54,11 @@ class QueueLogger(object):
     @classmethod
     def _trace_event(cls, ev):
         queue = ev[QUEUE]
-        if not queue in cls.cache:
+        if queue not in cls.cache:
             cls.cache[queue] = {}
 
         uniqueid = ev[UNIQUEID]
-        if not uniqueid in cls.cache[queue]:
+        if uniqueid not in cls.cache[queue]:
             cls.cache[queue][uniqueid] = ev
         else:
             cls.cache[queue][uniqueid] = dict(cls.cache[queue][uniqueid].items() + ev.items())
