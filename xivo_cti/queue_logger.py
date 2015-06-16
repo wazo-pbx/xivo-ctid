@@ -46,8 +46,8 @@ class QueueLogger(object):
     @classmethod
     def _register_ami_callbacks(cls):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('Join', cls.Join)
-        ami_handler.register_callback('Leave', cls.Leave)
+        ami_handler.register_callback('QueueCallerJoin', cls.QueueCallerJoin)
+        ami_handler.register_callback('QueueCallerLeave', cls.QueueCallerLeave)
         ami_handler.register_callback('AgentConnect', cls.AgentConnect)
         ami_handler.register_callback('AgentComplete', cls.AgentComplete)
 
@@ -92,7 +92,7 @@ class QueueLogger(object):
             del cls.cache[queue][event]
 
     @classmethod
-    def Join(cls, ev):
+    def QueueCallerJoin(cls, ev):
         ev[CALLTIME] = int(time.time())
 
         cls._trace_event(ev)
@@ -120,7 +120,7 @@ class QueueLogger(object):
         queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
 
     @classmethod
-    def Leave(cls, ev):
+    def QueueCallerLeave(cls, ev):
         if not cls._is_traced_event(ev):
             return
 

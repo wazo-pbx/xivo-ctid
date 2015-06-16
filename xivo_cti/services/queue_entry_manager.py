@@ -34,8 +34,8 @@ NAME, NUMBER, POSITION, QUEUE, UNIQUE_ID, COUNT, WAIT = \
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
-    callback_handler.register_callback('Join', parse_join)
-    callback_handler.register_callback('Leave', parse_leave)
+    callback_handler.register_callback('QueueCallerJoin', parse_join)
+    callback_handler.register_callback('QueueCallerLeave', parse_leave)
     callback_handler.register_callback('QueueEntry', parse_queue_entry)
     callback_handler.register_callback('QueueParams', parse_queue_params)
     callback_handler.register_callback('QueueStatusComplete', parse_queue_status_complete)
@@ -51,7 +51,7 @@ def parse_join(event):
                      event[NUMBER],
                      event[UNIQUE_ID])
     except (KeyError, ValueError):
-        logger.warning('Failed to parse Join event %s', event)
+        logger.warning('Failed to parse QueueCallerJoin event %s', event)
 
 
 def parse_queue_entry(event):
@@ -75,7 +75,7 @@ def parse_leave(event):
                       int(event[COUNT]),
                       event[UNIQUE_ID])
     except (KeyError, ValueError):
-        logger.warning('Failed to parse Leave event %s', event)
+        logger.warning('Failed to parse QueueCallerLeave event %s', event)
 
 
 def parse_queue_params(event):

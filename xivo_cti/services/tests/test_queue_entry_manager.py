@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ JOIN_TIME_3 = JOIN_TIME_1 + 24
 
 WAIT_TIME_1 = 13
 
-JOIN_MESSAGE_2 = {'Event': 'Join',
+JOIN_MESSAGE_2 = {'Event': 'QueueCallerJoin',
                   'Privilege': 'call,all',
                   'Channel': 'SIP/my_trunk-1235',
                   'CallerIDNum': CALLER_ID_NUMBER_2,
@@ -58,7 +58,7 @@ JOIN_MESSAGE_2 = {'Event': 'Join',
 QUEUE_ENTRY_1 = QueueEntry(1, CALLER_ID_NAME_1, CALLER_ID_NUMBER_1, JOIN_TIME_1, UNIQUE_ID_1)
 QUEUE_ENTRY_2 = QueueEntry(2, CALLER_ID_NAME_2, CALLER_ID_NUMBER_2, JOIN_TIME_2, UNIQUE_ID_2)
 
-LEAVE_MESSAGE_1 = {'Event': 'Leave',
+LEAVE_MESSAGE_1 = {'Event': 'QueueCallerLeave',
                    'Privilege': 'call,all',
                    'Channel': 'SIP/pcm_dev-0000001f',
                    'Queue': QUEUE_NAME,
@@ -67,7 +67,7 @@ LEAVE_MESSAGE_1 = {'Event': 'Leave',
                    'Uniqueid': UNIQUE_ID_1}
 
 
-JOIN_MESSAGE_1 = {'Event': 'Join',
+JOIN_MESSAGE_1 = {'Event': 'QueueCallerJoin',
                   'Privilege': 'call,all',
                   'Channel': 'SIP/my_trunk-1234',
                   'CallerIDNum': CALLER_ID_NUMBER_1,
