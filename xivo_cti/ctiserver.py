@@ -363,7 +363,7 @@ class CTIServer(object):
         call_receiver = context.get('call_receiver')
         callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
         callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
-        callback_handler.register_callback('Dial', call_receiver.handle_dial)
+        callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
         callback_handler.register_callback('Bridge', call_receiver.handle_bridge)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
         callback_handler.register_callback('Masquerade', call_receiver.handle_masquerade)

@@ -54,10 +54,6 @@ class CallReceiver(object):
         else:
             self._call_storage.update_endpoint_status(extension, status)
 
-    def handle_dial(self, event):
-        if event['SubEvent'] == 'Begin':
-            self._handle_dial_begin(event)
-
     def handle_bridge(self, event):
         uniqueid_1 = event.get('Uniqueid1')
 
@@ -68,11 +64,11 @@ class CallReceiver(object):
         elif event['Bridgestate'] == 'Unlink':
             self._call_storage.end_call(uniqueid_1)
 
-    def _handle_dial_begin(self, event):
+    def handle_dial_begin(self, event):
         channel_source = event['Channel']
-        channel_destination = event['Destination']
-        destination_uniqueid = event['DestUniqueID']
-        uniqueid = event['UniqueID']
+        channel_destination = event['DestChannel']
+        destination_uniqueid = event['DestUniqueid']
+        uniqueid = event['Uniqueid']
 
         self._add_channel(channel_source, channel_destination, uniqueid, destination_uniqueid)
 

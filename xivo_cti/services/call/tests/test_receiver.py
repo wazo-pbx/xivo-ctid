@@ -119,7 +119,7 @@ class TestCallReceiver(unittest.TestCase):
         }
         get_extension_from_channel.side_effect = lambda channel: extens[channel]
 
-        self.call_receiver.handle_dial(ami_event)
+        self.call_receiver.handle_dial_begin(ami_event)
 
         self.call_storage.new_call.assert_called_once_with(
             UNIQUEID,
@@ -132,7 +132,7 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin_invalid_channel(self):
         ami_event = self._mk_dial_begin_event()
 
-        self.call_receiver.handle_dial(ami_event)
+        self.call_receiver.handle_dial_begin(ami_event)
 
         self.assertEquals(self.call_storage.new_call.call_count, 0)
 
@@ -254,12 +254,11 @@ class TestCallReceiver(unittest.TestCase):
                              source=sentinel.channel_source,
                              destination=sentinel.channel_destination):
         return {
-            'Event': 'Dial',
-            'SubEvent': 'Begin',
+            'Event': 'DialBegin',
             'Channel': source,
-            'Destination': destination,
-            'UniqueID': uniqueid,
-            'DestUniqueID': dest_uniqueid,
+            'DestChannel': destination,
+            'Uniqueid': uniqueid,
+            'DestUniqueid': dest_uniqueid,
         }
 
     def _mk_dial_end_event(self, uniqueid=UNIQUEID, channel=CHANNEL):
