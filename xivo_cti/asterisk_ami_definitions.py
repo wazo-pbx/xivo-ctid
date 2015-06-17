@@ -29,7 +29,7 @@ event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
                          ]
 
 event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
-                       'Bridge', 'BridgeExec', 'BridgeAction',
+                       'Bridge',
                        'Transfer',  # only in chan_sip
                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
                        'ParkedCallStatus',  # CLG addendum
