@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
                        'NewAccountCode',  # (1.8)
                        'NewCallerid',  # was 'Newcallerid' in 1.4
                        'CEL', 'MCID',
-                       'Join', 'Leave',
+                       'QueueCallerJoin', 'QueueCallerLeave',
                        'ExtensionStatus', 'MusicOnHold',
                        'FaxSent', 'FaxReceived', 'ReceiveFAXStatus', 'SendFAXStatus', 'ReceiveFAX', 'SendFAX'
                        ]

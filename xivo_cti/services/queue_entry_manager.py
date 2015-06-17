@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ NAME, NUMBER, POSITION, QUEUE, UNIQUE_ID, COUNT, WAIT = \
 
 def register_events():
     callback_handler = AMICallbackHandler.get_instance()
-    callback_handler.register_callback('Join', parse_join)
-    callback_handler.register_callback('Leave', parse_leave)
+    callback_handler.register_callback('QueueCallerJoin', parse_join)
+    callback_handler.register_callback('QueueCallerLeave', parse_leave)
     callback_handler.register_callback('QueueEntry', parse_queue_entry)
     callback_handler.register_callback('QueueParams', parse_queue_params)
     callback_handler.register_callback('QueueStatusComplete', parse_queue_status_complete)
@@ -51,7 +51,7 @@ def parse_join(event):
                      event[NUMBER],
                      event[UNIQUE_ID])
     except (KeyError, ValueError):
-        logger.warning('Failed to parse Join event %s', event)
+        logger.warning('Failed to parse QueueCallerJoin event %s', event)
 
 
 def parse_queue_entry(event):
@@ -75,7 +75,7 @@ def parse_leave(event):
                       int(event[COUNT]),
                       event[UNIQUE_ID])
     except (KeyError, ValueError):
-        logger.warning('Failed to parse Leave event %s', event)
+        logger.warning('Failed to parse QueueCallerLeave event %s', event)
 
 
 def parse_queue_params(event):
@@ -153,7 +153,7 @@ class QueueEntryManager(object):
     def synchronize(self, queue_name=None):
         logger.info('Synchronizing QueueEntries on %s',
                     (queue_name if queue_name else 'all queues'))
-        if self._ami != None:
+        if self._ami is not None:
             self._ami.sendqueuestatus(queue_name)
         else:
             logger.warning('QueueEntryManager cannot contact any AMI instance')
