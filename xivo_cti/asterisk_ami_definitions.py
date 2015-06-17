@@ -22,7 +22,7 @@ event_flags = dict()
 event_others = dict()
 
 event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
-                         'Reload', 'Shutdown', 'ModuleLoadReport',
+                         'Reload', 'Shutdown',
                          'FullyBooted',  # (1.8)
                          'DNDState', 'MobileStatus', 'Registry',
                          'ChannelReload', 'LogChannel'
@@ -39,7 +39,6 @@ event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
                        'Newchannel',
                        'NewAccountCode',  # (1.8)
                        'NewCallerid',  # was 'Newcallerid' in 1.4
-                       'NewPeerAccount',
                        'CEL', 'MCID',
                        'Join', 'Leave',
                        'ExtensionStatus', 'MusicOnHold',
