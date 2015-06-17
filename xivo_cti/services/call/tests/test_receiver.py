@@ -260,11 +260,3 @@ class TestCallReceiver(unittest.TestCase):
             'Uniqueid': uniqueid,
             'DestUniqueid': dest_uniqueid,
         }
-
-    def _mk_dial_end_event(self, uniqueid=UNIQUEID, channel=CHANNEL):
-        return {
-            'Event': 'Dial',
-            'SubEvent': 'End',
-            'Channel': channel,
-            'UniqueID': uniqueid,
-        }

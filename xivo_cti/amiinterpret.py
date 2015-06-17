@@ -72,13 +72,12 @@ class AMI_1_8(object):
         self.innerdata.hangup(channel)
         self._aggregator.clean(uniqueid)
 
-    def ami_dial(self, event):
+    def ami_dialbegin(self, event):
         channel = event['Channel']
-        subevent = event['SubEvent']
-        uniqueid = event['UniqueID']
+        uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        if subevent == 'Begin' and 'Destination' in event:
-            destination = event['Destination']
+        if 'DestChannel' in event:
+            destination = event['DestChannel']
             if channel in self.innerdata.channels:
                 try:
                     _set('desttype', 'user')

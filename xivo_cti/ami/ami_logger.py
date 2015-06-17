@@ -24,7 +24,8 @@ class AMILogger(object):
     _log_header = 'AMI logger'
     logged_events = ['ChanSpyStart',
                      'ChanSpyStop',
-                     'Dial',
+                     'DialBegin',
+                     'DialEnd',
                      'ChannelReload',
                      'DAHDIChannel',
                      'FullyBooted',
