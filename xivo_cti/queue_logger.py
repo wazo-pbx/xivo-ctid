@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ UNIQUEID = 'Uniqueid'
 class QueueLogger(object):
 
     cache = None
-    cache_threshold = 10  # Time to wait in sec before removing from the
-                            # from the cache when a call is not answered
+    cache_threshold = 10    # Time to wait in sec before removing from the
+                            # cache when a call is not answered
 
     @classmethod
     def init(cls):
@@ -46,19 +46,19 @@ class QueueLogger(object):
     @classmethod
     def _register_ami_callbacks(cls):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('Join', cls.Join)
-        ami_handler.register_callback('Leave', cls.Leave)
+        ami_handler.register_callback('QueueCallerJoin', cls.QueueCallerJoin)
+        ami_handler.register_callback('QueueCallerLeave', cls.QueueCallerLeave)
         ami_handler.register_callback('AgentConnect', cls.AgentConnect)
         ami_handler.register_callback('AgentComplete', cls.AgentComplete)
 
     @classmethod
     def _trace_event(cls, ev):
         queue = ev[QUEUE]
-        if not queue in cls.cache:
+        if queue not in cls.cache:
             cls.cache[queue] = {}
 
         uniqueid = ev[UNIQUEID]
-        if not uniqueid in cls.cache[queue]:
+        if uniqueid not in cls.cache[queue]:
             cls.cache[queue][uniqueid] = ev
         else:
             cls.cache[queue][uniqueid] = dict(cls.cache[queue][uniqueid].items() + ev.items())
@@ -92,7 +92,7 @@ class QueueLogger(object):
             del cls.cache[queue][event]
 
     @classmethod
-    def Join(cls, ev):
+    def QueueCallerJoin(cls, ev):
         ev[CALLTIME] = int(time.time())
 
         cls._trace_event(ev)
@@ -120,7 +120,7 @@ class QueueLogger(object):
         queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
 
     @classmethod
-    def Leave(cls, ev):
+    def QueueCallerLeave(cls, ev):
         if not cls._is_traced_event(ev):
             return
 
