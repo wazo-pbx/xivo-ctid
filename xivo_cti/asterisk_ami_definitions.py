@@ -52,7 +52,7 @@ event_flags['AGENT'] = ['AgentCalled',
                         'AgentRingNoAnswer',
                         ]
 
-event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent']
+event_flags['USER'] = ['UserEvent']
 
 event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
                            'VarSet']
