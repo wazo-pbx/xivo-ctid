@@ -41,7 +41,7 @@ event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
                        'NewCallerid',  # was 'Newcallerid' in 1.4
                        'CEL', 'MCID',
                        'QueueCallerJoin', 'QueueCallerLeave',
-                       'ExtensionStatus', 'MusicOnHold',
+                       'ExtensionStatus', 'MusicOnHoldStart', 'MusicOnHoldStop',
                        'SendFAX', 'ReceiveFAX', 'ReceiveFAXStatus', 'SendFAXStatus'
                        ]
 
