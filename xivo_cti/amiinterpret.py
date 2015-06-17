@@ -76,28 +76,27 @@ class AMI_1_8(object):
         channel = event['Channel']
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        if 'DestChannel' in event:
-            destination = event['DestChannel']
-            if channel in self.innerdata.channels:
-                try:
-                    _set('desttype', 'user')
-                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
-                    if phone:
-                        _set('destid', str(phone['iduserfeatures']))
-                except LookupError:
-                    logger.exception('Could not set user id for dial')
-                self.innerdata.channels[channel].properties['direction'] = 'out'
-                self.innerdata.channels[channel].properties['commstatus'] = 'calling'
-                self.innerdata.channels[channel].properties['timestamp'] = time.time()
-                self.innerdata.setpeerchannel(channel, destination)
-                self.innerdata.update(channel)
-            if destination in self.innerdata.channels:
-                self.innerdata.channels[destination].properties['direction'] = 'in'
-                self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
-                self.innerdata.channels[destination].properties['timestamp'] = time.time()
-                self.innerdata.setpeerchannel(destination, channel)
-                self.innerdata.update(destination)
-            self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
+        destination = event['DestChannel']
+        if channel in self.innerdata.channels:
+            try:
+                _set('desttype', 'user')
+                phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
+                if phone:
+                    _set('destid', str(phone['iduserfeatures']))
+            except LookupError:
+                logger.exception('Could not set user id for dial')
+            self.innerdata.channels[channel].properties['direction'] = 'out'
+            self.innerdata.channels[channel].properties['commstatus'] = 'calling'
+            self.innerdata.channels[channel].properties['timestamp'] = time.time()
+            self.innerdata.setpeerchannel(channel, destination)
+            self.innerdata.update(channel)
+        if destination in self.innerdata.channels:
+            self.innerdata.channels[destination].properties['direction'] = 'in'
+            self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
+            self.innerdata.channels[destination].properties['timestamp'] = time.time()
+            self.innerdata.setpeerchannel(destination, channel)
+            self.innerdata.update(destination)
+        self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):
         self._endpoint_status_updater.update_status(event['Hint'], event['Status'])
