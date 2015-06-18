@@ -17,7 +17,6 @@
 
 import logging
 
-from xivo_dao.cel_dao import UnsupportedLineProtocolException
 from xivo_dao.resources.call_log import dao as call_log_dao
 
 from .calls import Call
@@ -33,11 +32,7 @@ class HistoryMode(object):
 
 def history_for_phone(phone, limit):
     identifier = _phone_to_identifier(phone)
-    try:
-        calls = all_calls_for_phone(identifier, limit)
-    except UnsupportedLineProtocolException:
-        logger.warning('Could not get history for phone: %s', phone['name'])
-    return calls
+    return all_calls_for_phone(identifier, limit)
 
 
 def all_calls_for_phone(identifier, limit):
