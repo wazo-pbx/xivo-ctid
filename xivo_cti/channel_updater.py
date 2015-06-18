@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,12 @@ def parse_new_caller_id(event):
 
 def parse_hold(event):
     updater = context.get('channel_updater')
-    updater.set_hold(event['Channel'], event['Status'] == 'On')
+    updater.set_hold(event['Channel'])
+
+
+def parse_unhold(event):
+    updater = context.get('channel_updater')
+    updater.set_unhold(event['Channel'])
 
 
 def assert_has_channel(func):
@@ -77,5 +82,10 @@ class ChannelUpdater(object):
 
     @assert_has_channel
     @notify_clients
-    def set_hold(self, channel_name, status):
-        self.innerdata.channels[channel_name].properties['holded'] = status
+    def set_hold(self, channel_name):
+        self.innerdata.channels[channel_name].properties['holded'] = True
+
+    @assert_has_channel
+    @notify_clients
+    def set_unhold(self, channel_name):
+        self.innerdata.channels[channel_name].properties['holded'] = False

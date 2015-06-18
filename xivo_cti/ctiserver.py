@@ -359,6 +359,7 @@ class CTIServer(object):
                                            channel_updater.parse_new_caller_id)
         callback_handler.register_callback('UserEvent', channel_updater.parse_userevent)
         callback_handler.register_callback('Hold', channel_updater.parse_hold)
+        callback_handler.register_callback('Unhold', channel_updater.parse_unhold)
 
         call_receiver = context.get('call_receiver')
         callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
