@@ -102,34 +102,6 @@ class AMI_1_8(object):
     def ami_extensionstatus(self, event):
         self._endpoint_status_updater.update_status(event['Hint'], event['Status'])
 
-    def ami_bridge(self, event):
-        if event['Bridgestate'] != 'Link':
-            return
-
-        channel_1 = self.innerdata.channels.get(event['Channel1'])
-        channel_2 = self.innerdata.channels.get(event['Channel2'])
-        uniqueid = event['Uniqueid1']
-        channel_name = event['Channel1']
-
-        if channel_1:
-            self._update_connected_channel(channel_1, channel_2)
-            channel_1.properties['commstatus'] = 'linked'
-
-        if channel_2:
-            self._update_connected_channel(channel_2, channel_1)
-            channel_2.properties['commstatus'] = 'linked'
-
-        self._call_form_dispatch_filter.handle_bridge(uniqueid, channel_name)
-
-    def _update_connected_channel(self, channel, peer_channel):
-        channel.properties.update({
-            'talkingto_kind': 'channel',
-            'talkingto_id': peer_channel.channel,
-            'timestamp': time.time(),
-        })
-        self.innerdata.setpeerchannel(channel.channel, peer_channel.channel)
-        self.innerdata.update(channel.channel)
-
     def ami_masquerade(self, event):
         original = event['Original']
         clone = event['Clone']
@@ -312,11 +284,10 @@ class AMI_1_8(object):
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
         context = event['Context']
-        bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
-        unique_id = event['UniqueID']
+        unique_id = event['Uniqueid']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
@@ -329,11 +300,6 @@ class AMI_1_8(object):
             channelstruct.properties['commstatus'] = 'ringing'
         elif state == '6':
             channelstruct.properties['commstatus'] = 'linked'
-
-        if state == '6' and bridgedchannel:
-            self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
-            self.innerdata.setpeerchannel(channel, bridgedchannel)
-            self.innerdata.setpeerchannel(bridgedchannel, channel)
 
     def ami_listdialplan(self, event):
         extension = event.get('Extension')

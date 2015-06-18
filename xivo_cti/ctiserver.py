@@ -162,6 +162,8 @@ class CTIServer(object):
         self._agent_service_manager = context.get('agent_service_manager')
         self._call_form_result_handler = context.get('call_form_result_handler')
 
+        self._bridge_updater = context.get('bridge_updater')
+
         self._presence_service_executor = context.get('presence_service_executor')
         self._statistics_notifier = context.get('statistics_notifier')
         self._queue_statistics_producer = context.get('queue_statistics_producer')
@@ -344,6 +346,7 @@ class CTIServer(object):
         callback_handler = ami_callback_handler.AMICallbackHandler.get_instance()
         agent_status_parser = context.get('agent_status_parser')
 
+        self._bridge_updater.register_ami_events(callback_handler)
         self._queue_member_updater.register_ami_events(callback_handler)
 
         callback_handler.register_callback('QueueMemberPaused', agent_status_parser.parse_ami_paused)
@@ -365,7 +368,6 @@ class CTIServer(object):
         callback_handler.register_callback('Newstate', call_receiver.handle_newstate)
         callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
         callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
-        callback_handler.register_callback('Bridge', call_receiver.handle_bridge)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
         callback_handler.register_callback('Masquerade', call_receiver.handle_masquerade)
 
