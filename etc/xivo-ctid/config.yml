@@ -45,6 +45,7 @@ dird:
     port: 9489
     version: 0.1
     timeout: 3
+    https: True
 
 # xivo-provd connection informations.
 provd:
