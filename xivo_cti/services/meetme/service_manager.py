@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 CHANNEL = 'Channel'
 CONF_ROOM_NUMBER = 'Meetme'
-USERNUM = 'Usernum'
-CIDNAME = 'CallerIDname'
-CIDNUMBER = 'CallerIDnum'
+USERNUM = 'User'
+CIDNAME = 'CallerIDName'
+CIDNUMBER = 'CallerIDNum'
 YES, NO = 'Yes', 'No'
 
 

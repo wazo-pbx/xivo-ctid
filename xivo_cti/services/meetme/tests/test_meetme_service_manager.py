@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -116,12 +116,9 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': channel,
                  'Uniqueid': '1338219287.2',
                  'Meetme': number,
-                 'PseudoChan': 'DAHDI/pseudo-965958986',
-                 'Admin': 'No',
-                 'NoAuthed': 'No',
-                 'Usernum': '1',
-                 'CallerIDnum': caller_id_number,
-                 'CallerIDname': caller_id_name,
+                 'User': '1',
+                 'CallerIDNum': caller_id_number,
+                 'CallerIDName': caller_id_name,
                  'ConnectedLineNum': '<unknown>',
                  'ConnectedLineName': '<unknown>'}
 
@@ -144,12 +141,9 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': channel,
                  'Uniqueid': '1338219287.2',
                  'Meetme': number,
-                 'PseudoChan': 'DAHDI/pseudo-965958986',
-                 'Admin': 'No',
-                 'NoAuthed': 'No',
-                 'Usernum': '1',
-                 'CallerIDnum': caller_id_number,
-                 'CallerIDname': caller_id_name,
+                 'User': '1',
+                 'CallerIDNum': caller_id_number,
+                 'CallerIDName': caller_id_name,
                  'ConnectedLineNum': '<unknown>',
                  'ConnectedLineName': '<unknown>'}
 
@@ -278,7 +272,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': 'SIP/i7vbu0-00000000',
                  'Uniqueid': '1338219251.0',
                  'Meetme': '800',
-                 'Usernum': '1',
+                 'User': '1',
                  'CallerIDNum': '1000',
                  'CallerIDName': 'Père Noël',
                  'ConnectedLineNum': '<unknown>',
@@ -296,7 +290,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': 'SIP/i7vbu0-00000000',
                  'Uniqueid': '1338219251.0',
                  'Meetme': '0834758704',
-                 'Usernum': '1',
+                 'User': '1',
                  'CallerIDNum': '1000',
                  'CallerIDName': 'Père Noël',
                  'ConnectedLineNum': '<unknown>',
