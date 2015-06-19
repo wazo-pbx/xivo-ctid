@@ -40,7 +40,7 @@ class AMIInitializer(object):
                                              ['SIPshowregistry', 'IAXregistry'])
     REGISTRATION_COMPLETE = InitializingEntry('RegistrationsComplete',
                                               ['DAHDIShowChannelsComplete', 'QueueSummaryComplete'],
-                                              ['RegistrationComplete', 'DAHDIShowChannelsComplete'],
+                                              ['RegistrationsComplete', 'DAHDIShowChannelsComplete'],
                                               ['DAHDIShowChannels', 'QueueSummary'])
     QUEUE_SUMMARY_COMPLETE = InitializingEntry('QueueSummaryComplete',
                                                ['QueueStatusComplete'],
