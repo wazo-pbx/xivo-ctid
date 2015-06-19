@@ -187,8 +187,8 @@ class Safe(object):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_called(self, event):
-        channel_name = event['DestinationChannel']
-        member_name = event['AgentName']
+        channel_name = event['DestChannel']
+        member_name = event['MemberName']
         uniqueid = event['Uniqueid']
         self._set_channel_extra_vars_agent(event, channel_name, member_name)
         context.get('call_form_dispatch_filter').handle_agent_called(uniqueid, channel_name)
