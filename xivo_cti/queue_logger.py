@@ -26,7 +26,7 @@ logger = logging.getLogger('XiVO queue logger')
 CALLERIDNUM = 'CallerIDNum'
 CALLTIME = 'call_time_t'
 HOLDTIME = 'HoldTime'
-MEMBER = 'Member'
+INTERFACE = 'Interface'
 QUEUE = 'Queue'
 TALKTIME = 'TalkTime'
 UNIQUEID = 'Uniqueid'
@@ -86,7 +86,7 @@ class QueueLogger(object):
                 if HOLDTIME not in values:
                     continue
                 leave_time = values[CALLTIME] + int(values[HOLDTIME])
-                if MEMBER not in values and leave_time < max_time:
+                if INTERFACE not in values and leave_time < max_time:
                     to_delete.append((queue, event))
         for queue, event in to_delete:
             del cls.cache[queue][event]
@@ -107,7 +107,7 @@ class QueueLogger(object):
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         cls._trace_event(ev)
-        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME], ev[MEMBER])
+        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME], ev[INTERFACE])
 
     @classmethod
     def AgentComplete(cls, ev):
