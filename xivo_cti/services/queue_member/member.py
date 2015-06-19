@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ class QueueMemberState(object):
     def from_ami_queue_member(cls, ami_event):
         state = cls()
         state.calls_taken = int(ami_event['CallsTaken'])
-        state.interface = ami_event['Location']
+        state.interface = ami_event.get('Interface') or ami_event['Location']
         state.last_call = _convert_last_call(ami_event['LastCall'])
         state.paused = _convert_paused(ami_event['Paused'])
         state.penalty = int(ami_event['Penalty'])
