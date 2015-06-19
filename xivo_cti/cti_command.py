@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ REGCOMMANDS = [
 IPBXCOMMANDS = [
     'originate',
     # transfer-like commands
-    'intercept', 'parking',
+    'intercept',
     'transfer', 'atxfer',
     # hangup-like commands
     'hangup',
@@ -136,7 +136,7 @@ class Command(object):
             logger.warning("%s - No CTI profile defined for the user", self.head)
             return 'capaid_undefined'
         else:
-            return  {'capalist': [cti_profile_id]}
+            return {'capalist': [cti_profile_id]}
 
     def _is_user_authenticated(self):
         this_hashed_password = self._commanddict.get('hashedpassword')

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -106,19 +106,8 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('ParkedCallsComplete')
-        self.ami_initializer._unregister.assert_called_once_with('QueueStatusComplete')
-        self.ami_initializer._send('ParkedCalls')
-
-    def test_go_parked_calls_complete(self):
-        self.setup_mock()
-        msg = {'Event': 'ParkedCallsComplete',
-               'Total': '0'}
-
-        self.ami_initializer.go(msg)
-
         self.ami_initializer._register.assert_called_once_with('StatusComplete')
-        self.ami_initializer._unregister.assert_called_once_with('ParkedCallsComplete')
+        self.ami_initializer._unregister.assert_called_once_with('QueueStatusComplete')
         self.ami_initializer._send.assert_called_once_with('Status')
 
     def test_go_show_status_complete(self):

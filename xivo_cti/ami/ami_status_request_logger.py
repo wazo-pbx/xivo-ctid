@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ class AMIStatusRequestLogger(AMILogger):
     _instance = None
     _log_header = 'AMI status request logger'
     logged_events = ['CoreShowChannel',
-                     'ParkedCallStatus',
                      'RegistryEntry',
                      'Status',
                      ]
