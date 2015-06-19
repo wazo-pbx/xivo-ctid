@@ -81,9 +81,6 @@ class CallReceiver(object):
             _Channel(Extension('', '', True), ''),
         )
 
-    def handle_masquerade(self, event):
-        self._call_storage.merge_local_channels(event['Original'])
-
     def _add_channel(self, channel_source, channel_destination, uniqueid, destination_uniqueid):
         try:
             extension_source = helper.get_extension_from_channel(channel_source)

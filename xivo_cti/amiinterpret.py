@@ -102,11 +102,6 @@ class AMI_1_8(object):
     def ami_extensionstatus(self, event):
         self._endpoint_status_updater.update_status(event['Hint'], event['Status'])
 
-    def ami_masquerade(self, event):
-        original = event['Original']
-        clone = event['Clone']
-        self.innerdata.masquerade(original, clone)
-
     def ami_originateresponse(self, event):
         channel = event['Channel']
         actionid = event.get('ActionID')
