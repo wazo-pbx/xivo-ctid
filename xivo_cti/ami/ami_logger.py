@@ -33,9 +33,6 @@ class AMILogger(object):
                      'MonitorStart',
                      'MonitorStop',
                      'OriginateResponse',
-                     'ParkedCall',
-                     'ParkedCallGiveUp',
-                     'ParkedCallTimeOut',
                      'Pickup',
                      'QueueCallerAbandon',
                      'Reload',
@@ -43,7 +40,6 @@ class AMILogger(object):
                      'SoftHangupRequest',
                      'Transfer',
                      'Unlink',
-                     'UnParkedCall',
                      ]
 
     def __init__(self):

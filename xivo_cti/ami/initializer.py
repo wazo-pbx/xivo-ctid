@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,12 +43,8 @@ class AMIInitializer(object):
                                                ['QueueSummaryComplete'],
                                                ['QueueStatus'])
     QUEUE_STATUS_COMPLETE = InitializingEntry('QueueStatusComplete',
-                                              ['ParkedCallsComplete'],
-                                              ['QueueStatusComplete'],
-                                              ['ParkedCalls'])
-    PARKED_CALLS_COMPLETE = InitializingEntry('ParkedCallsComplete',
                                               ['StatusComplete'],
-                                              ['ParkedCallsComplete'],
+                                              ['QueueStatusComplete'],
                                               ['Status'])
     SHOW_STATUS_COMPLETE = InitializingEntry('StatusComplete',
                                              ['ShowDialPlanComplete'],
@@ -67,7 +63,6 @@ class AMIInitializer(object):
                      REGISTRATION_COMPLETE.trigger: REGISTRATION_COMPLETE,
                      QUEUE_SUMMARY_COMPLETE.trigger: QUEUE_SUMMARY_COMPLETE,
                      QUEUE_STATUS_COMPLETE.trigger: QUEUE_STATUS_COMPLETE,
-                     PARKED_CALLS_COMPLETE.trigger: PARKED_CALLS_COMPLETE,
                      SHOW_STATUS_COMPLETE.trigger: SHOW_STATUS_COMPLETE,
                      SHOW_DIALPLAN_COMPLETE.trigger: SHOW_DIALPLAN_COMPLETE,
                      INIT_COMPLETE.trigger: INIT_COMPLETE}

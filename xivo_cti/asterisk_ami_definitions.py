@@ -32,8 +32,6 @@ event_flags['CALL'] = ['DialBegin', 'DialEnd', 'Hangup', 'Pickup', 'Rename',
                        'Bridge',
                        'Transfer',  # only in chan_sip
                        'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
-                       'ParkedCallStatus',  # CLG addendum
-                       'ParkedCall', 'UnParkedCall', 'ParkedCallTimeOut', 'ParkedCallGiveUp',
                        'ChanSpyStart', 'ChanSpyStop',
                        'DAHDIChannel',
                        'Newchannel',
@@ -59,7 +57,6 @@ event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
 
 event_others['replies'] = [
     'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
-    'ParkedCallsComplete',  # after ParkedCalls
     'Status', 'StatusComplete',  # after Status
     'QueueParams', 'QueueEntry', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary

@@ -158,25 +158,6 @@ class AMI_1_8(object):
                 # when requester is not connected any more ...
                 pass
 
-    def ami_parkedcall(self, event):
-        channel = event['Channel']
-        exten = event['Exten']
-        parkinglot = event['Parkinglot']
-        if parkinglot.startswith('parkinglot_'):
-            parkinglot = '_'.join(parkinglot.split('_')[1:])
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].setparking(exten, parkinglot)
-
-    def ami_unparkedcall(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].unsetparking()
-
-    def ami_parkedcalltimeout(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].unsetparking()
-
     def userevent_user(self, chanprops, event):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
