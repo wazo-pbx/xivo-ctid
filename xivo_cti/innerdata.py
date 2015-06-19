@@ -452,8 +452,6 @@ class Safe(object):
         self.channels[channel].relations = []
         if channel.startswith('SIPPeer/'):
             return
-        if channel.startswith('Parked/'):
-            return
         try:
             termination = self.ast_channel_to_termination(channel)
             p = self.zphones(termination.get('protocol'), termination.get('name'))
@@ -504,7 +502,7 @@ class Safe(object):
     def ast_channel_to_termination(self, channel):
         term = {}
         # special cases : AsyncGoto/IAX2/asteriskisdn-13622<ZOMBIE>
-        # Parked/SIP, Parked/IAX2, SCCP, DAHDI, Parked/SCCP ...
+        # SCCP, DAHDI, ...
         # what about a peer called a-b-c ?
         cutchan1 = channel.split('/')
         if len(cutchan1) == 2:
