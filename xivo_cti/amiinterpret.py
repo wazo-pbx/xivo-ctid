@@ -320,10 +320,12 @@ class AMI_1_8(object):
 
         channelstruct.properties['timestamp'] = timestamp_start
 
-        if state == '6':
-            channelstruct.properties['commstatus'] = 'linked'
+        if state == '4':
+            channelstruct.properties['commstatus'] = 'calling'
         elif state == '5':
             channelstruct.properties['commstatus'] = 'ringing'
+        elif state == '6':
+            channelstruct.properties['commstatus'] = 'linked'
 
         if state == '6' and bridgedchannel:
             self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
