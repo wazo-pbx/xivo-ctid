@@ -249,26 +249,6 @@ class Safe(object):
                            'class': 'getlist',
                            'status': item}
 
-    def config_from_external(self, listname, contents):
-        function = contents.get('function')
-        if function == 'listid':
-            for k in contents.get('list'):
-                self.xod_config[listname].keeplist[k] = {}
-                self.xod_status[listname][k] = {}
-        elif function == 'updateconfig':
-            tid = contents.get('tid')
-            self.xod_config[listname].keeplist[tid] = contents.get('config')
-        elif function == 'updatestatus':
-            tid = contents.get('tid')
-            if self.xod_status[listname].get(tid) != contents.get('status'):
-                self.xod_status[listname][tid] = contents.get('status')
-                self._ctiserver.send_cti_event({'class': 'getlist',
-                                                'listname': listname,
-                                                'function': 'updatestatus',
-                                                'tipbxid': self.ipbxid,
-                                                'tid': tid,
-                                                'status': self.xod_status[listname][tid]})
-
     def user_match(self, userid, tomatch):
         domatch = False
         user = self.xod_config['users'].keeplist[userid]
@@ -324,11 +304,6 @@ class Safe(object):
                             user_dao.get(userid).password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
-
-    def user_get_userstatuskind(self, userid):
-        cti_profile_id = old_user_dao.get_profile(userid)
-        zz = config['profiles'].get(cti_profile_id)
-        return zz.get('userstatus')
 
     def new_state(self, event):
         channel = event['Channel']
