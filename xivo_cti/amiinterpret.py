@@ -85,13 +85,11 @@ class AMI_1_8(object):
                     _set('destid', str(phone['iduserfeatures']))
             except LookupError:
                 logger.exception('Could not set user id for dial')
-            self.innerdata.channels[channel].properties['direction'] = 'out'
             self.innerdata.channels[channel].properties['commstatus'] = 'calling'
             self.innerdata.channels[channel].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(channel, destination)
             self.innerdata.update(channel)
         if destination in self.innerdata.channels:
-            self.innerdata.channels[destination].properties['direction'] = 'in'
             self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
             self.innerdata.channels[destination].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(destination, channel)
@@ -112,11 +110,11 @@ class AMI_1_8(object):
 
         if channel_1:
             self._update_connected_channel(channel_1, channel_2)
-            channel_1.properties['commstatus'] = 'linked-caller'
+            channel_1.properties['commstatus'] = 'linked'
 
         if channel_2:
             self._update_connected_channel(channel_2, channel_1)
-            channel_2.properties['commstatus'] = 'linked-called'
+            channel_2.properties['commstatus'] = 'linked'
 
         self._call_form_dispatch_filter.handle_bridge(uniqueid, channel_name)
 
@@ -311,7 +309,6 @@ class AMI_1_8(object):
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
         context = event['Context']
-        application = event['Application']
         bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
@@ -322,18 +319,11 @@ class AMI_1_8(object):
         channelstruct = self.innerdata.channels[channel]
 
         channelstruct.properties['timestamp'] = timestamp_start
-        if application == 'Dial':
-            channelstruct.properties['direction'] = 'out'
-            if state == '6':
-                channelstruct.properties['commstatus'] = 'linked-caller'
-            elif state == '4':
-                channelstruct.properties['commstatus'] = 'calling'
-        elif application == 'AppDial':
-            channelstruct.properties['direction'] = 'in'
-            if state == '6':
-                channelstruct.properties['commstatus'] = 'linked-called'
-            elif state == '5':
-                channelstruct.properties['commstatus'] = 'ringing'
+
+        if state == '6':
+            channelstruct.properties['commstatus'] = 'linked'
+        elif state == '5':
+            channelstruct.properties['commstatus'] = 'ringing'
 
         if state == '6' and bridgedchannel:
             self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
