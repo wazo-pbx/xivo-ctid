@@ -65,10 +65,10 @@ class CallReceiver(object):
             self._call_storage.end_call(uniqueid_1)
 
     def handle_dial_begin(self, event):
-        # If there are no channel, it's a dial initiated by an Originate
-        if event.get('Channel') is None:
-            return
         channel_source = event['Channel']
+        if channel_source is None:
+            # If there are no channel, it's a dial initiated by an Originate
+            return
         channel_destination = event['DestChannel']
         destination_uniqueid = event['DestUniqueid']
         uniqueid = event['Uniqueid']
