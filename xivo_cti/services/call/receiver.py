@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,6 +65,9 @@ class CallReceiver(object):
             self._call_storage.end_call(uniqueid_1)
 
     def handle_dial_begin(self, event):
+        # If there are no channel, it's a dial initiated by an Originate
+        if event.get('Channel') is None:
+            return
         channel_source = event['Channel']
         channel_destination = event['DestChannel']
         destination_uniqueid = event['DestUniqueid']

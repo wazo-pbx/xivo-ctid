@@ -73,6 +73,9 @@ class AMI_1_8(object):
         self._aggregator.clean(uniqueid)
 
     def ami_dialbegin(self, event):
+        # If there are no channel, it's a dial initiated by an Originate
+        if event.get('Channel') is None:
+            return
         channel = event['Channel']
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
