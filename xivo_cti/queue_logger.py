@@ -30,6 +30,8 @@ INTERFACE = 'Interface'
 QUEUE = 'Queue'
 TALKTIME = 'TalkTime'
 UNIQUEID = 'Uniqueid'
+DESTUNIQUEID = 'DestUniqueid'
+REASON = 'Reason'
 
 
 class QueueLogger(object):
@@ -66,7 +68,11 @@ class QueueLogger(object):
     @classmethod
     def _is_traced_event(cls, ev):
         queue = ev[QUEUE]
-        return queue in cls.cache and ev[UNIQUEID] in cls.cache[queue]
+        if ev.get(REASON) == 'caller':
+            unique_id_tag = DESTUNIQUEID
+        else:
+            unique_id_tag = UNIQUEID
+        return queue in cls.cache and ev[unique_id_tag] in cls.cache[queue]
 
     @classmethod
     def _show_cache(cls):
@@ -114,10 +120,15 @@ class QueueLogger(object):
         if not cls._is_traced_event(ev):
             return
 
-        ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
+        if ev[REASON] == 'caller':
+            unique_id_tag = UNIQUEID
+        else:
+            unique_id_tag = DESTUNIQUEID
 
-        del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
-        queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
+        ct = cls.cache[ev[QUEUE]][ev[unique_id_tag]][CALLTIME]
+
+        del cls.cache[ev[QUEUE]][ev[unique_id_tag]]
+        queue_info_dao.update_talktime(ev[unique_id_tag], ct, ev[TALKTIME])
 
     @classmethod
     def QueueCallerLeave(cls, ev):
