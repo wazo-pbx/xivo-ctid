@@ -39,6 +39,13 @@ agentd:
     host: localhost
     timeout: 3
 
+# xivo-auth (authentication daemon) connection informations.
+auth:
+    host: localhost
+    port: 9497
+    timeout: 2
+    https: True
+
 # Dird (Directory daemon) connection informations.
 dird:
     host: localhost

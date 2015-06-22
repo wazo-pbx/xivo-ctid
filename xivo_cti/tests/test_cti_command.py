@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -75,7 +75,10 @@ class Test(unittest.TestCase):
         cti_command = Command(self.conn, message)
         cti_command.ipbxid = 1
         cti_command.userid = 2
-        self.assertEquals("login_password", cti_command.regcommand_login_pass())
+
+        result = cti_command.regcommand_login_pass()
+
+        self.assertEquals(result, "login_password")
 
     @patch('xivo_cti.ioc.context.context.get', Mock())
     def test_regcommand_login_pass_wrong_password(self):
@@ -86,7 +89,10 @@ class Test(unittest.TestCase):
         cti_command.ipbxid = 1
         cti_command.userid = 2
         self._ctiserver.safe.user_get_hashed_password.return_value = "efgh"
-        self.assertEquals("login_password", cti_command.regcommand_login_pass())
+
+        result = cti_command.regcommand_login_pass()
+
+        self.assertEquals(result, "login_password")
 
     @patch('xivo_cti.ioc.context.context.get', Mock())
     @patch('xivo_dao.user_dao.get_profile')
@@ -104,7 +110,10 @@ class Test(unittest.TestCase):
         }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
         mock_get_profile.return_value = None
-        self.assertEquals("capaid_undefined", cti_command.regcommand_login_pass())
+
+        result = cti_command.regcommand_login_pass()
+
+        self.assertEquals(result, "capaid_undefined")
 
     @patch('xivo_cti.ioc.context.context.get', Mock())
     @patch('xivo_dao.user_dao.get_profile')
@@ -121,5 +130,11 @@ class Test(unittest.TestCase):
             'cti_profile_id': cti_profile_id
         }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
+        self._ctiserver.safe.user_new_auth_token.return_value = 'new-token'
         mock_get_profile.return_value = cti_profile_id
-        self.assertEquals({'capalist': [cti_profile_id]}, cti_command.regcommand_login_pass())
+
+        result = cti_command.regcommand_login_pass()
+
+        self.assertEquals(result, {'capalist': [cti_profile_id]})
+        self.assertTrue(self.conn.connection_details['authenticated'])
+        self.assertEquals(self.conn.connection_details['auth_token'], 'new-token')

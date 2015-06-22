@@ -34,17 +34,19 @@ class PeopleCTIAdapter(object):
         self._cti_server = cti_server
         self._runner = async_runner
 
-    def get_headers(self, user_id):
+    def get_headers(self, cti_connection, user_id):
         logger.debug('Get headers called')
         profile = dao.user.get_context(user_id)
+        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_headers_result, user_id)
-        self._runner.run_with_cb(callback, self._client.directories.headers, profile=profile)
+        self._runner.run_with_cb(callback, self._client.directories.headers, profile=profile, token=token)
 
-    def search(self, user_id, term):
+    def search(self, cti_connection, user_id, term):
         logger.debug('Search called')
         profile = dao.user.get_context(user_id)
+        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_lookup_result, user_id)
-        self._runner.run_with_cb(callback, self._client.directories.lookup, profile=profile, term=term)
+        self._runner.run_with_cb(callback, self._client.directories.lookup, profile=profile, term=term, token=token)
 
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)

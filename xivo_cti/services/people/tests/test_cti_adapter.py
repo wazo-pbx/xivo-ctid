@@ -32,6 +32,7 @@ class TestCTIAdapter(TestCase):
     def setUp(self):
         self.task_queue = new_task_queue()
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
+        self.cti_connection = Mock(connection_details={'auth_token': s.token})
         self.cti_server = Mock()
         with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
             with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
@@ -46,9 +47,9 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.get_headers(s.user_id)
+            self.cti_adapter.get_headers(self.cti_connection, s.user_id)
 
-        self.client.directories.headers.assert_called_once_with(profile=s.profile)
+        self.client.directories.headers.assert_called_once_with(profile=s.profile, token=s.token)
 
     def test_send_headers_result(self):
         user_id = 12
@@ -73,9 +74,9 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.search(s.user_id, s.term)
+            self.cti_adapter.search(self.cti_connection, s.user_id, s.term)
 
-        self.client.directories.lookup.assert_called_once_with(profile=s.profile, term=s.term)
+        self.client.directories.lookup.assert_called_once_with(profile=s.profile, term=s.term, token=s.token)
 
     def test_send_lookup_result(self):
         user_id = 12

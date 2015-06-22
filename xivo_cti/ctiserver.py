@@ -211,8 +211,8 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
-        PeopleSearch.register_callback_params(people_adapter.search, ('user_id', 'pattern'))
-        PeopleHeaders.register_callback_params(people_adapter.get_headers, ['user_id'])
+        PeopleSearch.register_callback_params(people_adapter.search, ('cti_connection', 'user_id', 'pattern'))
+        PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

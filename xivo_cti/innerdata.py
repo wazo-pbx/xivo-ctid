@@ -20,6 +20,8 @@ import hashlib
 import logging
 import time
 
+from datetime import timedelta
+from xivo_auth_client import Client as AuthClient
 from xivo_cti import cti_sheets
 from xivo_cti import config
 from xivo_cti import dao
@@ -50,6 +52,8 @@ from collections import defaultdict
 logger = logging.getLogger('innerdata')
 
 SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
+
+TWO_MONTHS = timedelta(days=60).total_seconds()
 
 
 class Safe(object):
@@ -324,6 +328,14 @@ class Safe(object):
                             user_dao.get(userid).password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
+
+    def user_new_auth_token(self, userid):
+        user = user_dao.get(userid)
+        auth_client = AuthClient(username=user.username,
+                                 password=user.password,
+                                 **config['auth'])
+        token = auth_client.token.new('xivo_user', expiration=TWO_MONTHS)['token']
+        return token
 
     def user_get_userstatuskind(self, userid):
         cti_profile_id = old_user_dao.get_profile(userid)

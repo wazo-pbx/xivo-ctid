@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -128,6 +128,7 @@ class Command(object):
 
         if self._is_user_authenticated():
             self._connection.connection_details['authenticated'] = True
+            self._connection.connection_details['auth_token'] = self._ctiserver.safe.user_new_auth_token(self.userid)
         else:
             return 'login_password'
 

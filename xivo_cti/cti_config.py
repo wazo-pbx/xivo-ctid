@@ -39,6 +39,12 @@ _default_config = {
     'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
     'config_file': '/etc/xivo-ctid/config.yml',
     'extra_config_files': '/etc/xivo-ctid/conf.d/',
+    'auth': {
+        'host': 'localhost',
+        'port': 9497,
+        'timeout': 2,
+        'https': True,
+    },
     'bus': {
         'exchange_name': 'xivo',
         'exchange_type': 'topic'
@@ -48,15 +54,15 @@ _default_config = {
         'port': 9489,
         'version': 0.1,
     },
-   'switchboard_polycom': {
-       'username': 'xivo_switchboard',
-       'password': 'xivo_switchboard',
-       'answer_delay': 0.4,
+    'switchboard_polycom': {
+        'username': 'xivo_switchboard',
+        'password': 'xivo_switchboard',
+        'answer_delay': 0.4,
     },
-   'switchboard_snom': {
-       'username': 'guest',
-       'password': 'guest',
-       'answer_delay': 0.5,
+    'switchboard_snom': {
+        'username': 'guest',
+        'password': 'guest',
+        'answer_delay': 0.5,
     },
 }
 _cli_config = {}
