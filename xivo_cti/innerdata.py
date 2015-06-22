@@ -160,10 +160,7 @@ class Safe(object):
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _set_channel_extra_vars_agent(self, event, channel_name, member_name):
-        if event.get('Reason') == 'caller':
-            uniqueid = event['DestUniqueid']
-        else:
-            uniqueid = event['Uniqueid']
+        uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
         channel = self.channels.get(channel_name)
         if not channel:
@@ -204,13 +201,9 @@ class Safe(object):
         context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid, channel_name)
 
     def handle_agent_unlinked(self, event):
-        if event['Reason'] == 'caller':
-            channel_name = event['DestChannel']
-            uniqueid = event['DestUniqueid']
-        else:
-            channel_name = event['Channel']
-            uniqueid = event['Uniqueid']
+        channel_name = event['Channel']
         member_name = event['MemberName']
+        uniqueid = event['Uniqueid']
         self._set_channel_extra_vars_agent(event, channel_name, member_name)
         context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid, channel_name)
 
