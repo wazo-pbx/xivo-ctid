@@ -18,6 +18,13 @@
 
 class Bridge(object):
 
-    def __init__(self, bridge_id):
+    def __init__(self, bridge_id, bridge_type):
         self.bridge_id = bridge_id
+        self.bridge_type = bridge_type
         self.channels = []
+
+    def basic_channels_connected(self):
+        if self.bridge_type == 'basic' and len(self.channels) == 2:
+            return True
+        else:
+            return False

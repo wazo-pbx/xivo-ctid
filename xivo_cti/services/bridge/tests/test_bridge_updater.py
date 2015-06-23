@@ -17,30 +17,41 @@
 
 import unittest
 from mock import Mock, MagicMock
+from xivo_cti.call_forms.dispatch_filter import DispatchFilter
+from xivo_cti.innerdata import Safe
 from xivo_cti.services.bridge.manager import BridgeManager
 from xivo_cti.services.bridge.updater import BridgeUpdater
+from xivo_cti.services.call.receiver import CallReceiver
+from xivo_cti.services.call.storage import CallStorage
+from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.xivo_ami import AMIClass
-from xivo_cti.innerdata import Safe
-from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 
 
 class TestBridgeUpdater(unittest.TestCase):
 
     def setUp(self):
-        self.bridge_manager = MagicMock(BridgeManager)
         self.ami_class = Mock(AMIClass)
-        self.innerdata = Mock(Safe)
+        self.bridge_manager = MagicMock(BridgeManager)
+        self.call_receiver = Mock(CallReceiver)
+        self.call_storage = Mock(CallStorage)
+        self.current_call_manager = Mock(CurrentCallManager)
         self.dispatch_filter = Mock(DispatchFilter)
-        self.bridge_updater = BridgeUpdater(self.bridge_manager,
-                                            self.ami_class,
-                                            self.innerdata,
-                                            self.dispatch_filter)
+        self.innerdata = Mock(Safe)
+        self.bridge_updater = BridgeUpdater(self.ami_class,
+                                            self.bridge_manager,
+                                            self.call_receiver,
+                                            self.call_storage,
+                                            self.current_call_manager,
+                                            self.dispatch_filter,
+                                            self.innerdata)
 
     def test_on_ami_bridge_create(self):
-        ami_event = {'BridgeUniqueid': 'e136cd36-5187-430c-af2a-d1f08870847b'}
+        ami_event = {'BridgeUniqueid': 'e136cd36-5187-430c-af2a-d1f08870847b',
+                     'BridgeType': 'basic'}
         bridge_id = ami_event['BridgeUniqueid']
+        bridge_type = ami_event['BridgeType']
         self.bridge_updater.on_ami_bridge_create(ami_event)
-        self.bridge_manager._add_bridge.assert_called_once_with(bridge_id)
+        self.bridge_manager._add_bridge.assert_called_once_with(bridge_id, bridge_type)
 
     def test_on_ami_bridge_destroy(self):
         ami_event = {'BridgeUniqueid': 'e136cd36-5187-430c-af2a-d1f08870847b'}

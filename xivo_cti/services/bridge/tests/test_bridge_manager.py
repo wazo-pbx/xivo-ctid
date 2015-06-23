@@ -26,14 +26,16 @@ class BridgeManagerTest(unittest.TestCase):
     def test_add_bridge(self):
         bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_manager._add_bridge(bridge_id)
+        bridge_type = u'basic'
+        bridge_manager._add_bridge(bridge_id, bridge_type)
 
         assert_that(bridge_manager._bridges, has_key(bridge_id))
 
     def test_remove_bridge(self):
         bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_manager._add_bridge(bridge_id)
+        bridge_type = u'basic'
+        bridge_manager._add_bridge(bridge_id, bridge_type)
         bridge_manager._remove_bridge(bridge_id)
 
         assert_that(bridge_manager._bridges, is_not(has_key(bridge_id)))
@@ -41,7 +43,8 @@ class BridgeManagerTest(unittest.TestCase):
     def test_get_bridge(self):
         bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_manager._add_bridge(bridge_id)
+        bridge_type = u'basic'
+        bridge_manager._add_bridge(bridge_id, bridge_type)
 
         bridge = bridge_manager.get_bridge(bridge_id)
         assert_that(bridge.bridge_id, equal_to(bridge_id))

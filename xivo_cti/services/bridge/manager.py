@@ -24,8 +24,8 @@ class BridgeManager(object):
         self._bridges = {}
 
     # package private method
-    def _add_bridge(self, bridge_id):
-        self._bridges[bridge_id] = Bridge(bridge_id)
+    def _add_bridge(self, bridge_id, bridge_type):
+        self._bridges[bridge_id] = Bridge(bridge_id, bridge_type)
 
     # package private method
     def _remove_bridge(self, bridge_id):
