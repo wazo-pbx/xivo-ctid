@@ -17,34 +17,46 @@
 
 import unittest
 
-from hamcrest import assert_that, is_not, has_key, equal_to
+from hamcrest import assert_that, equal_to, has_key, is_not, none
 from xivo_cti.services.bridge.manager import BridgeManager
 
 
 class BridgeManagerTest(unittest.TestCase):
 
+    def setUp(self):
+        self.bridge_manager = BridgeManager()
+
     def test_add_bridge(self):
-        bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
         bridge_type = u'basic'
-        bridge_manager._add_bridge(bridge_id, bridge_type)
+        self.bridge_manager._add_bridge(bridge_id, bridge_type)
 
-        assert_that(bridge_manager._bridges, has_key(bridge_id))
+        assert_that(self.bridge_manager._bridges, has_key(bridge_id))
 
     def test_remove_bridge(self):
-        bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
         bridge_type = u'basic'
-        bridge_manager._add_bridge(bridge_id, bridge_type)
-        bridge_manager._remove_bridge(bridge_id)
+        self.bridge_manager._add_bridge(bridge_id, bridge_type)
+        self.bridge_manager._remove_bridge(bridge_id)
 
-        assert_that(bridge_manager._bridges, is_not(has_key(bridge_id)))
+        assert_that(self.bridge_manager._bridges, is_not(has_key(bridge_id)))
+
+    def test_remove_bridge_non_existent(self):
+        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
+        self.bridge_manager._remove_bridge(bridge_id)
+
+        assert_that(self.bridge_manager._bridges, is_not(has_key(bridge_id)))
 
     def test_get_bridge(self):
-        bridge_manager = BridgeManager()
         bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
         bridge_type = u'basic'
-        bridge_manager._add_bridge(bridge_id, bridge_type)
+        self.bridge_manager._add_bridge(bridge_id, bridge_type)
+        bridge = self.bridge_manager.get_bridge(bridge_id)
 
-        bridge = bridge_manager.get_bridge(bridge_id)
         assert_that(bridge.bridge_id, equal_to(bridge_id))
+
+    def test_get_bridge_non_existent(self):
+        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
+        bridge = self.bridge_manager.get_bridge(bridge_id)
+
+        assert_that(bridge, none())
