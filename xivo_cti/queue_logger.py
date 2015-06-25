@@ -69,13 +69,6 @@ class QueueLogger(object):
         return queue in cls.cache and ev[UNIQUEID] in cls.cache[queue]
 
     @classmethod
-    def _show_cache(cls):
-        count = 0
-        for value in cls.cache.itervalues():
-            count += len(value)
-        logger.info('Cache size: %s\ncache = %s', count, cls.cache)
-
-    @classmethod
     def _clean_cache(cls):
         '''If a call has left the queue for cache_threshold amount of time
         without being answered by an agent, we can remove it from the cache'''
@@ -130,10 +123,4 @@ class QueueLogger(object):
         cls._trace_event(ev)
         queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME])
 
-        # if the patch to get the reason is not applied, the cache is cleaned
-        # manually
-        if 'Reason' in ev:
-            if ev['Reason'] == "0":
-                del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
-        else:
-            cls._clean_cache()
+        cls._clean_cache()
