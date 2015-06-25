@@ -23,13 +23,13 @@ class DispatchFilter(object):
         self._calls_to_user = {}
         self._linked_calls = []
 
-    def handle_agent_called(self, uniqueid, _channel_name):
+    def handle_agent_called(self, uniqueid):
         self._dispatch('dial', uniqueid)
 
-    def handle_agent_complete(self, uniqueid, _channel_name):
+    def handle_agent_complete(self, uniqueid):
         self._dispatch('unlink', uniqueid)
 
-    def handle_agent_connect(self, uniqueid, _channel_name):
+    def handle_agent_connect(self, uniqueid):
         self._dispatch('link', uniqueid)
 
     def handle_bridge(self, uniqueid, _channel_name):

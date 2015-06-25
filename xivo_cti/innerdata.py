@@ -159,12 +159,9 @@ class Safe(object):
         ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
-    def _set_channel_extra_vars_agent(self, event, channel_name, member_name):
+    def _set_channel_extra_vars_agent(self, event, member_name):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        channel = self.channels.get(channel_name)
-        if not channel:
-            return
         proto, agent_number = member_name.split('/', 1)
         try:
             if proto == 'Agent':
@@ -187,25 +184,22 @@ class Safe(object):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_called(self, event):
-        channel_name = event['DestChannel']
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_called(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_called(uniqueid)
 
     def handle_agent_linked(self, event):
-        channel_name = event['Channel']
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid)
 
     def handle_agent_unlinked(self, event):
-        channel_name = event['Channel']
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid)
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']

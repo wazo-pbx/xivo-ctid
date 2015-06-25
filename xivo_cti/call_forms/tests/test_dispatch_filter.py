@@ -71,17 +71,17 @@ class TestDispatchFilter(unittest.TestCase):
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_agent_called(self):
-        self._df.handle_agent_called(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_called(sentinel.uid)
 
         self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_agent_connect(self):
-        self._df.handle_agent_connect(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_connect(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_agent_complete(self):
-        self._df.handle_agent_complete(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_complete(sentinel.uid)
 
         self._dispatch.assert_called_once_with('unlink', sentinel.uid)
 
