@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
 from xivo_cti.services.bridge.bridge import Bridge
+
+logger = logging.getLogger(__name__)
 
 
 class BridgeManager(object):
@@ -29,7 +33,10 @@ class BridgeManager(object):
 
     # package private method
     def _remove_bridge(self, bridge_id):
-        del self._bridges[bridge_id]
+        try:
+            del self._bridges[bridge_id]
+        except (KeyError):
+            logger.warning('Failed to remove bridge:{}'.format(bridge_id))
 
     def get_bridge(self, bridge_id):
         return self._bridges.get(bridge_id)

@@ -43,7 +43,7 @@ class BridgeUpdater(object):
         bridge_id = event['BridgeUniqueid']
         channel_name = event['Channel']
         bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.channels.append(channel_name)
+        bridge.add_channel(channel_name)
 
         if bridge.basic_channels_connected():
             self._update_channels(bridge)
@@ -81,7 +81,7 @@ class BridgeUpdater(object):
         unique_id = event['Uniqueid']
 
         bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.channels.remove(channel_name)
+        bridge.remove_channel(channel_name)
 
         if number_channels < 2:
             self._call_storage.end_call(unique_id)
@@ -97,7 +97,7 @@ class BridgeUpdater(object):
         channel = event['Channel']
         bridge_id = event['ActionID']   # ActionID is previously set to BridgeUniqueid
         bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.channels.append(channel)
+        bridge.add_channel(channel)
 
     def on_ami_bridge_info_complete(self, event):
         bridge_id = event['BridgeUniqueid']

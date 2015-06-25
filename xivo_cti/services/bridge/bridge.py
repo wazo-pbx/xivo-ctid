@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Bridge(object):
 
@@ -22,6 +26,16 @@ class Bridge(object):
         self.bridge_id = bridge_id
         self.bridge_type = bridge_type
         self.channels = []
+
+    def add_channel(self, channel):
+        self.channels.append(channel)
+
+    def remove_channel(self, channel):
+        try:
+            self.channels.remove(channel)
+        except (ValueError):
+            logger.warning('Failed to remove channel:{} from bridge id:{}'.format(channel,
+                                                                                  self.bridge_id))
 
     def basic_channels_connected(self):
         if self.bridge_type == 'basic' and len(self.channels) == 2:
