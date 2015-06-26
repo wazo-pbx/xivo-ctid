@@ -91,6 +91,26 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
+    def people_favorites_result(favorite_result):
+        return {
+            'class': 'people_favorites_result',
+            'column_headers': favorite_result['column_headers'],
+            'column_types': favorite_result['column_types'],
+            'results': favorite_result['results'],
+        }
+
+    @staticmethod
+    def people_set_favorite_result(directory, contact, enabled):
+        return {
+            'class': 'people_set_favorite_result',
+            'data': {
+                'directory': directory,
+                'contact_id': contact,
+                'status': enabled,
+            }
+        }
+
+    @staticmethod
     def phone_hintstatus_update(phone_id, status):
         return {
             'class': 'getlist',

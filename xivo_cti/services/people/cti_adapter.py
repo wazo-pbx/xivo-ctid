@@ -48,6 +48,25 @@ class PeopleCTIAdapter(object):
         callback = partial(self._send_lookup_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.lookup, profile=profile, term=term, token=token)
 
+    def favorites(self, cti_connection, user_id):
+        logger.debug('Favorites called')
+        profile = dao.user.get_context(user_id)
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_favorites_result, user_id)
+        self._runner.run_with_cb(callback, self._client.directories.favorites, profile=profile, token=token)
+
+    def set_favorite(self, cti_connection, user_id, directory, contact, enabled):
+        logger.debug('Set Favorite called')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_set_favorite_result, user_id, directory, contact, enabled)
+
+        if enabled:
+            function = self._client.directories.new_favorite
+        else:
+            function = self._client.directories.remove_favorite
+
+        self._runner.run_with_cb(callback, function, directory=directory, contact=contact, token=token)
+
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_headers_result(headers)
@@ -56,4 +75,14 @@ class PeopleCTIAdapter(object):
     def _send_lookup_result(self, user_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_search_result(result)
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_favorites_result(self, user_id, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_favorites_result(result)
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_set_favorite_result(self, user_id, directory, contact, enabled, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_set_favorite_result(directory, contact, enabled)
         self._cti_server.send_to_cti_client(xuserid, message)
