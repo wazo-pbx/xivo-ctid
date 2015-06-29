@@ -17,6 +17,7 @@
 
 import unittest
 
+from mock import ANY
 from mock import Mock
 from mock import patch
 from mock import sentinel
@@ -160,12 +161,11 @@ class TestSafe(unittest.TestCase):
     def test_user_remove_auth_token(self, auth_client_factory, get_user):
         user_id = 12
         auth_client = auth_client_factory.return_value
-        get_user.return_value = Mock(username='my-login', password='my-password')
 
         self.safe.user_remove_auth_token(user_id, sentinel.token)
 
-        auth_client_factory.assert_called_once_with(username='my-login',
-                                                    password='my-password',
+        auth_client_factory.assert_called_once_with(username=ANY,
+                                                    password=ANY,
                                                     host='auth-host',
                                                     port=4242)
         auth_client.token.revoke.assert_called_once_with(sentinel.token)
