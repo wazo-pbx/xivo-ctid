@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,6 +73,7 @@ class CTI(interfaces.Interfaces):
         if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
             logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
         else:
+            self._remove_auth_token()
             try:
                 user_service_manager = context.get('user_service_manager')
                 user_id = self.user_id()
@@ -85,6 +86,12 @@ class CTI(interfaces.Interfaces):
                     raise TypeError('invalid DisconnectCause %s' % cause)
             except NotLoggedException:
                 logger.warning('Called disconnected with no user_id')
+
+    def _remove_auth_token(self):
+        token = self.connection_details.get('auth_token')
+        user_id = self.connection_details.get('userid')
+        if token and user_id:
+            self._ctiserver.safe.user_remove_auth_token(user_id, token)
 
     def manage_connection(self, msg):
         replies = []
