@@ -17,8 +17,11 @@
 
 import unittest
 
+from mock import ANY
 from mock import Mock
 from mock import patch
+from mock import sentinel
+
 from xivo_cti.channel import Channel
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, TWO_MONTHS
@@ -151,3 +154,18 @@ class TestSafe(unittest.TestCase):
                                                     port=4242)
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
         self.assertEquals(result, 'new-token')
+
+    @patch.dict('xivo_cti.innerdata.config', auth={'host': 'auth-host', 'port': 4242})
+    @patch('xivo_cti.innerdata.user_dao.get')
+    @patch('xivo_cti.innerdata.AuthClient')
+    def test_user_remove_auth_token(self, auth_client_factory, get_user):
+        user_id = 12
+        auth_client = auth_client_factory.return_value
+
+        self.safe.user_remove_auth_token(user_id, sentinel.token)
+
+        auth_client_factory.assert_called_once_with(username=ANY,
+                                                    password=ANY,
+                                                    host='auth-host',
+                                                    port=4242)
+        auth_client.token.revoke.assert_called_once_with(sentinel.token)
