@@ -216,7 +216,7 @@ class CTIServer(object):
         PeopleSearch.register_callback_params(people_adapter.search, ('cti_connection', 'user_id', 'pattern'))
         PeopleFavorites.register_callback_params(people_adapter.favorites, ('cti_connection', 'user_id'))
         PeopleSetFavorite.register_callback_params(people_adapter.set_favorite, ('cti_connection', 'user_id',
-                                                                                 'directory', 'contact', 'enabled'))
+                                                                                 'source', 'source_entry_id', 'enabled'))
         PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(

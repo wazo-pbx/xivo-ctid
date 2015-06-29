@@ -55,17 +55,17 @@ class PeopleCTIAdapter(object):
         callback = partial(self._send_favorites_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.favorites, profile=profile, token=token)
 
-    def set_favorite(self, cti_connection, user_id, directory, contact, enabled):
+    def set_favorite(self, cti_connection, user_id, source, source_entry_id, enabled):
         logger.debug('Set Favorite called')
         token = cti_connection.connection_details['auth_token']
-        callback = partial(self._send_set_favorite_result, user_id, directory, contact, enabled)
+        callback = partial(self._send_set_favorite_result, user_id, source, source_entry_id, enabled)
 
         if enabled:
             function = self._client.directories.new_favorite
         else:
             function = self._client.directories.remove_favorite
 
-        self._runner.run_with_cb(callback, function, directory=directory, contact=contact, token=token)
+        self._runner.run_with_cb(callback, function, directory=source, contact=source_entry_id, token=token)
 
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
@@ -82,7 +82,7 @@ class PeopleCTIAdapter(object):
         message = CTIMessageFormatter.people_favorites_result(result)
         self._cti_server.send_to_cti_client(xuserid, message)
 
-    def _send_set_favorite_result(self, user_id, directory, contact, enabled, result):
+    def _send_set_favorite_result(self, user_id, source, source_entry_id, enabled, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
-        message = CTIMessageFormatter.people_set_favorite_result(directory, contact, enabled)
+        message = CTIMessageFormatter.people_set_favorite_result(source, source_entry_id, enabled)
         self._cti_server.send_to_cti_client(xuserid, message)

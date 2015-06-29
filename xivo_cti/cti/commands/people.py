@@ -21,8 +21,8 @@ def _parse_search(msg, command):
 
 
 def _parse_set_favorite(msg, command):
-    command.directory = msg.get('directory')
-    command.contact = msg.get('contact_id')
+    command.source = msg.get('source')
+    command.source_entry_id = msg.get('source_entry_id')
     command.enabled = msg.get('status')
 
 

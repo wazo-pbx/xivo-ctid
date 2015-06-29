@@ -131,48 +131,48 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_set_favorite_with_new_favorite(self):
-        directory = "internal"
-        contact = "123456789"
+        source = "internal"
+        source_entry_id = "123456789"
         enabled = True
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, directory, contact, enabled)
+            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, source, source_entry_id, enabled)
 
-        self.client.directories.new_favorite.assert_called_once_with(directory=directory,
-                                                                     contact=contact,
+        self.client.directories.new_favorite.assert_called_once_with(directory=source,
+                                                                     contact=source_entry_id,
                                                                      token=s.token)
 
     @patch('xivo_cti.dao.user', Mock())
     def test_set_favorite_with_remove_favorite(self):
-        directory = "internal"
-        contact = "123456789"
+        source = "internal"
+        source_entry_id = "123456789"
         enabled = False
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, directory, contact, enabled)
+            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, source, source_entry_id, enabled)
 
-        self.client.directories.remove_favorite.assert_called_once_with(directory=directory,
-                                                                        contact=contact,
+        self.client.directories.remove_favorite.assert_called_once_with(directory=source,
+                                                                        contact=source_entry_id,
                                                                         token=s.token)
 
     def test_send_set_favorite_result(self):
         user_id = 12
-        directory = "internal"
-        contact = "123456789"
+        source = "internal"
+        source_entry_id = "123456789"
         enabled = True
         result = None
 
-        self.cti_adapter._send_set_favorite_result(user_id, directory, contact, enabled, result)
+        self.cti_adapter._send_set_favorite_result(user_id, source, source_entry_id, enabled, result)
 
         self.cti_server.send_to_cti_client.assert_called_once_with(
             'xivo/12',
             {
                 'class': 'people_set_favorite_result',
                 'data': {
-                    'directory': directory,
-                    'contact_id': contact,
+                    'source': source,
+                    'source_entry_id': source_entry_id,
                     'status': enabled,
                 }
             }
