@@ -51,8 +51,10 @@ from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
+from xivo_cti.cti.commands.people import PeopleFavorites
 from xivo_cti.cti.commands.people import PeopleHeaders
 from xivo_cti.cti.commands.people import PeopleSearch
+from xivo_cti.cti.commands.people import PeopleSetFavorite
 from xivo_cti.cti.commands.queue_add import QueueAdd
 from xivo_cti.cti.commands.queue_pause import QueuePause
 from xivo_cti.cti.commands.queue_remove import QueueRemove
@@ -212,6 +214,9 @@ class CTIServer(object):
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
         PeopleSearch.register_callback_params(people_adapter.search, ('cti_connection', 'user_id', 'pattern'))
+        PeopleFavorites.register_callback_params(people_adapter.favorites, ('cti_connection', 'user_id'))
+        PeopleSetFavorite.register_callback_params(people_adapter.set_favorite, ('cti_connection', 'user_id',
+                                                                                 'source', 'source_entry_id', 'enabled'))
         PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
