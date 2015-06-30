@@ -58,7 +58,7 @@ class PeopleCTIAdapter(object):
     def set_favorite(self, cti_connection, user_id, source, source_entry_id, enabled):
         logger.debug('Set Favorite called')
         token = cti_connection.connection_details['auth_token']
-        callback = partial(self._send_set_favorite_result, user_id, source, source_entry_id, enabled)
+        callback = partial(self._send_favorite_update, user_id, source, source_entry_id, enabled)
 
         if enabled:
             function = self._client.directories.new_favorite
@@ -82,7 +82,7 @@ class PeopleCTIAdapter(object):
         message = CTIMessageFormatter.people_favorites_result(result)
         self._cti_server.send_to_cti_client(xuserid, message)
 
-    def _send_set_favorite_result(self, user_id, source, source_entry_id, enabled, result):
+    def _send_favorite_update(self, user_id, source, source_entry_id, enabled, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
-        message = CTIMessageFormatter.people_set_favorite_result(source, source_entry_id, enabled)
+        message = CTIMessageFormatter.people_favorite_update(source, source_entry_id, enabled)
         self._cti_server.send_to_cti_client(xuserid, message)

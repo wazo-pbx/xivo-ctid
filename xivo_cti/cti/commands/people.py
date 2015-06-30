@@ -23,7 +23,7 @@ def _parse_search(msg, command):
 def _parse_set_favorite(msg, command):
     command.source = msg.get('source')
     command.source_entry_id = msg.get('source_entry_id')
-    command.enabled = msg.get('status')
+    command.enabled = msg.get('favorite')
 
 
 PeopleSearch = CTICommandClass('people_search', match_fun=None, parse_fun=_parse_search)

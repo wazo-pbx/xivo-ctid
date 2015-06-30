@@ -211,23 +211,23 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
-    def test_people_set_favorite_result(self):
+    def test_people_favorite_update(self):
         source = "internal"
         source_entry_id = "123456789"
         enabled = True
         set_favorite_result = {
-            'class': 'people_set_favorite_result',
+            'class': 'people_favorite_update',
             'data': {
                 'source': source,
                 'source_entry_id': source_entry_id,
-                'status': enabled,
+                'favorite': enabled,
             }
         }
 
-        result = CTIMessageFormatter.people_set_favorite_result(source, source_entry_id, enabled)
+        result = CTIMessageFormatter.people_favorite_update(source, source_entry_id, enabled)
 
         expected = dict(set_favorite_result)
-        expected.update({'class': 'people_set_favorite_result'})
+        expected.update({'class': 'people_favorite_update'})
 
         assert_that(result, equal_to(expected))
 

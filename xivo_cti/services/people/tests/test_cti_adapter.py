@@ -157,23 +157,23 @@ class TestCTIAdapter(TestCase):
                                                                         contact=source_entry_id,
                                                                         token=s.token)
 
-    def test_send_set_favorite_result(self):
+    def test_send_favorite_update(self):
         user_id = 12
         source = "internal"
         source_entry_id = "123456789"
         enabled = True
         result = None
 
-        self.cti_adapter._send_set_favorite_result(user_id, source, source_entry_id, enabled, result)
+        self.cti_adapter._send_favorite_update(user_id, source, source_entry_id, enabled, result)
 
         self.cti_server.send_to_cti_client.assert_called_once_with(
             'xivo/12',
             {
-                'class': 'people_set_favorite_result',
+                'class': 'people_favorite_update',
                 'data': {
                     'source': source,
                     'source_entry_id': source_entry_id,
-                    'status': enabled,
+                    'favorite': enabled,
                 }
             }
         )

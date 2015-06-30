@@ -100,13 +100,13 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
-    def people_set_favorite_result(source, source_entry_id, enabled):
+    def people_favorite_update(source, source_entry_id, enabled):
         return {
-            'class': 'people_set_favorite_result',
+            'class': 'people_favorite_update',
             'data': {
                 'source': source,
                 'source_entry_id': source_entry_id,
-                'status': enabled,
+                'favorite': enabled,
             }
         }
 
