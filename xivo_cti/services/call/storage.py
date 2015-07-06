@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,36 +37,6 @@ class CallStorage(object):
         result = [call for call in self._calls.itervalues()
                   if call.source.extension == extension or call.destination.extension == extension]
         return result
-
-    def merge_local_channels(self, local_channel):
-        non_unique_part = local_channel.split(';', 1)[0]
-        try:
-            source_uid = self._find_call_with_destination_starting_with(non_unique_part)
-            destination_uid = self._find_call_with_source_starting_with(non_unique_part)
-        except LookupError:
-            return
-
-        self._calls[destination_uid].source = self._calls[source_uid].source
-        del self._calls[source_uid]
-
-    def _find_call_with_destination_starting_with(self, term):
-        uid, call = self._find_call_matching(
-            lambda uid, call: call.destination._channel.startswith(term))
-
-        return uid
-
-    def _find_call_with_source_starting_with(self, term):
-        uid, call = self._find_call_matching(
-            lambda uid, call: call.source._channel.startswith(term))
-
-        return uid
-
-    def _find_call_matching(self, predicate):
-        for uid, call in self._calls.iteritems():
-            if predicate(uid, call):
-                return uid, call
-
-        raise LookupError('Could not match a call to the given predicate')
 
     def update_endpoint_status(self, extension, status):
         if self._need_to_update(extension, status):

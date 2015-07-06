@@ -438,29 +438,6 @@ class Safe(object):
         except LookupError:
             logger.exception('find termination according to channel %s', channel)
 
-    def masquerade(self, oldchannel, newchannel):
-        try:
-            oldrelations = self.channels[oldchannel].relations
-            newrelations = self.channels[newchannel].relations
-
-            oldchannelz = oldchannel + '<ZOMBIE>'
-            self.channels[oldchannelz] = self.channels.pop(newchannel)
-            self.channels[oldchannelz].channel = oldchannelz
-            self.channels[newchannel] = self.channels.pop(oldchannel)
-            self.channels[newchannel].channel = newchannel
-
-            for r in oldrelations:
-                if r.startswith('phone:'):
-                    p = r[6:]
-                    self.xod_status['phones'][p]['channels'].remove(oldchannel)
-                    self.channels[newchannel].delrelation(r)
-            self.channels[newchannel].relations = newrelations
-            newfirstchannel = self.channels[newchannel].peerchannel
-            if newfirstchannel:
-                self.setpeerchannel(newfirstchannel, newchannel)
-        except KeyError:
-            logger.warning('Trying to do as masquerade on an unexistant channel')
-
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel

@@ -54,16 +54,6 @@ class CallReceiver(object):
         else:
             self._call_storage.update_endpoint_status(extension, status)
 
-    def handle_bridge(self, event):
-        uniqueid_1 = event.get('Uniqueid1')
-
-        if event['Bridgestate'] == 'Link':
-            c1 = event['Channel1']
-            c2 = event['Channel2']
-            self._add_channel(c2, c1, uniqueid_1, event['Uniqueid2'])
-        elif event['Bridgestate'] == 'Unlink':
-            self._call_storage.end_call(uniqueid_1)
-
     def handle_dial_begin(self, event):
         channel_source = event.get('Channel')
         if channel_source is None:
@@ -90,9 +80,6 @@ class CallReceiver(object):
             _Channel(source_exten, channel),
             _Channel(Extension('', '', True), ''),
         )
-
-    def handle_masquerade(self, event):
-        self._call_storage.merge_local_channels(event['Original'])
 
     def _add_channel(self, channel_source, channel_destination, uniqueid, destination_uniqueid):
         try:

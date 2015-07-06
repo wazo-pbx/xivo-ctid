@@ -75,43 +75,6 @@ class CurrentCallManager(object):
                 return True
         return False
 
-    def masquerade(self, old, new):
-        old_2 = self._local_channel_peer(old)
-        line_from_old = identity_from_channel(old)
-        if line_from_old not in self._calls_per_line:
-            logger.debug('No masquerade done for channel %s %s', old, new)
-            return
-        new_2 = self._calls_per_line[line_from_old][0][PEER_CHANNEL]
-
-        self._execute_masquerade(old, new)
-        self._execute_masquerade(old_2, new_2)
-
-        line_from_new = identity_from_channel(new)
-        self._current_call_notifier.publish_current_call(line_from_new)
-
-        line_from_new_2 = identity_from_channel(new_2)
-        self._current_call_notifier.publish_current_call(line_from_new_2)
-
-    def _execute_masquerade(self, old, new):
-        self._remove_calls_with_line_channel(old)
-        self._substitute_calls_channel(old, new)
-
-    def _substitute_calls_channel(self, old, new):
-        for line, position in self._find_line_and_position(old, PEER_CHANNEL):
-            self._calls_per_line[line][position][PEER_CHANNEL] = new
-
-    def _remove_calls_with_line_channel(self, channel):
-        to_remove = []
-
-        for line, position in self._find_line_and_position(channel, LINE_CHANNEL):
-            self._calls_per_line[line].pop(position)
-
-            if not self._calls_per_line[line]:
-                to_remove.append(line)
-
-        for line in to_remove:
-            self._calls_per_line.pop(line)
-
     def _find_line_and_position(self, channel, field=PEER_CHANNEL):
         for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):

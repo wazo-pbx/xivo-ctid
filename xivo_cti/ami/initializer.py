@@ -31,12 +31,16 @@ class AMIInitializer(object):
                                      [],
                                      ['CoreShowChannels'])
     CORE_SHOW_CHANNEL_COMPLETE = InitializingEntry('CoreShowChannelsComplete',
-                                                   ['RegistrationsComplete'],
+                                                   ['BridgeListComplete'],
                                                    ['CoreShowChannelsComplete'],
-                                                   ['SIPshowregistry', 'IAXregistry'])
+                                                   ['BridgeList'])
+    BRIDGE_LIST_COMPLETE = InitializingEntry('BridgeListComplete',
+                                             ['RegistrationsComplete'],
+                                             ['BridgeListComplete'],
+                                             ['SIPshowregistry', 'IAXregistry'])
     REGISTRATION_COMPLETE = InitializingEntry('RegistrationsComplete',
                                               ['DAHDIShowChannelsComplete', 'QueueSummaryComplete'],
-                                              ['RegistrationComplete', 'DAHDIShowChannelsComplete'],
+                                              ['RegistrationsComplete', 'DAHDIShowChannelsComplete'],
                                               ['DAHDIShowChannels', 'QueueSummary'])
     QUEUE_SUMMARY_COMPLETE = InitializingEntry('QueueSummaryComplete',
                                                ['QueueStatusComplete'],
@@ -60,6 +64,7 @@ class AMIInitializer(object):
 
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
                      CORE_SHOW_CHANNEL_COMPLETE.trigger: CORE_SHOW_CHANNEL_COMPLETE,
+                     BRIDGE_LIST_COMPLETE.trigger: BRIDGE_LIST_COMPLETE,
                      REGISTRATION_COMPLETE.trigger: REGISTRATION_COMPLETE,
                      QUEUE_SUMMARY_COMPLETE.trigger: QUEUE_SUMMARY_COMPLETE,
                      QUEUE_STATUS_COMPLETE.trigger: QUEUE_STATUS_COMPLETE,

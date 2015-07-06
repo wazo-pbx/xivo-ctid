@@ -172,39 +172,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
 
-    def test_masquerade_with_the_same_local_channel(self):
-        line_1 = u'local/6000@pomme;1'
-        line_2 = u'local/6000@pomme;2'
-        local_line_1 = u'local/6000@pomme;1'
-        local_line_2 = u'local/6000@pomme;2'
-
-        line_1_channel = u'Local/6000@pomme-00000023;1'
-        line_2_channel = u'Local/6000@pomme-00000022;1'
-        local_line_1_channel = u'Local/6000@pomme-00000023;1'
-
-        self.manager._calls_per_line = {
-            local_line_1: [{BRIDGE_TIME: 1358197027.3219039,
-                            PEER_CHANNEL: line_2_channel,
-                            LINE_CHANNEL: local_line_1_channel,
-                            ON_HOLD: False}],
-            local_line_2: [{BRIDGE_TIME: 1358197027.242239,
-                            PEER_CHANNEL: line_1_channel,
-                            LINE_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
-                            ON_HOLD: False}],
-            line_1: [{BRIDGE_TIME: 1358197027.2422481,
-                      PEER_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
-                      LINE_CHANNEL: line_1_channel,
-                      ON_HOLD: False}],
-            line_2: [{BRIDGE_TIME: 1358197027.3218949,
-                      PEER_CHANNEL: local_line_1_channel,
-                      LINE_CHANNEL: line_2_channel,
-                      ON_HOLD: False}]}
-
-        self.manager.masquerade(local_line_1_channel, local_line_1_channel)
-
-        # It is expected not to freeze here
-        # TODO find something better to expect from this kind of scenario
-
     @patch('time.time')
     def test_bridge_channels_transfer_answered_not_tracked(self, mock_time):
         bridge_time = time.time()
@@ -227,55 +194,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         call_count = self.notifier.attended_transfer_answered.call_count
         self.assertEqual(call_count, 0)
-
-    def test_masquerade_agent_call(self):
-        line_1 = u'sip/6s7foq'
-        line_2 = u'sip/pcm_dev'
-        local_line_1 = u'local/id-292@agentcallback;1'
-        local_line_2 = u'local/id-292@agentcallback;2'
-
-        line_1_channel = u'SIP/6s7foq-00000023'
-        line_2_channel = u'SIP/pcm_dev-00000022'
-        local_line_1_channel = u'Local/id-292@agentcallback-00000013;1'
-
-        self.manager._calls_per_line = {
-            local_line_1: [{BRIDGE_TIME: 1358197027.3219039,
-                            PEER_CHANNEL: line_2_channel,
-                            LINE_CHANNEL: local_line_1_channel,
-                            ON_HOLD: False}],
-            local_line_2: [{BRIDGE_TIME: 1358197027.242239,
-                            PEER_CHANNEL: line_1_channel,
-                            LINE_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
-                            ON_HOLD: False}],
-            line_1: [{BRIDGE_TIME: 1358197027.2422481,
-                      PEER_CHANNEL: u'Local/id-292@agentcallback-00000013;2',
-                      LINE_CHANNEL: line_1_channel,
-                      ON_HOLD: False}],
-            line_2: [{BRIDGE_TIME: 1358197027.3218949,
-                      PEER_CHANNEL: local_line_1_channel,
-                      LINE_CHANNEL: line_2_channel,
-                      ON_HOLD: False}]}
-
-        self.manager.masquerade(local_line_1_channel, line_1_channel)
-
-        expected = {
-            line_1: [{BRIDGE_TIME: 1358197027.2422481,
-                      PEER_CHANNEL: line_2_channel,
-                      LINE_CHANNEL: line_1_channel,
-                      ON_HOLD: False}],
-            line_2: [{BRIDGE_TIME: 1358197027.3218949,
-                      PEER_CHANNEL: line_1_channel,
-                      LINE_CHANNEL: u'SIP/pcm_dev-00000022',
-                      ON_HOLD: False}]
-        }
-
-        self.assertEqual(self.manager._calls_per_line, expected)
-
-    def test_masquerade_bridged_channels(self):
-        bridged_line_1_channel = u'bridge/SIP/6s7foq-00000023'
-        line_1_channel = u'SIP/6s7foq-00000023'
-
-        self.manager.masquerade(bridged_line_1_channel, line_1_channel)
 
     def test_bridge_channels_on_hold(self):
         bridge_time = 123456.44
@@ -706,7 +624,6 @@ class TestCurrentCallManager(_BaseTestCase):
         unique_id = '1234567.44'
         user_id = 5
         user_line = 'sccp/12345'
-        channel_to_intercept = 'SIP/acbdf-348734'
 
         dao.channel = Mock(channel_dao.ChannelDAO)
         dao.channel.get_channel_from_unique_id.side_effect = LookupError()
