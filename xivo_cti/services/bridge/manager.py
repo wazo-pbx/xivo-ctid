@@ -35,39 +35,20 @@ class BridgeManager(object):
 
     # package private method
     def _on_bridge_destroy(self, bridge_id):
-        try:
-            del self._bridges[bridge_id]
-        except KeyError:
-            logger.warning('on bridge destroy: no bridge %s', bridge_id)
+        del self._bridges[bridge_id]
 
     # package private method
     def _on_bridge_enter(self, bridge_id, channel_name):
-        try:
-            bridge = self._bridges[bridge_id]
-        except KeyError:
-            logger.error('on bridge enter: no bridge %s', bridge_id)
-            return
-        try:
-            channel = self._innerdata.channels[channel_name]
-        except KeyError:
-            logger.error('on bridge enter: no channel %s', channel_name)
-            return
+        bridge = self._bridges[bridge_id]
+        channel = self._innerdata.channels[channel_name]
 
         bridge._add_channel(channel)
         self._bridge_notifier._on_bridge_enter(bridge, channel, bridge.linked())
 
     # package private method
     def _on_bridge_leave(self, bridge_id, channel_name):
-        try:
-            bridge = self._bridges[bridge_id]
-        except KeyError:
-            logger.error('on bridge leave: no bridge %s', bridge_id)
-            return
-        try:
-            channel = self._innerdata.channels[channel_name]
-        except KeyError:
-            logger.error('on bridge leave: no channel %s', channel_name)
-            return
+        bridge = self._bridges[bridge_id]
+        channel = self._innerdata.channels[channel_name]
 
         was_linked = bridge.linked()
         bridge._remove_channel(channel)
@@ -80,16 +61,8 @@ class BridgeManager(object):
 
     # package private method
     def _add_channel_to_bridge(self, bridge_id, channel_name):
-        try:
-            bridge = self._bridges[bridge_id]
-        except KeyError:
-            logger.error('add channel to bridge: no bridge %s', bridge_id)
-            return
-        try:
-            channel = self._innerdata.channels[channel_name]
-        except KeyError:
-            logger.error('add channel to bridge: no channel %s', channel_name)
-            return
+        bridge = self._bridges[bridge_id]
+        channel = self._innerdata.channels[channel_name]
 
         bridge._add_channel(channel)
 
