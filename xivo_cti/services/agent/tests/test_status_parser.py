@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ class TestAgentStatusParser(unittest.TestCase):
     def test_parse_ami_paused_partially(self):
         agent_id = 12
         ami_event = {'MemberName': 'Agent/1234',
-                     'Event': 'QueueMemberPaused',
+                     'Event': 'QueueMemberPause',
                      'Queue': 'q01',
                      'Paused': '1'}
         dao.agent.get_id_from_interface.return_value = agent_id
@@ -73,7 +73,7 @@ class TestAgentStatusParser(unittest.TestCase):
     def test_parse_ami_paused_completely(self):
         agent_id = 12
         ami_event = {'MemberName': 'Agent/1234',
-                     'Event': 'QueueMemberPaused',
+                     'Event': 'QueueMemberPause',
                      'Queue': 'q01',
                      'Paused': '1'}
         dao.agent.get_id_from_interface.return_value = agent_id
@@ -85,7 +85,7 @@ class TestAgentStatusParser(unittest.TestCase):
 
     def test_parse_ami_paused_not_an_agent(self):
         ami_event = {'MemberName': 'SIP/abcdef',
-                     'Event': 'QueueMemberPaused',
+                     'Event': 'QueueMemberPause',
                      'Queue': 'q01',
                      'Paused': '1'}
         dao.agent.get_id_from_interface.side_effect = ValueError()
@@ -98,7 +98,7 @@ class TestAgentStatusParser(unittest.TestCase):
     def test_parse_ami_unpaused(self):
         agent_id = 12
         ami_event = {'MemberName': 'Agent/1234',
-                     'Event': 'QueueMemberPaused',
+                     'Event': 'QueueMemberPause',
                      'Queue': 'q01',
                      'Paused': '0'}
         dao.agent.get_id_from_interface.return_value = agent_id

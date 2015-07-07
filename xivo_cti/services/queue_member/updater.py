@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -136,4 +136,4 @@ class QueueMemberUpdater(object):
         ami_handler.register_callback('QueueMember', self.on_ami_queue_member)
         ami_handler.register_callback('QueueMemberStatus', self.on_ami_queue_member_status)
         ami_handler.register_callback('QueueMemberAdded', self.on_ami_queue_member_added)
-        ami_handler.register_callback('QueueMemberPaused', self.on_ami_queue_member_paused)
+        ami_handler.register_callback('QueueMemberPause', self.on_ami_queue_member_paused)
