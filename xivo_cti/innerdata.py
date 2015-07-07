@@ -443,6 +443,19 @@ class Safe(object):
         chanprops.peerchannel = peerchannel
         chanprops.properties['talkingto_id'] = peerchannel
 
+    def handle_bridge_link(self, bridge_enter_event):
+        channel_1, channel_2 = bridge_enter_event.bridge.channels
+        self._update_connected_channel(channel_1, channel_2)
+        self._update_connected_channel(channel_2, channel_1)
+
+    def _update_connected_channel(self, channel, peer_channel):
+        channel.properties.update({
+            'commstatus': 'linked',
+            'timestamp': time.time(),
+        })
+        self.setpeerchannel(channel.channel, peer_channel.channel)
+        self.update(channel.channel)
+
     # IPBX side
 
     def ast_channel_to_termination(self, channel):

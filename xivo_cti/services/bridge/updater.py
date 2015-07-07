@@ -15,76 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import time
-
 
 class BridgeUpdater(object):
 
-    def __init__(self, ami_class, bridge_manager, call_form_dispatch_filter,
-                 call_receiver, call_storage, current_call_manager, innerdata):
+    def __init__(self, ami_class, bridge_manager):
         self._ami_class = ami_class
         self._bridge_manager = bridge_manager
-        self._call_form_dispatch_filter = call_form_dispatch_filter
-        self._call_receiver = call_receiver
-        self._call_storage = call_storage
-        self._current_call_manager = current_call_manager
-        self._innerdata = innerdata
 
     def on_ami_bridge_create(self, event):
         bridge_id = event['BridgeUniqueid']
         bridge_type = event['BridgeType']
-        self._bridge_manager._add_bridge(bridge_id, bridge_type)
+        self._bridge_manager._on_bridge_create(bridge_id, bridge_type)
 
     def on_ami_bridge_destroy(self, event):
         bridge_id = event['BridgeUniqueid']
-        self._bridge_manager._remove_bridge(bridge_id)
+        self._bridge_manager._on_bridge_destroy(bridge_id)
 
     def on_ami_bridge_enter(self, event):
         bridge_id = event['BridgeUniqueid']
         channel_name = event['Channel']
-        bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.add_channel(channel_name)
-
-        if bridge.basic_channels_connected():
-            self._update_channels(bridge)
-            self._link_call_receiver(bridge)
-
-    def _update_channels(self, bridge):
-        for channel_name in bridge.channels:
-            channel = self._innerdata.channels.get(channel_name)
-            if channel.properties['commstatus'] == 'calling':
-                self._call_form_dispatch_filter.handle_bridge(channel.unique_id, channel_name)
-
-            channel.properties['commstatus'] = 'linked'
-            channel.properties['timestamp'] = time.time()
-            self._innerdata.update(channel.channel)
-
-        self._update_peer_channels(bridge)
-
-    def _link_call_receiver(self, bridge):
-        channel_name_0 = bridge.channels[0]
-        channel_name_1 = bridge.channels[1]
-
-        channel_0 = self._innerdata.channels.get(channel_name_0)
-        channel_1 = self._innerdata.channels.get(channel_name_1)
-
-        self._call_receiver._add_channel(channel_name_0, channel_name_1,
-                                         channel_0.unique_id, channel_1.unique_id)
-
-        self._current_call_manager.bridge_channels(channel_name_0,
-                                                   channel_name_1)
+        self._bridge_manager._on_bridge_enter(bridge_id, channel_name)
 
     def on_ami_bridge_leave(self, event):
         bridge_id = event['BridgeUniqueid']
-        number_channels = event['BridgeNumChannels']
         channel_name = event['Channel']
-        unique_id = event['Uniqueid']
-
-        bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.remove_channel(channel_name)
-
-        if number_channels < 2:
-            self._call_storage.end_call(unique_id)
+        self._bridge_manager._on_bridge_leave(bridge_id, channel_name)
 
     def on_ami_bridge_list_item(self, event):
         bridge_id = event['BridgeUniqueid']
@@ -96,20 +51,11 @@ class BridgeUpdater(object):
     def on_ami_bridge_info_channel(self, event):
         channel = event['Channel']
         bridge_id = event['ActionID']   # ActionID is previously set to BridgeUniqueid
-        bridge = self._bridge_manager.get_bridge(bridge_id)
-        bridge.add_channel(channel)
+        self._bridge_manager._add_channel_to_bridge(bridge_id, channel)
 
     def on_ami_bridge_info_complete(self, event):
         bridge_id = event['BridgeUniqueid']
-        bridge = self._bridge_manager.get_bridge(bridge_id)
-        if bridge.basic_channels_connected():
-            self._update_peer_channels(bridge)
-
-    def _update_peer_channels(self, bridge):
-        channel_name_0 = bridge.channels[0]
-        channel_name_1 = bridge.channels[1]
-        self._innerdata.setpeerchannel(channel_name_0, channel_name_1)
-        self._innerdata.setpeerchannel(channel_name_1, channel_name_0)
+        self._bridge_manager._finish_bridge_initialization(bridge_id)
 
     def register_ami_events(self, ami_handler):
         ami_handler.register_callback('BridgeCreate', self.on_ami_bridge_create)

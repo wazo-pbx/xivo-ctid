@@ -24,19 +24,79 @@ logger = logging.getLogger(__name__)
 
 class BridgeManager(object):
 
-    def __init__(self):
+    def __init__(self, bridge_notifier, innerdata):
+        self._bridge_notifier = bridge_notifier
+        self._innerdata = innerdata
         self._bridges = {}
+
+    # package private method
+    def _on_bridge_create(self, bridge_id, bridge_type):
+        self._add_bridge(bridge_id, bridge_type)
+
+    # package private method
+    def _on_bridge_destroy(self, bridge_id):
+        try:
+            del self._bridges[bridge_id]
+        except KeyError:
+            logger.warning('on bridge destroy: no bridge %s', bridge_id)
+
+    # package private method
+    def _on_bridge_enter(self, bridge_id, channel_name):
+        try:
+            bridge = self._bridges[bridge_id]
+        except KeyError:
+            logger.error('on bridge enter: no bridge %s', bridge_id)
+            return
+        try:
+            channel = self._innerdata.channels[channel_name]
+        except KeyError:
+            logger.error('on bridge enter: no channel %s', channel_name)
+            return
+
+        bridge._add_channel(channel)
+        self._bridge_notifier._on_bridge_enter(bridge, channel, bridge.linked())
+
+    # package private method
+    def _on_bridge_leave(self, bridge_id, channel_name):
+        try:
+            bridge = self._bridges[bridge_id]
+        except KeyError:
+            logger.error('on bridge leave: no bridge %s', bridge_id)
+            return
+        try:
+            channel = self._innerdata.channels[channel_name]
+        except KeyError:
+            logger.error('on bridge leave: no channel %s', channel_name)
+            return
+
+        was_linked = bridge.linked()
+        bridge._remove_channel(channel)
+        unlinked = was_linked and not bridge.linked()
+        self._bridge_notifier._on_bridge_leave(bridge, channel, unlinked)
 
     # package private method
     def _add_bridge(self, bridge_id, bridge_type):
         self._bridges[bridge_id] = Bridge(bridge_id, bridge_type)
 
     # package private method
-    def _remove_bridge(self, bridge_id):
+    def _add_channel_to_bridge(self, bridge_id, channel_name):
         try:
-            del self._bridges[bridge_id]
+            bridge = self._bridges[bridge_id]
         except KeyError:
-            logger.warning('Failed to remove bridge %s: no such bridge', bridge_id)
+            logger.error('add channel to bridge: no bridge %s', bridge_id)
+            return
+        try:
+            channel = self._innerdata.channels[channel_name]
+        except KeyError:
+            logger.error('add channel to bridge: no channel %s', channel_name)
+            return
 
-    def get_bridge(self, bridge_id):
-        return self._bridges.get(bridge_id)
+        bridge._add_channel(channel)
+
+    # package private method
+    def _finish_bridge_initialization(self, bridge_id):
+        bridge = self._bridges[bridge_id]
+        if bridge.linked():
+            channel_1, channel_2 = bridge.channels
+            self._innerdata.setpeerchannel(channel_1.channel, channel_2.channel)
+            self._innerdata.setpeerchannel(channel_2.channel, channel_1.channel)

@@ -67,7 +67,7 @@ class TestBridgeUpdater(unittest.TestCase):
         channel_name = ami_event['Channel']
 
         bridge = Mock(Bridge)
-        bridge.basic_channels_connected.return_value = False
+        bridge.linked.return_value = False
         self.bridge_manager.get_bridge.return_value = bridge
 
         self.bridge_updater.on_ami_bridge_enter(ami_event)
@@ -83,7 +83,7 @@ class TestBridgeUpdater(unittest.TestCase):
 
         bridge = Mock(Bridge)
         bridge.channels = [channel_name_1, channel_name_2]
-        bridge.basic_channels_connected.return_value = True
+        bridge.linked.return_value = True
         self.bridge_manager.get_bridge.return_value = bridge
 
         channel_1 = Mock(Channel)
@@ -114,7 +114,7 @@ class TestBridgeUpdater(unittest.TestCase):
                      'Channel': 'SIP/n5ksoc-00000001'}
 
         bridge = Mock(Bridge)
-        bridge.basic_channels_connected.return_value = False
+        bridge.linked.return_value = False
         self.bridge_manager.get_bridge.return_value = bridge
 
         self.bridge_updater.on_ami_bridge_enter(ami_event)
@@ -190,7 +190,7 @@ class TestBridgeUpdater(unittest.TestCase):
 
         bridge = Mock(Bridge)
         bridge.channels = [channel_name_1, channel_name_2]
-        bridge.basic_channels_connected.return_value = True
+        bridge.linked.return_value = True
         self.bridge_manager.get_bridge.return_value = bridge
 
         self.bridge_updater.on_ami_bridge_info_complete(ami_event)

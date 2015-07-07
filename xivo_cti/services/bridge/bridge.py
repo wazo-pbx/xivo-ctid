@@ -27,15 +27,17 @@ class Bridge(object):
         self.bridge_type = bridge_type
         self.channels = []
 
-    def add_channel(self, channel_name):
-        self.channels.append(channel_name)
+    # package private method
+    def _add_channel(self, channel):
+        self.channels.append(channel)
 
-    def remove_channel(self, channel_name):
+    # package private method
+    def _remove_channel(self, channel):
         try:
-            self.channels.remove(channel_name)
+            self.channels.remove(channel)
         except ValueError:
-            logger.warning('Failed to remove channel %s from bridge %s: no such channel',
-                           channel_name, self.bridge_id)
+            logger.error('failed to remove channel %s from bridge %s: no such channel',
+                         channel.channel, self.bridge_id)
 
-    def basic_channels_connected(self):
+    def linked(self):
         return self.bridge_type == 'basic' and len(self.channels) == 2

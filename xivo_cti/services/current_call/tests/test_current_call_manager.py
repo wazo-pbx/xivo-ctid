@@ -80,7 +80,7 @@ class TestCurrentCallManager(_BaseTestCase):
         bridge_time = time.time()
         mock_time.return_value = bridge_time
 
-        self.manager.bridge_channels(self.channel_1, self.channel_2)
+        self.manager._bridge_channels(self.channel_1, self.channel_2)
 
         expected = {
             self.line_1: [
@@ -120,7 +120,7 @@ class TestCurrentCallManager(_BaseTestCase):
         }
         self.manager._calls_per_line = calls_per_line
 
-        self.manager.bridge_channels(transferer_channel, transferee_channel)
+        self.manager._bridge_channels(transferer_channel, transferee_channel)
 
         self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
 
@@ -143,7 +143,7 @@ class TestCurrentCallManager(_BaseTestCase):
         }
         self.manager._calls_per_line = calls_per_line
 
-        self.manager.bridge_channels(transferee_channel, transferer_channel)
+        self.manager._bridge_channels(transferee_channel, transferer_channel)
 
         self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
 
@@ -168,7 +168,7 @@ class TestCurrentCallManager(_BaseTestCase):
         }
         self.manager._calls_per_line = calls_per_line
 
-        self.manager.bridge_channels(transferer_channel, transferee_channel)
+        self.manager._bridge_channels(transferer_channel, transferee_channel)
 
         self.notifier.attended_transfer_answered.assert_called_once_with(self.line_1)
 
@@ -190,7 +190,7 @@ class TestCurrentCallManager(_BaseTestCase):
         }
         self.manager._calls_per_line = calls_per_line
 
-        self.manager.bridge_channels(transferer_channel, transferee_channel)
+        self.manager._bridge_channels(transferer_channel, transferee_channel)
 
         call_count = self.notifier.attended_transfer_answered.call_count
         self.assertEqual(call_count, 0)
@@ -211,7 +211,7 @@ class TestCurrentCallManager(_BaseTestCase):
             ],
         }
 
-        self.manager.bridge_channels(self.channel_1, self.channel_2)
+        self.manager._bridge_channels(self.channel_1, self.channel_2)
 
         expected = {
             self.line_1: [

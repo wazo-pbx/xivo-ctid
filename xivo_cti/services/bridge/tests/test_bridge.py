@@ -48,9 +48,9 @@ class BridgeTest(unittest.TestCase):
     def test_basic_channels_connected_return_true_with_two_basic_channels(self):
         self.bridge.channels = ['SIP/n5ksoc-00000001', 'SIP/n5ksoc-00000002']
 
-        assert_that(self.bridge.basic_channels_connected())
+        assert_that(self.bridge.linked())
 
     def test_basic_channels_connected_return_false_when_one_basic_channels(self):
         self.bridge.channels = ['SIP/n5ksoc-00000001']
 
-        assert_that(self.bridge.basic_channels_connected(), equal_to(False))
+        assert_that(self.bridge.linked(), equal_to(False))
