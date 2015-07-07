@@ -346,7 +346,7 @@ class CTIServer(object):
 
         self._queue_member_updater.register_ami_events(callback_handler)
 
-        callback_handler.register_callback('QueueMemberPaused', agent_status_parser.parse_ami_paused)
+        callback_handler.register_callback('QueueMemberPause', agent_status_parser.parse_ami_paused)
         callback_handler.register_callback('AgentConnect', agent_status_parser.parse_ami_acd_call_start)
         callback_handler.register_callback('AgentComplete', agent_status_parser.parse_ami_acd_call_end)
         callback_handler.register_userevent_callback('AgentLogin', agent_status_parser.parse_ami_login)
