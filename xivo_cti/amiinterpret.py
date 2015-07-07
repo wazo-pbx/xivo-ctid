@@ -21,6 +21,7 @@ import time
 
 from xivo_cti import ALPHANUMS
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
+from xivo_cti.channel import ChannelRole
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
@@ -88,11 +89,13 @@ class AMI_1_8(object):
                     _set('destid', str(phone['iduserfeatures']))
             except LookupError:
                 logger.exception('Could not set user id for dial')
+            self.innerdata.channels[channel].role = ChannelRole.caller
             self.innerdata.channels[channel].properties['commstatus'] = 'calling'
             self.innerdata.channels[channel].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(channel, destination)
             self.innerdata.update(channel)
         if destination in self.innerdata.channels:
+            self.innerdata.channels[destination].role = ChannelRole.callee
             self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
             self.innerdata.channels[destination].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(destination, channel)

@@ -18,6 +18,13 @@
 import time
 
 
+class ChannelRole(object):
+
+    unknown = 'unknown'
+    caller = 'caller'
+    callee = 'callee'
+
+
 class Channel(object):
 
     def __init__(self, channel, context, unique_id=None):
@@ -25,6 +32,7 @@ class Channel(object):
         self.peerchannel = None
         self.context = context
         self.unique_id = unique_id
+        self.role = ChannelRole.unknown
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 

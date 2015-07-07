@@ -33,7 +33,8 @@ class DispatchFilter(object):
         self._dispatch('link', uniqueid)
 
     def handle_bridge_link(self, bridge_event):
-        self._handle_bridge(bridge_event.bridge.channels[0].unique_id)
+        channel = bridge_event.bridge.get_caller_channel()
+        self._handle_bridge(channel.unique_id)
 
     def _handle_bridge(self, uniqueid):
         if self._is_calling_a_user(uniqueid) and not self._is_already_linked(uniqueid):
