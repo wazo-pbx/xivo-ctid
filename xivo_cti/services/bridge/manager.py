@@ -35,8 +35,8 @@ class BridgeManager(object):
     def _remove_bridge(self, bridge_id):
         try:
             del self._bridges[bridge_id]
-        except (KeyError):
-            logger.warning('Failed to remove bridge:{}'.format(bridge_id))
+        except KeyError:
+            logger.warning('Failed to remove bridge %s: no such bridge', bridge_id)
 
     def get_bridge(self, bridge_id):
         return self._bridges.get(bridge_id)
