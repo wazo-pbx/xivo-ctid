@@ -107,7 +107,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_time.return_value = bridge_time
 
         transferer_channel = self.channel_1
-        transferee_channel = 'Local/123@default-00000009;1'
+        transferee_channel = 'Local/123@default-00000009;2'
 
         calls_per_line = {
             self.line_1: [
@@ -118,7 +118,11 @@ class TestCurrentCallManager(_BaseTestCase):
                  TRANSFER_CHANNEL: transferee_channel}
             ],
         }
+        unanswered_transfers = {
+            transferee_channel: transferer_channel,
+        }
         self.manager._calls_per_line = calls_per_line
+        self.manager._unanswered_transfers = unanswered_transfers
 
         self.manager._bridge_channels(transferer_channel, transferee_channel)
 
@@ -130,7 +134,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_time.return_value = bridge_time
 
         transferer_channel = self.channel_1
-        transferee_channel = 'Local/123@default-00000009;1'
+        transferee_channel = 'Local/123@default-00000009;2'
 
         calls_per_line = {
             self.line_1: [
@@ -141,7 +145,11 @@ class TestCurrentCallManager(_BaseTestCase):
                  TRANSFER_CHANNEL: transferee_channel}
             ],
         }
+        unanswered_transfers = {
+            transferee_channel: transferer_channel,
+        }
         self.manager._calls_per_line = calls_per_line
+        self.manager._unanswered_transfers = unanswered_transfers
 
         self.manager._bridge_channels(transferee_channel, transferer_channel)
 
@@ -153,7 +161,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_time.return_value = bridge_time
 
         transferer_channel = self.channel_1
-        transferee_channel = 'Local/123@default-00000009;1'
+        transferee_channel = 'Local/123@default-00000009;2'
 
         calls_per_line = {
             self.line_1: [
@@ -166,7 +174,11 @@ class TestCurrentCallManager(_BaseTestCase):
                  TRANSFER_CHANNEL: transferee_channel}
             ],
         }
+        unanswered_transfers = {
+            transferee_channel: transferer_channel,
+        }
         self.manager._calls_per_line = calls_per_line
+        self.manager._unanswered_transfers = unanswered_transfers
 
         self.manager._bridge_channels(transferer_channel, transferee_channel)
 
@@ -178,7 +190,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_time.return_value = bridge_time
 
         transferer_channel = self.channel_1
-        transferee_channel = 'Local/123@default-00000009;1'
+        transferee_channel = 'Local/123@default-00000009;2'
 
         calls_per_line = {
             self.line_1: [
@@ -250,6 +262,10 @@ class TestCurrentCallManager(_BaseTestCase):
                  ON_HOLD: False}
             ],
         }
+        self.manager._unanswered_transfers = {
+            self.channel_1: 'SIP/foo-000122',
+            self.channel_2: 'SIP/bar-000123',
+        }
 
         self.manager.end_call(self.channel_1)
 
@@ -261,15 +277,19 @@ class TestCurrentCallManager(_BaseTestCase):
                  ON_HOLD: True}
             ],
         }
+        expected_unanswered_transfers = {
+            self.channel_2: 'SIP/bar-000123',
+        }
 
         self.assertEqual(self.manager._calls_per_line, expected)
+        self.assertEqual(self.manager._unanswered_transfers, expected_unanswered_transfers)
         calls = self._get_notifier_calls()
         assert_that(calls, only_contains(self.line_1, self.line_2))
 
     def test_remove_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()
         channel = u'%s-0000007b' % line
-        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+        transfer_channel = u'Local/1003@pcm-dev-00000021;2'
 
         self.manager._calls_per_line = {
             line: [
@@ -298,7 +318,7 @@ class TestCurrentCallManager(_BaseTestCase):
     def test_remove_transfer_channel_not_tracked(self):
         line = u'SIP/6s7foq'.lower()
         channel = u'%s-0000007b' % line
-        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+        transfer_channel = u'Local/1003@pcm-dev-00000021;2'
 
         self.manager._calls_per_line = {
             line: [
@@ -638,7 +658,7 @@ class TestCurrentCallManager(_BaseTestCase):
     def test_set_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()
         channel = u'%s-0000007b' % line
-        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+        transfer_channel = u'Local/1003@pcm-dev-00000021;2'
 
         self.manager._calls_per_line = {
             line: [
@@ -655,11 +675,33 @@ class TestCurrentCallManager(_BaseTestCase):
         call = [c for c in calls if c[LINE_CHANNEL] == channel][0]
 
         self.assertEqual(call[TRANSFER_CHANNEL], transfer_channel)
+        self.assertEqual(self.manager._unanswered_transfers, {transfer_channel: channel})
+
+    def test_set_transfer_channel_ignore_local_1_channel(self):
+        line = u'SIP/6s7foq'.lower()
+        channel = u'%s-0000007b' % line
+        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+
+        self.manager._calls_per_line = {
+            line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: channel,
+                 BRIDGE_TIME: 1234,
+                 ON_HOLD: False}
+            ],
+        }
+
+        self.manager.set_transfer_channel(channel, transfer_channel)
+
+        calls = self.manager._calls_per_line[line]
+        call = [c for c in calls if c[LINE_CHANNEL] == channel][0]
+
+        self.assertNotIn(TRANSFER_CHANNEL, call)
 
     def test_set_transfer_channel_not_tracked(self):
         line = u'SIP/6s7foq'.lower()
         channel = u'%s-0000007b' % line
-        transfer_channel = u'Local/1003@pcm-dev-00000021;1'
+        transfer_channel = u'Local/1003@pcm-dev-00000021;2'
 
         self.manager.set_transfer_channel(channel, transfer_channel)
 

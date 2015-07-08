@@ -41,6 +41,7 @@ class CurrentCallManager(object):
     def __init__(self, current_call_notifier, current_call_formatter,
                  ami_class, device_manager, call_manager, call_storage):
         self._calls_per_line = {}
+        self._unanswered_transfers = {}
         self._current_call_notifier = current_call_notifier
         current_call_formatter._current_call_manager = self
         self.ami = ami_class
@@ -67,17 +68,23 @@ class CurrentCallManager(object):
             ]
             self._current_call_notifier.publish_current_call(line)
 
-        line_calls = self._calls_per_line[line]
-        if self._attended_transfer_from_line_is_answered(line_calls, other_channel):
-            self._current_call_notifier.attended_transfer_answered(line)
+        self._check_attended_transfer_target_answered(channel)
 
-    def _attended_transfer_from_line_is_answered(self, line_calls, channel_transferee):
+    def _check_attended_transfer_target_answered(self, transfer_channel):
+        transferer_channel = self._unanswered_transfers.get(transfer_channel)
+        if not transferer_channel:
+            return
+
+        line = identity_from_channel(transferer_channel)
+        line_calls = self._calls_per_line.get(line)
+        if not line_calls:
+            return
+
         for line_call in line_calls:
-            if TRANSFER_CHANNEL not in line_call:
-                continue
-            if line_call[TRANSFER_CHANNEL] == channel_transferee:
-                return True
-        return False
+            if line_call[LINE_CHANNEL] == transferer_channel:
+                self._current_call_notifier.attended_transfer_answered(line)
+                del self._unanswered_transfers[transfer_channel]
+                break
 
     def _find_line_and_position(self, channel, field=PEER_CHANNEL):
         for line, calls in self._calls_per_line.iteritems():
@@ -92,6 +99,8 @@ class CurrentCallManager(object):
                 if call[PEER_CHANNEL] == channel or call[LINE_CHANNEL] == channel:
                     to_remove.append((line, call[PEER_CHANNEL]))
 
+        self._unanswered_transfers.pop(channel, None)
+
         for line, channel in to_remove:
             self._remove_peer_channel(line, channel)
 
@@ -104,8 +113,10 @@ class CurrentCallManager(object):
             self._current_call_notifier.publish_current_call(line)
 
     def set_transfer_channel(self, channel, transfer_channel):
-        line = identity_from_channel(channel)
+        if transfer_channel.endswith(';1'):
+            return
 
+        line = identity_from_channel(channel)
         if line not in self._calls_per_line:
             return
 
@@ -113,6 +124,8 @@ class CurrentCallManager(object):
             if call[LINE_CHANNEL] != channel:
                 continue
             call[TRANSFER_CHANNEL] = transfer_channel
+
+        self._unanswered_transfers[transfer_channel] = channel
 
     def _remove_peer_channel(self, line, peer_channel):
         to_be_removed = []
