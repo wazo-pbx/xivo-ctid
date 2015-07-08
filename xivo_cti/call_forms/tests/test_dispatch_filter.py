@@ -58,15 +58,15 @@ class TestDispatchFilter(unittest.TestCase):
 
     def test_handle_bridge_call_to_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
+        self._df._handle_bridge(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_bridge_call_to_user_hold_resume(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
+        self._df._handle_bridge(sentinel.uid)
+        self._df._handle_bridge(sentinel.uid)
+        self._df._handle_bridge(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 

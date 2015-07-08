@@ -94,3 +94,13 @@ class CallReceiver(object):
                 _Channel(extension_source, channel_source),
                 _Channel(extension_destination, channel_destination),
             )
+
+    def handle_bridge_link(self, bridge_event):
+        channel_source = bridge_event.bridge.get_caller_channel()
+        channel_destination = bridge_event.bridge.get_callee_channel()
+        self._add_channel(channel_source.channel, channel_destination.channel,
+                          channel_source.unique_id, channel_destination.unique_id)
+
+    def handle_bridge_unlink(self, bridge_event):
+        for channel in bridge_event.bridge.channels:
+            self._call_storage.end_call(channel.unique_id)

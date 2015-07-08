@@ -48,7 +48,11 @@ class CurrentCallManager(object):
         self._call_manager = call_manager
         self._call_storage = call_storage
 
-    def bridge_channels(self, channel_1, channel_2):
+    def handle_bridge_link(self, bridge_event):
+        channel_1, channel_2 = bridge_event.bridge.channels
+        self._bridge_channels(channel_1.channel, channel_2.channel)
+
+    def _bridge_channels(self, channel_1, channel_2):
         self._bridge_channels_oriented(channel_1, channel_2)
         self._bridge_channels_oriented(channel_2, channel_1)
 
