@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,30 +58,30 @@ class TestDispatchFilter(unittest.TestCase):
 
     def test_handle_bridge_call_to_user(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
+        self._df._handle_bridge(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_bridge_call_to_user_hold_resume(self):
         self._df.handle_user(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
-        self._df.handle_bridge(sentinel.uid, sentinel.chan)
+        self._df._handle_bridge(sentinel.uid)
+        self._df._handle_bridge(sentinel.uid)
+        self._df._handle_bridge(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_agent_called(self):
-        self._df.handle_agent_called(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_called(sentinel.uid)
 
         self._dispatch.assert_called_once_with('dial', sentinel.uid)
 
     def test_handle_agent_connect(self):
-        self._df.handle_agent_connect(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_connect(sentinel.uid)
 
         self._dispatch.assert_called_once_with('link', sentinel.uid)
 
     def test_handle_agent_complete(self):
-        self._df.handle_agent_complete(sentinel.uid, sentinel.chan)
+        self._df.handle_agent_complete(sentinel.uid)
 
         self._dispatch.assert_called_once_with('unlink', sentinel.uid)
 

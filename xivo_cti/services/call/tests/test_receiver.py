@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ class TestCallReceiver(unittest.TestCase):
         }
         get_extension_from_channel.side_effect = lambda channel: extens[channel]
 
-        self.call_receiver.handle_dial(ami_event)
+        self.call_receiver.handle_dial_begin(ami_event)
 
         self.call_storage.new_call.assert_called_once_with(
             UNIQUEID,
@@ -132,60 +132,9 @@ class TestCallReceiver(unittest.TestCase):
     def test_handle_dial_begin_invalid_channel(self):
         ami_event = self._mk_dial_begin_event()
 
-        self.call_receiver.handle_dial(ami_event)
+        self.call_receiver.handle_dial_begin(ami_event)
 
         self.assertEquals(self.call_storage.new_call.call_count, 0)
-
-    def test_handle_masquerade(self):
-        local_chan = 'Local/102@default-00000009;1'
-        event = {
-            'Event': 'Masquerade',
-            'Clone': 'SIP/8o5zja-00000020',
-            'CloneState': 'Up',
-            'Original': local_chan,
-            'OriginalState': 'Up',
-        }
-
-        self.call_receiver.handle_masquerade(event)
-
-        self.call_storage.merge_local_channels.assert_called_once_with(local_chan)
-
-    @patch_get_extension_from_channel()
-    def test_that_bridge_add_a_new_call(self, get_extension_from_channel):
-        source_channel = 'SCCP/1002'
-        destination_channel = 'SIP/abc'
-        exten1 = Mock(Extension)
-        exten2 = Mock(Extension)
-        channel1 = _Channel(exten1, source_channel)
-        channel2 = _Channel(exten2, destination_channel)
-        get_extension_from_channel.side_effect = (
-            lambda c: exten1 if c == source_channel else exten2)
-
-        ami_event = self._mk_bridge_event(
-            destination_channel=destination_channel,
-            source_channel=source_channel,
-        )
-
-        self.call_receiver.handle_bridge(ami_event)
-
-        self.call_storage.new_call.assert_called_once_with(
-            UNIQUEID, DEST_UNIQUEID, channel1, channel2)
-
-    def test_handle_bridge_unlink_channel(self):
-        ami_event = self._mk_bridge_event(state='Unlink')
-
-        self.call_receiver.handle_bridge(ami_event)
-
-        self.call_storage.end_call.assert_called_once_with(UNIQUEID)
-
-    def test_handle_bridge_unknown(self):
-        ami_event = {'Event': 'Bridge',
-                     'Bridgestate': 'Unknown'}
-
-        self.call_receiver.handle_bridge(ami_event)
-
-        assert_that(self.call_storage.end_call.call_count, equal_to(0))
-        assert_that(self.call_storage.new_call.call_count, equal_to(0))
 
     @patch_get_extension_from_channel()
     def test_handle_new_channel(self, get_extension_from_channel):
@@ -222,19 +171,6 @@ class TestCallReceiver(unittest.TestCase):
             'Uniqueid': uniqueid,
         }
 
-    def _mk_bridge_event(self, destination_channel=sentinel.channel_destination,
-                         source_channel=sentinel.channel_source,
-                         uniqueid1=UNIQUEID, uniqueid2=DEST_UNIQUEID,
-                         state='Link'):
-        return {
-            'Event': 'Bridge',
-            'Bridgestate': state,
-            'Channel1': destination_channel,
-            'Channel2': source_channel,
-            'Uniqueid1': uniqueid1,
-            'Uniqueid2': uniqueid2,
-        }
-
     def _mk_hangup_event(self, channel=CHANNEL, uniqueid=UNIQUEID):
         return {
             'Event': 'Hangup',
@@ -254,18 +190,9 @@ class TestCallReceiver(unittest.TestCase):
                              source=sentinel.channel_source,
                              destination=sentinel.channel_destination):
         return {
-            'Event': 'Dial',
-            'SubEvent': 'Begin',
+            'Event': 'DialBegin',
             'Channel': source,
-            'Destination': destination,
-            'UniqueID': uniqueid,
-            'DestUniqueID': dest_uniqueid,
-        }
-
-    def _mk_dial_end_event(self, uniqueid=UNIQUEID, channel=CHANNEL):
-        return {
-            'Event': 'Dial',
-            'SubEvent': 'End',
-            'Channel': channel,
-            'UniqueID': uniqueid,
+            'DestChannel': destination,
+            'Uniqueid': uniqueid,
+            'DestUniqueid': dest_uniqueid,
         }

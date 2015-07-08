@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,24 +31,24 @@ class AMIInitializer(object):
                                      [],
                                      ['CoreShowChannels'])
     CORE_SHOW_CHANNEL_COMPLETE = InitializingEntry('CoreShowChannelsComplete',
-                                                   ['RegistrationsComplete'],
+                                                   ['BridgeListComplete'],
                                                    ['CoreShowChannelsComplete'],
-                                                   ['SIPshowregistry', 'IAXregistry'])
+                                                   ['BridgeList'])
+    BRIDGE_LIST_COMPLETE = InitializingEntry('BridgeListComplete',
+                                             ['RegistrationsComplete'],
+                                             ['BridgeListComplete'],
+                                             ['SIPshowregistry', 'IAXregistry'])
     REGISTRATION_COMPLETE = InitializingEntry('RegistrationsComplete',
                                               ['DAHDIShowChannelsComplete', 'QueueSummaryComplete'],
-                                              ['RegistrationComplete', 'DAHDIShowChannelsComplete'],
+                                              ['RegistrationsComplete', 'DAHDIShowChannelsComplete'],
                                               ['DAHDIShowChannels', 'QueueSummary'])
     QUEUE_SUMMARY_COMPLETE = InitializingEntry('QueueSummaryComplete',
                                                ['QueueStatusComplete'],
                                                ['QueueSummaryComplete'],
                                                ['QueueStatus'])
     QUEUE_STATUS_COMPLETE = InitializingEntry('QueueStatusComplete',
-                                              ['ParkedCallsComplete'],
-                                              ['QueueStatusComplete'],
-                                              ['ParkedCalls'])
-    PARKED_CALLS_COMPLETE = InitializingEntry('ParkedCallsComplete',
                                               ['StatusComplete'],
-                                              ['ParkedCallsComplete'],
+                                              ['QueueStatusComplete'],
                                               ['Status'])
     SHOW_STATUS_COMPLETE = InitializingEntry('StatusComplete',
                                              ['ShowDialPlanComplete'],
@@ -64,10 +64,10 @@ class AMIInitializer(object):
 
     INIT_SEQUENCE = {FULLY_BOOTED.trigger: FULLY_BOOTED,
                      CORE_SHOW_CHANNEL_COMPLETE.trigger: CORE_SHOW_CHANNEL_COMPLETE,
+                     BRIDGE_LIST_COMPLETE.trigger: BRIDGE_LIST_COMPLETE,
                      REGISTRATION_COMPLETE.trigger: REGISTRATION_COMPLETE,
                      QUEUE_SUMMARY_COMPLETE.trigger: QUEUE_SUMMARY_COMPLETE,
                      QUEUE_STATUS_COMPLETE.trigger: QUEUE_STATUS_COMPLETE,
-                     PARKED_CALLS_COMPLETE.trigger: PARKED_CALLS_COMPLETE,
                      SHOW_STATUS_COMPLETE.trigger: SHOW_STATUS_COMPLETE,
                      SHOW_DIALPLAN_COMPLETE.trigger: SHOW_DIALPLAN_COMPLETE,
                      INIT_COMPLETE.trigger: INIT_COMPLETE}

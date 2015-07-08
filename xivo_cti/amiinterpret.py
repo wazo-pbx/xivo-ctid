@@ -21,6 +21,7 @@ import time
 
 from xivo_cti import ALPHANUMS
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
+from xivo_cti.channel import ChannelRole
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
@@ -72,69 +73,37 @@ class AMI_1_8(object):
         self.innerdata.hangup(channel)
         self._aggregator.clean(uniqueid)
 
-    def ami_dial(self, event):
-        channel = event['Channel']
-        subevent = event['SubEvent']
-        uniqueid = event['UniqueID']
+    def ami_dialbegin(self, event):
+        channel = event.get('Channel')
+        if channel is None:
+            # If there are no channel, it's a dial initiated by an Originate
+            return
+        uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        if subevent == 'Begin' and 'Destination' in event:
-            destination = event['Destination']
-            if channel in self.innerdata.channels:
-                try:
-                    _set('desttype', 'user')
-                    phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
-                    if phone:
-                        _set('destid', str(phone['iduserfeatures']))
-                except LookupError:
-                    logger.exception('Could not set user id for dial')
-                self.innerdata.channels[channel].properties['direction'] = 'out'
-                self.innerdata.channels[channel].properties['commstatus'] = 'calling'
-                self.innerdata.channels[channel].properties['timestamp'] = time.time()
-                self.innerdata.setpeerchannel(channel, destination)
-                self.innerdata.update(channel)
-            if destination in self.innerdata.channels:
-                self.innerdata.channels[destination].properties['direction'] = 'in'
-                self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
-                self.innerdata.channels[destination].properties['timestamp'] = time.time()
-                self.innerdata.setpeerchannel(destination, channel)
-                self.innerdata.update(destination)
-            self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
+        destination = event['DestChannel']
+        if channel in self.innerdata.channels:
+            try:
+                _set('desttype', 'user')
+                phone = self.innerdata.xod_config['phones'].find_phone_by_channel(destination)
+                if phone:
+                    _set('destid', str(phone['iduserfeatures']))
+            except LookupError:
+                logger.exception('Could not set user id for dial')
+            self.innerdata.channels[channel].role = ChannelRole.caller
+            self.innerdata.channels[channel].properties['commstatus'] = 'calling'
+            self.innerdata.channels[channel].properties['timestamp'] = time.time()
+            self.innerdata.setpeerchannel(channel, destination)
+            self.innerdata.update(channel)
+        if destination in self.innerdata.channels:
+            self.innerdata.channels[destination].role = ChannelRole.callee
+            self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
+            self.innerdata.channels[destination].properties['timestamp'] = time.time()
+            self.innerdata.setpeerchannel(destination, channel)
+            self.innerdata.update(destination)
+        self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):
         self._endpoint_status_updater.update_status(event['Hint'], event['Status'])
-
-    def ami_bridge(self, event):
-        if event['Bridgestate'] != 'Link':
-            return
-
-        channel_1 = self.innerdata.channels.get(event['Channel1'])
-        channel_2 = self.innerdata.channels.get(event['Channel2'])
-        uniqueid = event['Uniqueid1']
-        channel_name = event['Channel1']
-
-        if channel_1:
-            self._update_connected_channel(channel_1, channel_2)
-            channel_1.properties['commstatus'] = 'linked-caller'
-
-        if channel_2:
-            self._update_connected_channel(channel_2, channel_1)
-            channel_2.properties['commstatus'] = 'linked-called'
-
-        self._call_form_dispatch_filter.handle_bridge(uniqueid, channel_name)
-
-    def _update_connected_channel(self, channel, peer_channel):
-        channel.properties.update({
-            'talkingto_kind': 'channel',
-            'talkingto_id': peer_channel.channel,
-            'timestamp': time.time(),
-        })
-        self.innerdata.setpeerchannel(channel.channel, peer_channel.channel)
-        self.innerdata.update(channel.channel)
-
-    def ami_masquerade(self, event):
-        original = event['Original']
-        clone = event['Clone']
-        self.innerdata.masquerade(original, clone)
 
     def ami_originateresponse(self, event):
         channel = event['Channel']
@@ -159,25 +128,6 @@ class AMI_1_8(object):
             except Exception:
                 # when requester is not connected any more ...
                 pass
-
-    def ami_parkedcall(self, event):
-        channel = event['Channel']
-        exten = event['Exten']
-        parkinglot = event['Parkinglot']
-        if parkinglot.startswith('parkinglot_'):
-            parkinglot = '_'.join(parkinglot.split('_')[1:])
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].setparking(exten, parkinglot)
-
-    def ami_unparkedcall(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].unsetparking()
-
-    def ami_parkedcalltimeout(self, event):
-        channel = event['Channel']
-        if channel in self.innerdata.channels:
-            self.innerdata.channels[channel].unsetparking()
 
     def userevent_user(self, chanprops, event):
         uniqueid = event['Uniqueid']
@@ -332,34 +282,22 @@ class AMI_1_8(object):
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
         context = event['Context']
-        application = event['Application']
-        bridgedchannel = event['BridgedChannel']
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
         timestamp_start = self.timeconvert(event['Duration'])
-        unique_id = event['UniqueID']
+        unique_id = event['Uniqueid']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
         channelstruct = self.innerdata.channels[channel]
 
         channelstruct.properties['timestamp'] = timestamp_start
-        if application == 'Dial':
-            channelstruct.properties['direction'] = 'out'
-            if state == '6':
-                channelstruct.properties['commstatus'] = 'linked-caller'
-            elif state == '4':
-                channelstruct.properties['commstatus'] = 'calling'
-        elif application == 'AppDial':
-            channelstruct.properties['direction'] = 'in'
-            if state == '6':
-                channelstruct.properties['commstatus'] = 'linked-called'
-            elif state == '5':
-                channelstruct.properties['commstatus'] = 'ringing'
 
-        if state == '6' and bridgedchannel:
-            self.innerdata.newchannel(bridgedchannel, context, state, state_description, unique_id)
-            self.innerdata.setpeerchannel(channel, bridgedchannel)
-            self.innerdata.setpeerchannel(bridgedchannel, channel)
+        if state == '4':
+            channelstruct.properties['commstatus'] = 'calling'
+        elif state == '5':
+            channelstruct.properties['commstatus'] = 'ringing'
+        elif state == '6':
+            channelstruct.properties['commstatus'] = 'linked'
 
     def ami_listdialplan(self, event):
         extension = event.get('Extension')

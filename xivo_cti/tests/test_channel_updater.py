@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -101,14 +101,25 @@ class TestChannelUpdater(unittest.TestCase):
         self.updater.new_caller_id('SIP/1234', 'Alice', '1234')
 
     def test_hold_channel(self):
-        name, status = 'SIP/1234', True
+        name = 'SIP/1234'
         channel = Channel(name, 'default', '123456.66')
         self.innerdata.channels[name] = channel
 
-        self.updater.set_hold(name, status)
+        self.updater.set_hold(name)
 
         channel = self.innerdata.channels[name]
-        assert_that(channel.properties['holded'], equal_to(status), 'holded status')
+        assert_that(channel.properties['holded'], equal_to(True), 'holded status')
+        self._assert_channel_updated(name)
+
+    def test_unhold_channel(self):
+        name = 'SIP/1234'
+        channel = Channel(name, 'default', '123456.66')
+        self.innerdata.channels[name] = channel
+
+        self.updater.set_unhold(name)
+
+        channel = self.innerdata.channels[name]
+        assert_that(channel.properties['holded'], equal_to(False), 'unholded status')
         self._assert_channel_updated(name)
 
     def _assert_channel_updated(self, channel):

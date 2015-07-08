@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 import unittest
 
 from functools import wraps
-from hamcrest import assert_that, contains_inanyorder, equal_to, contains, has_item
+from hamcrest import assert_that, contains_inanyorder, equal_to, contains
 from mock import Mock
 from mock import sentinel, call
 from xivo.asterisk.extension import Extension
@@ -257,29 +257,3 @@ class TestNewCall(_BaseTestCase):
         self.storage.end_call.assert_any_call(sentinel.dest_uniqueid)
         assert_that(self.storage.end_call.call_count, equal_to(2))
         self.call_notifier.notify.assert_called_once_with(call_event)
-
-
-class TestMergeLocalChannels(_BaseTestCase):
-
-    def test_when_channel_1_is_local(self):
-        self.storage._calls = {
-            u'1395685236.26': Call(
-                _Channel(Extension('1009', 'default', True), 'SIP/1uzh6d-0000000e'),
-                _Channel(Extension('', '', True), 'Local/102@default-00000006;1'),
-            ),
-            u'1395685237.28': Call(
-                _Channel(Extension('', '', True), 'Local/102@default-00000006;2'),
-                _Channel(Extension('1002', 'default', True), 'SIP/8o5zja-0000000f'),
-            ),
-        }
-
-        self.storage.merge_local_channels('Local/102@default-00000006;')
-
-        expected = {
-            u'1395685237.28': Call(
-                _Channel(Extension('1009', 'default', True), 'SIP/1uzh6d-0000000e'),
-                _Channel(Extension('1002', 'default', True), 'SIP/8o5zja-0000000f'),
-            ),
-        }
-
-        assert_that(self.storage._calls, equal_to(expected))

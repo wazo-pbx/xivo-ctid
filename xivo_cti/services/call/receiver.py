@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,25 +54,14 @@ class CallReceiver(object):
         else:
             self._call_storage.update_endpoint_status(extension, status)
 
-    def handle_dial(self, event):
-        if event['SubEvent'] == 'Begin':
-            self._handle_dial_begin(event)
-
-    def handle_bridge(self, event):
-        uniqueid_1 = event.get('Uniqueid1')
-
-        if event['Bridgestate'] == 'Link':
-            c1 = event['Channel1']
-            c2 = event['Channel2']
-            self._add_channel(c2, c1, uniqueid_1, event['Uniqueid2'])
-        elif event['Bridgestate'] == 'Unlink':
-            self._call_storage.end_call(uniqueid_1)
-
-    def _handle_dial_begin(self, event):
-        channel_source = event['Channel']
-        channel_destination = event['Destination']
-        destination_uniqueid = event['DestUniqueID']
-        uniqueid = event['UniqueID']
+    def handle_dial_begin(self, event):
+        channel_source = event.get('Channel')
+        if channel_source is None:
+            # If there are no channel, it's a dial initiated by an Originate
+            return
+        channel_destination = event['DestChannel']
+        destination_uniqueid = event['DestUniqueid']
+        uniqueid = event['Uniqueid']
 
         self._add_channel(channel_source, channel_destination, uniqueid, destination_uniqueid)
 
@@ -92,9 +81,6 @@ class CallReceiver(object):
             _Channel(Extension('', '', True), ''),
         )
 
-    def handle_masquerade(self, event):
-        self._call_storage.merge_local_channels(event['Original'])
-
     def _add_channel(self, channel_source, channel_destination, uniqueid, destination_uniqueid):
         try:
             extension_source = helper.get_extension_from_channel(channel_source)
@@ -108,3 +94,13 @@ class CallReceiver(object):
                 _Channel(extension_source, channel_source),
                 _Channel(extension_destination, channel_destination),
             )
+
+    def handle_bridge_link(self, bridge_event):
+        channel_source = bridge_event.bridge.get_caller_channel()
+        channel_destination = bridge_event.bridge.get_callee_channel()
+        self._add_channel(channel_source.channel, channel_destination.channel,
+                          channel_source.unique_id, channel_destination.unique_id)
+
+    def handle_bridge_unlink(self, bridge_event):
+        for channel in bridge_event.bridge.channels:
+            self._call_storage.end_call(channel.unique_id)

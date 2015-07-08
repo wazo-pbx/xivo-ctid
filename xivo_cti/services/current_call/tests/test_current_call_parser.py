@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,26 +29,6 @@ class TestCurrentCallParser(unittest.TestCase):
         self.manager = Mock(manager.CurrentCallManager)
         self.parser = parser.CurrentCallParser(self.manager)
 
-    def test_parse_bridge(self):
-        channel_1 = 'SIP/xivo-dev-00000002'
-        channel_2 = 'SIP/nkvo55-00000003'
-        bridge_event = {
-            'Event': 'Bridge',
-            'Privilege': 'call,all',
-            'Bridgestate': 'Link',
-            'Bridgetype': 'core',
-            'Channel1': channel_1,
-            'Channel2': channel_2,
-            'Uniqueid1': 1354638961.2,
-            'Uniqueid2': 1354638961.3,
-            'CallerID1': '102',
-            'CallerID2': '1001'
-        }
-
-        self.parser.parse_bridge(bridge_event)
-
-        self.manager.bridge_channels.assert_called_once_with(channel_1, channel_2)
-
     def test_parse_hangup(self):
         channel = 'SIP/tc8nb4-000000000038'
         hangup_event = {'Event': 'Hangup',
@@ -66,27 +46,25 @@ class TestCurrentCallParser(unittest.TestCase):
 
         self.manager.end_call.assert_called_once_with(channel)
 
-    def test_parse_hold_off(self):
+    def test_parse_unhold(self):
         channel = 'SIP/nkvo55-00000003'
-        hold_event = {
-            'Event': 'Hold',
+        unhold_event = {
+            'Event': 'Unhold',
             'Privilege': 'call,all',
-            'Status': 'Off',
             'Channel': channel,
             'Uniqueid': 1354638961.3
         }
 
-        self.parser.parse_hold(hold_event)
+        self.parser.parse_unhold(unhold_event)
 
         self.assertEqual(self.manager.hold_channel.call_count, 0)
         self.manager.unhold_channel.assert_called_once_with(channel)
 
-    def test_parse_hold_on(self):
+    def test_parse_hold(self):
         channel = 'SIP/nkvo55-00000003'
         hold_event = {
             'Event': 'Hold',
             'Privilege': 'call,all',
-            'Status': 'On',
             'Channel': channel,
             'Uniqueid': 1354638961.3
         }
@@ -112,24 +90,6 @@ class TestCurrentCallParser(unittest.TestCase):
         self.parser.parse_hangup(hangup_event)
 
         self.manager.remove_transfer_channel.assert_called_once_with(channel)
-
-    def test_parse_masquerade(self):
-        original_channel = 'Local/1002@pcm-dev-00000001;1',
-        clone_channel = 'SIP/6s7foq-00000005',
-        masquerade_event = {
-            'Event': 'Masquerade',
-            'Privilege': 'call,all',
-            'Clone': clone_channel,
-            'CloneState': 'Up',
-            'Original': original_channel,
-            'OriginalState': 'Up'
-        }
-
-        self.parser.parse_masquerade(masquerade_event)
-
-        self.manager.masquerade.assert_called_once_with(
-            original_channel, clone_channel
-        )
 
     def test_parse_varset_transfername(self):
         channel = u'SIP/6s7foq-0000007b'

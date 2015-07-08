@@ -47,7 +47,7 @@ REGCOMMANDS = [
 IPBXCOMMANDS = [
     'originate',
     # transfer-like commands
-    'intercept', 'parking',
+    'intercept',
     'transfer', 'atxfer',
     # hangup-like commands
     'hangup',
@@ -137,7 +137,7 @@ class Command(object):
             logger.warning("%s - No CTI profile defined for the user", self.head)
             return 'capaid_undefined'
         else:
-            return  {'capalist': [cti_profile_id]}
+            return {'capalist': [cti_profile_id]}
 
     def _is_user_authenticated(self):
         this_hashed_password = self._commanddict.get('hashedpassword')

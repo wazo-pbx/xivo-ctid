@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,18 +24,15 @@ class AMILogger(object):
     _log_header = 'AMI logger'
     logged_events = ['ChanSpyStart',
                      'ChanSpyStop',
-                     'Dial',
+                     'DialBegin',
+                     'DialEnd',
                      'ChannelReload',
                      'DAHDIChannel',
                      'FullyBooted',
                      'HangupRequest',
-                     'ModuleLoadReport',
                      'MonitorStart',
                      'MonitorStop',
                      'OriginateResponse',
-                     'ParkedCall',
-                     'ParkedCallGiveUp',
-                     'ParkedCallTimeOut',
                      'Pickup',
                      'QueueCallerAbandon',
                      'Reload',
@@ -43,7 +40,6 @@ class AMILogger(object):
                      'SoftHangupRequest',
                      'Transfer',
                      'Unlink',
-                     'UnParkedCall',
                      ]
 
     def __init__(self):

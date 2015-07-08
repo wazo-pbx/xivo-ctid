@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,31 +27,17 @@ class CurrentCallParser(object):
     def __init__(self, current_call_manager):
         self._current_call_manager = current_call_manager
 
-    def parse_bridge(self, event):
-        if event['Bridgestate'] != 'Link':
-            return
-
-        self._current_call_manager.bridge_channels(
-            event['Channel1'],
-            event['Channel2']
-        )
-
     def parse_hold(self, event):
         channel = event['Channel']
-        if event['Status'] == 'On':
-            self._current_call_manager.hold_channel(channel)
-        else:
-            self._current_call_manager.unhold_channel(channel)
+        self._current_call_manager.hold_channel(channel)
+
+    def parse_unhold(self, event):
+        channel = event['Channel']
+        self._current_call_manager.unhold_channel(channel)
 
     def parse_hangup(self, event):
         self._current_call_manager.end_call(event['Channel'])
         self._current_call_manager.remove_transfer_channel(event['Channel'])
-
-    def parse_masquerade(self, event):
-        self._current_call_manager.masquerade(
-            event['Original'],
-            event['Clone']
-        )
 
     def parse_varset_transfername(self, event):
         if 'Variable' not in event or event['Variable'] != 'TRANSFERERNAME':
@@ -65,8 +51,7 @@ class CurrentCallParser(object):
     def register_ami_events(self):
         logger.debug('Registering to AMI events')
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
-        ami_handler.register_callback('Bridge', self.parse_bridge)
         ami_handler.register_callback('Hold', self.parse_hold)
+        ami_handler.register_callback('Unhold', self.parse_unhold)
         ami_handler.register_callback('Hangup', self.parse_hangup)
-        ami_handler.register_callback('Masquerade', self.parse_masquerade)
         ami_handler.register_callback('VarSet', self.parse_varset_transfername)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,13 @@
 import time
 
 
+class ChannelRole(object):
+
+    unknown = 'unknown'
+    caller = 'caller'
+    callee = 'callee'
+
+
 class Channel(object):
 
     def __init__(self, channel, context, unique_id=None):
@@ -25,13 +32,12 @@ class Channel(object):
         self.peerchannel = None
         self.context = context
         self.unique_id = unique_id
+        self.role = ChannelRole.unknown
         # destlist to update along the incoming channel path, in order
         # to be ready when a sheet will be sent to the 'destination'
 
         self.properties = {
             'holded': False,
-            'parked': False,
-            'direction': None,
             'commstatus': 'ready',
             'timestamp': time.time(),
             'talkingto_kind': None,
@@ -39,16 +45,6 @@ class Channel(object):
             'state': 'Unknown',
         }
         self.relations = []
-
-    def setparking(self, exten, parkinglot):
-        self.properties['parked'] = True
-        self.properties['talkingto_kind'] = 'parking'
-        self.properties['talkingto_id'] = '%s@%s' % (exten, parkinglot)
-
-    def unsetparking(self):
-        self.properties['parked'] = False
-        self.properties['talkingto_kind'] = None
-        self.properties['talkingto_id'] = None
 
     def addrelation(self, relation):
         if relation not in self.relations:

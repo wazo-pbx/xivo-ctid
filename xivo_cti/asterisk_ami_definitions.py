@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,28 +22,25 @@ event_flags = dict()
 event_others = dict()
 
 event_flags['SYSTEM'] = ['Alarm', 'AlarmClear', 'SpanAlarm', 'SpanAlarmClear',
-                         'Reload', 'Shutdown', 'ModuleLoadReport',
+                         'Reload', 'Shutdown',
                          'FullyBooted',  # (1.8)
                          'DNDState', 'MobileStatus', 'Registry',
                          'ChannelReload', 'LogChannel'
                          ]
 
-event_flags['CALL'] = ['Dial', 'Hangup', 'Pickup', 'Rename',
-                       'Bridge', 'BridgeExec', 'BridgeAction',
+event_flags['CALL'] = ['DialBegin', 'DialEnd', 'Hangup', 'Pickup', 'Rename',
+                       'Bridge',
                        'Transfer',  # only in chan_sip
-                       'Masquerade', 'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
-                       'ParkedCallStatus',  # CLG addendum
-                       'ParkedCall', 'UnParkedCall', 'ParkedCallTimeOut', 'ParkedCallGiveUp',
+                       'OriginateResponse', 'MessageWaiting', 'MiniVoiceMail',
                        'ChanSpyStart', 'ChanSpyStop',
                        'DAHDIChannel',
                        'Newchannel',
                        'NewAccountCode',  # (1.8)
                        'NewCallerid',  # was 'Newcallerid' in 1.4
-                       'NewPeerAccount',
                        'CEL', 'MCID',
-                       'Join', 'Leave',
-                       'ExtensionStatus', 'MusicOnHold',
-                       'FaxSent', 'FaxReceived', 'ReceiveFAXStatus', 'SendFAXStatus', 'ReceiveFAX', 'SendFAX'
+                       'QueueCallerJoin', 'QueueCallerLeave',
+                       'ExtensionStatus', 'MusicOnHoldStart', 'MusicOnHoldStop',
+                       'SendFAX', 'ReceiveFAX', 'ReceiveFAXStatus', 'SendFAXStatus'
                        ]
 
 event_flags['AGENT'] = ['AgentCalled',
@@ -53,14 +50,13 @@ event_flags['AGENT'] = ['AgentCalled',
                         'AgentRingNoAnswer',
                         ]
 
-event_flags['USER'] = ['JabberEvent', 'JabberStatus', 'UserEvent']
+event_flags['USER'] = ['UserEvent']
 
 event_flags['DIALPLAN'] = ['Newexten',  # in order to handle outgoing calls ?
                            'VarSet']
 
 event_others['replies'] = [
     'PeerEntry', 'PeerlistComplete',  # after SIPpeers or IAXpeers or ...
-    'ParkedCallsComplete',  # after ParkedCalls
     'Status', 'StatusComplete',  # after Status
     'QueueParams', 'QueueEntry', 'QueueStatusComplete',  # after QueueStatus
     'QueueSummary', 'QueueSummaryComplete',  # after QueueSummary

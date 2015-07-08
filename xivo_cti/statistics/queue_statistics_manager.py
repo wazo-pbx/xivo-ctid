@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import time
 from xivo_dao import queue_statistic_dao
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
@@ -31,7 +30,7 @@ def register_events():
     callback_handler.register_callback('QueueMemberStatus', parse_queue_member_status)
     callback_handler.register_callback('QueueMemberAdded', parse_queue_member_status)
     callback_handler.register_callback('QueueMemberRemoved', parse_queue_member_status)
-    callback_handler.register_callback('QueueMemberPaused', parse_queue_member_status)
+    callback_handler.register_callback('QueueMemberPause', parse_queue_member_status)
 
 
 def parse_queue_member_status(event):

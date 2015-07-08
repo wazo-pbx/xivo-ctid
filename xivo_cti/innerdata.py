@@ -174,12 +174,9 @@ class Safe(object):
         ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
-    def _set_channel_extra_vars_agent(self, event, channel_name, member_name):
+    def _set_channel_extra_vars_agent(self, event, member_name):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        channel = self.channels.get(channel_name)
-        if not channel:
-            return
         proto, agent_number = member_name.split('/', 1)
         try:
             if proto == 'Agent':
@@ -202,25 +199,22 @@ class Safe(object):
             logger.warning('Failed to set agent channel variables for event: %s', event)
 
     def handle_agent_called(self, event):
-        channel_name = event['DestinationChannel']
-        member_name = event['AgentName']
+        member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_called(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_called(uniqueid)
 
     def handle_agent_linked(self, event):
-        channel_name = event['Channel']
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid)
 
     def handle_agent_unlinked(self, event):
-        channel_name = event['Channel']
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
-        self._set_channel_extra_vars_agent(event, channel_name, member_name)
-        context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid, channel_name)
+        self._set_channel_extra_vars_agent(event, member_name)
+        context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid)
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
@@ -263,26 +257,6 @@ class Safe(object):
                            'tid': item_id,
                            'class': 'getlist',
                            'status': item}
-
-    def config_from_external(self, listname, contents):
-        function = contents.get('function')
-        if function == 'listid':
-            for k in contents.get('list'):
-                self.xod_config[listname].keeplist[k] = {}
-                self.xod_status[listname][k] = {}
-        elif function == 'updateconfig':
-            tid = contents.get('tid')
-            self.xod_config[listname].keeplist[tid] = contents.get('config')
-        elif function == 'updatestatus':
-            tid = contents.get('tid')
-            if self.xod_status[listname].get(tid) != contents.get('status'):
-                self.xod_status[listname][tid] = contents.get('status')
-                self._ctiserver.send_cti_event({'class': 'getlist',
-                                                'listname': listname,
-                                                'function': 'updatestatus',
-                                                'tipbxid': self.ipbxid,
-                                                'tid': tid,
-                                                'status': self.xod_status[listname][tid]})
 
     def user_match(self, userid, tomatch):
         domatch = False
@@ -347,11 +321,6 @@ class Safe(object):
     def user_remove_auth_token(self, userid, token):
         with auth_client(userid) as client:
             client.token.revoke(token)
-
-    def user_get_userstatuskind(self, userid):
-        cti_profile_id = old_user_dao.get_profile(userid)
-        zz = config['profiles'].get(cti_profile_id)
-        return zz.get('userstatus')
 
     def new_state(self, event):
         channel = event['Channel']
@@ -475,8 +444,6 @@ class Safe(object):
         self.channels[channel].relations = []
         if channel.startswith('SIPPeer/'):
             return
-        if channel.startswith('Parked/'):
-            return
         try:
             termination = self.ast_channel_to_termination(channel)
             p = self.zphones(termination.get('protocol'), termination.get('name'))
@@ -494,40 +461,30 @@ class Safe(object):
         except LookupError:
             logger.exception('find termination according to channel %s', channel)
 
-    def masquerade(self, oldchannel, newchannel):
-        try:
-            oldrelations = self.channels[oldchannel].relations
-            newrelations = self.channels[newchannel].relations
-
-            oldchannelz = oldchannel + '<ZOMBIE>'
-            self.channels[oldchannelz] = self.channels.pop(newchannel)
-            self.channels[oldchannelz].channel = oldchannelz
-            self.channels[newchannel] = self.channels.pop(oldchannel)
-            self.channels[newchannel].channel = newchannel
-
-            for r in oldrelations:
-                if r.startswith('phone:'):
-                    p = r[6:]
-                    self.xod_status['phones'][p]['channels'].remove(oldchannel)
-                    self.channels[newchannel].delrelation(r)
-            self.channels[newchannel].relations = newrelations
-            newfirstchannel = self.channels[newchannel].peerchannel
-            if newfirstchannel:
-                self.setpeerchannel(newfirstchannel, newchannel)
-        except KeyError:
-            logger.warning('Trying to do as masquerade on an unexistant channel')
-
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel
         chanprops.properties['talkingto_id'] = peerchannel
+
+    def handle_bridge_link(self, bridge_enter_event):
+        channel_1, channel_2 = bridge_enter_event.bridge.channels
+        self._update_connected_channel(channel_1, channel_2)
+        self._update_connected_channel(channel_2, channel_1)
+
+    def _update_connected_channel(self, channel, peer_channel):
+        channel.properties.update({
+            'commstatus': 'linked',
+            'timestamp': time.time(),
+        })
+        self.setpeerchannel(channel.channel, peer_channel.channel)
+        self.update(channel.channel)
 
     # IPBX side
 
     def ast_channel_to_termination(self, channel):
         term = {}
         # special cases : AsyncGoto/IAX2/asteriskisdn-13622<ZOMBIE>
-        # Parked/SIP, Parked/IAX2, SCCP, DAHDI, Parked/SCCP ...
+        # SCCP, DAHDI, ...
         # what about a peer called a-b-c ?
         cutchan1 = channel.split('/')
         if len(cutchan1) == 2:

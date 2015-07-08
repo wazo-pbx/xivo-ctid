@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,8 +71,20 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('RegistrationsComplete')
+        self.ami_initializer._register.assert_called_once_with('BridgeListComplete')
         self.ami_initializer._unregister.assert_called_once_with('CoreShowChannelsComplete')
+        self.ami_initializer._send.assert_called_once_with('BridgeList')
+
+    def test_go_bridge_list_complete(self):
+        self.setup_mock()
+        msg = {'Event': 'BridgeListComplete',
+               'EventList': 'Complete',
+               'ListItems': '0'}
+
+        self.ami_initializer.go(msg)
+
+        self.ami_initializer._register.assert_called_once_with('RegistrationsComplete')
+        self.ami_initializer._unregister.assert_called_once_with('BridgeListComplete')
         self.ami_initializer._send.assert_has_calls([call('SIPshowregistry'), call('IAXregistry')])
 
     def test_go_registrations_complete(self):
@@ -85,7 +97,7 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer._register.assert_any_call('DAHDIShowChannelsComplete')
         self.ami_initializer._register.assert_any_call('QueueSummaryComplete')
-        self.ami_initializer._unregister.assert_any_call('RegistrationComplete')
+        self.ami_initializer._unregister.assert_any_call('RegistrationsComplete')
         self.ami_initializer._unregister.assert_any_call('DAHDIShowChannelsComplete')
         self.ami_initializer._send.assert_any_call('DAHDIShowChannels')
         self.ami_initializer._send.assert_any_call('QueueSummary')
@@ -106,19 +118,8 @@ class TestAMIInitializer(unittest.TestCase):
 
         self.ami_initializer.go(msg)
 
-        self.ami_initializer._register.assert_called_once_with('ParkedCallsComplete')
-        self.ami_initializer._unregister.assert_called_once_with('QueueStatusComplete')
-        self.ami_initializer._send('ParkedCalls')
-
-    def test_go_parked_calls_complete(self):
-        self.setup_mock()
-        msg = {'Event': 'ParkedCallsComplete',
-               'Total': '0'}
-
-        self.ami_initializer.go(msg)
-
         self.ami_initializer._register.assert_called_once_with('StatusComplete')
-        self.ami_initializer._unregister.assert_called_once_with('ParkedCallsComplete')
+        self.ami_initializer._unregister.assert_called_once_with('QueueStatusComplete')
         self.ami_initializer._send.assert_called_once_with('Status')
 
     def test_go_show_status_complete(self):

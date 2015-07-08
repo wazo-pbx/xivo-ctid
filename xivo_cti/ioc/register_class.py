@@ -50,6 +50,9 @@ from xivo_cti.services.agent.status_adapter import AgentStatusAdapter
 from xivo_cti.services.agent.status_manager import AgentStatusManager
 from xivo_cti.services.agent.status_parser import AgentStatusParser
 from xivo_cti.services.agent.status_router import AgentStatusRouter
+from xivo_cti.services.bridge.manager import BridgeManager
+from xivo_cti.services.bridge.notifier import BridgeNotifier
+from xivo_cti.services.bridge.updater import BridgeUpdater
 from xivo_cti.services.call.call_notifier import CallNotifier
 from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.manager import CallManager
@@ -122,6 +125,9 @@ def setup():
     context.register('agent_status_router', AgentStatusRouter)
     context.register('async_runner', AsyncRunner)
     context.register('agentd_client', AgentdClient(**config['agentd']))
+    context.register('bridge_manager', BridgeManager)
+    context.register('bridge_updater', BridgeUpdater)
+    context.register('bridge_notifier', BridgeNotifier)
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
     context.register('bus_publisher', bus_publisher)

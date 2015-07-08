@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,16 +23,20 @@ class DispatchFilter(object):
         self._calls_to_user = {}
         self._linked_calls = []
 
-    def handle_agent_called(self, uniqueid, _channel_name):
+    def handle_agent_called(self, uniqueid):
         self._dispatch('dial', uniqueid)
 
-    def handle_agent_complete(self, uniqueid, _channel_name):
+    def handle_agent_complete(self, uniqueid):
         self._dispatch('unlink', uniqueid)
 
-    def handle_agent_connect(self, uniqueid, _channel_name):
+    def handle_agent_connect(self, uniqueid):
         self._dispatch('link', uniqueid)
 
-    def handle_bridge(self, uniqueid, _channel_name):
+    def handle_bridge_link(self, bridge_event):
+        channel = bridge_event.bridge.get_caller_channel()
+        self._handle_bridge(channel.unique_id)
+
+    def _handle_bridge(self, uniqueid):
         if self._is_calling_a_user(uniqueid) and not self._is_already_linked(uniqueid):
             self._linked_calls.append(uniqueid)
             self._dispatch('link', uniqueid)
