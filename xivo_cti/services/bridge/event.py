@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from collections import namedtuple
 
-class BridgeEvent(object):
 
-    def __init__(self, bridge, channel):
-        self.bridge = bridge
-        self.channel = channel
+BridgeEvent = namedtuple('BridgeEvent', ['bridge', 'channel'])

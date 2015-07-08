@@ -17,46 +17,96 @@
 
 import unittest
 
-from hamcrest import assert_that, equal_to, has_key, is_not, none
+from hamcrest import assert_that, has_key, equal_to
+from mock import Mock, call
+from xivo_cti.channel import Channel
+from xivo_cti.innerdata import Safe
+from xivo_cti.services.bridge.bridge import Bridge
 from xivo_cti.services.bridge.manager import BridgeManager
+from xivo_cti.services.bridge.notifier import BridgeNotifier
 
 
-class BridgeManagerTest(unittest.TestCase):
+class TestBridgeManager(unittest.TestCase):
 
     def setUp(self):
-        self.bridge_manager = BridgeManager()
+        self.bridge_id = 'e136cd36-5187-430c-af2a-d1f08870847b'
+        self.bridge_type = 'basic'
+        self.channel_name = 'SIP/foo-123'
+        self.channel = Mock(Channel)
+        self.bridge_notifier = Mock(BridgeNotifier)
+        self.innerdata = Mock(Safe)
+        self.innerdata.channels = {}
+        self.bridge_manager = BridgeManager(self.bridge_notifier, self.innerdata)
+
+    def _install_bridge(self):
+        bridge = Mock(Bridge)
+        self.bridge_manager._bridges[self.bridge_id] = bridge
+        return bridge
+
+    def test_on_bridge_create(self):
+        self.bridge_manager._on_bridge_create(self.bridge_id, self.bridge_type)
+
+        assert_that(self.bridge_manager._bridges, has_key(self.bridge_id))
+
+    def test_on_bridge_destroy(self):
+        self.bridge_manager._on_bridge_create(self.bridge_id, self.bridge_type)
+        self.bridge_manager._on_bridge_destroy(self.bridge_id)
+
+        assert_that(self.bridge_manager._bridges, equal_to({}))
+
+    def test_on_bridge_enter(self):
+        bridge = self._install_bridge()
+        self.innerdata.channels[self.channel_name] = self.channel
+
+        self.bridge_manager._on_bridge_enter(self.bridge_id, self.channel_name)
+
+        bridge._add_channel.assert_called_once_with(self.channel)
+        self.bridge_notifier._on_bridge_enter.assert_called_once_with(bridge, self.channel, bridge.linked.return_value)
+
+    def test_on_bridge_leave(self):
+        bridge = self._install_bridge()
+        bridge.linked.side_effect = [False, False]
+        self.innerdata.channels[self.channel_name] = self.channel
+
+        self.bridge_manager._on_bridge_leave(self.bridge_id, self.channel_name)
+
+        bridge._remove_channel.assert_called_once_with(self.channel)
+        self.bridge_notifier._on_bridge_leave.assert_called_once_with(bridge, self.channel, False)
+
+    def test_on_bridge_leave_unlinked(self):
+        bridge = self._install_bridge()
+        bridge.linked.side_effect = [True, False]
+        self.innerdata.channels[self.channel_name] = self.channel
+
+        self.bridge_manager._on_bridge_leave(self.bridge_id, self.channel_name)
+
+        self.bridge_notifier._on_bridge_leave.assert_called_once_with(bridge, self.channel, True)
 
     def test_add_bridge(self):
-        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_type = u'basic'
-        self.bridge_manager._add_bridge(bridge_id, bridge_type)
+        self.bridge_manager._add_bridge(self.bridge_id, self.bridge_type)
 
-        assert_that(self.bridge_manager._bridges, has_key(bridge_id))
+        assert_that(self.bridge_manager._bridges, has_key(self.bridge_id))
 
-    def test_remove_bridge(self):
-        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_type = u'basic'
-        self.bridge_manager._add_bridge(bridge_id, bridge_type)
-        self.bridge_manager._remove_bridge(bridge_id)
+    def test_add_channel_to_bridge(self):
+        bridge = self._install_bridge()
+        self.innerdata.channels[self.channel_name] = self.channel
 
-        assert_that(self.bridge_manager._bridges, is_not(has_key(bridge_id)))
+        self.bridge_manager._add_channel_to_bridge(self.bridge_id, self.channel_name)
 
-    def test_remove_bridge_non_existent(self):
-        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        self.bridge_manager._remove_bridge(bridge_id)
+        bridge._add_channel.assert_called_once_with(self.channel)
+        assert_that(self.bridge_notifier._on_bridge_enter.called, equal_to(False))
 
-        assert_that(self.bridge_manager._bridges, is_not(has_key(bridge_id)))
+    def test_finish_bridge_initialization(self):
+        channel_1 = Mock()
+        channel_2 = Mock()
+        bridge = self._install_bridge()
+        bridge.linked.return_value = True
+        bridge.channels = [channel_1, channel_2]
 
-    def test_get_bridge(self):
-        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge_type = u'basic'
-        self.bridge_manager._add_bridge(bridge_id, bridge_type)
-        bridge = self.bridge_manager.get_bridge(bridge_id)
+        self.bridge_manager._finish_bridge_initialization(self.bridge_id)
 
-        assert_that(bridge.bridge_id, equal_to(bridge_id))
-
-    def test_get_bridge_non_existent(self):
-        bridge_id = u'e136cd36-5187-430c-af2a-d1f08870847b'
-        bridge = self.bridge_manager.get_bridge(bridge_id)
-
-        assert_that(bridge, none())
+        expected_calls = [
+            call(channel_1.channel, channel_2.channel),
+            call(channel_2.channel, channel_1.channel),
+        ]
+        assert_that(expected_calls, equal_to(self.innerdata.setpeerchannel.call_args_list))

@@ -17,13 +17,13 @@
 
 import unittest
 
-from hamcrest import assert_that, contains, equal_to, is_not
+from hamcrest import assert_that, equal_to, is_not
 from mock import Mock
 from xivo_cti.channel import ChannelRole
 from xivo_cti.services.bridge.bridge import Bridge
 
 
-class BridgeTest(unittest.TestCase):
+class TestBridge(unittest.TestCase):
 
     def setUp(self):
         self.bridge = Bridge('e136cd36-5187-430c-af2a-d1f08870847b', 'basic')
@@ -33,25 +33,25 @@ class BridgeTest(unittest.TestCase):
     def test_add_channel(self):
         self.bridge._add_channel(self.channel_1)
 
-        assert_that(self.bridge.channels, contains(self.channel_1))
+        assert_that(self.bridge.channels, equal_to([self.channel_1]))
 
     def test_remove_channel(self):
         self.bridge._add_channel(self.channel_1)
         self.bridge._remove_channel(self.channel_1)
 
-        assert_that(self.bridge.channels, is_not(contains(self.channel_1)))
+        assert_that(self.bridge.channels, equal_to([]))
 
     def test_remove_channel_non_existent(self):
         self.bridge._remove_channel(self.channel_1)
 
-        assert_that(self.bridge.channels, is_not(contains(self.channel_1)))
+        assert_that(self.bridge.channels, equal_to([]))
 
-    def test_basic_channels_connected_return_true_with_two_basic_channels(self):
+    def test_linked_return_true_with_two_basic_channels(self):
         self.bridge.channels = [self.channel_1, self.channel_2]
 
         assert_that(self.bridge.linked())
 
-    def test_basic_channels_connected_return_false_when_one_basic_channels(self):
+    def test_linked_return_false_when_one_basic_channels(self):
         self.bridge.channels = [self.channel_1]
 
         assert_that(self.bridge.linked(), equal_to(False))
@@ -68,7 +68,7 @@ class BridgeTest(unittest.TestCase):
                 assert_that(caller, is_not(equal_to(callee)),
                             'caller and callee equals with roles (%s, %s)' % (role1, role2))
 
-    def test_caller_channel_is_first_when_role_unknown(self):
+    def test_caller_channel_is_channel_1_when_role_unknown(self):
         self.bridge.channels = [self.channel_1, self.channel_2]
         self.channel_1.role = ChannelRole.unknown
         self.channel_2.role = ChannelRole.unknown
