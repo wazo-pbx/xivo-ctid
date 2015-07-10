@@ -645,7 +645,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': 'SIP/pcm_dev-0000000b',
                  'Uniqueid': '1338379282.18',
                  'Meetme': '800',
-                 'Usernum': '1',
+                 'User': '1',
                  'Status': 'on'}
 
         service_manager.parse_meetmemute(event)
@@ -659,7 +659,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': 'SIP/pcm_dev-0000000b',
                  'Uniqueid': '1338379282.18',
                  'Meetme': '800',
-                 'Usernum': '1',
+                 'User': '1',
                  'Status': 'on'}
 
         service_manager.parse_meetmemute(event)
@@ -673,7 +673,7 @@ class TestMeetmeServiceManager(unittest.TestCase):
                  'Channel': 'SIP/pcm_dev-0000000b',
                  'Uniqueid': '1338379282.18',
                  'Meetme': '800',
-                 'Usernum': '1',
+                 'User': '1',
                  'Status': 'off'}
 
         service_manager.parse_meetmemute(event)

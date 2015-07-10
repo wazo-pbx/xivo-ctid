@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 CHANNEL = 'Channel'
 CONF_ROOM_NUMBER = 'Meetme'
-USERNUM = 'User'
+USER = 'User'
 CIDNAME = 'CallerIDName'
 CIDNUMBER = 'CallerIDNum'
 YES, NO = 'Yes', 'No'
@@ -52,7 +52,7 @@ def parse_join(event):
         context.get('meetme_service_manager').join(
             event[CHANNEL],
             number,
-            int(event[USERNUM]),
+            int(event[USER]),
             event[CIDNAME],
             event[CIDNUMBER])
 
@@ -60,7 +60,7 @@ def parse_join(event):
 def parse_leave(event):
     number = event[CONF_ROOM_NUMBER]
     if meetme_dao.is_a_meetme(number):
-        context.get('meetme_service_manager').leave(number, int(event[USERNUM]))
+        context.get('meetme_service_manager').leave(number, int(event[USER]))
 
 
 def parse_meetmelist(event):
@@ -80,9 +80,9 @@ def parse_meetmemute(event):
     if meetme_dao.is_a_meetme(number):
         muting = event['Status'] == 'on'
         if muting:
-            context.get('meetme_service_manager').mute(number, int(event['Usernum']))
+            context.get('meetme_service_manager').mute(number, int(event[USER]))
         else:
-            context.get('meetme_service_manager').unmute(number, int(event['Usernum']))
+            context.get('meetme_service_manager').unmute(number, int(event[USER]))
 
 
 class MeetmeServiceManager(object):
