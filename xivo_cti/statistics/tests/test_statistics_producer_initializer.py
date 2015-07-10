@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ class TestStatisticsProducerInitializer(unittest.TestCase):
         self.statistics_producer_initializer.init_queue_statistics_producer(self.queue_statistics_producer)
 
         mock_queue_dao.get_ids.assert_called_once_with()
-        self.queue_statistics_producer.on_queue_added.assert_was_called_with('12')
-        self.queue_statistics_producer.on_queue_added.assert_was_called_with('24')
+        self.queue_statistics_producer.on_queue_added.assert_any_call('12')
+        self.queue_statistics_producer.on_queue_added.assert_any_call('24')
 
     @patch('xivo_cti.dao.queue')
     def test_init_queue_statistics_producer_agents(self, mock_queue_dao):

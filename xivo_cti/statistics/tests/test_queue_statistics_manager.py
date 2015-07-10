@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ class TestQueueStatisticsManager(unittest.TestCase):
 
         self.queue_statistics_manager._on_queue_member_event(queue_member)
 
-        self.ami_class.queuesummary.assert_was_called_with(queue_member.queue_name)
+        self.ami_class.queuesummary.assert_called_once_with(queue_member.queue_name)
 
     @patch('xivo_cti.dao.queue', spec=QueueDAO)
     def test_get_queue_summary(self, mock_queue_dao):

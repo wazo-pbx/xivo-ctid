@@ -454,7 +454,7 @@ class TestQueueEntryManager(unittest.TestCase):
 
         self.manager.publish_all_realtime_stats(cti_connection)
 
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with(
+        self.manager._statistics_notifier.send_statistic.assert_any_call(
             {
                 '%s' % 56: {
                     'Xivo-WaitingCalls': 1,
@@ -462,7 +462,7 @@ class TestQueueEntryManager(unittest.TestCase):
                 }
             },
             cti_connection)
-        self.manager._statistics_notifier.send_statistic.assert_was_called_with(
+        self.manager._statistics_notifier.send_statistic.assert_any_call(
             {
                 '%s' % 34: {
                     'Xivo-WaitingCalls': 1,

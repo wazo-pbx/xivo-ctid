@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -112,10 +112,10 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.on_agent_loggedon(agentid1)
 
-        self.queue_statistics_producer.notifier.on_stat_changed.assert_was_called_with(
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_any_call(
             _aQueueStat().in_queue(queue1_id).nb_of_logged_agents(1).build()
         )
-        self.queue_statistics_producer.notifier.on_stat_changed.assert_was_called_with(
+        self.queue_statistics_producer.notifier.on_stat_changed.assert_any_call(
             _aQueueStat().in_queue(queue2_id).nb_of_logged_agents(1).build()
         )
 
@@ -275,12 +275,12 @@ class TestQueueStatisticsProducer(unittest.TestCase):
 
         self.queue_statistics_producer.send_all_stats(connection_cti)
 
-        self.queue_statistics_producer.notifier.send_statistic.assert_was_called_with(
+        self.queue_statistics_producer.notifier.send_statistic.assert_any_call(
             _aQueueStat().in_queue(queueid1).nb_of_logged_agents(0).build(),
             connection_cti
         )
 
-        self.queue_statistics_producer.notifier.send_statistic.assert_was_called_with(
+        self.queue_statistics_producer.notifier.send_statistic.assert_any_call(
             _aQueueStat().in_queue(queueid2).nb_of_logged_agents(0).build(),
             connection_cti
         )
