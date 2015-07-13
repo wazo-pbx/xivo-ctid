@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,6 +59,13 @@ class TestQueueMemberUpdater(unittest.TestCase):
         self.queue_member_updater._add_dao_queue_members_on_update()
 
         self.assertFalse(self.ami_class.called)
+
+    def test_on_ami_agent_complete(self):
+        ami_event = {'Queue': 'queue1', 'MemberName': 'member1'}
+
+        self.queue_member_updater.on_ami_agent_complete(ami_event)
+
+        self.ami_class.queuestatus.assert_called_once_with('queue1', 'member1')
 
     @patch('xivo_cti.services.queue_member.member.QueueMember.from_ami_agent_added_to_queue')
     def test_on_ami_agent_added_to_queue(self, from_ami_agent_added_to_queue):
