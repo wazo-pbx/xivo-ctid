@@ -45,7 +45,6 @@ from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
-from xivo_dao import user_dao as old_user_dao
 from xivo_dao.resources.user import dao as user_dao
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
