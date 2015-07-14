@@ -45,7 +45,6 @@ from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
-from xivo_dao import user_dao as old_user_dao
 from xivo_dao.resources.user import dao as user_dao
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 
@@ -464,7 +463,6 @@ class Safe(object):
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel
-        chanprops.properties['talkingto_id'] = peerchannel
 
     def handle_bridge_link(self, bridge_enter_event):
         channel_1, channel_2 = bridge_enter_event.bridge.channels
