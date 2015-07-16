@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,6 @@ import random
 from xivo_cti import ALPHANUMS
 from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.ami import ami_logger
-from xivo_cti.ami import ami_event_complete_logger
-from xivo_cti.ami import ami_status_request_logger
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.ami.initializer import AMIInitializer
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -50,9 +47,6 @@ class AMI(object):
         self.originate_actionids = {}
 
     def init_connection(self):
-        ami_logger.AMILogger.register_callbacks()
-        ami_event_complete_logger.AMIEventCompleteLogger.register_callbacks()
-        ami_status_request_logger.AMIStatusRequestLogger.register_callbacks()
         AMIAgentLoginLogoff.register_callbacks()
         ami_agent_login_logoff = AMIAgentLoginLogoff.get_instance()
         ami_agent_login_logoff.queue_statistics_producer = self._ctiserver._queue_statistics_producer
