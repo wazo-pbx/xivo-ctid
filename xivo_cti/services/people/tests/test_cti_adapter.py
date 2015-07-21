@@ -177,3 +177,87 @@ class TestCTIAdapter(TestCase):
                 }
             }
         )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_personal_contacts(self):
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.personal_contacts(self.cti_connection, s.user_id)
+
+        self.client.directories.privates.assert_called_once_with(profile=s.profile, token=s.token)
+
+    def test_send_personal_contacts_result(self):
+        user_id = 12
+        results = {
+            'column_headers': s.column_headers,
+            'column_types': s.column_types,
+            'results': s.results,
+        }
+
+        self.cti_adapter._send_personal_contacts_result(user_id, results)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contacts_result',
+                'column_headers': s.column_headers,
+                'column_types': s.column_types,
+                'results': s.results,
+            }
+        )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_create_personal_contact(self):
+        contact_infos = {'firstname': 'Bob',
+                         'lastname': 'Le Bricoleur',
+                         'random_key': 'random_value'}
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.create_personal_contact(self.cti_connection, s.user_id, contact_infos)
+
+        self.client.privates.create.assert_called_once_with(contact_infos=contact_infos, token=s.token)
+
+    def test_send_personal_contact_added(self):
+        user_id = 12
+        result = None
+
+        self.cti_adapter._send_personal_contact_added(user_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contact_added'
+            }
+        )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_delete_personal_contact(self):
+        source = "internal"
+        source_entry_id = "123456789"
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.delete_personal_contact(self.cti_connection, s.user_id, source, source_entry_id)
+
+        self.client.privates.delete.assert_called_once_with(contact_id=source_entry_id, token=s.token)
+
+    def test_send_personal_contact_deleted(self):
+        user_id = 12
+        source = "internal"
+        source_entry_id = "123456789"
+        result = None
+
+        self.cti_adapter._send_personal_contact_deleted(user_id, source, source_entry_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contact_deleted',
+                'data': {
+                    'source': source,
+                    'source_entry_id': source_entry_id,
+                }
+            }
+        )
