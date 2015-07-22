@@ -24,9 +24,6 @@ from xivo_cti.interfaces.interface_ami import AMI
 class TestInterfaceAMI(unittest.TestCase):
 
     def setUp(self):
-        self.ami_def_patcher = patch('xivo_cti.interfaces.interface_ami.ami_def')
-        self.ami_def = self.ami_def_patcher.start()
-
         self.context_patcher = patch('xivo_cti.interfaces.interface_ami.context')
         self.context = self.context_patcher.start()
 
@@ -38,7 +35,6 @@ class TestInterfaceAMI(unittest.TestCase):
         self.ami = AMI(self.cti_server, Mock(), Mock())
 
     def tearDown(self):
-        self.ami_def_patcher.stop()
         self.context_patcher.stop()
         self.ami_callback_handler_patcher.stop()
 
@@ -53,13 +49,10 @@ class TestInterfaceAMI(unittest.TestCase):
         callbacks = [callback]
         instance.get_callbacks.return_value = callbacks
 
-        evfunctions = {}
-        self.ami_def.evfunction_to_method_name = evfunctions
-
         ami_18 = Mock()
         self.context.get.return_value = ami_18
 
-        return handler, instance, callback, evfunctions, ami_18
+        return handler, instance, callback, ami_18
 
     def test_decode_raw_event(self):
         raw_event = 'Event: Foobar\r\nCallerIDName: LASTNAME Firstnam\xe9\r\n'
@@ -70,12 +63,21 @@ class TestInterfaceAMI(unittest.TestCase):
         self.assertEquals(result, expected)
 
     def test_handle_ami_function_calls_callback_from_ami_callback_handler(self):
-        _, instance, _, _, _ = self.setup_handle_ami_function()
-
+        _, instance, _, _ = self.setup_handle_ami_function()
         event = {'Event': 'Foobar'}
-        self.ami.handle_ami_function('Foobar', event)
+
+        self.ami.handle_ami_function(event['Event'], event)
 
         instance.get_callbacks.assert_called_once_with(event)
+
+    def test_handle_ami_funtion_calls_ami_method(self):
+        _, _, _, ami_18 = self.setup_handle_ami_function()
+        event = {'Event': 'Foobar'}
+        ami_18.ami_foobar = Mock()
+
+        self.ami.handle_ami_function(event['Event'], event)
+
+        ami_18.ami_foobar.assert_called_once_with(event)
 
     def test_run_functions_with_one_param(self):
         f1, f2, f3 = functions = [
