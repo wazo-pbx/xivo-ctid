@@ -26,6 +26,15 @@ def _parse_set_favorite(msg, command):
     command.enabled = msg.get('favorite')
 
 
+def _parse_create_personal_contact(msg, command):
+    command.contact_infos = msg.get('contact_infos')
+
+
+def _parse_delete_personal_contact(msg, command):
+    command.source = msg.get('source')
+    command.source_entry_id = msg.get('source_entry_id')
+
+
 PeopleSearch = CTICommandClass('people_search', match_fun=None, parse_fun=_parse_search)
 PeopleSearch.add_to_registry()
 
@@ -40,3 +49,17 @@ PeopleFavorites.add_to_registry()
 
 PeopleSetFavorite = CTICommandClass('people_set_favorite', match_fun=None, parse_fun=_parse_set_favorite)
 PeopleSetFavorite.add_to_registry()
+
+
+PeoplePersonalContacts = CTICommandClass('people_personal_contacts', match_fun=None, parse_fun=None)
+PeoplePersonalContacts.add_to_registry()
+
+
+PeopleCreatePersonalContact = CTICommandClass('people_create_personal_contact', match_fun=None,
+                                              parse_fun=_parse_create_personal_contact)
+PeopleCreatePersonalContact.add_to_registry()
+
+
+PeopleDeletePersonalContact = CTICommandClass('people_delete_personal_contact', match_fun=None,
+                                              parse_fun=_parse_delete_personal_contact)
+PeopleDeletePersonalContact.add_to_registry()

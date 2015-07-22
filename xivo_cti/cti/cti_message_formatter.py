@@ -156,3 +156,28 @@ class CTIMessageFormatter(object):
                 'status': status,
             }
         }
+
+    @staticmethod
+    def people_personal_contacts_result(personal_contacts_result):
+        return {
+            'class': 'people_personal_contacts_result',
+            'column_headers': personal_contacts_result['column_headers'],
+            'column_types': personal_contacts_result['column_types'],
+            'results': personal_contacts_result['results'],
+        }
+
+    @staticmethod
+    def people_personal_contact_deleted(source, source_entry_id):
+        return {
+            'class': 'people_personal_contact_deleted',
+            'data': {
+                'source': source,
+                'source_entry_id': source_entry_id,
+            }
+        }
+
+    @staticmethod
+    def people_personal_contact_created():
+        return {
+            'class': 'people_personal_contact_created'
+            }

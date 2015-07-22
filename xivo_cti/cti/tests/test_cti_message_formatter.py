@@ -211,6 +211,42 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_personal_contacts_result(self):
+        personal_contacts_result = {
+            "column_headers": ["Firstname", "Lastname", "Phone number", "Mobile", "Fax", "Email",
+                               "Agent", "Favorite", "Personal"],
+            "column_types": [None, "name", "number_office", "number_mobile", "fax", "email",
+                             "relation_agent", "favorite", "personal"],
+            "results": [
+                {
+                    "column_values": ["Bob", "Marley", "5555555", "5556666", "5553333",
+                                      "mail@example.com", None, True, True],
+                    "relations": {
+                        "agent": None,
+                        "user": None,
+                        "endpoint": None
+                    },
+                    "source": "personal"
+                }, {
+                    "column_values": ["Charlie", "Boblin", "5555556", "5554444", "5552222",
+                                      "mail2@example.com", None, False, True],
+                    "relations": {
+                        "agent": None,
+                        "user": None,
+                        "endpoint": None
+                    },
+                    "source": "personal"
+                }
+            ]
+        }
+
+        result = CTIMessageFormatter.people_personal_contacts_result(personal_contacts_result)
+
+        expected = dict(personal_contacts_result)
+        expected.update({'class': 'people_personal_contacts_result'})
+
+        assert_that(result, equal_to(expected))
+
     def test_people_favorite_update(self):
         source = "internal"
         source_entry_id = "123456789"
@@ -228,6 +264,30 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         expected = dict(set_favorite_result)
         expected.update({'class': 'people_favorite_update'})
+
+        assert_that(result, equal_to(expected))
+
+    def test_people_personal_contact_created(self):
+        expected = {
+            'class': 'people_personal_contact_created'
+        }
+
+        result = CTIMessageFormatter.people_personal_contact_created()
+
+        assert_that(result, equal_to(expected))
+
+    def test_people_personal_contact_deleted(self):
+        source = "personal"
+        source_entry_id = "123456789"
+        expected = {
+            'class': 'people_personal_contact_deleted',
+            'data': {
+                'source': source,
+                'source_entry_id': source_entry_id
+                }
+            }
+
+        result = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
 
         assert_that(result, equal_to(expected))
 
