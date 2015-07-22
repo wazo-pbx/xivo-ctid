@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -279,10 +279,10 @@ class DisplaysMgr(object):
 
 class DirectoriesMgr(object):
     _DIRECTORY_SRC_CLASSES = {
-        'file': CSVFileDirectoryDataSource,
-        'http': HTTPDirectoryDataSource,
-        'internal': InternalDirectoryDataSource,
-        'ldapfilter': LDAPDirectoryDataSource,
+        'csv': CSVFileDirectoryDataSource,
+        'webservices': HTTPDirectoryDataSource,
+        'xivo': InternalDirectoryDataSource,
+        'ldap': LDAPDirectoryDataSource,
         'phonebook': PhonebookDirectoryDataSource,
     }
 
@@ -310,6 +310,5 @@ class DirectoriesMgr(object):
         self._old_contents = contents
 
     def _get_directory_class(self, directory_contents):
-        uri = directory_contents['uri']
-        kind = uri.split(':', 1)[0]
+        kind = directory_contents['type']
         return self._DIRECTORY_SRC_CLASSES[kind]
