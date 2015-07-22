@@ -177,7 +177,7 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
-    def people_personal_contact_added():
+    def people_personal_contact_created():
         return {
-            'class': 'people_personal_contact_added'
+            'class': 'people_personal_contact_created'
             }

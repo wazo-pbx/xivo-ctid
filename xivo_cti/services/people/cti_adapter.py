@@ -77,7 +77,7 @@ class PeopleCTIAdapter(object):
     def create_personal_contact(self, cti_connection, user_id, contact_infos):
         logger.debug('Create Personal Contact called')
         token = cti_connection.connection_details['auth_token']
-        callback = partial(self._send_personal_contact_added, user_id)
+        callback = partial(self._send_personal_contact_created, user_id)
         self._runner.run_with_cb(callback, self._client.privates.create, contact_infos=contact_infos, token=token)
 
     def delete_personal_contact(self, cti_connection, user_id, source, source_entry_id):
@@ -116,7 +116,7 @@ class PeopleCTIAdapter(object):
         message = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
         self._cti_server.send_to_cti_client(xuserid, message)
 
-    def _send_personal_contact_added(self, user_id, result):
+    def _send_personal_contact_created(self, user_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
-        message = CTIMessageFormatter.people_personal_contact_added()
+        message = CTIMessageFormatter.people_personal_contact_created()
         self._cti_server.send_to_cti_client(xuserid, message)

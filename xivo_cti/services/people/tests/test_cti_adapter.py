@@ -219,16 +219,16 @@ class TestCTIAdapter(TestCase):
 
         self.client.privates.create.assert_called_once_with(contact_infos=contact_infos, token=s.token)
 
-    def test_send_personal_contact_added(self):
+    def test_send_personal_contact_created(self):
         user_id = 12
         result = None
 
-        self.cti_adapter._send_personal_contact_added(user_id, result)
+        self.cti_adapter._send_personal_contact_created(user_id, result)
 
         self.cti_server.send_to_cti_client.assert_called_once_with(
             'xivo/12',
             {
-                'class': 'people_personal_contact_added'
+                'class': 'people_personal_contact_created'
             }
         )
 

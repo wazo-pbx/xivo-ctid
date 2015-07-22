@@ -267,12 +267,12 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
-    def test_people_personal_contact_added(self):
+    def test_people_personal_contact_created(self):
         expected = {
-            'class': 'people_personal_contact_added'
+            'class': 'people_personal_contact_created'
         }
 
-        result = CTIMessageFormatter.people_personal_contact_added()
+        result = CTIMessageFormatter.people_personal_contact_created()
 
         assert_that(result, equal_to(expected))
 
