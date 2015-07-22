@@ -19,7 +19,6 @@ import logging
 import random
 
 from xivo_cti import ALPHANUMS
-from xivo_cti import asterisk_ami_definitions as ami_def
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.ami.initializer import AMIInitializer
@@ -122,7 +121,7 @@ class AMI(object):
                     except Exception:
                         logger.exception('response_error (%s) (%s)', event, nocolon)
 
-    def handle_ami_function(self, evfunction, event):
+    def handle_ami_function(self, event_name, event):
         """
         Handles the AMI events related to a given function (i.e. containing the Event field).
         It roughly only dispatches them to the relevant commandset's methods.
@@ -131,10 +130,10 @@ class AMI(object):
         functions = []
         if 'Event' in event:
             functions.extend(ami_callback_handler.AMICallbackHandler.get_instance().get_callbacks(event))
-        if evfunction in ami_def.evfunction_to_method_name:
-            methodname = ami_def.evfunction_to_method_name.get(evfunction)
-            if hasattr(ami_18, methodname):
-                functions.append(getattr(ami_18, methodname))
+
+        methodname = 'ami_{}'.format(event_name.lower())
+        if hasattr(ami_18, methodname):
+            functions.append(getattr(ami_18, methodname))
 
         self._run_functions_with_event(functions, event)
 
