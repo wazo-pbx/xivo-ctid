@@ -40,6 +40,7 @@ class Channel(object):
             'holded': False,
             'commstatus': 'ready',
             'timestamp': time.time(),
+            'talkingto_id': None,
             'state': 'Unknown',
         }
         self.relations = []
