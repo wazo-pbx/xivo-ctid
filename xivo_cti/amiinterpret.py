@@ -267,7 +267,6 @@ class AMI_1_8(object):
                     old = event.get('Old') or previous_status['old']
                     new = event.get('New') or previous_status['new']
                     waiting = event.get('Waiting') or previous_status['waiting']
-                    logger.info("Voicemail event received. mailbox:%s new:%s old:%s waiting:%s", full_mailbox, new, old, waiting)
                     self.innerdata.voicemailupdate(full_mailbox, new, old, waiting)
             if 'Old' not in event and 'New' not in event:
                 logger.info("Voicemail event did not contain 'old' and 'new' count. retrieving mailbox count")
