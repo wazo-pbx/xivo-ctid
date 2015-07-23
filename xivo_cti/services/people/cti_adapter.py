@@ -72,19 +72,19 @@ class PeopleCTIAdapter(object):
         profile = dao.user.get_context(user_id)
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contacts_result, user_id)
-        self._runner.run_with_cb(callback, self._client.directories.privates, profile=profile, token=token)
+        self._runner.run_with_cb(callback, self._client.directories.personal, profile=profile, token=token)
 
     def create_personal_contact(self, cti_connection, user_id, contact_infos):
         logger.debug('Create Personal Contact called')
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_created, user_id)
-        self._runner.run_with_cb(callback, self._client.privates.create, contact_infos=contact_infos, token=token)
+        self._runner.run_with_cb(callback, self._client.personal.create, contact_infos=contact_infos, token=token)
 
     def delete_personal_contact(self, cti_connection, user_id, source, source_entry_id):
         logger.debug('Delete Personal Contact called')
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_deleted, user_id, source, source_entry_id)
-        self._runner.run_with_cb(callback, self._client.privates.delete, contact_id=source_entry_id, token=token)
+        self._runner.run_with_cb(callback, self._client.personal.delete, contact_id=source_entry_id, token=token)
 
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)

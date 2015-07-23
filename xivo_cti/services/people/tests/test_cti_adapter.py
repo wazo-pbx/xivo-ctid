@@ -185,7 +185,7 @@ class TestCTIAdapter(TestCase):
         with synchronize(self.async_runner):
             self.cti_adapter.personal_contacts(self.cti_connection, s.user_id)
 
-        self.client.directories.privates.assert_called_once_with(profile=s.profile, token=s.token)
+        self.client.directories.personal.assert_called_once_with(profile=s.profile, token=s.token)
 
     def test_send_personal_contacts_result(self):
         user_id = 12
@@ -217,7 +217,7 @@ class TestCTIAdapter(TestCase):
         with synchronize(self.async_runner):
             self.cti_adapter.create_personal_contact(self.cti_connection, s.user_id, contact_infos)
 
-        self.client.privates.create.assert_called_once_with(contact_infos=contact_infos, token=s.token)
+        self.client.personal.create.assert_called_once_with(contact_infos=contact_infos, token=s.token)
 
     def test_send_personal_contact_created(self):
         user_id = 12
@@ -241,7 +241,7 @@ class TestCTIAdapter(TestCase):
         with synchronize(self.async_runner):
             self.cti_adapter.delete_personal_contact(self.cti_connection, s.user_id, source, source_entry_id)
 
-        self.client.privates.delete.assert_called_once_with(contact_id=source_entry_id, token=s.token)
+        self.client.personal.delete.assert_called_once_with(contact_id=source_entry_id, token=s.token)
 
     def test_send_personal_contact_deleted(self):
         user_id = 12
