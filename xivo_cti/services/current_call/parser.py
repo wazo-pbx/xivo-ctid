@@ -39,6 +39,11 @@ class CurrentCallParser(object):
         self._current_call_manager.end_call(event['Channel'])
         self._current_call_manager.remove_transfer_channel(event['Channel'])
 
+    def parse_local_optimization_begin(self, event):
+        local_one_channel = event['LocalOneChannel']
+        local_two_channel = event['LocalTwoChannel']
+        self._current_call_manager.on_local_optimization(local_one_channel, local_two_channel)
+
     def parse_varset_transfername(self, event):
         if 'Variable' not in event or event['Variable'] != 'TRANSFERERNAME':
             return
@@ -54,4 +59,5 @@ class CurrentCallParser(object):
         ami_handler.register_callback('Hold', self.parse_hold)
         ami_handler.register_callback('Unhold', self.parse_unhold)
         ami_handler.register_callback('Hangup', self.parse_hangup)
+        ami_handler.register_callback('LocalOptimizationBegin', self.parse_local_optimization_begin)
         ami_handler.register_callback('VarSet', self.parse_varset_transfername)

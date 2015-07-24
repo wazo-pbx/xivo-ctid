@@ -86,6 +86,50 @@ class CurrentCallManager(object):
                 del self._unanswered_transfers[transfer_channel]
                 break
 
+    def on_local_optimization(self, local_one_channel, local_two_channel):
+        local_one_call = self._find_call(local_one_channel)
+        if not local_one_call:
+            logger.warning('local optimization: no call for channel %s', local_one_channel)
+            return
+        local_two_call = self._find_call(local_two_channel)
+        if not local_two_call:
+            logger.warning('local optimization: no call for channel %s', local_two_channel)
+            return
+        source_call = self._find_call(local_one_call[PEER_CHANNEL])
+        if not source_call:
+            logger.warning('local optimization: no call for channel %s', local_one_call[PEER_CHANNEL])
+            return
+        dest_call = self._find_call(local_two_call[PEER_CHANNEL])
+        if not dest_call:
+            logger.warning('local optimization: no call for channel %s', local_two_call[PEER_CHANNEL])
+            return
+
+        source_call[PEER_CHANNEL] = dest_call[LINE_CHANNEL]
+        dest_call[PEER_CHANNEL] = source_call[LINE_CHANNEL]
+
+        self._remove_call(local_one_channel)
+        self._remove_call(local_two_channel)
+
+    def _find_call(self, channel):
+        line = identity_from_channel(channel)
+        calls = self._calls_per_line.get(line)
+        if not calls:
+            return None
+
+        for call in calls:
+            if call[LINE_CHANNEL] == channel:
+                return call
+        return None
+
+    def _remove_call(self, channel):
+        line = identity_from_channel(channel)
+        calls = self._calls_per_line[line]
+        new_calls = [call for call in calls if call[LINE_CHANNEL] != channel]
+        if new_calls:
+            self._calls_per_line[line] = new_calls
+        else:
+            del self._calls_per_line[line]
+
     def _find_line_and_position(self, channel, field=PEER_CHANNEL):
         for line, calls in self._calls_per_line.iteritems():
             for index, call in enumerate(calls):
