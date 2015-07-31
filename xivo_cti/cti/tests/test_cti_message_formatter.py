@@ -284,8 +284,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
             'data': {
                 'source': source,
                 'source_entry_id': source_entry_id
-                }
             }
+        }
 
         result = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
 

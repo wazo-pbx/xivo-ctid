@@ -75,8 +75,7 @@ class TestPolycomAnswerer(unittest.TestCase):
         self.answerer.answer()
 
         mock_requests.post.assert_called_once_with(expected_url,
-            headers=expected_headers,
-            data=expected_data,
-            auth=ANY,
-            timeout=expected_timeout,
-        )
+                                                   headers=expected_headers,
+                                                   data=expected_data,
+                                                   auth=ANY,
+                                                   timeout=expected_timeout)

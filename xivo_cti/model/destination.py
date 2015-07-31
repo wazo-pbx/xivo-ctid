@@ -28,9 +28,9 @@ class Destination(object):
         self.value = value
 
     def __eq__(self, other):
-        return (self.dest_type == other.dest_type
-                and self.ipbxid == other.ipbxid
-                and self.value == other.value)
+        return (self.dest_type == other.dest_type and
+                self.ipbxid == other.ipbxid and
+                self.value == other.value)
 
     def to_exten(self):
         logger.warning('Unimplemented to exten method for type %s', self.dest_type)

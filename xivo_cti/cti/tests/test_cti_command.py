@@ -65,6 +65,7 @@ class TestCTICommand(unittest.TestCase):
 
     def test_callback_memory_usage(self):
         command_class = CTICommandClass(self.class_name, None, None)
+
         class Test(object):
             def __init__(self):
                 command_class.register_callback_params(self.parse)

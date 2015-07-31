@@ -32,17 +32,17 @@ from xivo_cti.xivo_ami import AMIClass
 class TestDeviceManager(unittest.TestCase):
 
     POLYCOM_CONFIG = {
-       'switchboard_polycom': {
-           'username': 'xivo_switchboard',
-           'password': 'xivo_switchboard',
-           'answer_delay': 0.4,
+        'switchboard_polycom': {
+            'username': 'xivo_switchboard',
+            'password': 'xivo_switchboard',
+            'answer_delay': 0.4,
         },
     }
     SNOM_CONFIG = {
-       'switchboard_snom': {
-           'username': 'guest',
-           'password': 'guest',
-           'answer_delay': 0.5,
+        'switchboard_snom': {
+            'username': 'guest',
+            'password': 'guest',
+            'answer_delay': 0.5,
         },
     }
 
@@ -55,7 +55,7 @@ class TestDeviceManager(unittest.TestCase):
         self._snom_controller = Mock(SnomController)
         self._yealink_controller = Mock(YealinkController)
         with patch('xivo_cti.services.device.controller.polycom.config', self.POLYCOM_CONFIG),\
-             patch('xivo_cti.services.device.controller.snom.config', self.SNOM_CONFIG):
+                patch('xivo_cti.services.device.controller.snom.config', self.SNOM_CONFIG):
             self.manager = DeviceManager(self.ami_class, self.cti_provd_client)
 
     def test_get_answer_fn_no_device(self):

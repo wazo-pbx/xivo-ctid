@@ -73,6 +73,5 @@ class TestSnomAnswerer(unittest.TestCase):
         self.answerer.answer()
 
         mock_requests.get.assert_called_once_with(expected_url,
-            auth=ANY,
-            timeout=expected_timeout,
-        )
+                                                  auth=ANY,
+                                                  timeout=expected_timeout)

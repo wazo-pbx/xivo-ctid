@@ -61,11 +61,10 @@ class _PolycomAnswerer(object):
         auth = HTTPDigestAuth(self._username, self._password)
         try:
             r = requests.post(url,
-              headers=self._HEADERS,
-              data=self._DATA,
-              auth=auth,
-              timeout=self._TIMEOUT,
-            )
+                              headers=self._HEADERS,
+                              data=self._DATA,
+                              auth=auth,
+                              timeout=self._TIMEOUT)
         except requests.RequestException:
             logger.exception('Failed to answer %s: unexpected error', self._hostname)
         else:

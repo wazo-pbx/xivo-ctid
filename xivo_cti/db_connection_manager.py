@@ -37,7 +37,7 @@ class DbConnectionPool(object):
 
     def __init__(self, db_uri):
         self._db_uri = db_uri
-        if not db_uri in DbConnectionPool._pool:
+        if db_uri not in DbConnectionPool._pool:
             DbConnectionPool._pool[db_uri] = Queue.Queue()
             connection = {}
             connection['conn'] = anysql.connect_by_uri(db_uri)

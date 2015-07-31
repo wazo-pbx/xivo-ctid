@@ -60,10 +60,9 @@ TWO_MONTHS = timedelta(days=60).total_seconds()
 @contextmanager
 def auth_client(userid):
     user = user_dao.get(userid)
-    auth_client = AuthClient(username=user.username,
-                             password=user.password,
-                             **config['auth'])
-    yield auth_client
+    yield AuthClient(username=user.username,
+                     password=user.password,
+                     **config['auth'])
 
 
 class Safe(object):
@@ -300,9 +299,9 @@ class Safe(object):
         def channel_filter(channel_key):
             '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
             for channel_start in potential_channel_start:
-                if (channel_key.lower().startswith(channel_start.lower())
-                        and self.channels[channel_key].peerchannel
-                        and not self.channels[channel_key].properties['holded']):
+                if (channel_key.lower().startswith(channel_start.lower()) and
+                        self.channels[channel_key].peerchannel and
+                        not self.channels[channel_key].properties['holded']):
                     return True
 
         return filter(channel_filter, self.channels)

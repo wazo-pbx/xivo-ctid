@@ -38,7 +38,7 @@ class TestPhoneDAO(unittest.TestCase):
     def test_get_status(self):
         phone_id = '42'
 
-        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus':sentinel.status}
+        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus': sentinel.status}
 
         assert_that(self.dao.get_status(phone_id), equal_to(sentinel.status))
 
@@ -50,7 +50,7 @@ class TestPhoneDAO(unittest.TestCase):
     def test_update_status(self):
         phone_id = '42'
 
-        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus':sentinel.status}
+        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus': sentinel.status}
 
         self.dao.update_status(phone_id, sentinel.new_status)
 
@@ -60,7 +60,7 @@ class TestPhoneDAO(unittest.TestCase):
     def test_that_update_status_return_true_or_false_to_indicate_a_change_in_status(self):
         phone_id = '42'
 
-        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus':sentinel.status}
+        self._innerdata.xod_status['phones'][phone_id] = {'hintstatus': sentinel.status}
 
         res = self.dao.update_status(phone_id, sentinel.new_status)
 

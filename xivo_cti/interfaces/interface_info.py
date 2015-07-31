@@ -66,7 +66,7 @@ class INFO(interfaces.Interfaces):
                             continue
                         clireply.append('    %s' % k)
                         for kk, vv in v.keeplist.iteritems():
-                            if len(args) > 2 and not kk in args[2]:
+                            if len(args) > 2 and kk not in args[2]:
                                 continue
                             listname, list_id = k, kk
                             clireply.append('        %s %s' %

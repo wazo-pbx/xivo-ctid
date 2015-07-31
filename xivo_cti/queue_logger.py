@@ -35,8 +35,9 @@ UNIQUEID = 'Uniqueid'
 class QueueLogger(object):
 
     cache = None
-    cache_threshold = 10    # Time to wait in sec before removing from the
-                            # cache when a call is not answered
+
+    # Time to wait in sec before removing from the cache when a call is not answered
+    cache_threshold = 10
 
     @classmethod
     def init(cls):

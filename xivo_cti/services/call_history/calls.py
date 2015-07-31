@@ -26,11 +26,11 @@ class Call(object):
         self.mode = mode
 
     def __eq__(self, other):
-        return (self.date == other.date
-                and self.duration == other.duration
-                and self.caller_name == other.caller_name
-                and self.extension == other.extension
-                and self.mode == other.mode)
+        return (self.date == other.date and
+                self.duration == other.duration and
+                self.caller_name == other.caller_name and
+                self.extension == other.extension and
+                self.mode == other.mode)
 
     def __ne__(self, other):
         return not self == other

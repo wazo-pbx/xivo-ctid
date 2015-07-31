@@ -24,7 +24,6 @@ from xivo_cti.services.device.controller.yealink import YealinkController
 from xivo_cti.xivo_ami import AMIClass
 
 
-
 class TestYealinkController(unittest.TestCase):
 
     def setUp(self):

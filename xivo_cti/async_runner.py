@@ -22,6 +22,7 @@ from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
+
 @contextmanager
 def synchronize(runner):
     yield

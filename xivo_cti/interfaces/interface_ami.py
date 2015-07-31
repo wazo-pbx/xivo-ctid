@@ -102,8 +102,8 @@ class AMI(object):
             elif 'Response' in event and event['Response'] is not None:
                 AMIResponseHandler.get_instance().handle_response(event)
                 response = event['Response']
-                if (response == 'Follows' and 'Privilege' in event
-                        and event['Privilege'] == 'Command'):
+                if (response == 'Follows' and 'Privilege' in event and
+                        event['Privilege'] == 'Command'):
                     try:
                         self.amiresponse_follows(event)
                     except Exception:
@@ -235,9 +235,9 @@ class AMI(object):
             if properties['amicommand'] in ['originate',
                                             'txfax']:
                 self.originate_actionids[actionid] = properties
-            elif ('mailboxcount' in properties['amicommand']
-                  and 'amiargs' in properties
-                  and len(properties['amiargs']) > 1):
+            elif ('mailboxcount' in properties['amicommand'] and
+                  'amiargs' in properties and
+                  len(properties['amiargs']) > 1):
                 # The context is not part of this event, it's only part
                 # of the request when using track_and_execute with an
                 # extra argument

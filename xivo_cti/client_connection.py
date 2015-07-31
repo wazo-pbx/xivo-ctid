@@ -23,11 +23,11 @@ from collections import deque
 
 class ClientConnection(object):
     class CloseException(Exception):
-        def __init__(self, errno= -1):
+        def __init__(self, errno=-1):
             self.args = (errno,)
 
-    def __init__(self, socket, address=None):
-        self.socket = socket
+    def __init__(self, socket_, address=None):
+        self.socket = socket_
         self.address = address
         self.socket.setblocking(0)
         self.sendqueue = deque()
@@ -88,7 +88,7 @@ class ClientConnection(object):
         except ssl.SSLError as e:
             if e.args[0] != ssl.SSL_ERROR_WANT_READ:
                 raise
-        except socket.error, (_errno, string):
+        except socket.error as (_errno, _):
             if _errno in [errno.EPIPE, errno.ECONNRESET, errno.ENOTCONN, errno.ETIMEDOUT, errno.EHOSTUNREACH]:
                 self.close()
                 raise self.CloseException(_errno)

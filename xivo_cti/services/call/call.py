@@ -49,8 +49,8 @@ class Call(object):
 
     @property
     def is_internal(self):
-        return (self.source.extension.is_internal
-                and self.destination.extension.is_internal)
+        return (self.source.extension.is_internal and
+                self.destination.extension.is_internal)
 
     def __eq__(self, compared_call):
         return self._is_equal(compared_call)

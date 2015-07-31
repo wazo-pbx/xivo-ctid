@@ -24,6 +24,7 @@ from hamcrest import equal_to
 from xivo_cti.model.consult_voicemail_destination import ConsultVoicemailDestination
 from xivo_dao import extensions_dao
 
+
 class TestConsultVoicemail(unittest.TestCase):
 
     def test_to_exten(self):

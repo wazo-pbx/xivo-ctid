@@ -180,4 +180,4 @@ class CTIMessageFormatter(object):
     def people_personal_contact_created():
         return {
             'class': 'people_personal_contact_created'
-            }
+        }

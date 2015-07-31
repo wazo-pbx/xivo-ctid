@@ -99,6 +99,5 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
                     'userstatus': {'xivo': self._get_userstatus()}}):
-            fn = lambda: self.presence_service_executor.execute_actions(user_id, 'unknown')
 
-            self.assertRaises(ValueError, fn)
+            self.assertRaises(ValueError, self.presence_service_executor.execute_actions, user_id, 'unknown')

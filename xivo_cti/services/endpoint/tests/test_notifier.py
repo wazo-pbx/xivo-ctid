@@ -36,15 +36,14 @@ class TestStatusNotifier(unittest.TestCase):
 
         self._notifier.notify(phone_id, status)
 
-        self._ctiserver.send_cti_event.assert_called_once_with(
-            {'class': 'getlist',
-             'listname': 'phones',
-             'function': 'updatestatus',
-             'tipbxid': 'xivo',
-             'tid': phone_id,
-             'status': {'hintstatus': status},
-            }
-        )
+        self._ctiserver.send_cti_event.assert_called_once_with({
+            'class': 'getlist',
+            'listname': 'phones',
+            'function': 'updatestatus',
+            'tipbxid': 'xivo',
+            'tid': phone_id,
+            'status': {'hintstatus': status},
+        })
 
     def test_that_notify_sends_endpoint_status_update_event_on_the_bus(self):
         phone_id = '42'

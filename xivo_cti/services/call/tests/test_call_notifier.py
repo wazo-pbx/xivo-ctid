@@ -29,6 +29,7 @@ CONTEXT = 'my_context'
 EXTENSION = Mock(number=NUMBER, context=CONTEXT)
 CALLBACK = Mock()
 
+
 class TestCallNotifier(unittest.TestCase):
 
     def setUp(self):
