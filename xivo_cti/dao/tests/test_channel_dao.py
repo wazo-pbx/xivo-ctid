@@ -17,6 +17,8 @@
 
 import unittest
 
+from hamcrest import assert_that
+from hamcrest import contains_inanyorder
 from mock import Mock
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -108,4 +110,4 @@ class TestChannelDAO(unittest.TestCase):
     def test_channels_from_identity_when_two_channels(self):
         result = self._channel_dao.channels_from_identity('sccp/123')
 
-        self.assertEqual(result, [self.channel_2['id'], self.channel_3['id']])
+        assert_that(result, contains_inanyorder(self.channel_2['id'], self.channel_3['id']))

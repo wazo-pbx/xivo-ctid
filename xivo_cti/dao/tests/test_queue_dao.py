@@ -17,6 +17,8 @@
 
 import unittest
 
+from hamcrest import assert_that
+from hamcrest import contains_inanyorder
 from mock import Mock, sentinel
 from xivo_cti.dao.queue_dao import QueueDAO
 from xivo_cti.innerdata import Safe
@@ -143,4 +145,4 @@ class TestQueueDAO(unittest.TestCase):
 
         result = self.dao.get_ids()
 
-        self.assertEqual(result, ['1', '3'])
+        assert_that(result, contains_inanyorder('1', '3'))

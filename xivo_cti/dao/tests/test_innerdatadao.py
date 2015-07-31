@@ -17,6 +17,8 @@
 
 import unittest
 
+from hamcrest import assert_that
+from hamcrest import contains_inanyorder
 from mock import Mock
 from mock import patch
 from xivo_cti.dao.innerdata_dao import InnerdataDAO
@@ -39,4 +41,4 @@ class TestInnerdataDAO(unittest.TestCase):
 
         result = self.innerdata_dao.get_presences(profile)
 
-        self.assertEquals(result, expected_result)
+        assert_that(result, contains_inanyorder(*expected_result))
