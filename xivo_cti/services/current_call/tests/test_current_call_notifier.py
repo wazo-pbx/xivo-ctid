@@ -139,3 +139,10 @@ class TestCurrentCallNotifier(unittest.TestCase):
 
         self.assertEqual(self.client_connection_2.send_message.call_count, 0)
         self.assertTrue(self.line_identity_1.lower() not in self.notifier._subscriptions, 'Subscriber not removed')
+
+    def test_attended_transfer_answered_no_subscription_doesnt_raise(self):
+        formatted_message = {'class': 'current_call_attended_transfer_answered',
+                             'line': self.line_identity_1}
+        self.current_call_formatter.attended_transfer_answered.return_value = formatted_message
+
+        self.notifier.attended_transfer_answered(self.line_identity_1)
