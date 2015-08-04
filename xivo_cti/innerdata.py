@@ -466,8 +466,8 @@ class Safe(object):
         chanprops.peerchannel = peerchannel
         chanprops.properties['talkingto_id'] = peerchannel
 
-    def handle_bridge_link(self, bridge_enter_event):
-        channel_1, channel_2 = bridge_enter_event.bridge.channels
+    def handle_bridge_link(self, bridge_event):
+        channel_1, channel_2 = bridge_event.bridge.channels
         self._update_connected_channel(channel_1, channel_2)
         self._update_connected_channel(channel_2, channel_1)
 
