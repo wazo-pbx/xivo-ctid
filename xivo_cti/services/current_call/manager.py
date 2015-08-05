@@ -89,19 +89,19 @@ class CurrentCallManager(object):
     def on_local_optimization(self, local_one_channel, local_two_channel):
         local_one_call = self._find_call(local_one_channel)
         if not local_one_call:
-            logger.warning('local optimization: no call for channel %s', local_one_channel)
+            logger.info('local optimization: no call for channel %s', local_one_channel)
             return
         local_two_call = self._find_call(local_two_channel)
         if not local_two_call:
-            logger.warning('local optimization: no call for channel %s', local_two_channel)
+            logger.info('local optimization: no call for channel %s', local_two_channel)
             return
         source_call = self._find_call(local_one_call[PEER_CHANNEL])
         if not source_call:
-            logger.warning('local optimization: no call for channel %s', local_one_call[PEER_CHANNEL])
+            logger.info('local optimization: no call for channel %s', local_one_call[PEER_CHANNEL])
             return
         dest_call = self._find_call(local_two_call[PEER_CHANNEL])
         if not dest_call:
-            logger.warning('local optimization: no call for channel %s', local_two_call[PEER_CHANNEL])
+            logger.info('local optimization: no call for channel %s', local_two_call[PEER_CHANNEL])
             return
 
         source_call[PEER_CHANNEL] = dest_call[LINE_CHANNEL]
