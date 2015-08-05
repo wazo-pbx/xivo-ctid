@@ -71,7 +71,7 @@ class AMI_1_8(object):
 
         self._call_form_dispatch_filter.handle_hangup(uniqueid, channel)
         self.innerdata.hangup(channel)
-        self._aggregator.clean(uniqueid)
+        self._aggregator.on_hangup(uniqueid)
 
     def ami_dialbegin(self, event):
         channel = event.get('Channel')
