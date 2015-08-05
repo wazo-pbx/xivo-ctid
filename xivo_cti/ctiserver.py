@@ -53,8 +53,10 @@ from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.people import PeopleCreatePersonalContact
 from xivo_cti.cti.commands.people import PeopleDeletePersonalContact
+from xivo_cti.cti.commands.people import PeopleEditPersonalContact
 from xivo_cti.cti.commands.people import PeopleFavorites
 from xivo_cti.cti.commands.people import PeopleHeaders
+from xivo_cti.cti.commands.people import PeoplePersonalContactRaw
 from xivo_cti.cti.commands.people import PeoplePersonalContacts
 from xivo_cti.cti.commands.people import PeopleSearch
 from xivo_cti.cti.commands.people import PeopleSetFavorite
@@ -224,11 +226,17 @@ class CTIServer(object):
                                                                                  'source', 'source_entry_id', 'enabled'))
         PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
         PeoplePersonalContacts.register_callback_params(people_adapter.personal_contacts, ('cti_connection', 'user_id'))
+        PeoplePersonalContactRaw.register_callback_params(people_adapter.personal_contact_raw,
+                                                          ('cti_connection', 'user_id', 'source',
+                                                           'source_entry_id'))
         PeopleCreatePersonalContact.register_callback_params(people_adapter.create_personal_contact,
                                                              ('cti_connection', 'user_id', 'contact_infos'))
         PeopleDeletePersonalContact.register_callback_params(people_adapter.delete_personal_contact,
                                                              ('cti_connection', 'user_id', 'source',
                                                               'source_entry_id'))
+        PeopleEditPersonalContact.register_callback_params(people_adapter.edit_personal_contact,
+                                                           ('cti_connection', 'user_id', 'source',
+                                                            'source_entry_id', 'contact_infos'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

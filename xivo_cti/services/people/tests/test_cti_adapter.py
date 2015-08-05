@@ -261,3 +261,77 @@ class TestCTIAdapter(TestCase):
                 }
             }
         )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_edit_personal_contact(self):
+        source = "personal"
+        source_entry_id = "123456789"
+        contact_infos = {'firstname': 'Bob',
+                         'lastname': 'Le Bricoleur',
+                         'random_key': 'random_value'}
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.edit_personal_contact(self.cti_connection,
+                                                   s.user_id,
+                                                   source,
+                                                   source_entry_id,
+                                                   contact_infos)
+
+        self.client.personal.edit.assert_called_once_with(contact_id=source_entry_id,
+                                                          contact_infos=contact_infos,
+                                                          token=s.token)
+
+    def test_send_personal_contact_raw_update(self):
+        user_id = 12
+        source = "personal"
+        source_entry_id = "123456789"
+        result = None
+
+        self.cti_adapter._send_personal_contact_raw_update(user_id, source, source_entry_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contact_raw_update',
+                'data': {
+                    'source': source,
+                    'source_entry_id': source_entry_id,
+                }
+            }
+        )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_personal_contact_raw(self):
+        source = "personal"
+        source_entry_id = "123456789"
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.personal_contact_raw(self.cti_connection, s.user_id, source, source_entry_id)
+
+        self.client.personal.get.assert_called_once_with(contact_id=source_entry_id, token=s.token)
+
+    def test_send_personal_contact_raw_result(self):
+        user_id = 12
+        source = "personal"
+        source_entry_id = "123456789"
+        result = {'firstname': 'Bob',
+                  'lastname': 'Le Bricoleur',
+                  'random_key': 'random_value'}
+
+        self.cti_adapter._send_personal_contact_raw_result(user_id, source, source_entry_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contact_raw_result',
+                'data': {
+                    'source': source,
+                    'source_entry_id': source_entry_id,
+                    'firstname': 'Bob',
+                    'lastname': 'Le Bricoleur',
+                    'random_key': 'random_value'
+                }
+            }
+        )

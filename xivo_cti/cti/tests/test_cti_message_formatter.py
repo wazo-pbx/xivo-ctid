@@ -291,6 +291,42 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_personal_contact_raw_update(self):
+        source = "personal"
+        source_entry_id = "123456789"
+        expected = {
+            'class': 'people_personal_contact_raw_update',
+            'data': {
+                'source': source,
+                'source_entry_id': source_entry_id,
+            }
+        }
+
+        result = CTIMessageFormatter.people_personal_contact_raw_update(source, source_entry_id)
+
+        assert_that(result, equal_to(expected))
+
+    def test_people_personal_contact_raw_result(self):
+        source = "personal"
+        source_entry_id = "123456789"
+        contact_infos = {
+            'firstname': 'Bob',
+            'lastname': 'The Builder'
+            }
+        expected = {
+            'class': 'people_personal_contact_raw_result',
+            'data': {
+                'source': source,
+                'source_entry_id': source_entry_id,
+                'firstname': 'Bob',
+                'lastname': 'The Builder'
+            }
+        }
+
+        result = CTIMessageFormatter.people_personal_contact_raw_result(source, source_entry_id, contact_infos)
+
+        assert_that(result, equal_to(expected))
+
     def test_update_phone_hinstatus(self):
         hint = 8
         phone_id = '42'

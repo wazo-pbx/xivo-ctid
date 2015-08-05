@@ -181,3 +181,23 @@ class CTIMessageFormatter(object):
         return {
             'class': 'people_personal_contact_created'
         }
+
+    @staticmethod
+    def people_personal_contact_raw_update(source, source_entry_id):
+        return {
+            'class': 'people_personal_contact_raw_update',
+            'data': {
+                'source': source,
+                'source_entry_id': source_entry_id
+                }
+            }
+
+    @staticmethod
+    def people_personal_contact_raw_result(source, source_entry_id, contact_infos):
+        data = {'source': source,
+                'source_entry_id': source_entry_id}
+        data.update(contact_infos)
+        return {
+            'class': 'people_personal_contact_raw_result',
+            'data': data
+        }

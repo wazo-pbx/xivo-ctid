@@ -35,6 +35,17 @@ def _parse_delete_personal_contact(msg, command):
     command.source_entry_id = msg.get('source_entry_id')
 
 
+def _parse_edit_personal_contact(msg, command):
+    command.source = msg.get('source')
+    command.source_entry_id = msg.get('source_entry_id')
+    command.contact_infos = msg.get('contact_infos')
+
+
+def _parse_personal_contact_raw(msg, command):
+    command.source = msg.get('source')
+    command.source_entry_id = msg.get('source_entry_id')
+
+
 PeopleSearch = CTICommandClass('people_search', match_fun=None, parse_fun=_parse_search)
 PeopleSearch.add_to_registry()
 
@@ -55,6 +66,11 @@ PeoplePersonalContacts = CTICommandClass('people_personal_contacts', match_fun=N
 PeoplePersonalContacts.add_to_registry()
 
 
+PeoplePersonalContactRaw = CTICommandClass('people_personal_contact_raw', match_fun=None,
+                                           parse_fun=_parse_personal_contact_raw)
+PeoplePersonalContactRaw.add_to_registry()
+
+
 PeopleCreatePersonalContact = CTICommandClass('people_create_personal_contact', match_fun=None,
                                               parse_fun=_parse_create_personal_contact)
 PeopleCreatePersonalContact.add_to_registry()
@@ -63,3 +79,8 @@ PeopleCreatePersonalContact.add_to_registry()
 PeopleDeletePersonalContact = CTICommandClass('people_delete_personal_contact', match_fun=None,
                                               parse_fun=_parse_delete_personal_contact)
 PeopleDeletePersonalContact.add_to_registry()
+
+
+PeopleEditPersonalContact = CTICommandClass('people_edit_personal_contact', match_fun=None,
+                                            parse_fun=_parse_edit_personal_contact)
+PeopleEditPersonalContact.add_to_registry()
