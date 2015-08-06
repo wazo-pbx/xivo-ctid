@@ -28,23 +28,41 @@ class TestVariableAggregator(unittest.TestCase):
 
     def setUp(self):
         self._va = VariableAggregator()
+        self._var = Var(sentinel.type, sentinel.name, sentinel.value)
 
     def test_set(self):
-        self._va.set(sentinel.uid, Var(sentinel.type, sentinel.name, sentinel.value))
+        self._va.set(sentinel.uid, self._var)
 
         assert_that(self._va.get(sentinel.uid), equal_to({sentinel.type: {sentinel.name: sentinel.value}}))
 
     def test_get_not_tracked(self):
         assert_that(self._va.get(sentinel.uid), equal_to({}))
 
-    def test_clean(self):
-        self._va.set(sentinel.uid, Var(sentinel.type, sentinel.name, sentinel.value))
+    def test_on_hangup(self):
+        self._va.set(sentinel.uid, self._var)
 
-        self._va.clean(sentinel.uid)
+        self._va.on_hangup(sentinel.uid)
+
+        assert_that(self._va._vars, equal_to({}))
+
+    def test_on_hangup_unknown(self):
+        self._va.on_hangup(sentinel.uid)
 
         assert_that(self._va._vars, equal_to({}))
 
-    def test_clean_unknown(self):
-        self._va.clean(sentinel.uid)
+    def test_var_is_available_when_hangup_called_after_agent_connect(self):
+        self._va.set(sentinel.uid, self._var)
 
-        assert_that(self._va._vars, equal_to({}))
+        self._va.on_agent_connect(sentinel.uid)
+        self._va.on_hangup(sentinel.uid)
+
+        assert_that(self._va.get(sentinel.uid), equal_to({sentinel.type: {sentinel.name: sentinel.value}}))
+
+    def test_var_is_removed_on_agent_scenario(self):
+        self._va.set(sentinel.uid, self._var)
+
+        self._va.on_agent_connect(sentinel.uid)
+        self._va.on_hangup(sentinel.uid)
+        self._va.on_agent_complete(sentinel.uid)
+
+        assert_that(self._va.get(sentinel.uid), equal_to({}))

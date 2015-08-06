@@ -207,12 +207,14 @@ class Safe(object):
         uniqueid = event['Uniqueid']
         self._set_channel_extra_vars_agent(event, member_name)
         context.get('call_form_dispatch_filter').handle_agent_connect(uniqueid)
+        context.get('call_form_variable_aggregator').on_agent_connect(uniqueid)
 
     def handle_agent_unlinked(self, event):
         member_name = event['MemberName']
         uniqueid = event['Uniqueid']
         self._set_channel_extra_vars_agent(event, member_name)
         context.get('call_form_dispatch_filter').handle_agent_complete(uniqueid)
+        context.get('call_form_variable_aggregator').on_agent_complete(uniqueid)
 
     def handle_agent_login(self, event):
         agent_id = event['AgentID']
