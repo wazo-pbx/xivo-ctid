@@ -74,6 +74,12 @@ class PeopleCTIAdapter(object):
         callback = partial(self._send_personal_contacts_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.personal, profile=profile, token=token)
 
+    def personal_contact_raw(self, cti_connection, user_id, source, source_entry_id):
+        logger.debug('Personal Contact called')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_personal_contact_raw_result, user_id, source, source_entry_id)
+        self._runner.run_with_cb(callback, self._client.personal.get, contact_id=source_entry_id, token=token)
+
     def create_personal_contact(self, cti_connection, user_id, contact_infos):
         logger.debug('Create Personal Contact called')
         token = cti_connection.connection_details['auth_token']
@@ -85,6 +91,16 @@ class PeopleCTIAdapter(object):
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_deleted, user_id, source, source_entry_id)
         self._runner.run_with_cb(callback, self._client.personal.delete, contact_id=source_entry_id, token=token)
+
+    def edit_personal_contact(self, cti_connection, user_id, source, source_entry_id, contact_infos):
+        logger.debug('Edit Personal Contact called')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_personal_contact_raw_update,
+                           user_id, source, source_entry_id)
+        self._runner.run_with_cb(callback, self._client.personal.edit,
+                                 contact_id=source_entry_id,
+                                 contact_infos=contact_infos,
+                                 token=token)
 
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
@@ -111,12 +127,22 @@ class PeopleCTIAdapter(object):
         message = CTIMessageFormatter.people_personal_contacts_result(result)
         self._cti_server.send_to_cti_client(xuserid, message)
 
-    def _send_personal_contact_deleted(self, user_id, source, source_entry_id, result):
+    def _send_personal_contact_raw_result(self, user_id, source, source_entry_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
-        message = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
+        message = CTIMessageFormatter.people_personal_contact_raw_result(source, source_entry_id, result)
         self._cti_server.send_to_cti_client(xuserid, message)
 
     def _send_personal_contact_created(self, user_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_personal_contact_created()
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_personal_contact_deleted(self, user_id, source, source_entry_id, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_personal_contact_raw_update(self, user_id, source, source_entry_id, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_personal_contact_raw_update(source, source_entry_id)
         self._cti_server.send_to_cti_client(xuserid, message)
