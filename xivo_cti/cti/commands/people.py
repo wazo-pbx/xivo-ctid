@@ -90,6 +90,11 @@ PeopleEditPersonalContact = CTICommandClass('people_edit_personal_contact', matc
 PeopleEditPersonalContact.add_to_registry()
 
 
+PeopleExportPersonalContactsCSV = CTICommandClass('people_export_personal_contacts_csv', match_fun=None,
+                                                  parse_fun=None)
+PeopleExportPersonalContactsCSV.add_to_registry()
+
+
 PeopleImportPersonalContactsCSV = CTICommandClass('people_import_personal_contacts_csv', match_fun=None,
                                                   parse_fun=_parse_import_personal_contacts_csv)
 PeopleImportPersonalContactsCSV.add_to_registry()

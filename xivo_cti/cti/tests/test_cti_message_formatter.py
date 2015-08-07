@@ -267,6 +267,17 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_export_personal_contacts_csv_result(self):
+        result = 'firstname,lastname\r\nBob,the Buidler\r\n,Alice,Wonderland\r\n'
+        expected = {
+            'class': 'people_export_personal_contacts_csv_result',
+            'csv_contacts': result
+        }
+
+        result = CTIMessageFormatter.people_export_personal_contacts_csv_result(result)
+
+        assert_that(result, equal_to(expected))
+
     def test_people_import_personal_contacts_csv_result(self):
         result = {
             'failed': [

@@ -209,3 +209,10 @@ class CTIMessageFormatter(object):
             'failed': result.get('failed'),
             'created_count': len(result.get('created'))
         }
+
+    @staticmethod
+    def people_export_personal_contacts_csv_result(result):
+        return {
+            'class': 'people_export_personal_contacts_csv_result',
+            'csv_contacts': result
+        }

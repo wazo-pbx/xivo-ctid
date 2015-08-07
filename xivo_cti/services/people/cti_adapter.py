@@ -108,6 +108,12 @@ class PeopleCTIAdapter(object):
         callback = partial(self._send_import_personal_contacts_csv_result, user_id)
         self._runner.run_with_cb(callback, self._client.personal.import_csv, csv_text=csv_contacts, token=token)
 
+    def export_personal_contacts_csv(self, cti_connection, user_id):
+        logger.debug('Export Personal Contacts CSV called')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_export_personal_contacts_csv_result, user_id)
+        self._runner.run_with_cb(callback, self._client.personal.export_csv, token=token)
+
     def _send_headers_result(self, user_id, headers):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_headers_result(headers)
@@ -156,4 +162,9 @@ class PeopleCTIAdapter(object):
     def _send_import_personal_contacts_csv_result(self, user_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_import_personal_contacts_csv_result(result)
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_export_personal_contacts_csv_result(self, user_id, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_export_personal_contacts_csv_result(result)
         self._cti_server.send_to_cti_client(xuserid, message)
