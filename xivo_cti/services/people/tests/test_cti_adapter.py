@@ -335,3 +335,45 @@ class TestCTIAdapter(TestCase):
                 }
             }
         )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_import_personal_contacts_csv(self):
+        csv_contacts = 'firstname,lastname\r\nBob, the Builder\r\nAlice, Wonderland\r\n'
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.import_personal_contacts_csv(self.cti_connection, s.user_id, csv_contacts)
+
+        self.client.personal.import_csv.assert_called_once_with(csv_text=csv_contacts, token=s.token)
+
+    def test_send_import_personal_contact_csv_result(self):
+        user_id = 12
+        result = {
+            'failed': [
+                {
+                    'line': 3,
+                    'errors': ['missing fields']
+                }
+            ],
+            'created': [
+                {
+                    'firstname': 'Toto',
+                    'lastname': 'Bélanger'
+                },
+                {
+                    'firstname': 'Tata',
+                    'lastanem': 'Bergeron'
+                }
+            ]
+        }
+
+        self.cti_adapter._send_import_personal_contacts_csv_result(user_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_import_personal_contacts_csv_result',
+                'failed': result['failed'],
+                'created_count': len(result['created'])
+            }
+        )

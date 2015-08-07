@@ -267,6 +267,35 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_import_personal_contacts_csv_result(self):
+        result = {
+            'failed': [
+                {
+                    'line': 3,
+                    'errors': ['missing fields']
+                }
+            ],
+            'created': [
+                {
+                    'firstname': 'Toto',
+                    'lastname': 'Bélanger'
+                },
+                {
+                    'firstname': 'Tata',
+                    'lastanem': 'Bergeron'
+                }
+            ]
+        }
+        expected = {
+            'class': 'people_import_personal_contacts_csv_result',
+            'failed': result['failed'],
+            'created_count': len(result['created'])
+        }
+
+        result = CTIMessageFormatter.people_import_personal_contacts_csv_result(result)
+
+        assert_that(result, equal_to(expected))
+
     def test_people_personal_contact_created(self):
         expected = {
             'class': 'people_personal_contact_created'

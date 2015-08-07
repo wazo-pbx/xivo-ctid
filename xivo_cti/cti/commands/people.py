@@ -46,6 +46,10 @@ def _parse_personal_contact_raw(msg, command):
     command.source_entry_id = msg.get('source_entry_id')
 
 
+def _parse_import_personal_contacts_csv(msg, command):
+    command.csv_contacts = msg.get('csv_contacts')
+
+
 PeopleSearch = CTICommandClass('people_search', match_fun=None, parse_fun=_parse_search)
 PeopleSearch.add_to_registry()
 
@@ -84,3 +88,8 @@ PeopleDeletePersonalContact.add_to_registry()
 PeopleEditPersonalContact = CTICommandClass('people_edit_personal_contact', match_fun=None,
                                             parse_fun=_parse_edit_personal_contact)
 PeopleEditPersonalContact.add_to_registry()
+
+
+PeopleImportPersonalContactsCSV = CTICommandClass('people_import_personal_contacts_csv', match_fun=None,
+                                                  parse_fun=_parse_import_personal_contacts_csv)
+PeopleImportPersonalContactsCSV.add_to_registry()
