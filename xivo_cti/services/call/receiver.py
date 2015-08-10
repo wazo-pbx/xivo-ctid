@@ -102,5 +102,6 @@ class CallReceiver(object):
                           channel_source.unique_id, channel_destination.unique_id)
 
     def handle_bridge_unlink(self, bridge_event):
+        self._call_storage.end_call(bridge_event.channel.unique_id)
         for channel in bridge_event.bridge.channels:
             self._call_storage.end_call(channel.unique_id)
