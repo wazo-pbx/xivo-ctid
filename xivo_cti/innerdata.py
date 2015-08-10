@@ -260,7 +260,9 @@ class Safe(object):
 
     def user_match(self, userid, tomatch):
         domatch = False
-        user = self.xod_config['users'].keeplist[userid]
+        user = self.xod_config['users'].keeplist.get(userid)
+        if not user:
+            return False
 
         # does the user fullfil the destination criteria ?
         if 'desttype' in tomatch and 'destid' in tomatch:
