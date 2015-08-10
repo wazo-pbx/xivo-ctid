@@ -106,7 +106,7 @@ class PeopleCTIAdapter(object):
         logger.debug('Import Personal Contacts CSV called')
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_import_personal_contacts_csv_result, user_id)
-        self._runner.run_with_cb(callback, self._client.personal.import_csv, csv_text=csv_contacts, token=token)
+        self._runner.run_with_cb(callback, self._client.personal.import_csv, csv_text=csv_contacts.encode('utf-8'), token=token)
 
     def export_personal_contacts_csv(self, cti_connection, user_id):
         logger.debug('Export Personal Contacts CSV called')
