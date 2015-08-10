@@ -17,6 +17,7 @@
 
 import unittest
 
+from hamcrest import assert_that, is_
 from mock import ANY
 from mock import Mock
 from mock import patch
@@ -86,6 +87,14 @@ class TestSafe(unittest.TestCase):
 
         self.assertTrue(channel_name not in self.safe.channels)
         self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
+
+    def test_that_user_match_with_no_user_returns_false(self):
+        self.safe.xod_config['users'] = Mock(UsersList, keeplist={})
+
+        result = self.safe.user_match(None, {'desttype': 'user',
+                                             'destid': '42'})
+
+        assert_that(result, is_(False))
 
     @patch('xivo_dao.queue_dao.is_user_member_of_queue')
     def test_user_match_with_queue(self, mock_is_user_member_of_queue):
