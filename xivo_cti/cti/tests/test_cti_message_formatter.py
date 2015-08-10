@@ -253,11 +253,9 @@ class TestCTIMessageFormatter(unittest.TestCase):
         enabled = True
         set_favorite_result = {
             'class': 'people_favorite_update',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id,
-                'favorite': enabled,
-            }
+            'source': source,
+            'source_entry_id': source_entry_id,
+            'favorite': enabled
         }
 
         result = CTIMessageFormatter.people_favorite_update(source, source_entry_id, enabled)
@@ -321,10 +319,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         source_entry_id = '123456789'
         expected = {
             'class': 'people_personal_contact_deleted',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id
-            }
+            'source': source,
+            'source_entry_id': source_entry_id
         }
 
         result = CTIMessageFormatter.people_personal_contact_deleted(source, source_entry_id)
@@ -336,10 +332,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         source_entry_id = '123456789'
         expected = {
             'class': 'people_personal_contact_raw_update',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id,
-            }
+            'source': source,
+            'source_entry_id': source_entry_id,
         }
 
         result = CTIMessageFormatter.people_personal_contact_raw_update(source, source_entry_id)
@@ -355,9 +349,9 @@ class TestCTIMessageFormatter(unittest.TestCase):
             }
         expected = {
             'class': 'people_personal_contact_raw_result',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id,
+            'source': source,
+            'source_entry_id': source_entry_id,
+            'contact_infos': {
                 'firstname': 'Bob',
                 'lastname': 'The Builder'
             }

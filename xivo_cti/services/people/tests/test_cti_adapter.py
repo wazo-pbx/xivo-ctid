@@ -170,11 +170,9 @@ class TestCTIAdapter(TestCase):
             'xivo/12',
             {
                 'class': 'people_favorite_update',
-                'data': {
-                    'source': source,
-                    'source_entry_id': source_entry_id,
-                    'favorite': enabled,
-                }
+                'source': source,
+                'source_entry_id': source_entry_id,
+                'favorite': enabled,
             }
         )
 
@@ -255,10 +253,8 @@ class TestCTIAdapter(TestCase):
             'xivo/12',
             {
                 'class': 'people_personal_contact_deleted',
-                'data': {
-                    'source': source,
-                    'source_entry_id': source_entry_id,
-                }
+                'source': source,
+                'source_entry_id': source_entry_id,
             }
         )
 
@@ -294,10 +290,8 @@ class TestCTIAdapter(TestCase):
             'xivo/12',
             {
                 'class': 'people_personal_contact_raw_update',
-                'data': {
-                    'source': source,
-                    'source_entry_id': source_entry_id,
-                }
+                'source': source,
+                'source_entry_id': source_entry_id,
             }
         )
 
@@ -326,9 +320,9 @@ class TestCTIAdapter(TestCase):
             'xivo/12',
             {
                 'class': 'people_personal_contact_raw_result',
-                'data': {
-                    'source': source,
-                    'source_entry_id': source_entry_id,
+                'source': source,
+                'source_entry_id': source_entry_id,
+                'contact_infos': {
                     'firstname': 'Bob',
                     'lastname': 'Le Bricoleur',
                     'random_key': 'random_value'
