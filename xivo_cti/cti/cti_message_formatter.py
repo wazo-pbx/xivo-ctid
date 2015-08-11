@@ -201,3 +201,18 @@ class CTIMessageFormatter(object):
             'class': 'people_personal_contact_raw_result',
             'data': data
         }
+
+    @staticmethod
+    def people_import_personal_contacts_csv_result(result):
+        return {
+            'class': 'people_import_personal_contacts_csv_result',
+            'failed': result.get('failed'),
+            'created_count': len(result.get('created'))
+        }
+
+    @staticmethod
+    def people_export_personal_contacts_csv_result(result):
+        return {
+            'class': 'people_export_personal_contacts_csv_result',
+            'csv_contacts': result
+        }

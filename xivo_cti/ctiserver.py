@@ -54,6 +54,8 @@ from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.people import PeopleCreatePersonalContact
 from xivo_cti.cti.commands.people import PeopleDeletePersonalContact
 from xivo_cti.cti.commands.people import PeopleEditPersonalContact
+from xivo_cti.cti.commands.people import PeopleExportPersonalContactsCSV
+from xivo_cti.cti.commands.people import PeopleImportPersonalContactsCSV
 from xivo_cti.cti.commands.people import PeopleFavorites
 from xivo_cti.cti.commands.people import PeopleHeaders
 from xivo_cti.cti.commands.people import PeoplePersonalContactRaw
@@ -237,6 +239,10 @@ class CTIServer(object):
         PeopleEditPersonalContact.register_callback_params(people_adapter.edit_personal_contact,
                                                            ('cti_connection', 'user_id', 'source',
                                                             'source_entry_id', 'contact_infos'))
+        PeopleExportPersonalContactsCSV.register_callback_params(people_adapter.export_personal_contacts_csv,
+                                                                 ('cti_connection', 'user_id'))
+        PeopleImportPersonalContactsCSV.register_callback_params(people_adapter.import_personal_contacts_csv,
+                                                                 ('cti_connection', 'user_id', 'csv_contacts'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

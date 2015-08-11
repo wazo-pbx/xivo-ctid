@@ -131,8 +131,8 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_set_favorite_with_new_favorite(self):
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         enabled = True
         dao.user.get_context = Mock(return_value=s.profile)
 
@@ -145,8 +145,8 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_set_favorite_with_remove_favorite(self):
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         enabled = False
         dao.user.get_context = Mock(return_value=s.profile)
 
@@ -159,8 +159,8 @@ class TestCTIAdapter(TestCase):
 
     def test_send_favorite_update(self):
         user_id = 12
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         enabled = True
         result = None
 
@@ -234,8 +234,8 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_delete_personal_contact(self):
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
@@ -245,8 +245,8 @@ class TestCTIAdapter(TestCase):
 
     def test_send_personal_contact_deleted(self):
         user_id = 12
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         result = None
 
         self.cti_adapter._send_personal_contact_deleted(user_id, source, source_entry_id, result)
@@ -264,8 +264,8 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_edit_personal_contact(self):
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         contact_infos = {'firstname': 'Bob',
                          'lastname': 'Le Bricoleur',
                          'random_key': 'random_value'}
@@ -284,8 +284,8 @@ class TestCTIAdapter(TestCase):
 
     def test_send_personal_contact_raw_update(self):
         user_id = 12
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         result = None
 
         self.cti_adapter._send_personal_contact_raw_update(user_id, source, source_entry_id, result)
@@ -303,8 +303,8 @@ class TestCTIAdapter(TestCase):
 
     @patch('xivo_cti.dao.user', Mock())
     def test_personal_contact_raw(self):
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
@@ -314,8 +314,8 @@ class TestCTIAdapter(TestCase):
 
     def test_send_personal_contact_raw_result(self):
         user_id = 12
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         result = {'firstname': 'Bob',
                   'lastname': 'Le Bricoleur',
                   'random_key': 'random_value'}
@@ -333,5 +333,70 @@ class TestCTIAdapter(TestCase):
                     'lastname': 'Le Bricoleur',
                     'random_key': 'random_value'
                 }
+            }
+        )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_export_personal_contacts_csv(self):
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.export_personal_contacts_csv(self.cti_connection, s.user_id)
+
+        self.client.personal.export_csv.assert_called_once_with(token=s.token)
+
+    def test_send_export_personal_contact_csv_result(self):
+        user_id = 12
+        result = 'firstname,lastname\r\nBob,the Buidler\r\n,Alice,Wonderland'
+
+        self.cti_adapter._send_export_personal_contacts_csv_result(user_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_export_personal_contacts_csv_result',
+                'csv_contacts': result
+            }
+        )
+
+    @patch('xivo_cti.dao.user', Mock())
+    def test_import_personal_contacts_csv(self):
+        csv_contacts = 'firstname,lastname\r\nBob, the Builder\r\nAlice, Wonderland\r\n'
+        dao.user.get_context = Mock(return_value=s.profile)
+
+        with synchronize(self.async_runner):
+            self.cti_adapter.import_personal_contacts_csv(self.cti_connection, s.user_id, csv_contacts)
+
+        self.client.personal.import_csv.assert_called_once_with(csv_text=csv_contacts, token=s.token)
+
+    def test_send_import_personal_contact_csv_result(self):
+        user_id = 12
+        result = {
+            'failed': [
+                {
+                    'line': 3,
+                    'errors': ['missing fields']
+                }
+            ],
+            'created': [
+                {
+                    'firstname': 'Toto',
+                    'lastname': 'Bélanger'
+                },
+                {
+                    'firstname': 'Tata',
+                    'lastanem': 'Bergeron'
+                }
+            ]
+        }
+
+        self.cti_adapter._send_import_personal_contacts_csv_result(user_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_import_personal_contacts_csv_result',
+                'failed': result['failed'],
+                'created_count': len(result['created'])
             }
         )

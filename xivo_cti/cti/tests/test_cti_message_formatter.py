@@ -126,35 +126,35 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
     def test_people_search_result(self):
         search_result = {
-            "term": "Bob",
-            "column_headers": ["Firstname", "Lastname", "Phone number", "Mobile", "Fax", "Email", "Agent"],
-            "column_types": [None, "name", "number_office", "number_mobile", "fax", "email", "relation_agent"],
-            "results": [
+            'term': 'Bob',
+            'column_headers': ['Firstname', 'Lastname', 'Phone number', 'Mobile', 'Fax', 'Email', 'Agent'],
+            'column_types': [None, 'name', 'number_office', 'number_mobile', 'fax', 'email', 'relation_agent'],
+            'results': [
                 {
-                    "column_values": ["Bob", "Marley", "5555555", "5556666", "5553333", "mail@example.com", None],
-                    "relations": {
-                        "agent": None,
-                        "user": None,
-                        "endpoint": None
+                    'column_values': ['Bob', 'Marley', '5555555', '5556666', '5553333', 'mail@example.com', None],
+                    'relations': {
+                        'agent': None,
+                        'user': None,
+                        'endpoint': None
                     },
-                    "source": "my_ldap_directory"
+                    'source': 'my_ldap_directory'
                 }, {
-                    "column_values": ["Charlie", "Boblin", "5555556", "5554444", "5552222", "mail2@example.com", None],
-                    "relations": {
-                        "agent": {
-                            "id": 12,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                    'column_values': ['Charlie', 'Boblin', '5555556', '5554444', '5552222', 'mail2@example.com', None],
+                    'relations': {
+                        'agent': {
+                            'id': 12,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
-                        "user": {
-                            "id": 34,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        'user': {
+                            'id': 34,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
-                        "endpoint": {
-                            "id": 56,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        'endpoint': {
+                            'id': 56,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
                     },
-                    "source": "internal"
+                    'source': 'internal'
                 }
             ]
         }
@@ -168,38 +168,38 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
     def test_people_favorites_result(self):
         favorites_result = {
-            "column_headers": ["Firstname", "Lastname", "Phone number", "Mobile", "Fax", "Email",
-                               "Agent", "Favorite"],
-            "column_types": [None, "name", "number_office", "number_mobile", "fax", "email",
-                             "relation_agent", "favorite"],
-            "results": [
+            'column_headers': ['Firstname', 'Lastname', 'Phone number', 'Mobile', 'Fax', 'Email',
+                               'Agent', 'Favorite'],
+            'column_types': [None, 'name', 'number_office', 'number_mobile', 'fax', 'email',
+                             'relation_agent', 'favorite'],
+            'results': [
                 {
-                    "column_values": ["Bob", "Marley", "5555555", "5556666", "5553333",
-                                      "mail@example.com", None, True],
-                    "relations": {
-                        "agent": None,
-                        "user": None,
-                        "endpoint": None
+                    'column_values': ['Bob', 'Marley', '5555555', '5556666', '5553333',
+                                      'mail@example.com', None, True],
+                    'relations': {
+                        'agent': None,
+                        'user': None,
+                        'endpoint': None
                     },
-                    "source": "my_ldap_directory"
+                    'source': 'my_ldap_directory'
                 }, {
-                    "column_values": ["Charlie", "Boblin", "5555556", "5554444", "5552222",
-                                      "mail2@example.com", None, True],
-                    "relations": {
-                        "agent": {
-                            "id": 12,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                    'column_values': ['Charlie', 'Boblin', '5555556', '5554444', '5552222',
+                                      'mail2@example.com', None, True],
+                    'relations': {
+                        'agent': {
+                            'id': 12,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
-                        "user": {
-                            "id": 34,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        'user': {
+                            'id': 34,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
-                        "endpoint": {
-                            "id": 56,
-                            "xivo_id": "ad2f36c7-b0f3-48da-a63c-37434fed479b"
+                        'endpoint': {
+                            'id': 56,
+                            'xivo_id': 'ad2f36c7-b0f3-48da-a63c-37434fed479b'
                         },
                     },
-                    "source": "internal"
+                    'source': 'internal'
                 }
             ]
         }
@@ -213,29 +213,29 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
     def test_people_personal_contacts_result(self):
         personal_contacts_result = {
-            "column_headers": ["Firstname", "Lastname", "Phone number", "Mobile", "Fax", "Email",
-                               "Agent", "Favorite", "Personal"],
-            "column_types": [None, "name", "number_office", "number_mobile", "fax", "email",
-                             "relation_agent", "favorite", "personal"],
-            "results": [
+            'column_headers': ['Firstname', 'Lastname', 'Phone number', 'Mobile', 'Fax', 'Email',
+                               'Agent', 'Favorite', 'Personal'],
+            'column_types': [None, 'name', 'number_office', 'number_mobile', 'fax', 'email',
+                             'relation_agent', 'favorite', 'personal'],
+            'results': [
                 {
-                    "column_values": ["Bob", "Marley", "5555555", "5556666", "5553333",
-                                      "mail@example.com", None, True, True],
-                    "relations": {
-                        "agent": None,
-                        "user": None,
-                        "endpoint": None
+                    'column_values': ['Bob', 'Marley', '5555555', '5556666', '5553333',
+                                      'mail@example.com', None, True, True],
+                    'relations': {
+                        'agent': None,
+                        'user': None,
+                        'endpoint': None
                     },
-                    "source": "personal"
+                    'source': 'personal'
                 }, {
-                    "column_values": ["Charlie", "Boblin", "5555556", "5554444", "5552222",
-                                      "mail2@example.com", None, False, True],
-                    "relations": {
-                        "agent": None,
-                        "user": None,
-                        "endpoint": None
+                    'column_values': ['Charlie', 'Boblin', '5555556', '5554444', '5552222',
+                                      'mail2@example.com', None, False, True],
+                    'relations': {
+                        'agent': None,
+                        'user': None,
+                        'endpoint': None
                     },
-                    "source": "personal"
+                    'source': 'personal'
                 }
             ]
         }
@@ -248,8 +248,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         assert_that(result, equal_to(expected))
 
     def test_people_favorite_update(self):
-        source = "internal"
-        source_entry_id = "123456789"
+        source = 'internal'
+        source_entry_id = '123456789'
         enabled = True
         set_favorite_result = {
             'class': 'people_favorite_update',
@@ -267,6 +267,46 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_export_personal_contacts_csv_result(self):
+        result = 'firstname,lastname\r\nBob,the Buidler\r\n,Alice,Wonderland\r\n'
+        expected = {
+            'class': 'people_export_personal_contacts_csv_result',
+            'csv_contacts': result
+        }
+
+        result = CTIMessageFormatter.people_export_personal_contacts_csv_result(result)
+
+        assert_that(result, equal_to(expected))
+
+    def test_people_import_personal_contacts_csv_result(self):
+        result = {
+            'failed': [
+                {
+                    'line': 3,
+                    'errors': ['missing fields']
+                }
+            ],
+            'created': [
+                {
+                    'firstname': 'Toto',
+                    'lastname': 'Bélanger'
+                },
+                {
+                    'firstname': 'Tata',
+                    'lastanem': 'Bergeron'
+                }
+            ]
+        }
+        expected = {
+            'class': 'people_import_personal_contacts_csv_result',
+            'failed': result['failed'],
+            'created_count': len(result['created'])
+        }
+
+        result = CTIMessageFormatter.people_import_personal_contacts_csv_result(result)
+
+        assert_that(result, equal_to(expected))
+
     def test_people_personal_contact_created(self):
         expected = {
             'class': 'people_personal_contact_created'
@@ -277,8 +317,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         assert_that(result, equal_to(expected))
 
     def test_people_personal_contact_deleted(self):
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         expected = {
             'class': 'people_personal_contact_deleted',
             'data': {
@@ -292,8 +332,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         assert_that(result, equal_to(expected))
 
     def test_people_personal_contact_raw_update(self):
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         expected = {
             'class': 'people_personal_contact_raw_update',
             'data': {
@@ -307,8 +347,8 @@ class TestCTIMessageFormatter(unittest.TestCase):
         assert_that(result, equal_to(expected))
 
     def test_people_personal_contact_raw_result(self):
-        source = "personal"
-        source_entry_id = "123456789"
+        source = 'personal'
+        source_entry_id = '123456789'
         contact_infos = {
             'firstname': 'Bob',
             'lastname': 'The Builder'
