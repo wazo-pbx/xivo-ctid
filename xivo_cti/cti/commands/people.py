@@ -70,6 +70,10 @@ PeoplePersonalContacts = CTICommandClass('people_personal_contacts', match_fun=N
 PeoplePersonalContacts.add_to_registry()
 
 
+PeoplePurgePersonalContacts = CTICommandClass('people_purge_personal_contacts', match_fun=None, parse_fun=None)
+PeoplePurgePersonalContacts.add_to_registry()
+
+
 PeoplePersonalContactRaw = CTICommandClass('people_personal_contact_raw', match_fun=None,
                                            parse_fun=_parse_personal_contact_raw)
 PeoplePersonalContactRaw.add_to_registry()

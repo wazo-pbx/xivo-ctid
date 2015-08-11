@@ -165,6 +165,12 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
+    def people_personal_contacts_purged():
+        return {
+            'class': 'people_personal_contacts_purged'
+        }
+
+    @staticmethod
     def people_personal_contact_deleted(source, source_entry_id):
         return {
             'class': 'people_personal_contact_deleted',

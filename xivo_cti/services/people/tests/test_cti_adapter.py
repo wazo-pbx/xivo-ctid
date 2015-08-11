@@ -205,6 +205,24 @@ class TestCTIAdapter(TestCase):
             }
         )
 
+    def test_purge_personal_contacts(self):
+        with synchronize(self.async_runner):
+            self.cti_adapter.purge_personal_contacts(self.cti_connection, s.user_id)
+
+        self.client.personal.purge.assert_called_once_with(token=s.token)
+
+    def test_send_personal_contacts_purged(self):
+        user_id = 12
+        result = None
+        self.cti_adapter._send_personal_contacts_purged(user_id, result)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12',
+            {
+                'class': 'people_personal_contacts_purged'
+            }
+        )
+
     @patch('xivo_cti.dao.user', Mock())
     def test_create_personal_contact(self):
         contact_infos = {'firstname': 'Bob',
