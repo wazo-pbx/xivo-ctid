@@ -60,6 +60,7 @@ from xivo_cti.cti.commands.people import PeopleFavorites
 from xivo_cti.cti.commands.people import PeopleHeaders
 from xivo_cti.cti.commands.people import PeoplePersonalContactRaw
 from xivo_cti.cti.commands.people import PeoplePersonalContacts
+from xivo_cti.cti.commands.people import PeoplePurgePersonalContacts
 from xivo_cti.cti.commands.people import PeopleSearch
 from xivo_cti.cti.commands.people import PeopleSetFavorite
 from xivo_cti.cti.commands.queue_add import QueueAdd
@@ -228,6 +229,7 @@ class CTIServer(object):
                                                                                  'source', 'source_entry_id', 'enabled'))
         PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
         PeoplePersonalContacts.register_callback_params(people_adapter.personal_contacts, ('cti_connection', 'user_id'))
+        PeoplePurgePersonalContacts.register_callback_params(people_adapter.purge_personal_contacts, ('cti_connection', 'user_id'))
         PeoplePersonalContactRaw.register_callback_params(people_adapter.personal_contact_raw,
                                                           ('cti_connection', 'user_id', 'source',
                                                            'source_entry_id'))

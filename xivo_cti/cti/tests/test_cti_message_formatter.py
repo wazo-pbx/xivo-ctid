@@ -247,6 +247,13 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected))
 
+    def test_people_personal_contacts_purged(self):
+        result = CTIMessageFormatter.people_personal_contacts_purged()
+
+        expected = {'class': 'people_personal_contacts_purged'}
+
+        assert_that(result, equal_to(expected))
+
     def test_people_favorite_update(self):
         source = 'internal'
         source_entry_id = '123456789'

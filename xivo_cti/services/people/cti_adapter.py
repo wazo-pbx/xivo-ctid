@@ -74,6 +74,12 @@ class PeopleCTIAdapter(object):
         callback = partial(self._send_personal_contacts_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.personal, profile=profile, token=token)
 
+    def purge_personal_contacts(self, cti_connection, user_id):
+        logger.debug('Purge Personal Contacts called')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_personal_contacts_purged, user_id)
+        self._runner.run_with_cb(callback, self._client.personal.purge, token=token)
+
     def personal_contact_raw(self, cti_connection, user_id, source, source_entry_id):
         logger.debug('Personal Contact called')
         token = cti_connection.connection_details['auth_token']
@@ -106,7 +112,10 @@ class PeopleCTIAdapter(object):
         logger.debug('Import Personal Contacts CSV called')
         token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_import_personal_contacts_csv_result, user_id)
-        self._runner.run_with_cb(callback, self._client.personal.import_csv, csv_text=csv_contacts.encode('utf-8'), token=token)
+        self._runner.run_with_cb(callback,
+                                 self._client.personal.import_csv,
+                                 csv_text=csv_contacts.encode('utf-8'),
+                                 token=token)
 
     def export_personal_contacts_csv(self, cti_connection, user_id):
         logger.debug('Export Personal Contacts CSV called')
@@ -137,6 +146,11 @@ class PeopleCTIAdapter(object):
     def _send_personal_contacts_result(self, user_id, result):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         message = CTIMessageFormatter.people_personal_contacts_result(result)
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def _send_personal_contacts_purged(self, user_id, result):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        message = CTIMessageFormatter.people_personal_contacts_purged()
         self._cti_server.send_to_cti_client(xuserid, message)
 
     def _send_personal_contact_raw_result(self, user_id, source, source_entry_id, result):
