@@ -103,11 +103,9 @@ class CTIMessageFormatter(object):
     def people_favorite_update(source, source_entry_id, enabled):
         return {
             'class': 'people_favorite_update',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id,
-                'favorite': enabled,
-            }
+            'source': source,
+            'source_entry_id': source_entry_id,
+            'favorite': enabled,
         }
 
     @staticmethod
@@ -170,10 +168,8 @@ class CTIMessageFormatter(object):
     def people_personal_contact_deleted(source, source_entry_id):
         return {
             'class': 'people_personal_contact_deleted',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id,
-            }
+            'source': source,
+            'source_entry_id': source_entry_id,
         }
 
     @staticmethod
@@ -186,20 +182,17 @@ class CTIMessageFormatter(object):
     def people_personal_contact_raw_update(source, source_entry_id):
         return {
             'class': 'people_personal_contact_raw_update',
-            'data': {
-                'source': source,
-                'source_entry_id': source_entry_id
-                }
+            'source': source,
+            'source_entry_id': source_entry_id
             }
 
     @staticmethod
     def people_personal_contact_raw_result(source, source_entry_id, contact_infos):
-        data = {'source': source,
-                'source_entry_id': source_entry_id}
-        data.update(contact_infos)
         return {
             'class': 'people_personal_contact_raw_result',
-            'data': data
+            'source': source,
+            'source_entry_id': source_entry_id,
+            'contact_infos': contact_infos
         }
 
     @staticmethod
