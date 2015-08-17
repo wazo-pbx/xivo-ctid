@@ -95,8 +95,7 @@ class Test(unittest.TestCase):
         self.assertEquals(result, "login_password")
 
     @patch('xivo_cti.ioc.context.context.get', Mock())
-    @patch('xivo_dao.user_dao.get_profile')
-    def test_regcommand_login_pass_no_profile(self, mock_get_profile):
+    def test_regcommand_login_pass_no_profile(self):
         user_id = 2
         cti_profile_id = None
         message = {"class": "login_pass",
@@ -109,7 +108,6 @@ class Test(unittest.TestCase):
             'cti_profile_id': cti_profile_id
         }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
-        mock_get_profile.return_value = None
 
         result = cti_command.regcommand_login_pass()
 
