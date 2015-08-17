@@ -114,8 +114,7 @@ class Test(unittest.TestCase):
         self.assertEquals(result, "capaid_undefined")
 
     @patch('xivo_cti.ioc.context.context.get', Mock())
-    @patch('xivo_dao.user_dao.get_profile')
-    def test_regcommand_login_pass_success(self, mock_get_profile):
+    def test_regcommand_login_pass_success(self):
         user_id = 2
         cti_profile_id = 3
         message = {"class": "login_pass",
@@ -129,7 +128,6 @@ class Test(unittest.TestCase):
         }
         self._ctiserver.safe.user_get_hashed_password.return_value = "abcd"
         self._ctiserver.safe.user_new_auth_token.return_value = 'new-token'
-        mock_get_profile.return_value = cti_profile_id
 
         result = cti_command.regcommand_login_pass()
 
