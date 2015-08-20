@@ -26,7 +26,7 @@ import time
 import threading
 
 from xivo import daemonize
-from xivo.xivo_logging import setup_logging
+from xivo import xivo_logging
 from xivo_cti import config
 from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
@@ -148,7 +148,8 @@ class CTIServer(object):
         sys.exit(ret_code)
 
     def _set_logger(self):
-        setup_logging(config['logfile'], config['foreground'], config['debug'])
+        xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
+        xivo_logging.silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
 
     def _daemonize(self):
         if not config['foreground']:
