@@ -367,7 +367,7 @@ class TestAgentServiceManager(unittest.TestCase):
 
         self.agent_executor.unpause_on_all_queues.assert_called_once_with(agent_interface)
 
-    @patch('xivo_dao.agent_dao.agent_interface')
+    @patch('xivo_dao.agent_dao.find_agent_interface')
     def test_set_presence(self, mock_agent_interface):
         presence = 'disconnected'
         agent_id = 34

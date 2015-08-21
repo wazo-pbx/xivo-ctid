@@ -146,7 +146,7 @@ class AgentServiceManager(object):
             self.agent_executor.unpause_on_all_queues(agent_interface)
 
     def set_presence(self, agent_id, presence):
-        agent_member_name = agent_dao.agent_interface(agent_id)
+        agent_member_name = agent_dao.find_agent_interface(agent_id)
         if agent_member_name is not None:
             self.agent_executor.log_presence(agent_member_name, presence)
 
