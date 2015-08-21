@@ -33,7 +33,7 @@ class OldDirectoryFormatter(object):
         return headers, types, resultlist
 
     def _format_result(self, result):
-        return u';'.join([value or '' for value in result])
+        return u';'.join(value or '' for value in result)
 
     def _filter_list(self, l, invalid_indexes):
         return [element for i, element in enumerate(l) if i not in invalid_indexes]
