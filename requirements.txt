@@ -15,7 +15,7 @@ flask-cors==1.10.3
 futures
 kombu
 psycopg2
-pyaml
+pyyaml==3.10
 pyhamcrest
 python-ldap
 requests==2.0.0
