@@ -20,17 +20,33 @@ class OldDirectoryFormatter(object):
 
     _dird_only_column_types = ['favorite', 'personal']
 
-    def format(self, dird_result):
-        dird_types = dird_result['column_types']
-        dird_only_column_indexes = [dird_types.index(t) for t in dird_types if t in self._dird_only_column_types]
+    def format_results(self, dird_result):
+        types = dird_result['column_types']
+        headers = dird_result['column_headers']
+        results = dird_result['results']
 
-        headers = self._filter_list(dird_result['column_headers'], dird_only_column_indexes)
-        types = self._filter_list(dird_result['column_types'], dird_only_column_indexes)
+        dird_only_column_indexes = self._filtered_indexes(types)
+
+        headers = self._filter_list(headers, dird_only_column_indexes)
+        types = self._filter_list(types, dird_only_column_indexes)
         results = [self._filter_list(result['column_values'], dird_only_column_indexes)
-                   for result in dird_result['results']]
+                   for result in results]
+
         resultlist = [self._format_result(result) for result in results]
 
         return headers, types, resultlist
+
+    def format_headers(self, dird_result):
+        types = dird_result['column_types']
+        headers = dird_result['column_headers']
+
+        dird_only_column_indexes = self._filtered_indexes(types)
+
+        return zip(self._filter_list(headers, dird_only_column_indexes),
+                   self._filter_list(types, dird_only_column_indexes))
+
+    def _filtered_indexes(self, types):
+        return [types.index(t) for t in types if t in self._dird_only_column_types]
 
     def _format_result(self, result):
         return u';'.join(value or '' for value in result)

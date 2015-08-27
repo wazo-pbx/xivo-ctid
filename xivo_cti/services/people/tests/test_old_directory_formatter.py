@@ -33,7 +33,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
                        u'column_headers': ['Nom', 'Numéro', 'Entreprise', 'E-mail', 'Source'],
                        u'results': []}
 
-        headers, types, resultlist = self.formatter.format(dird_result)
+        headers, types, resultlist = self.formatter.format_results(dird_result)
 
         assert_that(headers, contains('Nom', 'Numéro', 'Entreprise', 'E-mail', 'Source'))
         assert_that(types, contains('', 'phone', '', '', '', ''))
@@ -59,7 +59,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
                                 u'endpoint_id': None,
                                 u'agent_id': None}}]}
 
-        _, _, resultlist = self.formatter.format(dird_result)
+        _, _, resultlist = self.formatter.format_results(dird_result)
 
         assert_that(resultlist, contains_inanyorder(u'Bob;;1002;',
                                                     u'El;Diablo;4185555666;'))
@@ -72,7 +72,28 @@ class TestOldDirectoryFormatter(unittest.TestCase):
             u'results': [],
         }
 
-        headers, types_, _ = self.formatter.format(dird_result)
+        headers, types_, _ = self.formatter.format_results(dird_result)
 
         assert_that(types_, contains('name', 'name', 'number', 'mobile'))
         assert_that(headers, contains('Firstname', 'Lastname', 'Number', 'Mobile'))
+
+    def test_format_headers(self):
+        dird_result = {"column_types": ["name",
+                                        "name",
+                                        "number",
+                                        "mobile",
+                                        "favorite",
+                                        "personal"],
+                       "column_headers": ["Firstname",
+                                          "Lastname",
+                                          "Number",
+                                          "Mobile",
+                                          "Favorite",
+                                          "Personal"]}
+
+        headers = self.formatter.format_headers(dird_result)
+
+        assert_that(headers, contains(('Firstname', 'name'),
+                                      ('Lastname', 'name'),
+                                      ('Number', 'number'),
+                                      ('Mobile', 'mobile')))
