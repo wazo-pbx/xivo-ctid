@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class OldDirectoryFormatter(object):
 
@@ -37,6 +41,7 @@ class OldDirectoryFormatter(object):
         return headers, types, resultlist
 
     def format_headers(self, dird_result):
+        logger.debug('Formatting headers %s', dird_result)
         types = dird_result['column_types']
         headers = dird_result['column_headers']
 

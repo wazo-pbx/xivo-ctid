@@ -24,7 +24,35 @@ from xivo_cti import config
 from xivo_cti import dao
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
+from .import old_directory_formatter
+
 logger = logging.getLogger(__name__)
+
+
+class OldProtocolCTIAdapter(object):
+
+    _profile = '__switchboard_directory'
+
+    def __init__(self, async_runner, cti_server):
+        self._client = Client(**config['dird'])
+        self._cti_server = cti_server
+        self._runner = async_runner
+        self._formatter = old_directory_formatter.OldDirectoryFormatter()
+
+    def get_headers(self, cti_connection, user_id):
+        logger.debug('Get switchboard headers')
+        token = cti_connection.connection_details['auth_token']
+        callback = partial(self._send_headers_result, user_id)
+        self._runner.run_with_cb(callback, self._client.directories.headers,
+                                 profile=self._profile, token=token)
+
+    def _send_headers_result(self, user_id, response):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        headers = self._formatter.format_headers(response)
+        logger.debug('Headers %s', headers)
+        message = {'class': 'directory_headers',
+                   'headers': headers}
+        self._cti_server.send_to_cti_client(xuserid, message)
 
 
 class PeopleCTIAdapter(object):

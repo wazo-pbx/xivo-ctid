@@ -51,6 +51,7 @@ from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
+from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.people import PeopleCreatePersonalContact
 from xivo_cti.cti.commands.people import PeopleDeletePersonalContact
 from xivo_cti.cti.commands.people import PeopleEditPersonalContact
@@ -246,6 +247,10 @@ class CTIServer(object):
                                                                  ('cti_connection', 'user_id'))
         PeopleImportPersonalContactsCSV.register_callback_params(people_adapter.import_personal_contacts_csv,
                                                                  ('cti_connection', 'user_id', 'csv_contacts'))
+
+        old_protocol_adapter = context.get('old_protocol_cti_adapter')
+        GetSwitchboardDirectoryHeaders.register_callback_params(old_protocol_adapter.get_headers,
+                                                                ('cti_connection', 'user_id'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

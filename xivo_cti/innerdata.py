@@ -34,14 +34,12 @@ from xivo_cti.directory import directory
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
-from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
 from xivo_cti.lists import agents_list, groups_list, meetmes_list, \
     phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
     trunks_list
-from xivo_dao import directory_dao
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
@@ -51,8 +49,6 @@ from xivo_cti.directory.formatter import DirectoryResultFormatter
 from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
-
-SWITCHBOARD_DIRECTORY_CONTEXT = '__switchboard_directory'
 
 TWO_MONTHS = timedelta(days=60).total_seconds()
 
@@ -162,7 +158,6 @@ class Safe(object):
         Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
         SwitchboardDirectorySearch.register_callback_params(self.switchboard_directory_search, ['pattern'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
-        GetSwitchboardDirectoryHeaders.register_callback_params(self.get_switchboard_directory_headers)
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()
@@ -603,7 +598,7 @@ class Safe(object):
 
     def switchboard_directory_search(self, pattern):
         try:
-            headers, types, resultlist = self._search_directory_in_context(pattern, SWITCHBOARD_DIRECTORY_CONTEXT)
+            headers, types, resultlist = self._search_directory_in_context(pattern, '__switchboard_directory')
         except (LookupError, KeyError):
             logger.warning('Error during switchboard directory lookup')
         else:
@@ -615,11 +610,6 @@ class Safe(object):
     def _search_directory_in_context(self, pattern, context):
         context_obj = self.contexts_mgr.contexts[context]
         return context_obj.lookup_direct(pattern, contexts=[context])
-
-    def get_switchboard_directory_headers(self):
-        headers = directory_dao.get_directory_headers(SWITCHBOARD_DIRECTORY_CONTEXT)
-        return 'message', {'class': 'directory_headers',
-                           'headers': headers}
 
     def _get_set_fn(self, uniqueid):
         aggregator = context.get('call_form_variable_aggregator')

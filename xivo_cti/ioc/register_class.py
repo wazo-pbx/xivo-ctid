@@ -69,6 +69,7 @@ from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.meetme.service_manager import MeetmeServiceManager
 from xivo_cti.services.meetme.service_notifier import MeetmeServiceNotifier
 from xivo_cti.services.people.cti_adapter import PeopleCTIAdapter
+from xivo_cti.services.people.cti_adapter import OldProtocolCTIAdapter
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.queue_entry_encoder import QueueEntryEncoder
@@ -161,6 +162,7 @@ def setup():
     context.register('meetme_service_manager', MeetmeServiceManager)
     context.register('meetme_service_notifier', MeetmeServiceNotifier)
     context.register('people_cti_adapter', PeopleCTIAdapter)
+    context.register('old_protocol_cti_adapter', OldProtocolCTIAdapter)
     context.register('presence_service_executor', PresenceServiceExecutor)
     context.register('presence_service_manager', PresenceServiceManager)
     context.register('pubsub', Pubsub)
