@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ class TestChannel(unittest.TestCase):
 
     def test_repr(self):
         e = Extension('1001', 'default', True)
-        assert_that(repr(_Channel(e, 'mychannel')), equal_to('<_Channel 1001@default>'))
+        assert_that(repr(_Channel(e, 'mychannel')), equal_to('_Channel(1001@default, mychannel)'))
 
 
 class TestCall(unittest.TestCase):

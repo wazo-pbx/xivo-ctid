@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,9 @@ class _Channel(object):
         return self.extension == other.extension and self._channel == other._channel
 
     def __repr__(self):
-        return '<_Channel %(extension)s>' % {'extension': self.extension}
+        return '{name}({extension}, {channel})'.format(name=self.__class__.__name__,
+                                                       extension=self.extension,
+                                                       channel=self._channel)
 
 
 class Call(object):
@@ -39,13 +41,13 @@ class Call(object):
         self.source = source
         self.destination = destination
 
-    def __repr__(self):
-        info = {
-            'name': self.__class__.__name__,
-            'source': self.source,
-            'destination': self.destination,
-        }
-        return '%(name)s from %(source)s to %(destination)s' % info
+    def __str__(self):
+        return '{name} from {source} to {destination}'.format(**self._info())
+
+    def _info(self):
+        return {'name': self.__class__.__name__,
+                'source': self.source,
+                'destination': self.destination}
 
     @property
     def is_internal(self):
