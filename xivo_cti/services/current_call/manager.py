@@ -298,6 +298,7 @@ class CurrentCallManager(object):
     def _get_current_call(self, user_id):
         ongoing_calls = self._get_ongoing_calls(user_id)
         if not ongoing_calls:
+            logger.debug('Failed to get %s current call\n\t%s', user_id, self._calls_per_line)
             raise LookupError('User %s has no ongoing calls' % user_id)
         return ongoing_calls[0]
 
