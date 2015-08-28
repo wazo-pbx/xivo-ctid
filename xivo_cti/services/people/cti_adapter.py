@@ -22,6 +22,7 @@ from xivo_dird_client import Client
 
 from xivo_cti import config
 from xivo_cti import dao
+from xivo_cti.directory.formatter import DirectoryResultFormatter
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 from .import old_directory_formatter
@@ -37,7 +38,7 @@ class OldProtocolCTIAdapter(object):
         self._client = Client(**config['dird'])
         self._cti_server = cti_server
         self._runner = async_runner
-        self._formatter = old_directory_formatter.OldDirectoryFormatter()
+        self._old_formatter = old_directory_formatter.OldDirectoryFormatter()
 
     def get_headers(self, token, user_id):
         logger.debug('Get switchboard headers')
@@ -47,10 +48,26 @@ class OldProtocolCTIAdapter(object):
 
     def _send_headers_result(self, user_id, response):
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
-        headers = self._formatter.format_headers(response)
+        headers = self._old_formatter.format_headers(response)
         logger.debug('Headers %s', headers)
         message = {'class': 'directory_headers',
                    'headers': headers}
+        self._cti_server.send_to_cti_client(xuserid, message)
+
+    def lookup(self, token, user_id, term):
+        logger.debug('Switchboard search called for %s', term)
+        callback = partial(self._send_lookup_result, user_id)
+        self._runner.run_with_cb(callback, self._client.directories.lookup,
+                                 profile=self._profile, term=term, token=token)
+
+    def _send_lookup_result(self, user_id, response):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        headers, types, resultlist = self._old_formatter.format_results(response)
+        switchboard_format_results = DirectoryResultFormatter.format(headers, types, resultlist)
+        message = {'class': 'directory_search_result',
+                   'pattern': response['term'],
+                   'results': switchboard_format_results}
+        logger.debug('Sending %s', message)
         self._cti_server.send_to_cti_client(xuserid, message)
 
 

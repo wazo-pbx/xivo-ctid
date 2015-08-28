@@ -52,6 +52,7 @@ from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
+from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
 from xivo_cti.cti.commands.people import PeopleCreatePersonalContact
 from xivo_cti.cti.commands.people import PeopleDeletePersonalContact
 from xivo_cti.cti.commands.people import PeopleEditPersonalContact
@@ -254,6 +255,9 @@ class CTIServer(object):
         old_protocol_adapter = context.get('old_protocol_cti_adapter')
         GetSwitchboardDirectoryHeaders.register_callback_params(old_protocol_adapter.get_headers,
                                                                 ('auth_token', 'user_id'))
+        SwitchboardDirectorySearch.register_callback_params(old_protocol_adapter.lookup,
+                                                            ('auth_token', 'user_id', 'pattern'))
+
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

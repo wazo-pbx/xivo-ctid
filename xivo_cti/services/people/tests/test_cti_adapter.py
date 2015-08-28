@@ -40,7 +40,7 @@ class TestOldProtocolCTIAdapter(TestCase):
             with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
                 self.cti_adapter = OldProtocolCTIAdapter(self.async_runner, self.cti_server)
                 self.client = Client.return_value
-        self.formatter = self.cti_adapter._formatter = Mock(OldDirectoryFormatter)
+        self.formatter = self.cti_adapter._old_formatter = Mock(OldDirectoryFormatter)
 
     def test_get_headers(self):
         with synchronize(self.async_runner):
@@ -61,6 +61,31 @@ class TestOldProtocolCTIAdapter(TestCase):
             'xivo/12', {'class': 'directory_headers',
                         'headers': self.formatter.format_headers.return_value})
         self.formatter.format_headers.assert_called_once_with(headers)
+
+    def test_lookup(self):
+        with synchronize(self.async_runner):
+            self.cti_adapter.lookup(s.token, s.user_id, s.term)
+
+        self.client.directories.lookup.assert_called_once_with(profile=self.profile,
+                                                               term=s.term, token=s.token)
+
+    @patch('xivo_cti.services.people.cti_adapter.DirectoryResultFormatter')
+    def test_send_lookup_result(self, MockedDirectoryResultFormatter):
+        self.formatter.format_results.return_value = Mock(), Mock(), Mock()
+        user_id = 12
+        results = {
+            'term': s.term,
+            'column_headers': s.column_headers,
+            'column_types': s.column_types,
+            'results': s.results,
+        }
+
+        self.cti_adapter._send_lookup_result(user_id, results)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12', {'class': 'directory_search_result',
+                        'pattern': s.term,
+                        'results': MockedDirectoryResultFormatter.format.return_value})
 
 
 class TestCTIAdapter(TestCase):
