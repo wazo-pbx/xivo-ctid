@@ -24,7 +24,43 @@ from xivo_cti import dao
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.task_queue import new_task_queue
 
-from ..cti_adapter import PeopleCTIAdapter
+from ..cti_adapter import OldProtocolCTIAdapter, PeopleCTIAdapter
+from ..old_directory_formatter import OldDirectoryFormatter
+
+
+class TestOldProtocolCTIAdapter(TestCase):
+
+    profile = '__switchboard_directory'
+
+    def setUp(self):
+        self.task_queue = new_task_queue()
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
+        self.cti_server = Mock()
+        with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
+            with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
+                self.cti_adapter = OldProtocolCTIAdapter(self.async_runner, self.cti_server)
+                self.client = Client.return_value
+        self.formatter = self.cti_adapter._formatter = Mock(OldDirectoryFormatter)
+
+    def test_get_headers(self):
+        with synchronize(self.async_runner):
+            self.cti_adapter.get_headers(s.token, s.user_id)
+
+        self.client.directories.headers.assert_called_once_with(profile=self.profile, token=s.token)
+
+    def test_send_headers_result(self):
+        user_id = 12
+        headers = {
+            'column_headers': Mock(),
+            'column_types': Mock(),
+        }
+
+        self.cti_adapter._send_headers_result(user_id, headers)
+
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12', {'class': 'directory_headers',
+                        'headers': self.formatter.format_headers.return_value})
+        self.formatter.format_headers.assert_called_once_with(headers)
 
 
 class TestCTIAdapter(TestCase):
