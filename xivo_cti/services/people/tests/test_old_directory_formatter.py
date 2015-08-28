@@ -80,7 +80,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
     def test_format_headers(self):
         dird_result = {"column_types": ["name",
                                         "name",
-                                        "number",
+                                        "number_office",
                                         "mobile",
                                         "favorite",
                                         "personal"],

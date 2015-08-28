@@ -47,8 +47,10 @@ class OldDirectoryFormatter(object):
 
         dird_only_column_indexes = self._filtered_indexes(types)
 
+        cleaned_up_types = ['number' if t.startswith('number') else t for t in types]
+
         return zip(self._filter_list(headers, dird_only_column_indexes),
-                   self._filter_list(types, dird_only_column_indexes))
+                   self._filter_list(cleaned_up_types, dird_only_column_indexes))
 
     def _filtered_indexes(self, types):
         return [types.index(t) for t in types if t in self._dird_only_column_types]
