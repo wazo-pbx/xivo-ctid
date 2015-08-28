@@ -225,32 +225,35 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
-        PeopleSearch.register_callback_params(people_adapter.search, ('cti_connection', 'user_id', 'pattern'))
-        PeopleFavorites.register_callback_params(people_adapter.favorites, ('cti_connection', 'user_id'))
-        PeopleSetFavorite.register_callback_params(people_adapter.set_favorite, ('cti_connection', 'user_id',
-                                                                                 'source', 'source_entry_id', 'enabled'))
-        PeopleHeaders.register_callback_params(people_adapter.get_headers, ('cti_connection', 'user_id'))
-        PeoplePersonalContacts.register_callback_params(people_adapter.personal_contacts, ('cti_connection', 'user_id'))
-        PeoplePurgePersonalContacts.register_callback_params(people_adapter.purge_personal_contacts, ('cti_connection', 'user_id'))
+        PeopleSearch.register_callback_params(people_adapter.search, ('auth_token', 'user_id', 'pattern'))
+        PeopleFavorites.register_callback_params(people_adapter.favorites, ('auth_token', 'user_id'))
+        PeopleSetFavorite.register_callback_params(
+            people_adapter.set_favorite,
+            ('auth_token', 'user_id', 'source', 'source_entry_id', 'enabled'))
+        PeopleHeaders.register_callback_params(people_adapter.get_headers, ('auth_token', 'user_id'))
+        PeoplePersonalContacts.register_callback_params(people_adapter.personal_contacts,
+                                                        ('auth_token', 'user_id'))
+        PeoplePurgePersonalContacts.register_callback_params(people_adapter.purge_personal_contacts,
+                                                             ('auth_token', 'user_id'))
         PeoplePersonalContactRaw.register_callback_params(people_adapter.personal_contact_raw,
-                                                          ('cti_connection', 'user_id', 'source',
+                                                          ('auth_token', 'user_id', 'source',
                                                            'source_entry_id'))
         PeopleCreatePersonalContact.register_callback_params(people_adapter.create_personal_contact,
-                                                             ('cti_connection', 'user_id', 'contact_infos'))
+                                                             ('auth_token', 'user_id', 'contact_infos'))
         PeopleDeletePersonalContact.register_callback_params(people_adapter.delete_personal_contact,
-                                                             ('cti_connection', 'user_id', 'source',
+                                                             ('auth_token', 'user_id', 'source',
                                                               'source_entry_id'))
         PeopleEditPersonalContact.register_callback_params(people_adapter.edit_personal_contact,
-                                                           ('cti_connection', 'user_id', 'source',
+                                                           ('auth_token', 'user_id', 'source',
                                                             'source_entry_id', 'contact_infos'))
         PeopleExportPersonalContactsCSV.register_callback_params(people_adapter.export_personal_contacts_csv,
-                                                                 ('cti_connection', 'user_id'))
+                                                                 ('auth_token', 'user_id'))
         PeopleImportPersonalContactsCSV.register_callback_params(people_adapter.import_personal_contacts_csv,
-                                                                 ('cti_connection', 'user_id', 'csv_contacts'))
+                                                                 ('auth_token', 'user_id', 'csv_contacts'))
 
         old_protocol_adapter = context.get('old_protocol_cti_adapter')
         GetSwitchboardDirectoryHeaders.register_callback_params(old_protocol_adapter.get_headers,
-                                                                ('cti_connection', 'user_id'))
+                                                                ('auth_token', 'user_id'))
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
             status_forwarder.agent_status_notifier.register,

@@ -39,9 +39,8 @@ class OldProtocolCTIAdapter(object):
         self._runner = async_runner
         self._formatter = old_directory_formatter.OldDirectoryFormatter()
 
-    def get_headers(self, cti_connection, user_id):
+    def get_headers(self, token, user_id):
         logger.debug('Get switchboard headers')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_headers_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.headers,
                                  profile=self._profile, token=token)
@@ -62,30 +61,26 @@ class PeopleCTIAdapter(object):
         self._cti_server = cti_server
         self._runner = async_runner
 
-    def get_headers(self, cti_connection, user_id):
+    def get_headers(self, token, user_id):
         logger.debug('Get headers called')
         profile = dao.user.get_context(user_id)
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_headers_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.headers, profile=profile, token=token)
 
-    def search(self, cti_connection, user_id, term):
+    def search(self, token, user_id, term):
         logger.debug('Search called')
         profile = dao.user.get_context(user_id)
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_lookup_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.lookup, profile=profile, term=term, token=token)
 
-    def favorites(self, cti_connection, user_id):
+    def favorites(self, token, user_id):
         logger.debug('Favorites called')
         profile = dao.user.get_context(user_id)
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_favorites_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.favorites, profile=profile, token=token)
 
-    def set_favorite(self, cti_connection, user_id, source, source_entry_id, enabled):
+    def set_favorite(self, token, user_id, source, source_entry_id, enabled):
         logger.debug('Set Favorite called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_favorite_update, user_id, source, source_entry_id, enabled)
 
         if enabled:
@@ -95,40 +90,34 @@ class PeopleCTIAdapter(object):
 
         self._runner.run_with_cb(callback, function, directory=source, contact=source_entry_id, token=token)
 
-    def personal_contacts(self, cti_connection, user_id):
+    def personal_contacts(self, token, user_id):
         logger.debug('Personal Contacts called')
         profile = dao.user.get_context(user_id)
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contacts_result, user_id)
         self._runner.run_with_cb(callback, self._client.directories.personal, profile=profile, token=token)
 
-    def purge_personal_contacts(self, cti_connection, user_id):
+    def purge_personal_contacts(self, token, user_id):
         logger.debug('Purge Personal Contacts called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contacts_purged, user_id)
         self._runner.run_with_cb(callback, self._client.personal.purge, token=token)
 
-    def personal_contact_raw(self, cti_connection, user_id, source, source_entry_id):
+    def personal_contact_raw(self, token, user_id, source, source_entry_id):
         logger.debug('Personal Contact called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_raw_result, user_id, source, source_entry_id)
         self._runner.run_with_cb(callback, self._client.personal.get, contact_id=source_entry_id, token=token)
 
-    def create_personal_contact(self, cti_connection, user_id, contact_infos):
+    def create_personal_contact(self, token, user_id, contact_infos):
         logger.debug('Create Personal Contact called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_created, user_id)
         self._runner.run_with_cb(callback, self._client.personal.create, contact_infos=contact_infos, token=token)
 
-    def delete_personal_contact(self, cti_connection, user_id, source, source_entry_id):
+    def delete_personal_contact(self, token, user_id, source, source_entry_id):
         logger.debug('Delete Personal Contact called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_deleted, user_id, source, source_entry_id)
         self._runner.run_with_cb(callback, self._client.personal.delete, contact_id=source_entry_id, token=token)
 
-    def edit_personal_contact(self, cti_connection, user_id, source, source_entry_id, contact_infos):
+    def edit_personal_contact(self, token, user_id, source, source_entry_id, contact_infos):
         logger.debug('Edit Personal Contact called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_personal_contact_raw_update,
                            user_id, source, source_entry_id)
         self._runner.run_with_cb(callback, self._client.personal.edit,
@@ -136,18 +125,16 @@ class PeopleCTIAdapter(object):
                                  contact_infos=contact_infos,
                                  token=token)
 
-    def import_personal_contacts_csv(self, cti_connection, user_id, csv_contacts):
+    def import_personal_contacts_csv(self, token, user_id, csv_contacts):
         logger.debug('Import Personal Contacts CSV called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_import_personal_contacts_csv_result, user_id)
         self._runner.run_with_cb(callback,
                                  self._client.personal.import_csv,
                                  csv_text=csv_contacts.encode('utf-8'),
                                  token=token)
 
-    def export_personal_contacts_csv(self, cti_connection, user_id):
+    def export_personal_contacts_csv(self, token, user_id):
         logger.debug('Export Personal Contacts CSV called')
-        token = cti_connection.connection_details['auth_token']
         callback = partial(self._send_export_personal_contacts_csv_result, user_id)
         self._runner.run_with_cb(callback, self._client.personal.export_csv, token=token)
 

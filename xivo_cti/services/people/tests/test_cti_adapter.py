@@ -32,7 +32,6 @@ class TestCTIAdapter(TestCase):
     def setUp(self):
         self.task_queue = new_task_queue()
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
-        self.cti_connection = Mock(connection_details={'auth_token': s.token})
         self.cti_server = Mock()
         with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
             with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
@@ -47,7 +46,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.get_headers(self.cti_connection, s.user_id)
+            self.cti_adapter.get_headers(s.token, s.user_id)
 
         self.client.directories.headers.assert_called_once_with(profile=s.profile, token=s.token)
 
@@ -74,7 +73,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.search(self.cti_connection, s.user_id, s.term)
+            self.cti_adapter.search(s.token, s.user_id, s.term)
 
         self.client.directories.lookup.assert_called_once_with(profile=s.profile, term=s.term, token=s.token)
 
@@ -105,7 +104,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.favorites(self.cti_connection, s.user_id)
+            self.cti_adapter.favorites(s.token, s.user_id)
 
         self.client.directories.favorites.assert_called_once_with(profile=s.profile, token=s.token)
 
@@ -137,7 +136,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, source, source_entry_id, enabled)
+            self.cti_adapter.set_favorite(s.token, s.user_id, source, source_entry_id, enabled)
 
         self.client.directories.new_favorite.assert_called_once_with(directory=source,
                                                                      contact=source_entry_id,
@@ -151,7 +150,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.set_favorite(self.cti_connection, s.user_id, source, source_entry_id, enabled)
+            self.cti_adapter.set_favorite(s.token, s.user_id, source, source_entry_id, enabled)
 
         self.client.directories.remove_favorite.assert_called_once_with(directory=source,
                                                                         contact=source_entry_id,
@@ -181,7 +180,7 @@ class TestCTIAdapter(TestCase):
         dao.user.get_context = Mock(return_value=s.profile)
 
         with synchronize(self.async_runner):
-            self.cti_adapter.personal_contacts(self.cti_connection, s.user_id)
+            self.cti_adapter.personal_contacts(s.token, s.user_id)
 
         self.client.directories.personal.assert_called_once_with(profile=s.profile, token=s.token)
 
@@ -207,7 +206,7 @@ class TestCTIAdapter(TestCase):
 
     def test_purge_personal_contacts(self):
         with synchronize(self.async_runner):
-            self.cti_adapter.purge_personal_contacts(self.cti_connection, s.user_id)
+            self.cti_adapter.purge_personal_contacts(s.token, s.user_id)
 
         self.client.personal.purge.assert_called_once_with(token=s.token)
 
@@ -229,7 +228,7 @@ class TestCTIAdapter(TestCase):
                          'random_key': 'random_value'}
 
         with synchronize(self.async_runner):
-            self.cti_adapter.create_personal_contact(self.cti_connection, s.user_id, contact_infos)
+            self.cti_adapter.create_personal_contact(s.token, s.user_id, contact_infos)
 
         self.client.personal.create.assert_called_once_with(contact_infos=contact_infos, token=s.token)
 
@@ -251,7 +250,7 @@ class TestCTIAdapter(TestCase):
         source_entry_id = '123456789'
 
         with synchronize(self.async_runner):
-            self.cti_adapter.delete_personal_contact(self.cti_connection, s.user_id, source, source_entry_id)
+            self.cti_adapter.delete_personal_contact(s.token, s.user_id, source, source_entry_id)
 
         self.client.personal.delete.assert_called_once_with(contact_id=source_entry_id, token=s.token)
 
@@ -280,7 +279,7 @@ class TestCTIAdapter(TestCase):
                          'random_key': 'random_value'}
 
         with synchronize(self.async_runner):
-            self.cti_adapter.edit_personal_contact(self.cti_connection,
+            self.cti_adapter.edit_personal_contact(s.token,
                                                    s.user_id,
                                                    source,
                                                    source_entry_id,
@@ -312,7 +311,7 @@ class TestCTIAdapter(TestCase):
         source_entry_id = '123456789'
 
         with synchronize(self.async_runner):
-            self.cti_adapter.personal_contact_raw(self.cti_connection, s.user_id, source, source_entry_id)
+            self.cti_adapter.personal_contact_raw(s.token, s.user_id, source, source_entry_id)
 
         self.client.personal.get.assert_called_once_with(contact_id=source_entry_id, token=s.token)
 
@@ -342,7 +341,7 @@ class TestCTIAdapter(TestCase):
 
     def test_export_personal_contacts_csv(self):
         with synchronize(self.async_runner):
-            self.cti_adapter.export_personal_contacts_csv(self.cti_connection, s.user_id)
+            self.cti_adapter.export_personal_contacts_csv(s.token, s.user_id)
 
         self.client.personal.export_csv.assert_called_once_with(token=s.token)
 
@@ -363,7 +362,7 @@ class TestCTIAdapter(TestCase):
     def test_import_personal_contacts_csv(self):
         csv_contacts = 'firstname,lastname\r\nBob, the Builder\r\nAlice, Wonderland\r\n'
         with synchronize(self.async_runner):
-            self.cti_adapter.import_personal_contacts_csv(self.cti_connection, s.user_id, csv_contacts)
+            self.cti_adapter.import_personal_contacts_csv(s.token, s.user_id, csv_contacts)
 
         self.client.personal.import_csv.assert_called_once_with(csv_text=csv_contacts, token=s.token)
 
