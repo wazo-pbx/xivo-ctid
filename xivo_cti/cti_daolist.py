@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,9 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-from xivo_dao import group_dao, agent_dao, \
-    meetme_dao, queue_dao, voicemail_dao, \
-    phonebook_dao, user_dao, trunk_dao, user_line_dao
+
+from xivo_dao import (group_dao, agent_dao,
+                      meetme_dao, queue_dao, voicemail_dao,
+                      user_dao, trunk_dao, user_line_dao)
 
 logger = logging.getLogger('daolist')
 
@@ -180,41 +181,6 @@ class DaoList(object):
         res[key] = voicemail.todict()
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
-        return res
-
-    def _get_phonebooks(self):
-        res = {}
-        phonebooks = phonebook_dao.all_join_elements()
-        for row in phonebooks:
-            phonebook, phonebookaddress, phonebooknumber = row
-            res.update(self._format_phonebook_data(phonebook, phonebookaddress, phonebooknumber))
-        return res
-
-    def _get_phonebook(self, id):
-        phonebook = phonebook_dao.get(id)
-        phonebookaddress = phonebook_dao.get_phonebookaddress(id)
-        phonebooknumber = phonebook_dao.get_phonebooknumber(id)
-        return self._format_phonebook_data(phonebook, phonebookaddress, phonebooknumber)
-
-    def _format_phonebookaddress(self, phonebookaddress):
-        phonebookaddress_dict = {}
-        for pba in phonebookaddress:
-            phonebookaddress_dict[pba.type] = pba.todict()
-        return phonebookaddress_dict
-
-    def _format_phonebooknumber(self, phonebooknumber):
-        phonebooknumber_dict = {}
-        for pbn in phonebooknumber:
-            phonebooknumber_dict[pbn.type] = pbn.todict()
-        return phonebooknumber_dict
-
-    def _format_phonebook_data(self, phonebook, phonebookaddress, phonebooknumber):
-        res = {}
-        key = str(phonebook.id)
-        res[key] = {}
-        res[key]['phonebook'] = phonebook.todict()
-        res[key]['phonebookaddress'] = self._format_phonebookaddress(phonebookaddress)
-        res[key]['phonebooknumber'] = self._format_phonebooknumber(phonebooknumber) if phonebooknumber else False
         return res
 
     def _get_trunks(self):

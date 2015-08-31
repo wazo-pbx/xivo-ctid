@@ -25,9 +25,9 @@ import xivo_cti
 from xivo.chain_map import ChainMap
 from xivo.config_helper import read_config_file_hierarchy
 from xivo_dao.resources.infos import dao as info_dao
-from xivo_dao import cti_service_dao, cti_preference_dao, cti_profile_dao, \
-    cti_main_dao, cti_displays_dao, cti_context_dao, cti_phonehints_dao, \
-    cti_userstatus_dao, cti_sheets_dao, cti_directories_dao
+from xivo_dao import (cti_service_dao, cti_preference_dao, cti_profile_dao,
+                      cti_main_dao, cti_phonehints_dao,
+                      cti_userstatus_dao, cti_sheets_dao)
 
 logger = logging.getLogger('cti_config')
 
@@ -129,15 +129,12 @@ class _DbConfig(object):
 
     def fill_conf(self):
         self.xc_json.update(cti_main_dao.get_config())
-        self.xc_json['displays'] = cti_displays_dao.get_config()
-        self.xc_json['contexts'] = cti_context_dao.get_config()
         self.xc_json['profiles'] = self._get_profiles()
         self.xc_json['services'] = self._get_services()
         self.xc_json['preferences'] = self._get_preferences()
         self.xc_json['phonestatus'] = cti_phonehints_dao.get_config()
         self.xc_json['userstatus'] = cti_userstatus_dao.get_config()
         self.xc_json['sheets'] = cti_sheets_dao.get_config()
-        self.xc_json['directories'] = cti_directories_dao.get_config()
         self.xc_json['uuid'] = info_dao.get().uuid
 
     def _get_profiles(self):

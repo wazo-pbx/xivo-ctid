@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -85,7 +85,6 @@ class AnyList(object):
             'admin_moderationmode'
         ],
         'outcalls': [],
-        'phonebooks': [],
         'queuemembers': [
             'queue_name',
             'interface',
@@ -138,7 +137,6 @@ class AnyList(object):
             'old': 0,
             'new': 0
         },
-        'phonebooks': {}
     }
 
     def __init__(self, listname):

@@ -33,9 +33,9 @@ from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
-from xivo_cti.lists import agents_list, groups_list, meetmes_list, \
-    phonebooks_list, phones_list, queues_list, users_list, voicemails_list, \
-    trunks_list
+from xivo_cti.lists import (agents_list, groups_list, meetmes_list,
+                            phones_list, queues_list, users_list, voicemails_list,
+                            trunks_list)
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
@@ -74,7 +74,6 @@ class Safe(object):
             'agents': agents_list.AgentsList(self),
             'groups': groups_list.GroupsList(self),
             'meetmes': meetmes_list.MeetmesList(self),
-            'phonebooks': phonebooks_list.PhonebooksList(self),
             'phones': phones_list.PhonesList(self),
             'queues': queues_list.QueuesList(self),
             'trunks': trunks_list.TrunksList(self),
