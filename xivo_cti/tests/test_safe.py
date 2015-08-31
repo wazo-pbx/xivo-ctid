@@ -28,7 +28,6 @@ from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe, TWO_MONTHS
 from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
-from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.tools.weak_method import WeakCallable
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.services.user.manager import UserServiceManager
@@ -57,7 +56,6 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(ListID, self.safe.handle_getlist_list_id)
         self.assert_callback_registered(UpdateConfig, self.safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, self.safe.handle_getlist_update_status)
-        self.assert_callback_registered(Directory, self.safe.getcustomers)
         self.assert_callback_registered(Availstate, self.safe.user_service_manager.set_presence)
 
     def test_handle_getlist_list_id_not_a_list(self):

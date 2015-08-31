@@ -26,13 +26,10 @@ from datetime import timedelta
 from xivo_auth_client import Client as AuthClient
 from xivo_cti import cti_sheets
 from xivo_cti import config
-from xivo_cti import dao
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable
 from xivo_cti.channel import Channel
-from xivo_cti.directory import directory
 from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
-from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
@@ -70,11 +67,6 @@ class Safe(object):
         self.channels = {}
         self.faxes = {}
         self.ctistack = []
-
-        self.displays_mgr = directory.DisplaysMgr()
-        self.contexts_mgr = directory.ContextsMgr()
-        self.directories_mgr = directory.DirectoriesMgr()
-
         self._sent_sheets = defaultdict(list)
 
     def init_xod_config(self):
@@ -153,7 +145,6 @@ class Safe(object):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
-        Directory.register_callback_params(self.getcustomers, ['user_id', 'pattern', 'commandid'])
         Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id', 'availstate'])
 
     def register_ami_handlers(self):
@@ -563,39 +554,6 @@ class Safe(object):
             actionid = fileid
             self._ctiserver.interface_ami.execute_and_track(actionid, params)
             del self.faxes[fileid]
-
-    def update_directories(self):
-        # This function must be called after a certain amount of initialization
-        # went by in the _ctiserver object since some of the directories depends on
-        # some information which is not available during this Safe __init__
-        display_contents = config['displays']
-        self.displays_mgr.update(display_contents)
-
-        directories_contents = config['directories']
-        self.directories_mgr.update(self._ctiserver, directories_contents)
-
-        contexts_contents = config['contexts']
-        self.contexts_mgr.update(self.displays_mgr.displays,
-                                 self.directories_mgr.directories,
-                                 contexts_contents)
-
-    def getcustomers(self, user_id, pattern, commandid):
-        try:
-            context = dao.user.get_context(user_id)
-            headers, _, resultlist = self._search_directory_in_context(pattern, context)
-        except (LookupError, KeyError):
-            logger.warning('Failed to retrieve user context for user %s', user_id)
-            return 'warning', {'status': 'ko', 'reason': 'undefined_context'}
-        else:
-            return 'message', {'class': 'directory',
-                               'headers': headers,
-                               'replyid': commandid,
-                               'resultlist': resultlist,
-                               'status': 'ok'}
-
-    def _search_directory_in_context(self, pattern, context):
-        context_obj = self.contexts_mgr.contexts[context]
-        return context_obj.lookup_direct(pattern, contexts=[context])
 
     def _get_set_fn(self, uniqueid):
         aggregator = context.get('call_form_variable_aggregator')

@@ -43,6 +43,7 @@ from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
 from xivo_cti.cti.commands.call_form_result import CallFormResult
 from xivo_cti.cti.commands.dial import Dial
+from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
@@ -257,6 +258,8 @@ class CTIServer(object):
                                                                 ('auth_token', 'user_id'))
         SwitchboardDirectorySearch.register_callback_params(old_protocol_adapter.lookup,
                                                             ('auth_token', 'user_id', 'pattern'))
+        Directory.register_callback_params(old_protocol_adapter.directory_search,
+                                           ('auth_token', 'user_id', 'pattern', 'commandid'))
 
         status_forwarder = context.get('status_forwarder')
         RegisterAgentStatus.register_callback_params(
@@ -485,7 +488,6 @@ class CTIServer(object):
         self.safe.init_xod_status()
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
-        self.safe.update_directories()
 
         self._queue_member_updater.on_initialization()
         self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
@@ -732,7 +734,6 @@ class CTIServer(object):
             try:
                 if 'xivo[cticonfig,update]' in self.update_config_list:
                     cti_config.update_db_config()
-                    self.safe.update_directories()
                     self.update_config_list.pop(self.update_config_list.index('xivo[cticonfig,update]'))
             except Exception:
                 logger.exception('failed while executing xivo[cticonfig,update]')
