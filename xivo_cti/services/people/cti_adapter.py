@@ -67,8 +67,25 @@ class OldProtocolCTIAdapter(object):
         message = {'class': 'directory_search_result',
                    'pattern': response['term'],
                    'results': switchboard_format_results}
-        logger.debug('Sending %s', message)
         self._cti_server.send_to_cti_client(xuserid, message)
+
+    def directory_search(self, token, user_id, term, commandid):
+        logger.debug('Directory search called for %s', term)
+        profile = dao.user.get_context(user_id)
+        callback = partial(self._send_directory_search_result, user_id, commandid)
+        self._runner.run_with_cb(callback, self._client.directories.lookup,
+                                 profile=profile, term=term, token=token)
+
+    def _send_directory_search_result(self, user_id, commandid, response):
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        headers, types, resultlist = self._old_formatter.format_results(response)
+        message = {'class': 'directory',
+                   'headers': headers,
+                   'replyid': commandid,
+                   'resultlist': resultlist,
+                   'status': 'ok'}
+        self._cti_server.send_to_cti_client(xuserid, message)
+
 
 
 class PeopleCTIAdapter(object):

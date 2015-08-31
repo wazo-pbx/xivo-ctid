@@ -87,6 +87,35 @@ class TestOldProtocolCTIAdapter(TestCase):
                         'pattern': s.term,
                         'results': MockedDirectoryResultFormatter.format.return_value})
 
+    @patch('xivo_cti.dao.user')
+    def test_directory_search(self, mocked_user_dao):
+        with synchronize(self.async_runner):
+            self.cti_adapter.directory_search(s.token, s.user_id, s.term, s.commandid)
+
+        self.client.directories.lookup.assert_called_once_with(
+            profile=mocked_user_dao.get_context.return_value, term=s.term, token=s.token)
+
+    def test_send_directory_search_result(self):
+        user_id = 12
+        results = {
+            'term': s.term,
+            'column_headers': s.column_headers,
+            'column_types': s.column_types,
+            'results': s.results,
+        }
+        self.formatter.format_results.return_value = s.headers, s.types, s.resultlist
+
+        self.cti_adapter._send_directory_search_result(user_id, s.commandid, results)
+
+        expected_message = {'class': 'directory',
+                            'headers': s.headers,
+                            'replyid': s.commandid,
+                            'resultlist': s.resultlist,
+                            'status': 'ok'}
+        self.cti_server.send_to_cti_client.assert_called_once_with(
+            'xivo/12', expected_message)
+        self.formatter.format_results.assert_called_once_with(results)
+
 
 class TestCTIAdapter(TestCase):
 
