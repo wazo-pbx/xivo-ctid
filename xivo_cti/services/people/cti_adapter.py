@@ -25,7 +25,7 @@ from xivo_cti import dao
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
-from .import old_directory_formatter
+from . import old_directory_formatter
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,6 @@ class OldProtocolCTIAdapter(object):
                    'resultlist': resultlist,
                    'status': 'ok'}
         self._cti_server.send_to_cti_client(xuserid, message)
-
 
 
 class PeopleCTIAdapter(object):
