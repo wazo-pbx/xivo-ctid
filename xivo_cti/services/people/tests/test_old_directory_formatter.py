@@ -97,3 +97,38 @@ class TestOldDirectoryFormatter(unittest.TestCase):
                                       ('Lastname', 'name'),
                                       ('Number', 'number'),
                                       ('Mobile', 'mobile')))
+
+    def test_that_multiple_numbers_return_one_row(self):
+        dird_result = {"column_types": ["name",
+                                        "name",
+                                        "number_office",
+                                        "number_mobile",
+                                        "favorite",
+                                        "personal"],
+                       "column_headers": ["Firstname",
+                                          "Lastname",
+                                          "Number",
+                                          "Number",
+                                          "Favorite",
+                                          "Personal"]}
+
+        headers = self.formatter.format_headers(dird_result)
+
+        assert_that(headers, contains(('Firstname', 'name'),
+                                      ('Lastname', 'name'),
+                                      ('Number', 'number')))
+
+    def test_format_headers_no_number(self):
+        dird_result = {"column_types": ["name",
+                                        "name",
+                                        "favorite",
+                                        "personal"],
+                       "column_headers": ["Firstname",
+                                          "Lastname",
+                                          "Favorite",
+                                          "Personal"]}
+
+        headers = self.formatter.format_headers(dird_result)
+
+        assert_that(headers, contains(('Firstname', 'name'),
+                                      ('Lastname', 'name')))
