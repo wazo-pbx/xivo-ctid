@@ -41,7 +41,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
 
     def test_resultlist_with_results(self):
         dird_result = {
-            u'column_types': [u'name', u'name', u'number', u'mobile', u'favorite', u'personal'],
+            u'column_types': [u'name', u'name', u'number', u'callable', u'favorite', u'personal'],
             u'term': u'o',
             u'column_headers': [u'Firstname', u'Lastname', u'Number', u'Mobile', u'Favorite', u'Personal'],
             u'results': [
@@ -66,7 +66,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
 
     def test_that_dird_specific_columns_are_not_included(self):
         dird_result = {
-            u'column_types': [u'name', u'name', u'number', u'mobile', u'favorite', u'personal'],
+            u'column_types': [u'name', u'name', u'number', u'callable', u'favorite', u'personal'],
             u'term': u'o',
             u'column_headers': [u'Firstname', u'Lastname', u'Number', u'Mobile', u'Favorite', u'Personal'],
             u'results': [],
@@ -74,14 +74,14 @@ class TestOldDirectoryFormatter(unittest.TestCase):
 
         headers, types_, _ = self.formatter.format_results(dird_result)
 
-        assert_that(types_, contains('name', 'name', 'number', 'mobile'))
+        assert_that(types_, contains('name', 'name', 'number', 'callable'))
         assert_that(headers, contains('Firstname', 'Lastname', 'Number', 'Mobile'))
 
     def test_format_headers(self):
         dird_result = {"column_types": ["name",
                                         "name",
                                         "number_office",
-                                        "mobile",
+                                        "callable",
                                         "favorite",
                                         "personal"],
                        "column_headers": ["Firstname",
@@ -96,7 +96,7 @@ class TestOldDirectoryFormatter(unittest.TestCase):
         assert_that(headers, contains(('Firstname', 'name'),
                                       ('Lastname', 'name'),
                                       ('Number', 'number'),
-                                      ('Mobile', 'mobile')))
+                                      ('Mobile', 'callable')))
 
     def test_that_multiple_numbers_return_one_row(self):
         dird_result = {"column_types": ["name",
