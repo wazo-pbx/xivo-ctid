@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +19,13 @@ import unittest
 
 from mock import Mock
 from mock import patch
-from mock import sentinel
+from mock import sentinel as s
 from hamcrest import assert_that
 from hamcrest import equal_to
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.exception import NoSuchLineException
+from xivo_cti.innerdata import Safe
+from xivo_cti.interfaces.interface_cti import CTI, CTI_PROTOCOL_VERSION
 from xivo_cti.interfaces.interface_cti import NotLoggedException
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
@@ -34,6 +36,8 @@ class TestCTI(unittest.TestCase):
 
     def setUp(self):
         self._ctiserver = Mock(CTIServer)
+        self._ctiserver.safe = self._innerdata = Mock(Safe)
+        self._innerdata.xod_config = {'users': Mock()}
         self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
@@ -67,3 +71,21 @@ class TestCTI(unittest.TestCase):
         fn = self._cti_connection._get_answer_cb(5)
 
         assert_that(fn, equal_to(self._cti_connection.answer_cb))
+
+    @patch('xivo_cti.interfaces.interface_cti.dao')
+    def test_that_receive_login_id_adds_the_lineid_to_connection_details(self, dao):
+        dao.user.get_line.return_value = {'id': '42'}
+        self._cti_connection._get_answer_cb = Mock()
+
+        self._cti_connection.receive_login_id(s.login, CTI_PROTOCOL_VERSION, self._cti_connection)
+
+        assert_that(self._cti_connection.connection_details['line_id'], equal_to('42'))
+
+    @patch('xivo_cti.interfaces.interface_cti.dao')
+    def test_that_receive_login_id_adds_the_lineid_to_connection_details_no_line(self, dao):
+        dao.user.get_line.side_effect = NoSuchLineException
+        self._cti_connection._get_answer_cb = Mock()
+
+        self._cti_connection.receive_login_id(s.login, CTI_PROTOCOL_VERSION, self._cti_connection)
+
+        assert_that(self._cti_connection.connection_details['line_id'], equal_to(None))

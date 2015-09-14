@@ -21,8 +21,10 @@ import random
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
+from xivo_cti import dao
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
 from xivo_dao import user_dao
@@ -167,8 +169,13 @@ class CTI(interfaces.Interfaces):
         user_id = user_dict.get('id')
 
         if user_dict:
-            self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
-                                            'userid': str(user_id)})
+            try:
+                line_id = dao.user.get_line(str(user_id)).get('id')
+            except NoSuchLineException:
+                line_id = None
+            self.connection_details.update({'ipbxid': 'xivo',
+                                            'userid': str(user_id),
+                                            'line_id': line_id})
             self.answer_cb = self._get_answer_cb(user_id)
 
         session_id = ''.join(random.sample(ALPHANUMS, 10))
