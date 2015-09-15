@@ -131,6 +131,21 @@ class TestCTIAdapter(TestCase):
     def tearDown(self):
         self.task_queue.close()
 
+    @patch('xivo_cti.services.people.cti_adapter.config', {'uuid': s.xivo_uuid})
+    @patch('xivo_cti.services.people.cti_adapter.dao', Mock(user=Mock(get_agent_id=Mock(return_value='26'),
+                                                                      get_line=Mock(return_value={'id': '24'}))))
+    def test_get_relations(self):
+        user_id = '42'
+
+        self.cti_adapter.get_relations(user_id)
+
+        expected_msg = {'class': 'relations',
+                        'data': {'xivo_uuid': s.xivo_uuid,
+                                 'user_id': 42,
+                                 'endpoint_id': 24,
+                                 'agent_id': 26}}
+        self.cti_server.send_to_cti_client.assert_called_once_with('xivo/42', expected_msg)
+
     @patch('xivo_cti.dao.user', Mock())
     def test_get_headers(self):
         dao.user.get_context = Mock(return_value=s.profile)

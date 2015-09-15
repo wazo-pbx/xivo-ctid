@@ -215,3 +215,15 @@ class CTIMessageFormatter(object):
             'class': 'people_export_personal_contacts_csv_result',
             'csv_contacts': result
         }
+
+    @staticmethod
+    def relations(xivo_uuid, user_id, endpoint_id, agent_id):
+        user_id = int(user_id)
+        endpoint_id = int(endpoint_id) if endpoint_id is not None else None
+        agent_id = int(agent_id) if agent_id is not None else None
+
+        return {'class': 'relations',
+                'data': {'xivo_uuid': xivo_uuid,
+                         'user_id': user_id,
+                         'endpoint_id': endpoint_id,
+                         'agent_id': agent_id}}
