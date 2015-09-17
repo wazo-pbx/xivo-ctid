@@ -425,3 +425,29 @@ class TestCTIMessageFormatter(unittest.TestCase):
                 'status': status,
             }
         }))
+
+    def test_relations(self):
+        xivo_uuid = 'my-xivo-uuid'
+        user_id = '42'
+        endpoint_id = '50'
+        agent_id = '24'
+
+        result = CTIMessageFormatter.relations(xivo_uuid, user_id, endpoint_id, agent_id)
+
+        assert_that(result, equal_to({'class': 'relations',
+                                      'data': {'xivo_uuid': xivo_uuid,
+                                               'user_id': 42,
+                                               'endpoint_id': 50,
+                                               'agent_id': 24}}))
+
+    def test_relations_no_endpoint_no_agent(self):
+        xivo_uuid = 'my-xivo-uuid'
+        user_id = '42'
+
+        result = CTIMessageFormatter.relations(xivo_uuid, user_id, None, None)
+
+        assert_that(result, equal_to({'class': 'relations',
+                                      'data': {'xivo_uuid': xivo_uuid,
+                                               'user_id': 42,
+                                               'endpoint_id': None,
+                                               'agent_id': None}}))

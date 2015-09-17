@@ -48,6 +48,7 @@ from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
 from xivo_cti.cti.commands.direct_transfer import DirectTransfer
 from xivo_cti.cti.commands.cancel_transfer import CancelTransfer
 from xivo_cti.cti.commands.complete_transfer import CompleteTransfer
+from xivo_cti.cti.commands.get_relations import GetRelations
 from xivo_cti.cti.commands.hangup import Hangup
 from xivo_cti.cti.commands.history import History
 from xivo_cti.cti.commands.listen import Listen
@@ -227,6 +228,7 @@ class CTIServer(object):
 
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
+        GetRelations.register_callback_params(people_adapter.get_relations, ['user_id'])
         PeopleSearch.register_callback_params(people_adapter.search, ('auth_token', 'user_id', 'pattern'))
         PeopleFavorites.register_callback_params(people_adapter.favorites, ('auth_token', 'user_id'))
         PeopleSetFavorite.register_callback_params(

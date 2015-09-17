@@ -22,6 +22,7 @@ from xivo_dird_client import Client
 
 from xivo_cti import config
 from xivo_cti import dao
+from xivo_cti.exception import NoSuchLineException
 from xivo_cti.directory.formatter import DirectoryResultFormatter
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -93,6 +94,19 @@ class PeopleCTIAdapter(object):
         self._client = Client(**config['dird'])
         self._cti_server = cti_server
         self._runner = async_runner
+
+    def get_relations(self, user_id):
+        logger.debug('User %s is requesting his relations', user_id)
+        xuserid = 'xivo/{user_id}'.format(user_id=user_id)
+        try:
+            line_id = dao.user.get_line(user_id)['id']
+        except NoSuchLineException:
+            line_id = None
+        agent_id = dao.user.get_agent_id(user_id)
+
+        msg = CTIMessageFormatter.relations(config['uuid'], user_id, line_id, agent_id)
+
+        self._cti_server.send_to_cti_client(xuserid, msg)
 
     def get_headers(self, token, user_id):
         logger.debug('Get headers called')
