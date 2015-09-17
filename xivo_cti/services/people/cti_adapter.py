@@ -96,7 +96,7 @@ class PeopleCTIAdapter(object):
         self._runner = async_runner
 
     def get_relations(self, user_id):
-        logger.debug('User %s is requesting is relations', user_id)
+        logger.debug('User %s is requesting his relations', user_id)
         xuserid = 'xivo/{user_id}'.format(user_id=user_id)
         try:
             line_id = dao.user.get_line(user_id)['id']
