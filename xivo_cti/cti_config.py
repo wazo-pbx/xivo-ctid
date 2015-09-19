@@ -43,7 +43,7 @@ _default_config = {
         'host': 'localhost',
         'port': 9497,
         'timeout': 2,
-        'https': True,
+        'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
     'bus': {
         'exchange_name': 'xivo',
@@ -53,6 +53,7 @@ _default_config = {
         'host': 'localhost',
         'port': 9489,
         'version': 0.1,
+        'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
     'switchboard_polycom': {
         'username': 'xivo_switchboard',
