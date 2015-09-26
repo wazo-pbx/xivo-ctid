@@ -27,7 +27,6 @@ WORKDIR /root
 RUN rm -fr /root/xivo-ctid
 
 EXPOSE 5003
-EXPOSE 5004
 EXPOSE 9495
 
 CMD xivo-ctid -f -d
