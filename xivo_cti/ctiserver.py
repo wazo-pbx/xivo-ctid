@@ -141,12 +141,6 @@ class CTIServer(object):
         logger.debug('Closing all sockets')
         self._socket_close_all()
 
-        logger.debug('Cleaning the task queue')
-        self._task_queue.clear()
-
-        logger.debug('Cleaning the task scheduler')
-        self._task_scheduler.clear()
-
         logger.debug('Stopping all remaining threads')
         for t in filter(lambda x: x.getName() not in
                         ['MainThread', 'HTTPServerThread'], threading.enumerate()):
@@ -477,9 +471,6 @@ class CTIServer(object):
     def main_loop(self):
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
-
-        self._task_queue.clear()
-        self._task_scheduler.clear()
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')
