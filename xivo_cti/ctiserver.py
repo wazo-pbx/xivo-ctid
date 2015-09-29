@@ -610,19 +610,15 @@ class CTIServer(object):
     def _socket_close_all(self):
         cause = DisconnectCause.by_server_stop
 
-        for s in self.fdlist_full:
-            if s in self.fdlist_interface_cti:
-                interface_cti = self.fdlist_interface_cti[s]
-                self._broadcast_cti_group.remove(interface_cti)
-                interface_cti.disconnected(cause)
+        for interface_cti in self.fdlist_interface_cti.itervalues():
+            self._broadcast_cti_group.remove(interface_cti)
+            interface_cti.disconnected(cause)
 
-        for s in self.fdlist_full:
-            if s in self.fdlist_interface_info:
-                self.fdlist_interface_info[s].disconnected(cause)
-            elif s in self.fdlist_interface_webi:
-                self.fdlist_interface_webi[s].disconnected(cause)
-            if not isinstance(s, int):
-                s.close()
+        for interface_info in self.fdlist_interface_info.itervalues():
+            interface_info.disconnected(cause)
+
+        for interface_webi in self.fdlist_interface_webi.itervalues():
+            interface_webi.disconnected(cause)
 
     def _socket_ami_read(self, sel_i):
         buf = sel_i.recv(BUFSIZE_LARGE)
