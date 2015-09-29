@@ -575,6 +575,7 @@ class CTIServer(object):
                 interface_cti.reply(what)
 
     def _init_socket(self):
+        fdlist_full = []
         try:
             fdtodel = []
             for cn in self.fdlist_interface_cti:
@@ -583,13 +584,12 @@ class CTIServer(object):
             for cn in fdtodel:
                 del self.fdlist_interface_cti[cn]
 
-            self.fdlist_full = []
-            self.fdlist_full.append(self._task_queue)
-            self.fdlist_full.append(self.ami_sock)
-            self.fdlist_full.extend(self.fdlist_listen_cti)
-            self.fdlist_full.extend(self.fdlist_interface_cti)
-            self.fdlist_full.extend(self.fdlist_interface_webi)
-            self.fdlist_full.extend(self.fdlist_interface_info)
+            fdlist_full.append(self._task_queue)
+            fdlist_full.append(self.ami_sock)
+            fdlist_full.extend(self.fdlist_listen_cti)
+            fdlist_full.extend(self.fdlist_interface_cti)
+            fdlist_full.extend(self.fdlist_interface_webi)
+            fdlist_full.extend(self.fdlist_interface_info)
 
             writefds = []
             for iconn in self.fdlist_interface_cti:
@@ -598,13 +598,13 @@ class CTIServer(object):
 
             timeout = self._task_scheduler.timeout()
             if timeout is None:
-                result = select.select(self.fdlist_full, writefds, [])
+                result = select.select(fdlist_full, writefds, [])
             else:
-                result = select.select(self.fdlist_full, writefds, [], timeout)
+                result = select.select(fdlist_full, writefds, [], timeout)
             return result
 
         except Exception:
-            logger.warning('(select) fdlist_full=%s', self.fdlist_full)
+            logger.exception('(select) fdlist_full=%s', fdlist_full)
             sys.exit(5)
 
     def _socket_close_all(self):
