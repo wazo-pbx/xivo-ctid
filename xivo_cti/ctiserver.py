@@ -114,6 +114,11 @@ class CTIServer(object):
         self.interface_ami = None
         self.update_config_list = []
         self.fdlist_full = []
+        self.fdlist_interface_cti = {}
+        self.fdlist_interface_info = {}
+        self.fdlist_interface_webi = {}
+        self.fdlist_listen_cti = {}
+        self.time_start = time.localtime()
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -122,9 +127,9 @@ class CTIServer(object):
     def _sighandler(self, signum, frame):
         logger.warning('(sighandler) signal %s lineno %s received : quits',
                        signum, frame.f_lineno)
-        self._stop(0)
+        sys.exit(0)
 
-    def _stop(self, ret_code):
+    def _on_exit(self):
         time_uptime = int(time.time() - time.mktime(self.time_start))
         logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
                     self.servername, os.getpid(),
@@ -148,7 +153,6 @@ class CTIServer(object):
             t._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
-        sys.exit(ret_code)
 
     def _set_logger(self):
         xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
@@ -439,6 +443,8 @@ class CTIServer(object):
             self.main_loop()
         except Exception:
             logger.exception('main loop has crashed')
+        finally:
+            self._on_exit()
 
     def manage_tcp_connections(self, sel_i, msg, kind):
         """
@@ -514,11 +520,6 @@ class CTIServer(object):
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)
 
-        self.fdlist_interface_cti = {}
-        self.fdlist_interface_info = {}
-        self.fdlist_interface_webi = {}
-        self.fdlist_listen_cti = {}
-
         incoming_tcp = xivoconf_general.get('incoming_tcp', {})
         for kind, bind_and_port in incoming_tcp.iteritems():
             allow_kind = True
@@ -551,7 +552,7 @@ class CTIServer(object):
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
-        self._stop(2)
+        sys.exit(2)
 
     def get_connected(self, tomatch):
         clist = []
@@ -613,7 +614,7 @@ class CTIServer(object):
 
         except Exception:
             logger.warning('(select) fdlist_full=%s', self.fdlist_full)
-            self._stop(5)
+            sys.exit(5)
 
     def _socket_close_all(self):
         cause = DisconnectCause.by_server_stop
