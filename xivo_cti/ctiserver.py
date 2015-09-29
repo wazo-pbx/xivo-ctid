@@ -435,12 +435,10 @@ class CTIServer(object):
         context.get('agent_status_adapter').subscribe_all_logged_agents()
 
     def run(self):
-        while True:
-            try:
-                self.main_loop()
-            except Exception:
-                logger.exception('main loop has crashed ... retrying in 5 seconds ...')
-                time.sleep(5)
+        try:
+            self.main_loop()
+        except Exception:
+            logger.exception('main loop has crashed')
 
     def manage_tcp_connections(self, sel_i, msg, kind):
         """
