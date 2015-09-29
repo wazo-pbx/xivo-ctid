@@ -120,8 +120,8 @@ class CTIServer(object):
         signal.signal(signal.SIGTERM, self._sighandler)
 
     def _sighandler(self, signum, frame):
-        logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
-                       signum, frame.f_lineno, self.askedtoquit)
+        logger.warning('(sighandler) signal %s lineno %s received : quits',
+                       signum, frame.f_lineno)
         self._stop(0)
 
     def _stop(self, ret_code):
@@ -129,7 +129,6 @@ class CTIServer(object):
         logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
-        self.askedtoquit = True
 
         logger.debug('Stopping the status forwarder')
         context.get('status_forwarder').stop()
@@ -472,7 +471,6 @@ class CTIServer(object):
             del self.fdlist_interface_cti[connc]
 
     def main_loop(self):
-        self.askedtoquit = False
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
 
@@ -535,7 +533,7 @@ class CTIServer(object):
             self._init_tcp_socket(kind, bind, port)
 
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
-        while not self.askedtoquit:
+        while True:
             self.select_step()
 
     def _init_tcp_socket(self, kind, bind, port):
@@ -616,11 +614,11 @@ class CTIServer(object):
             return result
 
         except Exception:
-            logger.warning('(select) self.askedtoquit=%s fdlist_full=%s', self.askedtoquit, self.fdlist_full)
+            logger.warning('(select) fdlist_full=%s', self.fdlist_full)
             self._stop(5)
 
     def _socket_close_all(self):
-        cause = DisconnectCause.by_server_stop if self.askedtoquit else DisconnectCause.by_server_reload
+        cause = DisconnectCause.by_server_stop
 
         for s in self.fdlist_full:
             if s in self.fdlist_interface_cti:
