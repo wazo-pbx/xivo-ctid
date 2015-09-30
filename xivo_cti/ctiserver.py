@@ -114,22 +114,26 @@ class CTIServer(object):
         self.interface_ami = None
         self.update_config_list = []
         self.fdlist_full = []
+        self.fdlist_interface_cti = {}
+        self.fdlist_interface_info = {}
+        self.fdlist_interface_webi = {}
+        self.fdlist_listen_cti = {}
+        self.time_start = time.localtime()
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
         signal.signal(signal.SIGTERM, self._sighandler)
 
     def _sighandler(self, signum, frame):
-        logger.warning('(sighandler) signal %s lineno %s (atq = %s) received : quits',
-                       signum, frame.f_lineno, self.askedtoquit)
-        self._stop(0)
+        logger.warning('(sighandler) signal %s lineno %s received : quits',
+                       signum, frame.f_lineno)
+        sys.exit(0)
 
-    def _stop(self, ret_code):
+    def _on_exit(self):
         time_uptime = int(time.time() - time.mktime(self.time_start))
         logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
-        self.askedtoquit = True
 
         logger.debug('Stopping the status forwarder')
         context.get('status_forwarder').stop()
@@ -137,19 +141,12 @@ class CTIServer(object):
         logger.debug('Closing all sockets')
         self._socket_close_all()
 
-        logger.debug('Cleaning the task queue')
-        self._task_queue.clear()
-
-        logger.debug('Cleaning the task scheduler')
-        self._task_scheduler.clear()
-
         logger.debug('Stopping all remaining threads')
         for t in filter(lambda x: x.getName() not in
                         ['MainThread', 'HTTPServerThread'], threading.enumerate()):
             t._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
-        sys.exit(ret_code)
 
     def _set_logger(self):
         xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
@@ -436,12 +433,12 @@ class CTIServer(object):
         context.get('agent_status_adapter').subscribe_all_logged_agents()
 
     def run(self):
-        while True:
-            try:
-                self.main_loop()
-            except Exception:
-                logger.exception('main loop has crashed ... retrying in 5 seconds ...')
-                time.sleep(5)
+        try:
+            self.main_loop()
+        except Exception:
+            logger.exception('main loop has crashed')
+        finally:
+            self._on_exit()
 
     def manage_tcp_connections(self, sel_i, msg, kind):
         """
@@ -472,12 +469,8 @@ class CTIServer(object):
             del self.fdlist_interface_cti[connc]
 
     def main_loop(self):
-        self.askedtoquit = False
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
-
-        self._task_queue.clear()
-        self._task_scheduler.clear()
 
         logger.info('Retrieving data')
         self.safe = context.get('innerdata')
@@ -518,11 +511,6 @@ class CTIServer(object):
         socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
         socket.setdefaulttimeout(socktimeout)
 
-        self.fdlist_interface_cti = {}
-        self.fdlist_interface_info = {}
-        self.fdlist_interface_webi = {}
-        self.fdlist_listen_cti = {}
-
         incoming_tcp = xivoconf_general.get('incoming_tcp', {})
         for kind, bind_and_port in incoming_tcp.iteritems():
             allow_kind = True
@@ -535,7 +523,7 @@ class CTIServer(object):
             self._init_tcp_socket(kind, bind, port)
 
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
-        while not self.askedtoquit:
+        while True:
             self.select_step()
 
     def _init_tcp_socket(self, kind, bind, port):
@@ -555,7 +543,7 @@ class CTIServer(object):
 
     def _on_ami_down(self):
         logger.warning('AMI: CLOSING (%s)', time.asctime())
-        self._stop(2)
+        sys.exit(2)
 
     def get_connected(self, tomatch):
         clist = []
@@ -587,6 +575,7 @@ class CTIServer(object):
                 interface_cti.reply(what)
 
     def _init_socket(self):
+        fdlist_full = []
         try:
             fdtodel = []
             for cn in self.fdlist_interface_cti:
@@ -595,13 +584,12 @@ class CTIServer(object):
             for cn in fdtodel:
                 del self.fdlist_interface_cti[cn]
 
-            self.fdlist_full = []
-            self.fdlist_full.append(self._task_queue)
-            self.fdlist_full.append(self.ami_sock)
-            self.fdlist_full.extend(self.fdlist_listen_cti)
-            self.fdlist_full.extend(self.fdlist_interface_cti)
-            self.fdlist_full.extend(self.fdlist_interface_webi)
-            self.fdlist_full.extend(self.fdlist_interface_info)
+            fdlist_full.append(self._task_queue)
+            fdlist_full.append(self.ami_sock)
+            fdlist_full.extend(self.fdlist_listen_cti)
+            fdlist_full.extend(self.fdlist_interface_cti)
+            fdlist_full.extend(self.fdlist_interface_webi)
+            fdlist_full.extend(self.fdlist_interface_info)
 
             writefds = []
             for iconn in self.fdlist_interface_cti:
@@ -610,31 +598,27 @@ class CTIServer(object):
 
             timeout = self._task_scheduler.timeout()
             if timeout is None:
-                result = select.select(self.fdlist_full, writefds, [])
+                result = select.select(fdlist_full, writefds, [])
             else:
-                result = select.select(self.fdlist_full, writefds, [], timeout)
+                result = select.select(fdlist_full, writefds, [], timeout)
             return result
 
         except Exception:
-            logger.warning('(select) self.askedtoquit=%s fdlist_full=%s', self.askedtoquit, self.fdlist_full)
-            self._stop(5)
+            logger.exception('(select) fdlist_full=%s', fdlist_full)
+            sys.exit(5)
 
     def _socket_close_all(self):
-        cause = DisconnectCause.by_server_stop if self.askedtoquit else DisconnectCause.by_server_reload
+        cause = DisconnectCause.by_server_stop
 
-        for s in self.fdlist_full:
-            if s in self.fdlist_interface_cti:
-                interface_cti = self.fdlist_interface_cti[s]
-                self._broadcast_cti_group.remove(interface_cti)
-                interface_cti.disconnected(cause)
+        for interface_cti in self.fdlist_interface_cti.itervalues():
+            self._broadcast_cti_group.remove(interface_cti)
+            interface_cti.disconnected(cause)
 
-        for s in self.fdlist_full:
-            if s in self.fdlist_interface_info:
-                self.fdlist_interface_info[s].disconnected(cause)
-            elif s in self.fdlist_interface_webi:
-                self.fdlist_interface_webi[s].disconnected(cause)
-            if not isinstance(s, int):
-                s.close()
+        for interface_info in self.fdlist_interface_info.itervalues():
+            interface_info.disconnected(cause)
+
+        for interface_webi in self.fdlist_interface_webi.itervalues():
+            interface_webi.disconnected(cause)
 
     def _socket_ami_read(self, sel_i):
         buf = sel_i.recv(BUFSIZE_LARGE)

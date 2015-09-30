@@ -76,9 +76,7 @@ class WEBI(interfaces.Interfaces):
 
         sre_obj = _CMD_WEBI_PATTERN.match(msg)
 
-        if msg == 'xivo[daemon,reload]':
-            self._ctiserver.askedtoquit = True
-        elif msg == 'xivo[cticonfig,update]':
+        if msg == 'xivo[cticonfig,update]':
             self._ctiserver.update_config_list.append(msg)
         elif msg == 'xivo[queuemember,update]':
             self._queue_member_updater.on_webi_update()

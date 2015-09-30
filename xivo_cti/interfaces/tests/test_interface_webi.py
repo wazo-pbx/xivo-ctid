@@ -32,15 +32,6 @@ class Test(unittest.TestCase):
         self._queue_member_updater = Mock(QueueMemberUpdater)
         self._interface_webi = WEBI(self._ctiserver, self._queue_member_updater)
 
-    def test_manage_connection_reload_daemon(self):
-        raw_msg = 'xivo[daemon,reload]'
-        expected_result = [{'closemenow': True}]
-
-        result = self._interface_webi.manage_connection(raw_msg)
-
-        self.assertEqual(self._ctiserver.askedtoquit, True)
-        self.assertEqual(expected_result, result)
-
     def test_manage_connection_unknown_msg(self):
         raw_msg = 'command that does_not exist'
         expected_result = [{'closemenow': True}]
