@@ -10,7 +10,7 @@ git+https://github.com/xivo-pbx/xivo-dird-client.git
 git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 cherrypy
 flask==0.10.1
-flask-restful>=0.3.4
+flask-restful==0.3.4
 flask-cors==1.10.3
 futures
 kombu
