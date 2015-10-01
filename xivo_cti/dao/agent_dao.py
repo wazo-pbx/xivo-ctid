@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -109,6 +109,10 @@ class AgentDAO(object):
     def nonacd_call_status(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
         return agent_status['nonacd_call_status']
+
+    def on_call_nonacd(self, agent_id):
+        agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
+        return agent_status['nonacd_call_status'] is not None
 
     def call_direction(self, agent_id):
         agent_status = self.innerdata.xod_status['agents'][str(agent_id)]
