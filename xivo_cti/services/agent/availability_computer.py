@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,10 @@ class AgentAvailabilityComputer(object):
         elif dao.agent.is_completely_paused(agent_id):
             agent_status = AgentStatus.unavailable
         elif dao.agent.on_wrapup(agent_id):
-            agent_status = AgentStatus.unavailable
+            if dao.agent.on_call_nonacd(agent_id):
+                agent_status = self._compute_non_acd_status(agent_id)
+            else:
+                agent_status = AgentStatus.unavailable
         elif dao.agent.on_call_acd(agent_id):
             agent_status = AgentStatus.unavailable
         else:

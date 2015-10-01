@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_wrapup(self):
-        dao.agent.nonacd_call_status.return_value = None
+        dao.agent.on_call_nonacd.return_value = False
         dao.agent.on_call_acd.return_value = False
         dao.agent.is_completely_paused.return_value = False
         dao.agent.on_wrapup.return_value = True
@@ -181,7 +181,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_pause(self):
