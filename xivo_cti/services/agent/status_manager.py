@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,12 +28,13 @@ class AgentStatusManager(object):
     def __init__(self, agent_availability_computer, task_scheduler):
         self._agent_availability_computer = agent_availability_computer
         self.task_scheduler = task_scheduler
+        self._wrapup_tasks = {}
 
     def agent_logged_in(self, agent_id):
         self._agent_availability_computer.compute(agent_id)
 
     def agent_logged_out(self, agent_id):
-        dao.agent.set_on_wrapup(agent_id, False)
+        self._agent_wrapup_complete(agent_id)
         self._agent_availability_computer.compute(agent_id)
 
     def device_in_use(self, agent_id, direction, is_internal):
@@ -56,15 +57,16 @@ class AgentStatusManager(object):
 
     def agent_in_wrapup(self, agent_id, wrapup_time):
         dao.agent.set_on_wrapup(agent_id, True)
-        self.task_scheduler.schedule(wrapup_time,
-                                     self.agent_wrapup_completed,
-                                     agent_id)
+        task = self.task_scheduler.schedule(wrapup_time,
+                                            self.agent_wrapup_completed,
+                                            agent_id)
+        self._wrapup_tasks[agent_id] = task
 
         dao.agent.set_on_call_acd(agent_id, False)
         self._agent_availability_computer.compute(agent_id)
 
     def agent_wrapup_completed(self, agent_id):
-        dao.agent.set_on_wrapup(agent_id, False)
+        self._agent_wrapup_complete(agent_id)
         self._agent_availability_computer.compute(agent_id)
 
     def agent_paused_all(self, agent_id):
@@ -72,3 +74,9 @@ class AgentStatusManager(object):
 
     def agent_unpaused(self, agent_id):
         self._agent_availability_computer.compute(agent_id)
+
+    def _agent_wrapup_complete(self, agent_id):
+        dao.agent.set_on_wrapup(agent_id, False)
+        if agent_id in self._wrapup_tasks:
+            task = self._wrapup_tasks.pop(agent_id)
+            task.cancel()
