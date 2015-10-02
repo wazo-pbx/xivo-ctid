@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
+from functools import partial
 from mock import Mock, patch
 
 from xivo_cti import dao
@@ -35,12 +37,16 @@ def when(paused=False, wrapup=False, non_acd=None, on_acd=False, logged_in=True)
     dao.agent.nonacd_call_status.return_value = non_acd
     dao.agent.on_call_nonacd.return_value = non_acd is not None
 
+then = None
+
 
 class TestAgentAvailabilityComputer(unittest.TestCase):
 
     def setUp(self):
+        global then
         self.agent_availability_updater = Mock(AgentAvailabilityUpdater)
         self.availability_computer = AgentAvailabilityComputer(self.agent_availability_updater)
+        then = partial(self.agent_availability_updater.update.assert_called_once_with, AGENT_ID)
         dao.agent = Mock(AgentDAO)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
@@ -49,7 +55,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.available)
+        then(AgentStatus.available)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_paused(self):
@@ -57,7 +63,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        then(AgentStatus.unavailable)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=False))
     def test_compute_logout(self):
@@ -65,7 +71,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.logged_out)
+        then(AgentStatus.logged_out)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_acd(self):
@@ -73,7 +79,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        then(AgentStatus.unavailable)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_wrapup(self):
@@ -81,7 +87,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        then(AgentStatus.unavailable)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_wrapup_pause(self):
@@ -89,7 +95,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        then(AgentStatus.unavailable)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_acd_pause(self):
@@ -97,7 +103,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.unavailable)
+        then(AgentStatus.unavailable)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_incoming_internal(self):
@@ -106,7 +112,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_incoming_internal)
+        then(AgentStatus.on_call_nonacd_incoming_internal)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_incoming_external(self):
@@ -115,7 +121,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_incoming_external)
+        then(AgentStatus.on_call_nonacd_incoming_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_outgoing_internal(self):
@@ -124,7 +130,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_internal)
+        then(AgentStatus.on_call_nonacd_outgoing_internal)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_outgoing_external(self):
@@ -133,7 +139,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_external)
+        then(AgentStatus.on_call_nonacd_outgoing_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_wrapup(self):
@@ -142,7 +148,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_external)
+        then(AgentStatus.on_call_nonacd_outgoing_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=True))
     def test_compute_call_nonacd_pause(self):
@@ -151,7 +157,7 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.on_call_nonacd_outgoing_external)
+        then(AgentStatus.on_call_nonacd_outgoing_external)
 
     @patch('xivo_dao.agent_status_dao.is_agent_logged_in', Mock(return_value=False))
     def test_compute_call_nonacd_logout(self):
@@ -160,4 +166,4 @@ class TestAgentAvailabilityComputer(unittest.TestCase):
 
         self.availability_computer.compute(AGENT_ID)
 
-        self.agent_availability_updater.update.assert_called_once_with(AGENT_ID, AgentStatus.logged_out)
+        then(AgentStatus.logged_out)
