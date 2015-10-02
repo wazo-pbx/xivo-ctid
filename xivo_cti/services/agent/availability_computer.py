@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+
 from xivo_cti import dao
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.call.direction import CallDirection
@@ -32,17 +33,16 @@ class AgentAvailabilityComputer(object):
     def compute(self, agent_id):
         if not agent_status_dao.is_agent_logged_in(agent_id):
             agent_status = AgentStatus.logged_out
+        elif dao.agent.on_call_acd(agent_id):
+            agent_status = AgentStatus.unavailable
+        elif dao.agent.on_call_nonacd(agent_id):
+            agent_status = self._compute_non_acd_status(agent_id)
         elif dao.agent.is_completely_paused(agent_id):
             agent_status = AgentStatus.unavailable
         elif dao.agent.on_wrapup(agent_id):
-            if dao.agent.on_call_nonacd(agent_id):
-                agent_status = self._compute_non_acd_status(agent_id)
-            else:
-                agent_status = AgentStatus.unavailable
-        elif dao.agent.on_call_acd(agent_id):
             agent_status = AgentStatus.unavailable
         else:
-            agent_status = self._compute_non_acd_status(agent_id)
+            agent_status = AgentStatus.available
 
         self.updater.update(agent_id, agent_status)
 
