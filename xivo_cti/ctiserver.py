@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import consul
 
 import logging
 import os
@@ -26,10 +25,8 @@ import ssl
 import sys
 import time
 import threading
-import uuid
 
-from requests.exceptions import HTTPError, ConnectionError
-
+from xivo import consul_helpers
 from xivo import daemonize
 from xivo import xivo_logging
 from xivo_cti import config
@@ -124,6 +121,10 @@ class CTIServer(object):
         self.fdlist_interface_webi = {}
         self.fdlist_listen_cti = {}
         self.time_start = time.localtime()
+        consul_config = config.get('consul', {})
+        tags = ['xivo-ctid', config['uuid']] + config['consul'].get('extra_tags', [])
+        consul_config['service_tags'] = tags
+        self._consul_registerer = consul_helpers.Registerer('xivo-ctid', **consul_config)
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -139,6 +140,8 @@ class CTIServer(object):
         logger.info('STOPPING %s (pid %d) / uptime %d s (since %s)',
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
+
+        self._consul_registerer.deregister()
 
         logger.debug('Stopping the status forwarder')
         context.get('status_forwarder').stop()
@@ -528,37 +531,18 @@ class CTIServer(object):
             self._init_tcp_socket(kind, bind, port)
 
         # Schedule a consul registration
-        self._task_scheduler.schedule(0, self._service_discovery_registration, 3)
+        self._service_discovery_register()
 
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
         while True:
             self.select_step()
 
-    def _service_discovery_registration(self, retry):
-        # TODO: handle previous registrations
-        # XXX: What does consul do if down and back again?
-        # XXX: What happens when the service restarts
-        logger.info('Adding this instance to the consul catalog')
-
-        consul_config = config.get('consul', {})
-        missing_fields = [f for f in ['host', 'port', 'token'] if f not in consul_config]
-        if missing_fields:
-            logger.warning('%s missing from the consul configuration', missing_fields)
-            return
-
-        consul_client = consul.Consul(host=consul_config['host'],
-                                      port=consul_config['port'],
-                                      token=consul_config['token'])
-
-        try:
-            consul_client.agent.service.register('xivo-ctid', service_id='xivo-ctid-%s' % uuid.uuid4(),
-                                                 port=config['rest_api']['port'])
-        except (HTTPError, ConnectionError):
-            if retry:
-                logger.warning('Consul registration failed, retrying in 3 seconds')
-                self._task_scheduler.schedule(3, self._service_discovery_registration, retry - 1)
-            else:
-                logger.warning('Consul registration FAILED')
+    def _service_discovery_register(self):
+        self._consul_registerer.register()
+        if not self._consul_registerer.is_registered():
+            delay = 20
+            logger.info('Service registration failed, retrying in %s seconds', delay)
+            self._task_scheduler.schedule(delay, self._service_discovery_register)
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
