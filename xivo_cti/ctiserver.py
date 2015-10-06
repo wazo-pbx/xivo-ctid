@@ -29,6 +29,8 @@ import threading
 from xivo import consul_helpers
 from xivo import daemonize
 from xivo import xivo_logging
+from xivo_bus.resources.services.event import ServiceDeregisteredEvent
+from xivo_bus.resources.services.event import ServiceRegisteredEvent
 from xivo_cti import config
 from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
@@ -138,7 +140,13 @@ class CTIServer(object):
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
 
-        self._consul_registerer.deregister()
+        if self._consul_registerer.is_registered():
+            self._consul_registerer.deregister()
+            msg = ServiceDeregisteredEvent(self._consul_registerer._service_name,
+                                           self._consul_registerer._service_id,
+                                           self._consul_registerer._tags)
+            context.get('bus_publisher').publish(msg)
+
 
         logger.debug('Stopping the status forwarder')
         context.get('status_forwarder').stop()
@@ -540,6 +548,13 @@ class CTIServer(object):
             delay = 20
             logger.info('Service registration failed, retrying in %s seconds', delay)
             self._task_scheduler.schedule(delay, self._service_discovery_register)
+            return
+        msg = ServiceRegisteredEvent(self._consul_registerer._service_name,
+                                     self._consul_registerer._service_id,
+                                     self._consul_registerer._advertise_address,
+                                     self._consul_registerer._advertise_port,
+                                     self._consul_registerer._tags)
+        context.get('bus_publisher').publish(msg)
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
