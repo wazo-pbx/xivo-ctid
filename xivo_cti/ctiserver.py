@@ -140,7 +140,10 @@ class CTIServer(object):
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
 
-        self._consul_registerer.deregister()
+        try:
+            self._consul_registerer.deregister()
+        except consul_helpers.RegistererError:
+            logger.exception('Failed to unregister')
 
         logger.debug('Stopping the status forwarder')
         context.get('status_forwarder').stop()
@@ -537,11 +540,16 @@ class CTIServer(object):
             self.select_step()
 
     def _service_discovery_register(self):
-        self._consul_registerer.register()
-        if not self._consul_registerer.is_registered():
-            delay = 20
-            logger.info('Service registration failed, retrying in %s seconds', delay)
-            self._task_scheduler.schedule(delay, self._service_discovery_register)
+        try:
+            self._consul_registerer.register()
+            if self._consul_registerer.is_registered():
+                return
+        except consul_helpers.RegistererError:
+            logger.exception('Failed to register service')
+
+        delay = 20
+        logger.info('Service registration failed, retrying in %s seconds', delay)
+        self._task_scheduler.schedule(delay, self._service_discovery_register)
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
