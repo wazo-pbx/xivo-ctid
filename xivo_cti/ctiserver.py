@@ -121,10 +121,7 @@ class CTIServer(object):
         self.fdlist_interface_webi = {}
         self.fdlist_listen_cti = {}
         self.time_start = time.localtime()
-        consul_config = config.get('consul', {})
-        tags = ['xivo-ctid', config['uuid']] + config['consul'].get('extra_tags', [])
-        consul_config['service_tags'] = tags
-        self._consul_registerer = consul_helpers.Registerer('xivo-ctid', **consul_config)
+        self._consul_registerer = consul_helpers.Registerer.from_config('xivo-ctid', config)
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
