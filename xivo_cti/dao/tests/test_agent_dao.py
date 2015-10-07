@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -355,6 +355,24 @@ class TestAgentDAO(unittest.TestCase):
         result = self.innerdata.xod_status['agents'][str(AGENT_ID)]['nonacd_call_status']
 
         self.assertEquals(call_status, result)
+
+    def test_on_call_nonacd(self):
+        self.innerdata.xod_status = {
+            'agents': {
+                str(AGENT_ID): {
+                }
+            }
+        }
+        call_status = AgentCallStatus(direction=CallDirection.incoming,
+                                      is_internal=False)
+
+        self.agent_dao.set_nonacd_call_status(AGENT_ID, call_status)
+        result = self.agent_dao.on_call_nonacd(AGENT_ID)
+        self.assertEquals(result, True)
+
+        self.agent_dao.set_nonacd_call_status(AGENT_ID, None)
+        result = self.agent_dao.on_call_nonacd(AGENT_ID)
+        self.assertEquals(result, False)
 
     def test_nonacd_call_status(self):
         call_status = AgentCallStatus(direction=CallDirection.incoming,
