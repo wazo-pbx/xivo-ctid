@@ -9,6 +9,7 @@ consul:
      advertise_address: ctid
      advertise_port: 9495
      check_url: http://ctid:9495/0.1/infos
+     check_url_interval: 300s
      check_url_timeout: 10s
 agentd:
     host: agentd
