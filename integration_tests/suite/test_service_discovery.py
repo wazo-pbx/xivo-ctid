@@ -38,7 +38,7 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
 
     @classmethod
     def wait_for_pg(cls):
-        while True:
+        for _ in countdown(120):
             try:
                 conn = psycopg2.connect(host='localhost', port=15432, user='asterisk', password='proformatique', database='asterisk')
                 cur = conn.cursor()
@@ -50,7 +50,7 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
 
     @classmethod
     def wait_for(cls, service):
-        while True:
+        for _ in countdown(5):
             cls._run_cmd('docker-compose start {}'.format(service))
             running = cls.service_status(service)[0]['State']['Running']
             if running:
@@ -59,11 +59,18 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
 
     def stop_service(self, service):
         self._run_cmd('docker-compose stop {}'.format(service))
-        while True:
+        for _ in countdown(5):
             running = self.service_status(service)[0]['State']['Running']
             if not running:
                 return
             time.sleep(1)
+
+
+def countdown(n):
+    while n > 0:
+        yield n
+        n = n - 1
+    raise Exception('countdown reached 0')
 
 
 class TestServiceDiscovery(BaseCTIDIntegrationTests):
