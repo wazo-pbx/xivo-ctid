@@ -40,7 +40,7 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
     def wait_for_pg(cls):
         while True:
             try:
-                conn = psycopg2.connect('postgresql://asterisk:proformatique@localhost:15432/asterisk')
+                conn = psycopg2.connect(host='localhost', port=15432, user='asterisk', password='proformatique', database='asterisk')
                 cur = conn.cursor()
                 cur.execute('SELECT count(*) FROM userfeatures')
                 conn.close()
