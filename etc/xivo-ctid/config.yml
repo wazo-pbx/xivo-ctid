@@ -89,4 +89,4 @@ consul:
     advertise_port: 9495
     check_url: http://localhost:9495/0.1/infos
     check_url_timeout: 10s
-    extra_args: []
+    extra_tags: []
