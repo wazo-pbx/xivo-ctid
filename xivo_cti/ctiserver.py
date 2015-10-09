@@ -542,14 +542,11 @@ class CTIServer(object):
     def _service_discovery_register(self):
         try:
             self._consul_registerer.register()
-            if self._consul_registerer.is_registered():
-                return
         except consul_helpers.RegistererError:
             logger.exception('Failed to register service')
-
-        delay = 20
-        logger.info('Service registration failed, retrying in %s seconds', delay)
-        self._task_scheduler.schedule(delay, self._service_discovery_register)
+            delay = 20
+            logger.info('Service registration failed, retrying in %s seconds', delay)
+            self._task_scheduler.schedule(delay, self._service_discovery_register)
 
     def _init_tcp_socket(self, kind, bind, port):
         try:
