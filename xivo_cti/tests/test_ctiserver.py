@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, patch
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.cti.cti_group import CTIGroup
 
@@ -26,7 +26,9 @@ class TestCTIServer(unittest.TestCase):
 
     def setUp(self):
         self.broadcast_cti_group = Mock(CTIGroup)
-        self.cti_server = CTIServer()
+        self.bus_publisher = Mock()
+        with patch('xivo_cti.ctiserver.consul_helpers'):
+            self.cti_server = CTIServer(self.bus_publisher)
         self.cti_server._broadcast_cti_group = self.broadcast_cti_group
 
     def test_send_cti_event(self):
