@@ -1,0 +1,7 @@
+debug: true
+db_uri: postgresql://asterisk:proformatique@postgres/asterisk
+bus:
+  host: rabbitmq
+rest_api:
+  listen: 0.0.0.0
+uuid: fake-uuid

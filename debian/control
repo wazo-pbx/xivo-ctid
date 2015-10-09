@@ -29,6 +29,7 @@ Architecture: all
 Depends: ${python:Depends},
          ${misc:Depends},
          file,
+         python-consul,
          python-concurrent.futures,
          python-kombu,
          python-flask-cors,
@@ -39,7 +40,6 @@ Depends: ${python:Depends},
          xivo-ctid-client,
          xivo-dird-client,
          xivo-libdao,
-         xivo-libdird,
          xivo-lib-python (>= 15.06~20150318.185305.e3a8c65-1),
          xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
 Description: XiVO CTI server library

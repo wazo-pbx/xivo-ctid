@@ -1,0 +1,16 @@
+debug: true
+db_uri: postgresql://asterisk:proformatique@postgres/asterisk
+bus:
+    host: rabbitmq
+consul:
+     host: consul
+     port: 8500
+     token: the_one_ring
+     advertise_address: ctid
+     advertise_port: 9495
+     check_url: http://ctid:9495/0.1/infos
+     check_url_timeout: 10s
+agentd:
+    host: agentd
+ipbx_connection:
+  ipaddress: asterisk

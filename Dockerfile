@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:wheezy
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -13,7 +13,7 @@ RUN apt-get -qq -y install \
      libldap2-dev \
      libsasl2-dev \
      libyaml-dev \
-     python-dev 
+     python-dev
 
 WORKDIR /root/
 ADD . /root/xivo-ctid
