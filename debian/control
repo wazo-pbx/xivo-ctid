@@ -36,11 +36,11 @@ Depends: ${python:Depends},
          python-flask-restful,
          xivo-agentd-client,
          xivo-auth-client,
-         xivo-bus (>= 15.05~20150311.155435.cd57c19-1),
+         xivo-bus (>= 15.17~20151009.134054.be6f60a-1),
          xivo-ctid-client,
          xivo-dird-client,
          xivo-libdao,
-         xivo-lib-python (>= 15.06~20150318.185305.e3a8c65-1),
+         xivo-lib-python (>= 15.17~20151009.134424.43993f6-1),
          xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
 Description: XiVO CTI server library
  XiVO is a system based on a powerful IPBX, to bring an easy to
