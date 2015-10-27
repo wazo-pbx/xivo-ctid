@@ -241,6 +241,38 @@ class TestCurrentCallManager(_BaseTestCase):
         self.assertEqual(self.manager._calls_per_line, expected)
         self.assertEqual(self.notifier.publish_current_call.call_count, 0)
 
+    def test_on_local_optimization_missing_source_call(self):
+        local_one_line = 'local/foo@bar;1'
+        local_one_channel = 'Local/foo@bar-000001;1'
+        local_two_line = 'local/foo@bar;2'
+        local_two_channel = 'Local/foo@bar-000001;2'
+
+        self.manager._calls_per_line = {
+            local_one_line: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: local_one_channel},
+            ],
+            local_two_line: [
+                {PEER_CHANNEL: self.channel_2,
+                 LINE_CHANNEL: local_two_channel}
+            ],
+            self.line_2: [
+                {PEER_CHANNEL: local_two_channel,
+                 LINE_CHANNEL: self.channel_2},
+            ]
+        }
+
+        self.manager.on_local_optimization(local_one_channel, local_two_channel)
+
+        expected = {
+            self.line_2: [
+                {PEER_CHANNEL: self.channel_1,
+                 LINE_CHANNEL: self.channel_2}
+            ],
+        }
+
+        self.assertEqual(self.manager._calls_per_line, expected)
+
     def test_end_call(self):
         bridge_time = 123456.44
 
