@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, sentinel
 
 from xivo_cti.services.current_call import parser
 from xivo_cti.services.current_call import manager
@@ -28,6 +28,25 @@ class TestCurrentCallParser(unittest.TestCase):
     def setUp(self):
         self.manager = Mock(manager.CurrentCallManager)
         self.parser = parser.CurrentCallParser(self.manager)
+
+    def test_that_bridge_leave_with_channels_remaining_in_the_bridge_does_nothing(self):
+        event = {u'BridgeNumChannels': u'1',
+                 u'Channel': sentinel.channel,
+                 u'Event': u'BridgeLeave'}
+
+        self.parser.parse_bridge_leave(event)
+
+        self.assertEqual(self.manager.end_call.call_count, 0,
+                         'end_call should not be called when a channel is left in the bridge')
+
+    def test_that_bridge_leave_with_no_channels_left_calls_end_call(self):
+        event = {u'BridgeNumChannels': u'0',
+                 u'Channel': sentinel.channel,
+                 u'Event': u'BridgeLeave'}
+
+        self.parser.parse_bridge_leave(event)
+
+        self.manager.end_call.assert_called_once_with(sentinel.channel)
 
     def test_parse_hangup(self):
         channel = 'SIP/tc8nb4-000000000038'

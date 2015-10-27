@@ -241,7 +241,7 @@ class CurrentCallManager(object):
             logger.warning('User %s tried to transfer but has no line or no context', user_id)
         else:
             peer_channel = current_call[PEER_CHANNEL]
-            logger.info('Switchboard %s is transfering %s to %s@%s',
+            logger.info('%s is transfering %s to %s@%s',
                         user_id, peer_channel, number, user_context)
             self.ami.transfer(peer_channel, number, user_context)
 
