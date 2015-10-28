@@ -191,59 +191,70 @@ class CurrentCallManager(object):
         return self._calls_per_line.get(line_identity, [])
 
     def hangup(self, user_id):
+        logger.info('hangup: user %s is hanging up is current call', user_id)
         try:
             call = self._get_active_call(user_id)
-        except NoSuchCallException as e:
-            logger.warning('Cannot hangup: %s', e)
-        else:
             self._call_manager.hangup(call)
+        except NoSuchCallException:
+            logger.warning('hangup: failed to find the active call for user %s', user_id)
 
     def complete_transfer(self, user_id):
+        logger.info('complete_transfer: user %s is completing a transfer', user_id)
         try:
             current_call = self._get_current_call(user_id)
-        except LookupError:
-            logger.warning('User %s tried to complete a transfer but has no line', user_id)
-        else:
-            logger.info('Switchboard %s is completing a transfer', user_id)
             self.ami.hangup(current_call[LINE_CHANNEL])
+        except LookupError:
+            logger.warning('complete_transfer: failed to find the current call for user %s', user_id)
 
     def cancel_transfer(self, user_id):
+        logger.info('cancel_transfer: user %s is cancelling a transfer', user_id)
         try:
             current_call = self._get_current_call(user_id)
         except LookupError:
-            logger.warning('User %s tried to cancel a transfer but has no line', user_id)
+            logger.warning('cancel_transfer: failed to find the current call for user %s', user_id)
             return
 
         if TRANSFER_CHANNEL not in current_call:
+            logger.warning('cancel_transfer: failed to find the transfer channel for this call %s', current_call)
             return
+
         transfer_channel = current_call[TRANSFER_CHANNEL]
         transfered_channel = self._local_channel_peer(transfer_channel)
-        logger.info('Switchboard %s is cancelling a transfer', user_id)
         self.ami.hangup(transfered_channel)
 
     def attended_transfer(self, user_id, number):
+        logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
+        except LookupError:
+            logger.warning('attended_transfer: failed to find the current call for user %s', user_id)
+            return
+
+        try:
             user_context = dao.user.get_context(user_id)
         except LookupError:
-            logger.warning('User %s tried to transfer but has no line or no context', user_id)
-        else:
-            current_channel = current_call[LINE_CHANNEL]
-            logger.info('Switchboard %s is atxfering %s to %s@%s',
-                        user_id, current_channel, number, user_context)
-            self.ami.atxfer(current_channel, number, user_context)
+            logger.warning('attended_transfer: failed to find the users context for user %s', user_id)
+            return
+
+        current_channel = current_call[LINE_CHANNEL]
+        self.ami.atxfer(current_channel, number, user_context)
 
     def direct_transfer(self, user_id, number):
+        logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
+        except LookupError:
+            logger.warning('direct_transfer: failed to find the current call for user %s', user_id)
+            return
+
+        try:
             user_context = dao.user.get_context(user_id)
         except LookupError:
-            logger.warning('User %s tried to transfer but has no line or no context', user_id)
-        else:
-            peer_channel = current_call[PEER_CHANNEL]
-            logger.info('Switchboard %s is transfering %s to %s@%s',
-                        user_id, peer_channel, number, user_context)
-            self.ami.transfer(peer_channel, number, user_context)
+            logger.warning('direct_transfer: failed to find the users context for user %s', user_id)
+            return
+
+        peer_channel = current_call[PEER_CHANNEL]
+        self.ami.transfer(peer_channel, number, user_context)
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
