@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ from xivo_cti.ioc import register_class
 def main():
     cti_config.init_cli_config(sys.argv[1:])
     cti_config.init_config_file()
-    xivo_dao.init_db_from_config(config)
+    xivo_dao.init_db_from_config(config, legacy_mode=True)
     cti_config.update_db_config()
 
     register_class.setup()
