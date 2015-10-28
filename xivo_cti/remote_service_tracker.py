@@ -15,8 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
 from collections import defaultdict
 from consul import Consul
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteServiceTracker(object):
@@ -25,7 +29,7 @@ class RemoteServiceTracker(object):
         self._consul_host = consul_host
         self._consul_port = consul_port
         self._consul_token = consul_token
-        self._services = defaultdict(lambda: defaultdict(list))
+        self._services = defaultdict(lambda: defaultdict(set))
 
     def add_service_node(self, service_name, service_id, uuid, host, port, tags):
         new_config = {'name': service_name,
@@ -41,12 +45,16 @@ class RemoteServiceTracker(object):
                 self._services[service_name][uuid].remove(config)
 
     def list_nodes_with_uuid(self, service_name, uuid):
+        logger.debug('looking for service "%s" on %s', service_name, uuid)
         if uuid not in self._services.get(service_name, {}):
             client = self._consul_client()
-            _, services = client.catalog.service(service_name, tags=uuid)
-            self._services[service_name][uuid] = [self._service_info(s) for s in services]
+            data_centers = client.catalog.datacenters()
+            for dc in data_centers:
+                _, services = client.catalog.service(service_name, tags=uuid, dc=dc)
+                for service in services:
+                    self._services[service_name][uuid].add(self._service_info(service))
 
-        return self._services[service_name][uuid]
+        return list(self._services[service_name][uuid])
 
     def _consul_client(self):
         return Consul(self._consul_host, self._consul_port, self._consul_token)
