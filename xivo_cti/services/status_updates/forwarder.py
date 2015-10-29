@@ -21,10 +21,11 @@ import threading
 import xivo_agentd_client
 
 from collections import defaultdict
-from functools import wraps
+from functools import wraps, partial
 
 from kombu.mixins import ConsumerMixin
 from kombu import Queue
+from requests.exceptions import RequestException
 
 from xivo_ctid_client import Client as CtidClient
 
@@ -259,6 +260,12 @@ class _BaseStatusFetcher(object):
             return service.to_dict()
         return None
 
+    def _rest_client_call_wrapper(self, f):
+        try:
+            return f()
+        except RequestException as e:
+            logger.warning('could not fetch resource: %s', e)
+
 
 class _AgentStatusFetcher(_BaseStatusFetcher):
 
@@ -269,13 +276,16 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
             return
         client_config = self._get_agentd_client_config(uuid)
         if not client_config:
-            logger.warning('Could not fetch agent %s on %s, unknown uuid', agent_id, uuid)
+            logger.warning('could not fetch agent %s on %s, unknown uuid', agent_id, uuid)
             return
 
         client = xivo_agentd_client.Client(**client_config)
-        self.async_runner.run_with_cb(self._on_result, client.agents.get_agent_status, agent_id)
+        cb = partial(client.agents.get_agent_status, agent_id)
+        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
 
     def _on_result(self, result):
+        if not result:
+            return
         key = result.origin_uuid, result.id
         status = 'logged_in' if result.logged else 'logged_out'
 
@@ -288,15 +298,18 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
         uuid, endpoint_id = key
         client_config = self._get_ctid_client_config(uuid)
         if not client_config:
-            logger.warning('Could not fetch endpoint %s on %s, unknown uuid', endpoint_id, uuid)
+            logger.warning('endpoint_status_fetcher: cannot find a running xivo-ctid service for %s', key)
             return
 
         client = CtidClient(**client_config)
         logger.debug('endpoint fetcher: scheduling a client.endpoints.get with %s for endpoint %s on %s',
                      client_config, endpoint_id, uuid)
-        self.async_runner.run_with_cb(self._on_result, client.endpoints.get, endpoint_id)
+        cb = partial(client.endpoints.get, endpoint_id)
+        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
 
     def _on_result(self, result):
+        if not result:
+            return
         key = result['origin_uuid'], result['id']
         status = result['status']
 
@@ -315,9 +328,12 @@ class _UserStatusFetcher(_BaseStatusFetcher):
         client = CtidClient(**client_config)
         logger.debug('user fetcher: scheduling a client.users.get with %s for user %s on %s',
                      client_config, user_id, uuid)
-        self.async_runner.run_with_cb(self._on_result, client.users.get, user_id)
+        cb = partial(client.users.get, user_id)
+        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
 
     def _on_result(self, result):
+        if not result:
+            return
         key = result['origin_uuid'], result['id']
         status = result['presence']
 
