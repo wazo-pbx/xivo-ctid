@@ -85,12 +85,21 @@ class TestRemoteServiceTracker(unittest.TestCase):
         self.uuid = 'e4d147b6-f747-4b64-955d-8c36fbcd1d3f'
         self.tracker = remote_service.RemoteServiceTracker(s.consul_host,
                                                            s.consul_port,
-                                                           s.consul_token)
+                                                           s.consul_token,
+                                                           'local-uuid',
+                                                           6666)
+
         self.foobar_service = remote_service.RemoteService('foobar',
                                                            s.service_id,
                                                            s.foobar_host,
                                                            s.foobar_port,
                                                            [s.tag_1])
+
+    def test_that_the_remote_service_tracker_knows_about_itself(self):
+        services = self.tracker.list_services_with_uuid('xivo-ctid', 'local-uuid')
+
+        assert_that(services[0].to_dict(), equal_to({'host': 'localhost',
+                                                     'port': 6666}))
 
     def test_fetch_services_will_query_all_datacenters(self):
         data_centers = ['dc1', 'dc2']

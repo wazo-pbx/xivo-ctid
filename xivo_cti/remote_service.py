@@ -84,11 +84,13 @@ class RemoteService(object):
 
 class RemoteServiceTracker(object):
 
-    def __init__(self, consul_host, consul_port, consul_token):
+    def __init__(self, consul_host, consul_port, consul_token, local_uuid, http_port):
         self._consul_host = consul_host
         self._consul_port = consul_port
         self._consul_token = consul_token
+        this_xivo_ctid = RemoteService('xivo-ctid', None, 'localhost', http_port, ['xivo-ctid', local_uuid])
         self._services = defaultdict(lambda: defaultdict(set))
+        self.add_service_node('xivo-ctid', local_uuid, this_xivo_ctid)
 
     def add_service_node(self, service_name, uuid, service):
         logger.debug('adding service %s %s', service, uuid)
@@ -118,7 +120,7 @@ class RemoteServiceTracker(object):
             for s in self.fetch_services(service_name, uuid):
                 self.add_service_node(service_name, uuid, s)
 
-        return self._services[service_name][uuid]
+        return list(self._services[service_name][uuid])
 
     def _consul_client(self):
         return Consul(self._consul_host, self._consul_port, self._consul_token)
