@@ -140,6 +140,11 @@ class _StatusWorker(ConsumerMixin):
                 Consumer(queues=self._service_deregistered_queue,
                          callbacks=[self._on_service_deregistered])]
 
+    def _extract_key(self, event):
+        id_field = self._id_field_map[event['name']]
+        return event['origin_uuid'], event['data'][id_field]
+
+    # All methods below this line are executed in the status listener's thread
     @_loads_and_ack
     def _on_service_registered(self, body):
         service = RemoteService.from_bus_msg(body)
@@ -174,10 +179,6 @@ class _StatusWorker(ConsumerMixin):
         key = self._extract_key(body)
         status = body['data']['status']
         self._task_queue.put(self._forwarder.on_endpoint_status_update, key, status)
-
-    def _extract_key(self, event):
-        id_field = self._id_field_map[event['name']]
-        return event['origin_uuid'], event['data'][id_field]
 
 
 class _StatusListener(object):
@@ -255,7 +256,6 @@ class _BaseStatusFetcher(object):
 
     def _get_ctid_client_config(self, uuid):
         for service in self._remote_service_tracker.list_services_with_uuid('xivo-ctid', uuid):
-            logger.debug('Found node %s', service)
             return service.to_dict()
         return None
 
