@@ -32,6 +32,7 @@ from xivo_bus.resources.cti.event import AgentStatusUpdateEvent,\
     UserStatusUpdateEvent, EndpointStatusUpdateEvent
 from xivo_cti import config
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.remote_service import RemoteService
 
 logger = logging.getLogger(__name__)
 
@@ -44,24 +45,27 @@ class StatusForwarder(object):
                  bus_connection,
                  bus_exchange,
                  async_runner,
+                 remote_service_tracker,
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
-        agent_status_fetcher = _AgentStatusFetcher(self, async_runner)
-        endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner)
-        user_status_fetcher = _UserStatusFetcher(self, async_runner)
+        agent_status_fetcher = _AgentStatusFetcher(self, async_runner, remote_service_tracker)
+        endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner, remote_service_tracker)
+        user_status_fetcher = _UserStatusFetcher(self, async_runner, remote_service_tracker)
         self._task_queue = task_queue
         self._exchange = bus_exchange
         self._bus_connection = bus_connection
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory, agent_status_fetcher)
         self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, endpoint_status_fetcher)
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, user_status_fetcher)
+        self._remote_service_tracker = remote_service_tracker
 
     def run(self):
         self._listener = _ThreadedStatusListener(self._task_queue,
                                                  self._bus_connection,
                                                  self,
-                                                 self._exchange)
+                                                 self._exchange,
+                                                 self._remote_service_tracker)
 
     def stop(self):
         self._listener.stop()
@@ -78,8 +82,8 @@ class StatusForwarder(object):
 
 class _ThreadedStatusListener(object):
 
-    def __init__(self, task_queue, connection, forwarder, exchange):
-        self._listener = _StatusListener(task_queue, connection, forwarder, exchange)
+    def __init__(self, task_queue, connection, forwarder, exchange, remote_service_tracker):
+        self._listener = _StatusListener(task_queue, connection, forwarder, exchange, remote_service_tracker)
         self._thread = threading.Thread(target=self._listener.start)
         self._thread.start()
 
@@ -104,14 +108,17 @@ class _StatusWorker(ConsumerMixin):
         'user_status_update': 'user_id',
     }
 
-    def __init__(self, connection, exchange, task_queue, forwarder):
+    def __init__(self, connection, exchange, task_queue, forwarder, remote_service_tracker):
         self.connection = connection
         self.exchange = exchange
         self._task_queue = task_queue
         self._forwarder = forwarder
+        self._remote_service_tracker = remote_service_tracker
         self._agent_queue = self._make_queue(AgentStatusUpdateEvent.routing_key)
         self._user_queue = self._make_queue(UserStatusUpdateEvent.routing_key)
         self._endpoint_queue = self._make_queue(EndpointStatusUpdateEvent.routing_key)
+        self._service_registered_queue = self._make_queue('service.registered.#')
+        self._service_deregistered_queue = self._make_queue('service.deregistered.#')
 
     def _make_queue(self, routing_key):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
@@ -122,7 +129,27 @@ class _StatusWorker(ConsumerMixin):
                 Consumer(queues=self._user_queue,
                          callbacks=[self._on_user_status]),
                 Consumer(queues=self._endpoint_queue,
-                         callbacks=[self._on_endpoint_status])]
+                         callbacks=[self._on_endpoint_status]),
+                Consumer(queues=self._service_registered_queue,
+                         callbacks=[self._on_service_registered]),
+                Consumer(queues=self._service_deregistered_queue,
+                         callbacks=[self._on_service_deregistered])]
+
+    @_loads_and_ack
+    def _on_service_registered(self, body):
+        service = RemoteService.from_bus_msg(body)
+        uuid = body['origin_uuid']
+        service_name = body['data']['service_name']
+        self._task_queue.put(self._remote_service_tracker.add_service_node,
+                             service_name, uuid, service)
+
+    @_loads_and_ack
+    def _on_service_deregistered(self, body):
+        uuid = body['origin_uuid']
+        service_name = body['data']['service_name']
+        service_id = body['data']['service_id']
+        self._task_queue.put(self._remote_service_tracker.remove_service_node,
+                             service_name, service_id, uuid)
 
     @_loads_and_ack
     def _on_agent_status(self, body):
@@ -149,8 +176,8 @@ class _StatusWorker(ConsumerMixin):
 
 class _StatusListener(object):
 
-    def __init__(self, task_queue, connection, forwarder, exchange):
-        self._worker = _StatusWorker(connection, exchange, task_queue, forwarder)
+    def __init__(self, task_queue, connection, forwarder, exchange, remote_service_tracker):
+        self._worker = _StatusWorker(connection, exchange, task_queue, forwarder, remote_service_tracker)
 
     def start(self):
         self._worker.run()
@@ -161,15 +188,16 @@ class _StatusListener(object):
 
 class _StatusNotifier(object):
 
-    def __init__(self, cti_group_factory, message_factory, fetcher):
+    def __init__(self, cti_group_factory, message_factory, fetcher, resource_name):
         self._subscriptions = defaultdict(cti_group_factory.new_cti_group)
         self._message_factory = message_factory
         self._statuses = {}
         self._fetcher = fetcher
+        self._resource_name = resource_name
 
     def register(self, connection, keys):
         for key in keys:
-            logger.debug('Registering to %s', key)
+            logger.debug('registering to %s: %s', self._resource_name, key)
             self._subscriptions[key].add(connection)
             status_msg = self._statuses.get(key)
             if status_msg:
@@ -195,9 +223,10 @@ class _StatusNotifier(object):
 
 class _BaseStatusFetcher(object):
 
-    def __init__(self, status_forwarder, async_runner):
+    def __init__(self, status_forwarder, async_runner, remote_service_tracker):
         self.forwarder = status_forwarder
         self.async_runner = async_runner
+        self._remote_service_tracker = remote_service_tracker
 
     def _get_agentd_client_config(self, uuid):
         if uuid == config['uuid']:
@@ -205,12 +234,9 @@ class _BaseStatusFetcher(object):
         return None
 
     def _get_ctid_client_config(self, uuid):
-        # XXX where do we get this info from? config, consul, other
-        if uuid == config['uuid']:
-            return {
-                'host': 'localhost',
-                'port': 9495,
-            }
+        for service in self._remote_service_tracker.list_services_with_uuid('xivo-ctid', uuid):
+            logger.debug('Found node %s', service)
+            return service.to_dict()
         return None
 
 
@@ -239,7 +265,6 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
 class _EndpointStatusFetcher(_BaseStatusFetcher):
 
     def fetch(self, key):
-        logger.debug('Fetching endpoint %s', key)
         uuid, endpoint_id = key
         client_config = self._get_ctid_client_config(uuid)
         if not client_config:
@@ -247,6 +272,8 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
             return
 
         client = CtidClient(**client_config)
+        logger.debug('endpoint fetcher: scheduling a client.endpoints.get with %s for endpoint %s on %s',
+                     client_config, endpoint_id, uuid)
         self.async_runner.run_with_cb(self._on_result, client.endpoints.get, endpoint_id)
 
     def _on_result(self, result):
@@ -259,7 +286,6 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
 class _UserStatusFetcher(_BaseStatusFetcher):
 
     def fetch(self, key):
-        logger.debug('Fetching user %s', key)
         uuid, user_id = key
         client_config = self._get_ctid_client_config(uuid)
         if not client_config:
@@ -267,6 +293,8 @@ class _UserStatusFetcher(_BaseStatusFetcher):
             return
 
         client = CtidClient(**client_config)
+        logger.debug('user fetcher: scheduling a client.users.get with %s for user %s on %s',
+                     client_config, user_id, uuid)
         self.async_runner.run_with_cb(self._on_result, client.users.get, user_id)
 
     def _on_result(self, result):
@@ -278,14 +306,14 @@ class _UserStatusFetcher(_BaseStatusFetcher):
 
 def _new_agent_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.agent_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher, 'agent')
 
 
 def _new_endpoint_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.endpoint_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher, 'endpoint')
 
 
 def _new_user_notifier(cti_group_factory, fetcher):
     msg_factory = CTIMessageFormatter.user_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory, fetcher)
+    return _StatusNotifier(cti_group_factory, msg_factory, fetcher, 'user')

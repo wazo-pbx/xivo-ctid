@@ -40,6 +40,7 @@ from xivo_cti.main_thread_proxy import MainThreadProxy
 from xivo_cti.interfaces.interface_ami import AMI
 from xivo_cti.ioc.context import context
 from xivo_cti.provd import CTIProvdClient
+from xivo_cti.remote_service import RemoteServiceTracker
 from xivo_cti.services.agent.availability_computer import AgentAvailabilityComputer
 from xivo_cti.services.agent.availability_notifier import AgentAvailabilityNotifier
 from xivo_cti.services.agent.availability_updater import AgentAvailabilityUpdater
@@ -109,6 +110,10 @@ def setup():
     bus_marshaler = Marshaler(config['uuid'])
     bus_publisher = Publisher(bus_producer, bus_marshaler)
 
+    remote_service_tracker = RemoteServiceTracker(config['consul']['host'],
+                                                  config['consul']['port'],
+                                                  config['consul']['token'])
+
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
 
     context.register('ami_18', AMI_1_8)
@@ -177,6 +182,7 @@ def setup():
     context.register('queue_member_manager', QueueMemberManager)
     context.register('queue_member_notifier', QueueMemberNotifier)
     context.register('queue_member_updater', QueueMemberUpdater)
+    context.register('remote_service_tracker', remote_service_tracker)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
     context.register('status_forwarder', StatusForwarder)
