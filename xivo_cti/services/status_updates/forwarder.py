@@ -79,6 +79,11 @@ class StatusForwarder(object):
     def on_user_status_update(self, key, status):
         self.user_status_notifier.update(key, status)
 
+    def on_service_added(self, service_name, uuid):
+        if service_name == 'xivo-ctid':
+            self.endpoint_status_notifier.on_service_started(uuid)
+            self.user_status_notifier.on_service_started(uuid)
+
 
 class _ThreadedStatusListener(object):
 
@@ -142,6 +147,7 @@ class _StatusWorker(ConsumerMixin):
         service_name = body['data']['service_name']
         self._task_queue.put(self._remote_service_tracker.add_service_node,
                              service_name, uuid, service)
+        self._task_queue.put(self._forwarder.on_service_added, service_name, uuid)
 
     @_loads_and_ack
     def _on_service_deregistered(self, body):
@@ -189,16 +195,28 @@ class _StatusListener(object):
 class _StatusNotifier(object):
 
     def __init__(self, cti_group_factory, message_factory, fetcher, resource_name):
-        self._subscriptions = defaultdict(cti_group_factory.new_cti_group)
+        self._subscriptions = defaultdict(lambda: defaultdict(cti_group_factory.new_cti_group))
         self._message_factory = message_factory
         self._statuses = {}
         self._fetcher = fetcher
         self._resource_name = resource_name
 
+    def on_service_started(self, uuid):
+        if not self._fetcher:
+            return
+
+        keys_on_service = [(uuid, resource_id) for resource_id in self._subscriptions[uuid].iterkeys()]
+        missing_statuses = [key for key in keys_on_service if key not in self._statuses]
+
+        logger.debug('%s notifier: new service detected, fetching %s', self._resource_name, missing_statuses)
+        for key in missing_statuses:
+            self._fetcher.fetch(key)
+
     def register(self, connection, keys):
         for key in keys:
             logger.debug('registering to %s: %s', self._resource_name, key)
-            self._subscriptions[key].add(connection)
+            xivo_uuid, resource_id = key
+            self._subscriptions[xivo_uuid][resource_id].add(connection)
             status_msg = self._statuses.get(key)
             if status_msg:
                 connection.send_message(status_msg)
@@ -207,13 +225,15 @@ class _StatusNotifier(object):
 
     def unregister(self, connection, keys):
         for key in keys:
-            self._subscriptions[key].remove(connection)
+            xivo_uuid, resource_id = key
+            self._subscriptions[xivo_uuid][resource_id].remove(connection)
 
     def update(self, key, new_status):
         msg = self._message_factory(key, new_status)
         self._statuses[key] = msg
 
-        subscription = self._subscriptions.get(key)
+        xivo_uuid, resource_id = key
+        subscription = self._subscriptions[xivo_uuid].get(resource_id)
         if subscription is None:
             logger.debug('No subscriptions for %s in %s', key, self._subscriptions.keys())
             return

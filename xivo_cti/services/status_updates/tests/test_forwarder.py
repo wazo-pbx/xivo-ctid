@@ -98,6 +98,14 @@ class TestStatusForwarder(unittest.TestCase):
         self.user_status_notifier.update.assert_called_once_with(
             (xivo_id, user_id), 'busy')
 
+    def test_on_service_added_with_xivo_ctid_call_notifier(self):
+        uuid = 'ca7f87e9-c2c8-5fad-ba1b-c3140ebb9be3'
+
+        self.forwarder.on_service_added('xivo-ctid', uuid)
+
+        self.user_status_notifier.on_service_started.assert_called_once_with(uuid)
+        self.endpoint_status_notifier.on_service_started.assert_called_once_with(uuid)
+
     @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
     def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
         self.forwarder.run()
