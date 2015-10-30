@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+import threading
 
 from collections import defaultdict
 from consul import Consul
@@ -90,17 +91,20 @@ class RemoteServiceTracker(object):
         self._consul_token = consul_token
         this_xivo_ctid = RemoteService('xivo-ctid', None, 'localhost', http_port, ['xivo-ctid', local_uuid])
         self._services = defaultdict(lambda: defaultdict(set))
+        self._services_lock = threading.Lock()
         self.add_service_node('xivo-ctid', local_uuid, this_xivo_ctid)
 
     def add_service_node(self, service_name, uuid, service):
         logger.debug('adding service %s %s', service, uuid)
-        self._services[service_name][uuid].add(service)
+        with self._services_lock:
+            self._services[service_name][uuid].add(service)
 
     def remove_service_node(self, service_name, service_id, uuid):
         logger.debug('removing service %s %s', service_name, uuid)
         for service in set(self._services[service_name][uuid]):
             if service.has_id(service_id):
-                self._services[service_name][uuid].remove(service)
+                with self._services_lock:
+                    self._services[service_name][uuid].remove(service)
 
     def fetch_services(self, service_name, uuid):
         logger.debug('fetching %s %s from consul', service_name, uuid)
@@ -120,7 +124,8 @@ class RemoteServiceTracker(object):
             for s in self.fetch_services(service_name, uuid):
                 self.add_service_node(service_name, uuid, s)
 
-        return list(self._services[service_name][uuid])
+        with self._services_lock:
+            return list(self._services[service_name][uuid])
 
     def _consul_client(self):
         return Consul(self._consul_host, self._consul_port, self._consul_token)
