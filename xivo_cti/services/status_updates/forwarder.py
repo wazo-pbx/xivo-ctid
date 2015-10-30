@@ -21,7 +21,7 @@ import threading
 import xivo_agentd_client
 
 from collections import defaultdict
-from functools import wraps, partial
+from functools import wraps
 
 from kombu.mixins import ConsumerMixin
 from kombu import Queue
@@ -250,6 +250,9 @@ class _BaseStatusFetcher(object):
         self.async_runner = async_runner
         self._remote_service_tracker = remote_service_tracker
 
+    def fetch(self, key):
+        self.async_runner.run_with_cb(self._on_result, self._async_fetch, key)
+
     def _get_agentd_client_config(self, uuid):
         if uuid == config['uuid']:
             return config['agentd']
@@ -260,28 +263,24 @@ class _BaseStatusFetcher(object):
             return service.to_dict()
         return None
 
-    def _rest_client_call_wrapper(self, f):
-        try:
-            return f()
-        except RequestException as e:
-            logger.warning('could not fetch resource: %s', e)
-
 
 class _AgentStatusFetcher(_BaseStatusFetcher):
 
-    def fetch(self, key):
-        logger.debug('Fetching agent %s', key)
+    def _async_fetch(self, key):
+        logger.info('agent_status_fetcher: fetching agent %s', key)
         uuid, agent_id = key
         if not agent_id:
             return
         client_config = self._get_agentd_client_config(uuid)
         if not client_config:
-            logger.warning('could not fetch agent %s on %s, unknown uuid', agent_id, uuid)
+            logger.warning('agent_status_fetcher: cannot find a running xivo-agentd service for %s', key)
             return
 
         client = xivo_agentd_client.Client(**client_config)
-        cb = partial(client.agents.get_agent_status, agent_id)
-        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
+        try:
+            client.agents.get_agent_status(agent_id)
+        except RequestException as e:
+            logger.warning('agent_status_fetcher: could not fetch agent status: %s', e)
 
     def _on_result(self, result):
         if not result:
@@ -294,7 +293,8 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
 
 class _EndpointStatusFetcher(_BaseStatusFetcher):
 
-    def fetch(self, key):
+    def _async_fetch(self, key):
+        logger.info('endpoint_status_fetcher: fetching endpoint %s', key)
         uuid, endpoint_id = key
         client_config = self._get_ctid_client_config(uuid)
         if not client_config:
@@ -302,10 +302,10 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
             return
 
         client = CtidClient(**client_config)
-        logger.debug('endpoint fetcher: scheduling a client.endpoints.get with %s for endpoint %s on %s',
-                     client_config, endpoint_id, uuid)
-        cb = partial(client.endpoints.get, endpoint_id)
-        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
+        try:
+            return client.endpoints.get(endpoint_id)
+        except RequestException as e:
+            logger.warning('endpoint_status_fetcher: could not fetch endpoint status: %s', e)
 
     def _on_result(self, result):
         if not result:
@@ -318,18 +318,19 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
 
 class _UserStatusFetcher(_BaseStatusFetcher):
 
-    def fetch(self, key):
+    def _async_fetch(self, key):
+        logger.info('user_status_fetcher: fetching user %s', key)
         uuid, user_id = key
         client_config = self._get_ctid_client_config(uuid)
         if not client_config:
-            logger.warning('Could not fetch endpoint %s on %s, unknown uuid', user_id, uuid)
+            logger.warning('user_status_fetcher: cannot find a running xivo-ctid service for %s', key)
             return
 
         client = CtidClient(**client_config)
-        logger.debug('user fetcher: scheduling a client.users.get with %s for user %s on %s',
-                     client_config, user_id, uuid)
-        cb = partial(client.users.get, user_id)
-        self.async_runner.run_with_cb(self._on_result, self._rest_client_call_wrapper, cb)
+        try:
+            return client.users.get(user_id)
+        except RequestException as e:
+            logger.warning('user_status_fetcher: could not fetch user status: %s', e)
 
     def _on_result(self, result):
         if not result:
