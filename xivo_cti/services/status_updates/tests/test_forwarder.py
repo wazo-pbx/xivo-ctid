@@ -218,3 +218,12 @@ class TestEndpointStatusFetcher(unittest.TestCase):
 
                 get_status.assert_called_once_with(self.id_)
                 on_result.assert_called_once_with(get_status.return_value)
+
+    def test_that_on_result_is_called_with_none_if_no_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            _client_fn.return_value = None
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
+
+                on_result.assert_called_once_with(None)

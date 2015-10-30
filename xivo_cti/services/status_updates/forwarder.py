@@ -21,6 +21,7 @@ import threading
 import xivo_agentd_client
 
 from collections import defaultdict
+from contextlib import contextmanager
 from functools import wraps
 
 from kombu.mixins import ConsumerMixin
@@ -256,31 +257,41 @@ class _BaseStatusFetcher(object):
             return
         self.async_runner.run_with_cb(self._on_result, self._async_fetch, uuid, resource_id)
 
+    @contextmanager
+    def exception_logging_client(self, uuid):
+        client = self._client(uuid)
+        try:
+            yield client
+        except RequestException as e:
+            logger.warning('status_fetcher: could not fetch status: %s', e)
+        except AttributeError:
+            if not client:
+                logger.warning('status_fetcher: cannot find a running service %s %s', self.service, uuid)
+            else:
+                raise
+
 
 class _CtidStatusFetcher(_BaseStatusFetcher):
 
+    service = 'xivo-ctid'
+
     def _client(self, uuid):
-        for service in self._remote_service_tracker.list_services_with_uuid('xivo-ctid', uuid):
+        for service in self._remote_service_tracker.list_services_with_uuid(self.service, uuid):
             return CtidClient(**service.to_dict())
-        logger.warning('status_fetcher: cannot find a running xivo-ctid service %s', uuid)
 
 
 class _AgentStatusFetcher(_BaseStatusFetcher):
 
+    service = 'xivo-agentd'
+
     def _client(self, uuid):
         if uuid == config['uuid']:
             return xivo_agentd_client.Client(**config['agentd'])
-        logger.warning('status_fetcher: cannot find a running xivo-agentd service %s', uuid)
 
     def _async_fetch(self, uuid, agent_id):
         logger.info('agent_status_fetcher: fetching agent %s@%s', agent_id, uuid)
-        client = self._client(uuid)
-        if not client:
-            return
-        try:
+        with self.exception_logging_client(uuid) as client:
             return client.agents.get_agent_status(agent_id)
-        except RequestException as e:
-            logger.warning('agent_status_fetcher: could not fetch agent status: %s', e)
 
     def _on_result(self, result):
         if not result:
@@ -295,13 +306,8 @@ class _EndpointStatusFetcher(_CtidStatusFetcher):
 
     def _async_fetch(self, uuid, endpoint_id):
         logger.info('endpoint_status_fetcher: fetching endpoint %s@%s', endpoint_id, uuid)
-        client = self._client(uuid)
-        if not client:
-            return
-        try:
+        with self.exception_logging_client(uuid) as client:
             return client.endpoints.get(endpoint_id)
-        except RequestException as e:
-            logger.warning('endpoint_status_fetcher: could not fetch endpoint status: %s', e)
 
     def _on_result(self, result):
         if not result:
@@ -316,13 +322,8 @@ class _UserStatusFetcher(_CtidStatusFetcher):
 
     def _async_fetch(self, uuid, user_id):
         logger.info('user_status_fetcher: fetching user %s@%s', user_id, uuid)
-        client = self._client(uuid)
-        if not client:
-            return
-        try:
+        with self.exception_logging_client(uuid) as client:
             return client.users.get(user_id)
-        except RequestException as e:
-            logger.warning('user_status_fetcher: could not fetch user status: %s', e)
 
     def _on_result(self, result):
         if not result:
