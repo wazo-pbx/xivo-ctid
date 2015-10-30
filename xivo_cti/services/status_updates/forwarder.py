@@ -238,7 +238,11 @@ class _StatusNotifier(object):
         xivo_uuid, resource_id = key
         subscription = self._subscriptions[xivo_uuid].get(resource_id)
         if subscription is None:
-            logger.debug('No subscriptions for %s in %s', key, self._subscriptions.keys())
+            keys = []
+            for uuid, subscriptions in self._subscriptions.iteritems():
+                for id_ in subscriptions.iterkeys():
+                    keys.append((uuid, id_))
+            logger.debug('No subscriptions for %s in %s', key, keys)
             return
 
         subscription.send_message(msg)
