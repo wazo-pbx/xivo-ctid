@@ -171,34 +171,23 @@ class TestAgentStatusFetcher(unittest.TestCase):
         self.id_ = 42
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
+        self._forwarder = Mock(StatusForwarder)
+        self._fetcher = _AgentStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
 
     def test_that_on_response_calls_the_forwarder(self):
-        forwarder = Mock(StatusForwarder)
-        result = Mock()
-        result.id = self.id_
-        result.origin_uuid = self.uuid
-        result.logged = True
+        self._fetcher._on_result(Mock(id=self.id_, origin_uuid=self.uuid, logger=True))
 
-        fetcher = _AgentStatusFetcher(forwarder, self.async_runner, s.service_tracker)
-        fetcher._on_result(result)
+        self._forwarder.on_agent_status_update.assert_called_once_with(self.key, 'logged_in')
 
-        forwarder.on_agent_status_update.assert_called_once_with(self.key, 'logged_in')
+    def test_that_fetch_get_from_a_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            get_status = _client_fn.return_value.agents.get_agent_status
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
 
-    @patch('xivo_cti.services.status_updates.forwarder.xivo_agentd_client')
-    def test_that_fetch_get_from_a_client(self, xivo_agentd_client):
-        client = xivo_agentd_client.Client.return_value = Mock()
-        forwarder = Mock(StatusForwarder)
-
-        fetcher = _AgentStatusFetcher(forwarder, self.async_runner, s.service_tracker)
-        fetcher._get_agentd_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
-        fetcher._on_result = Mock()
-
-        with synchronize(self.async_runner):
-            fetcher.fetch(self.key)
-
-        fetcher._get_agentd_client_config.assert_called_once_with(self.uuid)
-        xivo_agentd_client.Client.assert_called_once_with(host='localhost', port=6666)
-        client.agents.get_agent_status.assert_called_once_with(self.id_)
+                get_status.assert_called_once_with(self.id_)
+                on_result.assert_called_once_with(get_status.return_value)
 
 
 class TestEndpointStatusFetcher(unittest.TestCase):
@@ -208,32 +197,24 @@ class TestEndpointStatusFetcher(unittest.TestCase):
         self.id_ = 42
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
+        self._forwarder = Mock(StatusForwarder)
+        self._fetcher = _EndpointStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
 
     def test_that_on_response_calls_the_forwarder(self):
-        forwarder = Mock(StatusForwarder)
-
-        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner, s.service_tracker)
-
-        fetcher._on_result({
+        self._fetcher._on_result({
             'id': self.id_,
             'origin_uuid': self.uuid,
             'status': 8,
         })
 
-        forwarder.on_endpoint_status_update.assert_called_once_with(self.key, 8)
+        self._forwarder.on_endpoint_status_update.assert_called_once_with(self.key, 8)
 
-    @patch('xivo_cti.services.status_updates.forwarder.CtidClient')
-    def test_that_fetch_get_from_a_client(self, CtidClient):
-        client = CtidClient.return_value = Mock()
-        forwarder = Mock(StatusForwarder)
+    def test_that_fetch_get_from_a_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            get_status = _client_fn.return_value.endpoints.get
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
 
-        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner, s.service_tracker)
-        fetcher._get_ctid_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
-        fetcher._on_result = Mock()
-
-        with synchronize(self.async_runner):
-            fetcher.fetch(self.key)
-
-        fetcher._get_ctid_client_config.assert_called_once_with(self.uuid)
-        CtidClient.assert_called_once_with(host='localhost', port=6666)
-        client.endpoints.get.assert_called_once_with(self.id_)
+                get_status.assert_called_once_with(self.id_)
+                on_result.assert_called_once_with(get_status.return_value)

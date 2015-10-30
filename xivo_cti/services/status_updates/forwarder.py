@@ -251,34 +251,34 @@ class _BaseStatusFetcher(object):
         self._remote_service_tracker = remote_service_tracker
 
     def fetch(self, key):
-        self.async_runner.run_with_cb(self._on_result, self._async_fetch, key)
+        uuid, resource_id = key
+        if not resource_id:
+            return
+        self.async_runner.run_with_cb(self._on_result, self._async_fetch, uuid, resource_id)
 
-    def _get_agentd_client_config(self, uuid):
-        if uuid == config['uuid']:
-            return config['agentd']
-        return None
 
-    def _get_ctid_client_config(self, uuid):
+class _CtidStatusFetcher(_BaseStatusFetcher):
+
+    def _client(self, uuid):
         for service in self._remote_service_tracker.list_services_with_uuid('xivo-ctid', uuid):
-            return service.to_dict()
-        return None
+            return CtidClient(**service.to_dict())
+        logger.warning('status_fetcher: cannot find a running xivo-ctid service %s', uuid)
 
 
 class _AgentStatusFetcher(_BaseStatusFetcher):
 
-    def _async_fetch(self, key):
-        logger.info('agent_status_fetcher: fetching agent %s', key)
-        uuid, agent_id = key
-        if not agent_id:
-            return
-        client_config = self._get_agentd_client_config(uuid)
-        if not client_config:
-            logger.warning('agent_status_fetcher: cannot find a running xivo-agentd service for %s', key)
-            return
+    def _client(self, uuid):
+        if uuid == config['uuid']:
+            return xivo_agentd_client.Client(**config['agentd'])
+        logger.warning('status_fetcher: cannot find a running xivo-agentd service %s', uuid)
 
-        client = xivo_agentd_client.Client(**client_config)
+    def _async_fetch(self, uuid, agent_id):
+        logger.info('agent_status_fetcher: fetching agent %s@%s', agent_id, uuid)
+        client = self._client(uuid)
+        if not client:
+            return
         try:
-            client.agents.get_agent_status(agent_id)
+            return client.agents.get_agent_status(agent_id)
         except RequestException as e:
             logger.warning('agent_status_fetcher: could not fetch agent status: %s', e)
 
@@ -291,17 +291,13 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
         self.forwarder.on_agent_status_update(key, status)
 
 
-class _EndpointStatusFetcher(_BaseStatusFetcher):
+class _EndpointStatusFetcher(_CtidStatusFetcher):
 
-    def _async_fetch(self, key):
-        logger.info('endpoint_status_fetcher: fetching endpoint %s', key)
-        uuid, endpoint_id = key
-        client_config = self._get_ctid_client_config(uuid)
-        if not client_config:
-            logger.warning('endpoint_status_fetcher: cannot find a running xivo-ctid service for %s', key)
+    def _async_fetch(self, uuid, endpoint_id):
+        logger.info('endpoint_status_fetcher: fetching endpoint %s@%s', endpoint_id, uuid)
+        client = self._client(uuid)
+        if not client:
             return
-
-        client = CtidClient(**client_config)
         try:
             return client.endpoints.get(endpoint_id)
         except RequestException as e:
@@ -316,17 +312,13 @@ class _EndpointStatusFetcher(_BaseStatusFetcher):
         self.forwarder.on_endpoint_status_update(key, status)
 
 
-class _UserStatusFetcher(_BaseStatusFetcher):
+class _UserStatusFetcher(_CtidStatusFetcher):
 
-    def _async_fetch(self, key):
-        logger.info('user_status_fetcher: fetching user %s', key)
-        uuid, user_id = key
-        client_config = self._get_ctid_client_config(uuid)
-        if not client_config:
-            logger.warning('user_status_fetcher: cannot find a running xivo-ctid service for %s', key)
+    def _async_fetch(self, uuid, user_id):
+        logger.info('user_status_fetcher: fetching user %s@%s', user_id, uuid)
+        client = self._client(uuid)
+        if not client:
             return
-
-        client = CtidClient(**client_config)
         try:
             return client.users.get(user_id)
         except RequestException as e:
