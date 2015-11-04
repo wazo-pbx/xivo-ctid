@@ -39,6 +39,11 @@ _default_config = {
     'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
     'config_file': '/etc/xivo-ctid/config.yml',
     'extra_config_files': '/etc/xivo-ctid/conf.d/',
+    'agentd': {
+        'host': 'localhost',
+        'timeout': 3,
+        'verify_certificate': '/usr/share/xivo-certs/server.crt',
+    },
     'auth': {
         'host': 'localhost',
         'port': 9497,

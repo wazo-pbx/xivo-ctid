@@ -38,6 +38,7 @@ rest_api:
 agentd:
     host: localhost
     timeout: 3
+    verify_certificate: /usr/share/xivo-certs/server.crt
 
 # xivo-auth (authentication daemon) connection informations.
 auth:
