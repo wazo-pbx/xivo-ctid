@@ -8,13 +8,25 @@ ctid:
   image: xivo/xivo-ctid
   volumes:
     - "./etc/xivo-ctid/conf.d:/etc/xivo-ctid/conf.d"
+  expose:
+    - "5005"
   links:
     - postgres
     - rabbitmq
     - consul
     - agentd
     - asterisk
+    - cti2
   command: xivo-ctid -fd
+cti2:
+  image: mock-cti
+  expose:
+    - "6262"
+  links:
+    - rabbitmq
+    - consul
+  volumes:
+    - "./bin/cti_mock.py:/usr/local/bin/cti_mock.py:ro"
 rabbitmq:
   image: rabbitmq
   expose:
@@ -36,8 +48,9 @@ sync:
     - consul
     - asterisk
     - ctid
+    - cti2
   environment:
-    PORTS: "5432 5672 8500 5038 9495"
+    PORTS: "5432 5672 8500 5038 9495 6262"
 agentd:
   image: xivo/xivo-agentd
   links:

@@ -16,3 +16,9 @@ agentd:
     verify_certificate: False
 ipbx_connection:
   ipaddress: asterisk
+main:
+  incoming_tcp:
+    INFO:
+      - '0.0.0.0'
+      - 5005
+      - 1
