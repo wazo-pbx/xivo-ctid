@@ -1,4 +1,4 @@
-xivo-test-helpers
+xivo-test-helpers>=0.1.4
 nose
 python-consul
 psycopg2
