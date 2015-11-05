@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,12 +18,20 @@
 from xivo_cti.cti.cti_command import CTICommandClass
 
 
-def _parse(msg, command):
+def _parse_login_id(msg, command):
     command.company = msg['company']
     command.ident = msg['ident']
     command.userlogin = msg['userlogin']
     command.xivo_version = msg['xivoversion']
 
 
-LoginID = CTICommandClass('login_id', None, _parse)
+LoginID = CTICommandClass('login_id', None, _parse_login_id)
 LoginID.add_to_registry()
+
+
+def _parse_login_pass(msg, command):
+    command.password = msg['password']
+
+
+LoginPass = CTICommandClass('login_pass', None, _parse_login_pass)
+LoginPass.add_to_registry()

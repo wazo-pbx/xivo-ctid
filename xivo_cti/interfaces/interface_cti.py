@@ -17,17 +17,25 @@
 
 import logging
 import random
+import requests
+
+from datetime import timedelta
+
+from xivo_auth_client import Client as AuthClient
+from xivo_dao import user_dao
 
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
 from xivo_cti import config
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti.commands.login import LoginID, LoginPass
 from xivo_cti.cti.commands.starttls import StartTLS
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
 from xivo_cti.database import user_db
+
+TWO_MONTHS = timedelta(days=60).total_seconds()
 
 logger = logging.getLogger('interface_cti')
 
@@ -160,26 +168,62 @@ class CTI(interfaces.Interfaces):
             return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
                              'class': 'login_id'}
 
-        innerdata = self._ctiserver.safe
-        user_dict = innerdata.xod_config.get('users').finduser(login)
-        if not user_dict:
-            return 'error', {
-                'error_string': 'login_password',
-                'class': 'login_id',
-            }
-
-        user_id = user_dict.get('id')
-
-        if user_dict:
-            self.connection_details['userid'] = str(user_id)
-            self.answer_cb = self._get_answer_cb(user_id)
-
         session_id = ''.join(random.sample(ALPHANUMS, 10))
-        self.connection_details['prelogin'] = {'sessionid': session_id}
+        self.connection_details['prelogin'] = {'sessionid': session_id,
+                                               'username': login}
+
+        LoginPass.register_callback_params(self.receive_login_pass, ['password', 'cti_connection'])
 
         return 'message', {'sessionid': session_id,
                            'class': 'login_id',
                            'xivoversion': version}
+
+    def receive_login_pass(self, password, connection):
+        if connection != self:
+            return
+
+        LoginPass.deregister_callback(self.receive_login_pass)
+
+        username = self.connection_details['prelogin']['username']
+        sessionid = self.connection_details['prelogin']['sessionid']
+
+        auth_client = AuthClient(username=username,
+                                 password=password,
+                                 **config['auth'])
+
+        # TODO: make this async
+        try:
+            token_data = auth_client.token.new('xivo_user', expiration=TWO_MONTHS)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 401:
+                logger.info('Authentification failed, got a 401 from xivo-auth')
+                return 'error', {'class': 'login_pass',
+                                 'error_string': 'login_password'}
+            else:
+                # TODO: return a sane error message and don't crash xivo-ctid
+                pass
+
+        user_uuid = token_data['xivo_user_uuid']
+        token = token_data['token']
+        user_config = self._ctiserver.safe.xod_config['users'].finduser(user_uuid)
+        if not user_config:
+            logger.info('Authentification failed, unknown user')
+            return 'error', {'class': 'login_pass',
+                             'error_string': 'login_password'}
+
+        self.connection_details['userid'] = str(user_config['id'])
+        self.connection_details['auth_token'] = token
+        self.connection_details['authenticated'] = True
+        self.answer_cb = self._get_answer_cb(str(user_config['id']))
+        cti_profile_id = user_config['cti_profile_id']
+        if cti_profile_id is None:
+            logger.warning("%s - No CTI profile defined for the user", self.head)
+            return 'error', {'class': 'login_pass',
+                             'error_string': 'capaid_undefined'}
+
+        logger.debug('login pass completed')
+        return 'message', {'class': 'login_pass',
+                           'capalist': [cti_profile_id]}
 
     def _get_answer_cb(self, user_id):
         device_manager = context.get('device_manager')

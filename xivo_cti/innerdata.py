@@ -45,9 +45,6 @@ from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
 
-TWO_MONTHS = timedelta(days=60).total_seconds()
-
-
 @contextmanager
 def auth_client(userid):
     with session_scope():
@@ -277,10 +274,6 @@ class Safe(object):
         tohash = '%s:%s' % (sessionid, password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
-
-    def user_new_auth_token(self, userid):
-        with auth_client(userid) as client:
-            return client.token.new('xivo_user', expiration=TWO_MONTHS)['token']
 
     def user_remove_auth_token(self, userid, token):
         with auth_client(userid) as client:

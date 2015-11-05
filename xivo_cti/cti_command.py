@@ -26,9 +26,7 @@ from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 
 logger = logging.getLogger('cti_command')
 
-LOGINCOMMANDS = [
-    'login_pass', 'login_capas'
-]
+LOGINCOMMANDS = ['login_capas']
 
 REGCOMMANDS = [
     'getipbxlist',
@@ -84,46 +82,6 @@ class Command(object):
 
         z = [ackmessage]
         return z
-
-    def regcommand_login_pass(self):
-        self.head = 'LOGINFAIL - login_pass'
-        # user authentication
-        missings = []
-        for argum in ['hashedpassword']:
-            if argum not in self._commanddict:
-                missings.append(argum)
-        if missings:
-            logger.warning('%s - missing args : %s', self.head, missings)
-            return 'missing:%s' % ','.join(missings)
-
-        if self._is_user_authenticated():
-            self._connection.connection_details['authenticated'] = True
-            self._connection.connection_details['auth_token'] = self._ctiserver.safe.user_new_auth_token(self.userid)
-        else:
-            return 'login_password'
-
-        cti_profile_id = self.user_keeplist['cti_profile_id']
-        if cti_profile_id is None:
-            logger.warning("%s - No CTI profile defined for the user", self.head)
-            return 'capaid_undefined'
-        else:
-            return {'capalist': [cti_profile_id]}
-
-    def _is_user_authenticated(self):
-        this_hashed_password = self._commanddict.get('hashedpassword')
-        cdetails = self._connection.connection_details
-        sessionid = cdetails.get('prelogin').get('sessionid')
-
-        if self.ipbxid and self.userid:
-            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(self.userid, sessionid)
-            if ref_hashed_password != this_hashed_password:
-                logger.warning('%s - wrong hashed password', self.head)
-                return False
-            else:
-                return True
-        else:
-            logger.warning('%s - undefined user : probably the login_id step failed', self.head)
-            return False
 
     def regcommand_login_capas(self):
         self.head = 'LOGINFAIL - login_capas'

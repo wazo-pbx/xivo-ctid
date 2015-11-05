@@ -67,3 +67,15 @@ class TestCTI(unittest.TestCase):
         fn = self._cti_connection._get_answer_cb(5)
 
         assert_that(fn, equal_to(self._cti_connection.answer_cb))
+
+    def test_login_pass_wrong_password(self):
+        pass
+
+    def test_login_pass_unknown_user(self):
+        pass
+
+    def test_login_pass_success(self):
+        pass
+
+    def test_login_pass_no_profile(self):
+        pass
