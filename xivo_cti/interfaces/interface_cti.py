@@ -154,6 +154,8 @@ class CTI(interfaces.Interfaces):
         if connection != self:
             return []
 
+        LoginID.deregister_callback(self.receive_login_id)
+
         if version != CTI_PROTOCOL_VERSION:
             return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
                              'class': 'login_id'}
