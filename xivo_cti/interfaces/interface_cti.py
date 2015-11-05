@@ -194,45 +194,43 @@ class CTI(interfaces.Interfaces):
         username = self.connection_details['prelogin']['username']
         auth_client = AuthClient(username=username, password=password, **self._auth_config)
 
+        def error(msg):
+            return 'error', {'class': 'login_pass',
+                             'error_string': msg}
+
         # TODO: make this async
         try:
             token_data = auth_client.token.new(self._auth_backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
                 logger.info('Authentification failed, got a 401 from xivo-auth')
-                return 'error', {'class': 'login_pass',
-                                 'error_string': 'login_password'}
+                return error('login_password')
             logger.exception('Unexpected xivo-auth error')
-            return 'error', {'class': 'login_pass',
-                             'error_string': 'xivo_auth_error'}
+            return error('xivo_auth_error')
 
 
         user_uuid = token_data['xivo_user_uuid']
-        token = token_data['token']
         try:
             user_config = dao.user.get_by_uuid(user_uuid)
         except NoSuchUserException:
             logger.info('Authentification failed, unknown user')
-            return 'error', {'class': 'login_pass',
-                             'error_string': 'user_not_found'}
+            return error('user_not_found')
 
         client_enabled = user_config.get('enableclient', '0') != '0'
         if not client_enabled:
             logger.info('%s failed to login, client disabled', username)
-            return 'error', {'class': 'login_pass',
-                             'error_string': 'login_password'}
+            return error('login_password')
 
-        self.connection_details['userid'] = str(user_config['id'])
-        self.connection_details['auth_token'] = token
-        self.connection_details['authenticated'] = True
+        self.connection_details.update({'userid': str(user_config['id']),
+                                        'auth_token': token_data['token'],
+                                        'authenticated': True})
+
         self.answer_cb = self._get_answer_cb(str(user_config['id']))
         cti_profile_id = user_config.get('cti_profile_id')
         if cti_profile_id is None:
             logger.warning('login failed: No CTI profile defined for the user')
-            return 'error', {'class': 'login_pass',
-                             'error_string': 'capaid_undefined'}
+            return error('capaid_undefined')
 
-        logger.debug('login pass completed')
         return 'message', {'class': 'login_pass',
                            'capalist': [cti_profile_id]}
 
