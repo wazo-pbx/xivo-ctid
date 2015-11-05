@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
 from mock import Mock
+
+from xivo_cti.tools import weak_method
 from xivo_cti.cti.cti_command import CTICommandClass
 
 
@@ -62,6 +65,21 @@ class TestCTICommand(unittest.TestCase):
 
         command = command_class.from_dict({'class': 'callback_test'})
         self.assertEqual(len(command.callbacks_with_params()), 1)
+
+    def test_deregister_callback(self):
+        command_class = CTICommandClass(self.class_name, None, None)
+        command = command_class.from_dict({'class': 'callback_test'})
+
+        function_1 = lambda: None
+        function_2 = lambda: None
+
+        command_class.register_callback_params(function_1)
+        command_class.register_callback_params(function_2)
+        command_class.deregister_callback(function_1)
+
+        callbacks = command.callbacks_with_params()
+        self.assertEqual(len(callbacks), 1)
+        self.assertEqual(weak_method.WeakCallable(function_2), callbacks[0][0])
 
     def test_callback_memory_usage(self):
         command_class = CTICommandClass(self.class_name, None, None)
