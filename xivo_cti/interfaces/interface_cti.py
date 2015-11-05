@@ -44,7 +44,7 @@ class CTI(interfaces.Interfaces):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._cti_msg_decoder = cti_msg_decoder
         self._cti_msg_encoder = cti_msg_encoder
-        self.connection_details = {}
+        self.connection_details = {'ipbxid': ctiserver.myipbxid}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
         self._starttls_sent = False
@@ -169,8 +169,7 @@ class CTI(interfaces.Interfaces):
         user_id = user_dict.get('id')
 
         if user_dict:
-            self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
-                                            'userid': str(user_id)})
+            self.connection_details['userid'] = str(user_id)
             self.answer_cb = self._get_answer_cb(user_id)
 
         session_id = ''.join(random.sample(ALPHANUMS, 10))

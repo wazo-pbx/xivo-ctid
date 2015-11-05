@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ class TestCTICommandHandler(unittest.TestCase):
         self._msg_1 = {"class": "invite_confroom",
                        "commandid": 737000717,
                        "invitee": "user:pcmdev/3"}
-        self._ctiserver = Mock(CTIServer)
+        self._ctiserver = Mock(CTIServer, myipbxid='xivo')
         self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
 
     def test_parse_message(self):

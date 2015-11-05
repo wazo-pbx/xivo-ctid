@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
 class TestCTI(unittest.TestCase):
 
     def setUp(self):
-        self._ctiserver = Mock(CTIServer)
+        self._ctiserver = Mock(CTIServer, myipbxid='xivo')
         self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
