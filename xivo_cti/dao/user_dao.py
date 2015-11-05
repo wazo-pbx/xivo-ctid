@@ -108,6 +108,12 @@ class UserDAO(object):
         user_status['connection'] = None
         user_status['last-logouttimestamp'] = time.time()
 
+    def get_by_uuid(self, uuid):
+        for user_config in self.innerdata.xod_config['users'].keeplist.itervalues():
+            if user_config['uuid'] == uuid:
+                return user_config
+        raise NoSuchUserException(uuid)
+
     def get_presence(self, user_id):
         user_status = self._user_status(user_id)
         return user_status['availstate']

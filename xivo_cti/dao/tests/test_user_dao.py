@@ -69,6 +69,16 @@ class TestUserDAO(unittest.TestCase):
     def test__user_no_user(self):
         self.assertRaises(NoSuchUserException, self.dao._user, 206)
 
+    def test_get_by_uuid(self):
+        expected = self._userlist.keeplist['42'] = {'uuid': sentinel.uuid}
+
+        result = self.dao.get_by_uuid(sentinel.uuid)
+
+        assert_that(result, equal_to(expected))
+
+    def test_get_by_uuid_not_found(self):
+        self.assertRaises(NoSuchUserException, self.dao.get_by_uuid, sentinel.uuid)
+
     def test_fullname(self):
         user_id = '123'
         fullname = 'full'
