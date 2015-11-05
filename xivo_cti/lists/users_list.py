@@ -24,11 +24,6 @@ class UsersList(ContextAwareAnyList):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'users')
 
-    def finduser(self, user_uuid):
-        for userinfo in self.keeplist.itervalues():
-            if userinfo.get('enableclient', False) and userinfo.get('uuid') == user_uuid:
-                return userinfo
-
     def get_contexts(self, user_id):
         try:
             user = self.keeplist[user_id]

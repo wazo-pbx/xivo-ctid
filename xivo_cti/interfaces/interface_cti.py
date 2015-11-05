@@ -27,10 +27,12 @@ from xivo_dao import user_dao
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
+from xivo_cti import dao
 from xivo_cti import config
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login import LoginID, LoginPass
 from xivo_cti.cti.commands.starttls import StartTLS
+from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
 from xivo_cti.database import user_db
@@ -185,29 +187,35 @@ class CTI(interfaces.Interfaces):
         LoginPass.deregister_callback(self.receive_login_pass)
 
         username = self.connection_details['prelogin']['username']
-        sessionid = self.connection_details['prelogin']['sessionid']
-
-        auth_client = AuthClient(username=username,
-                                 password=password,
-                                 **config['auth'])
+        auth_config = dict(config['auth'])
+        backend = auth_config.pop('backend')
+        auth_client = AuthClient(username=username, password=password, **auth_config)
 
         # TODO: make this async
         try:
-            token_data = auth_client.token.new('xivo_user', expiration=TWO_MONTHS)
-        except requests.exceptions.HTTPError as e:
+            token_data = auth_client.token.new(backend, expiration=TWO_MONTHS)
+        except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
                 logger.info('Authentification failed, got a 401 from xivo-auth')
                 return 'error', {'class': 'login_pass',
                                  'error_string': 'login_password'}
-            else:
-                # TODO: return a sane error message and don't crash xivo-ctid
-                pass
+            logger.exception('Unexpected xivo-auth error')
+            return 'error', {'class': 'login_pass',
+                             'error_string': 'xivo_auth_error'}
+
 
         user_uuid = token_data['xivo_user_uuid']
         token = token_data['token']
-        user_config = self._ctiserver.safe.xod_config['users'].finduser(user_uuid)
-        if not user_config:
+        try:
+            user_config = dao.user.get_by_uuid(user_uuid)
+        except NoSuchUserException:
             logger.info('Authentification failed, unknown user')
+            return 'error', {'class': 'login_pass',
+                             'error_string': 'user_not_found'}
+
+        client_enabled = user_config.get('enableclient', '0') != '0'
+        if not client_enabled:
+            logger.info('%s failed to login, client disabled', username)
             return 'error', {'class': 'login_pass',
                              'error_string': 'login_password'}
 
@@ -215,9 +223,9 @@ class CTI(interfaces.Interfaces):
         self.connection_details['auth_token'] = token
         self.connection_details['authenticated'] = True
         self.answer_cb = self._get_answer_cb(str(user_config['id']))
-        cti_profile_id = user_config['cti_profile_id']
+        cti_profile_id = user_config.get('cti_profile_id')
         if cti_profile_id is None:
-            logger.warning("%s - No CTI profile defined for the user", self.head)
+            logger.warning('login failed: No CTI profile defined for the user')
             return 'error', {'class': 'login_pass',
                              'error_string': 'capaid_undefined'}
 

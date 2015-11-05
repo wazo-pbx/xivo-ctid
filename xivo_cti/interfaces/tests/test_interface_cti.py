@@ -16,14 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+import requests
 
 from mock import Mock
 from mock import patch
 from mock import sentinel
 from hamcrest import assert_that
 from hamcrest import equal_to
+
 from xivo_cti.ctiserver import CTIServer
-from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.exception import NoSuchUserException
+from xivo_cti.interfaces.interface_cti import CTI, TWO_MONTHS
 from xivo_cti.interfaces.interface_cti import NotLoggedException
 from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
@@ -68,14 +71,112 @@ class TestCTI(unittest.TestCase):
 
         assert_that(fn, equal_to(self._cti_connection.answer_cb))
 
-    def test_login_pass_wrong_password(self):
-        pass
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_wrong_password(self, AuthClient):
+        auth_client = AuthClient.return_value
+        response = Mock(status_code=401)
+        auth_client.token.new.side_effect = requests.exceptions.HTTPError(response=response)
+        password = 'secre7'
 
-    def test_login_pass_unknown_user(self):
-        pass
+        with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+            result = self._cti_connection.receive_login_pass(password, self._cti_connection)
 
-    def test_login_pass_success(self):
-        pass
+        AuthClient.assert_called_once_with(username='foobar', password=password)
+        auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
+        assert_that(result, equal_to(('error', {'class': 'login_pass',
+                                                'error_string': 'login_password'})))
 
-    def test_login_pass_no_profile(self):
-        pass
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_auth_error(self, AuthClient):
+        auth_client = AuthClient.return_value
+        response = Mock(status_code=404)
+        auth_client.token.new.side_effect = requests.exceptions.HTTPError(response=response)
+        password = 'secre7'
+
+        with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+            result = self._cti_connection.receive_login_pass(password, self._cti_connection)
+
+        AuthClient.assert_called_once_with(username='foobar', password=password)
+        auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
+        assert_that(result, equal_to(('error', {'class': 'login_pass',
+                                                'error_string': 'xivo_auth_error'})))
+
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_unknown_user(self, AuthClient):
+        auth_client = AuthClient.return_value
+        auth_client.return_value = {'token': sentinel.token,
+                                    'xivo_user_uuid': sentinel.uuid}
+
+        with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
+            dao.user.get_by_uuid.side_effect = NoSuchUserException
+            with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+                result = self._cti_connection.receive_login_pass(sentinel.password, self._cti_connection)
+
+        assert_that(result, equal_to(('error', {'class': 'login_pass',
+                                                'error_string': 'user_not_found'})))
+
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_success(self, AuthClient):
+        auth_client = AuthClient.return_value
+        auth_client.return_value = {'token': sentinel.token,
+                                    'xivo_user_uuid': sentinel.uuid}
+        password = 'secre7'
+        cti_profile_id = 42
+        user_config = {'cti_profile_id': cti_profile_id,
+                       'enableclient': '1',
+                       'id': '1'}
+
+        with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
+            dao.user.get_by_uuid.return_value = user_config
+            with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+                with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
+                    result = self._cti_connection.receive_login_pass(password, self._cti_connection)
+
+        AuthClient.assert_called_once_with(username='foobar', password=password)
+        auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
+        assert_that(result, equal_to(('message', {'class': 'login_pass',
+                                                  'capalist': [cti_profile_id]})))
+
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_no_profile(self, AuthClient):
+        auth_client = AuthClient.return_value
+        auth_client.return_value = {'token': sentinel.token,
+                                    'xivo_user_uuid': sentinel.uuid}
+        password = 'secre7'
+        user_config = {'id': '1',
+                       'enableclient': '1'}
+
+        with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
+            dao.user.get_by_uuid.return_value = user_config
+            with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+                with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
+                    result = self._cti_connection.receive_login_pass(password, self._cti_connection)
+
+        assert_that(result, equal_to(('error', {'class': 'login_pass',
+                                                'error_string': 'capaid_undefined'})))
+
+    @patch('xivo_cti.interfaces.interface_cti.AuthClient')
+    @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
+    def test_login_pass_client_disabled(self, AuthClient):
+        auth_client = AuthClient.return_value
+        auth_client.return_value = {'token': sentinel.token,
+                                    'xivo_user_uuid': sentinel.uuid}
+        password = 'secre7'
+        cti_profile_id = 42
+        user_config = {'cti_profile_id': cti_profile_id,
+                       'id': '1',
+                       'enableclient': '0'}
+
+        with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
+            dao.user.get_by_uuid.return_value = user_config
+            with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
+                with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
+                    result = self._cti_connection.receive_login_pass(password, self._cti_connection)
+
+        assert_that(result, equal_to(('error', {'class': 'login_pass',
+                                                'error_string': 'login_password'})))

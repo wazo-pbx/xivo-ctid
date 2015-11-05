@@ -45,6 +45,7 @@ from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
 
+
 @contextmanager
 def auth_client(userid):
     with session_scope():
@@ -56,6 +57,7 @@ def auth_client(userid):
     del auth_config['key_file']
     del auth_config['service_id']
     del auth_config['service_key']
+    del auth_config['backend']
     yield AuthClient(username=username, password=password, **auth_config)
 
 
