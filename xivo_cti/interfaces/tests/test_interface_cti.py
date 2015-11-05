@@ -37,7 +37,8 @@ class TestCTI(unittest.TestCase):
 
     def setUp(self):
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
-        self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
+        with patch('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}}):
+            self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
     def test_user_id_not_connected(self):

@@ -57,6 +57,11 @@ class CTI(interfaces.Interfaces):
         self.connection_details = {'ipbxid': ctiserver.myipbxid}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
+        self._auth_config = dict(config['auth'])
+        self._auth_backend = self._auth_config.pop('backend')
+        del self._auth_config['key_file']
+        del self._auth_config['service_id']
+        del self._auth_config['service_key']
         self._starttls_sent = False
         self._starttls_status_received = False
 
@@ -187,13 +192,11 @@ class CTI(interfaces.Interfaces):
         LoginPass.deregister_callback(self.receive_login_pass)
 
         username = self.connection_details['prelogin']['username']
-        auth_config = dict(config['auth'])
-        backend = auth_config.pop('backend')
-        auth_client = AuthClient(username=username, password=password, **auth_config)
+        auth_client = AuthClient(username=username, password=password, **self._auth_config)
 
         # TODO: make this async
         try:
-            token_data = auth_client.token.new(backend, expiration=TWO_MONTHS)
+            token_data = auth_client.token.new(self._auth_backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
                 logger.info('Authentification failed, got a 401 from xivo-auth')
