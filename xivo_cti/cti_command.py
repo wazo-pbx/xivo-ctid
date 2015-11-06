@@ -36,7 +36,6 @@ REGCOMMANDS = [
     'keepalive',
 
     'faxsend',
-    'filetransfer',
     'chitchat',
 
     'getqueuesstats',
@@ -250,31 +249,26 @@ class Command(object):
                                                                                         int(params['window']))
         return self._queue_statistics_encoder.encode(statistic_results)
 
-    def regcommand_filetransfer(self):
-        reply = {}
-        function = self._commanddict.get('command')
-        socketref = self._commanddict.get('socketref')
-        fileid = self._commanddict.get('fileid')
-        if fileid:
-            self.innerdata.faxes[fileid].setsocketref(socketref)
-            if function == 'put_announce':
-                self._ctiserver.set_transfer_socket(self.innerdata.faxes[fileid], 'c2s')
-        else:
-            logger.warning('empty fileid given %s', self._commanddict)
-        return reply
-
     def regcommand_faxsend(self):
-        fileid = ''.join(random.sample(ALPHANUMS, 10))
-        reply = {'fileid': fileid}
-        self.innerdata.faxes[fileid] = cti_fax.Fax(self.innerdata, fileid)
         contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
-        if contexts:
-            self.innerdata.faxes[fileid].setfaxparameters(self.ruserid,
-                                                          contexts[0],
-                                                          self._commanddict.get('destination'),
-                                                          self._commanddict.get('hide'))
-            self.innerdata.faxes[fileid].setrequester(self._connection)
-        return reply
+        if not contexts:
+            logger.info('faxsend: user %s tried to send a fax but has no context', self.ruserid)
+            return
+
+        context = contexts[0]
+        fileid = ''.join(random.sample(ALPHANUMS, 10))
+        size = self._commanddict['size']
+        encoded_data = self._commanddict['data']
+        destination = self._commanddict['destination']
+        anonymous = self._commanddict['hide']
+
+        logger.info('faxsend: user %s is sending a %s bytes fax to %s@%s',
+                    self.ruserid, size, destination, context)
+
+        self.innerdata.faxes[fileid] = fax = cti_fax.Fax(self.innerdata, fileid, encoded_data)
+        fax.setfaxparameters(self.ruserid, context, destination, anonymous)
+        fax.setrequester(self._connection)
+        fax.launchasyncs()
 
     def regcommand_getipbxlist(self):
         return {'ipbxlist': ['xivo']}

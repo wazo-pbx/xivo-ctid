@@ -43,7 +43,6 @@ class CTI(interfaces.Interfaces):
         self._cti_msg_decoder = cti_msg_decoder
         self._cti_msg_encoder = cti_msg_encoder
         self.connection_details = {}
-        self.transferconnection = {}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
 
@@ -70,22 +69,19 @@ class CTI(interfaces.Interfaces):
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
         self.login_task.cancel()
-        if self.transferconnection and self.transferconnection.get('direction') == 'c2s':
-            logger.info('%s got the file ...', self.transferconnection.get('faxobj').fileid)
-        else:
-            self._remove_auth_token()
-            try:
-                user_service_manager = context.get('user_service_manager')
-                user_id = self.user_id()
-                if (cause == self.DisconnectCause.by_client or
-                    cause == self.DisconnectCause.by_server_stop or
-                    cause == self.DisconnectCause.by_server_reload or
-                    cause == self.DisconnectCause.broken_pipe):
-                    user_service_manager.disconnect_no_action(user_id)
-                else:
-                    raise TypeError('invalid DisconnectCause %s' % cause)
-            except NotLoggedException:
-                logger.warning('Called disconnected with no user_id')
+        self._remove_auth_token()
+        try:
+            user_service_manager = context.get('user_service_manager')
+            user_id = self.user_id()
+            if (cause == self.DisconnectCause.by_client or
+                cause == self.DisconnectCause.by_server_stop or
+                cause == self.DisconnectCause.by_server_reload or
+                cause == self.DisconnectCause.broken_pipe):
+                user_service_manager.disconnect_no_action(user_id)
+            else:
+                raise TypeError('invalid DisconnectCause %s' % cause)
+        except NotLoggedException:
+            logger.warning('Called disconnected with no user_id')
 
     def _remove_auth_token(self):
         token = self.connection_details.get('auth_token')
@@ -95,19 +91,9 @@ class CTI(interfaces.Interfaces):
 
     def manage_connection(self, msg):
         replies = []
-        if self.transferconnection:
-            if self.transferconnection.get('direction') == 'c2s':
-                self.transferconnection['data'] += msg
-                if msg.endswith('\n'):
-                    data = self.transferconnection['data'][:-1]
-                    faxobj = self.transferconnection['faxobj']
-                    logger.info('%s transfer connection : %d received', faxobj.fileid, len(data))
-                    faxobj.setbuffer(data)
-                    faxobj.launchasyncs()
-        else:
-            commands = self._cti_msg_decoder.decode(msg)
-            for command in commands:
-                replies.extend(self._run_functions(command))
+        commands = self._cti_msg_decoder.decode(msg)
+        for command in commands:
+            replies.extend(self._run_functions(command))
         return replies
 
     def _is_authenticated(self):
@@ -129,24 +115,14 @@ class CTI(interfaces.Interfaces):
 
         return [reply for reply in replies if reply]
 
-    def set_as_transfer(self, direction, faxobj):
-        logger.info('%s set_as_transfer %s', faxobj.fileid, direction)
-        self.login_task.cancel()
-        self.transferconnection = {'direction': direction,
-                                   'faxobj': faxobj,
-                                   'data': ''}
-
     def reply(self, msg):
-        if not self.transferconnection:
-            self.connid.append_queue(self._cti_msg_encoder.encode(msg))
+        self.connid.append_queue(self._cti_msg_encoder.encode(msg))
 
     def send_message(self, msg):
-        if not self.transferconnection:
-            self.connid.append_queue(self._cti_msg_encoder.encode(msg))
+        self.connid.append_queue(self._cti_msg_encoder.encode(msg))
 
     def send_encoded_message(self, data):
-        if not self.transferconnection:
-            self.connid.append_queue(data)
+        self.connid.append_queue(data)
 
     def receive_login_id(self, login, version, connection):
         if connection != self:

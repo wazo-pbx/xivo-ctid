@@ -582,13 +582,6 @@ class CTIServer(object):
         self._broadcast_cti_group.send_message(event)
         message_hook.run_hooks(event)
 
-    def set_transfer_socket(self, faxobj, direction):
-        for iconn, interface_cti in self.fdlist_interface_cti.iteritems():
-            peername = '%s:%d' % iconn.getpeername()
-            if peername == faxobj.socketref:
-                interface_cti.set_as_transfer(direction, faxobj)
-                break
-
     def send_to_cti_client(self, who, what):
         (ipbxid, userid) = who.split('/')
         for interface_cti in self.fdlist_interface_cti.itervalues():
