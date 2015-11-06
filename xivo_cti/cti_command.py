@@ -260,13 +260,12 @@ class Command(object):
         size = self._commanddict['size']
         encoded_data = self._commanddict['data']
         destination = self._commanddict['destination']
-        anonymous = self._commanddict['hide']
 
         logger.info('faxsend: user %s is sending a %s bytes fax to %s@%s',
                     self.ruserid, size, destination, context)
 
         self.innerdata.faxes[fileid] = fax = cti_fax.Fax(self.innerdata, fileid, encoded_data)
-        fax.setfaxparameters(self.ruserid, context, destination, anonymous)
+        fax.setfaxparameters(self.ruserid, context, destination)
         fax.setrequester(self._connection)
         fax.launchasyncs()
 

@@ -88,20 +88,22 @@ class Fax(object):
         self.innerdata = innerdata
         self.fileid = fileid
         self.rawfile = data
+        self.callerid = 'anonymous'
 
         filename = 'astsendfax-%s' % self.fileid
         self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL_ASTERISK_TMP, filename)
 
-    def setfaxparameters(self, userid, context, number, hide):
+    def setfaxparameters(self, userid, context, number):
         self.userid = userid
         self.context = context
         self.number = number.replace('.', '').replace(' ', '')
-        linelist = self.innerdata.xod_config['users'].keeplist[userid]['linelist']
-        if not linelist or hide != '0':
-            self.callerid = 'anonymous'
-        else:
-            phoneid = linelist[0]
-            self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phoneid)
+        phone_ids = self.innerdata.xod_config['users'].keeplist[userid]['linelist']
+        if phone_ids:
+            try:
+                self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phone_ids[0])
+            except KeyError:
+                # stays anonymous
+                pass
 
     def setrequester(self, requester):
         self.requester = requester
