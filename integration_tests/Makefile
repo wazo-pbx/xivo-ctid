@@ -13,6 +13,7 @@ test-setup: build-postgres
 	docker build -t xivo/xivo-ctid -f ../Dockerfile ..
 	docker pull rabbitmq
 	docker pull progrium/consul
+	docker pull xivo/asterisk
 	docker pull xivo/xivo-agentd
 
 test:
