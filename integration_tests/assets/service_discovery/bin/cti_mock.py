@@ -45,12 +45,12 @@ def consul_registration():
     bus_publisher = Publisher(bus_producer, bus_marshaler)
     config = {'consul': {'host': 'consul',
                          'port': 8500,
-                         'token': 'the_one_ring',
-                         'advertise_address': 'cti2',
-                         'advertise_port': 6262,
-                         'check_url': 'http://cti2:6262/0.1/infos',
-                         'check_url_timeout': '3s',
-                         'check_url_interval': '30s'},
+                         'token': 'the_one_ring'},
+              'service_discovery': {'advertise_address': 'cti2',
+                                    'advertise_port': 6262,
+                                    'check_url': 'http://cti2:6262/0.1/infos',
+                                    'check_url_timeout': '3s',
+                                    'check_url_interval': '30s'},
               'uuid': UUID}
     registerer = NotifyingRegisterer.from_config('xivo-ctid', bus_publisher, config)
     registerer.register()
