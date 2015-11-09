@@ -85,10 +85,8 @@ class RemoteService(object):
 
 class RemoteServiceTracker(object):
 
-    def __init__(self, consul_host, consul_port, consul_token, local_uuid, http_port):
-        self._consul_host = consul_host
-        self._consul_port = consul_port
-        self._consul_token = consul_token
+    def __init__(self, consul_config, local_uuid, http_port):
+        self._consul_config = consul_config
         this_xivo_ctid = RemoteService('xivo-ctid', None, 'localhost', http_port, ['xivo-ctid', local_uuid])
         self._services = defaultdict(lambda: defaultdict(set))
         self._services_lock = threading.Lock()
@@ -128,4 +126,4 @@ class RemoteServiceTracker(object):
             return list(self._services[service_name][uuid])
 
     def _consul_client(self):
-        return Consul(self._consul_host, self._consul_port, self._consul_token)
+        return Consul(**self._consul_config)

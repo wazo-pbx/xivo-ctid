@@ -83,9 +83,9 @@ class TestRemoteServiceTracker(unittest.TestCase):
 
     def setUp(self):
         self.uuid = 'e4d147b6-f747-4b64-955d-8c36fbcd1d3f'
-        self.tracker = remote_service.RemoteServiceTracker(s.consul_host,
-                                                           s.consul_port,
-                                                           s.consul_token,
+        self.tracker = remote_service.RemoteServiceTracker({'host': s.consul_host,
+                                                            'port': s.consul_port,
+                                                            'token': s.consul_token},
                                                            'local-uuid',
                                                            6666)
 

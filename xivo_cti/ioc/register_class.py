@@ -110,9 +110,7 @@ def setup():
     bus_marshaler = Marshaler(config['uuid'])
     bus_publisher = Publisher(bus_producer, bus_marshaler)
 
-    remote_service_tracker = RemoteServiceTracker(config['consul']['host'],
-                                                  config['consul']['port'],
-                                                  config['consul']['token'],
+    remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   config['uuid'],
                                                   config['rest_api']['port'])
 
