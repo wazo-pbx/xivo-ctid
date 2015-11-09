@@ -20,7 +20,6 @@ import os
 import select
 import signal
 import socket
-import ssl
 import sys
 import time
 import threading
@@ -30,7 +29,6 @@ from xivo import daemonize
 from xivo import xivo_logging
 from xivo_cti import config
 from xivo_cti import cti_config
-from xivo_cti import SSLPROTO
 from xivo_cti import dao
 from xivo_cti import message_hook
 from xivo_cti import http_app
@@ -582,6 +580,11 @@ class CTIServer(object):
             self._task_scheduler.schedule(delay, self._service_discovery_register)
 
     def _init_tcp_socket(self, kind, bind, port):
+        logger.debug('init tcp socket %s %s %s', kind, bind, port)
+        if kind == 'CTIS':
+            logger.debug('skipping')
+            return
+
         try:
             trueport = int(port)
             gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
@@ -678,31 +681,10 @@ class CTIServer(object):
     def _socket_detect_new_tcp_connection(self, sel_i):
         [kind, nmax] = self.fdlist_listen_cti[sel_i].split(':')
         [socketobject, address] = sel_i.accept()
-
-        if kind == 'CTI':
-            socketobject = ClientConnection(socketobject, address)
-            interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
-        elif kind == 'CTIS':
-            certfile = config['main']['certfile']
-            keyfile = config['main']['keyfile']
-            try:
-                connstream = ssl.wrap_socket(socketobject,
-                                             server_side=True,
-                                             certfile=certfile,
-                                             keyfile=keyfile,
-                                             ssl_version=SSLPROTO)
-                socketobject = ClientConnection(connstream, address)
-                interface = interface_cti.CTIS(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
-            except ssl.SSLError:
-                logger.exception('%s:%s:%d cert=%s key=%s)',
-                                 kind, address[0], address[1],
-                                 certfile,
-                                 keyfile)
-                socketobject.close()
-                socketobject = None
-
         if socketobject:
-            if kind in ['CTI', 'CTIS']:
+            if kind == 'CTI':
+                socketobject = ClientConnection(socketobject, address)
+                interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
                 logintimeout = int(config['main'].get('logintimeout', 5))
                 interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
                 self.fdlist_interface_cti[socketobject] = interface
