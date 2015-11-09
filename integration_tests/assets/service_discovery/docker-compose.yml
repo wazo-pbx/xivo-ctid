@@ -47,6 +47,7 @@ agentd:
     - "9493"
   volumes:
     - "./etc/xivo-agentd/conf.d/config.yml:/etc/xivo-agentd/conf.d/config.yml"
+    - "../_common:/data/_common"
   command: xivo-agentd -f
 asterisk:
   image: xivo/asterisk

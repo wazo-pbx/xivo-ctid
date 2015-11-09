@@ -4,4 +4,6 @@ bus:
   host: rabbitmq
 rest_api:
   listen: 0.0.0.0
+  certificate: /data/_common/ssl/agentd/server.crt
+  private_key: /data/_common/ssl/agentd/server.key
 uuid: fake-uuid

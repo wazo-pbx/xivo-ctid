@@ -13,5 +13,6 @@ consul:
      check_url_timeout: 10s
 agentd:
     host: agentd
+    verify_certificate: False
 ipbx_connection:
   ipaddress: asterisk
