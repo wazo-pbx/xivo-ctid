@@ -45,6 +45,7 @@ class ClientConnection(object):
         keyfile = config['main']['keyfile']
         try:
             self.socket.setblocking(1)
+            self.socket.settimeout(0.5)
             self.socket = ssl.wrap_socket(self.socket,
                                           server_side=True,
                                           certfile=certfile,
