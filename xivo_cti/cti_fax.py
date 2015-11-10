@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import threading
 
 from xivo_cti.ioc.context import context
 
-logger = logging.getLogger('async')
+logger = logging.getLogger(__name__)
 
 PATH_SPOOL_ASTERISK = '/var/spool/asterisk'
 PATH_SPOOL_ASTERISK_FAX = PATH_SPOOL_ASTERISK + '/fax'
@@ -32,6 +32,7 @@ PDF2FAX = '/usr/bin/xivo_pdf2fax'
 
 
 class asyncActionsThread(threading.Thread):
+
     def __init__(self, name, params):
         threading.Thread.__init__(self)
         self.setName(name)
@@ -82,33 +83,30 @@ class asyncActionsThread(threading.Thread):
 
 
 class Fax(object):
-    def __init__(self, innerdata, fileid):
+
+    def __init__(self, innerdata, fileid, data):
         self.innerdata = innerdata
         self.fileid = fileid
+        self.rawfile = data
+        self.callerid = 'anonymous'
 
         filename = 'astsendfax-%s' % self.fileid
         self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL_ASTERISK_TMP, filename)
 
-    def setfaxparameters(self, userid, context, number, hide):
+    def setfaxparameters(self, userid, context, number):
         self.userid = userid
         self.context = context
         self.number = number.replace('.', '').replace(' ', '')
-        linelist = self.innerdata.xod_config['users'].keeplist[userid]['linelist']
-        if not linelist or hide != '0':
-            self.callerid = 'anonymous'
-        else:
-            phoneid = linelist[0]
-            self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phoneid)
-
-    def setsocketref(self, socketref):
-        self.socketref = socketref
+        phone_ids = self.innerdata.xod_config['users'].keeplist[userid]['linelist']
+        if phone_ids:
+            try:
+                self.callerid = self.innerdata.xod_config['phones'].get_callerid_from_phone_id(phone_ids[0])
+            except KeyError:
+                # stays anonymous
+                pass
 
     def setrequester(self, requester):
         self.requester = requester
-
-    def setbuffer(self, rawfile):
-        """Set on the 2nd opened soocket"""
-        self.rawfile = rawfile
 
     def launchasyncs(self):
         sthread = asyncActionsThread('fax-%s' % self.fileid,
