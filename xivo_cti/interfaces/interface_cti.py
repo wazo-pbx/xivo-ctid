@@ -186,7 +186,3 @@ class CTI(interfaces.Interfaces):
             return device_manager.get_answer_fn(device_id)
         except LookupError:
             return self.answer_cb
-
-
-class CTIS(CTI):
-    kind = 'CTIS'

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -581,10 +581,6 @@ class CTIServer(object):
 
     def _init_tcp_socket(self, kind, bind, port):
         logger.debug('init tcp socket %s %s %s', kind, bind, port)
-        if kind == 'CTIS':
-            logger.debug('skipping')
-            return
-
         try:
             trueport = int(port)
             gai = socket.getaddrinfo(bind, trueport, 0, socket.SOCK_STREAM, socket.SOL_TCP)
