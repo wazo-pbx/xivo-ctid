@@ -84,8 +84,8 @@ switchboard_snom:
     password: guest
     answer_delay: 0.5
 
-# Extra consul configuration
-consul:
+# Service discovery configuration
+service_discovery:
     advertise_address: localhost
     advertise_port: 9495
     check_url: http://localhost:9495/0.1/infos

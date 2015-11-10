@@ -6,6 +6,7 @@ consul:
      host: consul
      port: 8500
      token: the_one_ring
+service_discovery:
      advertise_address: ctid
      advertise_port: 9495
      check_url: http://ctid:9495/0.1/infos
@@ -16,3 +17,9 @@ agentd:
     verify_certificate: False
 ipbx_connection:
   ipaddress: asterisk
+main:
+  incoming_tcp:
+    INFO:
+      - '0.0.0.0'
+      - 5005
+      - 1

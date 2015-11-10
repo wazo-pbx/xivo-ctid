@@ -60,6 +60,18 @@ _default_config = {
         'version': 0.1,
         'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
+    'provd': {
+        'host': 'localhost',
+        'port': 8666,
+    },
+    'service_discovery': {
+        'advertise_address': 'localhost',
+        'advertise_port': 9495,
+        'check_url': 'http://localhost:9495/0.1/infos',
+        'check_url_interval': '300s',
+        'check_url_timeout': '10s',
+        'extra_tags': [],
+    },
     'switchboard_polycom': {
         'username': 'xivo_switchboard',
         'password': 'xivo_switchboard',

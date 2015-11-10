@@ -16,6 +16,7 @@ kombu
 psycopg2
 pyyaml==3.10
 pyhamcrest
+python-consul
 python-ldap
 requests==2.0.0
 sqlalchemy

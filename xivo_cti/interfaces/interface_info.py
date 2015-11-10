@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.interfaces import interfaces
-
 import logging
 import time
+
+from xivo_cti.interfaces import interfaces
+from xivo_cti.ioc.context import context
 
 logger = logging.getLogger('interface_info')
 
@@ -28,6 +29,7 @@ infohelptext = ['',
                 'showlist [listname [id]] : show all lists or the specified list'
                 '-- slightly advanced features --',
                 'disc <ip> <port>             : closes the socket linked to <ip>:<port> if present',
+                'register <resource> <uuid> <id> : register to a resource status',
                 '']
 
 
@@ -39,6 +41,12 @@ class INFO(interfaces.Interfaces):
     def disconnected(self, cause):
         self.connid.sendall('-- disconnected message from server at %s : %s\n' % (time.asctime(), cause))
         interfaces.Interfaces.disconnected(self, cause)
+
+    def send_message(self, msg):
+        self.connid.sendall(self._cti_msg_encoder.encode(msg))
+
+    def send_encoded_message(self, data):
+        self.connid.sendall(data)
 
     def manage_connection(self, msg):
         """
@@ -94,7 +102,12 @@ class INFO(interfaces.Interfaces):
                             del self._ctiserver.fdlist_interface_cti[socktoremove]
                         else:
                             clireply.append('nobody disconnected')
-
+                elif usefulmsg.startswith('register '):
+                    _, resource_name, uuid, resource_id = usefulmsg.split()
+                    logger.debug('register: %s %s %s', resource_name, uuid, resource_id)
+                    status_forwarder = context.get('status_forwarder')
+                    notifier = getattr(status_forwarder, '%s_status_notifier' % resource_name)
+                    notifier.register(self, [(uuid, int(resource_id))])
                 else:
                     retstr = 'KO'
 

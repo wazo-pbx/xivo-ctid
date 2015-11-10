@@ -48,6 +48,7 @@ class TestStatusForwarder(unittest.TestCase):
                                          s.bus_connection,
                                          s.bus_exchange,
                                          s.async_runner,
+                                         s.service_tracker,
                                          self.agent_status_notifier,
                                          self.endpoint_status_notifier,
                                          self.user_status_notifier)
@@ -60,7 +61,8 @@ class TestStatusForwarder(unittest.TestCase):
                         s.task_queue,
                         s.bus_connection,
                         s.bus_exchange,
-                        s.async_runner)
+                        s.async_runner,
+                        s.service_tracker)
 
         assert_that(new_endpoint_notifier.call_count, equal_to(1))
         assert_that(new_user_notifier.call_count, equal_to(1))
@@ -96,13 +98,22 @@ class TestStatusForwarder(unittest.TestCase):
         self.user_status_notifier.update.assert_called_once_with(
             (xivo_id, user_id), 'busy')
 
+    def test_on_service_added_with_xivo_ctid_call_notifier(self):
+        uuid = 'ca7f87e9-c2c8-5fad-ba1b-c3140ebb9be3'
+
+        self.forwarder.on_service_added('xivo-ctid', uuid)
+
+        self.user_status_notifier.on_service_started.assert_called_once_with(uuid)
+        self.endpoint_status_notifier.on_service_started.assert_called_once_with(uuid)
+
     @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
     def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
         self.forwarder.run()
 
         _ThreadedStatusListener.assert_called_once_with(s.task_queue,
                                                         s.bus_connection, self.forwarder,
-                                                        s.bus_exchange)
+                                                        s.bus_exchange,
+                                                        s.service_tracker)
 
 
 class TestNewAgentNotifier(unittest.TestCase):
@@ -111,13 +122,14 @@ class TestNewAgentNotifier(unittest.TestCase):
     def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _new_agent_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher)
+        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher, 'agent')
 
     @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
     def test_that_agent_status_update_is_injected(self, _StatusNotifier):
         _new_agent_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.agent_status_update, s.fetcher)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.agent_status_update,
+                                                s.fetcher, 'agent')
 
 
 class TestNewEndpointNotifier(unittest.TestCase):
@@ -126,13 +138,14 @@ class TestNewEndpointNotifier(unittest.TestCase):
     def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _new_endpoint_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher)
+        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher, 'endpoint')
 
     @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
     def test_that_endpoint_status_update_is_injected(self, _StatusNotifier):
         _new_endpoint_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.endpoint_status_update, s.fetcher)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.endpoint_status_update,
+                                                s.fetcher, 'endpoint')
 
 
 class TestNewUserNotifier(unittest.TestCase):
@@ -141,13 +154,14 @@ class TestNewUserNotifier(unittest.TestCase):
     def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
         _new_user_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher)
+        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher, 'user')
 
     @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
     def test_that_user_status_update_is_injected(self, _StatusNotifier):
         _new_user_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update, s.fetcher)
+        _StatusNotifier.assert_called_once_with(ANY, CTIMessageFormatter.user_status_update,
+                                                s.fetcher, 'user')
 
 
 class TestAgentStatusFetcher(unittest.TestCase):
@@ -157,34 +171,23 @@ class TestAgentStatusFetcher(unittest.TestCase):
         self.id_ = 42
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
+        self._forwarder = Mock(StatusForwarder)
+        self._fetcher = _AgentStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
 
     def test_that_on_response_calls_the_forwarder(self):
-        forwarder = Mock(StatusForwarder)
-        result = Mock()
-        result.id = self.id_
-        result.origin_uuid = self.uuid
-        result.logged = True
+        self._fetcher._on_result(Mock(id=self.id_, origin_uuid=self.uuid, logger=True))
 
-        fetcher = _AgentStatusFetcher(forwarder, self.async_runner)
-        fetcher._on_result(result)
+        self._forwarder.on_agent_status_update.assert_called_once_with(self.key, 'logged_in')
 
-        forwarder.on_agent_status_update.assert_called_once_with(self.key, 'logged_in')
+    def test_that_fetch_get_from_a_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            get_status = _client_fn.return_value.agents.get_agent_status
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
 
-    @patch('xivo_cti.services.status_updates.forwarder.xivo_agentd_client')
-    def test_that_fetch_get_from_a_client(self, xivo_agentd_client):
-        client = xivo_agentd_client.Client.return_value = Mock()
-        forwarder = Mock(StatusForwarder)
-
-        fetcher = _AgentStatusFetcher(forwarder, self.async_runner)
-        fetcher._get_agentd_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
-        fetcher._on_result = Mock()
-
-        with synchronize(self.async_runner):
-            fetcher.fetch(self.key)
-
-        fetcher._get_agentd_client_config.assert_called_once_with(self.uuid)
-        xivo_agentd_client.Client.assert_called_once_with(host='localhost', port=6666)
-        client.agents.get_agent_status.assert_called_once_with(self.id_)
+                get_status.assert_called_once_with(self.id_)
+                on_result.assert_called_once_with(get_status.return_value)
 
 
 class TestEndpointStatusFetcher(unittest.TestCase):
@@ -194,32 +197,33 @@ class TestEndpointStatusFetcher(unittest.TestCase):
         self.id_ = 42
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
+        self._forwarder = Mock(StatusForwarder)
+        self._fetcher = _EndpointStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
 
     def test_that_on_response_calls_the_forwarder(self):
-        forwarder = Mock(StatusForwarder)
-
-        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner)
-
-        fetcher._on_result({
+        self._fetcher._on_result({
             'id': self.id_,
             'origin_uuid': self.uuid,
             'status': 8,
         })
 
-        forwarder.on_endpoint_status_update.assert_called_once_with(self.key, 8)
+        self._forwarder.on_endpoint_status_update.assert_called_once_with(self.key, 8)
 
-    @patch('xivo_cti.services.status_updates.forwarder.CtidClient')
-    def test_that_fetch_get_from_a_client(self, CtidClient):
-        client = CtidClient.return_value = Mock()
-        forwarder = Mock(StatusForwarder)
+    def test_that_fetch_get_from_a_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            get_status = _client_fn.return_value.endpoints.get
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
 
-        fetcher = _EndpointStatusFetcher(forwarder, self.async_runner)
-        fetcher._get_ctid_client_config = Mock(return_value={'host': 'localhost', 'port': 6666})
-        fetcher._on_result = Mock()
+                get_status.assert_called_once_with(self.id_)
+                on_result.assert_called_once_with(get_status.return_value)
 
-        with synchronize(self.async_runner):
-            fetcher.fetch(self.key)
+    def test_that_on_result_is_called_with_none_if_no_client(self):
+        with patch.object(self._fetcher, '_client') as _client_fn:
+            _client_fn.return_value = None
+            with patch.object(self._fetcher, '_on_result') as on_result:
+                with synchronize(self.async_runner):
+                    self._fetcher.fetch(self.key)
 
-        fetcher._get_ctid_client_config.assert_called_once_with(self.uuid)
-        CtidClient.assert_called_once_with(host='localhost', port=6666)
-        client.endpoints.get.assert_called_once_with(self.id_)
+                on_result.assert_called_once_with(None)

@@ -16,11 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os
+import json
 import time
 import psycopg2
+import socket
 
+from docker import Client
 from consul import Consul
-from hamcrest import assert_that, not_
+from hamcrest import assert_that, equal_to, not_
 from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
 
 
@@ -35,6 +38,7 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
         cls.wait_for_pg()
         cls.wait_for('agentd')
         cls.wait_for('ctid')
+        cls.stop_service('cti2')
 
     @classmethod
     def wait_for_pg(cls):
@@ -46,24 +50,31 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
                 conn.close()
                 break
             except psycopg2.OperationalError:
+                print '.',
                 time.sleep(1)
+        print 'PG is started'
 
     @classmethod
     def wait_for(cls, service):
         for _ in countdown(5):
             cls._run_cmd('docker-compose start {}'.format(service))
-            running = cls.service_status(service)[0]['State']['Running']
-            if running:
+            if cls.service_status(service)['State']['Running']:
                 return
             time.sleep(1)
 
-    def stop_service(self, service):
-        self._run_cmd('docker-compose stop {}'.format(service))
+    @classmethod
+    def stop_service(cls, service):
+        cls._run_cmd('docker-compose stop {}'.format(service))
         for _ in countdown(5):
-            running = self.service_status(service)[0]['State']['Running']
-            if not running:
-                return
+            try:
+                if not cls.service_status(service)['State']['Running']:
+                    return
+            except ValueError:
+                pass
             time.sleep(1)
+
+    def start_service(self, service):
+        self.wait_for(service)
 
 
 def countdown(n):
@@ -87,6 +98,49 @@ class TestServiceDiscovery(BaseCTIDIntegrationTests):
         registered = self._is_ctid_registered_to_consul()
 
         assert_that(not_(registered), 'xivo-ctid should not be registered on consul')
+
+    def test_that_remote_service_discovery_works_when_remote_started_after(self):
+        self.start_service('cti2')
+        uuid = 'foobar'
+
+        status = self._get_endpoint_status(uuid, 42)
+
+        assert_that(status, equal_to('patate'))
+
+    def _find_host(self, container_name):
+        c = Client(base_url='unix://var/run/docker.sock')
+        long_name = u'/{asset}_{name}_1'.format(asset=self.asset.replace('_', ''), name=container_name)
+        print long_name
+        for container in c.containers():
+            if long_name in container['Names']:
+                return c.inspect_container(container['Id'])['NetworkSettings']['IPAddress']
+        raise LookupError('could not find a running %s', container_name)
+
+    def _get_endpoint_status(self, uuid, endpoint_id):
+        ctid_host = self._find_host('ctid')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        start = time.time()
+        while True:
+            try:
+                sock.connect((ctid_host, 5005))
+                break
+            except socket.error:
+                if time.time() - start > 5:
+                    assert False
+                time.sleep(0.25)
+        sock.send('register endpoint {} {}'.format(uuid, endpoint_id))
+        start = time.time()
+        while True:
+            buf = sock.recv(4096)
+            if buf.strip() == 'XIVO-INFO:KO':
+                return None
+            elif buf.strip() == 'XIVO-INFO:OK':
+                continue
+            else:
+                return json.loads(buf)['data']['status']
+            if time.time() - start > 5:
+                raise LookupError('could not get endpoint status')
+            time.sleep(0.25)
 
     def _is_ctid_registered_to_consul(self):
         consul = Consul('localhost', '8500', 'the_one_ring')
