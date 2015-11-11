@@ -98,7 +98,7 @@ class HTTPInterface(object):
         self.load_cors(app, config)
         api = restful.Api(app, prefix='/{}'.format(self.VERSION))
         self._add_resources(api, main_thread_proxy)
-        bind_addr = (config['listen'], config['port'])
+        bind_addr = (config['http']['listen'], config['http']['port'])
         wsgi_app = wsgiserver.WSGIPathInfoDispatcher({'/': app})
         self._server = wsgiserver.CherryPyWSGIServer(bind_addr=bind_addr,
                                                      wsgi_app=wsgi_app)

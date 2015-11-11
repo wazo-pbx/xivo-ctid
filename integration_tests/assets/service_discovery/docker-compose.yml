@@ -49,8 +49,9 @@ sync:
     - asterisk
     - ctid
     - cti2
+    - agentd
   environment:
-    PORTS: "5432 5672 8500 5038 9495 6262"
+    PORTS: "5432 5672 8500 5038 9495 6262 9493"
 agentd:
   image: xivo/xivo-agentd
   links:

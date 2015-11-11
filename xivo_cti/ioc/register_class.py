@@ -112,7 +112,7 @@ def setup():
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   config['uuid'],
-                                                  config['rest_api']['port'])
+                                                  config['rest_api']['http']['port'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
 
