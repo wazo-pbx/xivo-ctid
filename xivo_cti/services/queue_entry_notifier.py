@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from collections import defaultdict
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_dao
 
 
@@ -26,7 +28,8 @@ class QueueEntryNotifier(object):
         self._cache = {}
 
     def subscribe(self, client_connection, queue_id):
-        queue_name = queue_dao.queue_name(queue_id)
+        with session_scope():
+            queue_name = queue_dao.queue_name(queue_id)
         self._cti_groups[queue_name].add(client_connection)
         if queue_name in self._cache:
             client_connection.send_message(self._cache[queue_name])

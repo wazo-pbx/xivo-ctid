@@ -17,7 +17,9 @@
 
 import logging
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import agent_status_dao
+
 from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_event import EndpointEvent
 
@@ -35,22 +37,24 @@ class AgentStatusAdapter(object):
 
     def handle_endpoint_event(self, endpoint_event):
         extension = endpoint_event.extension
-        try:
-            agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
-        except LookupError:
-            logger.debug('endpoint %s has no agent', endpoint_event.extension)
-            self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
-        else:
-            self._status_router.route(agent_id, endpoint_event)
+        with session_scope():
+            try:
+                agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
+            except LookupError:
+                logger.debug('endpoint %s has no agent', endpoint_event.extension)
+                self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
+            else:
+                self._status_router.route(agent_id, endpoint_event)
 
     def subscribe_to_agent_events(self, agent_id):
-        try:
-            number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
-        except LookupError:
-            logger.debug('agent with id %s is not logged', agent_id)
-        else:
-            extension = Extension(number, context, is_internal=True)
-            self._new_subscription(extension, agent_id)
+        with session_scope():
+            try:
+                number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
+            except LookupError:
+                logger.debug('agent with id %s is not logged', agent_id)
+            else:
+                extension = Extension(number, context, is_internal=True)
+                self._new_subscription(extension, agent_id)
 
     def unsubscribe_from_agent_events(self, agent_id):
         extension = self._agent_extensions.pop(agent_id, None)
@@ -58,8 +62,9 @@ class AgentStatusAdapter(object):
             self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
 
     def subscribe_all_logged_agents(self):
-        for agent_id in agent_status_dao.get_logged_agent_ids():
-            self.subscribe_to_agent_events(agent_id)
+        with session_scope():
+            for agent_id in agent_status_dao.get_logged_agent_ids():
+                self.subscribe_to_agent_events(agent_id)
 
     def _new_subscription(self, extension, agent_id):
         self._agent_extensions[agent_id] = extension

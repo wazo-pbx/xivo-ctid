@@ -18,7 +18,9 @@
 import logging
 import time
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_dao
+
 from xivo_cti.exception import NoSuchUserException, NoSuchLineException
 
 logger = logging.getLogger("UserDAO")
@@ -48,57 +50,67 @@ class UserDAO(object):
             raise NoSuchUserException(user_id)
 
     def enable_dnd(self, user_id):
-        user_dao.enable_dnd(user_id)
+        with session_scope():
+            user_dao.enable_dnd(user_id)
         user = self._user(user_id)
         user['enablednd'] = True
 
     def disable_dnd(self, user_id):
-        user_dao.disable_dnd(user_id)
+        with session_scope():
+            user_dao.disable_dnd(user_id)
         user = self._user(user_id)
         user['enablednd'] = False
 
     def enable_filter(self, user_id):
-        user_dao.enable_filter(user_id)
+        with session_scope():
+            user_dao.enable_filter(user_id)
         user = self._user(user_id)
         user['incallfilter'] = True
 
     def disable_filter(self, user_id):
-        user_dao.disable_filter(user_id)
+        with session_scope():
+            user_dao.disable_filter(user_id)
         user = self._user(user_id)
         user['incallfilter'] = False
 
     def enable_unconditional_fwd(self, user_id, destination):
-        user_dao.enable_unconditional_fwd(user_id, destination)
+        with session_scope():
+            user_dao.enable_unconditional_fwd(user_id, destination)
         user = self._user(user_id)
         user['enableunc'] = True
         user['destunc'] = destination
 
     def disable_unconditional_fwd(self, user_id, destination):
-        user_dao.disable_unconditional_fwd(user_id, destination)
+        with session_scope():
+            user_dao.disable_unconditional_fwd(user_id, destination)
         user = self._user(user_id)
         user['destunc'] = destination
         user['enableunc'] = False
 
     def enable_rna_fwd(self, user_id, destination):
-        user_dao.enable_rna_fwd(user_id, destination)
+        with session_scope():
+            user_dao.enable_rna_fwd(user_id, destination)
         user = self._user(user_id)
         user['enablerna'] = True
         user['destrna'] = destination
 
     def disable_rna_fwd(self, user_id, destination):
-        user_dao.disable_rna_fwd(user_id, destination)
+        with session_scope():
+            user_dao.disable_rna_fwd(user_id, destination)
         user = self._user(user_id)
         user['destrna'] = destination
         user['enablerna'] = False
 
     def enable_busy_fwd(self, user_id, destination):
-        user_dao.enable_busy_fwd(user_id, destination)
+        with session_scope():
+            user_dao.enable_busy_fwd(user_id, destination)
         user = self._user(user_id)
         user['enablebusy'] = True
         user['destbusy'] = destination
 
     def disable_busy_fwd(self, user_id, destination):
-        user_dao.disable_busy_fwd(user_id, destination)
+        with session_scope():
+            user_dao.disable_busy_fwd(user_id, destination)
         user = self._user(user_id)
         user['destbusy'] = destination
         user['enablebusy'] = False
@@ -151,7 +163,8 @@ class UserDAO(object):
         try:
             line = self.get_line(user_id)
         except (NoSuchUserException, NoSuchLineException):
-            return user_dao.get_context(user_id)
+            with session_scope():
+                return user_dao.get_context(user_id)
         return line['context']
 
     def get_cti_profile_id(self, user_id):

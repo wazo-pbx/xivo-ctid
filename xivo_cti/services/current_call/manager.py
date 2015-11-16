@@ -22,7 +22,10 @@ from xivo_cti.exception import NoSuchLineException
 from xivo import caller_id
 from xivo.asterisk.extension import Extension
 from xivo.asterisk.line_identity import identity_from_channel
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
+
 from xivo_cti import dao
 
 
@@ -311,7 +314,8 @@ class CurrentCallManager(object):
 
     def _get_ongoing_calls(self, user_id):
         try:
-            line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
+            with session_scope():
+                line = user_line_dao.get_line_identity_by_user_id(user_id).lower()
         except LookupError:
             raise LookupError('User %s has no line' % user_id)
         else:

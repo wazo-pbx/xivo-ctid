@@ -19,6 +19,8 @@ import time
 import logging
 
 from xivo_cti.ami import ami_callback_handler
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_info_dao
 
 logger = logging.getLogger('XiVO queue logger')
@@ -91,7 +93,8 @@ class QueueLogger(object):
 
         cls._trace_event(ev)
 
-        queue_info_dao.add_entry(ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
+        with session_scope():
+            queue_info_dao.add_entry(ev[CALLTIME], ev[QUEUE], ev[CALLERIDNUM], ev[UNIQUEID])
 
     @classmethod
     def AgentConnect(cls, ev):
@@ -101,7 +104,9 @@ class QueueLogger(object):
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         cls._trace_event(ev)
-        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME], ev[INTERFACE])
+
+        with session_scope():
+            queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME], ev[INTERFACE])
 
     @classmethod
     def AgentComplete(cls, ev):
@@ -111,7 +116,9 @@ class QueueLogger(object):
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         del cls.cache[ev[QUEUE]][ev[UNIQUEID]]
-        queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
+
+        with session_scope():
+            queue_info_dao.update_talktime(ev[UNIQUEID], ct, ev[TALKTIME])
 
     @classmethod
     def QueueCallerLeave(cls, ev):
@@ -122,6 +129,8 @@ class QueueLogger(object):
         ct = cls.cache[ev[QUEUE]][ev[UNIQUEID]][CALLTIME]
 
         cls._trace_event(ev)
-        queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME])
+
+        with session_scope():
+            queue_info_dao.update_holdtime(ev[UNIQUEID], ct, ev[HOLDTIME])
 
         cls._clean_cache()

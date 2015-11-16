@@ -27,7 +27,7 @@ from xivo_cti.ioc import register_class
 def main():
     cti_config.init_cli_config(sys.argv[1:])
     cti_config.init_config_file()
-    xivo_dao.init_db_from_config(config, legacy_mode=True)
+    xivo_dao.init_db_from_config(config)
     cti_config.update_db_config()
 
     register_class.setup()

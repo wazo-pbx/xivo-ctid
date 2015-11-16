@@ -17,6 +17,7 @@
 
 import logging
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao.resources.call_log import dao as call_log_dao
 
 from .calls import Call
@@ -36,8 +37,9 @@ def history_for_phone(phone, limit):
 
 
 def all_calls_for_phone(identifier, limit):
-    call_logs = call_log_dao.find_all_history_for_phone(identifier, limit)
-    return _convert_all_call_logs(call_logs, identifier)
+    with session_scope():
+        call_logs = call_log_dao.find_all_history_for_phone(identifier, limit)
+        return _convert_all_call_logs(call_logs, identifier)
 
 
 def _convert_all_call_logs(call_logs, identifier):

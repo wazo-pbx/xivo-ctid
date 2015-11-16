@@ -16,8 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from xivo_cti.cti.commands.invite_confroom import InviteConfroom
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 from xivo_dao import meetme_dao
+
 from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
 from xivo_cti.tools.idconverter import IdConverter
@@ -48,41 +51,45 @@ def register_callbacks():
 
 def parse_join(event):
     number = event[CONF_ROOM_NUMBER]
-    if meetme_dao.is_a_meetme(number):
-        context.get('meetme_service_manager').join(
-            event[CHANNEL],
-            number,
-            int(event[USER]),
-            event[CIDNAME],
-            event[CIDNUMBER])
+    with session_scope():
+        if meetme_dao.is_a_meetme(number):
+            context.get('meetme_service_manager').join(
+                event[CHANNEL],
+                number,
+                int(event[USER]),
+                event[CIDNAME],
+                event[CIDNUMBER])
 
 
 def parse_leave(event):
     number = event[CONF_ROOM_NUMBER]
-    if meetme_dao.is_a_meetme(number):
-        context.get('meetme_service_manager').leave(number, int(event[USER]))
+    with session_scope():
+        if meetme_dao.is_a_meetme(number):
+            context.get('meetme_service_manager').leave(number, int(event[USER]))
 
 
 def parse_meetmelist(event):
     number = event['Conference']
-    if meetme_dao.is_a_meetme(number):
-        context.get('meetme_service_manager').refresh(
-            event[CHANNEL],
-            number,
-            int(event['UserNumber']),
-            event['CallerIDName'],
-            event['CallerIDNum'],
-            event['Muted'] == YES)
+    with session_scope():
+        if meetme_dao.is_a_meetme(number):
+            context.get('meetme_service_manager').refresh(
+                event[CHANNEL],
+                number,
+                int(event['UserNumber']),
+                event['CallerIDName'],
+                event['CallerIDNum'],
+                event['Muted'] == YES)
 
 
 def parse_meetmemute(event):
     number = event['Meetme']
-    if meetme_dao.is_a_meetme(number):
-        muting = event['Status'] == 'on'
-        if muting:
-            context.get('meetme_service_manager').mute(number, int(event[USER]))
-        else:
-            context.get('meetme_service_manager').unmute(number, int(event[USER]))
+    with session_scope():
+        if meetme_dao.is_a_meetme(number):
+            muting = event['Status'] == 'on'
+            if muting:
+                context.get('meetme_service_manager').mute(number, int(event[USER]))
+            else:
+                context.get('meetme_service_manager').unmute(number, int(event[USER]))
 
 
 class MeetmeServiceManager(object):
@@ -94,7 +101,8 @@ class MeetmeServiceManager(object):
 
     def initialize(self):
         old_cache = deepcopy(self._cache)
-        configs = meetme_dao.get_configs()
+        with session_scope():
+            configs = meetme_dao.get_configs()
         self._cache = {}
         for config in configs:
             self._add_room(*config)
@@ -126,14 +134,19 @@ class MeetmeServiceManager(object):
         logger.debug('Join %s %s %s %s %s', channel, conf_number, join_seq_number, cid_name, cid_num)
         if cid_num == conf_number:
             try:
-                cid_all, cid_name, cid_num = user_line_dao.get_cid_for_channel(channel)
+                with session_scope():
+                    cid_all, cid_name, cid_num = user_line_dao.get_cid_for_channel(channel)
             except (ValueError, LookupError):
                 logger.info('Joining from an originate, cannot get Caller ID from this channel')
+
+        with session_scope():
+            muted = meetme_dao.muted_on_join_by_number(conf_number)
+
         member_status = _build_joining_member_status(join_seq_number,
                                                      cid_name,
                                                      cid_num,
                                                      channel,
-                                                     meetme_dao.muted_on_join_by_number(conf_number))
+                                                     muted)
         self._set_room_config(conf_number)
         if not self._has_members(conf_number):
             self._cache[conf_number]['start_time'] = time.time()
@@ -178,8 +191,9 @@ class MeetmeServiceManager(object):
 
     def _set_room_config(self, room_number):
         if room_number not in self._cache:
-            meetme_id = meetme_dao.find_by_confno(room_number)
-            config = meetme_dao.get_config(meetme_id)
+            with session_scope():
+                meetme_id = meetme_dao.find_by_confno(room_number)
+                config = meetme_dao.get_config(meetme_id)
             self._add_room(*config)
 
     def _add_room(self, name, number, has_pin, context):

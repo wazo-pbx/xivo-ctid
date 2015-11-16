@@ -16,7 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from collections import namedtuple
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_dao
+
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -213,7 +216,8 @@ class QueueEntryManager(object):
             self._queue_entries.pop(queue_name)
 
     def _encode_stats(self, queue_name):
-        queue_id = queue_dao.id_from_name(queue_name)
+        with session_scope():
+            queue_id = queue_dao.id_from_name(queue_name)
         realtime_stat = {'%s' % queue_id: {u'Xivo-WaitingCalls': len(self._queue_entries[queue_name])}}
         if len(self._queue_entries[queue_name]) >= 1:
             longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
