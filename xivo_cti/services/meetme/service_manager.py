@@ -50,46 +50,50 @@ def register_callbacks():
 
 
 def parse_join(event):
-    number = event[CONF_ROOM_NUMBER]
     with session_scope():
-        if meetme_dao.is_a_meetme(number):
-            context.get('meetme_service_manager').join(
-                event[CHANNEL],
-                number,
-                int(event[USER]),
-                event[CIDNAME],
-                event[CIDNUMBER])
+        number = event[CONF_ROOM_NUMBER]
+        is_a_meetme = meetme_dao.is_a_meetme(number)
+    if is_a_meetme:
+        context.get('meetme_service_manager').join(
+            event[CHANNEL],
+            number,
+            int(event[USER]),
+            event[CIDNAME],
+            event[CIDNUMBER])
 
 
 def parse_leave(event):
-    number = event[CONF_ROOM_NUMBER]
     with session_scope():
-        if meetme_dao.is_a_meetme(number):
-            context.get('meetme_service_manager').leave(number, int(event[USER]))
+        number = event[CONF_ROOM_NUMBER]
+        is_a_meetme = meetme_dao.is_a_meetme(number)
+    if is_a_meetme:
+        context.get('meetme_service_manager').leave(number, int(event[USER]))
 
 
 def parse_meetmelist(event):
-    number = event['Conference']
     with session_scope():
-        if meetme_dao.is_a_meetme(number):
-            context.get('meetme_service_manager').refresh(
-                event[CHANNEL],
-                number,
-                int(event['UserNumber']),
-                event['CallerIDName'],
-                event['CallerIDNum'],
-                event['Muted'] == YES)
+        number = event['Conference']
+        is_a_meetme = meetme_dao.is_a_meetme(number)
+    if is_a_meetme:
+        context.get('meetme_service_manager').refresh(
+            event[CHANNEL],
+            number,
+            int(event['UserNumber']),
+            event['CallerIDName'],
+            event['CallerIDNum'],
+            event['Muted'] == YES)
 
 
 def parse_meetmemute(event):
-    number = event['Meetme']
     with session_scope():
-        if meetme_dao.is_a_meetme(number):
-            muting = event['Status'] == 'on'
-            if muting:
-                context.get('meetme_service_manager').mute(number, int(event[USER]))
-            else:
-                context.get('meetme_service_manager').unmute(number, int(event[USER]))
+        number = event['Meetme']
+        is_a_meetme = meetme_dao.is_a_meetme(number)
+    if is_a_meetme:
+        muting = event['Status'] == 'on'
+        if muting:
+            context.get('meetme_service_manager').mute(number, int(event[USER]))
+        else:
+            context.get('meetme_service_manager').unmute(number, int(event[USER]))
 
 
 class MeetmeServiceManager(object):
