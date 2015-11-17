@@ -192,13 +192,12 @@ class DaoList(object):
             return self._format_voicemail_data(voicemail)
 
     def _format_voicemail_data(self, voicemail):
-        with session_scope():
-            res = {}
-            key = str(voicemail.uniqueid)
-            res[key] = voicemail.todict()
-            res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
-            res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
-            return res
+        res = {}
+        key = str(voicemail.uniqueid)
+        res[key] = voicemail.todict()
+        res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
+        res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
+        return res
 
     def _get_trunks(self):
         with session_scope():
