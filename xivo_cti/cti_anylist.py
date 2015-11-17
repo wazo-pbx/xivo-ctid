@@ -49,6 +49,7 @@ class AnyList(object):
             'enablexfer',
             'incallfilter',
             'linelist',
+            'xivo_uuid',
         ],
         'phones': [
             'context',
