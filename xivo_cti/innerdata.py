@@ -36,6 +36,8 @@ from xivo_cti.ioc.context import context
 from xivo_cti.lists import (agents_list, groups_list, meetmes_list,
                             phones_list, queues_list, users_list, voicemails_list,
                             trunks_list)
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao import trunk_dao
@@ -50,10 +52,12 @@ TWO_MONTHS = timedelta(days=60).total_seconds()
 
 @contextmanager
 def auth_client(userid):
-    user = user_dao.get(userid)
-    yield AuthClient(username=user.username,
-                     password=user.password,
-                     **config['auth'])
+    with session_scope():
+        user = user_dao.get(userid)
+        username = user.username
+        password = user.password
+
+    yield AuthClient(username=username, password=password, **config['auth'])
 
 
 class Safe(object):
@@ -168,8 +172,9 @@ class Safe(object):
                 phone_id = self.zphones(proto, agent_number)
                 if not phone_id:
                     return
-                user = user_dao.get_main_user_by_line_id(phone_id)
-                data_id = str(user.id)
+                with session_scope():
+                    user = user_dao.get_main_user_by_line_id(phone_id)
+                    data_id = str(user.id)
             _set('desttype', data_type)
             _set('destid', data_id)
         except NotFoundError:
@@ -254,9 +259,11 @@ class Safe(object):
             elif dest_type == 'agent':
                 domatch = user['agentid'] == int(dest_id)
             elif dest_type == 'queue' and dest_id:
-                domatch = queue_dao.is_user_member_of_queue(userid, dest_id)
+                with session_scope():
+                    domatch = queue_dao.is_user_member_of_queue(userid, dest_id)
             elif dest_type == 'group' and dest_id:
-                domatch = group_dao.is_user_member_of_group(userid, dest_id)
+                with session_scope():
+                    domatch = group_dao.is_user_member_of_group(userid, dest_id)
         else:
             # 'all' case
             domatch = True
@@ -293,8 +300,9 @@ class Safe(object):
         return filter(channel_filter, self.channels)
 
     def user_get_hashed_password(self, userid, sessionid):
-        tohash = '%s:%s' % (sessionid,
-                            user_dao.get(userid).password)
+        with session_scope():
+            password = user_dao.get(userid).password
+        tohash = '%s:%s' % (sessionid, password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
 
@@ -485,7 +493,8 @@ class Safe(object):
 
     def ztrunks(self, protocol, name):
         try:
-            return trunk_dao.find_by_proto_name(protocol, name)
+            with session_scope():
+                return trunk_dao.find_by_proto_name(protocol, name)
         except (LookupError, ValueError):
             return None
 

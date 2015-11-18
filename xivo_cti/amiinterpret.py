@@ -22,6 +22,9 @@ import time
 from xivo_cti import ALPHANUMS
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_cti.channel import ChannelRole
+
+from xivo_dao.helpers.db_utils import session_scope
+
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
 from xivo_dao import user_dao
@@ -135,7 +138,9 @@ class AMI_1_8(object):
         xivo_userid = event.get('XIVO_USERID')
         destination_user_id = int(event['XIVO_DSTID'])
         channel_name = event['CHANNEL']
-        destination_name, destination_number = user_dao.get_name_number(destination_user_id)
+
+        with session_scope():
+            destination_name, destination_number = user_dao.get_name_number(destination_user_id)
 
         _set('desttype', 'user')
         _set('destid', destination_user_id)
@@ -152,7 +157,9 @@ class AMI_1_8(object):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
         queue_id = int(event['XIVO_DSTID'])
-        queue_name, queue_number = queue_dao.get_display_name_number(queue_id)
+
+        with session_scope():
+            queue_name, queue_number = queue_dao.get_display_name_number(queue_id)
 
         _set('calledidname', queue_name)
         _set('queuename', queue_name)
@@ -164,7 +171,9 @@ class AMI_1_8(object):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
         group_id = int(event['XIVO_DSTID'])
-        group_name, group_number = group_dao.get_name_number(group_id)
+
+        with session_scope():
+            group_name, group_number = group_dao.get_name_number(group_id)
 
         _set('calledidname', group_name)
         _set('calledidnum', group_number)
@@ -186,7 +195,10 @@ class AMI_1_8(object):
         _set('calleridrdnis', calleridrdnis)
         _set('calleridton', calleridton)
         _set('channel', chanprops.channel)
-        incall = incall_dao.get_by_exten(didnumber)
+
+        with session_scope():
+            incall = incall_dao.get_by_exten(didnumber)
+
         if incall:
             _set('desttype', incall.action)
             _set('destid', incall.actionarg1)

@@ -25,6 +25,8 @@ from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.tools.extension import InvalidExtension
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_dao
 
 logger = logging.getLogger(__name__)
@@ -161,11 +163,13 @@ class UserServiceManager(object):
         client_connection.answer_cb()
 
     def enable_recording(self, target):
-        user_dao.enable_recording(target)
+        with session_scope():
+            user_dao.enable_recording(target)
         self.user_service_notifier.recording_enabled(target)
 
     def disable_recording(self, target):
-        user_dao.disable_recording(target)
+        with session_scope():
+            user_dao.disable_recording(target)
         self.user_service_notifier.recording_disabled(target)
 
     def _dial(self, user_id, exten):

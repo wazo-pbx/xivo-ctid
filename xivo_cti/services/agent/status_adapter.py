@@ -17,7 +17,9 @@
 
 import logging
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import agent_status_dao
+
 from xivo.asterisk.extension import Extension
 from xivo_cti.model.endpoint_event import EndpointEvent
 
@@ -36,7 +38,8 @@ class AgentStatusAdapter(object):
     def handle_endpoint_event(self, endpoint_event):
         extension = endpoint_event.extension
         try:
-            agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
+            with session_scope():
+                agent_id = agent_status_dao.get_agent_id_from_extension(extension.number, extension.context)
         except LookupError:
             logger.debug('endpoint %s has no agent', endpoint_event.extension)
             self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
@@ -45,7 +48,8 @@ class AgentStatusAdapter(object):
 
     def subscribe_to_agent_events(self, agent_id):
         try:
-            number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
+            with session_scope():
+                number, context = agent_status_dao.get_extension_from_agent_id(agent_id)
         except LookupError:
             logger.debug('agent with id %s is not logged', agent_id)
         else:
@@ -58,7 +62,9 @@ class AgentStatusAdapter(object):
             self._endpoint_notifier.unsubscribe_from_status_changes(extension, self.handle_endpoint_event)
 
     def subscribe_all_logged_agents(self):
-        for agent_id in agent_status_dao.get_logged_agent_ids():
+        with session_scope():
+            agent_ids = agent_status_dao.get_logged_agent_ids()
+        for agent_id in agent_ids:
             self.subscribe_to_agent_events(agent_id)
 
     def _new_subscription(self, extension, agent_id):

@@ -23,6 +23,8 @@ from xivo_cti import cti_fax, dao
 from xivo_cti import config
 from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import extensions_dao
 
 logger = logging.getLogger('cti_command')
@@ -381,7 +383,8 @@ class Command(object):
                 phoneidstruct_dst = innerdata.xod_config.get('phones').keeplist.get(dst.get('id'))
         elif dst.get('type') == 'voicemail':
             try:
-                exten = extensions_dao.exten_by_name('vmusermsg')
+                with session_scope():
+                    exten = extensions_dao.exten_by_name('vmusermsg')
                 vm = innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 extentodial = exten
                 dst_context = vm['context']
@@ -450,7 +453,8 @@ class Command(object):
             elif dst['type'] == 'voicemail' and dst['id'] in self.innerdata.xod_config['voicemails'].keeplist:
                 voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
                 vm_number = voicemail['mailbox']
-                prefix = extensions_dao.exten_by_name('vmboxslt')
+                with session_scope():
+                    prefix = extensions_dao.exten_by_name('vmboxslt')
                 extentodial = prefix[:-1] + vm_number
                 dst_context = voicemail['context']
             elif dst['type'] == 'meetme' and dst['id'] in self.innerdata.xod_config['meetmes'].keeplist:

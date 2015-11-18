@@ -18,6 +18,8 @@
 from xivo.asterisk.extension import Extension
 from xivo.asterisk.protocol_interface import protocol_interface_from_channel
 from xivo_cti.model.endpoint_status import EndpointStatus
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import line_dao
 
 
@@ -42,8 +44,9 @@ def get_extension_from_channel(channel):
     protocol_interface = protocol_interface_from_channel(channel)
 
     try:
-        extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
-                                                                   protocol_interface.interface)
+        with session_scope():
+            extension = line_dao.get_extension_from_protocol_interface(protocol_interface.protocol,
+                                                                       protocol_interface.interface)
     except (LookupError, ValueError):
         extension = Extension(number='', context='', is_internal=False)
     return extension

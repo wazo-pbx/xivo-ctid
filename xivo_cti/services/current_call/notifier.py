@@ -18,6 +18,8 @@
 import logging
 
 from xivo_cti.client_connection import ClientConnection
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 
 logger = logging.getLogger(__name__)
@@ -32,7 +34,8 @@ class CurrentCallNotifier(object):
     def subscribe(self, client_connection):
         try:
             user_id = client_connection.user_id()
-            line_identity = user_line_dao.get_line_identity_by_user_id(user_id).lower()
+            with session_scope():
+                line_identity = user_line_dao.get_line_identity_by_user_id(user_id).lower()
         except LookupError:
             logging.warning('User %s tried to subscribe to current_calls with no line', user_id)
         else:

@@ -18,6 +18,8 @@
 from xivo import xivo_helpers
 
 from xivo_cti import dao
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import extensions_dao, user_dao
 
 
@@ -32,9 +34,10 @@ class FunckeyManager(object):
         self.dao = dao
 
     def _device(self, user_id, name, destination=''):
-        funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')
-        funckey_args = (user_id, extensions_dao.exten_by_name(name), destination)
-        funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
+        with session_scope():
+            funckey_prefix = extensions_dao.exten_by_name('phoneprogfunckey')
+            funckey_args = (user_id, extensions_dao.exten_by_name(name), destination)
+            funckey_pattern = xivo_helpers.fkey_extension(funckey_prefix, funckey_args)
 
         hint = self.DEVICE_PATTERN % funckey_pattern
 
@@ -97,21 +100,27 @@ def parse_update_user_config(manager, event):
 
 
 def _set_fwd_busy_blf(manager, user_id):
+    with session_scope():
+        destination = user_dao.get_dest_busy(user_id)
+        forward = user_dao.get_fwd_busy(user_id)
+
     manager.disable_all_busy_fwd(user_id)
-    manager.busy_fwd_in_use(user_id,
-                            user_dao.get_dest_busy(user_id),
-                            user_dao.get_fwd_busy(user_id))
+    manager.busy_fwd_in_use(user_id, destination, forward)
 
 
 def _set_fwd_rna_blf(manager, user_id):
+    with session_scope():
+        destination = user_dao.get_dest_rna(user_id)
+        forward = user_dao.get_fwd_rna(user_id)
+
     manager.disable_all_rna_fwd(user_id)
-    manager.rna_fwd_in_use(user_id,
-                           user_dao.get_dest_rna(user_id),
-                           user_dao.get_fwd_rna(user_id))
+    manager.rna_fwd_in_use(user_id, destination, forward)
 
 
 def _set_fwd_unc_blf(manager, user_id):
+    with session_scope():
+        destination = user_dao.get_dest_unc(user_id)
+        forward = user_dao.get_fwd_unc(user_id)
+
     manager.disable_all_unconditional_fwd(user_id)
-    manager.unconditional_fwd_in_use(user_id,
-                                     user_dao.get_dest_unc(user_id),
-                                     user_dao.get_fwd_unc(user_id))
+    manager.unconditional_fwd_in_use(user_id, destination, forward)

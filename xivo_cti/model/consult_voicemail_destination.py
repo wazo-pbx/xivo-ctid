@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_cti.model.destination import Destination
 from xivo_dao import extensions_dao
 
@@ -22,4 +23,5 @@ from xivo_dao import extensions_dao
 class ConsultVoicemailDestination(Destination):
 
     def to_exten(self):
-        return extensions_dao.exten_by_name('vmusermsg')
+        with session_scope():
+            return extensions_dao.exten_by_name('vmusermsg')

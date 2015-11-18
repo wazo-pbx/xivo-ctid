@@ -16,7 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_statistic_dao
+
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.model.queuestatistic import QueueStatistic
@@ -47,29 +50,29 @@ class QueueStatisticsManager(object):
         self._ami_class = ami_class
 
     def get_statistics(self, queue_name, xqos, window):
-        dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
+        with session_scope():
+            dao_queue_statistic = queue_statistic_dao.get_statistics(queue_name, window, xqos)
+            queue_statistic = QueueStatistic()
+            queue_statistic.received_call_count = dao_queue_statistic.received_call_count
+            queue_statistic.answered_call_count = dao_queue_statistic.answered_call_count
+            queue_statistic.abandonned_call_count = dao_queue_statistic.abandonned_call_count
+            if dao_queue_statistic.max_hold_time is None:
+                queue_statistic.max_hold_time = ''
+            else:
+                queue_statistic.max_hold_time = dao_queue_statistic.max_hold_time
+            if dao_queue_statistic.mean_hold_time is None:
+                queue_statistic.mean_hold_time = ''
+            else:
+                queue_statistic.mean_hold_time = dao_queue_statistic.mean_hold_time
 
-        queue_statistic = QueueStatistic()
-        queue_statistic.received_call_count = dao_queue_statistic.received_call_count
-        queue_statistic.answered_call_count = dao_queue_statistic.answered_call_count
-        queue_statistic.abandonned_call_count = dao_queue_statistic.abandonned_call_count
-        if dao_queue_statistic.max_hold_time is None:
-            queue_statistic.max_hold_time = ''
-        else:
-            queue_statistic.max_hold_time = dao_queue_statistic.max_hold_time
-        if dao_queue_statistic.mean_hold_time is None:
-            queue_statistic.mean_hold_time = ''
-        else:
-            queue_statistic.mean_hold_time = dao_queue_statistic.mean_hold_time
+            if queue_statistic.answered_call_count:
+                received_and_done = dao_queue_statistic.received_and_done
+                if received_and_done:
+                    queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100)))
 
-        if queue_statistic.answered_call_count:
-            received_and_done = dao_queue_statistic.received_and_done
-            if received_and_done:
-                queue_statistic.efficiency = int(round((float(queue_statistic.answered_call_count) / received_and_done * 100)))
-
-            answered_in_qos = dao_queue_statistic.answered_call_in_qos_count
-            queue_statistic.qos = int(round(float(answered_in_qos) / queue_statistic.answered_call_count * 100))
-        return queue_statistic
+                answered_in_qos = dao_queue_statistic.answered_call_in_qos_count
+                queue_statistic.qos = int(round(float(answered_in_qos) / queue_statistic.answered_call_count * 100))
+            return queue_statistic
 
     def get_queue_summary(self, queue_name):
         if dao.queue.exists(queue_name):

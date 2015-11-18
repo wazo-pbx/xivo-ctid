@@ -18,6 +18,8 @@
 import logging
 from xivo_cti.services.queue_member.common import format_queue_member_id
 from xivo_cti.services.queue_member.member import QueueMember, QueueMemberState
+
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_member_dao
 
 logger = logging.getLogger('QueueMemberUpdater')
@@ -35,22 +37,31 @@ class QueueMemberUpdater(object):
         # is actually done in the AMIInitializer class
 
     def _add_dao_queue_members_on_init(self):
-        for dao_queue_member in queue_member_dao.get_queue_members_for_queues():
-            queue_member = QueueMember.from_dao_queue_member(dao_queue_member)
+        with session_scope():
+            queue_members = [QueueMember.from_dao_queue_member(row)
+                             for row in queue_member_dao.get_queue_members_for_queues()]
+        for queue_member in queue_members:
             self._queue_member_manager._add_queue_member(queue_member)
 
     def _add_dao_queue_members_on_update(self):
         old_queue_member_ids = set(self._queue_member_manager.get_queue_members_id())
         new_queue_member_ids = set()
-        for dao_queue_member in queue_member_dao.get_queue_members_for_queues():
-            queue_name = dao_queue_member.queue_name
-            member_name = dao_queue_member.member_name
-            queue_member_id = format_queue_member_id(queue_name, member_name)
-            new_queue_member_ids.add(queue_member_id)
-            if queue_member_id not in old_queue_member_ids:
-                queue_member = QueueMember.from_dao_queue_member(dao_queue_member)
-                self._queue_member_manager._add_queue_member(queue_member)
-                self._ask_member_queue_status(queue_member)
+        add_queue_members = []
+
+        with session_scope():
+            for dao_queue_member in queue_member_dao.get_queue_members_for_queues():
+                queue_name = dao_queue_member.queue_name
+                member_name = dao_queue_member.member_name
+                queue_member_id = format_queue_member_id(queue_name, member_name)
+                new_queue_member_ids.add(queue_member_id)
+                if queue_member_id not in old_queue_member_ids:
+                    queue_member = QueueMember.from_dao_queue_member(dao_queue_member)
+                    add_queue_members.append(queue_member)
+
+        for queue_member in add_queue_members:
+            self._queue_member_manager._add_queue_member(queue_member)
+            self._ask_member_queue_status(queue_member)
+
         obsolete_queue_member_ids = old_queue_member_ids - new_queue_member_ids
         return obsolete_queue_member_ids
 

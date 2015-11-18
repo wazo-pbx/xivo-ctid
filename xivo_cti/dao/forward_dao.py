@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_dao.helpers.db_utils import session_scope
+
 
 class ForwardDAO(object):
 
@@ -31,5 +33,6 @@ class ForwardDAO(object):
         return self._filter_fwd_type(user_id, 'busy')
 
     def _filter_fwd_type(self, user_id, fwd_type):
-        return [fwd.number or ''
-                for fwd in self.dao.find_all_forwards(user_id, fwd_type)]
+        with session_scope():
+            return [fwd.number or ''
+                    for fwd in self.dao.find_all_forwards(user_id, fwd_type)]

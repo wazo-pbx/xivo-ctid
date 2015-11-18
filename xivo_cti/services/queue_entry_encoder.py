@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import queue_dao
 
 
@@ -58,8 +59,9 @@ class QueueEntryEncoder(object):
     def _build_state(self, queue_name, entry_list):
         state = dict(self.STATE_TEMPLATE)
 
-        state['queue_name'] = queue_name
-        state['queue_id'] = queue_dao.id_from_name(queue_name)
-        state['entries'] = entry_list
+        with session_scope():
+            state['queue_name'] = queue_name
+            state['queue_id'] = queue_dao.id_from_name(queue_name)
+            state['entries'] = entry_list
 
         return state
