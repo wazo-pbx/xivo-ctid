@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,7 +58,9 @@ class ClientConnection(object):
             data = self.sendqueue.popleft()
             try:
                 n = self.socket.send(data)
-                if n < len(data):  # there is some data left to be sent
+                if n == 0:
+                    return
+                elif n < len(data):  # there is some data left to be sent
                     self.sendqueue.appendleft(data[n:])
             except socket.error, (_errno, string):
                 if _errno == errno.EAGAIN:
