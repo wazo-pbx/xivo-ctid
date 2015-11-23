@@ -242,7 +242,7 @@ class Command(object):
 
         dest = 'xivo/{}'.format(user_id)
         self._othermessages.append({'dest': dest,
-                                    'message': {'to': self._commanddict.get('to'),
+                                    'message': {'to': self._commanddict['to'],
                                                 'from': (config['uuid'], self.ruserid),
                                                 'text': chitchattext}})
         return reply
