@@ -19,10 +19,10 @@ import logging
 from xivo_cti.tools.idconverter import IdConverter
 
 from xivo_dao.helpers.db_utils import session_scope
+from xivo_dao.resources.user import dao as user_dao
 from xivo_dao import agent_dao
 from xivo_dao import user_line_dao
 from xivo_dao import agent_status_dao
-from xivo_dao import user_dao
 from xivo_dao import queue_dao
 
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
@@ -96,17 +96,18 @@ class AgentServiceManager(object):
     def _transform_agent_xid(self, user_id, agent_xid):
         if not agent_xid or agent_xid == 'agent:special:me':
             with session_scope():
-                agent_id = user_dao.agent_id(user_id)
+                user = user_dao.find(user_id)
+                if user:
+                    return user.agentid
         else:
-            agent_id = IdConverter.xid_to_id(agent_xid)
-        return agent_id
+            return IdConverter.xid_to_id(agent_xid)
 
     def find_agent_exten(self, agent_id):
         with session_scope():
-            user_ids = user_dao.find_by_agent_id(agent_id)
             line_ids = []
-            for user_id in user_ids:
-                line_ids.extend(user_line_dao.find_line_id_by_user_id(user_id))
+            users = user_dao.find_all_by(agentid=agent_id)
+            for user in users:
+                line_ids.extend(user_line_dao.find_line_id_by_user_id(user.id))
             return [user_line_dao.get_main_exten_by_line_id(line_id) for line_id in line_ids]
 
     def login(self, agent_id, exten, context):
@@ -185,9 +186,12 @@ class AgentServiceManager(object):
     def _get_user_state_interface(self, user_id):
         with session_scope():
             user_line = user_line_dao.get_line_identity_by_user_id(user_id)
-            connected_agent_id = user_dao.agent_id(user_id)
+            user = user_dao.find(user_id)
+            connected_agent_id = user.agentid if user else None
+
         if connected_agent_id is None:
             return user_line
+
         loggedon_state_interface = self._get_agent_state_interface(connected_agent_id)
         if loggedon_state_interface is None:
             loggedon_state_interface = user_line

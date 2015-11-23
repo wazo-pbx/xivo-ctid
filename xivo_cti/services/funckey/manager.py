@@ -20,7 +20,8 @@ from xivo import xivo_helpers
 from xivo_cti import dao
 
 from xivo_dao.helpers.db_utils import session_scope
-from xivo_dao import extensions_dao, user_dao
+from xivo_dao.resources.user import dao as user_dao
+from xivo_dao import extensions_dao
 
 
 class FunckeyManager(object):
@@ -101,8 +102,8 @@ def parse_update_user_config(manager, event):
 
 def _set_fwd_busy_blf(manager, user_id):
     with session_scope():
-        destination = user_dao.get_dest_busy(user_id)
-        forward = user_dao.get_fwd_busy(user_id)
+        user = user_dao.get(user_id)
+        destination, forward = user.destbusy, user.enablebusy == 1
 
     manager.disable_all_busy_fwd(user_id)
     manager.busy_fwd_in_use(user_id, destination, forward)
@@ -110,8 +111,8 @@ def _set_fwd_busy_blf(manager, user_id):
 
 def _set_fwd_rna_blf(manager, user_id):
     with session_scope():
-        destination = user_dao.get_dest_rna(user_id)
-        forward = user_dao.get_fwd_rna(user_id)
+        user = user_dao.get(user_id)
+        destination, forward = user.destrna, user.enablerna == 1
 
     manager.disable_all_rna_fwd(user_id)
     manager.rna_fwd_in_use(user_id, destination, forward)
@@ -119,8 +120,8 @@ def _set_fwd_rna_blf(manager, user_id):
 
 def _set_fwd_unc_blf(manager, user_id):
     with session_scope():
-        destination = user_dao.get_dest_unc(user_id)
-        forward = user_dao.get_fwd_unc(user_id)
+        user = user_dao.get(user_id)
+        destination, forward = user.destunc, user.enableunc == 1
 
     manager.disable_all_unconditional_fwd(user_id)
     manager.unconditional_fwd_in_use(user_id, destination, forward)

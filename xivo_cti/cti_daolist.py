@@ -21,7 +21,9 @@ from xivo_dao.helpers.db_utils import session_scope
 
 from xivo_dao import (group_dao, agent_dao,
                       meetme_dao, queue_dao, voicemail_dao,
-                      user_dao, trunk_dao, user_line_dao)
+                      trunk_dao, user_line_dao)
+
+from xivo_cti.database import user_db
 
 logger = logging.getLogger('daolist')
 
@@ -63,11 +65,11 @@ class DaoList(object):
 
     def _get_users(self):
         with session_scope():
-            return user_dao.get_users_config()
+            return user_db.get_users_config()
 
     def _get_user(self, user_id):
         with session_scope():
-            return user_dao.get_user_config(user_id)
+            return user_db.get_user_config(user_id)
 
     def _get_phones(self):
         with session_scope():
