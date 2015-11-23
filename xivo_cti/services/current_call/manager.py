@@ -259,6 +259,12 @@ class CurrentCallManager(object):
         peer_channel = current_call[PEER_CHANNEL]
         self.ami.transfer(peer_channel, number, user_context)
 
+    def blind_txfer_to_voicemail(self, user_id, voicemail_number):
+        logger.info('blind_txfer_to_voicemail from user (%s) to voicemail %s', user_id, voicemail_number)
+
+    def atxfer_to_voicemail(self, user_id, voicemail_number):
+        logger.info('atxfer_to_voicemail from user (%s) to voicemail %s', user_id, voicemail_number)
+
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
             current_call = self._get_current_call(user_id)
