@@ -234,10 +234,17 @@ class Command(object):
     def regcommand_chitchat(self):
         reply = {}
         chitchattext = self._commanddict.get('text')
-        self._othermessages.append({'dest': self._commanddict.get('to'),
-                                   'message': {'to': self._commanddict.get('to'),
-                                               'from': '%s/%s' % (self.ripbxid, self.ruserid),
-                                               'text': chitchattext}})
+        xivo_uuid, user_id = self._commanddict['to']
+        logger.debug('chat message for %s %s', xivo_uuid, user_id)
+        if xivo_uuid != config['uuid']:
+            logger.info('%s tried to chat with someone on another xivo %s', self.ruserid, xivo_uuid)
+            return reply
+
+        dest = 'xivo/{}'.format(user_id)
+        self._othermessages.append({'dest': dest,
+                                    'message': {'to': self._commanddict['to'],
+                                                'from': (config['uuid'], self.ruserid),
+                                                'text': chitchattext}})
         return reply
 
     def regcommand_getqueuesstats(self):
