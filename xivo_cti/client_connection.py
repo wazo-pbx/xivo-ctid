@@ -59,6 +59,7 @@ class ClientConnection(object):
             try:
                 n = self.socket.send(data)
                 if n == 0:
+                    self.sendqueue.appendleft(data)
                     return
                 elif n < len(data):  # there is some data left to be sent
                     self.sendqueue.appendleft(data[n:])

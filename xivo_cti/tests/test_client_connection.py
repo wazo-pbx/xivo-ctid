@@ -38,3 +38,4 @@ class TestClientConnection(unittest.TestCase):
         self.client_conn.process_sending()
 
         self.socket.send.assert_called_once_with('foo')
+        self.assertEqual(self.client_conn.sendqueue.popleft(), 'foo')
