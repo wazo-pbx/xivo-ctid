@@ -29,7 +29,6 @@ from xivo import consul_helpers
 from xivo import daemonize
 from xivo import xivo_logging
 from xivo_cti import config
-from xivo_cti import BUFSIZE_LARGE
 from xivo_cti import cti_config
 from xivo_cti import SSLPROTO
 from xivo_cti import dao
@@ -108,6 +107,15 @@ logger = logging.getLogger('main')
 class CTIServer(object):
 
     servername = 'XiVO CTI Server'
+
+    _BUFSIZE_AMI = 262144
+    # BUFSIZE_CTI should be large enough to prevent the SSL layer (when using
+    # SSL-wrapped socket) from buffering the application data, i.e. to
+    # prevent a CTI connection from being in a state where:
+    #  - select(2) doesn't report the socket as being "read-ready"
+    #  - there is still data to be read from sock.recv()
+    _BUFSIZE_CTI = 65536
+    _BUFSIZE_OTHER = 8192
 
     def __init__(self, bus_publisher):
         self.start_time = time.time()
@@ -635,7 +643,7 @@ class CTIServer(object):
             interface_webi.disconnected(cause)
 
     def _socket_ami_read(self, sel_i):
-        buf = sel_i.recv(BUFSIZE_LARGE)
+        buf = sel_i.recv(self._BUFSIZE_AMI)
         if not buf:
             self._on_ami_down()
         else:
@@ -690,14 +698,14 @@ class CTIServer(object):
             closemenow = False
             if isinstance(sel_i, ClientConnection):
                 try:
-                    msg = sel_i.recv(BUFSIZE_LARGE)
+                    msg = sel_i.recv(self._BUFSIZE_CTI)
                     closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
                 except ClientConnection.CloseException:
                     interface_obj.disconnected(DisconnectCause.broken_pipe)
                     self._remove_from_fdlist(sel_i)
             else:
                 try:
-                    msg = sel_i.recv(BUFSIZE_LARGE, socket.MSG_DONTWAIT)
+                    msg = sel_i.recv(self._BUFSIZE_OTHER, socket.MSG_DONTWAIT)
                 except socket.error:
                     logger.exception('connection to %s (%s)', requester, interface_obj)
                     msg = ''
