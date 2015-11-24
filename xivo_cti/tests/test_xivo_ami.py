@@ -48,6 +48,20 @@ class TestXivoAMI(unittest.TestCase):
         self.fail('No call matched "{}" with args {} in:\n{}'.format(
             cmd, args, self.ami_class._exec_command.call_args_list))
 
+    def test_hangup(self):
+        channel = sentinel.channel_to_hangup
+
+        self.ami_class.hangup(channel)
+
+        self._assert_exec_command('Hangup', [('Channel', channel)])
+
+    def test_hangup_with_cause_answered_elsewhere(self):
+        channel = sentinel.channel_to_hangup
+
+        self.ami_class.hangup_with_cause_answered_elsewhere(channel)
+
+        self._assert_exec_command('Hangup', [('Channel', channel), ('Cause', '26')])
+
     def test_redirect(self):
         channel, context, extension, priority = 'channel', 'ctx', '1001', '2'
 
@@ -98,17 +112,3 @@ class TestXivoAMI(unittest.TestCase):
     def testSIPNotify_missing_fields(self):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
         self.assertRaises(ValueError, self.ami_class.sipnotify, None, {'Event': 'aastra-xml'})
-
-    def test_hangup(self):
-        channel = sentinel.channel_to_hangup
-
-        self.ami_class.hangup(channel)
-
-        self._assert_exec_command('Hangup', [('Channel', channel)])
-
-    def test_hangup_with_cause_answered_elsewhere(self):
-        channel = sentinel.channel_to_hangup
-
-        self.ami_class.hangup_with_cause_answered_elsewhere(channel)
-
-        self._assert_exec_command('Hangup', [('Channel', channel), ('Cause', '26')])
