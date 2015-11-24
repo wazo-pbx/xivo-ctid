@@ -112,3 +112,19 @@ class TestXivoAMI(unittest.TestCase):
     def testSIPNotify_missing_fields(self):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
         self.assertRaises(ValueError, self.ami_class.sipnotify, None, {'Event': 'aastra-xml'})
+
+    def test_voicemail_transfer(self):
+        channel, context, voicemail_number = 'chan', 'ctx', '1002'
+
+        self.ami_class.voicemail_transfer(channel, context, voicemail_number)
+
+        self._assert_exec_command('Setvar', [('Variable', 'XIVO_BASE_CONTEXT'),
+                                             ('Value', context),
+                                             ('Channel', channel)])
+        self._assert_exec_command('Setvar', [('Variable', 'ARG1'),
+                                             ('Value', voicemail_number),
+                                             ('Channel', channel)])
+        self._assert_exec_command('Redirect', [('Channel', channel),
+                                               ('Context', 'vmbox'),
+                                               ('Exten', 's'),
+                                               ('Priority', '1')])
