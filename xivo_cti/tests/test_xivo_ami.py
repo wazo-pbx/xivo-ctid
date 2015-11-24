@@ -106,7 +106,7 @@ class TestXivoAMI(unittest.TestCase):
 
         self._assert_exec_command('Hangup', [('Channel', channel)])
 
-    def hangup_with_cause_answered_elsewhere(self):
+    def test_hangup_with_cause_answered_elsewhere(self):
         channel = sentinel.channel_to_hangup
 
         self.ami_class.hangup_with_cause_answered_elsewhere(channel)
