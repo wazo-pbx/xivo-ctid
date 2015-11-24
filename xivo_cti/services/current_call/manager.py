@@ -229,14 +229,9 @@ class CurrentCallManager(object):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
+            user_context = self._get_context(user_id)
         except LookupError as e:
             logger.info('attended_transfer: %s', e)
-            return
-
-        try:
-            user_context = dao.user.get_context(user_id)
-        except LookupError:
-            logger.warning('attended_transfer: failed to find the users context for user %s', user_id)
             return
 
         current_channel = current_call[LINE_CHANNEL]
@@ -246,14 +241,9 @@ class CurrentCallManager(object):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
+            user_context = self._get_context(user_id)
         except LookupError as e:
             logger.info('direct_transfer: %s', e)
-            return
-
-        try:
-            user_context = dao.user.get_context(user_id)
-        except LookupError:
-            logger.warning('direct_transfer: failed to find the users context for user %s', user_id)
             return
 
         peer_channel = current_call[PEER_CHANNEL]
@@ -316,6 +306,13 @@ class CurrentCallManager(object):
         if not ongoing_calls:
             raise LookupError('failed to find the current call for user (%s)' % user_id)
         return ongoing_calls[0]
+
+    def _get_context(self, user_id):
+        user_context = dao.user.get_context(user_id)
+        if not user_context:
+            raise LookupError('failed to find the context for user (%s)' % user_id)
+
+        return user_context
 
     def _get_ongoing_calls(self, user_id):
         try:
