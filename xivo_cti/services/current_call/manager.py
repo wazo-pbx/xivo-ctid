@@ -206,15 +206,15 @@ class CurrentCallManager(object):
         try:
             current_call = self._get_current_call(user_id)
             self.ami.hangup(current_call[LINE_CHANNEL])
-        except LookupError:
-            logger.warning('complete_transfer: failed to find the current call for user %s', user_id)
+        except LookupError as e:
+            logger.info('complete_transfer: %s', e)
 
     def cancel_transfer(self, user_id):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_id)
         try:
             current_call = self._get_current_call(user_id)
-        except LookupError:
-            logger.warning('cancel_transfer: failed to find the current call for user %s', user_id)
+        except LookupError as e:
+            logger.info('cancel_transfer: %s', e)
             return
 
         if TRANSFER_CHANNEL not in current_call:
@@ -229,8 +229,8 @@ class CurrentCallManager(object):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
-        except LookupError:
-            logger.warning('attended_transfer: failed to find the current call for user %s', user_id)
+        except LookupError as e:
+            logger.info('attended_transfer: %s', e)
             return
 
         try:
@@ -246,8 +246,8 @@ class CurrentCallManager(object):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
         try:
             current_call = self._get_current_call(user_id)
-        except LookupError:
-            logger.warning('direct_transfer: failed to find the current call for user %s', user_id)
+        except LookupError as e:
+            logger.info('direct_transfer: %s', e)
             return
 
         try:
@@ -270,7 +270,7 @@ class CurrentCallManager(object):
             current_call = self._get_current_call(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError as e:
-            logger.warning('User %s tried to put his current call on switchboard hold but failed' % user_id)
+            logger.info('switchboard_hold: %s', e)
             logger.exception(e)
         else:
             channel_to_hold = current_call[PEER_CHANNEL]
@@ -314,8 +314,7 @@ class CurrentCallManager(object):
     def _get_current_call(self, user_id):
         ongoing_calls = self._get_ongoing_calls(user_id)
         if not ongoing_calls:
-            logger.debug('Failed to get %s current call\n\t%s', user_id, self._calls_per_line)
-            raise LookupError('User %s has no ongoing calls' % user_id)
+            raise LookupError('failed to find the current call for user (%s)' % user_id)
         return ongoing_calls[0]
 
     def _get_ongoing_calls(self, user_id):
