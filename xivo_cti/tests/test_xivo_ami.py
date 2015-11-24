@@ -69,19 +69,18 @@ class TestXivoAMI(unittest.TestCase):
 
         self.ami_class.switchboard_retrieve(line_interface, channel, cid_name, cid_num, cid_name_src, cid_num_src)
 
-        self.ami_class._exec_command.assert_called_once_with(
-            'Originate',
-            [('Channel', line_interface),
-             ('Exten', 's'),
-             ('Context', 'xivo_switchboard_retrieve'),
-             ('Priority', '1'),
-             ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
-             ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
-             ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
-             ('Variable', 'XIVO_ORIG_CID_NUM=%s' % cid_num_src),
-             ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cid_name_src),
-             ('Variable', 'XIVO_CHANNEL=%s' % channel),
-             ('Async', 'true')])
+        self._assert_exec_command('Originate',
+                                  [('Channel', line_interface),
+                                   ('Exten', 's'),
+                                   ('Context', 'xivo_switchboard_retrieve'),
+                                   ('Priority', '1'),
+                                   ('CallerID', '"%s" <%s>' % (cid_name, cid_num)),
+                                   ('Variable', 'XIVO_CID_NUM=%s' % cid_num),
+                                   ('Variable', 'XIVO_CID_NAME=%s' % cid_name),
+                                   ('Variable', 'XIVO_ORIG_CID_NUM=%s' % cid_num_src),
+                                   ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cid_name_src),
+                                   ('Variable', 'XIVO_CHANNEL=%s' % channel),
+                                   ('Async', 'true')])
 
     def testSIPNotify_with_variables(self):
         channel = 'SIP/1234'
@@ -91,13 +90,10 @@ class TestXivoAMI(unittest.TestCase):
 
         self.ami_class.sipnotify(channel, variables)
 
-        excpected_var = ['SIPNotify', sorted([('Channel', channel),
-                                              ('Variable', 'Event=val'),
-                                              ('Variable', 'Deux=val2'),
-                                              ('Variable', 'Trois=3')])]
-        result = list(self.ami_class._exec_command.call_args_list[0][0])
-        result[1] = sorted(result[1])
-        self.assertEquals(result, excpected_var)
+        self._assert_exec_command('SIPNotify', [('Channel', channel),
+                                                ('Variable', 'Event=val'),
+                                                ('Variable', 'Deux=val2'),
+                                                ('Variable', 'Trois=3')])
 
     def testSIPNotify_missing_fields(self):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
@@ -108,13 +104,11 @@ class TestXivoAMI(unittest.TestCase):
 
         self.ami_class.hangup(channel)
 
-        self.ami_class._exec_command.assert_called_once_with(
-            'Hangup', [('Channel', channel)])
+        self._assert_exec_command('Hangup', [('Channel', channel)])
 
     def hangup_with_cause_answered_elsewhere(self):
         channel = sentinel.channel_to_hangup
 
         self.ami_class.hangup_with_cause_answered_elsewhere(channel)
 
-        self.ami_class._exec_command.assert_called_once_with(
-            'Hangup', [('Channel', channel), ('Cause', '26')])
+        self._assert_exec_command('Hangup', [('Channel', channel), ('Cause', '26')])
