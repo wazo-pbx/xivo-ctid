@@ -317,7 +317,6 @@ class AMIClass(object):
             full_mailbox = "%s@%s" % (mailbox, context)
         return self._exec_command('MailboxCount', (('MailBox', full_mailbox),))
 
-    # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
         try:
             extension = normalize_exten(extension)
@@ -326,11 +325,7 @@ class AMIClass(object):
             return False
         else:
             self.setvar('BLINDTRANSFER', 'true', channel)
-            command_details = [('Channel', channel),
-                               ('Exten', extension),
-                               ('Context', context),
-                               ('Priority', '1')]
-        return self._exec_command('Redirect', command_details)
+        return self.redirect(channel, context, extension)
 
     # \brief Atxfer a channel towards a new extension.
     def atxfer(self, channel, extension, context):
