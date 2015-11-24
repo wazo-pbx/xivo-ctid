@@ -15,11 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import re
+
 from xivo_cti.cti.cti_command import CTICommandClass
+
+NUMERIC_STRING = re.compile(r'^\d+$')
 
 
 def _parse(msg, command):
     command.voicemail_number = msg.get('voicemail')
+    try:
+        matches = NUMERIC_STRING.match(command.voicemail_number)
+    except TypeError:
+        matches = False
+
+    if not matches:
+        raise ValueError('{} is not a numeric string'.format(command.voicemail_number))
 
 
 BlindTransferVoicemail = CTICommandClass('blind_transfer_voicemail', None, _parse)
