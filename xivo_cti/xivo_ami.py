@@ -24,6 +24,9 @@ import errno
 
 from copy import copy
 
+from xivo.xivo_helpers import clean_extension
+from xivo_dao import extensions_dao
+
 from xivo_cti import config
 from xivo_cti.tools.extension import normalize_exten
 from xivo_cti.interfaces.interface_ami import AMI
@@ -326,6 +329,15 @@ class AMIClass(object):
         else:
             self.setvar('BLINDTRANSFER', 'true', channel)
         return self.redirect(channel, context, extension)
+
+    def voicemail_atxfer(self, channel, context, voicemail_number):
+        logger.debug('voicemail_atxfer: channel: %s context: %s voicemail %s',
+                     channel, context, voicemail_number)
+
+        prefix = clean_extension(extensions_dao.exten_by_name('vmboxslt'))
+        consult_vm_exten = '{}{}#'.format(prefix, voicemail_number)
+
+        return self.atxfer(channel, consult_vm_exten, context)
 
     def voicemail_transfer(self, channel, base_context, voicemail_number):
         logger.debug('voicemail_transfer: channel: %s context: %s voicemail %s',
