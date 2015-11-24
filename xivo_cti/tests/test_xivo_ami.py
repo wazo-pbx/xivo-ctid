@@ -17,6 +17,8 @@
 
 import unittest
 
+from collections import Counter
+
 from xivo_cti.xivo_ami import AMIClass
 from mock import Mock
 from mock import patch
@@ -30,6 +32,32 @@ class TestXivoAMI(unittest.TestCase):
             ami_class = AMIClass()
         ami_class._exec_command = Mock()
         self.ami_class = ami_class
+
+    @staticmethod
+    def _list_match_anyorder(left, right):
+        return Counter(left) == Counter(right)
+
+    def _assert_exec_command(self, cmd, args):
+        for call in self.ami_class._exec_command.call_args_list:
+            called_cmd, called_args = call[0]
+            if called_cmd != cmd:
+                continue
+            if self._list_match_anyorder(called_args, args):
+                return
+
+        self.fail('No call matched "{}" with args {} in:\n{}'.format(
+            cmd, args, self.ami_class._exec_command.call_args_list))
+
+    def test_redirect(self):
+        channel, context, extension, priority = 'channel', 'ctx', '1001', '2'
+
+        self.ami_class.redirect(channel, context, extension, priority)
+
+        self._assert_exec_command('Redirect',
+                                  [('Channel', channel),
+                                   ('Context', context),
+                                   ('Exten', extension),
+                                   ('Priority', priority)])
 
     def test_switchboard_retrieve(self):
         line_interface = sentinel.line_interface

@@ -15,10 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-"""
-Asterisk AMI utilities.
-"""
-
 import logging
 import os
 import socket
@@ -182,6 +178,13 @@ class AMIClass(object):
             return self._exec_command('Setvar', [('Channel', chan),
                                                  ('Variable', var),
                                                  ('Value', val)])
+
+    def redirect(self, channel, context, exten='s', priority='1'):
+        return self._exec_command('Redirect',
+                                  [('Channel', channel),
+                                   ('Context', context),
+                                   ('Exten', exten),
+                                   ('Priority', priority)])
 
     # \brief Originates a call from a phone towards another.
     def originate(self, phoneproto, phonesrcname, phonesrcnum, cidnamesrc,
