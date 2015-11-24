@@ -298,11 +298,6 @@ class AMIClass(object):
         ret = ret1 and ret2
         return ret
 
-    # \brief Retrieves the value of Variable in a Channel
-    def getvar(self, channel, varname):
-        return self._exec_command('Getvar', [('Channel', channel),
-                                             ('Variable', varname)])
-
     def sipnotify(self, channel, variables):
         if not variables or not channel:
             raise ValueError('Missing fields to send a SIPNotify')
