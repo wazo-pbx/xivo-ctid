@@ -30,7 +30,6 @@ class TestBlindTransferVoicemail(unittest.TestCase):
 
     def test_that_an_invalid_vm_number_raises(self):
         invalid_values = [
-            'foobar',
             '',
             124,
             '''1002
