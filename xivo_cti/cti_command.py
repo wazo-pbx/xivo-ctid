@@ -49,7 +49,7 @@ IPBXCOMMANDS = [
     'originate',
     # transfer-like commands
     'intercept',
-    'transfer', 'atxfer',
+    'atxfer',
     # hangup-like commands
     'hangup',
 
@@ -443,37 +443,6 @@ class Command(object):
             return [{'amicommand': 'mailboxcount',
                      'amiargs': (self._commanddict['mailbox'],
                                  self._commanddict['context'])}]
-
-    def ipbxcommand_transfer(self):
-        try:
-            dst = self.parseid(self._commanddict['destination'])
-            transferers_channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
-            channel = self.innerdata.channels[transferers_channel].peerchannel
-            dst_context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
-
-            if dst['type'] == 'user':
-                extentodial = self.innerdata.xod_config['phones'].get_main_line(dst['id'])['number']
-            elif dst['type'] == 'phone' and dst['id'] in self.innerdata.xod_config['phones'].keeplist:
-                extentodial = self.innerdata.xod_config['phones'].keeplist[dst['id']]
-            elif dst['type'] == 'exten':
-                extentodial = dst['id']
-            elif dst['type'] == 'voicemail' and dst['id'] in self.innerdata.xod_config['voicemails'].keeplist:
-                voicemail = self.innerdata.xod_config['voicemails'].keeplist[dst['id']]
-                vm_number = voicemail['mailbox']
-                with session_scope():
-                    prefix = extensions_dao.exten_by_name('vmboxslt')
-                extentodial = prefix[:-1] + vm_number
-                dst_context = voicemail['context']
-            elif dst['type'] == 'meetme' and dst['id'] in self.innerdata.xod_config['meetmes'].keeplist:
-                extentodial = self.innerdata.xod_config['meetmes'].keeplist[dst['id']]['confno']
-            else:
-                extentodial = None
-
-            return [{'amicommand': 'transfer',
-                     'amiargs': [channel, extentodial, dst_context]}]
-        except (KeyError, IndexError):
-            logger.exception('Failed to transfer call')
-            return [{'error': 'Incomplete transfer information'}]
 
     def ipbxcommand_atxfer(self):
         try:
