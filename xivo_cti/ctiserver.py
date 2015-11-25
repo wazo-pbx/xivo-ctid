@@ -77,6 +77,7 @@ from xivo_cti.cti.commands.register_user_status import RegisterUserStatus
 from xivo_cti.cti.commands.unregister_agent_status import UnregisterAgentStatus
 from xivo_cti.cti.commands.unregister_user_status import UnregisterUserStatus
 from xivo_cti.cti.commands.unregister_endpoint_status import UnregisterEndpointStatus
+from xivo_cti.cti.commands.vm_txfer import BlindTransferVoicemail, AttendedTransferVoicemail
 from xivo_cti.cti.commands.subscribe import SubscribeCurrentCalls, \
     SubscribeMeetmeUpdate, SubscribeQueueEntryUpdate
 from xivo_cti.cti.commands.subscribetoqueuesstats import SubscribeToQueuesStats
@@ -367,36 +368,37 @@ class CTIServer(object):
             context.get('current_call_notifier').subscribe,
             ['cti_connection']
         )
+        current_call_manager = context.get('current_call_manager')
         Hangup.register_callback_params(
-            context.get('current_call_manager').hangup,
-            ['user_id']
+            current_call_manager.hangup, ['user_id']
         )
         AttendedTransfer.register_callback_params(
-            context.get('current_call_manager').attended_transfer,
-            ['user_id', 'number']
+            current_call_manager.attended_transfer, ['user_id', 'number']
         )
         DirectTransfer.register_callback_params(
-            context.get('current_call_manager').direct_transfer,
-            ['user_id', 'number']
+            current_call_manager.direct_transfer, ['user_id', 'number']
+        )
+        BlindTransferVoicemail.register_callback_params(
+            current_call_manager.blind_txfer_to_voicemail, ['user_id', 'voicemail_number']
+        )
+        AttendedTransferVoicemail.register_callback_params(
+            current_call_manager.atxfer_to_voicemail, ['user_id', 'voicemail_number']
         )
         CancelTransfer.register_callback_params(
-            context.get('current_call_manager').cancel_transfer,
-            ['user_id']
+            current_call_manager.cancel_transfer, ['user_id']
         )
         CompleteTransfer.register_callback_params(
-            context.get('current_call_manager').complete_transfer,
-            ['user_id']
+            current_call_manager.complete_transfer, ['user_id']
         )
         HoldSwitchboard.register_callback_params(
-            context.get('current_call_manager').switchboard_hold,
-            ['user_id', 'queue_name']
+            current_call_manager.switchboard_hold, ['user_id', 'queue_name']
         )
         ResumeSwitchboard.register_callback_params(
-            context.get('current_call_manager').switchboard_retrieve_waiting_call,
+            current_call_manager.switchboard_retrieve_waiting_call,
             ['user_id', 'unique_id', 'cti_connection'],
         )
         Answer.register_callback_params(
-            context.get('current_call_manager').switchboard_retrieve_waiting_call,
+            current_call_manager.switchboard_retrieve_waiting_call,
             ['user_id', 'unique_id', 'cti_connection'],
         )
         History.register_callback_params(

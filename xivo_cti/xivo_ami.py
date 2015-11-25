@@ -15,10 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-"""
-Asterisk AMI utilities.
-"""
-
 import logging
 import os
 import socket
@@ -27,6 +23,9 @@ import time
 import errno
 
 from copy import copy
+
+from xivo.xivo_helpers import clean_extension
+from xivo_dao import extensions_dao
 
 from xivo_cti import config
 from xivo_cti.tools.extension import normalize_exten
@@ -183,6 +182,13 @@ class AMIClass(object):
                                                  ('Variable', var),
                                                  ('Value', val)])
 
+    def redirect(self, channel, context, exten='s', priority='1'):
+        return self._exec_command('Redirect',
+                                  [('Channel', channel),
+                                   ('Context', context),
+                                   ('Exten', exten),
+                                   ('Priority', priority)])
+
     # \brief Originates a call from a phone towards another.
     def originate(self, phoneproto, phonesrcname, phonesrcnum, cidnamesrc,
                   phonedst, cidnamedst,
@@ -292,11 +298,6 @@ class AMIClass(object):
         ret = ret1 and ret2
         return ret
 
-    # \brief Retrieves the value of Variable in a Channel
-    def getvar(self, channel, varname):
-        return self._exec_command('Getvar', [('Channel', channel),
-                                             ('Variable', varname)])
-
     def sipnotify(self, channel, variables):
         if not variables or not channel:
             raise ValueError('Missing fields to send a SIPNotify')
@@ -314,7 +315,6 @@ class AMIClass(object):
             full_mailbox = "%s@%s" % (mailbox, context)
         return self._exec_command('MailboxCount', (('MailBox', full_mailbox),))
 
-    # \brief Transfers a channel towards a new extension.
     def transfer(self, channel, extension, context):
         try:
             extension = normalize_exten(extension)
@@ -323,13 +323,25 @@ class AMIClass(object):
             return False
         else:
             self.setvar('BLINDTRANSFER', 'true', channel)
-            command_details = [('Channel', channel),
-                               ('Exten', extension),
-                               ('Context', context),
-                               ('Priority', '1')]
-        return self._exec_command('Redirect', command_details)
+        return self.redirect(channel, context, extension)
 
-    # \brief Atxfer a channel towards a new extension.
+    def voicemail_atxfer(self, channel, context, voicemail_number):
+        logger.debug('voicemail_atxfer: channel: %s context: %s voicemail %s',
+                     channel, context, voicemail_number)
+
+        prefix = clean_extension(extensions_dao.exten_by_name('vmboxslt'))
+        consult_vm_exten = '{}{}#'.format(prefix, voicemail_number)
+
+        return self.atxfer(channel, consult_vm_exten, context)
+
+    def voicemail_transfer(self, channel, base_context, voicemail_number):
+        logger.debug('voicemail_transfer: channel: %s context: %s voicemail %s',
+                     channel, base_context, voicemail_number)
+
+        self.setvar('XIVO_BASE_CONTEXT', base_context, channel)
+        self.setvar('ARG1', voicemail_number, channel)
+        return self.redirect(channel, 'vmbox')
+
     def atxfer(self, channel, extension, context):
         try:
             extension = normalize_exten(extension)
