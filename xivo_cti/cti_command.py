@@ -49,7 +49,6 @@ IPBXCOMMANDS = [
     'originate',
     # transfer-like commands
     'intercept',
-    'atxfer',
     # hangup-like commands
     'hangup',
 
@@ -443,18 +442,6 @@ class Command(object):
             return [{'amicommand': 'mailboxcount',
                      'amiargs': (self._commanddict['mailbox'],
                                  self._commanddict['context'])}]
-
-    def ipbxcommand_atxfer(self):
-        try:
-            exten = self.parseid(self._commanddict['destination'])['id']
-            context = self.innerdata.xod_config['phones'].get_main_line(self.userid)['context']
-            channel = self.innerdata.find_users_channels_with_peer(self.userid)[0]
-        except (KeyError, IndexError):
-            logger.exception('Atxfer failed %s', self._commanddict)
-            return [{'error': 'Incomplete info'}]
-        else:
-            return [{'amicommand': 'atxfer',
-                     'amiargs': [channel, exten, context]}]
 
     def ipbxcommand_intercept(self):
         try:
