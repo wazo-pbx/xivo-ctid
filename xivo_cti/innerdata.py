@@ -327,10 +327,7 @@ class Safe(object):
         self.handle_cti_stack('empty_stack')
 
     def statusbylist(self, listname, item_id):
-        if listname == 'channels':
-            if item_id and item_id in self.channels:
-                return self.channels[item_id].properties
-        elif listname == 'queuemembers':
+        if listname == 'queuemembers':
             return self.queue_member_cti_adapter.get_status(item_id)
         else:
             if item_id and item_id in self.xod_status[listname]:
