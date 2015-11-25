@@ -267,7 +267,7 @@ class CurrentCallManager(object):
             current_call = self._get_current_call(user_id)
             user_context = self._get_context(user_id)
         except LookupError as e:
-            logger.info('blind_txfer_to_voicemail: %s', e)
+            logger.info('atxfer_to_voicemail: %s', e)
             return
 
         line_channel = current_call[LINE_CHANNEL]
