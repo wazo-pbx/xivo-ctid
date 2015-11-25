@@ -121,13 +121,7 @@ class Safe(object):
             return self.queue_member_cti_adapter.get_config(item_id)
         return self.xod_config[listname].get_item_config(item_id, user_contexts)
 
-    def get_status_channel(self, channel_id):
-        if channel_id in self.channels:
-            return self.channels[channel_id].properties
-
     def get_status(self, listname, item_id):
-        if listname == 'channels':
-            return self.get_status_channel(item_id)
         if listname == 'queuemembers':
             return self.queue_member_cti_adapter.get_status(item_id)
 
@@ -328,10 +322,8 @@ class Safe(object):
         if channel_name not in self.channels:
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
-        self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
         self.updaterelations(channel_name)
         self.channels[channel_name].update_state(state, state_description)
-        self.handle_cti_stack('empty_stack')
 
     def voicemailupdate(self, mailbox, new, old=None, waiting=None):
         for k, v in self.xod_config['voicemails'].keeplist.iteritems():
@@ -352,7 +344,6 @@ class Safe(object):
                 self.handle_cti_stack('setforce', ('users', 'updatestatus', r[5:]))
             elif r.startswith('phone:'):
                 self.handle_cti_stack('setforce', ('phones', 'updatestatus', r[6:]))
-        self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel))
         self.handle_cti_stack('empty_stack')
 
     def statusbylist(self, listname, item_id):
@@ -413,11 +404,6 @@ class Safe(object):
         if channel in self.channels:
             self._remove_channel_relations(channel)
             del self.channels[channel]
-            self._ctiserver.send_cti_event({'class': 'getlist',
-                                            'listname': 'channels',
-                                            'function': 'delconfig',
-                                            'tipbxid': self.ipbxid,
-                                            'list': [channel]})
 
     def _remove_channel_relations(self, channel):
         relations = self.channels[channel].relations

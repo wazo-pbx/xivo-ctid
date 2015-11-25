@@ -109,7 +109,6 @@ class TestChannelUpdater(unittest.TestCase):
 
         channel = self.innerdata.channels[name]
         assert_that(channel.properties['holded'], equal_to(True), 'holded status')
-        self._assert_channel_updated(name)
 
     def test_unhold_channel(self):
         name = 'SIP/1234'
@@ -120,11 +119,3 @@ class TestChannelUpdater(unittest.TestCase):
 
         channel = self.innerdata.channels[name]
         assert_that(channel.properties['holded'], equal_to(False), 'unholded status')
-        self._assert_channel_updated(name)
-
-    def _assert_channel_updated(self, channel):
-        calls = list(self.innerdata.handle_cti_stack.call_args_list)
-        expected = [call('setforce', ('channels', 'updatestatus', channel)),
-                    call('empty_stack')]
-
-        assert_that(calls, equal_to(expected), 'handle_cti_stack calls')
