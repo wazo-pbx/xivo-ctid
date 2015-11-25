@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,8 @@ from xivo_cti.channel import Channel
 class TestChannel(unittest.TestCase):
 
     def test_update_state(self):
-        state = 'Ringing'
-
         channel = Channel('1001@my-ctx-00000', 'my-ctx', '1234567.33')
 
-        channel.update_state(5, state)
+        channel.update_state(5)
 
         self.assertEqual(channel.state, 5)
-        self.assertEqual(channel.properties['state'], state)

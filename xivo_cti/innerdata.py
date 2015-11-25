@@ -291,10 +291,9 @@ class Safe(object):
     def new_state(self, event):
         channel = event['Channel']
         state = event['ChannelState']
-        description = event['ChannelStateDesc']
 
         if channel in self.channels:
-            self.channels[channel].update_state(state, description)
+            self.channels[channel].update_state(state)
 
     def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:
@@ -419,7 +418,6 @@ class Safe(object):
     def setpeerchannel(self, channel, peerchannel):
         chanprops = self.channels.get(channel)
         chanprops.peerchannel = peerchannel
-        chanprops.properties['talkingto_id'] = peerchannel
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
@@ -427,10 +425,6 @@ class Safe(object):
         self._update_connected_channel(channel_2, channel_1)
 
     def _update_connected_channel(self, channel, peer_channel):
-        channel.properties.update({
-            'commstatus': 'linked',
-            'timestamp': time.time(),
-        })
         self.setpeerchannel(channel.channel, peer_channel.channel)
         self.update(channel.channel)
 

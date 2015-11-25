@@ -93,14 +93,10 @@ class AMI_1_8(object):
             except LookupError:
                 logger.exception('Could not set user id for dial')
             self.innerdata.channels[channel].role = ChannelRole.caller
-            self.innerdata.channels[channel].properties['commstatus'] = 'calling'
-            self.innerdata.channels[channel].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(channel, destination)
             self.innerdata.update(channel)
         if destination in self.innerdata.channels:
             self.innerdata.channels[destination].role = ChannelRole.callee
-            self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
-            self.innerdata.channels[destination].properties['timestamp'] = time.time()
             self.innerdata.setpeerchannel(destination, channel)
             self.innerdata.update(destination)
         self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
@@ -294,20 +290,9 @@ class AMI_1_8(object):
         context = event['Context']
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
-        timestamp_start = self.timeconvert(event['Duration'])
         unique_id = event['Uniqueid']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
-        channelstruct = self.innerdata.channels[channel]
-
-        channelstruct.properties['timestamp'] = timestamp_start
-
-        if state == '4':
-            channelstruct.properties['commstatus'] = 'calling'
-        elif state == '5':
-            channelstruct.properties['commstatus'] = 'ringing'
-        elif state == '6':
-            channelstruct.properties['commstatus'] = 'linked'
 
     def ami_listdialplan(self, event):
         extension = event.get('Extension')

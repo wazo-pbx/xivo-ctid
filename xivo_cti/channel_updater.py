@@ -35,25 +35,6 @@ def parse_new_caller_id(event):
     updater.new_caller_id(event['Uniqueid'], event['CallerIDName'], event['CallerIDNum'])
 
 
-def parse_hold(event):
-    updater = context.get('channel_updater')
-    updater.set_hold(event['Channel'])
-
-
-def parse_unhold(event):
-    updater = context.get('channel_updater')
-    updater.set_unhold(event['Channel'])
-
-
-def assert_has_channel(func):
-    def _fn(self, channel_name, *args, **kwargs):
-        if channel_name not in self.innerdata.channels:
-            logger.warning('Trying to update an untracked channel %s', channel_name)
-        else:
-            func(self, channel_name, *args, **kwargs)
-    return _fn
-
-
 class ChannelUpdater(object):
 
     def __init__(self, innerdata, call_form_variable_aggregator):
@@ -71,11 +52,3 @@ class ChannelUpdater(object):
             if key.startswith('db-'):
                 key = key.split('-', 1)[-1]
                 self._aggregator.set(uid, Var('db', key, value))
-
-    @assert_has_channel
-    def set_hold(self, channel_name):
-        self.innerdata.channels[channel_name].properties['holded'] = True
-
-    @assert_has_channel
-    def set_unhold(self, channel_name):
-        self.innerdata.channels[channel_name].properties['holded'] = False
