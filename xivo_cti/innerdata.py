@@ -273,26 +273,6 @@ class Safe(object):
 
         return domatch
 
-    def find_users_channels_with_peer(self, user_id):
-        '''Find a user's channels that that are talking to another channel'''
-        potential_channel_start = []
-        main_line = self.xod_config['phones'].get_main_line(user_id)
-        agent = self.xod_config['agents'].get_agent_by_user(user_id)
-        if main_line:
-            potential_channel_start.append('%s/%s' % (main_line['protocol'], main_line['name']))
-        if agent:
-            potential_channel_start.append('Agent/%s' % agent['number'])
-
-        def channel_filter(channel_key):
-            '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
-            for channel_start in potential_channel_start:
-                if (channel_key.lower().startswith(channel_start.lower()) and
-                        self.channels[channel_key].peerchannel and
-                        not self.channels[channel_key].properties['holded']):
-                    return True
-
-        return filter(channel_filter, self.channels)
-
     def user_get_hashed_password(self, userid, sessionid):
         with session_scope():
             password = user_dao.get(userid).password
