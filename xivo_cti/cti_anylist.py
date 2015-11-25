@@ -34,8 +34,6 @@ class AnyList(object):
             'lastname',
             'fullname',
             'mobilephonenumber',
-            'profileclient',
-            'enableclient',
             'agentid',
             'voicemailid',
             'enablerna',
