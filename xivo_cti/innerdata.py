@@ -149,7 +149,6 @@ class Safe(object):
         ami_handler.register_callback('AgentCalled', self.handle_agent_called)
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
-        ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _set_channel_extra_vars_agent(self, event, member_name):
@@ -202,7 +201,6 @@ class Safe(object):
         self.handle_cti_stack('set', ('agents', 'updatestatus', agent_id))
         agstatus = self.xod_status['agents'].get(agent_id)
         agstatus['phonenumber'] = event['Extension']
-        # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
     def handle_getlist_list_id(self, listname, user_id):
@@ -288,13 +286,6 @@ class Safe(object):
         with auth_client(userid) as client:
             client.token.revoke(token)
 
-    def new_state(self, event):
-        channel = event['Channel']
-        state = event['ChannelState']
-
-        if channel in self.channels:
-            self.channels[channel].update_state(state)
-
     def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:
             return
@@ -302,7 +293,6 @@ class Safe(object):
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
         self.updaterelations(channel_name)
-        self.channels[channel_name].update_state(state, state_description)
 
     def voicemailupdate(self, mailbox, new, old=None, waiting=None):
         for k, v in self.xod_config['voicemails'].keeplist.iteritems():

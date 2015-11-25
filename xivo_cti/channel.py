@@ -42,10 +42,3 @@ class Channel(object):
     def delrelation(self, relation):
         if relation in self.relations:
             self.relations.remove(relation)
-
-    def update_state(self, state):
-        # values
-        # 0 Down (creation time)
-        # 5 Ringing
-        # 6 Up
-        self.state = state
