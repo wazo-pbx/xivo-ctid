@@ -93,12 +93,3 @@ class TestBridgeUpdater(unittest.TestCase):
         self.bridge_updater.on_ami_bridge_info_channel(ami_event)
 
         self.bridge_manager._add_channel_to_bridge.assert_called_once_with(self.bridge_id, self.channel_name)
-
-    def test_on_ami_bridge_info_complete(self):
-        ami_event = {
-            'BridgeUniqueid': 'e136cd36-5187-430c-af2a-d1f08870847b',
-        }
-
-        self.bridge_updater.on_ami_bridge_info_complete(ami_event)
-
-        self.bridge_manager._finish_bridge_initialization.assert_called_once_with(self.bridge_id)

@@ -53,10 +53,6 @@ class BridgeUpdater(object):
         bridge_id = event['ActionID']   # ActionID is previously set to BridgeUniqueid
         self._bridge_manager._add_channel_to_bridge(bridge_id, channel)
 
-    def on_ami_bridge_info_complete(self, event):
-        bridge_id = event['BridgeUniqueid']
-        self._bridge_manager._finish_bridge_initialization(bridge_id)
-
     def register_ami_events(self, ami_handler):
         ami_handler.register_callback('BridgeCreate', self.on_ami_bridge_create)
         ami_handler.register_callback('BridgeDestroy', self.on_ami_bridge_destroy)
@@ -64,4 +60,3 @@ class BridgeUpdater(object):
         ami_handler.register_callback('BridgeLeave', self.on_ami_bridge_leave)
         ami_handler.register_callback('BridgeListItem', self.on_ami_bridge_list_item)
         ami_handler.register_callback('BridgeInfoChannel', self.on_ami_bridge_info_channel)
-        ami_handler.register_callback('BridgeInfoComplete', self.on_ami_bridge_info_complete)

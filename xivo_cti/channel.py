@@ -27,7 +27,6 @@ class Channel(object):
 
     def __init__(self, channel, context, unique_id=None):
         self.channel = channel
-        self.peerchannel = None
         self.context = context
         self.unique_id = unique_id
         self.role = ChannelRole.unknown

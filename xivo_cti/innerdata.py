@@ -405,17 +405,12 @@ class Safe(object):
         except LookupError:
             logger.exception('find termination according to channel %s', channel)
 
-    def setpeerchannel(self, channel, peerchannel):
-        chanprops = self.channels.get(channel)
-        chanprops.peerchannel = peerchannel
-
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
         self._update_connected_channel(channel_1, channel_2)
         self._update_connected_channel(channel_2, channel_1)
 
     def _update_connected_channel(self, channel, peer_channel):
-        self.setpeerchannel(channel.channel, peer_channel.channel)
         self.update(channel.channel)
 
     # IPBX side
