@@ -371,8 +371,6 @@ class Safe(object):
             chanlist = self.xod_status[list_name][termination_id]['channels']
             if channel in chanlist:
                 chanlist.remove(channel)
-                if list_name == 'phones':
-                    self.appendcti('phones', 'updatestatus', termination_id)
 
     def updaterelations(self, channel):
         self.channels[channel].relations = []
@@ -380,15 +378,6 @@ class Safe(object):
             return
         try:
             termination = self.ast_channel_to_termination(channel)
-            p = self.zphones(termination.get('protocol'), termination.get('name'))
-            if p:
-                self.channels[channel].addrelation('phone:%s' % p)
-                oldchans = self.xod_status['phones'][p].get('channels')
-                if channel not in oldchans:
-                    self.handle_cti_stack('set', ('phones', 'updatestatus', p))
-                    oldchans.append(channel)
-                    self.handle_cti_stack('empty_stack')
-                self.xod_status['phones'][p]['channels'] = oldchans
             t = self.ztrunks(termination.get('protocol'), termination.get('name'))
             if t:
                 self.channels[channel].addrelation('trunk:%s' % t)
