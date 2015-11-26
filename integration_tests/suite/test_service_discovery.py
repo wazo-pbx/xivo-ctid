@@ -15,78 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import os
 import json
 import time
-import psycopg2
 import socket
 
 from docker import Client
 from consul import Consul
 from hamcrest import assert_that, equal_to, not_
-from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
 
-
-class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
-
-    service = 'ctid'
-    assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
-
-    @classmethod
-    def setUpClass(cls):
-        cls.launch_service_with_asset()
-        cls.wait_for_pg()
-        cls.wait_for('agentd')
-        cls.wait_for('ctid')
-        cls.stop_service('cti2')
-
-    @classmethod
-    def wait_for_pg(cls):
-        for _ in countdown(120):
-            try:
-                conn = psycopg2.connect(host='localhost', port=15432, user='asterisk', password='proformatique', database='asterisk')
-                cur = conn.cursor()
-                cur.execute('SELECT count(*) FROM userfeatures')
-                conn.close()
-                break
-            except psycopg2.OperationalError:
-                print '.',
-                time.sleep(1)
-        print 'PG is started'
-
-    @classmethod
-    def wait_for(cls, service):
-        for _ in countdown(5):
-            cls._run_cmd('docker-compose start {}'.format(service))
-            if cls.service_status(service)['State']['Running']:
-                return
-            time.sleep(1)
-
-    @classmethod
-    def stop_service(cls, service):
-        cls._run_cmd('docker-compose stop {}'.format(service))
-        for _ in countdown(5):
-            try:
-                if not cls.service_status(service)['State']['Running']:
-                    return
-            except ValueError:
-                pass
-            time.sleep(1)
-
-    def start_service(self, service):
-        self.wait_for(service)
-
-
-def countdown(n):
-    while n > 0:
-        yield n
-        n = n - 1
-    raise Exception('countdown reached 0')
+from .base import BaseCTIDIntegrationTests
 
 
 class TestServiceDiscovery(BaseCTIDIntegrationTests):
 
     asset = 'service_discovery'
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestServiceDiscovery, cls).setUpClass()
+        cls.stop_service('cti2')
 
     def test_that_service_is_registered_on_consul_on_start(self):
         registered = self._is_ctid_registered_to_consul()

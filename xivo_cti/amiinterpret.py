@@ -22,12 +22,12 @@ import time
 from xivo_cti import ALPHANUMS
 from xivo_cti.call_forms.variable_aggregator import CallFormVariable as Var
 from xivo_cti.channel import ChannelRole
+from xivo_cti.database import user_db
 
 from xivo_dao.helpers.db_utils import session_scope
 
 from xivo_dao import group_dao
 from xivo_dao import incall_dao
-from xivo_dao import user_dao
 from xivo_dao import queue_dao
 
 logger = logging.getLogger('AMI_1.8')
@@ -139,8 +139,7 @@ class AMI_1_8(object):
         destination_user_id = int(event['XIVO_DSTID'])
         channel_name = event['CHANNEL']
 
-        with session_scope():
-            destination_name, destination_number = user_dao.get_name_number(destination_user_id)
+        destination_name, destination_number = user_db.get_name_number(destination_user_id)
 
         _set('desttype', 'user')
         _set('destid', destination_user_id)

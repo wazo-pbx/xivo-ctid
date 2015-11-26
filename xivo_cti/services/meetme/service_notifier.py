@@ -22,9 +22,10 @@ from copy import deepcopy
 from xivo_cti import config
 from xivo_cti.services.meetme import encoder
 from xivo_cti.client_connection import ClientConnection
+from xivo_cti.database import user_db
 
 from xivo_dao.helpers.db_utils import session_scope
-from xivo_dao import user_dao, user_line_dao
+from xivo_dao import user_line_dao
 
 logger = logging.getLogger('meetme_service_notifier')
 
@@ -91,9 +92,8 @@ class MeetmeServiceNotifier(object):
         if self._current_state:
             if bool(config['main']['context_separation']):
                 user_id = client_connection.user_id()
-                with session_scope():
-                    reachable_contexts = user_dao.get_reachable_contexts(user_id)
-                    msg = encoder.encode_update_for_contexts(self._current_state, reachable_contexts)
+                reachable_contexts = user_db.get_reachable_contexts(user_id)
+                msg = encoder.encode_update_for_contexts(self._current_state, reachable_contexts)
             else:
                 msg = encoder.encode_update(self._current_state)
             client_connection.send_message(msg)

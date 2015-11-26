@@ -42,7 +42,7 @@ class TestDaoList(unittest.TestCase):
         self.daolist._get_user.assert_called_once_with(user_id)
         self.assertEquals(result, expected_result)
 
-    @patch('xivo_dao.user_dao.get_users_config')
+    @patch('xivo_cti.database.user_db.get_users_config')
     def test_get_users(self, mock_get_users_config):
         mock_get_users_config.return_value = sentinel.value
 
@@ -51,7 +51,7 @@ class TestDaoList(unittest.TestCase):
         mock_get_users_config.assert_called_once_with()
         self.assertEqual(result, sentinel.value)
 
-    @patch('xivo_dao.user_dao.get_user_config')
+    @patch('xivo_cti.database.user_db.get_user_config')
     def test_get_user(self, mock_get_user_config):
         mock_get_user_config.return_value = sentinel.value
 

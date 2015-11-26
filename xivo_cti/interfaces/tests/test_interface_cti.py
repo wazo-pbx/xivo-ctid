@@ -48,7 +48,7 @@ class TestCTI(unittest.TestCase):
 
         self.assertEqual(result, user_id)
 
-    @patch('xivo_dao.user_dao.get_device_id')
+    @patch('xivo_cti.database.user_db.get_device_id')
     @patch('xivo_cti.ioc.context.context.get')
     def test_get_answer_cb(self, mock_device_manager_get, mock_get_device_id):
         mock_device_manager_get.return_value = mock_device_manager = Mock(DeviceManager)
@@ -60,7 +60,7 @@ class TestCTI(unittest.TestCase):
         mock_device_manager.get_answer_fn.assert_called_once_with(device_id)
         answer_fn.assert_called_once_with()
 
-    @patch('xivo_dao.user_dao.get_device_id', Mock(side_effect=LookupError))
+    @patch('xivo_cti.database.user_db.get_device_id', Mock(side_effect=LookupError))
     @patch('xivo_cti.ioc.context.context.get', Mock())
     def test_get_answer_cb_no_device(self):
 

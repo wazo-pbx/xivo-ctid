@@ -1,6 +1,7 @@
 xivo-test-helpers>=0.1.4
+docker-compose==1.4.2
 nose
 python-consul
 psycopg2
 pyhamcrest
-docker-compose==1.4.2
+sqlalchemy==0.9.4

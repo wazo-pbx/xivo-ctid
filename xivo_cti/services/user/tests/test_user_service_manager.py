@@ -483,20 +483,20 @@ class TestUserServiceManager(_BaseTestCase):
 
         client_connection.answer_cb.assert_called_once_with()
 
-    @patch('xivo_dao.user_dao.enable_recording')
-    def test_enable_recording(self, mock_enable_recording):
+    @patch('xivo_cti.database.user_db.enable_service')
+    def test_enable_recording(self, mock_enable_service):
         target = 37
 
         self.user_service_manager.enable_recording(target)
 
-        mock_enable_recording.assert_called_once_with(target)
+        mock_enable_service.assert_called_once_with(target, 'callrecord')
         self.user_service_notifier.recording_enabled.assert_called_once_with(target)
 
-    @patch('xivo_dao.user_dao.disable_recording')
-    def test_disable_recording(self, mock_disable_recording):
+    @patch('xivo_cti.database.user_db.disable_service')
+    def test_disable_recording(self, mock_disable_service):
         target = 35
 
         self.user_service_manager.disable_recording(target)
 
-        mock_disable_recording.assert_called_once_with(target)
+        mock_disable_service.assert_called_once_with(target, 'callrecord')
         self.user_service_notifier.recording_disabled.assert_called_once_with(target)

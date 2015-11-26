@@ -25,9 +25,7 @@ from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
-
-from xivo_dao.helpers.db_utils import session_scope
-from xivo_dao import user_dao
+from xivo_cti.database import user_db
 
 logger = logging.getLogger('interface_cti')
 
@@ -159,8 +157,7 @@ class CTI(interfaces.Interfaces):
     def _get_answer_cb(self, user_id):
         device_manager = context.get('device_manager')
         try:
-            with session_scope():
-                device_id = user_dao.get_device_id(user_id)
+            device_id = user_db.get_device_id(user_id)
             return device_manager.get_answer_fn(device_id)
         except LookupError:
             return self.answer_cb
