@@ -309,9 +309,7 @@ class Safe(object):
         chanprops = self.channels.get(channel)
         relations = chanprops.relations
         for r in relations:
-            if r.startswith('user:'):
-                self.handle_cti_stack('setforce', ('users', 'updatestatus', r[5:]))
-            elif r.startswith('phone:'):
+            if r.startswith('phone:'):
                 self.handle_cti_stack('setforce', ('phones', 'updatestatus', r[6:]))
         self.handle_cti_stack('empty_stack')
 
