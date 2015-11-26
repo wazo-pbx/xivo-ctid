@@ -25,7 +25,7 @@ class ChannelRole(object):
 
 class Channel(object):
 
-    def __init__(self, channel, context, unique_id=None):
+    def __init__(self, channel, context, unique_id):
         self.channel = channel
         self.context = context
         self.unique_id = unique_id
