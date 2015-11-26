@@ -50,13 +50,9 @@ class AnyList(object):
             'xivo_uuid',
         ],
         'phones': [
-            'context',
-            'protocol',
             'number',
             'iduserfeatures',
             'identity',
-            'initialized',
-            'allowtransfer',
         ],
         'agents': [
             'context',
@@ -97,9 +93,6 @@ class AnyList(object):
         },
         'phones': {
             'hintstatus': '4',
-            'channels': [],
-            'queues': [],
-            'groups': []
         },
         'trunks': {
             'hintstatus': '-2',
