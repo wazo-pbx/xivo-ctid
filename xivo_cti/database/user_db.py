@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_dao.alchemy.userfeatures import UserFeatures as User
+from xivo_dao.alchemy.contextinclude import ContextInclude
+from xivo_dao.alchemy.extension import Extension
+from xivo_dao.alchemy.infos import Infos
 from xivo_dao.alchemy.linefeatures import LineFeatures as Line
 from xivo_dao.alchemy.user_line import UserLine
-from xivo_dao.alchemy.extension import Extension
-from xivo_dao.alchemy.contextinclude import ContextInclude
-
+from xivo_dao.alchemy.userfeatures import UserFeatures as User
 from xivo_dao.helpers.db_utils import session_scope
 
 USER_CONFIG_FIELDS = (
@@ -100,10 +100,10 @@ def find_line_context(user_id):
 def get_reachable_contexts(user_id):
     with session_scope() as session:
         query = (session.query(Extension.context)
-                 .join(UserLine.main_extension)
+                 .join(UserLine.main_extension_rel)
                  .join(UserLine.main_user_rel)
                  .filter(UserLine.user_id == user_id))
-        contexts = (row.context for row in query)
+        contexts = [row.context for row in query]
         return _get_nested_contexts(session, contexts)
 
 
@@ -138,22 +138,16 @@ def get_name_number(user_id):
         return row.name, row.exten
 
 
-def get_context(user_id):
-    with session_scope() as session:
-        query = (session.query(Line.context)
-                 .join(UserLine.main_line_rel)
-                 .join(UserLine.main_user_rel)
-                 .filter(UserLine.user_id == user_id))
-        return query.scalar()
-
-
 def get_device_id(user_id):
     with session_scope() as session:
         query = (session.query(Line.device)
                  .join(UserLine.main_line_rel)
                  .join(UserLine.main_user_rel)
                  .filter(UserLine.user_id == user_id))
-        return query.scalar()
+        result = query.scalar()
+    if not result:
+        raise LookupError('Cannot find a device from this user id %s' % user_id)
+    return result
 
 
 def get_user_config(user_id):
@@ -175,9 +169,10 @@ def _config_query(session):
     columns = (getattr(User, name).label(name) for name in USER_CONFIG_FIELDS)
     return (session.query(Line.id.label('line_id'),
                           Line.context.label('line_context'),
+                          Infos.uuid.label('xivo_uuid'),
                           *columns)
-            .outerjoin(UserLine.main_user_rel)
-            .outerjoin(UserLine.main_line_rel))
+            .outerjoin(User.main_line_rel)
+            .outerjoin(UserLine.linefeatures))
 
 
 def _format_row(row):
@@ -190,4 +185,5 @@ def _format_row(row):
     user['identity'] = row.fullname
     user['context'] = row.line_context
     user['linelist'] = line_list
+    user['xivo_uuid'] = row.xivo_uuid
     return user
