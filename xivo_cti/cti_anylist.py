@@ -79,7 +79,6 @@ class AnyList(object):
             'name',
             'admin_moderationmode'
         ],
-        'outcalls': [],
         'queuemembers': [
             'queue_name',
             'interface',
