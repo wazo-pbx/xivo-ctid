@@ -30,14 +30,3 @@ class Channel(object):
         self.context = context
         self.unique_id = unique_id
         self.role = ChannelRole.unknown
-        # destlist to update along the incoming channel path, in order
-        # to be ready when a sheet will be sent to the 'destination'
-        self.relations = []
-
-    def addrelation(self, relation):
-        if relation not in self.relations:
-            self.relations.append(relation)
-
-    def delrelation(self, relation):
-        if relation in self.relations:
-            self.relations.remove(relation)

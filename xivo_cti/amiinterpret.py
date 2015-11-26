@@ -93,10 +93,8 @@ class AMI_1_8(object):
             except LookupError:
                 logger.exception('Could not set user id for dial')
             self.innerdata.channels[channel].role = ChannelRole.caller
-            self.innerdata.update(channel)
         if destination in self.innerdata.channels:
             self.innerdata.channels[destination].role = ChannelRole.callee
-            self.innerdata.update(destination)
         self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):

@@ -70,20 +70,6 @@ class TestSafe(unittest.TestCase):
                 found = True
         self.assertTrue(found, 'Could not find callback to function %s' % fn)
 
-    def test_trunk_hangup(self):
-        channel_name = 'SIP/mon_trunk-12345'
-
-        channel = Mock(Channel)
-        channel.relations = ['trunk:1']
-        self.safe.channels[channel_name] = channel
-        self.safe.xod_status['trunks'] = {}
-        self.safe.xod_status['trunks'][1] = {'channels': [channel_name]}
-
-        self.safe.hangup(channel_name)
-
-        self.assertTrue(channel_name not in self.safe.channels)
-        self.assertTrue(channel_name not in self.safe.xod_status['trunks'][1]['channels'])
-
     def test_that_user_match_with_no_user_returns_false(self):
         self.safe.xod_config['users'] = Mock(UsersList, keeplist={})
 

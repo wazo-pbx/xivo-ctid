@@ -34,13 +34,11 @@ from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
 from xivo_cti.lists import (agents_list, groups_list, meetmes_list,
-                            phones_list, queues_list, users_list, voicemails_list,
-                            trunks_list)
+                            phones_list, queues_list, users_list, voicemails_list)
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
-from xivo_dao import trunk_dao
 from xivo_dao.resources.user import dao as user_dao
 
 from collections import defaultdict
@@ -80,7 +78,6 @@ class Safe(object):
             'meetmes': meetmes_list.MeetmesList(self),
             'phones': phones_list.PhonesList(self),
             'queues': queues_list.QueuesList(self),
-            'trunks': trunks_list.TrunksList(self),
             'users': users_list.UsersList(self),
             'voicemails': voicemails_list.VoicemailsList(self),
         }
@@ -292,7 +289,6 @@ class Safe(object):
         if channel_name not in self.channels:
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
-        self.updaterelations(channel_name)
 
     def voicemailupdate(self, mailbox, new, old=None, waiting=None):
         for k, v in self.xod_config['voicemails'].keeplist.iteritems():
@@ -358,58 +354,12 @@ class Safe(object):
 
     def hangup(self, channel):
         if channel in self.channels:
-            self._remove_channel_relations(channel)
             del self.channels[channel]
-
-    def _remove_channel_relations(self, channel):
-        relations = self.channels[channel].relations
-        for r in relations:
-            termination_type, termination_id = r.split(':', 1)
-            list_name = termination_type + 's'
-            if list_name == 'trunks':
-                termination_id = int(termination_id)
-            chanlist = self.xod_status[list_name][termination_id]['channels']
-            if channel in chanlist:
-                chanlist.remove(channel)
-
-    def updaterelations(self, channel):
-        self.channels[channel].relations = []
-        if channel.startswith('SIPPeer/'):
-            return
-        try:
-            termination = self.ast_channel_to_termination(channel)
-            t = self.ztrunks(termination.get('protocol'), termination.get('name'))
-            if t:
-                self.channels[channel].addrelation('trunk:%s' % t)
-        except LookupError:
-            logger.exception('find termination according to channel %s', channel)
-
-    # IPBX side
-
-    def ast_channel_to_termination(self, channel):
-        term = {}
-        # special cases : AsyncGoto/IAX2/asteriskisdn-13622<ZOMBIE>
-        # SCCP, DAHDI, ...
-        # what about a peer called a-b-c ?
-        cutchan1 = channel.split('/')
-        if len(cutchan1) == 2:
-            protocol = cutchan1[0]
-            cutchan2 = cutchan1[1].split('-')
-            name = cutchan2[0]
-            term = {'protocol': protocol, 'name': name}
-        return term
 
     def zphones(self, protocol, name):
         if protocol:
             protocol = protocol.lower()
             return self.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, name)
-
-    def ztrunks(self, protocol, name):
-        try:
-            with session_scope():
-                return trunk_dao.find_by_proto_name(protocol, name)
-        except (LookupError, ValueError):
-            return None
 
     def sheetsend(self, where, uid):
         sheets = config.get('sheets')
