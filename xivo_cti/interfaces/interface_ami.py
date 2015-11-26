@@ -232,20 +232,8 @@ class AMI(object):
             pass
 
         if 'amicommand' in properties:
-            if properties['amicommand'] in ['originate',
-                                            'txfax']:
+            if properties['amicommand'] in ['originate', 'txfax']:
                 self.originate_actionids[actionid] = properties
-            elif ('mailboxcount' in properties['amicommand'] and
-                  'amiargs' in properties and
-                  len(properties['amiargs']) > 1):
-                # The context is not part of this event, it's only part
-                # of the request when using track_and_execute with an
-                # extra argument
-                context = properties['amiargs'][1]
-                fullmailbox = event['Mailbox']
-                self.innerdata.voicemailupdate(fullmailbox,
-                                               event['NewMessages'],
-                                               event['OldMessages'])
 
     def _run_functions_with_event(self, functions, event):
         for function in functions:

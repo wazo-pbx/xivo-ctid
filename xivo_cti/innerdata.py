@@ -290,16 +290,10 @@ class Safe(object):
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
 
-    def voicemailupdate(self, mailbox, new, old=None, waiting=None):
-        for k, v in self.xod_config['voicemails'].keeplist.iteritems():
-            if mailbox == v.get('fullmailbox'):
-                self.handle_cti_stack('set', ('voicemails', 'updatestatus', k))
-                self.xod_status['voicemails'][k].update({'old': old,
-                                                         'new': new,
-                                                         'waiting': waiting})
-                self.handle_cti_stack('empty_stack')
-                logger.info("voicemail %s updated. new:%s old:%s waiting:%s", mailbox, new, old, waiting)
-                break
+    def voicemailupdate(self, mailbox_id, new):
+        self.handle_cti_stack('set', ('voicemails', 'updatestatus', mailbox_id))
+        self.xod_status['voicemails'][mailbox_id]['new'] = new
+        self.handle_cti_stack('empty_stack')
 
     def statusbylist(self, listname, item_id):
         if listname == 'queuemembers':

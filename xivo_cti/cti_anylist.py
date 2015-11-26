@@ -69,9 +69,7 @@ class AnyList(object):
         'groups': [],
         'voicemails': [
             'context',
-            'fullname',
             'mailbox',
-            'email'
         ],
         'meetmes': [
             'context',
@@ -118,8 +116,6 @@ class AnyList(object):
             'paused': False
         },
         'voicemails': {
-            'waiting': False,
-            'old': 0,
             'new': 0
         },
     }

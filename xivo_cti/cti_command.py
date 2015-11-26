@@ -38,11 +38,7 @@ REGCOMMANDS = [
     'chitchat',
 
     'getqueuesstats',
-
-    'ipbxcommand'
 ]
-
-IPBXCOMMANDS = ['mailboxcount']
 
 
 class Command(object):
@@ -267,52 +263,3 @@ class Command(object):
 
     def regcommand_getipbxlist(self):
         return {'ipbxlist': ['xivo']}
-
-    def regcommand_ipbxcommand(self):
-        reply = {}
-        self.ipbxcommand = self._commanddict.get('command')
-
-        if not self.ipbxcommand or self.ipbxcommand not in IPBXCOMMANDS:
-            return reply
-
-        reply['command'] = self.ipbxcommand
-
-        methodname = 'ipbxcommand_%s' % self.ipbxcommand
-
-        # check whether ipbxcommand is in the users's profile capabilities
-        zs = []
-        if hasattr(self, methodname):
-                zs = getattr(self, methodname)()
-
-        # if some actions have been requested ...
-        if self.commandid:  # pass the commandid on the actionid # 'user action - forwarded'
-            baseactionid = 'uaf:%s' % self.commandid
-        else:  # 'user action - auto'
-            baseactionid = 'uaa:%s' % ''.join(random.sample(ALPHANUMS, 10))
-        ipbxreply = 'noaction'
-        idz = 0
-        for z in zs:
-            if 'amicommand' in z:
-                params = {'mode': 'useraction',
-                          'request': {'requester': self._connection,
-                                      'ipbxcommand': self.ipbxcommand,
-                                      'commandid': self.commandid},
-                          'amicommand': z.get('amicommand'),
-                          'amiargs': z.get('amiargs')}
-                actionid = '%s-%03d' % (baseactionid, idz)
-                ipbxreply = self._ctiserver.interface_ami.execute_and_track(actionid, params)
-            else:
-                ipbxreply = z.get('error')
-            idz += 1
-
-        reply['ipbxreply'] = ipbxreply
-        return reply
-
-    def ipbxcommand_mailboxcount(self):
-        """
-        Send a MailboxCount ami command
-        """
-        if 'mailbox' in self._commanddict:
-            return [{'amicommand': 'mailboxcount',
-                     'amiargs': (self._commanddict['mailbox'],
-                                 self._commanddict['context'])}]
