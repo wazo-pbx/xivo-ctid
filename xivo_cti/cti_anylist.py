@@ -94,12 +94,6 @@ class AnyList(object):
         'phones': {
             'hintstatus': '4',
         },
-        'trunks': {
-            'hintstatus': '-2',
-            'channels': [],
-            'queues': [],
-            'groups': []
-        },
         'agents': {
             'phonenumber': None,
             'channel': None,

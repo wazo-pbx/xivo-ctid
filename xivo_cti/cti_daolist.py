@@ -19,11 +19,11 @@ import logging
 
 from xivo_dao.helpers.db_utils import session_scope
 
-from xivo_dao import (group_dao, agent_dao,
-                      meetme_dao, queue_dao, voicemail_dao,
-                      trunk_dao, user_line_dao)
+from xivo_dao import (group_dao, agent_dao, meetme_dao,
+                      queue_dao, voicemail_dao, user_line_dao)
 
 from xivo_cti.database import user_db
+
 
 logger = logging.getLogger('daolist')
 
@@ -199,23 +199,4 @@ class DaoList(object):
         res[key] = voicemail.todict()
         res[key]['fullmailbox'] = '%s@%s' % (voicemail.mailbox, voicemail.context)
         res[key]['identity'] = '%s (%s@%s)' % (voicemail.fullname, voicemail.mailbox, voicemail.context)
-        return res
-
-    def _get_trunks(self):
-        with session_scope():
-            res = {}
-            trunks = trunk_dao.all()
-            for trunk in trunks:
-                res.update(self._format_trunk_data(trunk))
-            return res
-
-    def _get_trunk(self, id):
-        with session_scope():
-            trunk = trunk_dao.get(id)
-            return self._format_trunk_data(trunk)
-
-    def _format_trunk_data(self, trunk):
-        res = {}
-        key = str(trunk.id)
-        res[key] = trunk.todict()
         return res
