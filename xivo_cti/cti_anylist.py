@@ -66,7 +66,6 @@ class AnyList(object):
             'displayname',
             'number'
         ],
-        'groups': [],
         'voicemails': [
             'context',
             'mailbox',
@@ -103,10 +102,6 @@ class AnyList(object):
             'groups': []
         },
         'queues': {
-            'agentmembers': [],
-            'phonemembers': [],
-        },
-        'groups': {
             'agentmembers': [],
             'phonemembers': [],
         },

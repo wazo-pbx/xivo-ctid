@@ -33,8 +33,8 @@ from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
-from xivo_cti.lists import (agents_list, groups_list, meetmes_list,
-                            phones_list, queues_list, users_list, voicemails_list)
+from xivo_cti.lists import (agents_list, meetmes_list, phones_list,
+                            queues_list, users_list, voicemails_list)
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import group_dao
@@ -74,7 +74,6 @@ class Safe(object):
     def init_xod_config(self):
         self.xod_config = {
             'agents': agents_list.AgentsList(self),
-            'groups': groups_list.GroupsList(self),
             'meetmes': meetmes_list.MeetmesList(self),
             'phones': phones_list.PhonesList(self),
             'queues': queues_list.QueuesList(self),

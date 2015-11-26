@@ -19,8 +19,7 @@ import logging
 
 from xivo_dao.helpers.db_utils import session_scope
 
-from xivo_dao import (group_dao, agent_dao, meetme_dao,
-                      queue_dao, voicemail_dao, user_line_dao)
+from xivo_dao import agent_dao, meetme_dao, queue_dao, voicemail_dao, user_line_dao
 
 from xivo_cti.database import user_db
 
@@ -100,26 +99,6 @@ class DaoList(object):
         iface_name = merged_line['name']
         merged_line['identity'] = '%s/%s' % (protocol, iface_name)
         res[str(line.id)] = merged_line
-        return res
-
-    def _get_groups(self):
-        with session_scope():
-            res = {}
-            groups = group_dao.all()
-            for group in groups:
-                res.update(self._format_group_data(group))
-            return res
-
-    def _get_group(self, id):
-        with session_scope():
-            group = group_dao.get(id)
-            return self._format_group_data(group)
-
-    def _format_group_data(self, group):
-        res = {}
-        key = str(group.id)
-        res[key] = group.todict()
-        res[key]['fullname'] = '%s (%s)' % (group.name, group.context)
         return res
 
     def _get_agents(self):
