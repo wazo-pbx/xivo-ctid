@@ -305,14 +305,6 @@ class Safe(object):
                 logger.info("voicemail %s updated. new:%s old:%s waiting:%s", mailbox, new, old, waiting)
                 break
 
-    def update(self, channel):
-        chanprops = self.channels.get(channel)
-        relations = chanprops.relations
-        for r in relations:
-            if r.startswith('phone:'):
-                self.handle_cti_stack('setforce', ('phones', 'updatestatus', r[6:]))
-        self.handle_cti_stack('empty_stack')
-
     def statusbylist(self, listname, item_id):
         if listname == 'queuemembers':
             return self.queue_member_cti_adapter.get_status(item_id)
@@ -402,14 +394,6 @@ class Safe(object):
                 self.channels[channel].addrelation('trunk:%s' % t)
         except LookupError:
             logger.exception('find termination according to channel %s', channel)
-
-    def handle_bridge_link(self, bridge_event):
-        channel_1, channel_2 = bridge_event.bridge.channels
-        self._update_connected_channel(channel_1, channel_2)
-        self._update_connected_channel(channel_2, channel_1)
-
-    def _update_connected_channel(self, channel, peer_channel):
-        self.update(channel.channel)
 
     # IPBX side
 
