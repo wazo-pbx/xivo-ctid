@@ -93,16 +93,8 @@ class AMI_1_8(object):
             except LookupError:
                 logger.exception('Could not set user id for dial')
             self.innerdata.channels[channel].role = ChannelRole.caller
-            self.innerdata.channels[channel].properties['commstatus'] = 'calling'
-            self.innerdata.channels[channel].properties['timestamp'] = time.time()
-            self.innerdata.setpeerchannel(channel, destination)
-            self.innerdata.update(channel)
         if destination in self.innerdata.channels:
             self.innerdata.channels[destination].role = ChannelRole.callee
-            self.innerdata.channels[destination].properties['commstatus'] = 'ringing'
-            self.innerdata.channels[destination].properties['timestamp'] = time.time()
-            self.innerdata.setpeerchannel(destination, channel)
-            self.innerdata.update(destination)
         self._call_form_dispatch_filter.handle_dial(uniqueid, channel)
 
     def ami_extensionstatus(self, event):
@@ -270,44 +262,18 @@ class AMI_1_8(object):
                     getattr(self, methodname)(chanprops, event)
 
     def ami_messagewaiting(self, event):
-        try:
-            full_mailbox = event['Mailbox']
-            for mailbox_id, mailbox in self.innerdata.xod_config['voicemails'].keeplist.iteritems():
-                if full_mailbox == mailbox['fullmailbox']:
-                    previous_status = self.innerdata.xod_status['voicemails'][mailbox_id]
-                    old = event.get('Old') or previous_status['old']
-                    new = event.get('New') or previous_status['new']
-                    waiting = event.get('Waiting') or previous_status['waiting']
-                    self.innerdata.voicemailupdate(full_mailbox, new, old, waiting)
-            if 'Old' not in event and 'New' not in event:
-                logger.info("Voicemail event did not contain 'old' and 'new' count. retrieving mailbox count")
-                params = {'mode': 'vmupdate',
-                          'amicommand': 'mailboxcount',
-                          'amiargs': full_mailbox.split('@')}
-                actionid = ''.join(random.sample(ALPHANUMS, 10))
-                self.interface_ami.execute_and_track(actionid, params)
-        except KeyError:
-            logger.warning('ami_messagewaiting Failed to update mailbox')
+        mailbox_id = self._voicemail_id_from_fullmailbox(event['Mailbox'])
+        if mailbox_id:
+            self.innerdata.voicemailupdate(mailbox_id, event['New'])
 
     def ami_coreshowchannel(self, event):
         channel = event['Channel']
         context = event['Context']
         state = event['ChannelState']
         state_description = event['ChannelStateDesc']
-        timestamp_start = self.timeconvert(event['Duration'])
         unique_id = event['Uniqueid']
 
         self.innerdata.newchannel(channel, context, state, state_description, unique_id)
-        channelstruct = self.innerdata.channels[channel]
-
-        channelstruct.properties['timestamp'] = timestamp_start
-
-        if state == '4':
-            channelstruct.properties['commstatus'] = 'calling'
-        elif state == '5':
-            channelstruct.properties['commstatus'] = 'ringing'
-        elif state == '6':
-            channelstruct.properties['commstatus'] = 'linked'
 
     def ami_listdialplan(self, event):
         extension = event.get('Extension')
@@ -320,14 +286,20 @@ class AMI_1_8(object):
 
     def ami_voicemailuserentry(self, event):
         fullmailbox = '%s@%s' % (event['VoiceMailbox'], event['VMContext'])
-        # only NewMessageCount here - OldMessageCount only when IMAP compiled
-        # relation to Old/New/Waiting in MessageWaiting UserEvent ?
-        self.innerdata.voicemailupdate(fullmailbox, event['NewMessageCount'])
+        voicemail_id = self._voicemail_id_from_fullmailbox(fullmailbox)
+        if voicemail_id:
+            self.innerdata.voicemailupdate(voicemail_id, event['NewMessageCount'])
 
     def amiresponse_extensionstatus(self, event):
         hint = event.get('Hint')
         if hint:
             self._endpoint_status_updater.update_status(hint, event['Status'])
+
+    def _voicemail_id_from_fullmailbox(self, fullmailbox):
+        for voicemail_id, vm_config in self.innerdata.xod_config['voicemails'].keeplist.iteritems():
+            if vm_config['fullmailbox'] == fullmailbox:
+                return voicemail_id
+        return None
 
     def _get_set_fn(self, uniqueid):
         def _set(var_name, var_value):

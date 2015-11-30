@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import time
-
 
 class ChannelRole(object):
 
@@ -27,37 +25,8 @@ class ChannelRole(object):
 
 class Channel(object):
 
-    def __init__(self, channel, context, unique_id=None):
+    def __init__(self, channel, context, unique_id):
         self.channel = channel
-        self.peerchannel = None
         self.context = context
         self.unique_id = unique_id
         self.role = ChannelRole.unknown
-        # destlist to update along the incoming channel path, in order
-        # to be ready when a sheet will be sent to the 'destination'
-
-        self.properties = {
-            'holded': False,
-            'commstatus': 'ready',
-            'timestamp': time.time(),
-            'talkingto_id': None,
-            'state': 'Unknown',
-        }
-        self.relations = []
-
-    def addrelation(self, relation):
-        if relation not in self.relations:
-            self.relations.append(relation)
-
-    def delrelation(self, relation):
-        if relation in self.relations:
-            self.relations.remove(relation)
-
-    def update_state(self, state, description):
-        # values
-        # 0 Down (creation time)
-        # 5 Ringing
-        # 6 Up
-        self.state = state
-        if description:
-            self.properties['state'] = description

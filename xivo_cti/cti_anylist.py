@@ -34,8 +34,6 @@ class AnyList(object):
             'lastname',
             'fullname',
             'mobilephonenumber',
-            'profileclient',
-            'enableclient',
             'agentid',
             'voicemailid',
             'enablerna',
@@ -52,13 +50,9 @@ class AnyList(object):
             'xivo_uuid',
         ],
         'phones': [
-            'context',
-            'protocol',
             'number',
             'iduserfeatures',
             'identity',
-            'initialized',
-            'allowtransfer',
         ],
         'agents': [
             'context',
@@ -72,12 +66,9 @@ class AnyList(object):
             'displayname',
             'number'
         ],
-        'groups': [],
         'voicemails': [
             'context',
-            'fullname',
             'mailbox',
-            'email'
         ],
         'meetmes': [
             'context',
@@ -85,7 +76,6 @@ class AnyList(object):
             'name',
             'admin_moderationmode'
         ],
-        'outcalls': [],
         'queuemembers': [
             'queue_name',
             'interface',
@@ -99,15 +89,6 @@ class AnyList(object):
         },
         'phones': {
             'hintstatus': '4',
-            'channels': [],
-            'queues': [],
-            'groups': []
-        },
-        'trunks': {
-            'hintstatus': '-2',
-            'channels': [],
-            'queues': [],
-            'groups': []
         },
         'agents': {
             'phonenumber': None,
@@ -124,18 +105,12 @@ class AnyList(object):
             'agentmembers': [],
             'phonemembers': [],
         },
-        'groups': {
-            'agentmembers': [],
-            'phonemembers': [],
-        },
         'meetmes': {
             'pseudochan': None,
             'channels': {},
             'paused': False
         },
         'voicemails': {
-            'waiting': False,
-            'old': 0,
             'new': 0
         },
     }

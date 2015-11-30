@@ -65,11 +65,3 @@ class BridgeManager(object):
         channel = self._innerdata.channels[channel_name]
 
         bridge._add_channel(channel)
-
-    # package private method
-    def _finish_bridge_initialization(self, bridge_id):
-        bridge = self._bridges[bridge_id]
-        if bridge.linked():
-            channel_1, channel_2 = bridge.channels
-            self._innerdata.setpeerchannel(channel_1.channel, channel_2.channel)
-            self._innerdata.setpeerchannel(channel_2.channel, channel_1.channel)

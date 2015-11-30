@@ -18,7 +18,7 @@
 import unittest
 
 from hamcrest import assert_that, has_key, equal_to
-from mock import Mock, call
+from mock import Mock
 from xivo_cti.channel import Channel
 from xivo_cti.innerdata import Safe
 from xivo_cti.services.bridge.bridge import Bridge
@@ -95,18 +95,3 @@ class TestBridgeManager(unittest.TestCase):
 
         bridge._add_channel.assert_called_once_with(self.channel)
         assert_that(self.bridge_notifier._on_bridge_enter.called, equal_to(False))
-
-    def test_finish_bridge_initialization(self):
-        channel_1 = Mock()
-        channel_2 = Mock()
-        bridge = self._install_bridge()
-        bridge.linked.return_value = True
-        bridge.channels = [channel_1, channel_2]
-
-        self.bridge_manager._finish_bridge_initialization(self.bridge_id)
-
-        expected_calls = [
-            call(channel_1.channel, channel_2.channel),
-            call(channel_2.channel, channel_1.channel),
-        ]
-        assert_that(expected_calls, equal_to(self.innerdata.setpeerchannel.call_args_list))

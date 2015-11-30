@@ -33,14 +33,12 @@ from xivo_cti.cti.commands.getlist import ListID, UpdateConfig, UpdateStatus
 from xivo_cti.cti.commands.availstate import Availstate
 from xivo_cti.cti_daolist import NotFoundError
 from xivo_cti.ioc.context import context
-from xivo_cti.lists import (agents_list, groups_list, meetmes_list,
-                            phones_list, queues_list, users_list, voicemails_list,
-                            trunks_list)
+from xivo_cti.lists import (agents_list, meetmes_list, phones_list,
+                            queues_list, users_list, voicemails_list)
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
-from xivo_dao import trunk_dao
 from xivo_dao.resources.user import dao as user_dao
 
 from collections import defaultdict
@@ -76,11 +74,9 @@ class Safe(object):
     def init_xod_config(self):
         self.xod_config = {
             'agents': agents_list.AgentsList(self),
-            'groups': groups_list.GroupsList(self),
             'meetmes': meetmes_list.MeetmesList(self),
             'phones': phones_list.PhonesList(self),
             'queues': queues_list.QueuesList(self),
-            'trunks': trunks_list.TrunksList(self),
             'users': users_list.UsersList(self),
             'voicemails': voicemails_list.VoicemailsList(self),
         }
@@ -121,13 +117,7 @@ class Safe(object):
             return self.queue_member_cti_adapter.get_config(item_id)
         return self.xod_config[listname].get_item_config(item_id, user_contexts)
 
-    def get_status_channel(self, channel_id):
-        if channel_id in self.channels:
-            return self.channels[channel_id].properties
-
     def get_status(self, listname, item_id):
-        if listname == 'channels':
-            return self.get_status_channel(item_id)
         if listname == 'queuemembers':
             return self.queue_member_cti_adapter.get_status(item_id)
 
@@ -155,7 +145,6 @@ class Safe(object):
         ami_handler.register_callback('AgentCalled', self.handle_agent_called)
         ami_handler.register_callback('AgentConnect', self.handle_agent_linked)
         ami_handler.register_callback('AgentComplete', self.handle_agent_unlinked)
-        ami_handler.register_callback('Newstate', self.new_state)
         ami_handler.register_userevent_callback('AgentLogin', self.handle_agent_login)
 
     def _set_channel_extra_vars_agent(self, event, member_name):
@@ -208,7 +197,6 @@ class Safe(object):
         self.handle_cti_stack('set', ('agents', 'updatestatus', agent_id))
         agstatus = self.xod_status['agents'].get(agent_id)
         agstatus['phonenumber'] = event['Extension']
-        # define relations for agent:x : channel:y and phone:z
         self.handle_cti_stack('empty_stack')
 
     def handle_getlist_list_id(self, listname, user_id):
@@ -279,26 +267,6 @@ class Safe(object):
 
         return domatch
 
-    def find_users_channels_with_peer(self, user_id):
-        '''Find a user's channels that that are talking to another channel'''
-        potential_channel_start = []
-        main_line = self.xod_config['phones'].get_main_line(user_id)
-        agent = self.xod_config['agents'].get_agent_by_user(user_id)
-        if main_line:
-            potential_channel_start.append('%s/%s' % (main_line['protocol'], main_line['name']))
-        if agent:
-            potential_channel_start.append('Agent/%s' % agent['number'])
-
-        def channel_filter(channel_key):
-            '''Check if a channel (SIP/1234-xxxx) matches our potential channels'''
-            for channel_start in potential_channel_start:
-                if (channel_key.lower().startswith(channel_start.lower()) and
-                        self.channels[channel_key].peerchannel and
-                        not self.channels[channel_key].properties['holded']):
-                    return True
-
-        return filter(channel_filter, self.channels)
-
     def user_get_hashed_password(self, userid, sessionid):
         with session_scope():
             password = user_dao.get(userid).password
@@ -314,52 +282,20 @@ class Safe(object):
         with auth_client(userid) as client:
             client.token.revoke(token)
 
-    def new_state(self, event):
-        channel = event['Channel']
-        state = event['ChannelState']
-        description = event['ChannelStateDesc']
-
-        if channel in self.channels:
-            self.channels[channel].update_state(state, description)
-
     def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:
             return
         if channel_name not in self.channels:
             channel = Channel(channel_name, context, unique_id)
             self.channels[channel_name] = channel
-        self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel_name))
-        self.updaterelations(channel_name)
-        self.channels[channel_name].update_state(state, state_description)
-        self.handle_cti_stack('empty_stack')
 
-    def voicemailupdate(self, mailbox, new, old=None, waiting=None):
-        for k, v in self.xod_config['voicemails'].keeplist.iteritems():
-            if mailbox == v.get('fullmailbox'):
-                self.handle_cti_stack('set', ('voicemails', 'updatestatus', k))
-                self.xod_status['voicemails'][k].update({'old': old,
-                                                         'new': new,
-                                                         'waiting': waiting})
-                self.handle_cti_stack('empty_stack')
-                logger.info("voicemail %s updated. new:%s old:%s waiting:%s", mailbox, new, old, waiting)
-                break
-
-    def update(self, channel):
-        chanprops = self.channels.get(channel)
-        relations = chanprops.relations
-        for r in relations:
-            if r.startswith('user:'):
-                self.handle_cti_stack('setforce', ('users', 'updatestatus', r[5:]))
-            elif r.startswith('phone:'):
-                self.handle_cti_stack('setforce', ('phones', 'updatestatus', r[6:]))
-        self.handle_cti_stack('setforce', ('channels', 'updatestatus', channel))
+    def voicemailupdate(self, mailbox_id, new):
+        self.handle_cti_stack('set', ('voicemails', 'updatestatus', mailbox_id))
+        self.xod_status['voicemails'][mailbox_id]['new'] = new
         self.handle_cti_stack('empty_stack')
 
     def statusbylist(self, listname, item_id):
-        if listname == 'channels':
-            if item_id and item_id in self.channels:
-                return self.channels[item_id].properties
-        elif listname == 'queuemembers':
+        if listname == 'queuemembers':
             return self.queue_member_cti_adapter.get_status(item_id)
         else:
             if item_id and item_id in self.xod_status[listname]:
@@ -411,92 +347,12 @@ class Safe(object):
 
     def hangup(self, channel):
         if channel in self.channels:
-            self._remove_channel_relations(channel)
             del self.channels[channel]
-            self._ctiserver.send_cti_event({'class': 'getlist',
-                                            'listname': 'channels',
-                                            'function': 'delconfig',
-                                            'tipbxid': self.ipbxid,
-                                            'list': [channel]})
-
-    def _remove_channel_relations(self, channel):
-        relations = self.channels[channel].relations
-        for r in relations:
-            termination_type, termination_id = r.split(':', 1)
-            list_name = termination_type + 's'
-            if list_name == 'trunks':
-                termination_id = int(termination_id)
-            chanlist = self.xod_status[list_name][termination_id]['channels']
-            if channel in chanlist:
-                chanlist.remove(channel)
-                if list_name == 'phones':
-                    self.appendcti('phones', 'updatestatus', termination_id)
-
-    def updaterelations(self, channel):
-        self.channels[channel].relations = []
-        if channel.startswith('SIPPeer/'):
-            return
-        try:
-            termination = self.ast_channel_to_termination(channel)
-            p = self.zphones(termination.get('protocol'), termination.get('name'))
-            if p:
-                self.channels[channel].addrelation('phone:%s' % p)
-                oldchans = self.xod_status['phones'][p].get('channels')
-                if channel not in oldchans:
-                    self.handle_cti_stack('set', ('phones', 'updatestatus', p))
-                    oldchans.append(channel)
-                    self.handle_cti_stack('empty_stack')
-                self.xod_status['phones'][p]['channels'] = oldchans
-            t = self.ztrunks(termination.get('protocol'), termination.get('name'))
-            if t:
-                self.channels[channel].addrelation('trunk:%s' % t)
-        except LookupError:
-            logger.exception('find termination according to channel %s', channel)
-
-    def setpeerchannel(self, channel, peerchannel):
-        chanprops = self.channels.get(channel)
-        chanprops.peerchannel = peerchannel
-        chanprops.properties['talkingto_id'] = peerchannel
-
-    def handle_bridge_link(self, bridge_event):
-        channel_1, channel_2 = bridge_event.bridge.channels
-        self._update_connected_channel(channel_1, channel_2)
-        self._update_connected_channel(channel_2, channel_1)
-
-    def _update_connected_channel(self, channel, peer_channel):
-        channel.properties.update({
-            'commstatus': 'linked',
-            'timestamp': time.time(),
-        })
-        self.setpeerchannel(channel.channel, peer_channel.channel)
-        self.update(channel.channel)
-
-    # IPBX side
-
-    def ast_channel_to_termination(self, channel):
-        term = {}
-        # special cases : AsyncGoto/IAX2/asteriskisdn-13622<ZOMBIE>
-        # SCCP, DAHDI, ...
-        # what about a peer called a-b-c ?
-        cutchan1 = channel.split('/')
-        if len(cutchan1) == 2:
-            protocol = cutchan1[0]
-            cutchan2 = cutchan1[1].split('-')
-            name = cutchan2[0]
-            term = {'protocol': protocol, 'name': name}
-        return term
 
     def zphones(self, protocol, name):
         if protocol:
             protocol = protocol.lower()
             return self.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, name)
-
-    def ztrunks(self, protocol, name):
-        try:
-            with session_scope():
-                return trunk_dao.find_by_proto_name(protocol, name)
-        except (LookupError, ValueError):
-            return None
 
     def sheetsend(self, where, uid):
         sheets = config.get('sheets')

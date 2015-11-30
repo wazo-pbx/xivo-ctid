@@ -24,9 +24,8 @@ logger = logging.getLogger(__name__)
 
 class BridgeNotifier(object):
 
-    def __init__(self, call_form_dispatch_filter, call_receiver, current_call_manager, innerdata):
+    def __init__(self, call_form_dispatch_filter, call_receiver, current_call_manager):
         self._callbacks_bridge_link = [
-            innerdata.handle_bridge_link,
             call_form_dispatch_filter.handle_bridge_link,
             call_receiver.handle_bridge_link,
             current_call_manager.handle_bridge_link,

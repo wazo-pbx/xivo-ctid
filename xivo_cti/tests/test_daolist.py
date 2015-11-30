@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -134,30 +134,6 @@ class TestDaoList(unittest.TestCase):
 
         self.assertEquals(result, expected_result)
 
-    def test_format_group_data(self):
-        group_id = 7
-        name = 'test_group'
-        context = 'default'
-        number = '2000'
-        group = self._generic_object(id=group_id,
-                                     name=name,
-                                     context=context,
-                                     number=number)
-
-        expected_result = {
-            str(group_id): {
-                'id': group_id,
-                'name': name,
-                'context': context,
-                'number': number,
-                'fullname': '%s (%s)' % (group.name, group.context)
-            }
-        }
-
-        result = self.daolist._format_group_data(group)
-
-        self.assertEquals(result, expected_result)
-
     def test_format_agent_data(self):
         agent_id = 3
         name = 'test_agent'
@@ -258,28 +234,5 @@ class TestDaoList(unittest.TestCase):
         }
 
         result = self.daolist._format_voicemail_data(voicemail)
-
-        self.assertEquals(result, expected_result)
-
-    def test_format_trunk_data(self):
-        trunk_id = 42
-        protocol = 'sip'
-        protocolid = 15
-        registerid = 0
-        trunk = self._generic_object(id=trunk_id,
-                                     protocol=protocol,
-                                     protocolid=protocolid,
-                                     registerid=registerid)
-
-        expected_result = {
-            str(trunk_id): {
-                'id': trunk_id,
-                'protocol': protocol,
-                'protocolid': protocolid,
-                'registerid': registerid
-            }
-        }
-
-        result = self.daolist._format_trunk_data(trunk)
 
         self.assertEquals(result, expected_result)
