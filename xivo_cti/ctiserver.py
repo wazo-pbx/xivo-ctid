@@ -173,6 +173,10 @@ class CTIServer(object):
     def _setup_token_renewer(self):
         agentd_client = context.get('agentd_client')
         self._token_renewer.subscribe_to_token_change(agentd_client.set_token)
+        self._token_renewer.subscribe_to_token_change(self._on_token_change)
+
+    def _on_token_change(self, token_id):
+        config['agentd']['token'] = token_id
 
     def _daemonize(self):
         if not config['foreground']:
