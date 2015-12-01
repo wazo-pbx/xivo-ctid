@@ -20,8 +20,10 @@ import logging
 from concurrent import futures
 from kombu import Connection, Exchange, Producer
 
+from xivo.auth_helpers import TokenRenewer
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
+from xivo_auth_client import Client as AuthClient
 from xivo_bus import Marshaler, Publisher
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -102,6 +104,8 @@ logger = logging.getLogger(__name__)
 
 
 def setup():
+    auth_client = new_auth_client()
+
     bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
     bus_connection = Connection(bus_url)
     bus_exchange = Exchange(config['bus']['exchange_name'],
@@ -188,9 +192,18 @@ def setup():
     context.register('status_forwarder', StatusForwarder)
     context.register('task_queue', new_task_queue)
     context.register('task_scheduler', new_task_scheduler)
+    context.register('token_renewer', TokenRenewer(auth_client))
     context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
+
+
+def new_auth_client():
+    auth_config = dict(config['auth'])
+    username = auth_config.pop('service_id')
+    password = auth_config.pop('service_key')
+    del auth_config['key_file']
+    return AuthClient(username=username, password=password, **auth_config)
 
 
 def new_broadcast_cti_group(cti_group_factory):

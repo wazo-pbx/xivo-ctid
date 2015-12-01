@@ -55,7 +55,11 @@ def auth_client(userid):
         username = user.username
         password = user.password
 
-    yield AuthClient(username=username, password=password, **config['auth'])
+    auth_config = dict(config['auth'])
+    del auth_config['key_file']
+    del auth_config['service_id']
+    del auth_config['service_key']
+    yield AuthClient(username=username, password=password, **auth_config)
 
 
 class Safe(object):
