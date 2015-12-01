@@ -161,11 +161,9 @@ class Safe(object):
             else:
                 data_type = 'user'
                 phone_id = self.zphones(proto, agent_number)
-                if not phone_id:
+                if not phone_id or phone_id not in self.xod_config['phones'].keeplist:
                     return
-                with session_scope():
-                    user = user_dao.get_main_user_by_line_id(phone_id)
-                    data_id = str(user.id)
+                data_id = self.xod_config['phones'].keeplist[phone_id]['iduserfeatures']
             _set('desttype', data_type)
             _set('destid', data_id)
         except NotFoundError:
