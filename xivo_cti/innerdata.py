@@ -152,16 +152,16 @@ class Safe(object):
     def _set_channel_extra_vars_agent(self, event, member_name):
         uniqueid = event['Uniqueid']
         _set = self._get_set_fn(uniqueid)
-        proto, agent_number = member_name.split('/', 1)
+        proto, iface = member_name.split('/', 1)
         try:
             if proto == 'Agent':
-                _set('agentnumber', agent_number)
+                _set('agentnumber', iface)
                 data_type = 'agent'
-                data_id = self.xod_config['agents'].idbyagentnumber(agent_number)
+                data_id = self.xod_config['agents'].idbyagentnumber(iface)
             else:
                 data_type = 'user'
-                phone_id = self.zphones(proto, agent_number)
-                if not phone_id or phone_id not in self.xod_config['phones'].keeplist:
+                phone_id = self.xod_config['phones'].get_phone_id_from_proto_and_name(proto.lower(), iface)
+                if not phone_id:
                     return
                 data_id = self.xod_config['phones'].keeplist[phone_id]['iduserfeatures']
             _set('desttype', data_type)
@@ -348,11 +348,6 @@ class Safe(object):
     def hangup(self, channel):
         if channel in self.channels:
             del self.channels[channel]
-
-    def zphones(self, protocol, name):
-        if protocol:
-            protocol = protocol.lower()
-            return self.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, name)
 
     def sheetsend(self, where, uid):
         sheets = config.get('sheets')
