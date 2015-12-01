@@ -15,6 +15,7 @@ test-setup: build-postgres
 	docker pull progrium/consul
 	docker pull xivo/asterisk
 	docker pull xivo/xivo-agentd
+	docker pull xivo/xivo-auth
 
 test:
 	nosetests suite

@@ -1,5 +1,8 @@
 debug: true
 db_uri: postgresql://asterisk:proformatique@postgres/asterisk
+auth:
+  host: auth
+  verify_certificate: False
 bus:
   host: rabbitmq
 rest_api:
