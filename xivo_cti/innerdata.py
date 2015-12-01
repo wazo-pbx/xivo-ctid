@@ -89,6 +89,8 @@ class Safe(object):
             self.xod_status[name] = config.init_status()
 
     def update_config_list(self, listname, state, item_id):
+        if listname not in self.xod_config:
+            return
         try:
             if state == 'add':
                 self._update_config_list_add(listname, item_id)
