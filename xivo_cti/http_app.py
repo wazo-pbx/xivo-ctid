@@ -24,7 +24,6 @@ from cherrypy import wsgiserver
 from flask import Flask
 from flask.ext import restful
 from flask_cors import CORS
-from werkzeug.contrib.fixers import ProxyFix
 from xivo import http_helpers
 
 from xivo_cti.swagger.resource import SwaggerResource
@@ -93,7 +92,6 @@ class HTTPInterface(object):
         app = Flask('xivo_ctid')
         http_helpers.add_logger(app, logger)
         app.after_request(http_helpers.log_request)
-        app.wsgi_app = ProxyFix(app.wsgi_app)
         app.secret_key = os.urandom(24)
         self.load_cors(app, config)
         api = restful.Api(app, prefix='/{}'.format(self.VERSION))
