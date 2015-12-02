@@ -40,7 +40,7 @@ Depends: ${python:Depends},
          xivo-ctid-client,
          xivo-dird-client,
          xivo-libdao,
-         xivo-lib-python (>= 15.17~20151009.134424.43993f6-1),
+         xivo-lib-python (>> 15.18),
          xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
 Description: XiVO CTI server library
  XiVO is a system based on a powerful IPBX, to bring an easy to
