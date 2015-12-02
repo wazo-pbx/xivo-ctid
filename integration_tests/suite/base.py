@@ -51,8 +51,7 @@ class BaseCTIDIntegrationTests(AssetLaunchingTestCase):
                 cur.execute('SELECT count(*) FROM userfeatures')
                 conn.close()
                 break
-            except psycopg2.OperationalError as e:
-                print e
+            except psycopg2.OperationalError:
                 print '.',
                 time.sleep(1)
         print 'PG is started'
