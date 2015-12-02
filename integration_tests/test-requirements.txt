@@ -5,3 +5,10 @@ python-consul
 psycopg2
 pyhamcrest
 sqlalchemy==0.9.4
+
+# xivo-ctid
+-e ..
+
+# dependencies for xivo-ctid db code
+git+https://github.com/xivo-pbx/xivo-dao.git
+git+https://github.com/xivo-pbx/xivo-lib-python.git
