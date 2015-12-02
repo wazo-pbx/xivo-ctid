@@ -38,6 +38,13 @@ from xivo_cti.lists.users_list import UsersList
 class TestSafe(unittest.TestCase):
 
     _ipbx_id = 'xivo'
+    _auth_config = {
+        'host': 'auth-host',
+        'port': 4242,
+        'key_file': '/tmp/some.yml',
+        'service_id': 'some-id',
+        'service_key': 'some-key',
+    }
 
     def setUp(self):
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
@@ -128,7 +135,7 @@ class TestSafe(unittest.TestCase):
         mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
         self.assertTrue(domatch)
 
-    @patch.dict('xivo_cti.innerdata.config', auth={'host': 'auth-host', 'port': 4242})
+    @patch.dict('xivo_cti.innerdata.config', auth=_auth_config)
     @patch('xivo_cti.innerdata.user_dao.get')
     @patch('xivo_cti.innerdata.AuthClient')
     def test_user_new_auth_token(self, auth_client_factory, get_user):
@@ -146,7 +153,7 @@ class TestSafe(unittest.TestCase):
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
         self.assertEquals(result, 'new-token')
 
-    @patch.dict('xivo_cti.innerdata.config', auth={'host': 'auth-host', 'port': 4242})
+    @patch.dict('xivo_cti.innerdata.config', auth=_auth_config)
     @patch('xivo_cti.innerdata.user_dao.get')
     @patch('xivo_cti.innerdata.AuthClient')
     def test_user_remove_auth_token(self, auth_client_factory, get_user):

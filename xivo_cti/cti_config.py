@@ -23,7 +23,7 @@ import time
 import xivo_cti
 
 from xivo.chain_map import ChainMap
-from xivo.config_helper import read_config_file_hierarchy
+from xivo.config_helper import parse_config_file, read_config_file_hierarchy
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao.resources.infos import dao as info_dao
@@ -50,6 +50,7 @@ _default_config = {
         'host': 'localhost',
         'port': 9497,
         'timeout': 2,
+        'key_file': '/var/lib/xivo-auth-keys/xivo-ctid-key.yml',
         'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
     'bus': {
@@ -88,6 +89,16 @@ _default_config = {
 _cli_config = {}
 _db_config = {}
 _file_config = {}
+_auth_config = {}
+
+
+def init_auth_config():
+    global _auth_config
+
+    key_file = parse_config_file(xivo_cti.config['auth']['key_file'])
+    _auth_config = {'auth': {'service_id': key_file['service_id'],
+                             'service_key': key_file['service_key']}}
+    _update_config()
 
 
 def init_config_file():
@@ -204,4 +215,4 @@ class _DbConfig(object):
 
 
 def _update_config():
-    xivo_cti.config.data = ChainMap(_cli_config, _file_config, _db_config, _default_config)
+    xivo_cti.config.data = ChainMap(_cli_config, _auth_config, _file_config, _db_config, _default_config)

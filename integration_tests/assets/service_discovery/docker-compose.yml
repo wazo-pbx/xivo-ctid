@@ -8,6 +8,7 @@ ctid:
   image: xivo/xivo-ctid
   volumes:
     - "./etc/xivo-ctid/conf.d:/etc/xivo-ctid/conf.d"
+    - "../_common:/data/_common"
   expose:
     - "5005"
   links:
@@ -16,6 +17,7 @@ ctid:
     - consul
     - agentd
     - asterisk
+    - auth
     - cti2
   command: xivo-ctid -fd
 cti2:
@@ -47,16 +49,18 @@ sync:
     - rabbitmq
     - consul
     - asterisk
+    - auth
     - ctid
     - cti2
     - agentd
   environment:
-    PORTS: "5432 5672 8500 5038 6262"
+    PORTS: "5432 5672 8500 5038 9497 6262"
 agentd:
   image: xivo/xivo-agentd
   links:
     - postgres
     - rabbitmq
+    - auth
   expose:
     - "9493"
   volumes:
@@ -69,3 +73,14 @@ asterisk:
     - "5038"
   volumes:
     - "./etc/asterisk/manager.conf:/etc/asterisk/manager.conf"
+auth:
+  image: xivo/xivo-auth
+  links:
+    - consul
+    - rabbitmq
+  expose:
+    - "9497"
+  volumes:
+    - "./etc/xivo-auth/config.yml:/etc/xivo-auth/config.yml"
+    - "../_common:/data/_common"
+  command: xivo-auth -f

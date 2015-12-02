@@ -1,0 +1,24 @@
+debug: true
+
+rest_api:
+  https:
+    certificate: /data/_common/ssl/auth/server.crt
+    private_key: /data/_common/ssl/auth/server.key
+
+enabled_plugins:
+  - xivo_user
+  - xivo_service
+
+services:
+  xivo-ctid:
+    key_file: /data/_common/auth-keys/xivo-ctid-key.yml
+
+consul:
+  scheme: http
+  host: consul
+  token: the_one_ring
+
+amqp:
+  uri: amqp://guest:guest@rabbitmq:5672/
+  exchange_name: xivo
+  exchange_type: topic

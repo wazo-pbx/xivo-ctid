@@ -1,5 +1,9 @@
 debug: true
 db_uri: postgresql://asterisk:proformatique@postgres/asterisk
+auth:
+    host: auth
+    key_file: /data/_common/auth-keys/xivo-ctid-key.yml
+    verify_certificate: False
 bus:
     host: rabbitmq
 consul:
