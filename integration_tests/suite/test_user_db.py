@@ -54,6 +54,11 @@ class TestUserFeaturesDAO(test_dao.DAOTestCase):
         _IntegrationUser.setUpClass()
         super(TestUserFeaturesDAO, cls).setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        super(TestUserFeaturesDAO, cls).tearDownClass()
+        _IntegrationUser.tearDownClass()
+
     def test_set_dnd(self):
         user_id = self.add_user_dnd_not_set()
 
