@@ -49,7 +49,7 @@ _default_config = {
     'auth': {
         'host': 'localhost',
         'port': 9497,
-        'timeout': 2,
+        'timeout': 3,
         'key_file': '/var/lib/xivo-auth-keys/xivo-ctid-key.yml',
         'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
