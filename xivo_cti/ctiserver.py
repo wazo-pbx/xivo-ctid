@@ -55,6 +55,8 @@ from xivo_cti.cti.commands.listen import Listen
 from xivo_cti.cti.commands.logout import Logout
 from xivo_cti.cti.commands.get_switchboard_directory_headers import GetSwitchboardDirectoryHeaders
 from xivo_cti.cti.commands.switchboard_directory_search import SwitchboardDirectorySearch
+from xivo_cti.cti.commands.meetme_mute import MeetmeMute
+from xivo_cti.cti.commands.meetme_mute import MeetmeUnmute
 from xivo_cti.cti.commands.people import PeopleCreatePersonalContact
 from xivo_cti.cti.commands.people import PeopleDeletePersonalContact
 from xivo_cti.cti.commands.people import PeopleEditPersonalContact
@@ -415,6 +417,12 @@ class CTIServer(object):
         History.register_callback_params(
             call_history_cti_interface.get_history,
             ['user_id', 'size']
+        )
+        MeetmeMute.register_callback_params(
+            context.get('ami_class').meetmemute, ['meetme_number', 'user_position']
+        )
+        MeetmeUnmute.register_callback_params(
+            context.get('ami_class').meetmeunmute, ['meetme_number', 'user_position']
         )
 
     def _register_ami_callbacks(self):

@@ -232,12 +232,12 @@ class AMIClass(object):
                                                      ('Context', context)])
 
     def meetmemute(self, meetme, usernum):
-        return self._exec_command('MeetmeMute', (('Meetme', meetme),
-                                                 ('Usernum', usernum)))
+        self._exec_command('MeetmeMute', (('Meetme', meetme),
+                                          ('Usernum', usernum)))
 
     def meetmeunmute(self, meetme, usernum):
-        return self._exec_command('MeetmeUnmute', (('Meetme', meetme),
-                                                   ('Usernum', usernum)))
+        self._exec_command('MeetmeUnmute', (('Meetme', meetme),
+                                            ('Usernum', usernum)))
 
     def queueadd(self, queuename, interface, paused, skills=''):
         # it looks like not specifying Paused is the same as setting it to false
