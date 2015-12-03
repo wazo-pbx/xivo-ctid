@@ -101,6 +101,12 @@ def init_auth_config():
     _update_config()
 
 
+def on_token_change(token_id):
+    _auth_config['auth']['token'] = token_id
+
+    _update_config()
+
+
 def init_config_file():
     global _file_config
 

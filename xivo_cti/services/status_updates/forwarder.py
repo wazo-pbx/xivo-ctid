@@ -290,7 +290,8 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
 
     def _client(self, uuid):
         if uuid == config['uuid']:
-            return xivo_agentd_client.Client(**config['agentd'])
+            token = config['auth']['token']
+            return xivo_agentd_client.Client(token=token, **config['agentd'])
 
     def _async_fetch(self, uuid, agent_id):
         logger.info('agent_status_fetcher: fetching agent %s@%s', agent_id, uuid)
