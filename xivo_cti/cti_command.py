@@ -227,6 +227,7 @@ class Command(object):
         self._othermessages.append({'dest': dest,
                                     'message': {'to': self._commanddict['to'],
                                                 'from': (config['uuid'], self.ruserid),
+                                                'alias': self._commanddict['alias'],
                                                 'text': chitchattext}})
         return reply
 
