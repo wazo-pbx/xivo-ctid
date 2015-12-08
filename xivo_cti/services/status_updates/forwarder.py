@@ -17,15 +17,12 @@
 
 import logging
 import json
-import threading
 import xivo_agentd_client
 
 from collections import defaultdict
 from contextlib import contextmanager
 from functools import wraps
 
-from kombu.mixins import ConsumerMixin
-from kombu import Queue
 from requests.exceptions import RequestException
 
 from xivo_ctid_client import Client as CtidClient
@@ -39,13 +36,24 @@ from xivo_cti.remote_service import RemoteService
 logger = logging.getLogger(__name__)
 
 
+def _loads_and_ack(f):
+    @wraps(f)
+    def wrapped(one_self, body, message):
+        f(one_self, json.loads(body))
+        message.ack()
+    return wrapped
+
+
 class StatusForwarder(object):
+
+    _id_field_map = {'agent_status_update': 'agent_id',
+                     'endpoint_status_update': 'endpoint_id',
+                     'user_status_update': 'user_id'}
 
     def __init__(self,
                  cti_group_factory,
                  task_queue,
-                 bus_connection,
-                 bus_exchange,
+                 bus_listener,
                  async_runner,
                  remote_service_tracker,
                  _agent_status_notifier=None,
@@ -54,23 +62,18 @@ class StatusForwarder(object):
         agent_status_fetcher = _AgentStatusFetcher(self, async_runner, remote_service_tracker)
         endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner, remote_service_tracker)
         user_status_fetcher = _UserStatusFetcher(self, async_runner, remote_service_tracker)
+        self._bus_listener = bus_listener
         self._task_queue = task_queue
-        self._exchange = bus_exchange
-        self._bus_connection = bus_connection
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory, agent_status_fetcher)
         self.endpoint_status_notifier = _endpoint_status_notifier or _new_endpoint_notifier(cti_group_factory, endpoint_status_fetcher)
         self.user_status_notifier = _user_status_notifier or _new_user_notifier(cti_group_factory, user_status_fetcher)
         self._remote_service_tracker = remote_service_tracker
 
-    def run(self):
-        self._listener = _ThreadedStatusListener(self._task_queue,
-                                                 self._bus_connection,
-                                                 self,
-                                                 self._exchange,
-                                                 self._remote_service_tracker)
-
-    def stop(self):
-        self._listener.stop()
+        self._bus_listener.add_callback(AgentStatusUpdateEvent.routing_key, self._on_bus_agent_status)
+        self._bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status)
+        self._bus_listener.add_callback(EndpointStatusUpdateEvent.routing_key, self._on_bus_endpoint_status)
+        self._bus_listener.add_callback('service.registered.#', self._on_bus_service_registered)
+        self._bus_listener.add_callback('service.deregistered.#', self._on_bus_service_deregistered)
 
     def on_agent_status_update(self, key, status):
         self.agent_status_notifier.update(key, status)
@@ -86,78 +89,22 @@ class StatusForwarder(object):
             self.endpoint_status_notifier.on_service_started(uuid)
             self.user_status_notifier.on_service_started(uuid)
 
-
-class _ThreadedStatusListener(object):
-
-    def __init__(self, task_queue, connection, forwarder, exchange, remote_service_tracker):
-        self._listener = _StatusListener(task_queue, connection, forwarder, exchange, remote_service_tracker)
-        self._thread = threading.Thread(target=self._listener.start)
-        self._thread.start()
-
-    def stop(self):
-        self._listener.stop()
-        self._thread.join()
-
-
-def _loads_and_ack(f):
-    @wraps(f)
-    def wrapped(one_self, body, message):
-        f(one_self, json.loads(body))
-        message.ack()
-    return wrapped
-
-
-class _StatusWorker(ConsumerMixin):
-
-    _id_field_map = {
-        'agent_status_update': 'agent_id',
-        'endpoint_status_update': 'endpoint_id',
-        'user_status_update': 'user_id',
-    }
-
-    def __init__(self, connection, exchange, task_queue, forwarder, remote_service_tracker):
-        self.connection = connection
-        self.exchange = exchange
-        self._task_queue = task_queue
-        self._forwarder = forwarder
-        self._remote_service_tracker = remote_service_tracker
-        self._agent_queue = self._make_queue(AgentStatusUpdateEvent.routing_key)
-        self._user_queue = self._make_queue(UserStatusUpdateEvent.routing_key)
-        self._endpoint_queue = self._make_queue(EndpointStatusUpdateEvent.routing_key)
-        self._service_registered_queue = self._make_queue('service.registered.#')
-        self._service_deregistered_queue = self._make_queue('service.deregistered.#')
-
-    def _make_queue(self, routing_key):
-        return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
-
-    def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=self._agent_queue,
-                         callbacks=[self._on_agent_status]),
-                Consumer(queues=self._user_queue,
-                         callbacks=[self._on_user_status]),
-                Consumer(queues=self._endpoint_queue,
-                         callbacks=[self._on_endpoint_status]),
-                Consumer(queues=self._service_registered_queue,
-                         callbacks=[self._on_service_registered]),
-                Consumer(queues=self._service_deregistered_queue,
-                         callbacks=[self._on_service_deregistered])]
-
     def _extract_key(self, event):
         id_field = self._id_field_map[event['name']]
         return event['origin_uuid'], event['data'][id_field]
 
-    # All methods below this line are executed in the status listener's thread
+    # All methods below this line are executed in the bus listener's thread
     @_loads_and_ack
-    def _on_service_registered(self, body):
+    def _on_bus_service_registered(self, body):
         service = RemoteService.from_bus_msg(body)
         uuid = body['origin_uuid']
         service_name = body['data']['service_name']
         self._task_queue.put(self._remote_service_tracker.add_service_node,
                              service_name, uuid, service)
-        self._task_queue.put(self._forwarder.on_service_added, service_name, uuid)
+        self._task_queue.put(self.on_service_added, service_name, uuid)
 
     @_loads_and_ack
-    def _on_service_deregistered(self, body):
+    def _on_bus_service_deregistered(self, body):
         uuid = body['origin_uuid']
         service_name = body['data']['service_name']
         service_id = body['data']['service_id']
@@ -165,34 +112,22 @@ class _StatusWorker(ConsumerMixin):
                              service_name, service_id, uuid)
 
     @_loads_and_ack
-    def _on_agent_status(self, body):
+    def _on_bus_agent_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
-        self._task_queue.put(self._forwarder.on_agent_status_update, key, status)
+        self._task_queue.put(self.on_agent_status_update, key, status)
 
     @_loads_and_ack
-    def _on_user_status(self, body):
+    def _on_bus_user_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
-        self._task_queue.put(self._forwarder.on_user_status_update, key, status)
+        self._task_queue.put(self.on_user_status_update, key, status)
 
     @_loads_and_ack
-    def _on_endpoint_status(self, body):
+    def _on_bus_endpoint_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
-        self._task_queue.put(self._forwarder.on_endpoint_status_update, key, status)
-
-
-class _StatusListener(object):
-
-    def __init__(self, task_queue, connection, forwarder, exchange, remote_service_tracker):
-        self._worker = _StatusWorker(connection, exchange, task_queue, forwarder, remote_service_tracker)
-
-    def start(self):
-        self._worker.run()
-
-    def stop(self):
-        self._worker.should_stop = True
+        self._task_queue.put(self.on_endpoint_status_update, key, status)
 
 
 class _StatusNotifier(object):

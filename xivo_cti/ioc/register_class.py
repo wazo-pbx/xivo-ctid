@@ -29,6 +29,7 @@ from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.async_runner import AsyncRunner
+from xivo_cti.bus_listener import BusListener
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -113,6 +114,7 @@ def setup():
     bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
     bus_marshaler = Marshaler(config['uuid'])
     bus_publisher = Publisher(bus_producer, bus_marshaler)
+    bus_listener = BusListener(bus_connection, bus_exchange)
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   config['uuid'],
@@ -140,6 +142,7 @@ def setup():
     context.register('bridge_notifier', BridgeNotifier)
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
+    context.register('bus_listener', bus_listener)
     context.register('bus_publisher', bus_publisher)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('call_form_dispatch_filter', DispatchFilter)

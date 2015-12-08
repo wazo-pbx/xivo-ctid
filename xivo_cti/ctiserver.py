@@ -134,6 +134,7 @@ class CTIServer(object):
         self._consul_registerer = consul_helpers.NotifyingRegisterer.from_config('xivo-ctid',
                                                                                  bus_publisher,
                                                                                  config)
+        self._bus_listener_thread = None
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -155,8 +156,9 @@ class CTIServer(object):
         except consul_helpers.RegistererError:
             logger.exception('Failed to unregister')
 
-        logger.debug('Stopping the status forwarder')
-        context.get('status_forwarder').stop()
+        logger.debug('Stopping the bus listener')
+        context.get('bus_listener').should_stop = True
+        self._bus_listener_thread.join()
 
         logger.debug('Closing all sockets')
         self._socket_close_all()
@@ -189,7 +191,9 @@ class CTIServer(object):
         QueueLogger.init()
         self._set_signal_handlers()
 
-        context.get('status_forwarder').run()
+        bus_listener = context.get('bus_listener')
+        self._bus_listener_thread = threading.Thread(target=bus_listener.run)
+        self._bus_listener_thread.start()
 
         self._token_renewer = context.get('token_renewer')
         self._setup_token_renewer()
