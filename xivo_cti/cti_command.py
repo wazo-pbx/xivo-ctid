@@ -54,11 +54,6 @@ class Command(object):
         self.userid = self._connection.connection_details.get('userid')
         self.innerdata = self._ctiserver.safe
 
-        # identifiers for the requester
-        self.ripbxid = self._commanddict.get('ipbxid', self.ipbxid)
-        self.ruserid = self._commanddict.get('userid', self.userid)
-        self.rinnerdata = self._ctiserver.safe
-
         self.user_keeplist = self.innerdata.xod_config['users'].keeplist.get(self.userid)
 
         messagebase = {'class': self.command}
@@ -219,7 +214,7 @@ class Command(object):
     def regcommand_faxsend(self):
         contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
         if not contexts:
-            logger.info('faxsend: user %s tried to send a fax but has no context', self.ruserid)
+            logger.info('faxsend: user %s tried to send a fax but has no context', self.userid)
             return
 
         context = contexts[0]
@@ -229,10 +224,10 @@ class Command(object):
         destination = self._commanddict['destination']
 
         logger.info('faxsend: user %s is sending a %s bytes fax to %s@%s',
-                    self.ruserid, size, destination, context)
+                    self.userid, size, destination, context)
 
         self.innerdata.faxes[fileid] = fax = cti_fax.Fax(self.innerdata, fileid, encoded_data)
-        fax.setfaxparameters(self.ruserid, context, destination)
+        fax.setfaxparameters(self.userid, context, destination)
         fax.setrequester(self._connection)
         fax.launchasyncs()
 
