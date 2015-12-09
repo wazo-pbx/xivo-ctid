@@ -30,6 +30,7 @@ from xivo_ctid_client import Client as CtidClient
 from xivo_bus.resources.cti.event import AgentStatusUpdateEvent,\
     UserStatusUpdateEvent, EndpointStatusUpdateEvent
 from xivo_cti import config
+from xivo_cti.bus_listener import bus_listener_thread
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.remote_service import RemoteService
 
@@ -93,7 +94,7 @@ class StatusForwarder(object):
         id_field = self._id_field_map[event['name']]
         return event['origin_uuid'], event['data'][id_field]
 
-    # All methods below this line are executed in the bus listener's thread
+    @bus_listener_thread
     @_loads_and_ack
     def _on_bus_service_registered(self, body):
         service = RemoteService.from_bus_msg(body)
@@ -103,6 +104,7 @@ class StatusForwarder(object):
                              service_name, uuid, service)
         self._task_queue.put(self.on_service_added, service_name, uuid)
 
+    @bus_listener_thread
     @_loads_and_ack
     def _on_bus_service_deregistered(self, body):
         uuid = body['origin_uuid']
@@ -111,18 +113,21 @@ class StatusForwarder(object):
         self._task_queue.put(self._remote_service_tracker.remove_service_node,
                              service_name, service_id, uuid)
 
+    @bus_listener_thread
     @_loads_and_ack
     def _on_bus_agent_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
         self._task_queue.put(self.on_agent_status_update, key, status)
 
+    @bus_listener_thread
     @_loads_and_ack
     def _on_bus_user_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
         self._task_queue.put(self.on_user_status_update, key, status)
 
+    @bus_listener_thread
     @_loads_and_ack
     def _on_bus_endpoint_status(self, body):
         key = self._extract_key(body)

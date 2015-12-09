@@ -19,6 +19,7 @@ import json
 import logging
 
 from xivo_bus.resources.chat.event import ChatMessageEvent
+from xivo_cti.bus_listener import bus_listener_thread
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class ChatPublisher(object):
         bus_msg = ChatMessageEvent(from_, to, alias, text)
         self._publisher.publish(bus_msg)
 
-    # This function is executed in the BusListener's thread
+    @bus_listener_thread
     def _on_bus_chat_message_event(self, body, message):
         message.ack()
         event = json.loads(body)

@@ -18,13 +18,29 @@
 import logging
 
 from collections import namedtuple
-
+from functools import wraps
 from kombu import Queue
 from kombu.mixins import ConsumerMixin
 
 Callback = namedtuple('Callback', ['queue', 'callable'])
 
 logger = logging.getLogger(__name__)
+
+
+def bus_listener_thread(f):
+    """
+    The decorated function is executed in the bus listener's thread. This means
+    that the implementation of the function should only manipulate it's
+    parameters and call thread safe operations. Usually add a task to a task
+    queue.
+
+    The implementation of this decorator does nothing. It's just a warning for
+    the next programmer reading the decorated function.
+    """
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        return f(*args, **kwargs)
+    return wrapped
 
 
 class BusListener(ConsumerMixin):
