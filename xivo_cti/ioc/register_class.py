@@ -62,6 +62,7 @@ from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
+from xivo_cti.services.chat import ChatPublisher
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -152,6 +153,7 @@ def setup():
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
+    context.register('chat_publisher', ChatPublisher)
     context.register('channel_updater', ChannelUpdater)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
@@ -199,6 +201,7 @@ def setup():
     context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
+    context.register('xivo_uuid', lambda: config['uuid'])
 
 
 def new_auth_client():

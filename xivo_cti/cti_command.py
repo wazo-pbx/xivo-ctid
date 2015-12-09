@@ -33,10 +33,7 @@ LOGINCOMMANDS = [
 REGCOMMANDS = [
     'getipbxlist',
     'keepalive',
-
     'faxsend',
-    'chitchat',
-
     'getqueuesstats',
 ]
 
@@ -213,23 +210,6 @@ class Command(object):
         user_service_manager.set_presence(userid, availstate)
 
     # end of login/logout related commands
-
-    def regcommand_chitchat(self):
-        reply = {}
-        chitchattext = self._commanddict.get('text')
-        xivo_uuid, user_id = self._commanddict['to']
-        logger.debug('chat message for %s %s', xivo_uuid, user_id)
-        if xivo_uuid != config['uuid']:
-            logger.info('%s tried to chat with someone on another xivo %s', self.ruserid, xivo_uuid)
-            return reply
-
-        dest = 'xivo/{}'.format(user_id)
-        self._othermessages.append({'dest': dest,
-                                    'message': {'to': self._commanddict['to'],
-                                                'from': (config['uuid'], self.ruserid),
-                                                'alias': self._commanddict['alias'],
-                                                'text': chitchattext}})
-        return reply
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:

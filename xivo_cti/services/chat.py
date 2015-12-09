@@ -15,18 +15,51 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import json
+import logging
+
 from xivo_bus.resources.chat.event import ChatMessageEvent
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+
+logger = logging.getLogger(__name__)
 
 
 class ChatPublisher(object):
 
-    def __init__(self, bus_publisher, xivo_uuid):
+    def __init__(self, bus_publisher, bus_listener, cti_server, task_queue, xivo_uuid):
         self._publisher = bus_publisher
         self._xivo_uuid = xivo_uuid
+        self._cti_server = cti_server
+        self._task_queue = task_queue
 
-    def on_chat_message(self, local_user_id, remote_xivo_uuid, remote_user_id, alias, text):
+        chat_msg_routing_key = 'chat.message.{}.#'.format(self._xivo_uuid)
+        bus_listener.add_callback(chat_msg_routing_key, self._on_bus_chat_message_event)
+
+    def deliver_chat_message(self, from_, to, alias, text):
+        destination = '{}/{}'.format(*to)
+        msg = CTIMessageFormatter.chat(from_, to, alias, text)
+        self._cti_server.send_to_cti_client(destination, msg)
+
+    def on_cti_chat_message(self, local_user_id, remote_xivo_uuid, remote_user_id, alias, text):
         from_ = self._xivo_uuid, local_user_id
         to = remote_xivo_uuid, remote_user_id
+        self._send_chat_msg_to_bus(from_, to, alias, text)
 
+    def _send_chat_msg_to_bus(self, from_, to, alias, text):
         bus_msg = ChatMessageEvent(from_, to, alias, text)
         self._publisher.publish(bus_msg)
+
+    # This function is executed in the BusListener's thread
+    def _on_bus_chat_message_event(self, body, message):
+        message.ack()
+        event = json.loads(body)
+        data = event.get('data', {})
+        try:
+            from_ = data['from']
+            to = data['to']
+            alias = data['alias']
+            text = data['msg']
+
+            self._task_queue.put(self.deliver_chat_message, from_, to, alias, text)
+        except KeyError as e:
+            logger.info('_on_bus_chat_message_event: received an incomplete chat message event: %s', e)

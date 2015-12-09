@@ -42,6 +42,7 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
 from xivo_cti.cti.commands.call_form_result import CallFormResult
+from xivo_cti.cti.commands.chat import Chat
 from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
@@ -424,6 +425,10 @@ class CTIServer(object):
         )
         MeetmeUnmute.register_callback_params(
             context.get('ami_class').meetmeunmute, ['meetme_number', 'user_position']
+        )
+        Chat.register_callback_params(
+            context.get('chat_publisher').on_cti_chat_message,
+            ['user_id', 'remote_xivo_uuid', 'remote_user_id', 'alias', 'text']
         )
 
     def _register_ami_callbacks(self):
