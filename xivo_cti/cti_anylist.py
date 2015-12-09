@@ -88,7 +88,7 @@ class AnyList(object):
             'availstate': 'disconnected'
         },
         'phones': {
-            'hintstatus': '1',
+            'hintstatus': '4',
         },
         'agents': {
             'phonenumber': None,
