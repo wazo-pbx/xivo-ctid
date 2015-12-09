@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import json
 import logging
 
 from collections import namedtuple
@@ -25,6 +26,14 @@ from kombu.mixins import ConsumerMixin
 Callback = namedtuple('Callback', ['queue', 'callable'])
 
 logger = logging.getLogger(__name__)
+
+
+def loads_and_ack(f):
+    @wraps(f)
+    def wrapped(one_self, body, message):
+        f(one_self, json.loads(body))
+        message.ack()
+    return wrapped
 
 
 def bus_listener_thread(f):

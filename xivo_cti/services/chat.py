@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
 import logging
 
 from xivo_bus.resources.chat.event import ChatMessageEvent
-from xivo_cti.bus_listener import bus_listener_thread
+from xivo_cti.bus_listener import bus_listener_thread, loads_and_ack
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
@@ -51,9 +50,8 @@ class ChatPublisher(object):
         self._publisher.publish(bus_msg)
 
     @bus_listener_thread
-    def _on_bus_chat_message_event(self, body, message):
-        message.ack()
-        event = json.loads(body)
+    @loads_and_ack
+    def _on_bus_chat_message_event(self, event):
         data = event.get('data', {})
         try:
             from_ = data['from']
