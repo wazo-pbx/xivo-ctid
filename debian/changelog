@@ -1,4 +1,4 @@
-xivo-ctid (1:13.22~20131101.150200.67c047a-2) squeeze-xivo-skaro-dev; urgency=low
+xivo-ctid (1:13.22~20131101.150200.67c047a) xivo-dev; urgency=low
 
   * replace dependency from xivo-agent to xivo-bus
 
