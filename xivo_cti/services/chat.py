@@ -41,7 +41,7 @@ class ChatPublisher(object):
         self._cti_server.send_to_cti_client(destination, msg)
 
     def on_cti_chat_message(self, local_user_id, remote_xivo_uuid, remote_user_id, alias, text):
-        from_ = self._xivo_uuid, local_user_id
+        from_ = self._xivo_uuid, int(local_user_id)
         to = remote_xivo_uuid, remote_user_id
         self._send_chat_msg_to_bus(from_, to, alias, text)
 
