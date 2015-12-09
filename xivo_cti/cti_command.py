@@ -43,7 +43,6 @@ class Command(object):
         self._connection = connection
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
-        self._othermessages = list()
         self._queue_statistics_manager = cti_context.get('queue_statistics_manager')
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
@@ -89,11 +88,6 @@ class Command(object):
             ackmessage['closemenow'] = True
 
         z = [ackmessage]
-        for extramessage in self._othermessages:
-            bmsg = extramessage.get('message')
-            bmsg['class'] = self.command
-            z.append({'dest': extramessage.get('dest'),
-                      'message': bmsg})
         return z
 
     def regcommand_login_pass(self):
