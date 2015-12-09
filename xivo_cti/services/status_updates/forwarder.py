@@ -23,8 +23,9 @@ from contextlib import contextmanager
 from requests.exceptions import RequestException
 
 from xivo_ctid_client import Client as CtidClient
-from xivo_bus.resources.cti.event import AgentStatusUpdateEvent,\
-    UserStatusUpdateEvent, EndpointStatusUpdateEvent
+from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
+                                          UserStatusUpdateEvent,
+                                          EndpointStatusUpdateEvent)
 from xivo_cti import config
 from xivo_cti.bus_listener import bus_listener_thread, loads_and_ack
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
