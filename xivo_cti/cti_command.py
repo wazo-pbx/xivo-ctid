@@ -33,10 +33,7 @@ LOGINCOMMANDS = [
 REGCOMMANDS = [
     'getipbxlist',
     'keepalive',
-
     'faxsend',
-    'chitchat',
-
     'getqueuesstats',
 ]
 
@@ -46,7 +43,6 @@ class Command(object):
         self._connection = connection
         self._ctiserver = self._connection._ctiserver
         self._commanddict = thiscommand
-        self._othermessages = list()
         self._queue_statistics_manager = cti_context.get('queue_statistics_manager')
         self._queue_statistics_encoder = QueueStatisticsEncoder()
 
@@ -57,11 +53,6 @@ class Command(object):
         self.ipbxid = self._connection.connection_details.get('ipbxid')
         self.userid = self._connection.connection_details.get('userid')
         self.innerdata = self._ctiserver.safe
-
-        # identifiers for the requester
-        self.ripbxid = self._commanddict.get('ipbxid', self.ipbxid)
-        self.ruserid = self._commanddict.get('userid', self.userid)
-        self.rinnerdata = self._ctiserver.safe
 
         self.user_keeplist = self.innerdata.xod_config['users'].keeplist.get(self.userid)
 
@@ -92,11 +83,6 @@ class Command(object):
             ackmessage['closemenow'] = True
 
         z = [ackmessage]
-        for extramessage in self._othermessages:
-            bmsg = extramessage.get('message')
-            bmsg['class'] = self.command
-            z.append({'dest': extramessage.get('dest'),
-                      'message': bmsg})
         return z
 
     def regcommand_login_pass(self):
@@ -214,22 +200,6 @@ class Command(object):
 
     # end of login/logout related commands
 
-    def regcommand_chitchat(self):
-        reply = {}
-        chitchattext = self._commanddict.get('text')
-        xivo_uuid, user_id = self._commanddict['to']
-        logger.debug('chat message for %s %s', xivo_uuid, user_id)
-        if xivo_uuid != config['uuid']:
-            logger.info('%s tried to chat with someone on another xivo %s', self.ruserid, xivo_uuid)
-            return reply
-
-        dest = 'xivo/{}'.format(user_id)
-        self._othermessages.append({'dest': dest,
-                                    'message': {'to': self._commanddict['to'],
-                                                'from': (config['uuid'], self.ruserid),
-                                                'text': chitchattext}})
-        return reply
-
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:
             return {}
@@ -244,7 +214,7 @@ class Command(object):
     def regcommand_faxsend(self):
         contexts = self.innerdata.xod_config['users'].get_contexts(self.userid)
         if not contexts:
-            logger.info('faxsend: user %s tried to send a fax but has no context', self.ruserid)
+            logger.info('faxsend: user %s tried to send a fax but has no context', self.userid)
             return
 
         context = contexts[0]
@@ -254,10 +224,10 @@ class Command(object):
         destination = self._commanddict['destination']
 
         logger.info('faxsend: user %s is sending a %s bytes fax to %s@%s',
-                    self.ruserid, size, destination, context)
+                    self.userid, size, destination, context)
 
         self.innerdata.faxes[fileid] = fax = cti_fax.Fax(self.innerdata, fileid, encoded_data)
-        fax.setfaxparameters(self.ruserid, context, destination)
+        fax.setfaxparameters(self.userid, context, destination)
         fax.setrequester(self._connection)
         fax.launchasyncs()
 

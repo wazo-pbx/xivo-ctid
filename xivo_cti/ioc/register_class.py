@@ -29,6 +29,7 @@ from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.async_runner import AsyncRunner
+from xivo_cti.bus_listener import BusListener
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -61,6 +62,7 @@ from xivo_cti.services.call.endpoint_notifier import EndpointNotifier
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
+from xivo_cti.services.chat import ChatPublisher
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
 from xivo_cti.services.current_call.manager import CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
@@ -113,6 +115,7 @@ def setup():
     bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
     bus_marshaler = Marshaler(config['uuid'])
     bus_publisher = Publisher(bus_producer, bus_marshaler)
+    bus_listener = BusListener(bus_connection, bus_exchange)
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   config['uuid'],
@@ -140,6 +143,7 @@ def setup():
     context.register('bridge_notifier', BridgeNotifier)
     context.register('bus_connection', bus_connection)
     context.register('bus_exchange', lambda: bus_exchange)
+    context.register('bus_listener', bus_listener)
     context.register('bus_publisher', bus_publisher)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
     context.register('call_form_dispatch_filter', DispatchFilter)
@@ -149,6 +153,7 @@ def setup():
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)
     context.register('call_manager', CallManager)
+    context.register('chat_publisher', ChatPublisher)
     context.register('channel_updater', ChannelUpdater)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
@@ -196,6 +201,7 @@ def setup():
     context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
+    context.register('xivo_uuid', lambda: config['uuid'])
 
 
 def new_auth_client():

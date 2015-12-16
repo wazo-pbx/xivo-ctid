@@ -42,6 +42,7 @@ from xivo_cti.cti.commands.agent_login import AgentLogin
 from xivo_cti.cti.commands.agent_logout import AgentLogout
 from xivo_cti.cti.commands.answer import Answer
 from xivo_cti.cti.commands.call_form_result import CallFormResult
+from xivo_cti.cti.commands.chat import Chat
 from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.commands.directory import Directory
 from xivo_cti.cti.commands.attended_transfer import AttendedTransfer
@@ -134,6 +135,7 @@ class CTIServer(object):
         self._consul_registerer = consul_helpers.NotifyingRegisterer.from_config('xivo-ctid',
                                                                                  bus_publisher,
                                                                                  config)
+        self._bus_listener_thread = None
 
     def _set_signal_handlers(self):
         signal.signal(signal.SIGINT, self._sighandler)
@@ -155,8 +157,9 @@ class CTIServer(object):
         except consul_helpers.RegistererError:
             logger.exception('Failed to unregister')
 
-        logger.debug('Stopping the status forwarder')
-        context.get('status_forwarder').stop()
+        logger.debug('Stopping the bus listener')
+        context.get('bus_listener').should_stop = True
+        self._bus_listener_thread.join()
 
         logger.debug('Closing all sockets')
         self._socket_close_all()
@@ -189,7 +192,9 @@ class CTIServer(object):
         QueueLogger.init()
         self._set_signal_handlers()
 
-        context.get('status_forwarder').run()
+        bus_listener = context.get('bus_listener')
+        self._bus_listener_thread = threading.Thread(target=bus_listener.run)
+        self._bus_listener_thread.start()
 
         self._token_renewer = context.get('token_renewer')
         self._setup_token_renewer()
@@ -420,6 +425,10 @@ class CTIServer(object):
         )
         MeetmeUnmute.register_callback_params(
             context.get('ami_class').meetmeunmute, ['meetme_number', 'user_position']
+        )
+        Chat.register_callback_params(
+            context.get('chat_publisher').on_cti_chat_message,
+            ['user_id', 'remote_xivo_uuid', 'remote_user_id', 'alias', 'text']
         )
 
     def _register_ami_callbacks(self):

@@ -48,6 +48,7 @@ class TestServiceDiscovery(BaseCTIDIntegrationTests):
 
     def test_that_remote_service_discovery_works_when_remote_started_after(self):
         self.start_service('cti2')
+        time.sleep(1)
         uuid = 'foobar'
 
         status = self._get_endpoint_status(uuid, 42)

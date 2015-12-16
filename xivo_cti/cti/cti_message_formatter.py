@@ -29,6 +29,16 @@ class CTIMessageFormatter(object):
         }
 
     @staticmethod
+    def chat(from_, to, alias, text):
+        return {
+            'class': 'chitchat',
+            'alias': alias,
+            'from': from_,
+            'to': to,
+            'text': text
+        }
+
+    @staticmethod
     def dial_success(exten):
         return {
             'class': 'dial_success',

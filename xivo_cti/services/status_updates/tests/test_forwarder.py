@@ -27,6 +27,7 @@ from mock import sentinel as s
 
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.task_queue import new_task_queue
+from xivo_cti.bus_listener import BusListener
 
 from ..forwarder import StatusForwarder
 from ..forwarder import _new_agent_notifier
@@ -43,10 +44,10 @@ class TestStatusForwarder(unittest.TestCase):
         self.agent_status_notifier = Mock()
         self.endpoint_status_notifier = Mock()
         self.user_status_notifier = Mock()
+        self.bus_listener = Mock(BusListener)
         self.forwarder = StatusForwarder(s.cti_group_factory,
                                          s.task_queue,
-                                         s.bus_connection,
-                                         s.bus_exchange,
+                                         self.bus_listener,
                                          s.async_runner,
                                          s.service_tracker,
                                          self.agent_status_notifier,
@@ -59,8 +60,7 @@ class TestStatusForwarder(unittest.TestCase):
     def test_forwarder_without_arguments(self, new_user_notifier, new_endpoint_notifier, new_agent_notifier):
         StatusForwarder(s.cti_group_factory,
                         s.task_queue,
-                        s.bus_connection,
-                        s.bus_exchange,
+                        self.bus_listener,
                         s.async_runner,
                         s.service_tracker)
 
@@ -105,15 +105,6 @@ class TestStatusForwarder(unittest.TestCase):
 
         self.user_status_notifier.on_service_started.assert_called_once_with(uuid)
         self.endpoint_status_notifier.on_service_started.assert_called_once_with(uuid)
-
-    @patch('xivo_cti.services.status_updates.forwarder._ThreadedStatusListener')
-    def test_that_run_starts_a_listener_thread(self, _ThreadedStatusListener):
-        self.forwarder.run()
-
-        _ThreadedStatusListener.assert_called_once_with(s.task_queue,
-                                                        s.bus_connection, self.forwarder,
-                                                        s.bus_exchange,
-                                                        s.service_tracker)
 
 
 class TestNewAgentNotifier(unittest.TestCase):
