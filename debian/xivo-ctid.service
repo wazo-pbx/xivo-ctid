@@ -1,0 +1,12 @@
+[Unit]
+Description=xivo-ctid server
+ConditionPathExists=!/tmp/xivo-disabled
+After=network.target asterisk.service postgresql.service rabbitmq-server.service xivo-agentd.service xivo-confgend.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/xivo-ctid
+PIDFile=/var/run/xivo-ctid.pid
+
+[Install]
+WantedBy=multi-user.target

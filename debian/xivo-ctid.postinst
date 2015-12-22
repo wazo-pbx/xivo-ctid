@@ -13,6 +13,20 @@ case "$1" in
         if [ -d /usr/share/xivo-ctid ]; then
             rm -rf /usr/share/xivo-ctid
         fi
+
+        # systemd migration
+        if [ -f /etc/default/xivo-ctid ]; then
+            if grep -q 'XIVO_CTID_AMI_PROXY=1' /etc/default/xivo-ctid; then
+                mkdir -p /etc/systemd/system/xivo-ctid.service.d
+                cat >/etc/systemd/system/xivo-ctid.service.d/ami-proxy.conf <<EOF
+[Service]
+Environment=XIVO_CTID_AMI_PROXY=1
+EOF
+                systemctl daemon-reload || true
+            fi
+
+            rm /etc/default/xivo-ctid
+        fi
     ;;
     abort-upgrade|abort-remove|abort-deconfigure)
 
