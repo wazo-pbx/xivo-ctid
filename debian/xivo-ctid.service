@@ -2,6 +2,7 @@
 Description=xivo-ctid server
 ConditionPathExists=!/var/lib/xivo/disabled
 After=network.target asterisk.service postgresql.service rabbitmq-server.service xivo-agentd.service xivo-confgend.service
+Wants=asterisk.service postgresql.service rabbitmq-server.service xivo-agentd.service xivo-confgend.service
 
 [Service]
 Type=forking
