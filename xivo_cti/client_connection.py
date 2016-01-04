@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ class ClientConnection(object):
         certfile = config['main']['certfile']
         keyfile = config['main']['keyfile']
         try:
-            logger.debug('upgrading socket to ssl %s %s', certfile, keyfile)
+            logger.debug('upgrading socket to ssl\n\tcertfile:  %s\n\tkeyfile: %s', certfile, keyfile)
             self.socket.setblocking(1)
             self.socket.settimeout(0.5)
             self.socket = ssl.wrap_socket(self.socket,
