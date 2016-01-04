@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import random
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
+from xivo_cti import config
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.commands.starttls import StartTLS
@@ -52,7 +53,7 @@ class CTI(interfaces.Interfaces):
     def connected(self, connid):
         logger.debug('connected: sending starttls')
         super(CTI, self).connected(connid)
-        if not self._starttls_sent:
+        if config['main']['starttls'] and not self._starttls_sent:
             StartTLS.register_callback_params(self._on_starttls, ['status', 'cti_connection'])
             self.send_message({'class': 'starttls'})
             self._starttls_sent = True
