@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,10 @@ import random
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
+from xivo_cti import config
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login_id import LoginID
+from xivo_cti.cti.commands.starttls import StartTLS
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
 from xivo_cti.database import user_db
@@ -45,6 +47,29 @@ class CTI(interfaces.Interfaces):
         self.connection_details = {}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
+        self._starttls_sent = False
+        self._starttls_status_received = False
+
+    def connected(self, connid):
+        logger.debug('connected: sending starttls')
+        super(CTI, self).connected(connid)
+        if config['main']['starttls'] and not self._starttls_sent:
+            StartTLS.register_callback_params(self._on_starttls, ['status', 'cti_connection'])
+            self.send_message({'class': 'starttls'})
+            self._starttls_sent = True
+
+    def _on_starttls(self, status, connection):
+        if connection != self or self._starttls_status_received:
+            return
+
+        # TODO: add a StartTLS.deregister when it gets merged
+        self.send_message({'class': 'starttls',
+                           'starttls': status})
+        self._starttls_status_received = True
+
+        if status:
+            task_queue = context.get('task_queue')
+            task_queue.put(self.connid.upgrade_ssl)
 
     def __str__(self):
         user_id = self.connection_details.get('userid', 'Not logged')
@@ -100,7 +125,8 @@ class CTI(interfaces.Interfaces):
         return self.connection_details.get('authenticated', False)
 
     def _run_functions(self, decoded_command):
-        if not self._is_authenticated() and not decoded_command['class'].startswith('login_'):
+        no_auth_commands = ['login_id', 'login_pass', 'login_capas', 'starttls']
+        if not self._is_authenticated() and decoded_command['class'] not in no_auth_commands:
             return []
         replies = []
 
@@ -161,7 +187,3 @@ class CTI(interfaces.Interfaces):
             return device_manager.get_answer_fn(device_id)
         except LookupError:
             return self.answer_cb
-
-
-class CTIS(CTI):
-    kind = 'CTIS'

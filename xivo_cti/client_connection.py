@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 import socket
 import errno
 import ssl
+
 from collections import deque
+
+from xivo_cti import config
+from xivo_cti import SSLPROTO
+
+logger = logging.getLogger(__name__)
 
 
 class ClientConnection(object):
@@ -32,6 +39,26 @@ class ClientConnection(object):
         self.socket.setblocking(0)
         self.sendqueue = deque()
         self.isClosed = False
+
+    def upgrade_ssl(self):
+        certfile = config['main']['certfile']
+        keyfile = config['main']['keyfile']
+        try:
+            logger.debug('upgrading socket to ssl\n\tcertfile:  %s\n\tkeyfile: %s', certfile, keyfile)
+            self.socket.setblocking(1)
+            self.socket.settimeout(0.5)
+            self.socket = ssl.wrap_socket(self.socket,
+                                          server_side=True,
+                                          certfile=certfile,
+                                          keyfile=keyfile,
+                                          ssl_version=SSLPROTO)
+            self.socket.setblocking(0)
+        except ssl.SSLError:
+            logger.exception('CTI:%s:%d cert=%s key=%s)',
+                             self.address[0], self.address[1],
+                             certfile,
+                             keyfile)
+            self.close()
 
     # useful for select
     def fileno(self):
