@@ -15,17 +15,20 @@ case "$1" in
         fi
 
         # systemd migration
-        if [ -f /etc/default/xivo-ctid ]; then
-            if grep -q 'XIVO_CTID_AMI_PROXY=1' /etc/default/xivo-ctid; then
-                mkdir -p /etc/systemd/system/xivo-ctid.service.d
-                cat >/etc/systemd/system/xivo-ctid.service.d/ami-proxy.conf <<EOF
+        drop_in='/etc/systemd/system/xivo-ctid.service.d/auto-sysv-migration.conf'
+        if [ -f /etc/default/xivo-ctid -a ! -f "${drop_in}" ]; then
+            # be on the safe side and source /etc/default/xivo-ctid in a subshell
+            (
+                . /etc/default/xivo-ctid
+                if [ "${XIVO_CTID_AMI_PROXY}" = 1 ]; then
+                    mkdir -p $(dirname "${drop_in}")
+                    cat > "${drop_in}" <<EOF
 [Service]
 Environment=XIVO_CTID_AMI_PROXY=1
 EOF
-                systemctl daemon-reload || true
-            fi
-
-            rm /etc/default/xivo-ctid
+                    systemctl daemon-reload || true
+                fi
+            )
         fi
     ;;
     abort-upgrade|abort-remove|abort-deconfigure)
