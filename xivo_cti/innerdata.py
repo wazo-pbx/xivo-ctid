@@ -22,7 +22,6 @@ import time
 
 from contextlib import contextmanager
 
-from datetime import timedelta
 from xivo_auth_client import Client as AuthClient
 from xivo_cti import cti_sheets
 from xivo_cti import config
