@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,10 +54,10 @@ def auth_client(userid):
         password = user.password
 
     auth_config = dict(config['auth'])
-    del auth_config['key_file']
-    del auth_config['service_id']
-    del auth_config['service_key']
-    del auth_config['backend']
+    auth_config.pop('key_file', None)
+    auth_config.pop('service_id', None)
+    auth_config.pop('service_key', None)
+    auth_config.pop('backend', None)
     yield AuthClient(username=username, password=password, **auth_config)
 
 

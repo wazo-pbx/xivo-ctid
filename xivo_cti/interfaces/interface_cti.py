@@ -59,9 +59,9 @@ class CTI(interfaces.Interfaces):
         self._register_login_callbacks()
         self._auth_config = dict(config['auth'])
         self._auth_backend = self._auth_config.pop('backend')
-        del self._auth_config['key_file']
-        del self._auth_config['service_id']
-        del self._auth_config['service_key']
+        self._auth_config.pop('key_file', None)
+        self._auth_config.pop('service_id', None)
+        self._auth_config.pop('service_key', None)
         self._starttls_sent = False
         self._starttls_status_received = False
 
