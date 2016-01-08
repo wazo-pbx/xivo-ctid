@@ -58,6 +58,11 @@ class BusListener(ConsumerMixin):
         self.connection = connection
         self.exchange = exchange
         self._callbacks = []
+        self._started = False
+
+    def run(self, *args, **kwargs):
+        self._started = True
+        super(BusListener, self).run(*args, **kwargs)
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=cb.queue, callbacks=[cb.callable]) for cb in self._callbacks]
@@ -66,7 +71,8 @@ class BusListener(ConsumerMixin):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
 
     def add_callback(self, routing_key, callback):
-        # need to be called before the bus listener thread is started
+        if self._started:
+            raise RuntimeError('failed to add a new callback: listener already running')
         logger.debug('add_callback: %s %s', routing_key, callback)
         queue = self._make_queue(routing_key)
         cb = Callback(queue, callback)
