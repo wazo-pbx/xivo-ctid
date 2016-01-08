@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ class BusListener(ConsumerMixin):
         return Queue(exchange=self.exchange, routing_key=routing_key, exclusive=True)
 
     def add_callback(self, routing_key, callback):
+        # need to be called before the bus listener thread is started
         logger.debug('add_callback: %s %s', routing_key, callback)
         queue = self._make_queue(routing_key)
         cb = Callback(queue, callback)

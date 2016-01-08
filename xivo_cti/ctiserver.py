@@ -156,8 +156,9 @@ class CTIServer(object):
             logger.exception('Failed to unregister')
 
         logger.debug('Stopping the bus listener')
-        context.get('bus_listener').should_stop = True
-        self._bus_listener_thread.join()
+        if self._bus_listener_thread:
+            context.get('bus_listener').should_stop = True
+            self._bus_listener_thread.join()
 
         logger.debug('Closing all sockets')
         self._socket_close_all()
@@ -189,10 +190,6 @@ class CTIServer(object):
         self._daemonize()
         QueueLogger.init()
         self._set_signal_handlers()
-
-        bus_listener = context.get('bus_listener')
-        self._bus_listener_thread = threading.Thread(target=bus_listener.run)
-        self._bus_listener_thread.start()
 
         self._token_renewer = context.get('token_renewer')
         self._setup_token_renewer()
@@ -524,6 +521,10 @@ class CTIServer(object):
         self.safe.init_xod_status()
         self.safe.register_cti_handlers()
         self.safe.register_ami_handlers()
+
+        bus_listener = context.get('bus_listener')
+        self._bus_listener_thread = threading.Thread(target=bus_listener.run)
+        self._bus_listener_thread.start()
 
         self._queue_member_updater.on_initialization()
         self._queue_member_cti_subscriber.send_cti_event = self.send_cti_event
