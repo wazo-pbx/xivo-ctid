@@ -77,7 +77,7 @@ class CTI(interfaces.Interfaces):
         if connection != self or self._starttls_status_received:
             return
 
-        # TODO: add a StartTLS.deregister when it gets merged
+        StartTLS.deregister_callback(self._on_starttls)
         self.send_message({'class': 'starttls',
                            'starttls': status})
         self._starttls_status_received = True
