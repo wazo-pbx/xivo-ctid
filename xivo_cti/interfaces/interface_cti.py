@@ -203,11 +203,10 @@ class CTI(interfaces.Interfaces):
             token_data = auth_client.token.new(self._auth_backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
-                logger.info('Authentification failed, got a 401 from xivo-auth')
+                logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s', username, self._auth_backend)
                 return error('login_password')
             logger.exception('Unexpected xivo-auth error')
             return error('xivo_auth_error')
-
 
         user_uuid = token_data['xivo_user_uuid']
         try:
@@ -225,6 +224,7 @@ class CTI(interfaces.Interfaces):
                                         'auth_token': token_data['token'],
                                         'authenticated': True})
 
+        # TODO: Check if this call is async
         self.answer_cb = self._get_answer_cb(str(user_config['id']))
         cti_profile_id = user_config.get('cti_profile_id')
         if cti_profile_id is None:
