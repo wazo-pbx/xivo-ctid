@@ -20,9 +20,6 @@ import hashlib
 import logging
 import time
 
-from contextlib import contextmanager
-
-from xivo_auth_client import Client as AuthClient
 from xivo_cti import cti_sheets
 from xivo_cti import config
 from xivo_cti.ami import ami_callback_handler
@@ -43,21 +40,6 @@ from xivo_dao.resources.user import dao as user_dao
 from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
-
-
-@contextmanager
-def auth_client(userid):
-    with session_scope():
-        user = user_dao.get(userid)
-        username = user.username
-        password = user.password
-
-    auth_config = dict(config['auth'])
-    auth_config.pop('key_file', None)
-    auth_config.pop('service_id', None)
-    auth_config.pop('service_key', None)
-    auth_config.pop('backend', None)
-    yield AuthClient(username=username, password=password, **auth_config)
 
 
 class Safe(object):
@@ -275,10 +257,6 @@ class Safe(object):
         tohash = '%s:%s' % (sessionid, password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
-
-    def user_remove_auth_token(self, userid, token):
-        with auth_client(userid) as client:
-            client.token.revoke(token)
 
     def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:

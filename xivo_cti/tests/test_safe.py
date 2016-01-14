@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,12 +18,9 @@
 import unittest
 
 from hamcrest import assert_that, is_
-from mock import ANY
 from mock import Mock
 from mock import patch
-from mock import sentinel
 
-from xivo_cti.channel import Channel
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.innerdata import Safe
 from xivo_cti.ioc.context import context
@@ -38,13 +35,6 @@ from xivo_cti.lists.users_list import UsersList
 class TestSafe(unittest.TestCase):
 
     _ipbx_id = 'xivo'
-    _auth_config = {
-        'host': 'auth-host',
-        'port': 4242,
-        'key_file': '/tmp/some.yml',
-        'service_id': 'some-id',
-        'service_key': 'some-key',
-    }
 
     def setUp(self):
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
@@ -134,18 +124,3 @@ class TestSafe(unittest.TestCase):
 
         mock_is_user_member_of_group.assert_called_once_with(user_id, group_id)
         self.assertTrue(domatch)
-
-    @patch.dict('xivo_cti.innerdata.config', auth=_auth_config)
-    @patch('xivo_cti.innerdata.user_dao.get')
-    @patch('xivo_cti.innerdata.AuthClient')
-    def test_user_remove_auth_token(self, auth_client_factory, get_user):
-        user_id = 12
-        auth_client = auth_client_factory.return_value
-
-        self.safe.user_remove_auth_token(user_id, sentinel.token)
-
-        auth_client_factory.assert_called_once_with(username=ANY,
-                                                    password=ANY,
-                                                    host='auth-host',
-                                                    port=4242)
-        auth_client.token.revoke.assert_called_once_with(sentinel.token)

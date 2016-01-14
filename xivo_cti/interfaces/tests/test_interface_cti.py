@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2015 Avencall
+# Copyright (C) 2012-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ class TestCTI(unittest.TestCase):
         with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
             result = self._cti_connection.receive_login_pass(password, self._cti_connection)
 
-        AuthClient.assert_called_once_with(username='foobar', password=password)
+        AuthClient.assert_called_once_with(username='foobar', password=password, backend='xivo_user')
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
         assert_that(result, equal_to(('error', {'class': 'login_pass',
                                                 'error_string': 'login_password'})))
@@ -99,7 +99,7 @@ class TestCTI(unittest.TestCase):
         with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
             result = self._cti_connection.receive_login_pass(password, self._cti_connection)
 
-        AuthClient.assert_called_once_with(username='foobar', password=password)
+        AuthClient.assert_called_once_with(username='foobar', password=password, backend='xivo_user')
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
         assert_that(result, equal_to(('error', {'class': 'login_pass',
                                                 'error_string': 'xivo_auth_error'})))
@@ -137,7 +137,7 @@ class TestCTI(unittest.TestCase):
                 with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
                     result = self._cti_connection.receive_login_pass(password, self._cti_connection)
 
-        AuthClient.assert_called_once_with(username='foobar', password=password)
+        AuthClient.assert_called_once_with(username='foobar', password=password, backend='xivo_user')
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
         assert_that(result, equal_to(('message', {'class': 'login_pass',
                                                   'capalist': [cti_profile_id]})))

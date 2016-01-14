@@ -64,6 +64,7 @@ class CTI(interfaces.Interfaces):
         self._auth_config.pop('service_key', None)
         self._starttls_sent = False
         self._starttls_status_received = False
+        self._auth_client = None
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')
@@ -125,9 +126,9 @@ class CTI(interfaces.Interfaces):
 
     def _remove_auth_token(self):
         token = self.connection_details.get('auth_token')
-        user_id = self.connection_details.get('userid')
-        if token and user_id:
-            self._ctiserver.safe.user_remove_auth_token(user_id, token)
+        if token and self._auth_client:
+            # XXX make this async
+            self._auth_client.token.revoke(token)
 
     def manage_connection(self, msg):
         replies = []
@@ -192,7 +193,7 @@ class CTI(interfaces.Interfaces):
         LoginPass.deregister_callback(self.receive_login_pass)
 
         username = self.connection_details['prelogin']['username']
-        auth_client = AuthClient(username=username, password=password, **self._auth_config)
+        self._auth_client = AuthClient(username=username, password=password, **config['auth'])
 
         def error(msg):
             return 'error', {'class': 'login_pass',
@@ -200,10 +201,12 @@ class CTI(interfaces.Interfaces):
 
         # TODO: make this async
         try:
-            token_data = auth_client.token.new(self._auth_backend, expiration=TWO_MONTHS)
+            backend = config['auth']['backend']
+            token_data = self._auth_client.token.new(backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
-                logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s', username, self._auth_backend)
+                logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s',
+                            username, backend)
                 return error('login_password')
             logger.exception('Unexpected xivo-auth error')
             return error('xivo_auth_error')
