@@ -28,6 +28,7 @@ from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti import ALPHANUMS
 from xivo_cti import dao
 from xivo_cti import config
+from xivo_cti.interfaces.interfaces import Interfaces, DisconnectCause
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.login import LoginID, LoginPass
 from xivo_cti.cti.commands.starttls import StartTLS
@@ -45,7 +46,7 @@ class NotLoggedException(StandardError):
     pass
 
 
-class CTI(interfaces.Interfaces):
+class CTI(Interfaces):
 
     kind = 'CTI'
 
@@ -237,4 +238,4 @@ class CTI(interfaces.Interfaces):
 
     def _error(self, klass, msg):
         self.send_message({'class': klass, 'error_string': msg})
-        return 'error', {'closemenow': True}
+        self._ctiserver.disconnect_iface(self, DisconnectCause.by_client)
