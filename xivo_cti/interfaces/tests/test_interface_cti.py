@@ -165,7 +165,7 @@ class TestCTI(unittest.TestCase):
         cti_profile_id = 42
         user_config = {'cti_profile_id': cti_profile_id,
                        'id': '1',
-                       'enableclient': '0'}
+                       'enableclient': 0}
 
         with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
             dao.user.get_by_uuid.return_value = user_config

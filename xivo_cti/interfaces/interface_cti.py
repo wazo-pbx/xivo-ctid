@@ -217,7 +217,7 @@ class CTI(Interfaces):
             logger.info('Authentification failed, unknown user')
             return self._error('login_pass', 'user_not_found')
 
-        client_enabled = user_config.get('enableclient', '0') != '0'
+        client_enabled = user_config.get('enableclient', 0) != 0
         if not client_enabled:
             logger.info('%s failed to login, client disabled', username)
             return self._error('login_pass', 'login_password')
