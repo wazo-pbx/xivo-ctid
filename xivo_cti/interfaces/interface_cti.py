@@ -167,8 +167,7 @@ class CTI(interfaces.Interfaces):
         LoginID.deregister_callback(self.receive_login_id)
 
         if version != CTI_PROTOCOL_VERSION:
-            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
-                             'class': 'login_id'}
+            return self._error('login_id', 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION))
 
         session_id = ''.join(random.sample(ALPHANUMS, 10))
         self.connection_details['prelogin'] = {'sessionid': session_id,
@@ -184,14 +183,11 @@ class CTI(interfaces.Interfaces):
         if connection != self:
             return
 
+        klass = 'login_pass'
         LoginPass.deregister_callback(self.receive_login_pass)
 
         username = self.connection_details['prelogin']['username']
         self._auth_client = AuthClient(username=username, password=password, **config['auth'])
-
-        def error(msg):
-            return 'error', {'class': 'login_pass',
-                             'error_string': msg}
 
         # TODO: make this async
         try:
@@ -201,21 +197,21 @@ class CTI(interfaces.Interfaces):
             if e.response.status_code == 401:
                 logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s',
                             username, backend)
-                return error('login_password')
+                return self._error(klass, 'login_password')
             logger.exception('Unexpected xivo-auth error')
-            return error('xivo_auth_error')
+            return self._error(klass, 'xivo_auth_error')
 
         user_uuid = token_data['xivo_user_uuid']
         try:
             user_config = dao.user.get_by_uuid(user_uuid)
         except NoSuchUserException:
             logger.info('Authentification failed, unknown user')
-            return error('user_not_found')
+            return self._error(klass, 'user_not_found')
 
         client_enabled = user_config.get('enableclient', '0') != '0'
         if not client_enabled:
             logger.info('%s failed to login, client disabled', username)
-            return error('login_password')
+            return self._error(klass, 'login_password')
 
         self.connection_details.update({'userid': str(user_config['id']),
                                         'auth_token': token_data['token'],
@@ -226,7 +222,7 @@ class CTI(interfaces.Interfaces):
         cti_profile_id = user_config.get('cti_profile_id')
         if cti_profile_id is None:
             logger.warning('login failed: No CTI profile defined for the user')
-            return error('capaid_undefined')
+            return self._error(klass, 'capaid_undefined')
 
         return 'message', {'class': 'login_pass',
                            'capalist': [cti_profile_id]}
@@ -238,3 +234,8 @@ class CTI(interfaces.Interfaces):
             return device_manager.get_answer_fn(device_id)
         except LookupError:
             return self.answer_cb
+
+    @staticmethod
+    def _error(klass, msg):
+        return 'error', {'class': klass,
+                         'error_string': msg}
