@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ class TestCTICommandHandler(unittest.TestCase):
                        "invitee": "user:pcmdev/3"}
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
         with patch('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}}):
-            self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
+            with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
+                self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
 
     def test_parse_message(self):
         cti_handler = CTICommandHandler(self._cti_connection)

@@ -18,12 +18,15 @@
 import unittest
 import requests
 
+from concurrent import futures
 from mock import Mock
 from mock import patch
 from mock import sentinel
 from hamcrest import assert_that
 from hamcrest import equal_to
 
+from xivo_cti.async_runner import AsyncRunner, synchronize
+from xivo_cti.task_queue import new_task_queue
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces.interface_cti import CTI, TWO_MONTHS
@@ -36,10 +39,15 @@ from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
 class TestCTI(unittest.TestCase):
 
     def setUp(self):
+        self.task_queue = new_task_queue()
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
-        with patch('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}}):
-            self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
-            self._cti_connection.send_message = Mock()
+
+        with patch('xivo_cti.interfaces.interface_cti.context', {'async_runner': self.async_runner,
+                                                                 'task_queue': self.task_queue}):
+            with patch('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}}):
+                self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
+                self._cti_connection.send_message = Mock()
         self._cti_connection.login_task = Mock()
 
     def test_user_id_not_connected(self):
@@ -82,7 +90,8 @@ class TestCTI(unittest.TestCase):
         password = 'secre7'
 
         with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
-            self._cti_connection.receive_login_pass(password, self._cti_connection)
+            with synchronize(self.async_runner):
+                self._cti_connection.receive_login_pass(password, self._cti_connection)
 
         AuthClient.assert_called_once_with(username='foobar', password=password, backend='xivo_user')
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
@@ -98,7 +107,8 @@ class TestCTI(unittest.TestCase):
         password = 'secre7'
 
         with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
-            self._cti_connection.receive_login_pass(password, self._cti_connection)
+            with synchronize(self.async_runner):
+                self._cti_connection.receive_login_pass(password, self._cti_connection)
 
         self._cti_connection.send_message.assert_called_once_with({'class': 'login_pass',
                                                                    'error_string': 'xivo_auth_error'})
@@ -115,7 +125,8 @@ class TestCTI(unittest.TestCase):
         with patch('xivo_cti.interfaces.interface_cti.dao') as dao:
             dao.user.get_by_uuid.side_effect = NoSuchUserException
             with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
-                self._cti_connection.receive_login_pass(sentinel.password, self._cti_connection)
+                with synchronize(self.async_runner):
+                    self._cti_connection.receive_login_pass(sentinel.password, self._cti_connection)
 
         self._cti_connection.send_message.assert_called_once_with({'class': 'login_pass',
                                                                    'error_string': 'user_not_found'})
@@ -136,7 +147,8 @@ class TestCTI(unittest.TestCase):
             dao.user.get_by_uuid.return_value = user_config
             with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
                 with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
-                    self._cti_connection.receive_login_pass(password, self._cti_connection)
+                    with synchronize(self.async_runner):
+                        self._cti_connection.receive_login_pass(password, self._cti_connection)
 
         AuthClient.assert_called_once_with(username='foobar', password=password, backend='xivo_user')
         auth_client.token.new.assert_called_once_with('xivo_user', expiration=TWO_MONTHS)
@@ -157,7 +169,8 @@ class TestCTI(unittest.TestCase):
             dao.user.get_by_uuid.return_value = user_config
             with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
                 with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
-                    self._cti_connection.receive_login_pass(password, self._cti_connection)
+                    with synchronize(self.async_runner):
+                        self._cti_connection.receive_login_pass(password, self._cti_connection)
 
         self._cti_connection.send_message.assert_called_once_with({'class': 'login_pass',
                                                                    'error_string': 'capaid_undefined'})
@@ -178,7 +191,8 @@ class TestCTI(unittest.TestCase):
             dao.user.get_by_uuid.return_value = user_config
             with patch.object(self._cti_connection, 'connection_details', {'prelogin': {'username': 'foobar'}}):
                 with patch.object(self._cti_connection, '_get_answer_cb', Mock()):
-                    self._cti_connection.receive_login_pass(password, self._cti_connection)
+                    with synchronize(self.async_runner):
+                        self._cti_connection.receive_login_pass(password, self._cti_connection)
 
         self._cti_connection.send_message.assert_called_once_with({'class': 'login_pass',
                                                                    'error_string': 'login_password'})

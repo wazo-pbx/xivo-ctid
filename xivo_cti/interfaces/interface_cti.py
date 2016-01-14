@@ -61,6 +61,7 @@ class CTI(Interfaces):
         self._starttls_status_received = False
         self._auth_client = None
         self._async_runner = context.get('async_runner')
+        self._task_queue = context.get('task_queue')
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')
@@ -80,8 +81,7 @@ class CTI(Interfaces):
         self._starttls_status_received = True
 
         if status:
-            task_queue = context.get('task_queue')
-            task_queue.put(self.connid.upgrade_ssl)
+            self._task_queue.put(self.connid.upgrade_ssl)
 
     def __str__(self):
         user_id = self.connection_details.get('userid', 'Not logged')
@@ -184,46 +184,53 @@ class CTI(Interfaces):
         if connection != self:
             return
 
-        klass = 'login_pass'
         LoginPass.deregister_callback(self.receive_login_pass)
 
         username = self.connection_details['prelogin']['username']
+        backend = config['auth']['backend']
         self._auth_client = AuthClient(username=username, password=password, **config['auth'])
 
-        # TODO: make this async
+        self._async_runner.run_with_cb(self._complete_login_pass, self._create_token,
+                                       self._auth_client, backend, username)
+
+    def _create_token(self, auth_client, backend, username):
         try:
-            backend = config['auth']['backend']
-            token_data = self._auth_client.token.new(backend, expiration=TWO_MONTHS)
+            return auth_client.token.new(backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response.status_code == 401:
                 logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s',
                             username, backend)
-                return self._error(klass, 'login_password')
+                self._task_queue.put(self._error, 'login_pass', 'login_password')
+                return
             logger.exception('Unexpected xivo-auth error')
-            return self._error(klass, 'xivo_auth_error')
+            self._task_queue.put(self._error, 'login_pass', 'xivo_auth_error')
+
+    def _complete_login_pass(self, token_data):
+        if not token_data:
+            return
 
         user_uuid = token_data['xivo_user_uuid']
+        username = self.connection_details['prelogin']['username']
         try:
             user_config = dao.user.get_by_uuid(user_uuid)
         except NoSuchUserException:
             logger.info('Authentification failed, unknown user')
-            return self._error(klass, 'user_not_found')
+            return self._error('login_pass', 'user_not_found')
 
         client_enabled = user_config.get('enableclient', '0') != '0'
         if not client_enabled:
             logger.info('%s failed to login, client disabled', username)
-            return self._error(klass, 'login_password')
+            return self._error('login_pass', 'login_password')
 
         self.connection_details.update({'userid': str(user_config['id']),
                                         'auth_token': token_data['token'],
                                         'authenticated': True})
 
-        # TODO: Check if this call is async
         self.answer_cb = self._get_answer_cb(str(user_config['id']))
         cti_profile_id = user_config.get('cti_profile_id')
         if cti_profile_id is None:
             logger.warning('login failed: No CTI profile defined for the user')
-            return self._error(klass, 'capaid_undefined')
+            return self._error('login_pass', 'capaid_undefined')
 
         self.send_message({'class': 'login_pass',
                            'capalist': [cti_profile_id]})
