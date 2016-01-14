@@ -60,6 +60,7 @@ class CTI(Interfaces):
         self._starttls_sent = False
         self._starttls_status_received = False
         self._auth_client = None
+        self._async_runner = context.get('async_runner')
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')
@@ -122,8 +123,7 @@ class CTI(Interfaces):
     def _remove_auth_token(self):
         token = self.connection_details.get('auth_token')
         if token and self._auth_client:
-            # XXX make this async
-            self._auth_client.token.revoke(token)
+            self._async_runner.run(self._auth_client.token.revoke, token)
 
     def manage_connection(self, msg):
         replies = []
