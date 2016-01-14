@@ -22,7 +22,6 @@ import requests
 from datetime import timedelta
 
 from xivo_auth_client import Client as AuthClient
-from xivo_dao import user_dao
 
 from xivo_cti import cti_command
 from xivo_cti import CTI_PROTOCOL_VERSION
@@ -57,11 +56,6 @@ class CTI(interfaces.Interfaces):
         self.connection_details = {'ipbxid': ctiserver.myipbxid}
         self._cti_command_handler = CTICommandHandler(self)
         self._register_login_callbacks()
-        self._auth_config = dict(config['auth'])
-        self._auth_backend = self._auth_config.pop('backend')
-        self._auth_config.pop('key_file', None)
-        self._auth_config.pop('service_id', None)
-        self._auth_config.pop('service_key', None)
         self._starttls_sent = False
         self._starttls_status_received = False
         self._auth_client = None
