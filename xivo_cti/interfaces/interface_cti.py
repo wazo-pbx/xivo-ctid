@@ -175,9 +175,9 @@ class CTI(interfaces.Interfaces):
 
         LoginPass.register_callback_params(self.receive_login_pass, ['password', 'cti_connection'])
 
-        return 'message', {'sessionid': session_id,
+        self.send_message({'sessionid': session_id,
                            'class': 'login_id',
-                           'xivoversion': version}
+                           'xivoversion': version})
 
     def receive_login_pass(self, password, connection):
         if connection != self:
@@ -224,8 +224,8 @@ class CTI(interfaces.Interfaces):
             logger.warning('login failed: No CTI profile defined for the user')
             return self._error(klass, 'capaid_undefined')
 
-        return 'message', {'class': 'login_pass',
-                           'capalist': [cti_profile_id]}
+        self.send_message({'class': 'login_pass',
+                           'capalist': [cti_profile_id]})
 
     def _get_answer_cb(self, user_id):
         device_manager = context.get('device_manager')
@@ -235,7 +235,6 @@ class CTI(interfaces.Interfaces):
         except LookupError:
             return self.answer_cb
 
-    @staticmethod
-    def _error(klass, msg):
-        return 'error', {'class': klass,
-                         'error_string': msg}
+    def _error(self, klass, msg):
+        self.send_message({'class': klass, 'error_string': msg})
+        return 'error', {'closemenow': True}
