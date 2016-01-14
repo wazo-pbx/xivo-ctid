@@ -239,9 +239,13 @@ class CTI(Interfaces):
         device_manager = context.get('device_manager')
         try:
             device_id = user_db.get_device_id(user_id)
-            return device_manager.get_answer_fn(device_id)
+            self._async_runner.run_with_cb(self.set_answer_cb, device_manager.get_answer_fn, device_id)
         except LookupError:
-            return self.answer_cb
+            return
+
+    def set_answer_cb(self, cb):
+        if cb:
+            self.answer_cb = cb
 
     def _error(self, klass, msg):
         self.send_message({'class': klass, 'error_string': msg})

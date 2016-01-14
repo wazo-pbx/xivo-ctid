@@ -61,26 +61,6 @@ class TestCTI(unittest.TestCase):
 
         self.assertEqual(result, user_id)
 
-    @patch('xivo_cti.database.user_db.get_device_id')
-    @patch('xivo_cti.ioc.context.context.get')
-    def test_get_answer_cb(self, mock_device_manager_get, mock_get_device_id):
-        mock_device_manager_get.return_value = mock_device_manager = Mock(DeviceManager)
-        mock_device_manager.get_answer_fn.return_value = answer_fn = Mock()
-        mock_get_device_id.return_value = device_id = 42
-
-        self._cti_connection._get_answer_cb(5)()
-
-        mock_device_manager.get_answer_fn.assert_called_once_with(device_id)
-        answer_fn.assert_called_once_with()
-
-    @patch('xivo_cti.database.user_db.get_device_id', Mock(side_effect=LookupError))
-    @patch('xivo_cti.ioc.context.context.get', Mock())
-    def test_get_answer_cb_no_device(self):
-
-        fn = self._cti_connection._get_answer_cb(5)
-
-        assert_that(fn, equal_to(self._cti_connection.answer_cb))
-
     @patch('xivo_cti.interfaces.interface_cti.AuthClient')
     @patch.dict('xivo_cti.interfaces.interface_cti.config', {'auth': {'backend': 'xivo_user'}})
     def test_login_pass_wrong_password(self, AuthClient):
