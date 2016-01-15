@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ class Command(object):
     def regcommand_login_capas(self):
         self.head = 'LOGINFAIL - login_capas'
         missings = []
-        for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
+        for argum in ['state', 'capaid', 'loginkind']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
