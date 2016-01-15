@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 import unittest
 
 from xivo_cti import CTI_PROTOCOL_VERSION
-from xivo_cti.cti.commands.login import LoginID, LoginPass
+from xivo_cti.cti.commands.login import LoginCapas, LoginID, LoginPass
 
 
 class TestLoginId(unittest.TestCase):
@@ -51,3 +51,17 @@ class TestLoginPass(unittest.TestCase):
                                           'commandid': 'abc'})
 
         self.assertEqual(login_pass.password, password)
+
+
+class TestLoginCapas(unittest.TestCase):
+
+    def test_from_dict(self):
+        state = 'away'
+        profile_id = 'switchboard'
+
+        login_capas = LoginCapas.from_dict({'class': 'login_capas',
+                                            'state': state,
+                                            'capaid': profile_id})
+
+        self.assertEqual(login_capas.state, state)
+        self.assertEqual(login_capas.capaid, profile_id)
