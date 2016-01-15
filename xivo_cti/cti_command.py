@@ -86,7 +86,7 @@ class Command(object):
     def regcommand_login_capas(self):
         self.head = 'LOGINFAIL - login_capas'
         missings = []
-        for argum in ['state', 'capaid', 'loginkind']:
+        for argum in ['state', 'capaid']:
             if argum not in self._commanddict:
                 missings.append(argum)
         if missings:
