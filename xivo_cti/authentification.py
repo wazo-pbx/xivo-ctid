@@ -30,7 +30,7 @@ from xivo_cti import config
 from xivo_cti import dao
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.ioc.context import context
-from xivo_cti.cti.commands.login import (LoginID, LoginPass)
+from xivo_cti.cti.commands.login import (LoginCapas, LoginID, LoginPass)
 
 TWO_MONTHS = timedelta(days=60).total_seconds()
 
@@ -121,8 +121,12 @@ class AuthentificationHandler(object):
         self._auth_token = token_data['token']
         self._user_id = str(user_config['id'])
         msg = self._new_login_pass_reply(cti_profile_id)
+        LoginCapas.register_callback_params(self._on_login_capas, ['capaid', 'state', 'cti_connection'])
         self._send_msg(msg)
         self._on_auth_complete()
+
+    def _on_login_capas(self, profile_id, state, cti_connection):
+        logger.debug('login_capas: %s %s', profile_id, state)
 
     def _on_login_id(self, userlogin, xivo_version, cti_connection):
         if cti_connection != self._connection:

@@ -168,6 +168,17 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
         assert_that(self.handler._user_uuid, equal_to(s.uuid))
         assert_that(self.handler._user_id, equal_to('1'))
 
+    @patch('xivo_cti.authentification.LoginCapas')
+    @patch('xivo_cti.authentification.dao')
+    def test_that_login_capas_command_is_registered_on_success(self, dao, LoginCapas):
+        dao.user.get_by_uuid.return_value = self.user_config
+
+        self.handler._on_auth_success(self.token_data)
+
+        LoginCapas.register_callback_params.assert_called_once_with(
+            self.handler._on_login_capas,
+            ['capaid', 'state', 'cti_connection'])
+
     @patch('xivo_cti.authentification.dao')
     def test_complete_cb_are_called_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
