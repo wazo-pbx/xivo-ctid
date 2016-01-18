@@ -69,6 +69,8 @@ class AuthentificationHandler(object):
                                                              'cti_connection'])
 
     def logoff(self):
+        if self._login_task:
+            self._login_task.cancel()
         self._is_authenticated = False
         if self._auth_token and self._auth_client:
             self._async_runner.run(self._auth_client.token.revoke, self._auth_token)

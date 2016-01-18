@@ -96,7 +96,6 @@ class CTI(Interfaces):
 
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
-        self.login_task.cancel()
         self._auth_handler.logoff()
         try:
             user_service_manager = context.get('user_service_manager')
