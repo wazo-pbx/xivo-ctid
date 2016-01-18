@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 class AuthentificationHandler(object):
 
     _session_id_len = 10
+    _ipbxid = 'xivo'
 
     def __init__(self, connection, on_complete_cb):
         self._connection = connection
@@ -111,22 +112,56 @@ class AuthentificationHandler(object):
             return self._fatal('login_pass', 'user_not_found')
 
         client_enabled = user_config.get('enableclient', 0) != 0
-        cti_profile_id = user_config.get('cti_profile_id')
-        if not client_enabled or not cti_profile_id:
+        self._cti_profile_id = user_config.get('cti_profile_id')
+        if not client_enabled or not self._cti_profile_id:
             logger.info('%s failed to login, client enabled %s profile %s',
-                        self._username, client_enabled, cti_profile_id)
+                        self._username, client_enabled, self._cti_profile_id)
             return self._fatal('login_pass', 'login_password')
 
         self._authenticated = True
         self._auth_token = token_data['token']
         self._user_id = str(user_config['id'])
-        msg = self._new_login_pass_reply(cti_profile_id)
+        msg = self._new_login_pass_reply(self._cti_profile_id)
         LoginCapas.register_callback_params(self._on_login_capas, ['capaid', 'state', 'cti_connection'])
         self._send_msg(msg)
         self._on_auth_complete()
 
     def _on_login_capas(self, profile_id, state, cti_connection):
-        logger.debug('login_capas: %s %s', profile_id, state)
+        if cti_connection != self._connection:
+            return
+
+        logger.debug('_on_login_capas: %r %s', profile_id, state)
+        LoginCapas.deregister_callback(self._on_login_capas)
+
+        if profile_id != self._cti_profile_id:
+            logger.info('LOGINFAIL - login_capas - wrong cti_profile_id: %r %r',
+                        profile_id, self._cti_profile_id)
+            return self._fatal('login_capas', 'wrong cti_profile_id')
+
+        profile_config = config['profiles'].get(profile_id)
+        if not profile_config:
+            logger.info('LOGINFAIL - login_capas - unknown cti_profile_id')
+            return self._fatal('login_capas', 'unknown cti_profile_id')
+
+        get = lambda key: config[key].get(profile_config[key], {})
+        capas = {'services': get('services'),
+                 'preferences': get('preferences'),
+                 'userstatus': get('userstatus'),
+                 'phonestatus': get('phonestatus')}
+        msg = {'class': 'login_capas',
+               'userid': self._user_id,
+               'ipbxid': self._ipbxid,
+               'capas': capas,
+               'capaxlets': profile_config['xlets'],
+               'appliname': profile_config['name']}
+
+        user_service_manager = context.get('user_service_manager')
+        user_service_manager.connect(self._user_id, state)
+        self._connection.login_task.cancel()
+        self._send_msg(msg)
+        login_info = {'user_uuid': self._user_uuid,
+                      'user_id': self._user_id}
+        logger.info('LOGIN_SUCCESSFUL for %s', login_info)
 
     def _on_login_id(self, userlogin, xivo_version, cti_connection):
         if cti_connection != self._connection:

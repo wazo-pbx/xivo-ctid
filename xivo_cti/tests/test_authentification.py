@@ -29,6 +29,7 @@ from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti.async_runner import AsyncRunner
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces.interface_cti import CTI
+from xivo_cti.services.user.manager import UserServiceManager
 
 from ..authentification import AuthentificationHandler
 
@@ -219,6 +220,203 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
         self.handler._on_auth_success(self.token_data)
 
         self.assert_fatal('login_pass', 'login_password')
+
+
+@patch('xivo_cti.authentification.context', Mock())
+class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCase):
+
+    xivo_user_status = {u'available': {'color': u'#9BC920',
+                                       'allowed': [u'available',
+                                                   u'away',
+                                                   u'outtolunch',
+                                                   u'donotdisturb',
+                                                   u'berightback'],
+                                       'actions': {u'enablednd': u'false'},
+                                       'longname': u'Disponible'},
+                        u'berightback': {'color': u'#FFB545',
+                                         'allowed': [u'available',
+                                                     u'away',
+                                                     u'outtolunch',
+                                                     u'donotdisturb',
+                                                     u'berightback'],
+                                         'actions': {u'enablednd': u'false'},
+                                         'longname': u'Bient\xf4t de retour'},
+                        u'disconnected': {'color': u'#9E9E9E',
+                                          'actions': {u'agentlogoff': u''},
+                                          'longname': u'D\xe9connect\xe9'},
+                        u'away': {'color': u'#FFDD00',
+                                  'allowed': [u'available',
+                                              u'away',
+                                              u'outtolunch',
+                                              u'donotdisturb',
+                                              u'berightback'],
+                                  'actions': {u'enablednd': u'false'},
+                                  'longname': u'Sorti'},
+                        u'donotdisturb': {'color': u'#D13224',
+                                          'allowed': [u'available',
+                                                      u'away',
+                                                      u'outtolunch',
+                                                      u'donotdisturb',
+                                                      u'berightback'],
+                                          'actions': {u'enablednd': u'true'},
+                                          'longname': u'Ne pas d\xe9ranger'},
+                        u'outtolunch': {'color': u'#6CA6FF',
+                                        'allowed': [u'available',
+                                                    u'away',
+                                                    u'outtolunch',
+                                                    u'donotdisturb',
+                                                    u'berightback'],
+                                        'actions': {u'enablednd': u'false'},
+                                        'longname': u'Parti Manger'}}
+
+    xivo_phone_status = {u'16': {'color': u'#FFDD00',
+                                 'longname': u'En Attente'},
+                         u'1': {'color': u'#D13224',
+                                'longname': u'En ligne OU appelle'},
+                         u'0': {'color': u'#9BC920',
+                                'longname': u'Disponible'},
+                         u'2': {'color': u'#D13224',
+                                'longname': u'Occup\xe9'},
+                         u'-1': {'color': u'#9E9E9E',
+                                 'longname': u'D\xe9sactiv\xe9'},
+                         u'4': {'color': u'#9E9E9E',
+                                'longname': u'Indisponible'},
+                         u'-2': {'color': u'#9E9E9E',
+                                 'longname': u'Inexistant'},
+                         u'9': {'color': u'#D13224',
+                                'longname': u'(En Ligne OU Appelle) ET Sonne'},
+                         u'8': {'color': u'#6CA6FF', 'longname': u'Sonne'}}
+
+    client_xlets = [[u'identity', u'grid'],
+                    [u'tabber', u'grid', '1'],
+                    [u'customerinfo', u'tab', '1'],
+                    [u'fax', u'tab', '2'],
+                    [u'history', u'tab', '3'],
+                    [u'features', u'tab', '5'],
+                    [u'conference', u'tab', '7'],
+                    [u'people', u'tab', '8']]
+
+    config = {'profiles': {1: {'preferences': u'itm_preferences_Supervisor',
+                               'userstatus': u'xivo',
+                               'services': u'itm_services_Supervisor',
+                               'phonestatus': u'xivo',
+                               'xlets': [[u'identity', u'grid'],
+                                         [u'queueentrydetails', u'dock', 'fcms'],
+                                         [u'agentdetails', u'dock', 'fcms'],
+                                         [u'queues', u'dock', 'fcms'],
+                                         [u'queuemembers', u'dock', 'fcms'],
+                                         [u'agents', u'dock', 'fcms']],
+                               'id': 1,
+                               'name': u'Supervisor'},
+                           2: {'preferences': u'itm_preferences_Agent',
+                               'userstatus': u'xivo',
+                               'services': u'itm_services_Agent',
+                               'phonestatus': u'xivo',
+                               'xlets': [[u'identity', u'grid'],
+                                         [u'queues', u'dock', 'fcms'],
+                                         [u'customerinfo', u'dock', 'fcms'],
+                                         [u'agentdetails', u'dock', 'fcms']],
+                               'id': 2,
+                               'name': u'Agent'},
+                           3: {'preferences': u'itm_preferences_Client',
+                               'userstatus': u'xivo',
+                               'services': u'itm_services_Client',
+                               'phonestatus': u'xivo',
+                               'xlets': client_xlets,
+                               'id': 3,
+                               'name': u'Client'},
+                           4: {'preferences': u'itm_preferences_Switchboard',
+                               'userstatus': u'xivo',
+                               'services': u'itm_services_Switchboard',
+                               'phonestatus': u'xivo',
+                               'xlets': [[u'identity', u'grid'],
+                                         [u'switchboard', u'dock', 'fcms', '1'],
+                                         [u'directory', u'dock', 'fcms', '3']],
+                               'id': 4,
+                               'name': u'Switchboard'}},
+              'services': {u'itm_services_Switchboard': [''],
+                           u'itm_services_Agent': [''],
+                           u'itm_services_Client': [u'enablednd', u'fwdunc', u'fwdbusy', u'fwdrna'],
+                           u'itm_services_Supervisor': ['']},
+              'preferences': {u'itm_preferences_Client': False,
+                              u'itm_preferences_Supervisor': False,
+                              u'itm_preferences_Agent': False,
+                              u'itm_preferences_Switchboard': False},
+              'userstatus': {'xivo': xivo_user_status},
+              'phonestatus': {'xivo': xivo_phone_status}}
+
+    def setUp(self):
+        super(TestAuthentificationHandlerOnLoginCapas, self).setUp()
+        self.handler._user_uuid = s.uuid
+        self.user_id = self.handler._user_id = 42
+        self.profile_id = self.handler._cti_profile_id = 3
+        self.connection.login_task = Mock()
+
+    def test_login_capas_reply_on_success(self):
+        ipbxid = 'xivo'
+        capas = {'services': [u'enablednd', u'fwdunc', u'fwdbusy', u'fwdrna'],
+                 'preferences': False,
+                 'userstatus': self.xivo_user_status,
+                 'phonestatus': self.xivo_phone_status}
+        capaxlets = self.client_xlets
+        state = 'available'
+
+        with patch('xivo_cti.authentification.config', self.config):
+            self.handler._on_login_capas(self.profile_id, state, self.connection)
+
+        msg = {'class': 'login_capas',
+               'userid': self.user_id,
+               'ipbxid': ipbxid,
+               'capas': capas,
+               'capaxlets': capaxlets,
+               'appliname': 'Client'}
+        self.assert_message_sent(msg)
+
+    def test_that_the_login_task_is_cancelled_on_success(self):
+        with patch('xivo_cti.authentification.config', self.config):
+            self.handler._on_login_capas(self.profile_id, 'available', self.connection)
+
+        self.connection.login_task.cancel.assert_called_once_with()
+
+    def test_that_the_user_status_is_updated_on_success(self):
+        user_service_manager = Mock(UserServiceManager)
+        state = 'available'
+
+        with patch('xivo_cti.authentification.context', {'user_service_manager': user_service_manager}):
+            with patch('xivo_cti.authentification.config', self.config):
+                self.handler._on_login_capas(self.profile_id, state, self.connection)
+
+        user_service_manager.connect.assert_called_once_with(self.user_id, state)
+
+    @patch('xivo_cti.authentification.LoginCapas')
+    def test_that_login_capas_command_is_deregistered(self, LoginCapas):
+        with patch('xivo_cti.authentification.config', self.config):
+            self.handler._on_login_capas(self.profile_id, 'available', self.connection)
+
+        LoginCapas.deregister_callback.assert_called_once_with(self.handler._on_login_capas)
+
+    def test_with_a_capaid_that_does_not_match_the_users_profile(self):
+        with patch('xivo_cti.authentification.config', self.config):
+            self.handler._on_login_capas(1, 'available', self.connection)
+
+        self.assert_fatal('login_capas', 'wrong cti_profile_id')
+
+    def test_with_an_unknown_profile(self):
+        unknown_profile_id = 42
+
+        with patch.object(self.handler, '_cti_profile_id', unknown_profile_id):
+            with patch('xivo_cti.authentification.config', self.config):
+                self.handler._on_login_capas(unknown_profile_id, 'available', self.connection)
+
+        self.assert_fatal('login_capas', 'unknown cti_profile_id')
+
+    def test_that_nothing_happens_if_another_connection(self):
+        another_connection = Mock(CTI)
+
+        with patch('xivo_cti.authentification.config', self.config):
+            self.handler._on_login_capas(s.capaid, s.state, another_connection)
+
+        self.assert_no_message_sent()
 
 
 class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase):
