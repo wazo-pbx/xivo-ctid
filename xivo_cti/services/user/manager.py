@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2009-2015 Avencall
+# Copyright (C) 2009-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,6 +71,10 @@ class UserServiceManager(object):
                                      user_id,
                                      exten,
                                      "Invalid extension '{exten}'".format(exten=e.exten))
+
+    def connect(self, user_id, state):
+        self.dao.user.connect(user_id)
+        self.set_presence(user_id, state)
 
     def enable_dnd(self, user_id):
         self.dao.user.enable_dnd(user_id)

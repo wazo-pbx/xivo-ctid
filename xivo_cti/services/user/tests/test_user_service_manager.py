@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 
 import unittest
 
-from mock import ANY
 from mock import Mock
 from mock import sentinel
 from mock import patch
@@ -133,6 +132,16 @@ class TestUserServiceManager(_BaseTestCase):
 
         expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
         connection.send_message.assert_called_once_with(expected_message)
+
+    def test_connect(self):
+        state = 'available'
+        user_id = '42'
+
+        with patch.object(self.user_service_manager, 'set_presence') as set_presence:
+            self.user_service_manager.connect(user_id, state)
+
+        set_presence.assert_called_once_with(user_id, state)
+        self.user_service_manager.dao.user.connect.assert_called_once_with(user_id)
 
     def test_register_originate_response_callback(self):
         action_id, user_id, exten = '8734534', '12', '324564'
