@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2009-2015 Avencall
+# Copyright (C) 2009-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -205,6 +205,20 @@ class TestUserDAO(unittest.TestCase):
         disable_service.assert_called_once_with(user_id, 'enablebusy', 'destbusy', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enablebusy'], False)
         self.assertEqual(self._userlist.keeplist[user_id]['destbusy'], destination, 'inner data not updated for busy destination')
+
+    def test_connect(self):
+        self.dao._innerdata = self._innerdata
+        user_id = '1'
+        self._userlist = {}
+        self._userlist[user_id] = {'connection': None}
+        self.dao._innerdata.xod_status = {'users': self._userlist}
+
+        self.dao.connect(user_id)
+
+        result = self.dao._innerdata.xod_status['users'][user_id]
+
+        expected_userdata = {'connection': 'yes'}
+        self.assertEqual(expected_userdata['connection'], result['connection'])
 
     def test_disconnect(self):
         self.dao._innerdata = self._innerdata

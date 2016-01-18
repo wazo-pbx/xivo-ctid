@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,6 +46,10 @@ class UserDAO(object):
             return self.innerdata.xod_status['users'][user_id]
         except LookupError:
             raise NoSuchUserException(user_id)
+
+    def connect(self, user_id):
+        user_status = self._user_status(user_id)
+        user_status['connection'] = 'yes'
 
     def enable_dnd(self, user_id):
         user_db.enable_service(user_id, 'enablednd')
