@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,3 +37,16 @@ class TestCTIServer(unittest.TestCase):
         self.cti_server.send_cti_event(event)
 
         self.broadcast_cti_group.send_message.assert_called_once_with(event)
+
+    def test_deregister_from_consul_on_exception(self):
+        # in certain conditions, call to deregister() raises a TypeError
+        # instead of a RegistererError. This happens because of a bug in
+        # pyOpenSSL, and when consul is stopped at about the same time as
+        # xivo-ctid.
+        consul_registerer = Mock()
+        consul_registerer.deregister.side_effect = Exception('foo')
+        self.cti_server._consul_registerer = consul_registerer
+
+        self.cti_server._deregister_from_consul()
+
+        consul_registerer.deregister.assert_called_once_with()

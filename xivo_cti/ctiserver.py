@@ -150,10 +150,7 @@ class CTIServer(object):
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
 
-        try:
-            self._consul_registerer.deregister()
-        except consul_helpers.RegistererError:
-            logger.exception('Failed to unregister')
+        self._deregister_from_consul()
 
         logger.debug('Stopping the bus listener')
         if self._bus_listener_thread:
@@ -169,6 +166,12 @@ class CTIServer(object):
             t._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
+
+    def _deregister_from_consul(self):
+        try:
+            self._consul_registerer.deregister()
+        except Exception:
+            logger.exception('Failed to unregister')
 
     def _set_logger(self):
         xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
