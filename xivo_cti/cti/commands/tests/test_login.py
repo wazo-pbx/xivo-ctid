@@ -57,11 +57,11 @@ class TestLoginCapas(unittest.TestCase):
 
     def test_from_dict(self):
         state = 'away'
-        profile_id = 'switchboard'
+        profile_id = '42'
 
         login_capas = LoginCapas.from_dict({'class': 'login_capas',
                                             'state': state,
                                             'capaid': profile_id})
 
         self.assertEqual(login_capas.state, state)
-        self.assertEqual(login_capas.capaid, profile_id)
+        self.assertEqual(login_capas.capaid, 42)

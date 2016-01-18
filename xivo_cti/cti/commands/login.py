@@ -19,7 +19,7 @@ from xivo_cti.cti.cti_command import CTICommandClass
 
 
 def _parse_login_capas(msg, command):
-    command.capaid = msg['capaid']
+    command.capaid = int(msg['capaid'])
     command.state = msg['state']
 
 LoginCapas = CTICommandClass('login_capas', None, _parse_login_capas)
