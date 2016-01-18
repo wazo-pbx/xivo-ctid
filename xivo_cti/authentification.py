@@ -49,9 +49,12 @@ class AuthentificationHandler(object):
         self._auth_config = config['auth']
         self._async_runner = context.get('async_runner')
         self._task_queue = context.get('task_queue')
+        self._task_scheduler = context.get('task_scheduler')
         self._auth_token = None
         self._authenticated = False
         self._on_complete_cb = on_complete_cb
+        self._login_task = None
+        self._login_timeout = int(config['main'].get('logintimeout', 5))
 
     def auth_token(self):
         return self._auth_token
@@ -60,6 +63,7 @@ class AuthentificationHandler(object):
         return self._authenticated
 
     def run(self):
+        self._login_task = self._task_scheduler.schedule(self._login_timeout, self._on_cti_login_auth_timeout)
         LoginID.register_callback_params(self._on_login_id, ['userlogin',
                                                              'xivo_version',
                                                              'cti_connection'])
@@ -126,6 +130,9 @@ class AuthentificationHandler(object):
         self._send_msg(msg)
         self._on_auth_complete()
 
+    def _on_cti_login_auth_timeout(self):
+        self._connection.disconnect()
+
     def _on_login_capas(self, profile_id, state, cti_connection):
         if cti_connection != self._connection:
             return
@@ -157,7 +164,8 @@ class AuthentificationHandler(object):
 
         user_service_manager = context.get('user_service_manager')
         user_service_manager.connect(self._user_id, state)
-        self._connection.login_task.cancel()
+        if self._login_task:
+            self._login_task.cancel()
         self._send_msg(msg)
         login_info = {'user_uuid': self._user_uuid,
                       'user_id': self._user_id}

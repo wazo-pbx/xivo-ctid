@@ -43,11 +43,14 @@ class _BaseAuthentificationHandlerTestCase(unittest.TestCase):
         self.connection = Mock(CTI)
         self.async_runner = Mock(AsyncRunner)
         self.task_queue = Mock()
+        self.task_scheduler = Mock()
         self.complete_cb = Mock()
         with patch('xivo_cti.authentification.context', {'async_runner': self.async_runner,
-                                                         'task_queue': self.task_queue}):
+                                                         'task_queue': self.task_queue,
+                                                         'task_scheduler': self.task_scheduler}):
             with patch('xivo_cti.authentification.config', {'auth': {'backend': s.backend,
-                                                                     'host': s.host}}):
+                                                                     'host': s.host},
+                                                            'main': {'logintimeout': 42}}):
                 self.handler = AuthentificationHandler(self.connection, self.complete_cb)
         self.session_id = self.handler._session_id
         self.handler._username = s.username
@@ -80,6 +83,12 @@ class TestAuthentificationHandler(_BaseAuthentificationHandlerTestCase):
         LoginID.register_callback_params.assert_called_once_with(
             self.handler._on_login_id,
             ['userlogin', 'xivo_version', 'cti_connection'])
+
+    @patch('xivo_cti.authentification.LoginID', Mock())
+    def test_that_run_starts_the_login_timeout_task(self):
+        self.handler.run()
+
+        self.task_scheduler.schedule(42, self.handler._on_cti_login_auth_timeout)
 
     def test_that_is_authenticated_is_false(self):
         result = self.handler.is_authenticated()
@@ -373,10 +382,11 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
         self.assert_message_sent(msg)
 
     def test_that_the_login_task_is_cancelled_on_success(self):
-        with patch('xivo_cti.authentification.config', self.config):
-            self.handler._on_login_capas(self.profile_id, 'available', self.connection)
+        with patch.object(self.handler, '_login_task') as login_task:
+            with patch('xivo_cti.authentification.config', self.config):
+                self.handler._on_login_capas(self.profile_id, 'available', self.connection)
 
-        self.connection.login_task.cancel.assert_called_once_with()
+        login_task.cancel.assert_called_once_with()
 
     def test_that_the_user_status_is_updated_on_success(self):
         user_service_manager = Mock(UserServiceManager)

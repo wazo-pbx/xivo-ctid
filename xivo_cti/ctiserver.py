@@ -501,11 +501,6 @@ class CTIServer(object):
             logger.warning('unknown connection kind %s', kind)
         return closemenow
 
-    def _on_cti_login_auth_timeout(self, connc):
-        connc.close()
-        if connc in self.fdlist_interface_cti:
-            del self.fdlist_interface_cti[connc]
-
     def main_loop(self):
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
@@ -688,8 +683,6 @@ class CTIServer(object):
             if kind == 'CTI':
                 socketobject = ClientConnection(socketobject, address)
                 interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
-                logintimeout = int(config['main'].get('logintimeout', 5))
-                interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
                 self.fdlist_interface_cti[socketobject] = interface
                 self._broadcast_cti_group.add(interface)
             elif kind == 'INFO':
