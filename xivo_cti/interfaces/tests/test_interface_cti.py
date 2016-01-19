@@ -21,7 +21,6 @@ from concurrent import futures
 from hamcrest import assert_that, equal_to
 from mock import Mock
 from mock import patch
-from mock import sentinel as s
 
 from xivo_cti.async_runner import AsyncRunner
 from xivo_cti.task_queue import new_task_queue
@@ -40,7 +39,7 @@ class TestCTI(unittest.TestCase):
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
 
         with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
-            with patch('xivo_cti.interfaces.interface_cti.AuthentificationHandler', Mock()):
+            with patch('xivo_cti.interfaces.interface_cti.AuthenticationHandler', Mock()):
                 self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 

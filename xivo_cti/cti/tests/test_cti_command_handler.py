@@ -36,7 +36,7 @@ class TestCTICommandHandler(unittest.TestCase):
                        "invitee": "user:pcmdev/3"}
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
         with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
-            with patch('xivo_cti.interfaces.interface_cti.AuthentificationHandler', Mock()):
+            with patch('xivo_cti.interfaces.interface_cti.AuthenticationHandler', Mock()):
                 self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
 
     def test_parse_message(self):

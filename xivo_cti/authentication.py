@@ -37,7 +37,7 @@ TWO_MONTHS = timedelta(days=60).total_seconds()
 logger = logging.getLogger(__name__)
 
 
-class AuthentificationHandler(object):
+class AuthenticationHandler(object):
 
     _session_id_len = 10
     _ipbxid = 'xivo'
@@ -88,7 +88,7 @@ class AuthentificationHandler(object):
             return auth_client.token.new(backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response and e.response.status_code == 401:
-                logger.info('Authentification failed, got a 401 from xivo-auth username: %s backend: %s',
+                logger.info('Authentication failed, got a 401 from xivo-auth username: %s backend: %s',
                             username, backend)
                 error_string = 'login_password'
             else:

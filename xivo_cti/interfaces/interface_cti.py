@@ -21,7 +21,7 @@ from datetime import timedelta
 
 from xivo_cti import cti_command
 from xivo_cti import config
-from xivo_cti.authentification import AuthentificationHandler
+from xivo_cti.authentication import AuthenticationHandler
 from xivo_cti.interfaces.interfaces import Interfaces, DisconnectCause
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
 from xivo_cti.cti.commands.starttls import StartTLS
@@ -53,7 +53,7 @@ class CTI(Interfaces):
         self._auth_client = None
         self._async_runner = context.get('async_runner')
         self._task_queue = context.get('task_queue')
-        self._auth_handler = AuthentificationHandler(self, self._on_auth_success)
+        self._auth_handler = AuthenticationHandler(self, self._on_auth_success)
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')

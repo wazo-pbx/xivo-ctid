@@ -31,13 +31,13 @@ from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.services.user.manager import UserServiceManager
 
-from ..authentification import AuthentificationHandler
+from ..authentication import AuthenticationHandler
 
 
 TWO_MONTHS = timedelta(days=60).total_seconds()
 
 
-class _BaseAuthentificationHandlerTestCase(unittest.TestCase):
+class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.connection = Mock(CTI)
@@ -45,13 +45,13 @@ class _BaseAuthentificationHandlerTestCase(unittest.TestCase):
         self.task_queue = Mock()
         self.task_scheduler = Mock()
         self.complete_cb = Mock()
-        with patch('xivo_cti.authentification.context', {'async_runner': self.async_runner,
+        with patch('xivo_cti.authentication.context', {'async_runner': self.async_runner,
                                                          'task_queue': self.task_queue,
                                                          'task_scheduler': self.task_scheduler}):
-            with patch('xivo_cti.authentification.config', {'auth': {'backend': s.backend,
+            with patch('xivo_cti.authentication.config', {'auth': {'backend': s.backend,
                                                                      'host': s.host},
                                                             'main': {'logintimeout': 42}}):
-                self.handler = AuthentificationHandler(self.connection, self.complete_cb)
+                self.handler = AuthenticationHandler(self.connection, self.complete_cb)
         self.session_id = self.handler._session_id
         self.handler._username = s.username
 
@@ -74,9 +74,9 @@ class _BaseAuthentificationHandlerTestCase(unittest.TestCase):
         self.task_queue.put.assert_called_once_with(self.handler._fatal, message_class, error_string)
 
 
-class TestAuthentificationHandler(_BaseAuthentificationHandlerTestCase):
+class TestAuthenticationHandler(_BaseAuthenticationHandlerTestCase):
 
-    @patch('xivo_cti.authentification.LoginID')
+    @patch('xivo_cti.authentication.LoginID')
     def test_that_run_starts_the_login_chain(self, LoginID):
         self.handler.run()
 
@@ -84,7 +84,7 @@ class TestAuthentificationHandler(_BaseAuthentificationHandlerTestCase):
             self.handler._on_login_id,
             ['userlogin', 'xivo_version', 'cti_connection'])
 
-    @patch('xivo_cti.authentification.LoginID', Mock())
+    @patch('xivo_cti.authentication.LoginID', Mock())
     def test_that_run_starts_the_login_timeout_task(self):
         self.handler.run()
 
@@ -101,10 +101,10 @@ class TestAuthentificationHandler(_BaseAuthentificationHandlerTestCase):
         assert_that(session_id, has_length(10))
 
 
-class TestAuthentificationHandlerCreateToken(_BaseAuthentificationHandlerTestCase):
+class TestAuthenticationHandlerCreateToken(_BaseAuthenticationHandlerTestCase):
 
     def setUp(self):
-        super(TestAuthentificationHandlerCreateToken, self).setUp()
+        super(TestAuthenticationHandlerCreateToken, self).setUp()
         self.auth_client = Mock()
 
     def test_that_create_token_returns_the_clients_return_value(self):
@@ -132,17 +132,17 @@ class TestAuthentificationHandlerCreateToken(_BaseAuthentificationHandlerTestCas
         self.assert_fatal_scheduled('login_pass', 'xivo_auth_error')
 
 
-class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestCase):
+class TestAuthenticationHandlerOnAuthSuccess(_BaseAuthenticationHandlerTestCase):
 
     def setUp(self):
-        super(TestAuthentificationHandlerOnAuthSuccess, self).setUp()
+        super(TestAuthenticationHandlerOnAuthSuccess, self).setUp()
         self.user_config = {'cti_profile_id': s.profile_id,
                             'enableclient': '1',
                             'id': 1}
         self.token_data = {'xivo_user_uuid': s.uuid,
                            'token': s.token}
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_login_pass_reply_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -151,7 +151,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
         self.assert_message_sent({'class': 'login_pass',
                                   'capalist': [s.profile_id]})
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_is_authenticated_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -160,7 +160,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
 
         assert_that(result, equal_to(True))
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_that_auth_token_is_set_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -169,7 +169,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
 
         assert_that(result, equal_to(s.token))
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_that_user_id_and_uuid_are_set_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -178,8 +178,8 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
         assert_that(self.handler._user_uuid, equal_to(s.uuid))
         assert_that(self.handler._user_id, equal_to('1'))
 
-    @patch('xivo_cti.authentification.LoginCapas')
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.LoginCapas')
+    @patch('xivo_cti.authentication.dao')
     def test_that_login_capas_command_is_registered_on_success(self, dao, LoginCapas):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -189,7 +189,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
             self.handler._on_login_capas,
             ['capaid', 'state', 'cti_connection'])
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_complete_cb_are_called_on_success(self, dao):
         dao.user.get_by_uuid.return_value = self.user_config
 
@@ -202,7 +202,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
 
         assert_that(self.handler.is_authenticated(), equal_to(False))
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_unknown_user(self, dao):
         dao.user.get_by_uuid.side_effect = NoSuchUserException
 
@@ -210,7 +210,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
 
         self.assert_fatal('login_pass', 'user_not_found')
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_disabled_client(self, dao):
         user_config = dict(self.user_config)
         user_config['enableclient'] = 0
@@ -220,7 +220,7 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
 
         self.assert_fatal('login_pass', 'login_password')
 
-    @patch('xivo_cti.authentification.dao')
+    @patch('xivo_cti.authentication.dao')
     def test_undefined_profile(self, dao):
         user_config = dict(self.user_config)
         user_config.pop('cti_profile_id', None)
@@ -231,8 +231,8 @@ class TestAuthentificationHandlerOnAuthSuccess(_BaseAuthentificationHandlerTestC
         self.assert_fatal('login_pass', 'login_password')
 
 
-@patch('xivo_cti.authentification.context', Mock())
-class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCase):
+@patch('xivo_cti.authentication.context', Mock())
+class TestAuthenticationHandlerOnLoginCapas(_BaseAuthenticationHandlerTestCase):
 
     xivo_user_status = {u'available': {'color': u'#9BC920',
                                        'allowed': [u'available',
@@ -355,7 +355,7 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
               'phonestatus': {'xivo': xivo_phone_status}}
 
     def setUp(self):
-        super(TestAuthentificationHandlerOnLoginCapas, self).setUp()
+        super(TestAuthenticationHandlerOnLoginCapas, self).setUp()
         self.handler._user_uuid = s.uuid
         self.user_id = self.handler._user_id = 42
         self.profile_id = self.handler._cti_profile_id = 3
@@ -370,7 +370,7 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
         capaxlets = self.client_xlets
         state = 'available'
 
-        with patch('xivo_cti.authentification.config', self.config):
+        with patch('xivo_cti.authentication.config', self.config):
             self.handler._on_login_capas(self.profile_id, state, self.connection)
 
         msg = {'class': 'login_capas',
@@ -383,7 +383,7 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
 
     def test_that_the_login_task_is_cancelled_on_success(self):
         with patch.object(self.handler, '_login_task') as login_task:
-            with patch('xivo_cti.authentification.config', self.config):
+            with patch('xivo_cti.authentication.config', self.config):
                 self.handler._on_login_capas(self.profile_id, 'available', self.connection)
 
         login_task.cancel.assert_called_once_with()
@@ -392,21 +392,21 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
         user_service_manager = Mock(UserServiceManager)
         state = 'available'
 
-        with patch('xivo_cti.authentification.context', {'user_service_manager': user_service_manager}):
-            with patch('xivo_cti.authentification.config', self.config):
+        with patch('xivo_cti.authentication.context', {'user_service_manager': user_service_manager}):
+            with patch('xivo_cti.authentication.config', self.config):
                 self.handler._on_login_capas(self.profile_id, state, self.connection)
 
         user_service_manager.connect.assert_called_once_with(self.user_id, state)
 
-    @patch('xivo_cti.authentification.LoginCapas')
+    @patch('xivo_cti.authentication.LoginCapas')
     def test_that_login_capas_command_is_deregistered(self, LoginCapas):
-        with patch('xivo_cti.authentification.config', self.config):
+        with patch('xivo_cti.authentication.config', self.config):
             self.handler._on_login_capas(self.profile_id, 'available', self.connection)
 
         LoginCapas.deregister_callback.assert_called_once_with(self.handler._on_login_capas)
 
     def test_with_a_capaid_that_does_not_match_the_users_profile(self):
-        with patch('xivo_cti.authentification.config', self.config):
+        with patch('xivo_cti.authentication.config', self.config):
             self.handler._on_login_capas(1, 'available', self.connection)
 
         self.assert_fatal('login_capas', 'wrong cti_profile_id')
@@ -415,7 +415,7 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
         unknown_profile_id = 42
 
         with patch.object(self.handler, '_cti_profile_id', unknown_profile_id):
-            with patch('xivo_cti.authentification.config', self.config):
+            with patch('xivo_cti.authentication.config', self.config):
                 self.handler._on_login_capas(unknown_profile_id, 'available', self.connection)
 
         self.assert_fatal('login_capas', 'unknown cti_profile_id')
@@ -423,13 +423,13 @@ class TestAuthentificationHandlerOnLoginCapas(_BaseAuthentificationHandlerTestCa
     def test_that_nothing_happens_if_another_connection(self):
         another_connection = Mock(CTI)
 
-        with patch('xivo_cti.authentification.config', self.config):
+        with patch('xivo_cti.authentication.config', self.config):
             self.handler._on_login_capas(s.capaid, s.state, another_connection)
 
         self.assert_no_message_sent()
 
 
-class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase):
+class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
 
     def test_that_on_login_id_checks_the_version(self):
         bad_version = CTI_PROTOCOL_VERSION + '1'
@@ -441,7 +441,7 @@ class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase)
         self.assert_message_sent(expected_msg)
         self.assert_disconnect_called()
 
-    @patch('xivo_cti.authentification.LoginPass')
+    @patch('xivo_cti.authentication.LoginPass')
     def test_that_login_pass_is_registered_on_success(self, LoginPass):
         self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
 
@@ -449,7 +449,7 @@ class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase)
             self.handler._on_login_pass,
             ['password', 'cti_connection'])
 
-    @patch('xivo_cti.authentification.LoginID')
+    @patch('xivo_cti.authentication.LoginID')
     def test_that_login_id_is_deregistered(self, LoginID):
         self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
 
@@ -463,8 +463,8 @@ class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase)
                         'xivoversion': CTI_PROTOCOL_VERSION}
         self.assert_message_sent(expected_msg)
 
-    @patch('xivo_cti.authentification.LoginPass')
-    @patch('xivo_cti.authentification.LoginID')
+    @patch('xivo_cti.authentication.LoginPass')
+    @patch('xivo_cti.authentication.LoginID')
     def test_that_nothing_happens_if_another_connection(self, LoginID, LoginPass):
         another_connection = Mock(CTI)
 
@@ -475,15 +475,15 @@ class TestAuthentificationHandlerOnLoginID(_BaseAuthentificationHandlerTestCase)
         self.assert_no_message_sent()
 
 
-class TestAuthentificationHandlerOnLoginPass(_BaseAuthentificationHandlerTestCase):
+class TestAuthenticationHandlerOnLoginPass(_BaseAuthenticationHandlerTestCase):
 
-    @patch('xivo_cti.authentification.LoginPass')
+    @patch('xivo_cti.authentication.LoginPass')
     def test_that_login_pass_is_deregistered(self, LoginPass):
         self.handler._on_login_pass(s.password, self.connection)
 
         LoginPass.deregister_callback.assert_called_once_with(self.handler._on_login_pass)
 
-    @patch('xivo_cti.authentification.AuthClient')
+    @patch('xivo_cti.authentication.AuthClient')
     def test_that_create_token_is_scheduled(self, AuthClient):
         auth_client = AuthClient.return_value
 
@@ -495,8 +495,8 @@ class TestAuthentificationHandlerOnLoginPass(_BaseAuthentificationHandlerTestCas
             auth_client, s.backend, s.username)
         assert_that(self.handler._auth_client, equal_to(auth_client))
 
-    @patch('xivo_cti.authentification.LoginPass')
-    @patch('xivo_cti.authentification.AuthClient')
+    @patch('xivo_cti.authentication.LoginPass')
+    @patch('xivo_cti.authentication.AuthClient')
     def test_that_nothing_happens_if_another_connection(self, LoginPass, AuthClient):
         another_connection = Mock(CTI)
 
