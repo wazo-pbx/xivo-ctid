@@ -4,7 +4,7 @@ MANAGE_DB_DIR=../../xivo-manage-db/
 POSTGRES_DOCKER=$(MANAGE_DB_DIR)/contribs/xivo-postgres/Dockerfile
 
 build-postgres:
-	docker pull postgres:9.1
+	docker pull postgres:9.4
 	docker build -t xivo/xivo-postgres -f $(POSTGRES_DOCKER) $(MANAGE_DB_DIR)
 
 test-setup: build-postgres
