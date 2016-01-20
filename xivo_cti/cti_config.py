@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -78,6 +78,8 @@ _default_config = {
         'check_url': 'http://localhost:9495/0.1/infos',
         'check_url_interval': '300s',
         'check_url_timeout': '10s',
+        'refresh_interval': 25,
+        'retry_interval': 2,
         'extra_tags': [],
     },
     'switchboard_polycom': {

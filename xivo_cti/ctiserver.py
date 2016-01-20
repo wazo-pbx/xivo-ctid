@@ -24,7 +24,6 @@ import sys
 import time
 import threading
 
-from xivo import consul_helpers
 from xivo import daemonize
 from xivo import xivo_logging
 from xivo_cti import config
@@ -130,9 +129,6 @@ class CTIServer(object):
         self.fdlist_interface_webi = {}
         self.fdlist_listen_cti = {}
         self.time_start = time.localtime()
-        self._consul_registerer = consul_helpers.NotifyingRegisterer.from_config('xivo-ctid',
-                                                                                 bus_publisher,
-                                                                                 config)
         self._bus_listener_thread = None
 
     def _set_signal_handlers(self):
@@ -150,8 +146,6 @@ class CTIServer(object):
                     self.servername, os.getpid(),
                     time_uptime, time.asctime(self.time_start))
 
-        self._deregister_from_consul()
-
         logger.debug('Stopping the bus listener')
         if self._bus_listener_thread:
             context.get('bus_listener').should_stop = True
@@ -162,16 +156,10 @@ class CTIServer(object):
 
         logger.debug('Stopping all remaining threads')
         for t in filter(lambda x: x.getName() not in
-                        ['MainThread', 'HTTPServerThread'], threading.enumerate()):
+                        ['MainThread', 'HTTPServerThread', 'ServiceDiscoveryThread'], threading.enumerate()):
             t._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
-
-    def _deregister_from_consul(self):
-        try:
-            self._consul_registerer.deregister()
-        except Exception:
-            logger.exception('Failed to unregister')
 
     def _set_logger(self):
         xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
@@ -562,21 +550,9 @@ class CTIServer(object):
             bind, port = bind_and_port[:2]
             self._init_tcp_socket(kind, bind, port)
 
-        # Schedule a consul registration
-        self._service_discovery_register()
-
         logger.info('CTI Fully Booted in %.6f seconds', (time.time() - self.start_time))
         while True:
             self.select_step()
-
-    def _service_discovery_register(self):
-        try:
-            self._consul_registerer.register()
-        except consul_helpers.RegistererError:
-            logger.exception('Failed to register service')
-            delay = 20
-            logger.info('Service registration failed, retrying in %s seconds', delay)
-            self._task_scheduler.schedule(delay, self._service_discovery_register)
 
     def _init_tcp_socket(self, kind, bind, port):
         logger.debug('init tcp socket %s %s %s', kind, bind, port)
