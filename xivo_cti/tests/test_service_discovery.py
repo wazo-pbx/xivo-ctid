@@ -22,11 +22,13 @@ from mock import Mock, patch
 from ..service_discovery import self_check
 
 
+@patch('xivo_cti.service_discovery.socket', Mock())
 class TestSelfCheck(unittest.TestCase):
 
     def setUp(self):
         self.http_port = 4242
-        self.config = {'rest_api': {'http': {'port': self.http_port}}}
+        self.config = {'rest_api': {'http': {'port': self.http_port}},
+                       'main': {'incoming_tcp': {'CTI': ('0.0.0.0', 5003, 1)}}}
 
     @patch('xivo_cti.service_discovery.requests.get', return_value=Mock(status_code=404))
     def test_that_self_check_returns_false_if_infos_does_not_return_200(self, get):
