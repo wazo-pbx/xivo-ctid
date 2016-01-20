@@ -29,6 +29,7 @@ from xivo_auth_client import Client as AuthClient
 from xivo_cti import config
 from xivo_cti import dao
 from xivo_cti.async_runner import async_runner_thread
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.login import (LoginCapas, LoginID, LoginPass)
@@ -106,7 +107,7 @@ class AuthenticationHandler(object):
         LoginPass.register_callback_params(self._on_login_pass, ['password',
                                                                  'cti_connection'])
 
-        msg = self._new_login_id_reply()
+        msg = CTIMessageFormatter.login_id(self._session_id)
         self._send_msg(msg)
 
     def _on_cti_login_auth_timeout(self):
@@ -158,7 +159,7 @@ class AuthenticationHandler(object):
         self._authenticated = True
         self._auth_token = token_data['token']
         self._user_id = str(user_config['id'])
-        msg = self._new_login_pass_reply(self._cti_profile_id)
+        msg = CTIMessageFormatter.login_pass(self._cti_profile_id)
         LoginCapas.register_callback_params(self._on_login_capas, ['capaid', 'state', 'cti_connection'])
         self._send_msg(msg)
         self._on_auth_complete()
@@ -200,14 +201,6 @@ class AuthenticationHandler(object):
         login_info = {'user_uuid': self._user_uuid,
                       'user_id': self._user_id}
         logger.info('LOGIN_SUCCESSFUL for %s', login_info)
-
-    def _new_login_id_reply(self):
-        return {'class': 'login_id',
-                'sessionid': self._session_id,
-                'xivoversion': xivo_cti.CTI_PROTOCOL_VERSION}
-
-    def _new_login_pass_reply(self, cti_profile_id):
-        return {'class': 'login_pass', 'capalist': [cti_profile_id]}
 
     def _on_auth_complete(self):
         if self._on_complete_cb:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,14 +17,14 @@
 
 import unittest
 
+import xivo_cti
+
 from hamcrest import assert_that
 from hamcrest import equal_to
-from mock import Mock, sentinel
+from mock import Mock, sentinel as s
 from xivo_cti.services.agent.status import AgentStatus
 from xivo_cti.services.queue_member.member import QueueMember
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
-
-CLASS = 'class'
 
 
 class TestCTIMessageFormatter(unittest.TestCase):
@@ -59,14 +59,14 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
     def test_update_queue_member_config(self):
         queue_member = Mock(QueueMember, id=12)
-        queue_member.to_cti_config.return_value = sentinel.config
+        queue_member.to_cti_config.return_value = s.config
         expected = {
             'class': 'getlist',
             'listname': 'queuemembers',
             'function': 'updateconfig',
             'tipbxid': 'xivo',
             'tid': 12,
-            'config': sentinel.config,
+            'config': s.config,
         }
 
         result = CTIMessageFormatter.update_queue_member_config(queue_member)
@@ -91,7 +91,7 @@ class TestCTIMessageFormatter(unittest.TestCase):
     def test_report_ipbxcommand_error(self):
         msg = 'Ad libitum'
         expected = {
-            CLASS: 'ipbxcommand',
+            'class': 'ipbxcommand',
             'error_string': msg,
         }
 
@@ -99,25 +99,42 @@ class TestCTIMessageFormatter(unittest.TestCase):
 
         assert_that(result, equal_to(expected), 'Error message')
 
+    def test_login_id(self):
+        expected = {'class': 'login_id',
+                    'sessionid': s.session_id,
+                    'xivoversion': xivo_cti.CTI_PROTOCOL_VERSION}
+
+        result = CTIMessageFormatter.login_id(s.session_id)
+
+        assert_that(result, equal_to(expected))
+
+    def test_login_pass(self):
+        expected = {'class': 'login_pass',
+                    'capalist': [s.cti_profile_id]}
+
+        result = CTIMessageFormatter.login_pass(s.cti_profile_id)
+
+        assert_that(result, equal_to(expected))
+
     def test_dial_success(self):
         expected = {
             'class': 'dial_success',
-            'exten': sentinel.exten,
+            'exten': s.exten,
         }
 
-        result = CTIMessageFormatter.dial_success(sentinel.exten)
+        result = CTIMessageFormatter.dial_success(s.exten)
 
         assert_that(result, equal_to(expected))
 
     def test_people_headers_result(self):
         headers = {
-            'column_headers': sentinel.headers,
-            'column_types': sentinel.types
+            'column_headers': s.headers,
+            'column_types': s.types
         }
         expected = {
             'class': 'people_headers_result',
-            'column_headers': sentinel.headers,
-            'column_types': sentinel.types
+            'column_headers': s.headers,
+            'column_types': s.types
         }
 
         result = CTIMessageFormatter.people_headers_result(headers)
