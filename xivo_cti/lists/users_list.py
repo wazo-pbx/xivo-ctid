@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2015 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@ class UsersList(ContextAwareAnyList):
     def __init__(self, innerdata):
         self._innerdata = innerdata
         ContextAwareAnyList.__init__(self, 'users')
-
-    def finduser(self, userid):
-        for userinfo in self.keeplist.itervalues():
-            if userinfo and userinfo.get('enableclient') and userinfo.get('loginclient') == userid:
-                return userinfo
 
     def get_contexts(self, user_id):
         try:

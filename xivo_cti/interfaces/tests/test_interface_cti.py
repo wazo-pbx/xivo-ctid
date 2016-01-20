@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2014 Avencall
+# Copyright (C) 2012-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,24 +17,30 @@
 
 import unittest
 
+from concurrent import futures
+from hamcrest import assert_that, equal_to
 from mock import Mock
 from mock import patch
-from mock import sentinel
-from hamcrest import assert_that
-from hamcrest import equal_to
+
+from xivo_cti.async_runner import AsyncRunner
+from xivo_cti.task_queue import new_task_queue
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.interfaces.interface_cti import NotLoggedException
-from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
-    CTIMessageEncoder
+from xivo_cti.cti.cti_message_codec import (CTIMessageDecoder,
+                                            CTIMessageEncoder)
 
 
 class TestCTI(unittest.TestCase):
 
     def setUp(self):
-        self._ctiserver = Mock(CTIServer)
-        self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
+        self.task_queue = new_task_queue()
+        self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
+        self._ctiserver = Mock(CTIServer, myipbxid='xivo')
+
+        with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
+            with patch('xivo_cti.interfaces.interface_cti.AuthenticationHandler', Mock()):
+                self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
     def test_user_id_not_connected(self):
@@ -48,22 +54,16 @@ class TestCTI(unittest.TestCase):
 
         self.assertEqual(result, user_id)
 
-    @patch('xivo_cti.database.user_db.get_device_id')
-    @patch('xivo_cti.ioc.context.context.get')
-    def test_get_answer_cb(self, mock_device_manager_get, mock_get_device_id):
-        mock_device_manager_get.return_value = mock_device_manager = Mock(DeviceManager)
-        mock_device_manager.get_answer_fn.return_value = answer_fn = Mock()
-        mock_get_device_id.return_value = device_id = 42
+    def test_on_auth_success(self):
+        with patch.object(self._cti_connection, '_auth_handler') as auth_handler:
+            with patch.object(self._cti_connection, '_get_answer_cb') as get_answer_cb:
+                self._cti_connection._on_auth_success()
 
-        self._cti_connection._get_answer_cb(5)()
+                get_answer_cb.assert_called_once_with(auth_handler.user_id.return_value)
 
-        mock_device_manager.get_answer_fn.assert_called_once_with(device_id)
-        answer_fn.assert_called_once_with()
-
-    @patch('xivo_cti.database.user_db.get_device_id', Mock(side_effect=LookupError))
-    @patch('xivo_cti.ioc.context.context.get', Mock())
-    def test_get_answer_cb_no_device(self):
-
-        fn = self._cti_connection._get_answer_cb(5)
-
-        assert_that(fn, equal_to(self._cti_connection.answer_cb))
+                expected = {'userid': auth_handler.user_id.return_value,
+                            'user_uuid': auth_handler.user_uuid.return_value,
+                            'auth_token': auth_handler.auth_token.return_value,
+                            'authenticated': auth_handler.is_authenticated.return_value,
+                            'ipbxid': 'xivo'}
+                assert_that(self._cti_connection.connection_details, equal_to(expected))

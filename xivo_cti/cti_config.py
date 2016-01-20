@@ -56,6 +56,7 @@ _default_config = {
         'timeout': 3,
         'key_file': '/var/lib/xivo-auth-keys/xivo-ctid-key.yml',
         'verify_certificate': '/usr/share/xivo-certs/server.crt',
+        'backend': 'xivo_user',
     },
     'bus': {
         'exchange_name': 'xivo',

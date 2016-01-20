@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+import xivo_cti
 
 
 class CTIMessageFormatter(object):
@@ -81,6 +83,17 @@ class CTIMessageFormatter(object):
             'class': 'ipbxcommand',
             'error_string': msg,
         }
+
+    @staticmethod
+    def login_id(session_id):
+        return {'class': 'login_id',
+                'sessionid': session_id,
+                'xivoversion': xivo_cti.CTI_PROTOCOL_VERSION}
+
+    @staticmethod
+    def login_pass(cti_profile_id):
+        return {'class': 'login_pass',
+                'capalist': [cti_profile_id]}
 
     @staticmethod
     def people_headers_result(headers):

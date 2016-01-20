@@ -504,11 +504,6 @@ class CTIServer(object):
             logger.warning('unknown connection kind %s', kind)
         return closemenow
 
-    def _on_cti_login_auth_timeout(self, connc):
-        connc.close()
-        if connc in self.fdlist_interface_cti:
-            del self.fdlist_interface_cti[connc]
-
     def main_loop(self):
         self.time_start = time.localtime()
         logger.info('STARTING %s (pid %d))', self.servername, os.getpid())
@@ -625,6 +620,12 @@ class CTIServer(object):
             if interface_cti.connection_details.get('userid') == userid:
                 interface_cti.reply(what)
 
+    def disconnect_iface(self, iface, cause):
+        iface.disconnected(cause)
+        if iface.connid:
+            iface.connid.close()
+            self._remove_from_fdlist(iface.connid)
+
     def _init_socket(self):
         fdlist_full = []
         try:
@@ -685,8 +686,6 @@ class CTIServer(object):
             if kind == 'CTI':
                 socketobject = ClientConnection(socketobject, address)
                 interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
-                logintimeout = int(config['main'].get('logintimeout', 5))
-                interface.login_task = self._task_scheduler.schedule(logintimeout, self._on_cti_login_auth_timeout, socketobject)
                 self.fdlist_interface_cti[socketobject] = interface
                 self._broadcast_cti_group.add(interface)
             elif kind == 'INFO':
@@ -709,8 +708,7 @@ class CTIServer(object):
                     msg = sel_i.recv(self._BUFSIZE_CTI)
                     closemenow = self.manage_tcp_connections(sel_i, msg, interface_obj)
                 except ClientConnection.CloseException:
-                    interface_obj.disconnected(DisconnectCause.broken_pipe)
-                    self._remove_from_fdlist(sel_i)
+                    self.disconnect_iface(interface_obj, DisconnectCause.broken_pipe)
             else:
                 try:
                     msg = sel_i.recv(self._BUFSIZE_OTHER, socket.MSG_DONTWAIT)
@@ -727,15 +725,11 @@ class CTIServer(object):
                     closemenow = True
 
             if closemenow:
-                interface_obj.disconnected(DisconnectCause.by_client)
-                sel_i.close()
-                self._remove_from_fdlist(sel_i)
+                self.disconnect_iface(interface_obj, DisconnectCause.by_client)
         except Exception:
             logger.exception('[%s] %s', interface_obj, sel_i)
             logger.warning('unexpected socket breakup')
-            interface_obj.disconnected(DisconnectCause.broken_pipe)
-            sel_i.close()
-            self._remove_from_fdlist(sel_i)
+            self.disconnect_iface(interface_obj, DisconnectCause.broken_pipe)
 
     def _remove_from_fdlist(self, conn):
         if conn in self.fdlist_interface_cti:

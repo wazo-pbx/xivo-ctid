@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,6 +59,12 @@ class CTICommandClass(object):
     def callbacks_with_params(self):
         return [callback for callback in self._callbacks_with_params if not callback[0].dead()]
 
+    def deregister_callback(self, function):
+        comparable = weak_method.WeakCallable(function)
+        to_remove = [(callback, params) for callback, params in self._callbacks_with_params if callback == comparable]
+        for pair in to_remove:
+            self._callbacks_with_params.remove(pair)
+
     def register_callback_params(self, function, params=None):
         if not params:
             params = []
@@ -66,5 +72,4 @@ class CTICommandClass(object):
 
 
 class CTICommandInstance(object):
-
     pass

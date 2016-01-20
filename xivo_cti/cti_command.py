@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,15 +20,10 @@ import random
 
 from xivo_cti import ALPHANUMS
 from xivo_cti import cti_fax, dao
-from xivo_cti import config
 from xivo_cti.ioc.context import context as cti_context
 from xivo_cti.statistics.queue_statistics_encoder import QueueStatisticsEncoder
 
 logger = logging.getLogger('cti_command')
-
-LOGINCOMMANDS = [
-    'login_pass', 'login_capas'
-]
 
 REGCOMMANDS = [
     'getipbxlist',
@@ -50,20 +45,15 @@ class Command(object):
         self.command = self._commanddict.get('class')
         self.commandid = self._commanddict.get('commandid')
 
-        self.ipbxid = self._connection.connection_details.get('ipbxid')
         self.userid = self._connection.connection_details.get('userid')
         self.innerdata = self._ctiserver.safe
-
-        self.user_keeplist = self.innerdata.xod_config['users'].keeplist.get(self.userid)
 
         messagebase = {'class': self.command}
 
         if self.commandid:
             messagebase['replyid'] = self.commandid
 
-        if self.command in REGCOMMANDS and not self._connection.connection_details.get('logged'):
-            messagebase['error_string'] = 'notloggedyet'
-        elif self.command in LOGINCOMMANDS or self.command in REGCOMMANDS:
+        if self.command in REGCOMMANDS:
             methodname = 'regcommand_%s' % self.command
             if hasattr(self, methodname):
                 method_result = getattr(self, methodname)()
@@ -84,121 +74,6 @@ class Command(object):
 
         z = [ackmessage]
         return z
-
-    def regcommand_login_pass(self):
-        self.head = 'LOGINFAIL - login_pass'
-        # user authentication
-        missings = []
-        for argum in ['hashedpassword']:
-            if argum not in self._commanddict:
-                missings.append(argum)
-        if missings:
-            logger.warning('%s - missing args : %s', self.head, missings)
-            return 'missing:%s' % ','.join(missings)
-
-        if self._is_user_authenticated():
-            self._connection.connection_details['authenticated'] = True
-            self._connection.connection_details['auth_token'] = self._ctiserver.safe.user_new_auth_token(self.userid)
-        else:
-            return 'login_password'
-
-        cti_profile_id = self.user_keeplist['cti_profile_id']
-        if cti_profile_id is None:
-            logger.warning("%s - No CTI profile defined for the user", self.head)
-            return 'capaid_undefined'
-        else:
-            return {'capalist': [cti_profile_id]}
-
-    def _is_user_authenticated(self):
-        this_hashed_password = self._commanddict.get('hashedpassword')
-        cdetails = self._connection.connection_details
-        sessionid = cdetails.get('prelogin').get('sessionid')
-
-        if self.ipbxid and self.userid:
-            ref_hashed_password = self._ctiserver.safe.user_get_hashed_password(self.userid, sessionid)
-            if ref_hashed_password != this_hashed_password:
-                logger.warning('%s - wrong hashed password', self.head)
-                return False
-            else:
-                return True
-        else:
-            logger.warning('%s - undefined user : probably the login_id step failed', self.head)
-            return False
-
-    def regcommand_login_capas(self):
-        self.head = 'LOGINFAIL - login_capas'
-        missings = []
-        for argum in ['state', 'capaid', 'lastconnwins', 'loginkind']:
-            if argum not in self._commanddict:
-                missings.append(argum)
-        if missings:
-            logger.warning('%s - missing args : %s', self.head, missings)
-            return 'missing:%s' % ','.join(missings)
-
-        cdetails = self._connection.connection_details
-
-        state = self._commanddict.get('state')
-        capaid = self._commanddict.get('capaid')
-
-        iserr = self.__check_capa_connection__(capaid)
-        if iserr is not None:
-            logger.warning('%s - wrong capaid : %s %s', self.head, iserr, capaid)
-            return iserr
-
-        self.__connect_user__(state, capaid)
-        self.head = 'LOGIN SUCCESSFUL'
-        logger.info('%s for %s', self.head, cdetails)
-
-        cti_profile_id = self.user_keeplist['cti_profile_id']
-        profilespecs = config['profiles'].get(cti_profile_id)
-
-        capastruct = {}
-        summarycapas = {}
-        if profilespecs:
-            for capakind in ['regcommands', 'ipbxcommands',
-                             'services', 'preferences',
-                             'userstatus', 'phonestatus']:
-                if profilespecs.get(capakind):
-                    tt = profilespecs.get(capakind)
-                    cfg_capakind = config[capakind]
-                    if cfg_capakind:
-                        details = cfg_capakind.get(tt)
-                    else:
-                        details = {}
-                    capastruct[capakind] = details
-                    if details:
-                        summarycapas[capakind] = tt
-                else:
-                    capastruct[capakind] = {}
-
-        reply = {'ipbxid': self.ipbxid,
-                 'userid': self.userid,
-                 'appliname': profilespecs.get('name'),
-                 'capaxlets': profilespecs.get('xlets'),
-                 'capas': capastruct}
-
-        self._connection.connection_details['logged'] = True
-        self._connection.login_task.cancel()
-        return reply
-
-    def __check_capa_connection__(self, capaid):
-        cdetails = self._connection.connection_details
-        userid = cdetails.get('userid')
-        capaid = int(capaid)
-
-        if capaid not in config['profiles'].keys():
-            return 'unknown cti_profile_id'
-        if capaid != self._ctiserver.safe.xod_config['users'].keeplist[userid]['cti_profile_id']:
-            return 'wrong cti_profile_id'
-
-    def __connect_user__(self, availstate, c):
-        user_service_manager = cti_context.get('user_service_manager')
-        cdetails = self._connection.connection_details
-        userid = cdetails.get('userid')
-        self._ctiserver.safe.xod_status['users'][userid]['connection'] = 'yes'
-        user_service_manager.set_presence(userid, availstate)
-
-    # end of login/logout related commands
 
     def regcommand_getqueuesstats(self):
         if 'on' not in self._commanddict:

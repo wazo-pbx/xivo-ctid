@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 import logging
 
 from contextlib import contextmanager
-
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,22 @@ def synchronize(runner):
     yield
     runner._thread_pool_executor.shutdown(wait=True)
     runner._task_queue.run()
+
+
+def async_runner_thread(f):
+    """
+    The decorated function is executed in the async runner's thread. This means
+    that the implementation of the function should only manipulate it's
+    parameters and call thread safe operations. Usually add a task to a task
+    queue.
+
+    The implementation of this decorator does nothing. It's just a warning for
+    the next programmer reading the decorated function.
+    """
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        return f(*args, **kwargs)
+    return wrapped
 
 
 class AsyncRunner(object):

@@ -16,18 +16,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
-import random
+
+from datetime import timedelta
 
 from xivo_cti import cti_command
-from xivo_cti import CTI_PROTOCOL_VERSION
-from xivo_cti import ALPHANUMS
 from xivo_cti import config
+from xivo_cti.authentication import AuthenticationHandler
+from xivo_cti.interfaces.interfaces import Interfaces, DisconnectCause
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.cti.commands.login_id import LoginID
 from xivo_cti.cti.commands.starttls import StartTLS
 from xivo_cti.interfaces import interfaces
 from xivo_cti.ioc.context import context
 from xivo_cti.database import user_db
+
+TWO_MONTHS = timedelta(days=60).total_seconds()
 
 logger = logging.getLogger('interface_cti')
 
@@ -36,7 +38,7 @@ class NotLoggedException(StandardError):
     pass
 
 
-class CTI(interfaces.Interfaces):
+class CTI(Interfaces):
 
     kind = 'CTI'
 
@@ -44,15 +46,19 @@ class CTI(interfaces.Interfaces):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._cti_msg_decoder = cti_msg_decoder
         self._cti_msg_encoder = cti_msg_encoder
-        self.connection_details = {}
+        self.connection_details = {'ipbxid': ctiserver.myipbxid}
         self._cti_command_handler = CTICommandHandler(self)
-        self._register_login_callbacks()
         self._starttls_sent = False
         self._starttls_status_received = False
+        self._auth_client = None
+        self._async_runner = context.get('async_runner')
+        self._task_queue = context.get('task_queue')
+        self._auth_handler = AuthenticationHandler(self, self._on_auth_success)
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')
         super(CTI, self).connected(connid)
+        self._auth_handler.run()
         if config['main']['starttls'] and not self._starttls_sent:
             StartTLS.register_callback_params(self._on_starttls, ['status', 'cti_connection'])
             self.send_message({'class': 'starttls'})
@@ -62,14 +68,13 @@ class CTI(interfaces.Interfaces):
         if connection != self or self._starttls_status_received:
             return
 
-        # TODO: add a StartTLS.deregister when it gets merged
+        StartTLS.deregister_callback(self._on_starttls)
         self.send_message({'class': 'starttls',
                            'starttls': status})
         self._starttls_status_received = True
 
         if status:
-            task_queue = context.get('task_queue')
-            task_queue.put(self.connid.upgrade_ssl)
+            self._task_queue.put(self.connid.upgrade_ssl)
 
     def __str__(self):
         user_id = self.connection_details.get('userid', 'Not logged')
@@ -86,15 +91,12 @@ class CTI(interfaces.Interfaces):
         else:
             return user_id
 
-    def _register_login_callbacks(self):
-        LoginID.register_callback_params(self.receive_login_id, ['userlogin',
-                                                                 'xivo_version',
-                                                                 'cti_connection'])
+    def disconnect(self):
+        self._ctiserver.disconnect_iface(self, DisconnectCause.by_client)
 
     def disconnected(self, cause):
         logger.info('disconnected %s', cause)
-        self.login_task.cancel()
-        self._remove_auth_token()
+        self._auth_handler.logoff()
         try:
             user_service_manager = context.get('user_service_manager')
             user_id = self.user_id()
@@ -108,12 +110,6 @@ class CTI(interfaces.Interfaces):
         except NotLoggedException:
             logger.warning('Called disconnected with no user_id')
 
-    def _remove_auth_token(self):
-        token = self.connection_details.get('auth_token')
-        user_id = self.connection_details.get('userid')
-        if token and user_id:
-            self._ctiserver.safe.user_remove_auth_token(user_id, token)
-
     def manage_connection(self, msg):
         replies = []
         commands = self._cti_msg_decoder.decode(msg)
@@ -122,10 +118,10 @@ class CTI(interfaces.Interfaces):
         return replies
 
     def _is_authenticated(self):
-        return self.connection_details.get('authenticated', False)
+        return self._auth_handler.is_authenticated()
 
     def _run_functions(self, decoded_command):
-        no_auth_commands = ['login_id', 'login_pass', 'login_capas', 'starttls']
+        no_auth_commands = ['login_id', 'login_pass', 'starttls']
         if not self._is_authenticated() and decoded_command['class'] not in no_auth_commands:
             return []
         replies = []
@@ -150,40 +146,22 @@ class CTI(interfaces.Interfaces):
     def send_encoded_message(self, data):
         self.connid.append_queue(data)
 
-    def receive_login_id(self, login, version, connection):
-        if connection != self:
-            return []
-
-        if version != CTI_PROTOCOL_VERSION:
-            return 'error', {'error_string': 'xivoversion_client:%s;%s' % (version, CTI_PROTOCOL_VERSION),
-                             'class': 'login_id'}
-
-        innerdata = self._ctiserver.safe
-        user_dict = innerdata.xod_config.get('users').finduser(login)
-        if not user_dict:
-            return 'error', {
-                'error_string': 'login_password',
-                'class': 'login_id',
-            }
-
-        user_id = user_dict.get('id')
-
-        if user_dict:
-            self.connection_details.update({'ipbxid': self._ctiserver.myipbxid,
-                                            'userid': str(user_id)})
-            self.answer_cb = self._get_answer_cb(user_id)
-
-        session_id = ''.join(random.sample(ALPHANUMS, 10))
-        self.connection_details['prelogin'] = {'sessionid': session_id}
-
-        return 'message', {'sessionid': session_id,
-                           'class': 'login_id',
-                           'xivoversion': version}
+    def _on_auth_success(self):
+        user_id = self._auth_handler.user_id()
+        self.connection_details.update({'userid': user_id,
+                                        'user_uuid': self._auth_handler.user_uuid(),
+                                        'auth_token': self._auth_handler.auth_token(),
+                                        'authenticated': self._auth_handler.is_authenticated()})
+        self.answer_cb = self._get_answer_cb(user_id)
 
     def _get_answer_cb(self, user_id):
         device_manager = context.get('device_manager')
         try:
             device_id = user_db.get_device_id(user_id)
-            return device_manager.get_answer_fn(device_id)
+            self._async_runner.run_with_cb(self.set_answer_cb, device_manager.get_answer_fn, device_id)
         except LookupError:
-            return self.answer_cb
+            return
+
+    def set_answer_cb(self, cb):
+        if cb:
+            self.answer_cb = cb

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
                                           UserStatusUpdateEvent,
                                           EndpointStatusUpdateEvent)
 from xivo_cti import config
+from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.bus_listener import bus_listener_thread, loads_and_ack
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.remote_service import RemoteService
@@ -188,7 +189,7 @@ class _BaseStatusFetcher(object):
         uuid, resource_id = key
         if not resource_id:
             return
-        self.async_runner.run_with_cb(self._on_result, self._async_fetch, uuid, resource_id)
+        self.async_runner.run_with_cb(self._on_result, self._fetch, uuid, resource_id)
 
     @contextmanager
     def exception_logging_client(self, uuid):
@@ -222,7 +223,8 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
             token = config['auth']['token']
             return xivo_agentd_client.Client(token=token, **config['agentd'])
 
-    def _async_fetch(self, uuid, agent_id):
+    @async_runner_thread
+    def _fetch(self, uuid, agent_id):
         logger.info('agent_status_fetcher: fetching agent %s@%s', agent_id, uuid)
         with self.exception_logging_client(uuid) as client:
             return client.agents.get_agent_status(agent_id)
@@ -238,7 +240,8 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
 
 class _EndpointStatusFetcher(_CtidStatusFetcher):
 
-    def _async_fetch(self, uuid, endpoint_id):
+    @async_runner_thread
+    def _fetch(self, uuid, endpoint_id):
         logger.info('endpoint_status_fetcher: fetching endpoint %s@%s', endpoint_id, uuid)
         with self.exception_logging_client(uuid) as client:
             return client.endpoints.get(endpoint_id)
@@ -254,7 +257,8 @@ class _EndpointStatusFetcher(_CtidStatusFetcher):
 
 class _UserStatusFetcher(_CtidStatusFetcher):
 
-    def _async_fetch(self, uuid, user_id):
+    @async_runner_thread
+    def _fetch(self, uuid, user_id):
         logger.info('user_status_fetcher: fetching user %s@%s', user_id, uuid)
         with self.exception_logging_client(uuid) as client:
             return client.users.get(user_id)

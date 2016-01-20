@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,6 @@ import hashlib
 import logging
 import time
 
-from contextlib import contextmanager
-
-from datetime import timedelta
-from xivo_auth_client import Client as AuthClient
 from xivo_cti import cti_sheets
 from xivo_cti import config
 from xivo_cti.ami import ami_callback_handler
@@ -44,22 +40,6 @@ from xivo_dao.resources.user import dao as user_dao
 from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
-
-TWO_MONTHS = timedelta(days=60).total_seconds()
-
-
-@contextmanager
-def auth_client(userid):
-    with session_scope():
-        user = user_dao.get(userid)
-        username = user.username
-        password = user.password
-
-    auth_config = dict(config['auth'])
-    del auth_config['key_file']
-    del auth_config['service_id']
-    del auth_config['service_key']
-    yield AuthClient(username=username, password=password, **auth_config)
 
 
 class Safe(object):
@@ -277,14 +257,6 @@ class Safe(object):
         tohash = '%s:%s' % (sessionid, password)
         sha1sum = hashlib.sha1(tohash).hexdigest()
         return sha1sum
-
-    def user_new_auth_token(self, userid):
-        with auth_client(userid) as client:
-            return client.token.new('xivo_user', expiration=TWO_MONTHS)['token']
-
-    def user_remove_auth_token(self, userid, token):
-        with auth_client(userid) as client:
-            client.token.revoke(token)
 
     def newchannel(self, channel_name, context, state, state_description, unique_id):
         if not channel_name:

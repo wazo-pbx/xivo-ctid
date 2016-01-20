@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2015 Avencall
+# Copyright (C) 2012-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -205,11 +205,9 @@ def setup():
 
 
 def new_auth_client():
-    auth_config = dict(config['auth'])
-    username = auth_config.pop('service_id')
-    password = auth_config.pop('service_key')
-    del auth_config['key_file']
-    return AuthClient(username=username, password=password, **auth_config)
+    username = config['auth']['service_id']
+    password = config['auth']['service_key']
+    return AuthClient(username=username, password=password, **config['auth'])
 
 
 def new_broadcast_cti_group(cti_group_factory):
