@@ -55,9 +55,6 @@ class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
         self.session_id = self.handler._session_id
         self.handler._username = s.username
 
-    def assert_disconnect_called(self):
-        self.connection.disconnect.assert_called_once_with()
-
     def assert_message_sent(self, msg):
         self.connection.send_message.assert_called_once_with(msg)
 
@@ -68,7 +65,6 @@ class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
         msg = {'class': message_class,
                'error_string': error_string}
         self.assert_message_sent(msg)
-        self.assert_disconnect_called()
 
     def assert_fatal_scheduled(self, message_class, error_string):
         self.task_queue.put.assert_called_once_with(self.handler._fatal, message_class, error_string)
@@ -111,7 +107,6 @@ class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
         expected_msg = {'class': 'login_id',
                         'error_string': 'xivoversion_client:%s;%s' % (bad_version, CTI_PROTOCOL_VERSION)}
         self.assert_message_sent(expected_msg)
-        self.assert_disconnect_called()
 
     @patch('xivo_cti.authentication.LoginPass')
     def test_that_login_pass_is_registered_on_success(self, LoginPass):
