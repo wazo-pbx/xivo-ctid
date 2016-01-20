@@ -75,11 +75,9 @@ _default_config = {
     'service_discovery': {
         'advertise_address': 'localhost',
         'advertise_port': 9495,
-        'check_url': 'http://localhost:9495/0.1/infos',
-        'check_url_interval': '300s',
-        'check_url_timeout': '10s',
         'refresh_interval': 25,
         'retry_interval': 2,
+        'ttl_interval': 30,
         'extra_tags': [],
     },
     'switchboard_polycom': {

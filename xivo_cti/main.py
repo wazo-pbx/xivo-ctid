@@ -89,10 +89,14 @@ class ServiceDiscovery(object):
             except RegistererError:
                 logger.exception('service_discovery: failed to register service')
                 logger.info('service_discovery: registration failed, retrying in %s seconds', self._retry_interval)
-                return self._fail()
+                self._sleep(self._retry_interval)
 
-        # TTL here
-        self._sleep(self._refresh_interval)
+        if self._registered:
+            updated = self._registerer.send_ttl()
+            if updated:
+                self._sleep(self._refresh_interval)
+            else:
+                self._sleep(self._retry_interval)
 
     def _fail(self):
         self._sleep(self._retry_interval)
