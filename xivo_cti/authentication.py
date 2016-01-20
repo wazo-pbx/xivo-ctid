@@ -178,11 +178,11 @@ class AuthenticationHandler(object):
             logger.info('LOGINFAIL - login_capas - unknown cti_profile_id')
             return self._fatal('login_capas', 'unknown cti_profile_id')
 
-        get = lambda key: config[key].get(profile_config[key], {})
-        capas = {'services': get('services'),
-                 'preferences': get('preferences'),
-                 'userstatus': get('userstatus'),
-                 'phonestatus': get('phonestatus')}
+        get_capa = lambda key: config[key].get(profile_config[key], {})
+        capas = {'services': get_capa('services'),
+                 'preferences': get_capa('preferences'),
+                 'userstatus': get_capa('userstatus'),
+                 'phonestatus': get_capa('phonestatus')}
         msg = {'class': 'login_capas',
                'userid': self._user_id,
                'ipbxid': self._ipbxid,
