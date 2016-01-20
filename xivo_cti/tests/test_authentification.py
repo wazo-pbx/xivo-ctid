@@ -21,7 +21,7 @@ import requests
 
 from datetime import timedelta
 
-from hamcrest import (assert_that, equal_to, has_length)
+from hamcrest import (assert_that, equal_to, has_length, is_)
 from mock import (Mock, patch)
 from mock import sentinel as s
 
@@ -62,7 +62,7 @@ class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
         self.connection.send_message.assert_called_once_with(msg)
 
     def assert_no_message_sent(self):
-        assert_that(self.connection.send_message.call_count, equal_to(0))
+        assert_that(self.connection.send_message.called, is_(False))
 
     def assert_fatal(self, message_class, error_string):
         msg = {'class': message_class,
@@ -470,8 +470,8 @@ class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
 
         self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, another_connection)
 
-        assert_that(LoginID.deregister_callback.call_count, equal_to(0))
-        assert_that(LoginPass.register_callback_params.call_count, equal_to(0))
+        assert_that(LoginID.deregister_callback.called, is_(False))
+        assert_that(LoginPass.register_callback_params.called, is_(False))
         self.assert_no_message_sent()
 
 
@@ -502,6 +502,6 @@ class TestAuthenticationHandlerOnLoginPass(_BaseAuthenticationHandlerTestCase):
 
         self.handler._on_login_pass(s.password, another_connection)
 
-        assert_that(LoginPass.deregister_callback.call_count, equal_to(0))
-        assert_that(AuthClient.call_count, equal_to(0))
-        assert_that(self.async_runner.run_with_cb.call_count, equal_to(0))
+        assert_that(LoginPass.deregister_callback.called, is_(False))
+        assert_that(AuthClient.called, is_(False))
+        assert_that(self.async_runner.run_with_cb.called, is_(False))
