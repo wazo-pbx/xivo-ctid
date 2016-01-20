@@ -89,7 +89,6 @@ class AuthenticationHandler(object):
         msg = {'class': msg_class,
                'error_string': error_string}
         self._send_msg(msg)
-        self._connection.disconnect()
 
     def _on_login_id(self, userlogin, xivo_version, cti_connection):
         if cti_connection != self._connection:
