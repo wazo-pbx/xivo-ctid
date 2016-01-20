@@ -21,12 +21,15 @@ import threading
 
 import xivo_dao
 
+from functools import partial
+
 from xivo.consul_helpers import NotifyingRegisterer, RegistererError
 
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti.ioc.context import context
 from xivo_cti.ioc import register_class
+from xivo_cti.service_discovery import self_check
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +113,7 @@ def main():
     ctid = context.get('cti_server')
     ctid.setup()
     publisher = context.get('bus_publisher')
-    with ServiceDiscovery('xivo-ctid', config, publisher):
+    with ServiceDiscovery('xivo-ctid', config, publisher, partial(self_check, config)):
         ctid.run()
 
 
