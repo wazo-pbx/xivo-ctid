@@ -83,6 +83,45 @@ class AuthenticationHandler(object):
         if self._authenticated:
             return self._user_uuid
 
+    def _fatal(self, msg_class, error_string):
+        msg = {'class': msg_class,
+               'error_string': error_string}
+        self._send_msg(msg)
+        self._connection.disconnect()
+
+    def _on_login_id(self, userlogin, xivo_version, cti_connection):
+        if cti_connection != self._connection:
+            return
+
+        LoginID.deregister_callback(self._on_login_id)
+
+        if xivo_version != xivo_cti.CTI_PROTOCOL_VERSION:
+            msg = 'xivoversion_client:{};{}'.format(xivo_version, xivo_cti.CTI_PROTOCOL_VERSION)
+            self._fatal('login_id', msg)
+            return
+
+        self._username = userlogin
+
+        LoginPass.register_callback_params(self._on_login_pass, ['password',
+                                                                 'cti_connection'])
+
+        msg = self._new_login_id_reply()
+        self._send_msg(msg)
+
+    def _on_cti_login_auth_timeout(self):
+        self._connection.disconnect()
+
+    def _on_login_pass(self, password, cti_connection):
+        if cti_connection != self._connection:
+            return
+
+        LoginPass.deregister_callback(self._on_login_pass)
+
+        self._auth_client = AuthClient(username=self._username, password=password, **self._auth_config)
+        self._async_runner.run_with_cb(self._on_auth_success,
+                                       self._create_token,
+                                       self._auth_client, self._auth_backend, self._username)
+
     def _create_token(self, auth_client, backend, username):
         try:
             return auth_client.token.new(backend, expiration=TWO_MONTHS)
@@ -96,16 +135,6 @@ class AuthenticationHandler(object):
                 error_string = 'xivo_auth_error'
 
             self._task_queue.put(self._fatal, 'login_pass', error_string)
-
-    def _fatal(self, msg_class, error_string):
-        msg = {'class': msg_class,
-               'error_string': error_string}
-        self._send_msg(msg)
-        self._connection.disconnect()
-
-    def _on_auth_complete(self):
-        if self._on_complete_cb:
-            self._on_complete_cb()
 
     def _on_auth_success(self, token_data):
         if not token_data:
@@ -131,9 +160,6 @@ class AuthenticationHandler(object):
         LoginCapas.register_callback_params(self._on_login_capas, ['capaid', 'state', 'cti_connection'])
         self._send_msg(msg)
         self._on_auth_complete()
-
-    def _on_cti_login_auth_timeout(self):
-        self._connection.disconnect()
 
     def _on_login_capas(self, profile_id, state, cti_connection):
         if cti_connection != self._connection:
@@ -173,36 +199,6 @@ class AuthenticationHandler(object):
                       'user_id': self._user_id}
         logger.info('LOGIN_SUCCESSFUL for %s', login_info)
 
-    def _on_login_id(self, userlogin, xivo_version, cti_connection):
-        if cti_connection != self._connection:
-            return
-
-        LoginID.deregister_callback(self._on_login_id)
-
-        if xivo_version != xivo_cti.CTI_PROTOCOL_VERSION:
-            msg = 'xivoversion_client:{};{}'.format(xivo_version, xivo_cti.CTI_PROTOCOL_VERSION)
-            self._fatal('login_id', msg)
-            return
-
-        self._username = userlogin
-
-        LoginPass.register_callback_params(self._on_login_pass, ['password',
-                                                                 'cti_connection'])
-
-        msg = self._new_login_id_reply()
-        self._send_msg(msg)
-
-    def _on_login_pass(self, password, cti_connection):
-        if cti_connection != self._connection:
-            return
-
-        LoginPass.deregister_callback(self._on_login_pass)
-
-        self._auth_client = AuthClient(username=self._username, password=password, **self._auth_config)
-        self._async_runner.run_with_cb(self._on_auth_success,
-                                       self._create_token,
-                                       self._auth_client, self._auth_backend, self._username)
-
     def _new_login_id_reply(self):
         return {'class': 'login_id',
                 'sessionid': self._session_id,
@@ -210,6 +206,10 @@ class AuthenticationHandler(object):
 
     def _new_login_pass_reply(self, cti_profile_id):
         return {'class': 'login_pass', 'capalist': [cti_profile_id]}
+
+    def _on_auth_complete(self):
+        if self._on_complete_cb:
+            self._on_complete_cb()
 
     def _new_session_id(self):
         return ''.join(random.sample(xivo_cti.ALPHANUMS, self._session_id_len))

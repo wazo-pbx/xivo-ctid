@@ -46,11 +46,11 @@ class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
         self.task_scheduler = Mock()
         self.complete_cb = Mock()
         with patch('xivo_cti.authentication.context', {'async_runner': self.async_runner,
-                                                         'task_queue': self.task_queue,
-                                                         'task_scheduler': self.task_scheduler}):
+                                                       'task_queue': self.task_queue,
+                                                       'task_scheduler': self.task_scheduler}):
             with patch('xivo_cti.authentication.config', {'auth': {'backend': s.backend,
-                                                                     'host': s.host},
-                                                            'main': {'logintimeout': 42}}):
+                                                                   'host': s.host},
+                                                          'main': {'logintimeout': 42}}):
                 self.handler = AuthenticationHandler(self.connection, self.complete_cb)
         self.session_id = self.handler._session_id
         self.handler._username = s.username
@@ -99,6 +99,84 @@ class TestAuthenticationHandler(_BaseAuthenticationHandlerTestCase):
         session_id = self.handler._new_session_id()
 
         assert_that(session_id, has_length(10))
+
+
+class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
+
+    def test_that_on_login_id_checks_the_version(self):
+        bad_version = CTI_PROTOCOL_VERSION + '1'
+
+        self.handler._on_login_id(s.login, bad_version, self.connection)
+
+        expected_msg = {'class': 'login_id',
+                        'error_string': 'xivoversion_client:%s;%s' % (bad_version, CTI_PROTOCOL_VERSION)}
+        self.assert_message_sent(expected_msg)
+        self.assert_disconnect_called()
+
+    @patch('xivo_cti.authentication.LoginPass')
+    def test_that_login_pass_is_registered_on_success(self, LoginPass):
+        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
+
+        LoginPass.register_callback_params.assert_called_once_with(
+            self.handler._on_login_pass,
+            ['password', 'cti_connection'])
+
+    @patch('xivo_cti.authentication.LoginID')
+    def test_that_login_id_is_deregistered(self, LoginID):
+        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
+
+        LoginID.deregister_callback.assert_called_once_with(self.handler._on_login_id)
+
+    def test_that_a_reply_is_sent_when_successfull(self):
+        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
+
+        expected_msg = {'class': 'login_id',
+                        'sessionid': self.session_id,
+                        'xivoversion': CTI_PROTOCOL_VERSION}
+        self.assert_message_sent(expected_msg)
+
+    @patch('xivo_cti.authentication.LoginPass')
+    @patch('xivo_cti.authentication.LoginID')
+    def test_that_nothing_happens_if_another_connection(self, LoginID, LoginPass):
+        another_connection = Mock(CTI)
+
+        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, another_connection)
+
+        assert_that(LoginID.deregister_callback.called, is_(False))
+        assert_that(LoginPass.register_callback_params.called, is_(False))
+        self.assert_no_message_sent()
+
+
+class TestAuthenticationHandlerOnLoginPass(_BaseAuthenticationHandlerTestCase):
+
+    @patch('xivo_cti.authentication.LoginPass')
+    def test_that_login_pass_is_deregistered(self, LoginPass):
+        self.handler._on_login_pass(s.password, self.connection)
+
+        LoginPass.deregister_callback.assert_called_once_with(self.handler._on_login_pass)
+
+    @patch('xivo_cti.authentication.AuthClient')
+    def test_that_create_token_is_scheduled(self, AuthClient):
+        auth_client = AuthClient.return_value
+
+        self.handler._on_login_pass(s.password, self.connection)
+
+        self.async_runner.run_with_cb.assert_called_once_with(
+            self.handler._on_auth_success,
+            self.handler._create_token,
+            auth_client, s.backend, s.username)
+        assert_that(self.handler._auth_client, equal_to(auth_client))
+
+    @patch('xivo_cti.authentication.LoginPass')
+    @patch('xivo_cti.authentication.AuthClient')
+    def test_that_nothing_happens_if_another_connection(self, LoginPass, AuthClient):
+        another_connection = Mock(CTI)
+
+        self.handler._on_login_pass(s.password, another_connection)
+
+        assert_that(LoginPass.deregister_callback.called, is_(False))
+        assert_that(AuthClient.called, is_(False))
+        assert_that(self.async_runner.run_with_cb.called, is_(False))
 
 
 class TestAuthenticationHandlerCreateToken(_BaseAuthenticationHandlerTestCase):
@@ -427,81 +505,3 @@ class TestAuthenticationHandlerOnLoginCapas(_BaseAuthenticationHandlerTestCase):
             self.handler._on_login_capas(s.capaid, s.state, another_connection)
 
         self.assert_no_message_sent()
-
-
-class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
-
-    def test_that_on_login_id_checks_the_version(self):
-        bad_version = CTI_PROTOCOL_VERSION + '1'
-
-        self.handler._on_login_id(s.login, bad_version, self.connection)
-
-        expected_msg = {'class': 'login_id',
-                        'error_string': 'xivoversion_client:%s;%s' % (bad_version, CTI_PROTOCOL_VERSION)}
-        self.assert_message_sent(expected_msg)
-        self.assert_disconnect_called()
-
-    @patch('xivo_cti.authentication.LoginPass')
-    def test_that_login_pass_is_registered_on_success(self, LoginPass):
-        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
-
-        LoginPass.register_callback_params.assert_called_once_with(
-            self.handler._on_login_pass,
-            ['password', 'cti_connection'])
-
-    @patch('xivo_cti.authentication.LoginID')
-    def test_that_login_id_is_deregistered(self, LoginID):
-        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
-
-        LoginID.deregister_callback.assert_called_once_with(self.handler._on_login_id)
-
-    def test_that_a_reply_is_sent_when_successfull(self):
-        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, self.connection)
-
-        expected_msg = {'class': 'login_id',
-                        'sessionid': self.session_id,
-                        'xivoversion': CTI_PROTOCOL_VERSION}
-        self.assert_message_sent(expected_msg)
-
-    @patch('xivo_cti.authentication.LoginPass')
-    @patch('xivo_cti.authentication.LoginID')
-    def test_that_nothing_happens_if_another_connection(self, LoginID, LoginPass):
-        another_connection = Mock(CTI)
-
-        self.handler._on_login_id(s.login, CTI_PROTOCOL_VERSION, another_connection)
-
-        assert_that(LoginID.deregister_callback.called, is_(False))
-        assert_that(LoginPass.register_callback_params.called, is_(False))
-        self.assert_no_message_sent()
-
-
-class TestAuthenticationHandlerOnLoginPass(_BaseAuthenticationHandlerTestCase):
-
-    @patch('xivo_cti.authentication.LoginPass')
-    def test_that_login_pass_is_deregistered(self, LoginPass):
-        self.handler._on_login_pass(s.password, self.connection)
-
-        LoginPass.deregister_callback.assert_called_once_with(self.handler._on_login_pass)
-
-    @patch('xivo_cti.authentication.AuthClient')
-    def test_that_create_token_is_scheduled(self, AuthClient):
-        auth_client = AuthClient.return_value
-
-        self.handler._on_login_pass(s.password, self.connection)
-
-        self.async_runner.run_with_cb.assert_called_once_with(
-            self.handler._on_auth_success,
-            self.handler._create_token,
-            auth_client, s.backend, s.username)
-        assert_that(self.handler._auth_client, equal_to(auth_client))
-
-    @patch('xivo_cti.authentication.LoginPass')
-    @patch('xivo_cti.authentication.AuthClient')
-    def test_that_nothing_happens_if_another_connection(self, LoginPass, AuthClient):
-        another_connection = Mock(CTI)
-
-        self.handler._on_login_pass(s.password, another_connection)
-
-        assert_that(LoginPass.deregister_callback.called, is_(False))
-        assert_that(AuthClient.called, is_(False))
-        assert_that(self.async_runner.run_with_cb.called, is_(False))
