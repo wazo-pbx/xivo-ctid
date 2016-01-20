@@ -28,6 +28,7 @@ from xivo_auth_client import Client as AuthClient
 
 from xivo_cti import config
 from xivo_cti import dao
+from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.login import (LoginCapas, LoginID, LoginPass)
@@ -122,6 +123,7 @@ class AuthenticationHandler(object):
                                        self._create_token,
                                        self._auth_client, self._auth_backend, self._username)
 
+    @async_runner_thread
     def _create_token(self, auth_client, backend, username):
         try:
             return auth_client.token.new(backend, expiration=TWO_MONTHS)
