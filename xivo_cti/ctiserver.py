@@ -621,10 +621,11 @@ class CTIServer(object):
                 interface_cti.reply(what)
 
     def disconnect_iface(self, iface, cause):
+        socket = iface.connid
         iface.disconnected(cause)
-        if iface.connid:
-            iface.connid.close()
-            self._remove_from_fdlist(iface.connid)
+        if socket:
+            socket.close()
+        self._remove_from_fdlist(socket)
 
     def _init_socket(self):
         fdlist_full = []
