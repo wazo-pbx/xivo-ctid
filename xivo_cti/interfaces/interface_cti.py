@@ -105,7 +105,7 @@ class CTI(Interfaces):
             else:
                 raise TypeError('invalid DisconnectCause %s' % cause)
         except NotLoggedException:
-            logger.warning('Called disconnected with no user_id')
+            'not so exceptionnal, a connection has been closed before login in'
 
     def manage_connection(self, msg):
         replies = []
