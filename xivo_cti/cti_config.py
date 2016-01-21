@@ -75,6 +75,7 @@ _default_config = {
     'service_discovery': {
         'advertise_address': 'localhost',
         'advertise_port': 9495,
+        'advertise_address_interface': 'eth0',
         'refresh_interval': 25,
         'retry_interval': 2,
         'ttl_interval': 30,
