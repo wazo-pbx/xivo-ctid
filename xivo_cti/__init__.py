@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2015 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ from UserDict import UserDict
 
 __all__ = []
 
-CTI_PROTOCOL_VERSION = '1.2'
+CTI_PROTOCOL_VERSION = '2.0'
 DAEMONNAME = 'xivo-ctid'
 SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
