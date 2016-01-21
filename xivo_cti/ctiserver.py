@@ -625,7 +625,7 @@ class CTIServer(object):
         iface.disconnected(cause)
         if socket:
             socket.close()
-        self._remove_from_fdlist(socket)
+            self._remove_from_fdlist(socket)
 
     def _init_socket(self):
         fdlist_full = []
