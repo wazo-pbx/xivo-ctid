@@ -21,3 +21,4 @@ python-ldap==2.4.10
 requests==2.4.3
 sqlalchemy==0.9.8
 stevedore==0.14.1
+netifaces
