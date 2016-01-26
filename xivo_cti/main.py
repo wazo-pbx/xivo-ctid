@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,12 +16,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+
 import xivo_dao
+
+from functools import partial
+
+from xivo.consul_helpers import ServiceCatalogRegistration
 
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti.ioc.context import context
 from xivo_cti.ioc import register_class
+from xivo_cti.service_discovery import self_check
 
 
 def main():
@@ -35,7 +41,9 @@ def main():
 
     ctid = context.get('cti_server')
     ctid.setup()
-    ctid.run()
+    publisher = context.get('bus_publisher')
+    with ServiceCatalogRegistration('xivo-ctid', config, publisher, partial(self_check, config)):
+        ctid.run()
 
 
 if __name__ == '__main__':

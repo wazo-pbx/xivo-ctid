@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@ class DisconnectCause(object):
     by_server_stop = 'by_server_stop'
     by_server_reload = 'by_server_reload'
     broken_pipe = 'broken_pipe'
+
+    @classmethod
+    def __contains__(cls, cause):
+        return cause in [cls.by_client, cls.by_server_stop, cls.by_server_reload, cls.broken_pipe]
 
 
 class Interfaces(object):

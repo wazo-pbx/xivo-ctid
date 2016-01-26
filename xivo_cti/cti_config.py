@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -75,9 +75,10 @@ _default_config = {
     'service_discovery': {
         'advertise_address': 'localhost',
         'advertise_port': 9495,
-        'check_url': 'http://localhost:9495/0.1/infos',
-        'check_url_interval': '300s',
-        'check_url_timeout': '10s',
+        'advertise_address_interface': 'eth0',
+        'refresh_interval': 25,
+        'retry_interval': 2,
+        'ttl_interval': 30,
         'extra_tags': [],
     },
     'switchboard_polycom': {

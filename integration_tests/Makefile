@@ -8,7 +8,6 @@ build-postgres:
 	docker build -t xivo/xivo-postgres -f $(POSTGRES_DOCKER) $(MANAGE_DB_DIR)
 
 test-setup: build-postgres
-	docker build -t mock-cti -f assets/service_discovery/Dockerfile_cti_mock assets/service_discovery
 	docker pull n3llyb0y/wait
 	docker build -t xivo/xivo-ctid -f ../Dockerfile ..
 	docker pull rabbitmq
