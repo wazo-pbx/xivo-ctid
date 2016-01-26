@@ -22,6 +22,8 @@ RUN pip install -r requirements.txt
 RUN python setup.py install
 RUN cp -av etc/xivo-ctid /etc
 RUN mkdir /etc/xivo-ctid/conf.d
+RUN mkdir -p /usr/share/xivo-certs
+ADD ./contribs/docker/certs /usr/share/xivo-certs
 
 WORKDIR /root
 RUN rm -fr /root/xivo-ctid
