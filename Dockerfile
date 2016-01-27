@@ -31,4 +31,4 @@ RUN rm -fr /root/xivo-ctid
 EXPOSE 5003
 EXPOSE 9495
 
-CMD xivo-ctid -f -d
+CMD ["xivo-ctid", "-f", "-d"]
