@@ -13,12 +13,9 @@ flask-restful==0.3.4
 flask-cors==1.10.3
 futures==2.2.0
 kombu
-psycopg2==2.5.4
-pyyaml==3.11
-pyhamcrest==1.8.0
+psycopg2==2.5.4  # from xivo-lib-python
+pyyaml==3.11  # from xivo-lib-python
 python-consul==0.4.7
-python-ldap==2.4.10
 requests==2.4.3
-sqlalchemy==0.9.8
-stevedore==0.14.1
-netifaces
+sqlalchemy==0.9.8  # from xivo-dao
+netifaces  # from xivo-lib-python
