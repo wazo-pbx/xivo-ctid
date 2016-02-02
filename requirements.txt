@@ -9,7 +9,7 @@ git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
 git+https://github.com/xivo-pbx/xivo-provd-client.git
 cherrypy==3.7.0
 flask-cors==1.10.3
-flask-restful==0.3.4
+flask-restful==0.3.5
 flask==0.10.1
 futures==2.2.0
 kombu
