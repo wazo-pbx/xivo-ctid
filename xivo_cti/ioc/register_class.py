@@ -20,7 +20,7 @@ import logging
 from concurrent import futures
 from kombu import Connection, Exchange, Producer
 
-from xivo.auth_helpers import TokenRenewer
+from xivo.token_renewer import TokenRenewer
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
 from xivo_auth_client import Client as AuthClient
