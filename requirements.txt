@@ -16,7 +16,7 @@ kombu
 netifaces  # from xivo-lib-python
 psycopg2==2.5.4  # from xivo-lib-python
 pyopenssl==0.14  # from xivo-lib-python
-python-consul==0.4.7
+python-consul==0.4.7  # from xivo-lib-python
 pyyaml==3.11  # from xivo-lib-python
 requests==2.4.3
 sqlalchemy==0.9.8  # from xivo-dao
