@@ -1,24 +1,21 @@
 git+https://github.com/xivo-pbx/xivo-agentd-client.git
 git+https://github.com/xivo-pbx/xivo-auth-client.git
-git+https://github.com/xivo-pbx/xivo-dao.git
-git+https://github.com/xivo-pbx/xivo-lib-python.git
-git+https://github.com/xivo-pbx/xivo-provd-client.git
 git+https://github.com/xivo-pbx/xivo-bus.git
 git+https://github.com/xivo-pbx/xivo-ctid-client.git
+git+https://github.com/xivo-pbx/xivo-dao.git
 git+https://github.com/xivo-pbx/xivo-dird-client.git
+git+https://github.com/xivo-pbx/xivo-lib-python.git
 git+https://github.com/xivo-pbx/xivo-lib-rest-client.git
+git+https://github.com/xivo-pbx/xivo-provd-client.git
 cherrypy==3.7.0
-flask==0.10.1
-flask-restful==0.3.4
 flask-cors==1.10.3
+flask-restful==0.3.4
+flask==0.10.1
 futures==2.2.0
 kombu
-psycopg2==2.5.4
-pyyaml==3.11
-pyhamcrest==1.8.0
+netifaces  # from xivo-lib-python
+psycopg2==2.5.4  # from xivo-lib-python
 python-consul==0.4.7
-python-ldap==2.4.10
+pyyaml==3.11  # from xivo-lib-python
 requests==2.4.3
-sqlalchemy==0.9.8
-stevedore==0.14.1
-netifaces
+sqlalchemy==0.9.8  # from xivo-dao
