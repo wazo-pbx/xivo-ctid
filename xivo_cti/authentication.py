@@ -34,7 +34,7 @@ from xivo_cti.exception import NoSuchUserException
 from xivo_cti.ioc.context import context
 from xivo_cti.cti.commands.login import (LoginCapas, LoginID, LoginPass)
 
-TWO_MONTHS = timedelta(days=60).total_seconds()
+TWO_MONTHS = int(timedelta(days=60).total_seconds())
 
 logger = logging.getLogger(__name__)
 
