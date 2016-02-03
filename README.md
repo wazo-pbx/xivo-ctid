@@ -16,5 +16,21 @@ further details on installing one.
 Running unit tests
 ------------------
 
-1. Install requirements with ```pip install -r requirements.txt```
-2. Run tests with ```nosetests xivo_cti```
+```
+apt-get install libpq-dev python-dev libffi-dev libyaml-dev
+pip install tox
+tox --recreate -e py27
+```
+
+
+Running integration tests
+-------------------------
+
+You need Docker installed.
+
+```
+cd integration_tests
+pip install -U -r test-requirements.txt
+make test-setup
+make test
+```
