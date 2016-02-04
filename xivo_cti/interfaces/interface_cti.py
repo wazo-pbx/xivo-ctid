@@ -100,7 +100,7 @@ class CTI(Interfaces):
         try:
             user_service_manager = context.get('user_service_manager')
             user_id = self.user_id()
-            if cause in self.DisconnectCause:
+            if DisconnectCause.is_valid(cause):
                 user_service_manager.disconnect_no_action(user_id)
             else:
                 raise TypeError('invalid DisconnectCause %s' % cause)

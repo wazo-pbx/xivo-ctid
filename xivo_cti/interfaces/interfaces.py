@@ -24,12 +24,11 @@ class DisconnectCause(object):
     broken_pipe = 'broken_pipe'
 
     @classmethod
-    def __contains__(cls, cause):
+    def is_valid(cls, cause):
         return cause in [cls.by_client, cls.by_server_stop, cls.by_server_reload, cls.broken_pipe]
 
 
 class Interfaces(object):
-    DisconnectCause = DisconnectCause
 
     def __init__(self, ctiserver):
         self._ctiserver = ctiserver
