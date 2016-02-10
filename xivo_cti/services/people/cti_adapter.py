@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -90,10 +90,11 @@ class OldProtocolCTIAdapter(object):
 
 class PeopleCTIAdapter(object):
 
-    def __init__(self, async_runner, cti_server):
+    def __init__(self, async_runner, cti_server, xivo_uuid):
         self._client = Client(**config['dird'])
         self._cti_server = cti_server
         self._runner = async_runner
+        self._uuid = xivo_uuid
 
     def get_relations(self, user_id):
         logger.debug('User %s is requesting his relations', user_id)
@@ -104,7 +105,7 @@ class PeopleCTIAdapter(object):
             line_id = None
         agent_id = dao.user.get_agent_id(user_id)
 
-        msg = CTIMessageFormatter.relations(config['uuid'], user_id, line_id, agent_id)
+        msg = CTIMessageFormatter.relations(self._uuid, user_id, line_id, agent_id)
 
         self._cti_server.send_to_cti_client(xuserid, msg)
 

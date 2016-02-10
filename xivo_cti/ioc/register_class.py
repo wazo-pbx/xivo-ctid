@@ -105,7 +105,7 @@ from xivo_cti.xivo_ami import AMIClass
 logger = logging.getLogger(__name__)
 
 
-def setup():
+def setup(uuid):
     auth_client = new_auth_client()
 
     bus_url = 'amqp://{username}:{password}@{host}:{port}//'.format(**config['bus'])
@@ -113,12 +113,12 @@ def setup():
     bus_exchange = Exchange(config['bus']['exchange_name'],
                             type=config['bus']['exchange_type'])
     bus_producer = Producer(bus_connection, exchange=bus_exchange, auto_declare=True)
-    bus_marshaler = Marshaler(config['uuid'])
+    bus_marshaler = Marshaler(uuid)
     bus_publisher = Publisher(bus_producer, bus_marshaler)
     bus_listener = BusListener(bus_connection, bus_exchange)
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
-                                                  config['uuid'],
+                                                  uuid,
                                                   config['rest_api']['http']['port'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
@@ -201,7 +201,7 @@ def setup():
     context.register('thread_pool_executor', thread_pool_executor)
     context.register('user_service_manager', UserServiceManager)
     context.register('user_service_notifier', UserServiceNotifier)
-    context.register('xivo_uuid', lambda: config['uuid'])
+    context.register('xivo_uuid', lambda: uuid)
 
 
 def new_auth_client():

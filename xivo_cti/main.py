@@ -50,7 +50,7 @@ def main():
         logger.error('undefined environment variable XIVO_UUID')
         sys.exit(1)
 
-    register_class.setup()
+    register_class.setup(uuid)
 
     ctid = context.get('cti_server')
     ctid.setup()

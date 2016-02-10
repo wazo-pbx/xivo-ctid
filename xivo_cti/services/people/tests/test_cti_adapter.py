@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -123,15 +123,15 @@ class TestCTIAdapter(TestCase):
         self.task_queue = new_task_queue()
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
         self.cti_server = Mock()
+        self.uuid = '738d4ae6-6a8f-4370-8f7d-bad1e56a7501'
         with patch('xivo_cti.services.people.cti_adapter.config', {'dird': {}}):
             with patch('xivo_cti.services.people.cti_adapter.Client') as Client:
-                self.cti_adapter = PeopleCTIAdapter(self.async_runner, self.cti_server)
+                self.cti_adapter = PeopleCTIAdapter(self.async_runner, self.cti_server, self.uuid)
                 self.client = Client.return_value
 
     def tearDown(self):
         self.task_queue.close()
 
-    @patch('xivo_cti.services.people.cti_adapter.config', {'uuid': s.xivo_uuid})
     @patch('xivo_cti.services.people.cti_adapter.dao', Mock(user=Mock(get_agent_id=Mock(return_value='26'),
                                                                       get_line=Mock(return_value={'id': '24'}))))
     def test_get_relations(self):
@@ -140,7 +140,7 @@ class TestCTIAdapter(TestCase):
         self.cti_adapter.get_relations(user_id)
 
         expected_msg = {'class': 'relations',
-                        'data': {'xivo_uuid': s.xivo_uuid,
+                        'data': {'xivo_uuid': self.uuid,
                                  'user_id': 42,
                                  'endpoint_id': 24,
                                  'agent_id': 26}}
