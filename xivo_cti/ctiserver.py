@@ -25,7 +25,6 @@ import time
 import threading
 
 from xivo import daemonize
-from xivo import xivo_logging
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti import dao
@@ -161,10 +160,6 @@ class CTIServer(object):
 
         daemonize.unlock_pidfile(config['pidfile'])
 
-    def _set_logger(self):
-        xivo_logging.setup_logging(config['logfile'], config['foreground'], config['debug'])
-        xivo_logging.silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
-
     def _setup_token_renewer(self):
         agentd_client = context.get('agentd_client')
         self._token_renewer.subscribe_to_token_change(agentd_client.set_token)
@@ -177,7 +172,6 @@ class CTIServer(object):
 
     def setup(self):
         cti_config.update_db_config()
-        self._set_logger()
         self._daemonize()
         QueueLogger.init()
         self._set_signal_handlers()

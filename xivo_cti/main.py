@@ -23,6 +23,7 @@ from functools import partial
 
 from xivo.consul_helpers import ServiceCatalogRegistration
 
+from xivo.xivo_logging import setup_logging, silence_loggers
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti.ioc.context import context
@@ -36,6 +37,9 @@ def main():
     cti_config.init_auth_config()
     xivo_dao.init_db_from_config(config)
     cti_config.update_db_config()
+
+    setup_logging(config['logfile'], config['foreground'], config['debug'])
+    silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
 
     register_class.setup()
 
