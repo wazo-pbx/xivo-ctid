@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+import os
+import logging
 
 import xivo_dao
 
@@ -30,6 +32,8 @@ from xivo_cti.ioc.context import context
 from xivo_cti.ioc import register_class
 from xivo_cti.service_discovery import self_check
 
+logger = logging.getLogger(__name__)
+
 
 def main():
     cti_config.init_cli_config(sys.argv[1:])
@@ -41,12 +45,22 @@ def main():
     setup_logging(config['logfile'], config['foreground'], config['debug'])
     silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
 
+    uuid = os.getenv('XIVO_UUID')
+    if not uuid:
+        logger.error('undefined environment variable XIVO_UUID')
+        sys.exit(1)
+
     register_class.setup()
 
     ctid = context.get('cti_server')
     ctid.setup()
-    publisher = context.get('bus_publisher')
-    with ServiceCatalogRegistration('xivo-ctid', config, publisher, partial(self_check, config)):
+
+    with ServiceCatalogRegistration('xivo-ctid',
+                                    uuid,
+                                    config['consul'],
+                                    config['service_discovery'],
+                                    config['bus'],
+                                    partial(self_check, config)):
         ctid.run()
 
 
