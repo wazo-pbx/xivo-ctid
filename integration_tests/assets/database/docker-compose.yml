@@ -2,61 +2,12 @@ sync:
   image: n3llyb0y/wait
   links:
     - postgres
-    - rabbitmq
-    - consul
-    - asterisk
-    - ctid
-    - agentd
   environment:
-    PORTS: "5432 5672 8500 5038 6262"
+    PORTS: "5432"
 
 postgres:
-  image: xivo/xivo-postgres
+  image: xivo/postgres
   expose:
     - "5432"
   ports:
     - "15432:5432"
-
-ctid:
-  image: xivo/xivo-ctid
-  volumes:
-    - "./etc/xivo-ctid/conf.d:/etc/xivo-ctid/conf.d"
-  links:
-    - postgres
-    - rabbitmq
-    - consul
-    - agentd
-    - asterisk
-  command: xivo-ctid -fd
-
-rabbitmq:
-  image: rabbitmq
-  expose:
-    - "5672"
-
-consul:
-  image: progrium/consul
-  expose:
-    - "8500"
-  volumes:
-    - "./etc/consul/config.json:/etc/consul/config.json"
-  command: "-client 0.0.0.0 -config-dir /etc/consul"
-
-agentd:
-  image: xivo/xivo-agentd
-  links:
-    - postgres
-    - rabbitmq
-  expose:
-    - "9493"
-  volumes:
-    - "./etc/xivo-agentd/conf.d/config.yml:/etc/xivo-agentd/conf.d/config.yml"
-    - "../_common:/data/_common"
-  command: xivo-agentd -f
-
-asterisk:
-  image: xivo/asterisk
-  expose:
-    - "5038"
-  volumes:
-    - "./etc/asterisk/manager.conf:/etc/asterisk/manager.conf"

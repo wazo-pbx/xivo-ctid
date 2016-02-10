@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import os
 
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
@@ -36,15 +37,24 @@ from xivo_dao.alchemy.rightcallmember import RightCallMember
 from xivo_dao.alchemy.schedulepath import SchedulePath
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.tests import test_dao
+from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
 
-from .base import BaseCTIDIntegrationTests, DB_URL
+DB_USER = 'asterisk'
+DB_PASSWORD = 'proformatique'
+DB_HOST = 'localhost'
+DB_PORT = '15432'
+DB_NAME = 'asterisk'
+DB_URL = ('postgresql://{user}:{password}@{host}:{port}/{db_name}'
+          .format(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, db_name=DB_NAME))
 
 test_dao.TEST_DB_URL = DB_URL
 
 
-class _IntegrationUser(BaseCTIDIntegrationTests):
+class _IntegrationUser(AssetLaunchingTestCase):
 
+    assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
     asset = 'database'
+    service = 'ctid'
 
 
 class TestUserFeaturesDAO(test_dao.DAOTestCase):
