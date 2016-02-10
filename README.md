@@ -6,6 +6,12 @@ that provides advanced telephony services such as automatic phone control and
 [Call center](http://en.wikipedia.org/wiki/Call_center) monitoring. CTI services are controlled by connecting to
 the server with the [XiVO CTI client](https://github.com/xivo-pbx/xivo-client-qt)
 
+Requirements
+------------
+
+xivo-ctid needs the XIVO_UUID environment variable to start. This environment
+variable is already defined on a XiVO.
+
 Installing XiVO CTI
 -------------------
 
