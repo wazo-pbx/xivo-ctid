@@ -28,7 +28,7 @@ from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
                                           EndpointStatusUpdateEvent)
 from xivo_cti import config
 from xivo_cti.async_runner import async_runner_thread
-from xivo_cti.bus_listener import bus_listener_thread, loads_and_ack
+from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.remote_service import RemoteService
 
@@ -85,7 +85,7 @@ class StatusForwarder(object):
         return event['origin_uuid'], event['data'][id_field]
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_service_registered(self, body):
         service = RemoteService.from_bus_msg(body)
         uuid = body['origin_uuid']
@@ -95,7 +95,7 @@ class StatusForwarder(object):
         self._task_queue.put(self.on_service_added, service_name, uuid)
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_service_deregistered(self, body):
         uuid = body['origin_uuid']
         service_name = body['data']['service_name']
@@ -104,21 +104,21 @@ class StatusForwarder(object):
                              service_name, service_id, uuid)
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_agent_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
         self._task_queue.put(self.on_agent_status_update, key, status)
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_user_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']
         self._task_queue.put(self.on_user_status_update, key, status)
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_endpoint_status(self, body):
         key = self._extract_key(body)
         status = body['data']['status']

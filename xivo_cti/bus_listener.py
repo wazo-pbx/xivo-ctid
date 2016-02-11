@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
 import logging
 
 from collections import namedtuple
@@ -28,10 +27,10 @@ Callback = namedtuple('Callback', ['queue', 'callable'])
 logger = logging.getLogger(__name__)
 
 
-def loads_and_ack(f):
+def ack_bus_message(f):
     @wraps(f)
     def wrapped(one_self, body, message):
-        f(one_self, json.loads(body))
+        f(one_self, body)
         message.ack()
     return wrapped
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 import logging
 
 from xivo_bus.resources.chat.event import ChatMessageEvent
-from xivo_cti.bus_listener import bus_listener_thread, loads_and_ack
+from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class ChatPublisher(object):
         self._publisher.publish(bus_msg)
 
     @bus_listener_thread
-    @loads_and_ack
+    @ack_bus_message
     def _on_bus_chat_message_event(self, event):
         data = event.get('data', {})
         try:
