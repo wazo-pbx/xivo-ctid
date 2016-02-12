@@ -72,6 +72,7 @@ _default_config = {
         'port': 8666,
     },
     'service_discovery': {
+        'enabled': True,
         'advertise_address': 'localhost',
         'advertise_port': 9495,
         'advertise_address_interface': 'eth0',
