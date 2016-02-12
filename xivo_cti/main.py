@@ -45,18 +45,18 @@ def main():
     setup_logging(config['logfile'], config['foreground'], config['debug'])
     silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
 
-    uuid = os.getenv('XIVO_UUID')
-    if not uuid:
+    xivo_uuid = os.getenv('XIVO_UUID')
+    if not xivo_uuid:
         logger.error('undefined environment variable XIVO_UUID')
         sys.exit(1)
 
-    register_class.setup(uuid)
+    register_class.setup(xivo_uuid)
 
     ctid = context.get('cti_server')
     ctid.setup()
 
     with ServiceCatalogRegistration('xivo-ctid',
-                                    uuid,
+                                    xivo_uuid,
                                     config['consul'],
                                     config['service_discovery'],
                                     config['bus'],
