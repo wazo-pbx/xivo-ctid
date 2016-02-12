@@ -1,10 +1,16 @@
 XiVO CTI [![Build Status](https://travis-ci.org/xivo-pbx/xivo-ctid.png?branch=master)](https://travis-ci.org/xivo-pbx/xivo-ctid)
 ========
 
-XiVO CTI is a [Computer telephony integration](http://en.wikipedia.org/Computer_telephony_integration) server 
-that provides advanced telephony services such as automatic phone control and 
-[Call center](http://en.wikipedia.org/wiki/Call_center) monitoring. CTI services are controlled by connecting to 
+XiVO CTI is a [Computer telephony integration](http://en.wikipedia.org/Computer_telephony_integration) server
+that provides advanced telephony services such as automatic phone control and
+[Call center](http://en.wikipedia.org/wiki/Call_center) monitoring. CTI services are controlled by connecting to
 the server with the [XiVO CTI client](https://github.com/xivo-pbx/xivo-client-qt)
+
+Requirements
+------------
+
+xivo-ctid needs the XIVO_UUID environment variable to start. This environment
+variable is already defined on a XiVO.
 
 Installing XiVO CTI
 -------------------

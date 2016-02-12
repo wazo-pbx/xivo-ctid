@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 
 import Queue
 
-from xivo_cti import config
 from xivo_cti import dao
 
 
@@ -82,9 +81,9 @@ class MainThreadProxy(object):
     returned futures to retrieve the result or reraise the original exception.
     """
 
-    def __init__(self, task_queue):
+    def __init__(self, task_queue, xivo_uuid):
         self._exec = _AsyncCommandExecutor(task_queue)
-        self._uuid = config['uuid']
+        self._uuid = xivo_uuid
 
     def get_uuid(self):
         return _Value(self._uuid)

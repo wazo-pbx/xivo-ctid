@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,6 +38,9 @@ from ..forwarder import _AgentStatusFetcher
 from ..forwarder import _EndpointStatusFetcher
 
 
+UUID = '738d4ae6-6a8f-4370-8f7d-bad1e56a7501'
+
+
 class TestStatusForwarder(unittest.TestCase):
 
     def setUp(self):
@@ -45,7 +48,8 @@ class TestStatusForwarder(unittest.TestCase):
         self.endpoint_status_notifier = Mock()
         self.user_status_notifier = Mock()
         self.bus_listener = Mock(BusListener)
-        self.forwarder = StatusForwarder(s.cti_group_factory,
+        self.forwarder = StatusForwarder(UUID,
+                                         s.cti_group_factory,
                                          s.task_queue,
                                          self.bus_listener,
                                          s.async_runner,
@@ -58,7 +62,8 @@ class TestStatusForwarder(unittest.TestCase):
     @patch('xivo_cti.services.status_updates.forwarder._new_endpoint_notifier')
     @patch('xivo_cti.services.status_updates.forwarder._new_user_notifier')
     def test_forwarder_without_arguments(self, new_user_notifier, new_endpoint_notifier, new_agent_notifier):
-        StatusForwarder(s.cti_group_factory,
+        StatusForwarder(UUID,
+                        s.cti_group_factory,
                         s.task_queue,
                         self.bus_listener,
                         s.async_runner,
@@ -163,7 +168,7 @@ class TestAgentStatusFetcher(unittest.TestCase):
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
         self._forwarder = Mock(StatusForwarder)
-        self._fetcher = _AgentStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
+        self._fetcher = _AgentStatusFetcher(self._forwarder, self.async_runner, s.service_tracker, UUID)
 
     def test_that_on_response_calls_the_forwarder(self):
         self._fetcher._on_result(Mock(id=self.id_, origin_uuid=self.uuid, logger=True))
@@ -189,7 +194,7 @@ class TestEndpointStatusFetcher(unittest.TestCase):
         self.key = (self.uuid, self.id_)
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), new_task_queue())
         self._forwarder = Mock(StatusForwarder)
-        self._fetcher = _EndpointStatusFetcher(self._forwarder, self.async_runner, s.service_tracker)
+        self._fetcher = _EndpointStatusFetcher(self._forwarder, self.async_runner, s.service_tracker, UUID)
 
     def test_that_on_response_calls_the_forwarder(self):
         self._fetcher._on_result({

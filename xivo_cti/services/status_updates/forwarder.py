@@ -42,6 +42,7 @@ class StatusForwarder(object):
                      'user_status_update': 'user_id'}
 
     def __init__(self,
+                 xivo_uuid,
                  cti_group_factory,
                  task_queue,
                  bus_listener,
@@ -50,9 +51,9 @@ class StatusForwarder(object):
                  _agent_status_notifier=None,
                  _endpoint_status_notifier=None,
                  _user_status_notifier=None):
-        agent_status_fetcher = _AgentStatusFetcher(self, async_runner, remote_service_tracker)
-        endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner, remote_service_tracker)
-        user_status_fetcher = _UserStatusFetcher(self, async_runner, remote_service_tracker)
+        agent_status_fetcher = _AgentStatusFetcher(self, async_runner, remote_service_tracker, xivo_uuid)
+        endpoint_status_fetcher = _EndpointStatusFetcher(self, async_runner, remote_service_tracker, xivo_uuid)
+        user_status_fetcher = _UserStatusFetcher(self, async_runner, remote_service_tracker, xivo_uuid)
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self.agent_status_notifier = _agent_status_notifier or _new_agent_notifier(cti_group_factory, agent_status_fetcher)
@@ -180,10 +181,11 @@ class _StatusNotifier(object):
 
 class _BaseStatusFetcher(object):
 
-    def __init__(self, status_forwarder, async_runner, remote_service_tracker):
+    def __init__(self, status_forwarder, async_runner, remote_service_tracker, xivo_uuid):
         self.forwarder = status_forwarder
         self.async_runner = async_runner
         self._remote_service_tracker = remote_service_tracker
+        self._uuid = xivo_uuid
 
     def fetch(self, key):
         uuid, resource_id = key
@@ -219,7 +221,7 @@ class _AgentStatusFetcher(_BaseStatusFetcher):
     service = 'xivo-agentd'
 
     def _client(self, uuid):
-        if uuid == config['uuid']:
+        if uuid == self._uuid:
             token = config['auth']['token']
             return xivo_agentd_client.Client(token=token, **config['agentd'])
 
