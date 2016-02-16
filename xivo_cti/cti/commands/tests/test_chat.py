@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,11 +31,11 @@ characters'''
 class TestChat(unittest.TestCase):
 
     def test_from_dict(self):
-        xivo_uuid, user_id = str(uuid4()), 42
+        xivo_uuid, user_uuid = str(uuid4()), str(uuid4())
 
         cti_msg = {'class': 'chitchat',
                    'alias': u'pépé',
-                   'to': [xivo_uuid, user_id],
+                   'to': [xivo_uuid, user_uuid],
                    'text': msg,
                    'commandid': '124.1245'}
 
@@ -43,11 +43,11 @@ class TestChat(unittest.TestCase):
 
         assert_that(chat.alias, equal_to(u'pépé'))
         assert_that(chat.remote_xivo_uuid, equal_to(xivo_uuid))
-        assert_that(chat.remote_user_id, equal_to(user_id))
+        assert_that(chat.remote_user_uuid, equal_to(user_uuid))
         assert_that(chat.text, equal_to(msg))
 
     def test_from_dict_with_an_invalid_xivo_uuid(self):
-        xivo_uuid, user_id = 'lol', 42
+        xivo_uuid, user_id = 'lol', str(uuid4())
 
         cti_msg = {'class': 'chitchat',
                    'alias': u'pépé',
@@ -57,12 +57,12 @@ class TestChat(unittest.TestCase):
 
         self.assertRaises(ValueError, Chat.from_dict, cti_msg)
 
-    def test_from_dict_with_a_str_id(self):
-        xivo_uuid, user_id = str(uuid4()), 0
+    def test_from_dict_with_an_invalid_user_uuid(self):
+        xivo_uuid, user_uuid = str(uuid4()), 'lol'
 
         cti_msg = {'class': 'chitchat',
                    'alias': u'pépé',
-                   'to': [xivo_uuid, user_id],
+                   'to': [xivo_uuid, user_uuid],
                    'text': msg,
                    'commandid': '124.1245'}
 

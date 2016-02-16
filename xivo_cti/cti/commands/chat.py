@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,18 +25,10 @@ def _check_valid_uuid(value):
     return value
 
 
-def _check_positive_int(value):
-    if not isinstance(value, int):
-        raise ValueError('expected int: was {}'.format(type(value)))
-    if not value > 0:
-        raise ValueError('expected a positive int: was {}'.format(value))
-    return value
-
-
 def _parse(msg, command):
     command.alias = msg['alias']
     command.remote_xivo_uuid = _check_valid_uuid(msg['to'][0])
-    command.remote_user_id = _check_positive_int(msg['to'][1])
+    command.remote_user_uuid = _check_valid_uuid(msg['to'][1])
     command.text = msg['text']
 
 Chat = CTICommandClass('chitchat', None, _parse)

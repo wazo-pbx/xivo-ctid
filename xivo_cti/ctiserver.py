@@ -408,7 +408,7 @@ class CTIServer(object):
         )
         Chat.register_callback_params(
             context.get('chat_publisher').on_cti_chat_message,
-            ['user_id', 'remote_xivo_uuid', 'remote_user_id', 'alias', 'text']
+            ['user_uuid', 'remote_xivo_uuid', 'remote_user_uuid', 'alias', 'text']
         )
 
     def _register_ami_callbacks(self):
