@@ -53,7 +53,7 @@ class ClientConnection(object):
                                           keyfile=keyfile,
                                           ssl_version=SSLPROTO)
             self.socket.setblocking(0)
-        except ssl.SSLError:
+        except (ssl.SSLError, IOError):
             logger.exception('CTI:%s:%d cert=%s key=%s)',
                              self.address[0], self.address[1],
                              certfile,
