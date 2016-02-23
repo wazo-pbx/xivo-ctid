@@ -121,26 +121,31 @@ class Publisher(object):
         if not self._is_call_abandoned(call_events):
             return
 
-        logger.debug('%s: %s abandoned', queue_name, linked_id)
+        t = call_events.end_time
+        logger.debug('%s: %s abandoned at %s', queue_name, linked_id, t)
 
     def _publish_call_connected(self, queue_name, linked_id, call_events):
         if self._is_call_abandoned(call_events):
             return
 
-        logger.debug('%s: %s connected', queue_name, linked_id)
+        t = call_events.answer_time
+        logger.debug('%s: %s connected at %s', queue_name, linked_id, t)
 
     def _publish_call_duration(self, queue_name, linked_id, call_events):
         duration = call_events.end_time - call_events.start_time
-        logger.debug('%s: %s duration %s', queue_name, linked_id, duration)
+        t = call_events.end_time
+        logger.debug('%s: %s duration %s at %s', queue_name, linked_id, duration, t)
 
     def _publish_call_end(self, queue_name, linked_id, call_events):
         if self._is_call_abandoned(call_events):
             return
 
-        logger.debug('%s: %s ended', queue_name, linked_id)
+        t = call_events.end_time
+        logger.debug('%s: %s ended at %s', queue_name, linked_id, t)
 
     def _publish_call_start(self, queue_name, linked_id, call_events):
-        logger.debug('%s: %s started', queue_name, linked_id)
+        t = call_events.start_time
+        logger.debug('%s: %s started at %s', queue_name, linked_id, t)
 
     @staticmethod
     def _is_call_abandoned(call_events):
