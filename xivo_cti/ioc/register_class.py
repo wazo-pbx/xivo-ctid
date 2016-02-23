@@ -96,6 +96,8 @@ from xivo_cti.statistics.queue_statistics_producer import \
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.statistics_producer_initializer import \
     StatisticsProducerInitializer
+from xivo_cti.statistics.switchboard import Dispatcher as SwitchboardStatisticDispatcher
+from xivo_cti.statistics.switchboard import Parser as SwitchboardStatisticParser
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.task_scheduler import new_task_scheduler
 from xivo_cti.tools.delta_computer import DeltaComputer
@@ -122,6 +124,8 @@ def setup(xivo_uuid):
                                                   config['rest_api']['http']['port'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
+
+    switchboard_queues = [queue for queue, enabled in config['switchboard_queues'].iteritems() if enabled]
 
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
@@ -194,6 +198,8 @@ def setup(xivo_uuid):
     context.register('remote_service_tracker', remote_service_tracker)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
+    context.register('switchboard_statistic_dispatcher', SwitchboardStatisticDispatcher(switchboard_queues))
+    context.register('switchboard_statistic_parser', SwitchboardStatisticParser)
     context.register('status_forwarder', StatusForwarder)
     context.register('task_queue', new_task_queue)
     context.register('task_scheduler', new_task_scheduler)
