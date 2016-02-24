@@ -139,7 +139,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, None, t2)
 
-        self.publisher.publish_call_events.assert_called_once_with('foobar', s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
     def test_answered_calls(self):
         t1 = time.time()
@@ -152,7 +152,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t3)
 
-        self.publisher.publish_call_events.assert_called_once_with('foobar', s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
     def test_answered_many_times_calls(self):
         t1 = time.time()
@@ -167,7 +167,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t3)
 
-        self.publisher.publish_call_events.assert_called_once_with('foobar', s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
     def at(self, f, t):
         with patch('xivo_cti.statistics.switchboard.time.time', return_value=t):

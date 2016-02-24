@@ -24,7 +24,7 @@ from xivo.token_renewer import TokenRenewer
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
 from xivo_auth_client import Client as AuthClient
-from xivo_bus import Marshaler, Publisher
+from xivo_bus import CollectdMarshaler, Marshaler, Publisher
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
@@ -119,6 +119,11 @@ def setup(xivo_uuid):
     bus_publisher = Publisher(bus_producer, bus_marshaler)
     bus_listener = BusListener(bus_connection, bus_exchange)
 
+    collectd_exchange = Exchange('collectd', type=config['bus']['exchange_type'])
+    collectd_producer = Producer(bus_connection, exchange=collectd_exchange, auto_declare=False)
+    collectd_marshaler = CollectdMarshaler(xivo_uuid)
+    collectd_publisher = Publisher(collectd_producer, collectd_marshaler)
+
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   xivo_uuid,
                                                   config['rest_api']['http']['port'])
@@ -159,6 +164,7 @@ def setup(xivo_uuid):
     context.register('call_manager', CallManager)
     context.register('chat_publisher', ChatPublisher)
     context.register('channel_updater', ChannelUpdater)
+    context.register('collectd_publisher', collectd_publisher)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
     context.register('cti_provd_client', CTIProvdClient.new_from_config(config['provd']))

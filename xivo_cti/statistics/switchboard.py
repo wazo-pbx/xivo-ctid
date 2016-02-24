@@ -18,6 +18,13 @@
 import logging
 import time
 
+from xivo_bus.collectd.calls.event import (CallAbandonedCollectdEvent,
+                                           CallConnectCollectdEvent,
+                                           CallDurationCollectdEvent,
+                                           CallEndCollectdEvent,
+                                           CallStartCollectdEvent)
+from xivo_cti.ioc.context import context
+
 logger = logging.getLogger(__name__)
 
 
@@ -109,43 +116,47 @@ class Parser(object):
 
 class Publisher(object):
 
-    def publish_call_events(self, queue_name, linked_id, call_events):
-        logger.debug('%s: publishing events for %...', queue_name, linked_id)
-        self._publish_call_start(queue_name, linked_id, call_events)
-        self._publish_call_connected(queue_name, linked_id, call_events)
-        self._publish_call_abandoned(queue_name, linked_id, call_events)
-        self._publish_call_end(queue_name, linked_id, call_events)
-        self._publish_call_duration(queue_name, linked_id, call_events)
+    _application = 'callcontrol'
 
-    def _publish_call_abandoned(self, queue_name, linked_id, call_events):
+    def __init__(self, collectd_publisher, queue_name):
+        self._collectd_publisher = collectd_publisher
+        self._queue_name = queue_name
+
+    def publish_call_events(self, linked_id, call_events):
+        [self._publish(msg) for msg in [self._publish_call_start(linked_id, call_events),
+                                        self._publish_call_connected(linked_id, call_events),
+                                        self._publish_call_abandoned(linked_id, call_events),
+                                        self._publish_call_end(linked_id, call_events),
+                                        self._publish_call_duration(linked_id, call_events)]]
+
+    def _publish(self, msg):
+        if msg:
+            self._collectd_publisher.publish(msg)
+
+    def _publish_call_abandoned(self, linked_id, call_events):
         if not self._is_call_abandoned(call_events):
             return
 
-        t = call_events.end_time
-        logger.debug('%s: %s abandoned at %s', queue_name, linked_id, t)
+        return CallAbandonedCollectdEvent(self._application, self._queue_name, time=call_events.end_time)
 
-    def _publish_call_connected(self, queue_name, linked_id, call_events):
+    def _publish_call_connected(self, linked_id, call_events):
         if self._is_call_abandoned(call_events):
             return
 
-        t = call_events.answer_time
-        logger.debug('%s: %s connected at %s', queue_name, linked_id, t)
+        return CallConnectCollectdEvent(self._application, self._queue_name, time=call_events.answer_time)
 
-    def _publish_call_duration(self, queue_name, linked_id, call_events):
-        duration = call_events.end_time - call_events.start_time
-        t = call_events.end_time
-        logger.debug('%s: %s duration %s at %s', queue_name, linked_id, duration, t)
+    def _publish_call_duration(self, linked_id, call_events):
+        duration = round(call_events.end_time - call_events.start_time, 3)
+        return CallDurationCollectdEvent(self._application, self._queue_name, duration)
 
-    def _publish_call_end(self, queue_name, linked_id, call_events):
+    def _publish_call_end(self, linked_id, call_events):
         if self._is_call_abandoned(call_events):
             return
 
-        t = call_events.end_time
-        logger.debug('%s: %s ended at %s', queue_name, linked_id, t)
+        return CallEndCollectdEvent(self._application, self._queue_name, time=call_events.end_time)
 
-    def _publish_call_start(self, queue_name, linked_id, call_events):
-        t = call_events.start_time
-        logger.debug('%s: %s started at %s', queue_name, linked_id, t)
+    def _publish_call_start(self, linked_id, call_events):
+        return CallStartCollectdEvent(self._application, self._queue_name, time=call_events.start_time)
 
     @staticmethod
     def _is_call_abandoned(call_events):
@@ -155,9 +166,11 @@ class Publisher(object):
 class Switchboard(object):
 
     def __init__(self, queue_name, publisher=None):
-        self._queue_name = queue_name
-        self._publisher = publisher or Publisher()
         self._call_events = {}
+        if publisher:
+            self._publisher = publisher
+        else:
+            self._publisher = Publisher(context.get('collectd_publisher'), queue_name)
 
     def on_answer(self, linked_id):
         events = self._call_events.get(linked_id)
@@ -172,7 +185,7 @@ class Switchboard(object):
             return
 
         events.on_end()
-        self._publisher.publish_call_events(self._queue_name, linked_id, events)
+        self._publisher.publish_call_events(linked_id, events)
 
     def on_new_call(self, linked_id):
         self._call_events[linked_id] = CallEvents()
