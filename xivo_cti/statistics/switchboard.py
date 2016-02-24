@@ -146,7 +146,7 @@ class Publisher(object):
         return CallConnectCollectdEvent(self._application, self._queue_name, time=call_events.answer_time)
 
     def _publish_call_duration(self, linked_id, call_events):
-        duration = round(call_events.end_time - call_events.start_time, 3)
+        duration = call_events.end_time - call_events.start_time
         return CallDurationCollectdEvent(self._application, self._queue_name, duration)
 
     def _publish_call_end(self, linked_id, call_events):
