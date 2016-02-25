@@ -32,6 +32,10 @@
                 "summary": "Server information",
                 "description": "Configuration information about the CTI service",
                 "operationId": "get_infos",
+                "security": [ {} ],
+                "tags": [
+                    "infos"
+                ],
                 "responses": {
                     "200": {
                         "description": "Service information",
@@ -47,6 +51,7 @@
                 "summary": "Find the current state of an Endpoint.",
                 "description": "An Endpoint represents any device that is connected to the server and can answer a phone call, like a VOIP phone or softphone",
                 "operationId": "get_endpoint",
+                "security": [ {} ],
                 "tags": [
                     "endpoint"
                 ],
@@ -81,6 +86,7 @@
                 "summary": "Find a user",
                 "description": "Find a user in the CTI",
                 "operationId": "get_user",
+                "security": [ {} ],
                 "tags": [
                     "user"
                 ],
