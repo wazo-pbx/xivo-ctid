@@ -25,6 +25,7 @@ from xivo_bus.collectd.calls.event import (CallAbandonedCollectdEvent,
                                            CallStartCollectdEvent)
 from xivo_cti.ioc.context import context
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,6 +82,13 @@ class Dispatcher(object):
         self._switchboard_by_linked_id[linked_id] = switchboard
         switchboard.on_new_call(linked_id)
 
+    def on_transfer(self, linked_id):
+        switchboard = self._switchboard_by_linked_id.pop(linked_id, None)
+        if not switchboard:
+            return
+
+        switchboard.on_transfer(linked_id)
+
     @staticmethod
     def _switchboard_factory(queue_name):
         return Switchboard(queue_name)
@@ -88,6 +96,7 @@ class Dispatcher(object):
 
 class Parser(object):
 
+    _attended_transfer = u'ATTENDEDTRANSFER'
     _linked_id_end = u'LINKEDID_END'
 
     def __init__(self, switchboard_statistic_dispatcher):
@@ -102,16 +111,27 @@ class Parser(object):
         cel_event = event.get(u'EventName')
         linked_id = event.get(u'LinkedID')
 
-        if not linked_id or cel_event != self._linked_id_end:
+        if not linked_id:
             return
 
-        self._dispatcher.on_call_end(linked_id)
+        if cel_event == self._linked_id_end:
+            self._dispatcher.on_call_end(linked_id)
+        elif cel_event == self._attended_transfer:
+            self._dispatcher.on_transfer(linked_id)
 
     def on_queue_caller_join(self, event):
         queue = event.get(u'Queue')
         linked_id = event.get(u'Linkedid')
         if queue and linked_id:
             self._dispatcher.on_new_call(queue, linked_id)
+
+    def on_set_var(self, event):
+        if event.get('Variable') != 'BLINDTRANSFER':
+            return
+
+        linked_id = event.get(u'Linkedid')
+        if linked_id:
+            self._dispatcher.on_transfer(linked_id)
 
 
 class Publisher(object):
@@ -180,12 +200,18 @@ class Switchboard(object):
         events.on_answer()
 
     def on_call_end(self, linked_id):
+        self._call_completed(linked_id)
+
+    def on_new_call(self, linked_id):
+        self._call_events[linked_id] = CallEvents()
+
+    def on_transfer(self, linked_id):
+        self._call_completed(linked_id)
+
+    def _call_completed(self, linked_id):
         events = self._call_events.pop(linked_id, None)
         if not events:
             return
 
         events.on_end()
         self._publisher.publish_call_events(linked_id, events)
-
-    def on_new_call(self, linked_id):
-        self._call_events[linked_id] = CallEvents()

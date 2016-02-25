@@ -35,6 +35,15 @@ BRIDGE_ENTER_EVENT = {u'Linkedid': LINKED_ID,
 LINKEDID_END_EVENT = {u'LinkedID': LINKED_ID,
                       u'EventName': u'LINKEDID_END',
                       u'Event': u'CEL'}
+BLIND_TRANSFER_EVENT = {u'Linkedid': LINKED_ID,
+                        u'Value': u'true',
+                        u'Uniqueid': u'1456414620.302',
+                        u'Variable': u'BLINDTRANSFER',
+                        u'Event': u'VarSet'}
+ATTENDED_TRANSFER_EVENT = {u'LinkedID': LINKED_ID,
+                           u'EventName': u'ATTENDEDTRANSFER',
+                           u'UniqueID': u'1456413895.274',
+                           u'Event': u'CEL'}
 
 
 class TestDispatcher(unittest.TestCase):
@@ -90,6 +99,14 @@ class TestDispatcher(unittest.TestCase):
         self.assert_not_called(self._other_switchboard.on_call_end)
         self._default_switchboard.on_call_end.assert_called_once_with(s.linked_id)
 
+    def test_on_transfer_not_a_switchboard(self):
+        self.dispatcher.on_new_call(SWITCHBOARD_QUEUE, s.linked_id)
+
+        self.dispatcher.on_transfer(s.linked_id)
+
+        self.assert_not_called(self._other_switchboard.on_transfer)
+        self._default_switchboard.on_transfer.assert_called_once_with(s.linked_id)
+
     def assert_not_called(self, mocked_fn):
         assert_that(mocked_fn.call_count, equal_to(0),
                     'expected no calls got {}'.format(mocked_fn.call_args_list))
@@ -118,10 +135,20 @@ class TestParser(unittest.TestCase):
 
         self.dispatcher.on_call_answer.assert_called_once_with(LINKED_ID)
 
-    def test_on_cel(self):
+    def test_on_cel_linked_id_end(self):
         self.parser.on_cel(LINKEDID_END_EVENT)
 
-        self.dispatcher.on_call_end(LINKED_ID)
+        self.dispatcher.on_call_end.assert_called_once_with(LINKED_ID)
+
+    def test_on_cel_attended_transfer(self):
+        self.parser.on_cel(ATTENDED_TRANSFER_EVENT)
+
+        self.dispatcher.on_transfer.assert_called_once_with(LINKED_ID)
+
+    def test_on_setvar_blind_transfer(self):
+        self.parser.on_set_var(BLIND_TRANSFER_EVENT)
+
+        self.dispatcher.on_transfer.assert_called_once_with(LINKED_ID)
 
 
 class TestSwitchboard(unittest.TestCase):
@@ -154,16 +181,14 @@ class TestSwitchboard(unittest.TestCase):
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
-    def test_answered_many_times_calls(self):
+    def test_transfered_calls(self):
         t1 = time.time()
         t2 = t1 + 23
         t3 = t2 + 180
 
         self.at(partial(self.switchboard.on_new_call, s.linked_id), t1)
         self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
-        self.switchboard.on_answer(s.linked_id)
-        self.switchboard.on_answer(s.linked_id)
-        self.at(partial(self.switchboard.on_call_end, s.linked_id), t3)
+        self.at(partial(self.switchboard.on_transfer, s.linked_id), t3)
 
         expected = self.new_call_events(t1, t2, t3)
 
