@@ -629,7 +629,7 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.switchboard_hold(user_id, queue_name)
 
-        self.manager.ami.transfer.assert_called_once_with(self.channel_1, '3006', 'ctx')
+        self.manager.ami.redirect.assert_called_once_with(self.channel_1, 'ctx', '3006')
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
     @patch('xivo_cti.dao.user.get_line')
