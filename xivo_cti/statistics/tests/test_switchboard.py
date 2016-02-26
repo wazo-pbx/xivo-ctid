@@ -26,6 +26,7 @@ from ..switchboard import CallEvents, Dispatcher, Parser, Publisher, Switchboard
 
 LINKED_ID = u'1456240331.88'
 SWITCHBOARD_QUEUE = u'__switchboard'
+SWITCHBOARD_HOLD_QUEUE = u'__switchboard_hold'
 QUEUE_CALLER_JOIN_EVENT = {u'Linkedid': LINKED_ID,
                            u'Queue': SWITCHBOARD_QUEUE,
                            u'Uniqueid': LINKED_ID,
@@ -44,6 +45,18 @@ ATTENDED_TRANSFER_EVENT = {u'LinkedID': LINKED_ID,
                            u'EventName': u'ATTENDEDTRANSFER',
                            u'UniqueID': u'1456413895.274',
                            u'Event': u'CEL'}
+HOLD_EVENT = {u'Linkedid': LINKED_ID,
+              u'Queue': SWITCHBOARD_HOLD_QUEUE,
+              u'Uniqueid': u'1456418880.4',
+              u'Event': u'QueueCallerJoin'}
+RESUME_EVENT = {u'Queue': SWITCHBOARD_HOLD_QUEUE,
+                u'Ast11Uniqueid': u'1456418880.4',
+                u'Uniqueid': LINKED_ID,
+                u'Event': u'QueueCallerLeave'}
+ABANDON_EVENT = {u'Linkedid': LINKED_ID,
+                 u'Queue': SWITCHBOARD_HOLD_QUEUE,
+                 u'Uniqueid': u'1456419086.18',
+                 u'Event': u'QueueCallerAbandon'}
 
 
 class TestDispatcher(unittest.TestCase):
@@ -66,6 +79,14 @@ class TestDispatcher(unittest.TestCase):
 
         self.assert_not_called(self._default_switchboard.on_new_call)
         self._other_switchboard.on_new_call.assert_called_once_with(s.linked_id)
+
+    def test_on_call_abandon(self):
+        self.dispatcher.on_new_call(SWITCHBOARD_QUEUE, s.linked_id)
+
+        self.dispatcher.on_call_abandon(s.linked_id)
+
+        self.assert_not_called(self._other_switchboard.on_abandon)
+        self._default_switchboard.on_abandon.assert_called_once_with(s.linked_id)
 
     def test_on_call_answer_not_a_switchboard(self):
         self.dispatcher.on_new_call('foobar', s.linked_id)
@@ -99,6 +120,22 @@ class TestDispatcher(unittest.TestCase):
         self.assert_not_called(self._other_switchboard.on_call_end)
         self._default_switchboard.on_call_end.assert_called_once_with(s.linked_id)
 
+    def test_on_hold_call(self):
+        self.dispatcher.on_new_call(SWITCHBOARD_QUEUE, s.linked_id)
+
+        self.dispatcher.on_hold_call(s.linked_id)
+
+        self.assert_not_called(self._other_switchboard.on_hold_call)
+        self._default_switchboard.on_hold_call.assert_called_once_with(s.linked_id)
+
+    def test_on_resume_call(self):
+        self.dispatcher.on_new_call(SWITCHBOARD_QUEUE, s.linked_id)
+
+        self.dispatcher.on_resume_call(s.linked_id)
+
+        self.assert_not_called(self._other_switchboard.on_resume_call)
+        self._default_switchboard.on_resume_call.assert_called_once_with(s.linked_id)
+
     def test_on_transfer_not_a_switchboard(self):
         self.dispatcher.on_new_call(SWITCHBOARD_QUEUE, s.linked_id)
 
@@ -122,13 +159,59 @@ class TestParser(unittest.TestCase):
 
     def setUp(self):
         self.dispatcher = Mock(Dispatcher)
-        self.parser = Parser(self.dispatcher)
+        self.parser = Parser([SWITCHBOARD_QUEUE], [SWITCHBOARD_HOLD_QUEUE], self.dispatcher)
 
-    def test_on_queue_caller_join(self):
+    def test_on_queue_caller_abandon_switchboard_hold_queue(self):
+        self.parser.on_queue_caller_abandon(ABANDON_EVENT)
+
+        self.dispatcher.on_call_abandon.assert_called_once_with(LINKED_ID)
+
+    def test_on_queue_caller_abandon_switchboard_queue(self):
+        event = dict(ABANDON_EVENT)
+        event[u'Queue'] = SWITCHBOARD_QUEUE
+        self.parser.on_queue_caller_abandon(event)
+
+        self.dispatcher.on_call_abandon.assert_called_once_with(LINKED_ID)
+
+    def test_on_queue_caller_abandon_other_queue(self):
+        event = dict(ABANDON_EVENT)
+        event[u'Queue'] = 'foobar'
+        self.parser.on_queue_caller_abandon(event)
+
+        assert_that(self.dispatcher.on_call_abandon.call_count, equal_to(0))
+
+    def test_on_queue_caller_leave_hold_queues(self):
+        self.parser.on_queue_caller_leave(RESUME_EVENT)
+
+        self.dispatcher.on_resume_call.assert_called_once_with(LINKED_ID)
+
+    def test_on_queue_caller_leave_not_hold_queues(self):
+        event = dict(RESUME_EVENT)
+        event[u'Queue'] = 'foobar'
+        self.parser.on_queue_caller_leave(event)
+
+        assert_that(self.dispatcher.on_resume_call.call_count, equal_to(0))
+
+    def test_on_queue_caller_join_switchboard_queue(self):
         self.parser.on_queue_caller_join(QUEUE_CALLER_JOIN_EVENT)
 
         self.dispatcher.on_new_call.assert_called_once_with(SWITCHBOARD_QUEUE,
                                                             LINKED_ID)
+
+    def test_on_queue_caller_join_not_switchboard_queue(self):
+        self.parser.on_queue_caller_join(HOLD_EVENT)
+
+        assert_that(self.dispatcher.on_new_call.call_count, equal_to(0))
+
+    def test_on_queue_caller_join_hold_queue(self):
+        self.parser.on_queue_caller_join(HOLD_EVENT)
+
+        self.dispatcher.on_hold_call.assert_called_once_with(LINKED_ID)
+
+    def test_on_queue_caller_join_not_hold_queue(self):
+        self.parser.on_queue_caller_join(QUEUE_CALLER_JOIN_EVENT)
+
+        assert_that(self.dispatcher.on_hold_call.call_count, equal_to(0))
 
     def test_on_bridge_enter(self):
         self.parser.on_bridge_enter(BRIDGE_ENTER_EVENT)
@@ -157,18 +240,33 @@ class TestSwitchboard(unittest.TestCase):
         self.publisher = Mock(Publisher)
         self.switchboard = Switchboard('foobar', self.publisher)
 
-    def test_abandoned_calls(self):
+    def test_call_abandoned_in_the_switchboard_queue(self):
         t1 = time.time()
         t2 = t1 + 23
 
         self.at(partial(self.switchboard.on_new_call, s.linked_id), t1)
-        self.at(partial(self.switchboard.on_call_end, s.linked_id), t2)
+        self.at(partial(self.switchboard.on_abandon, s.linked_id), t2)
 
-        expected = self.new_call_events(t1, None, t2)
+        expected = self.new_call_events(t1, None, t2, abandoned=True)
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
-    def test_answered_calls(self):
+    def test_call_abandoned_in_the_switchboard_hold_queue(self):
+        t1 = time.time()
+        t2 = t1 + 23
+        t3 = t2 + 120
+        t4 = t3 + 200
+
+        self.at(partial(self.switchboard.on_new_call, s.linked_id), t1)
+        self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
+        self.at(partial(self.switchboard.on_hold_call, s.linked_id), t3)
+        self.at(partial(self.switchboard.on_abandon, s.linked_id), t4)
+
+        expected = self.new_call_events(t1, t2, t4, abandoned=True, hold_time=t3)
+
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+
+    def test_call_completed_by_the_operator(self):
         t1 = time.time()
         t2 = t1 + 23
         t3 = t2 + 180
@@ -181,6 +279,23 @@ class TestSwitchboard(unittest.TestCase):
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
+    def test_call_completed_by_the_operator_after_hold(self):
+        t1 = time.time()
+        t2 = t1 + 23
+        t3 = t2 + 180
+        t4 = t3 + 10
+        t5 = t4 + 21
+
+        self.at(partial(self.switchboard.on_new_call, s.linked_id), t1)
+        self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
+        self.at(partial(self.switchboard.on_hold_call, s.linked_id), t3)
+        self.at(partial(self.switchboard.on_resume_call, s.linked_id), t4)
+        self.at(partial(self.switchboard.on_call_end, s.linked_id), t5)
+
+        expected = self.new_call_events(t1, t2, t5, hold_time=t3, resume_time=t4)
+
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+
     def test_transfered_calls(self):
         t1 = time.time()
         t2 = t1 + 23
@@ -190,7 +305,24 @@ class TestSwitchboard(unittest.TestCase):
         self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
         self.at(partial(self.switchboard.on_transfer, s.linked_id), t3)
 
-        expected = self.new_call_events(t1, t2, t3)
+        expected = self.new_call_events(t1, t2, t3, transfered=True)
+
+        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+
+    def test_call_transfered_after_hold(self):
+        t1 = time.time()
+        t2 = t1 + 23
+        t3 = t2 + 180
+        t4 = t3 + 42
+        t5 = t4 + 10
+
+        self.at(partial(self.switchboard.on_new_call, s.linked_id), t1)
+        self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
+        self.at(partial(self.switchboard.on_hold_call, s.linked_id), t3)
+        self.at(partial(self.switchboard.on_resume_call, s.linked_id), t4)
+        self.at(partial(self.switchboard.on_transfer, s.linked_id), t5)
+
+        expected = self.new_call_events(t1, t2, t5, transfered=True, hold_time=t3, resume_time=t4)
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
@@ -198,7 +330,8 @@ class TestSwitchboard(unittest.TestCase):
         with patch('xivo_cti.statistics.switchboard.time.time', return_value=t):
             f()
 
-    def new_call_events(self, new_time, answer_time, end_time):
+    def new_call_events(self, new_time, answer_time, end_time, transfered=False,
+                        abandoned=False, hold_time=None, resume_time=None):
         with patch('xivo_cti.statistics.switchboard.time.time') as time:
             time.return_value = new_time
 
@@ -208,7 +341,20 @@ class TestSwitchboard(unittest.TestCase):
                 time.return_value = answer_time
                 call_events.on_answer()
 
+            if hold_time:
+                time.return_value = hold_time
+                call_events.on_hold()
+
+            if resume_time:
+                time.return_value = resume_time
+                call_events.on_resume()
+
             time.return_value = end_time
-            call_events.on_end()
+            if abandoned:
+                call_events.on_abandon()
+            elif transfered:
+                call_events.on_transfer()
+            else:
+                call_events.on_end()
 
         return call_events
