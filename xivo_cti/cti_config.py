@@ -94,6 +94,9 @@ _default_config = {
     'switchboard_queues': {
         '__switchboard': True,
     },
+    'switchboard_hold_queues': {
+        '__switchboard_hold': True,
+    },
 }
 _cli_config = {}
 _db_config = {}
