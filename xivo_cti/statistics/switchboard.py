@@ -24,12 +24,16 @@ from xivo_cti.ioc.context import context
 logger = logging.getLogger(__name__)
 
 
-class CallEvents(object):
+class State(object):
+
+    unknown, ringing, on_hold, answered, completed, abandoned, transfered, forwarded = range(8)
+
+
+class Call(object):
 
     def __init__(self):
+        self.state = State.unknown
         self.start_time = time.time()
-        self.is_abandoned = False
-        self.is_transfered = False
         self.answer_time = None
         self.end_time = None
         self.hold_duration = 0
@@ -37,8 +41,7 @@ class CallEvents(object):
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
-                and self.is_abandoned == other.is_abandoned
-                and self.is_transfered == other.is_transfered
+                and self.state == other.state
                 and self.start_time == other.start_time
                 and self.answer_time == other.answer_time
                 and self.end_time == other.end_time
@@ -48,46 +51,52 @@ class CallEvents(object):
         return not self.__eq__(other)
 
     def on_abandon(self):
-        t = time.time()
-        self.is_abandoned = True
-        self.end_time = t
-        if self.hold_time:
-            self.hold_duration += t - self.hold_time
-            self.hold_time = None
+        if self.state == State.on_hold:
+            self.hold_duration += time.time() - self.hold_time
+
+        self.state = State.abandoned
+        self.end_time = time.time()
 
     def on_answer(self):
-        if not self.answer_time:
+        if self.state == State.ringing:
+            self.state = State.answered
             self.answer_time = time.time()
 
     def on_end(self):
         if not self.end_time:
             self.end_time = time.time()
 
+        if self.state == State.answered:
+            self.state = State.completed
+
+    def on_enter_queue(self):
+        self.state = State.ringing
+
+    def on_forward(self):
+        self.end_time = time.time()
+        self.state = State.forwarded
+
     def on_hold(self):
-        if not self.hold_time:
+        if self.state == State.answered:
+            self.state = State.on_hold
             self.hold_time = time.time()
 
     def on_resume(self):
-        if not self.hold_time:
+        if not self.state == State.on_hold:
             return
 
         self.hold_duration += time.time() - self.hold_time
         self.hold_time = None
+        self.state = State.answered
 
     def on_transfer(self):
-        if not self.end_time:
-            self.end_time = time.time()
-            self.is_transfered = True
-
-    @property
-    def is_answered(self):
-        if not self.answer_time:
-            return False
-        else:
-            return not self.is_abandoned and not self.is_transfered
+        self.state = State.transfered
+        self.end_time = time.time()
 
     def wait_time(self):
-        if not self.answer_time:
+        if not self.start_time:
+            return 0
+        elif not self.answer_time:
             return self.end_time - self.start_time
         else:
             return self.answer_time - self.start_time + self.hold_duration
@@ -101,7 +110,7 @@ class Dispatcher(object):
         self._switchboard_by_linked_id = {}
 
     def on_call_abandon(self, linked_id):
-        switchboard = self._switchboard_by_linked_id.pop(linked_id, None)
+        switchboard = self._switchboard_by_linked_id.get(linked_id)
         if not switchboard:
             return
 
@@ -121,6 +130,13 @@ class Dispatcher(object):
 
         switchboard.on_call_end(linked_id)
 
+    def on_call_forward(self, linked_id):
+        switchboard = self._switchboard_by_linked_id.pop(linked_id, None)
+        if not switchboard:
+            return
+
+        switchboard.on_call_forward(linked_id)
+
     def on_hold_call(self, linked_id):
         switchboard = self._switchboard_by_linked_id.get(linked_id)
         if not switchboard:
@@ -128,13 +144,20 @@ class Dispatcher(object):
 
         switchboard.on_hold_call(linked_id)
 
-    def on_new_call(self, queue, linked_id):
+    def on_incoming_call(self, linked_id, queue):
         switchboard = self._switchboards.get(queue)
         if not switchboard:
             return
 
+        switchboard.on_start(linked_id)
         self._switchboard_by_linked_id[linked_id] = switchboard
-        switchboard.on_new_call(linked_id)
+
+    def on_enter_queue(self, linked_id):
+        switchboard = self._switchboard_by_linked_id.get(linked_id)
+        if not switchboard:
+            return
+
+        switchboard.on_enter_queue(linked_id)
 
     def on_resume_call(self, linked_id):
         switchboard = self._switchboard_by_linked_id.get(linked_id)
@@ -159,6 +182,7 @@ class Parser(object):
 
     _attended_transfer = u'ATTENDEDTRANSFER'
     _linked_id_end = u'LINKEDID_END'
+    _forward_events = [u'FULL', u'JOINEMPTY', u'LEAVEEMPTY', u'DIVERT_CA_RATIO', u'DIVERT_HOLDTIME']
 
     def __init__(self, switchboard_queues, switchboard_hold_queues, switchboard_statistic_dispatcher):
         self._switchboard_queues = switchboard_queues
@@ -207,17 +231,25 @@ class Parser(object):
 
         queue = event.get(u'Queue')
         if queue in self._switchboard_queues:
-            self._dispatcher.on_new_call(queue, linked_id)
+            self._dispatcher.on_enter_queue(linked_id)
         elif queue in self._switchboard_hold_queues:
             self._dispatcher.on_hold_call(linked_id)
 
     def on_set_var(self, event):
         linked_id = event.get(u'Linkedid')
         variable = event.get(u'Variable')
-        if not linked_id or variable != 'BLINDTRANSFER':
+        value = event.get(u'Value')
+        if not linked_id:
             return
 
-        self._dispatcher.on_transfer(linked_id)
+        if variable == 'XIVO_QUEUENAME' and value in self._switchboard_queues:
+            self._dispatcher.on_incoming_call(linked_id, value)
+        elif variable == u'BLINDTRANSFER':
+            self._dispatcher.on_transfer(linked_id)
+        elif variable == u'XIVO_QUEUELOG_EVENT' and value in self._forward_events:
+            self._dispatcher.on_call_forward(linked_id)
+        elif variable == u'XIVO_FWD_TYPE' and value == u'QUEUE_NOANSWER':
+            self._dispatcher.on_call_forward(linked_id)
 
 
 class Publisher(object):
@@ -228,102 +260,124 @@ class Publisher(object):
         self._collectd_publisher = collectd_publisher
         self._queue_name = queue_name
 
-    def publish_call_events(self, linked_id, call_events):
-        [self._publish(msg) for msg in [self._publish_call_start(linked_id, call_events),
-                                        self._publish_call_answered(linked_id, call_events),
-                                        self._publish_call_abandoned(linked_id, call_events),
-                                        self._publish_call_transfered(linked_id, call_events),
-                                        self._publish_wait_time(linked_id, call_events)]]
+    def publish_call_events(self, linked_id, call):
+        [self._publish(msg) for msg in [self._publish_call_start(linked_id, call),
+                                        self._publish_call_completed(linked_id, call),
+                                        self._publish_call_abandoned(linked_id, call),
+                                        self._publish_call_forwarded(linked_id, call),
+                                        self._publish_call_transfered(linked_id, call),
+                                        self._publish_wait_time(linked_id, call)]]
 
     def _publish(self, msg):
         if msg:
             self._collectd_publisher.publish(msg)
 
-    def _publish_call_abandoned(self, linked_id, call_events):
-        if not call_events.is_abandoned:
+    def _publish_call_abandoned(self, linked_id, call):
+        if call.state != State.abandoned:
             return
 
         logger.debug('%s: abandoned', linked_id)
 
-    def _publish_call_answered(self, linked_id, call_events):
-        if not call_events.is_answered:
+    def _publish_call_completed(self, linked_id, call):
+        if call.state != State.completed:
             return
 
-        logger.debug('%s: answered', linked_id)
+        logger.debug('%s: completed', linked_id)
 
-    def _publish_call_transfered(self, linked_id, call_events):
-        if not call_events.is_transfered:
+    def _publish_call_forwarded(self, linked_id, call):
+        if call.state != State.forwarded:
+            return
+
+        logger.debug('%s: forwarded', linked_id)
+
+    def _publish_call_transfered(self, linked_id, call):
+        if call.state != State.transfered:
             return
 
         logger.debug('%s: transfered', linked_id)
 
-    def _publish_call_start(self, linked_id, call_events):
+    def _publish_call_start(self, linked_id, call):
         logger.debug('%s: new call', linked_id)
 
-    def _publish_wait_time(self, linked_id, call_events):
-        logger.debug('%s:, wait time %s', linked_id, call_events.wait_time())
+    def _publish_wait_time(self, linked_id, call):
+        logger.debug('%s:, wait time %s', linked_id, call.wait_time())
 
 
 class Switchboard(object):
 
     def __init__(self, queue_name, publisher=None):
-        self._call_events = {}
+        self._calls = {}
         if publisher:
             self._publisher = publisher
         else:
             self._publisher = Publisher(context.get('collectd_publisher'), queue_name)
 
     def on_abandon(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_abandon()
-        self._call_completed(linked_id)
+        call.on_abandon()
+        # _call_completed is not called because its going to be forwarded if on timeout
 
     def on_answer(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_answer()
+        call.on_answer()
 
     def on_call_end(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_end()
+        call.on_end()
         self._call_completed(linked_id)
 
-    def on_new_call(self, linked_id):
-        self._call_events[linked_id] = CallEvents()
+    def on_call_forward(self, linked_id):
+        call = self._calls.get(linked_id)
+        if not call:
+            call = self._calls[linked_id] = Call()
+
+        call.on_forward()
+        self._call_completed(linked_id)
+
+    def on_enter_queue(self, linked_id):
+        call = self._calls.get(linked_id)
+        if not call:
+            return
+
+        call.on_enter_queue()
 
     def on_hold_call(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_hold()
+        call.on_hold()
 
     def on_resume_call(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_resume()
+        call.on_resume()
+
+    def on_start(self, linked_id):
+        self._calls[linked_id] = Call()
 
     def on_transfer(self, linked_id):
-        events = self._call_events.get(linked_id)
-        if not events:
+        call = self._calls.get(linked_id)
+        if not call:
             return
 
-        events.on_transfer()
+        call.on_transfer()
         self._call_completed(linked_id)
 
     def _call_completed(self, linked_id):
-        events = self._call_events.pop(linked_id, None)
-        if not events:
+        call = self._calls.pop(linked_id, None)
+        if not call:
             return
 
-        self._publisher.publish_call_events(linked_id, events)
+        self._publisher.publish_call_events(linked_id, call)
