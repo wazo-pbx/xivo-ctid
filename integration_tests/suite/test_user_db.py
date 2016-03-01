@@ -16,13 +16,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os
+import time
 
+from datetime import datetime
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
 from hamcrest import equal_to
 from hamcrest import none
 
 from xivo_cti.database import user_db as user_dao
+from xivo_cti.database import statistics as statistic_switchboard_dao
 from xivo_dao.alchemy.callfilter import Callfilter
 from xivo_dao.alchemy.callfiltermember import Callfiltermember
 from xivo_dao.alchemy.contextinclude import ContextInclude
@@ -35,6 +38,7 @@ from xivo_dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_dao.alchemy.queuemember import QueueMember
 from xivo_dao.alchemy.rightcallmember import RightCallMember
 from xivo_dao.alchemy.schedulepath import SchedulePath
+from xivo_dao.alchemy.stat_switchboard_queue import StatSwitchboardQueue
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.tests import test_dao
 from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
@@ -55,6 +59,32 @@ class _IntegrationUser(AssetLaunchingTestCase):
     assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
     asset = 'database'
     service = 'ctid'
+
+
+class TestSwitchboardStatisticDAO(test_dao.DAOTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        _IntegrationUser.setUpClass()
+        super(TestSwitchboardStatisticDAO, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestSwitchboardStatisticDAO, cls).tearDownClass()
+        _IntegrationUser.tearDownClass()
+
+    def test_insert_switchboard_call(self):
+        queue = self.add_queue(name='foobar')
+        t = time.time()
+
+        statistic_switchboard_dao.insert_switchboard_call(t, 'forwarded', 42.25, 'foobar')
+
+        call = self.session.query(StatSwitchboardQueue).first()
+        expected = StatSwitchboardQueue(time=datetime.fromtimestamp(t),
+                                        end_type='forwarded',
+                                        wait_time=42.25,
+                                        queue_id=queue.id)
+        assert_that(call, equal_to(expected))
 
 
 class TestUserFeaturesDAO(test_dao.DAOTestCase):

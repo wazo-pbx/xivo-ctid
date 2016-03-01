@@ -26,6 +26,7 @@ from xivo_bus.collectd.switchboard import (SwitchboardEnteredEvent,
                                            SwitchboardWaitTimeEvent)
 
 from xivo_cti.ioc.context import context
+from xivo_cti.database import statistics as statistic_dao
 
 
 logger = logging.getLogger(__name__)
@@ -278,6 +279,10 @@ class Publisher(object):
 
     def publish_call_events(self, call):
         self._publish_collectd_events(call)
+        self._insert_call_events(call)
+
+    def _insert_call_events(self, call):
+        statistic_dao.insert_switchboard_call(call.start_time, call.state, call.wait_time(), self._queue_name)
 
     def _publish_collectd_events(self, call):
         events = [self._get_call_start_event(call),
