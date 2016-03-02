@@ -61,16 +61,16 @@ class _IntegrationUser(AssetLaunchingTestCase):
     service = 'ctid'
 
 
-class TestSwitchboardStatisticDAO(test_dao.DAOTestCase):
+class TestDatabaseDAO(test_dao.DAOTestCase):
 
     @classmethod
     def setUpClass(cls):
         _IntegrationUser.setUpClass()
-        super(TestSwitchboardStatisticDAO, cls).setUpClass()
+        super(TestDatabaseDAO, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
-        super(TestSwitchboardStatisticDAO, cls).tearDownClass()
+        super(TestDatabaseDAO, cls).tearDownClass()
         _IntegrationUser.tearDownClass()
 
     def test_insert_switchboard_call(self):
@@ -85,19 +85,6 @@ class TestSwitchboardStatisticDAO(test_dao.DAOTestCase):
         assert_that(call.end_type, equal_to('forwarded'))
         assert_that(call.wait_time, equal_to(42.25))
         assert_that(call.queue_id, equal_to(queue_id))
-
-
-class TestUserFeaturesDAO(test_dao.DAOTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        _IntegrationUser.setUpClass()
-        super(TestUserFeaturesDAO, cls).setUpClass()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(TestUserFeaturesDAO, cls).tearDownClass()
-        _IntegrationUser.tearDownClass()
 
     def test_set_dnd(self):
         user_id = self.add_user_dnd_not_set()
