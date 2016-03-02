@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -222,8 +222,8 @@ class CurrentCallManager(object):
             return
 
         transfer_channel = current_call[TRANSFER_CHANNEL]
-        transfered_channel = self._local_channel_peer(transfer_channel)
-        self.ami.hangup(transfered_channel)
+        transferred_channel = self._local_channel_peer(transfer_channel)
+        self.ami.hangup(transferred_channel)
 
     def attended_transfer(self, user_id, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)

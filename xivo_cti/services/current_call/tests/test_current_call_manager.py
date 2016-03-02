@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -761,7 +761,7 @@ class TestCurrentCallManager(_BaseTestCase):
     def test_cancel_transfer(self, mock_get_line_identity):
         local_transfer_channel = u'Local/1003@pcm-dev-00000032;'
         transfer_channel = local_transfer_channel + u'1'
-        transfered_channel = local_transfer_channel + u'2'
+        transferred_channel = local_transfer_channel + u'2'
         user_id = 5
         self.manager._calls_per_line = {
             self.line_1: [
@@ -782,7 +782,7 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.cancel_transfer(user_id)
 
-        self.manager.ami.hangup.assert_called_once_with(transfered_channel)
+        self.manager.ami.hangup.assert_called_once_with(transferred_channel)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
