@@ -22,7 +22,7 @@ from xivo_bus.collectd.switchboard import (SwitchboardEnteredEvent,
                                            SwitchboardCompletedEvent,
                                            SwitchboardAbandonedEvent,
                                            SwitchboardForwardedEvent,
-                                           SwitchboardTransferedEvent,
+                                           SwitchboardTransferredEvent,
                                            SwitchboardWaitTimeEvent)
 
 from xivo_cti.ioc.context import context
@@ -33,7 +33,9 @@ logger = logging.getLogger(__name__)
 
 class State(object):
 
-    unknown, ringing, on_hold, answered, completed, abandoned, transfered, forwarded = range(8)
+    unknown, ringing, on_hold, answered, completed, abandoned, transferred, forwarded = (
+        'unknown', 'ringing', 'on_hold', 'answered', 'completed', 'abandoned', 'transferred', 'forwarded',
+    )
 
 
 class Call(object):
@@ -97,7 +99,7 @@ class Call(object):
         self.state = State.answered
 
     def on_transfer(self):
-        self.state = State.transfered
+        self.state = State.transferred
         self.end_time = time.time()
 
     def wait_time(self):
@@ -263,7 +265,7 @@ class Publisher(object):
 
     _state_to_msg_map = {State.abandoned: SwitchboardAbandonedEvent,
                          State.completed: SwitchboardCompletedEvent,
-                         State.transfered: SwitchboardTransferedEvent,
+                         State.transferred: SwitchboardTransferredEvent,
                          State.forwarded: SwitchboardForwardedEvent}
 
     def __init__(self, collectd_publisher, queue_name):

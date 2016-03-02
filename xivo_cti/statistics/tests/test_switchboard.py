@@ -405,7 +405,7 @@ class TestSwitchboard(unittest.TestCase):
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
-    def test_transfered_calls(self):
+    def test_transferred_calls(self):
         t1 = time.time()
         t2 = t1 + 23
         t3 = t2 + 180
@@ -415,11 +415,11 @@ class TestSwitchboard(unittest.TestCase):
         self.at(partial(self.switchboard.on_answer, s.linked_id), t2)
         self.at(partial(self.switchboard.on_transfer, s.linked_id), t3)
 
-        expected = self.new_call_events(t1, t2, t3, transfered=True)
+        expected = self.new_call_events(t1, t2, t3, transferred=True)
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
-    def test_call_transfered_after_hold(self):
+    def test_call_transferred_after_hold(self):
         t1 = time.time()
         t2 = t1 + 23
         t3 = t2 + 180
@@ -433,7 +433,7 @@ class TestSwitchboard(unittest.TestCase):
         self.at(partial(self.switchboard.on_resume_call, s.linked_id), t4)
         self.at(partial(self.switchboard.on_transfer, s.linked_id), t5)
 
-        expected = self.new_call_events(t1, t2, t5, transfered=True, hold_time=t3, resume_time=t4)
+        expected = self.new_call_events(t1, t2, t5, transferred=True, hold_time=t3, resume_time=t4)
 
         self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
 
@@ -451,7 +451,7 @@ class TestSwitchboard(unittest.TestCase):
         with patch('xivo_cti.statistics.switchboard.time.time', return_value=t):
             f()
 
-    def new_call_events(self, new_time, answer_time, end_time, transfered=False,
+    def new_call_events(self, new_time, answer_time, end_time, transferred=False,
                         abandoned=False, hold_time=None, resume_time=None, forwarded=False):
         with patch('xivo_cti.statistics.switchboard.time.time') as time:
             time.return_value = new_time
@@ -474,7 +474,7 @@ class TestSwitchboard(unittest.TestCase):
             time.return_value = end_time
             if abandoned:
                 call_events.on_abandon()
-            elif transfered:
+            elif transferred:
                 call_events.on_transfer()
             elif forwarded:
                 call_events.on_forward()
