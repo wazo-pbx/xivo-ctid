@@ -74,17 +74,17 @@ class TestSwitchboardStatisticDAO(test_dao.DAOTestCase):
         _IntegrationUser.tearDownClass()
 
     def test_insert_switchboard_call(self):
-        queue = self.add_queue(name='foobar')
+        queue_id = self.add_queuefeatures(name='foobar').id
         t = time.time()
 
         statistic_switchboard_dao.insert_switchboard_call(t, 'forwarded', 42.25, 'foobar')
 
         call = self.session.query(StatSwitchboardQueue).first()
-        expected = StatSwitchboardQueue(time=datetime.fromtimestamp(t),
-                                        end_type='forwarded',
-                                        wait_time=42.25,
-                                        queue_id=queue.id)
-        assert_that(call, equal_to(expected))
+
+        assert_that(call.time, equal_to(datetime.fromtimestamp(t)))
+        assert_that(call.end_type, equal_to('forwarded'))
+        assert_that(call.wait_time, equal_to(42.25))
+        assert_that(call.queue_id, equal_to(queue_id))
 
 
 class TestUserFeaturesDAO(test_dao.DAOTestCase):
