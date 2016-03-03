@@ -273,23 +273,27 @@ class Publisher(object):
         self._queue_name = queue_name
 
     def publish_call_events(self, linked_id, call):
-        [self._publish(msg) for msg in [self._publish_call_start_event(call),
-                                        self._publish_call_end_event(call),
-                                        self._publish_wait_time(call)]]
+        events = [self._get_call_start_event(call),
+                  self._get_call_end_event(call),
+                  self._get_wait_time(call)]
+
+        if None in events:
+            logger.info('invalid call cannot publish stats %s', linked_id)
+        else:
+            [self._publish(msg) for msg in events]
 
     def _publish(self, msg):
-        if msg:
-            self._collectd_publisher.publish(msg)
+        self._collectd_publisher.publish(msg)
 
-    def _publish_call_start_event(self, call):
+    def _get_call_start_event(self, call):
         return SwitchboardEnteredEvent(self._queue_name, call.start_time)
 
-    def _publish_call_end_event(self, call):
+    def _get_call_end_event(self, call):
         Klass = self._state_to_msg_map.get(call.state)
         if Klass:
             return Klass(self._queue_name, call.end_time)
 
-    def _publish_wait_time(self, call):
+    def _get_wait_time(self, call):
         return SwitchboardWaitTimeEvent(self._queue_name, call.wait_time())
 
 
