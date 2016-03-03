@@ -91,6 +91,12 @@ _default_config = {
         'password': 'guest',
         'answer_delay': 0.5,
     },
+    'switchboard_queues': {
+        '__switchboard': True,
+    },
+    'switchboard_hold_queues': {
+        '__switchboard_hold': True,
+    },
 }
 _cli_config = {}
 _db_config = {}

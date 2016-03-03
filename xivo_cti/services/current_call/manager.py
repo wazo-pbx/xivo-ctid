@@ -283,7 +283,7 @@ class CurrentCallManager(object):
         else:
             channel_to_hold = current_call[PEER_CHANNEL]
             logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
-            self.ami.transfer(channel_to_hold, hold_queue_number, hold_queue_ctx)
+            self.ami.redirect(channel_to_hold, hold_queue_ctx, hold_queue_number)
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
         logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)

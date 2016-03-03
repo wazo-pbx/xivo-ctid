@@ -437,6 +437,14 @@ class CTIServer(object):
         callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
 
+        parser = context.get('switchboard_statistic_parser')
+        callback_handler.register_callback('QueueCallerAbandon', parser.on_queue_caller_abandon)
+        callback_handler.register_callback('QueueCallerJoin', parser.on_queue_caller_join)
+        callback_handler.register_callback('QueueCallerLeave', parser.on_queue_caller_leave)
+        callback_handler.register_callback('CEL', parser.on_cel)
+        callback_handler.register_callback('BridgeEnter', parser.on_bridge_enter)
+        callback_handler.register_callback('VarSet', parser.on_set_var)
+
     def _register_message_hooks(self):
         message_hook.add_hook([('function', 'updateconfig'),
                                ('listname', 'users')],

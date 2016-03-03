@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -183,6 +183,12 @@ class AMIClass(object):
                                                  ('Value', val)])
 
     def redirect(self, channel, context, exten='s', priority='1'):
+        try:
+            exten = normalize_exten(exten)
+        except ValueError, e:
+            logger.warning('Transfer failed: %s', e.message)
+            return False
+
         return self._exec_command('Redirect',
                                   [('Channel', channel),
                                    ('Context', context),

@@ -88,6 +88,14 @@ switchboard_snom:
   password: guest
   answer_delay: 0.5
 
+# Queues that are configured as switchboards
+switchboard_queues:
+  __switchboard: true
+
+# Queues that are configured as switchboard hold queues
+switchboard_hold_queues:
+  __switchboard_hold: true
+
 # Service discovery configuration. all time intervals are in seconds
 service_discovery:
   # the address that will be received by other services using service discovery.

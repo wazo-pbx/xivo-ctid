@@ -24,7 +24,7 @@ from xivo.token_renewer import TokenRenewer
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
 from xivo_auth_client import Client as AuthClient
-from xivo_bus import Marshaler, Publisher
+from xivo_bus import CollectdMarshaler, Marshaler, Publisher
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
@@ -96,6 +96,8 @@ from xivo_cti.statistics.queue_statistics_producer import \
 from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.statistics_producer_initializer import \
     StatisticsProducerInitializer
+from xivo_cti.statistics.switchboard import Dispatcher as SwitchboardStatisticDispatcher
+from xivo_cti.statistics.switchboard import Parser as SwitchboardStatisticParser
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.task_scheduler import new_task_scheduler
 from xivo_cti.tools.delta_computer import DeltaComputer
@@ -117,11 +119,19 @@ def setup(xivo_uuid):
     bus_publisher = Publisher(bus_producer, bus_marshaler)
     bus_listener = BusListener(bus_connection, bus_exchange)
 
+    collectd_exchange = Exchange('collectd', type=config['bus']['exchange_type'])
+    collectd_producer = Producer(bus_connection, exchange=collectd_exchange, auto_declare=False)
+    collectd_marshaler = CollectdMarshaler(xivo_uuid)
+    collectd_publisher = Publisher(collectd_producer, collectd_marshaler)
+
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   xivo_uuid,
                                                   config['rest_api']['http']['port'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
+
+    switchboard_queues = [queue for queue, enabled in config['switchboard_queues'].iteritems() if enabled]
+    switchboard_hold_queues = [queue for queue, enabled in config['switchboard_hold_queues'].iteritems() if enabled]
 
     context.register('ami_18', AMI_1_8)
     context.register('ami_callback_handler', AMICallbackHandler.get_instance())
@@ -155,6 +165,7 @@ def setup(xivo_uuid):
     context.register('call_manager', CallManager)
     context.register('chat_publisher', ChatPublisher)
     context.register('channel_updater', ChannelUpdater)
+    context.register('collectd_publisher', collectd_publisher)
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
     context.register('cti_provd_client', CTIProvdClient.new_from_config(config['provd']))
@@ -194,6 +205,10 @@ def setup(xivo_uuid):
     context.register('remote_service_tracker', remote_service_tracker)
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
+    context.register('switchboard_statistic_dispatcher', SwitchboardStatisticDispatcher)
+    context.register('switchboard_statistic_parser', SwitchboardStatisticParser)
+    context.register('switchboard_queues', switchboard_queues)
+    context.register('switchboard_hold_queues', switchboard_hold_queues)
     context.register('status_forwarder', StatusForwarder)
     context.register('task_queue', new_task_queue)
     context.register('task_scheduler', new_task_scheduler)
