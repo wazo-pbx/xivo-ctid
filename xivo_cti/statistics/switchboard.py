@@ -258,7 +258,7 @@ class Parser(object):
 
         if variable == 'XIVO_QUEUENAME' and value in self._switchboard_queues:
             self._dispatcher.on_incoming_call(linked_id, value)
-        elif variable == u'BLINDTRANSFER':
+        elif variable == u'BLINDTRANSFER' and value == u'true':
             self._dispatcher.on_transfer(linked_id)
         elif variable == u'XIVO_QUEUELOG_EVENT' and value in self._forward_events:
             self._dispatcher.on_call_forward(linked_id)
