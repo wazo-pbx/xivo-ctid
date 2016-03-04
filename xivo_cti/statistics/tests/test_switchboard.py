@@ -342,7 +342,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, None, t2, abandoned=True)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_call_abandoned_in_the_switchboard_hold_queue(self):
         t1 = time.time()
@@ -360,7 +360,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t4, abandoned=True, hold_time=t3)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_call_completed_by_the_operator(self):
         t1 = time.time()
@@ -374,7 +374,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t3)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_call_completed_by_the_operator_after_hold(self):
         t1 = time.time()
@@ -392,7 +392,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t5, hold_time=t3, resume_time=t4)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_forwarded(self):
         t1 = time.time()
@@ -403,7 +403,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, None, t2, forwarded=True)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_transferred_calls(self):
         t1 = time.time()
@@ -417,7 +417,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t3, transferred=True)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_call_transferred_after_hold(self):
         t1 = time.time()
@@ -435,7 +435,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, t2, t5, transferred=True, hold_time=t3, resume_time=t4)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def test_full_queue(self):
         t1 = time.time()
@@ -445,7 +445,7 @@ class TestSwitchboard(unittest.TestCase):
 
         expected = self.new_call_events(t1, None, t1, forwarded=True)
 
-        self.publisher.publish_call_events.assert_called_once_with(s.linked_id, expected)
+        self.publisher.publish_call_events.assert_called_once_with(expected)
 
     def at(self, f, t):
         with patch('xivo_cti.statistics.switchboard.time.time', return_value=t):

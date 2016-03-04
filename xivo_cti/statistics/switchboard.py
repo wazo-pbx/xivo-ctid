@@ -26,9 +26,14 @@ from xivo_bus.collectd.switchboard import (SwitchboardEnteredEvent,
                                            SwitchboardWaitTimeEvent)
 
 from xivo_cti.ioc.context import context
+from xivo_cti.database import statistics as statistic_dao
 
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidCallException(Exception):
+    pass
 
 
 class State(object):
@@ -253,7 +258,7 @@ class Parser(object):
 
         if variable == 'XIVO_QUEUENAME' and value in self._switchboard_queues:
             self._dispatcher.on_incoming_call(linked_id, value)
-        elif variable == u'BLINDTRANSFER':
+        elif variable == u'BLINDTRANSFER' and value == u'true':
             self._dispatcher.on_transfer(linked_id)
         elif variable == u'XIVO_QUEUELOG_EVENT' and value in self._forward_events:
             self._dispatcher.on_call_forward(linked_id)
@@ -272,15 +277,22 @@ class Publisher(object):
         self._collectd_publisher = collectd_publisher
         self._queue_name = queue_name
 
-    def publish_call_events(self, linked_id, call):
+    def publish_call_events(self, call):
+        self._publish_collectd_events(call)
+        self._insert_call_events(call)
+
+    def _insert_call_events(self, call):
+        statistic_dao.insert_switchboard_call(call.start_time, call.state, call.wait_time(), self._queue_name)
+
+    def _publish_collectd_events(self, call):
         events = [self._get_call_start_event(call),
                   self._get_call_end_event(call),
                   self._get_wait_time(call)]
 
         if None in events:
-            logger.info('invalid call cannot publish stats %s', linked_id)
-        else:
-            [self._publish(msg) for msg in events]
+            raise InvalidCallException
+
+        [self._publish(msg) for msg in events]
 
     def _publish(self, msg):
         self._collectd_publisher.publish(msg)
@@ -374,4 +386,7 @@ class Switchboard(object):
         if not call:
             return
 
-        self._publisher.publish_call_events(linked_id, call)
+        try:
+            self._publisher.publish_call_events(call)
+        except InvalidCallException:
+            logger.info('invalid call cannot publish stats %s', linked_id)
