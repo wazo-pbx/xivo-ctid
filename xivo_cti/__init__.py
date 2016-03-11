@@ -22,7 +22,7 @@ from UserDict import UserDict
 
 __all__ = []
 
-CTI_PROTOCOL_VERSION = '2.1'
+CTI_PROTOCOL_VERSION = '2.0'
 DAEMONNAME = 'xivo-ctid'
 SSLPROTO = ssl.PROTOCOL_TLSv1
 ALPHANUMS = string.uppercase + string.lowercase + string.digits
