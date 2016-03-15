@@ -18,6 +18,7 @@
 import logging
 
 from xivo_bus.resources.chat.event import ChatMessageEvent
+from xivo_cti import dao
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -36,13 +37,19 @@ class ChatPublisher(object):
         bus_listener.add_callback(chat_msg_routing_key, self._on_bus_chat_message_event)
 
     def deliver_chat_message(self, from_, to, alias, text):
-        destination = '{}/{}'.format(*to)
+        destination_xivo_uuid, destination_user_uuid = to
+        if destination_xivo_uuid != self._xivo_uuid:
+            return
+
+        destination_user_id = dao.user.get_by_uuid(destination_user_uuid)['id']
+        destination = '{}/{}'.format(destination_xivo_uuid, destination_user_id)
+
         msg = CTIMessageFormatter.chat(from_, to, alias, text)
         self._cti_server.send_to_cti_client(destination, msg)
 
-    def on_cti_chat_message(self, local_user_id, remote_xivo_uuid, remote_user_id, alias, text):
-        from_ = self._xivo_uuid, int(local_user_id)
-        to = remote_xivo_uuid, remote_user_id
+    def on_cti_chat_message(self, local_user_uuid, remote_xivo_uuid, remote_user_uuid, alias, text):
+        from_ = self._xivo_uuid, local_user_uuid
+        to = remote_xivo_uuid, remote_user_uuid
         self._send_chat_msg_to_bus(from_, to, alias, text)
 
     def _send_chat_msg_to_bus(self, from_, to, alias, text):

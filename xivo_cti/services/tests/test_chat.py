@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 import unittest
 
-from mock import Mock
+from mock import Mock, patch
 from xivo_bus import Publisher
 from xivo_bus.resources.chat.event import ChatMessageEvent
 
@@ -57,15 +57,20 @@ class TestChatPublisher(unittest.TestCase):
 
         self.bus_publisher.publish.assert_called_once_with(expected_msg)
 
-    def test_deliver_chat_message(self):
+    @patch('xivo_cti.services.chat.dao.user')
+    def test_deliver_chat_message(self, user_dao):
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        user_id = 42
         from_ = ('other-xivo-uuid', 5)
-        to = ('local-xivo-uuid', 42)
+        to = ('local-xivo-uuid', user_uuid)
         alias = u'Föobar'
         text = u'a chat messagé'
 
+        user_dao.get_by_uuid.return_value = {'id': user_id}
+
         self.chat_publisher.deliver_chat_message(from_, to, alias, text)
 
-        expected_destination = '{}/{}'.format(*to)
+        expected_destination = '{}/{}'.format('local-xivo-uuid', user_id)
         expected_message = {'class': 'chitchat',
                             'alias': alias,
                             'to': to,

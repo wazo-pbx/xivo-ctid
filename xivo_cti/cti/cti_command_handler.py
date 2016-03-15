@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ class CTICommandHandler(object):
             command = command_class.from_dict(message)
             command.cti_connection = self._cti_connection
             command.user_id = self._cti_connection.connection_details.get('userid')
+            command.user_uuid = self._cti_connection.connection_details.get('user_uuid')
             command.auth_token = self._cti_connection.connection_details.get('auth_token')
             self._commands_to_run.append(command)
 
