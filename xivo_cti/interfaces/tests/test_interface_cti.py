@@ -29,6 +29,7 @@ from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.interfaces.interface_cti import NotLoggedException
 from xivo_cti.cti.cti_message_codec import (CTIMessageDecoder,
                                             CTIMessageEncoder)
+from xivo_cti.cti.cti_group import CTIGroup
 
 
 SOME_USER_ID = 5
@@ -40,10 +41,14 @@ class TestCTI(unittest.TestCase):
         self.task_queue = new_task_queue()
         self.async_runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self.task_queue)
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
+        self._broadcast_cti_group = Mock(CTIGroup)
 
         with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
             with patch('xivo_cti.interfaces.interface_cti.AuthenticationHandler', Mock()):
-                self._cti_connection = CTI(self._ctiserver, CTIMessageDecoder(), CTIMessageEncoder())
+                self._cti_connection = CTI(self._ctiserver,
+                                           self._broadcast_cti_group,
+                                           CTIMessageDecoder(),
+                                           CTIMessageEncoder())
         self._cti_connection.login_task = Mock()
 
     def test_user_id_not_connected(self):
@@ -62,6 +67,7 @@ class TestCTI(unittest.TestCase):
             with patch.object(self._cti_connection, '_get_answer_cb') as get_answer_cb:
                 self._cti_connection._on_auth_success()
 
+                self._broadcast_cti_group.add.assert_called_once_with(self._cti_connection)
                 get_answer_cb.assert_called_once_with(auth_handler.user_id.return_value)
 
                 expected = {'userid': auth_handler.user_id.return_value,
