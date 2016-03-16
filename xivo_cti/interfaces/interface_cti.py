@@ -42,7 +42,7 @@ class CTI(Interfaces):
 
     kind = 'CTI'
 
-    def __init__(self, ctiserver, cti_msg_decoder, cti_msg_encoder):
+    def __init__(self, ctiserver, broadcast_cti_group, cti_msg_decoder, cti_msg_encoder):
         interfaces.Interfaces.__init__(self, ctiserver)
         self._cti_msg_decoder = cti_msg_decoder
         self._cti_msg_encoder = cti_msg_encoder
@@ -54,6 +54,7 @@ class CTI(Interfaces):
         self._async_runner = context.get('async_runner')
         self._task_queue = context.get('task_queue')
         self._auth_handler = AuthenticationHandler(self, self._on_auth_success)
+        self._broadcast_cti_group = broadcast_cti_group
 
     def connected(self, connid):
         logger.debug('connected: sending starttls')
@@ -144,6 +145,7 @@ class CTI(Interfaces):
         self.connid.append_queue(data)
 
     def _on_auth_success(self):
+        self._broadcast_cti_group.add(self)
         user_id = self._auth_handler.user_id()
         self.connection_details.update({'userid': user_id,
                                         'user_uuid': self._auth_handler.user_uuid(),

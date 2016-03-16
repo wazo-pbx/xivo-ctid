@@ -664,9 +664,11 @@ class CTIServer(object):
         if socketobject:
             if kind == 'CTI':
                 socketobject = ClientConnection(socketobject, address)
-                interface = interface_cti.CTI(self, self._cti_msg_codec.new_decoder(), self._cti_msg_codec.new_encoder())
+                interface = interface_cti.CTI(self,
+                                              self._broadcast_cti_group,
+                                              self._cti_msg_codec.new_decoder(),
+                                              self._cti_msg_codec.new_encoder())
                 self.fdlist_interface_cti[socketobject] = interface
-                self._broadcast_cti_group.add(interface)
             elif kind == 'INFO':
                 interface = interface_info.INFO(self)
                 self.fdlist_interface_info[socketobject] = interface
