@@ -28,7 +28,7 @@ from mock import sentinel
 class TestXivoAMI(unittest.TestCase):
 
     def setUp(self):
-        with patch('xivo_cti.xivo_ami.config', {'ipbx_connection': {}}):
+        with patch('xivo_cti.xivo_ami.config', {'ami': {}}):
             ami_class = AMIClass()
         ami_class._exec_command = Mock()
         self.ami_class = ami_class

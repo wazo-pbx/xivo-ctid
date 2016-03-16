@@ -43,6 +43,13 @@ agentd:
   timeout: 3
   verify_certificate: /usr/share/xivo-certs/server.crt
 
+# Connection info to Asterisk AMI
+ami:
+  host: localhost
+  port: 5038
+  username: xivo_cti_user
+  password: phaickbebs9
+
 # xivo-auth (authentication daemon) connection informations.
 auth:
   host: localhost

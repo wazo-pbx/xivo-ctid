@@ -41,9 +41,9 @@ class AMIClass(object):
         pass
 
     def __init__(self):
-        ipbxconfig = config['ipbx_connection']
+        ipbxconfig = config['ami']
         self.ipbxid = 'xivo'
-        self.ipaddress = ipbxconfig.get('ipaddress', '127.0.0.1')
+        self.ipaddress = ipbxconfig.get('host', '127.0.0.1')
         self.ipport = int(ipbxconfig.get('ipport', 5038))
         self.loginname = ipbxconfig.get('username', 'xivouser')
         self.password = ipbxconfig.get('password', 'xivouser')
