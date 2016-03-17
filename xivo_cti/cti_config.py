@@ -97,6 +97,12 @@ _default_config = {
     'switchboard_hold_queues': {
         '__switchboard_hold': True,
     },
+    'ami': {
+        'host': 'localhost',
+        'port': 5038,
+        'username': 'xivo_cti_user',
+        'password': 'phaickbebs9',
+    },
 }
 _cli_config = {}
 _db_config = {}
