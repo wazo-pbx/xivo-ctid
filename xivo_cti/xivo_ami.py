@@ -44,7 +44,7 @@ class AMIClass(object):
         ipbxconfig = config['ami']
         self.ipbxid = 'xivo'
         self.ipaddress = ipbxconfig.get('host', '127.0.0.1')
-        self.ipport = int(ipbxconfig.get('ipport', 5038))
+        self.ipport = int(ipbxconfig.get('port', 5038))
         self.loginname = ipbxconfig.get('username', 'xivouser')
         self.password = ipbxconfig.get('password', 'xivouser')
         self.actionid = None
