@@ -44,7 +44,9 @@ class UserServiceManager(object):
                  device_manager,
                  ami_class,
                  ami_callback_handler,
-                 call_manager):
+                 call_manager,
+                 confd_client,
+                 async_runner):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
@@ -54,6 +56,8 @@ class UserServiceManager(object):
         self.ami_class = ami_class
         self._ami_callback_handler = ami_callback_handler
         self._call_manager = call_manager
+        self._client = confd_client
+        self._runner = async_runner
 
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
@@ -77,14 +81,16 @@ class UserServiceManager(object):
         self.set_presence(user_id, state)
 
     def enable_dnd(self, user_id):
-        self.dao.user.enable_dnd(user_id)
-        self.user_service_notifier.dnd_enabled(user_id)
-        self.funckey_manager.dnd_in_use(user_id, True)
+        logger.debug('Enable DND called')
+        self._runner.run(self._client.users(user_id).update_service,
+                         service_name='dnd',
+                         service={'enabled': True})
 
     def disable_dnd(self, user_id):
-        self.dao.user.disable_dnd(user_id)
-        self.user_service_notifier.dnd_disabled(user_id)
-        self.funckey_manager.dnd_in_use(user_id, False)
+        logger.debug('Disable DND called')
+        self._runner.run(self._client.users(user_id).update_service,
+                         service_name='dnd',
+                         service={'enabled': False})
 
     def set_dnd(self, user_id, status):
         self.enable_dnd(user_id) if status else self.disable_dnd(user_id)

@@ -24,6 +24,7 @@ from xivo.token_renewer import TokenRenewer
 from xivo.pubsub import Pubsub
 from xivo_agentd_client import Client as AgentdClient
 from xivo_auth_client import Client as AuthClient
+from xivo_confd_client import Client as ConfdClient
 from xivo_bus import CollectdMarshaler, Marshaler, Publisher
 from xivo_cti import config
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
@@ -166,6 +167,7 @@ def setup(xivo_uuid):
     context.register('chat_publisher', ChatPublisher)
     context.register('channel_updater', ChannelUpdater)
     context.register('collectd_publisher', collectd_publisher)
+    context.register('confd_client', ConfdClient(**config['confd']))
     context.register('cti_group_factory', CTIGroupFactory)
     context.register('cti_msg_codec', CTIMessageCodec)
     context.register('cti_provd_client', CTIProvdClient.new_from_config(config['provd']))

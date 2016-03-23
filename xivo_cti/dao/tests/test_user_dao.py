@@ -88,24 +88,20 @@ class TestUserDAO(unittest.TestCase):
 
         assert_that(result, equal_to(fullname), 'User\'s fullname')
 
-    @patch('xivo_cti.database.user_db.enable_service')
-    def test_set_dnd(self, enable_service):
+    def test_set_dnd(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': False}
 
         self.dao.enable_dnd(user_id)
 
-        enable_service.assert_called_once_with(user_id, 'enablednd')
         self.assertTrue(self._userlist.keeplist[user_id]['enablednd'])
 
-    @patch('xivo_cti.database.user_db.disable_service')
-    def test_unset_dnd(self, disable_service):
+    def test_unset_dnd(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': True}
 
         self.dao.disable_dnd(user_id)
 
-        disable_service.assert_called_once_with(user_id, 'enablednd')
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
     @patch('xivo_cti.database.user_db.enable_service')

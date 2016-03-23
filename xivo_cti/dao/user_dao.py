@@ -52,12 +52,10 @@ class UserDAO(object):
         user_status['connection'] = 'yes'
 
     def enable_dnd(self, user_id):
-        user_db.enable_service(user_id, 'enablednd')
         user = self._user(user_id)
         user['enablednd'] = True
 
     def disable_dnd(self, user_id):
-        user_db.disable_service(user_id, 'enablednd')
         user = self._user(user_id)
         user['enablednd'] = False
 

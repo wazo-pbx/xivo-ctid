@@ -61,6 +61,12 @@ _default_config = {
         'exchange_name': 'xivo',
         'exchange_type': 'topic'
     },
+    'confd': {
+        'host': 'localhost',
+        'port': 9486,
+        'version': 1.1,
+        'verify_certificate': '/usr/share/xivo-certs/server.crt',
+    },
     'dird': {
         'host': 'localhost',
         'port': 9489,

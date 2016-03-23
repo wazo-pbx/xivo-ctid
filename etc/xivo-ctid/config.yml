@@ -58,6 +58,13 @@ auth:
   key_file: /var/lib/xivo-auth-keys/xivo-ctid-key.yml
   verify_certificate: /usr/share/xivo-certs/server.crt
 
+# Confd (Configuration daemon) connection informations.
+confd:
+  host: localhost
+  port: 9486
+  version: 1.1
+  verify_certificate: /usr/share/xivo-certs/server.crt
+
 # Dird (Directory daemon) connection informations.
 dird:
   host: localhost
