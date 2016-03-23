@@ -22,10 +22,11 @@ from functools import partial
 from xivo import caller_id
 from xivo_cti import dao
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
+from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.database import user_db
 from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.tools.extension import InvalidExtension
-from xivo_cti.database import user_db
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,9 @@ class UserServiceManager(object):
                  ami_callback_handler,
                  call_manager,
                  confd_client,
-                 async_runner):
+                 async_runner,
+                 bus_listener,
+                 task_queue):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
@@ -58,6 +61,9 @@ class UserServiceManager(object):
         self._call_manager = call_manager
         self._client = confd_client
         self._runner = async_runner
+        self._task_queue = task_queue
+        services_routing_key = 'config.users.*.services.*.updated'
+        bus_listener.add_callback(services_routing_key, self._on_bus_services_message_event)
 
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
@@ -218,3 +224,39 @@ class UserServiceManager(object):
         logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
         formatted_msg = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
         client_connection.send_message(formatted_msg)
+
+    def deliver_dnd_message(self, user_uuid, enabled):
+        user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+        if enabled:
+            self.dao.user.enable_dnd(user_id)
+            self.user_service_notifier.dnd_enabled(user_id)
+        else:
+            self.dao.user.disable_dnd(user_id)
+            self.user_service_notifier.dnd_disabled(user_id)
+        self.funckey_manager.dnd_in_use(user_id, enabled)
+
+    def deliver_incallfilter_message(self, user_uuid, enabled):
+        user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+        if enabled:
+            self.dao.user.enable_filter(user_id)
+            self.user_service_notifier.filter_enabled(user_id)
+        else:
+            self.dao.user.disable_filter(user_id)
+            self.user_service_notifier.filter_disabled(user_id)
+        self.funckey_manager.call_filter_in_use(user_id, enabled)
+
+    @bus_listener_thread
+    @ack_bus_message
+    def _on_bus_services_message_event(self, event):
+        data = event.get('data', {})
+        try:
+            user_uuid = data['user_uuid']
+            enabled = data['enabled']
+            name = event['name']
+        except KeyError as e:
+            logger.info('_on_bus_services_message_event: received an incomplete dnd message event: %s', e)
+
+        if name == 'users_services_dnd_updated':
+            self._task_queue.put(self.deliver_dnd_message, user_uuid, enabled)
+        elif name == 'users_services_incallfilter_updated':
+            self._task_queue.put(self.deliver_incallfilter_message, user_uuid, enabled)
