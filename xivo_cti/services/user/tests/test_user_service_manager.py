@@ -17,6 +17,7 @@
 
 import unittest
 
+from concurrent import futures
 from mock import Mock
 from mock import sentinel
 from mock import patch
@@ -24,6 +25,10 @@ from mock import patch
 from hamcrest import assert_that
 from hamcrest import equal_to
 
+from xivo_confd_client import Client
+from xivo_cti.async_runner import AsyncRunner, synchronize
+from xivo_cti.bus_listener import BusListener
+from xivo_cti.task_queue import new_task_queue
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
@@ -46,6 +51,10 @@ from xivo_cti.xivo_ami import AMIClass
 class _BaseTestCase(unittest.TestCase):
 
     def setUp(self):
+        self._task_queue = new_task_queue()
+        self._runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self._task_queue)
+        self._client = Mock(Client).return_value
+
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
@@ -56,6 +65,7 @@ class _BaseTestCase(unittest.TestCase):
         self.ami_class = Mock(AMIClass)
         self._ami_cb_handler = Mock(AMICallbackHandler)
         self._call_manager = Mock(CallManager)
+        self._bus_listener = Mock(BusListener)
         self.user_service_manager = UserServiceManager(
             self.user_service_notifier,
             self.agent_service_manager,
@@ -65,10 +75,15 @@ class _BaseTestCase(unittest.TestCase):
             self.ami_class,
             self._ami_cb_handler,
             self._call_manager,
+            self._client,
+            self._runner,
+            self._bus_listener,
+            self._task_queue
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
         self.user_service_manager.dao.forward = self.forward_dao
+
         context.reset()
 
 
@@ -256,20 +271,20 @@ class TestUserServiceManager(_BaseTestCase):
     def test_enable_dnd(self):
         user_id = 123
 
-        self.user_service_manager.enable_dnd(user_id)
+        with synchronize(self._runner):
+            self.user_service_manager.enable_dnd(user_id)
 
-        self.user_service_manager.dao.user.enable_dnd.assert_called_once_with(user_id)
-        self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
-        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
+        self._client.users(user_id).update_service.assert_called_once_with(service_name='dnd',
+                                                                           service={'enabled': True})
 
     def test_disable_dnd(self):
-        user_id = 241
+        user_id = 123
 
-        self.user_service_manager.disable_dnd(user_id)
+        with synchronize(self._runner):
+            self.user_service_manager.disable_dnd(user_id)
 
-        self.user_service_manager.dao.user.disable_dnd.assert_called_once_with(user_id)
-        self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
-        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
+        self._client.users(user_id).update_service.assert_called_once_with(service_name='dnd',
+                                                                           service={'enabled': False})
 
     def test_set_dnd(self):
         old_enable, self.user_service_manager.enable_dnd = self.user_service_manager.enable_dnd, Mock()
@@ -288,23 +303,67 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.enable_dnd = old_enable
         self.user_service_manager.disable_dnd = old_disable
 
-    def test_enable_filter(self):
-        user_id = 789
+    def test_enable_incallfilter(self):
+        user_id = 123
 
-        self.user_service_manager.enable_filter(user_id)
+        with synchronize(self._runner):
+            self.user_service_manager.enable_filter(user_id)
+
+        self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
+                                                                           service={'enabled': True})
+
+    def test_disable_incallfilter(self):
+        user_id = 123
+
+        with synchronize(self._runner):
+            self.user_service_manager.disable_filter(user_id)
+
+        self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
+                                                                           service={'enabled': False})
+
+    def test_deliver_incallfilter_message_false(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_incallfilter_message(user_uuid, False)
+
+        self.user_service_manager.dao.user.disable_filter.assert_called_once_with(user_id)
+        self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
+        self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
+
+    def test_deliver_incallfilter_message_true(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_incallfilter_message(user_uuid, True)
 
         self.user_service_manager.dao.user.enable_filter.assert_called_once_with(user_id)
         self.user_service_notifier.filter_enabled.assert_called_once_with(user_id)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, True)
 
-    def test_disable_filter(self):
-        user_id = 834
+    def test_deliver_dnd_message_false(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
 
-        self.user_service_manager.disable_filter(user_id)
+        self.user_service_manager.deliver_dnd_message(user_uuid, False)
 
-        self.user_service_manager.dao.user.disable_filter.assert_called_once_with(user_id)
-        self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
-        self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
+        self.user_service_manager.dao.user.disable_dnd.assert_called_once_with(user_id)
+        self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
+        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
+
+    def test_deliver_dnd_message_true(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_dnd_message(user_uuid, True)
+
+        self.user_service_manager.dao.user.enable_dnd.assert_called_once_with(user_id)
+        self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
+        self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 
     def test_enable_unconditional_fwd(self):
         user_id = 543321
