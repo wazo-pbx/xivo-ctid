@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ import unittest
 from mock import Mock
 from xivo_cti.cti.cti_command import CTICommandInstance
 from xivo_cti.cti.cti_command_runner import CTICommandRunner
+from xivo_cti.exception import InvalidCallbackException
 
 
 class Test(unittest.TestCase):
@@ -53,3 +54,13 @@ class Test(unittest.TestCase):
         self.assertEqual(reply, {'message': {'color': 'red'},
                                  'replyid': self.command.commandid,
                                  'class': self.command.command_class})
+
+    def test_run_command_invalid_callback(self):
+        self.handler.side_effect = InvalidCallbackException()
+
+        try:
+            self.runner.run(self.command)
+        except InvalidCallbackException:
+            self.fail('CTICommandRunner.run() should not raise InvalidCallbackException')
+
+        self.command.deregister_callback.assert_called_once_with(self.handler)

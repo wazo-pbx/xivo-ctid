@@ -37,6 +37,9 @@ class WeakMethodBound(object):
     def __eq__(self, other):
         return hasattr(other, 'instance') and self.instance() == other.instance() and self.function == other.function
 
+    def __ne__(self, other):
+        return not self == other
+
     def dead(self):
         return self.instance is None or self.instance() is None
 
@@ -52,7 +55,10 @@ class WeakMethodFree(object):
         return (self.function()(*arg))
 
     def __eq__(self, other):
-        return self.function() == other.function()
+        return hasattr(other, 'function') and self.function() == other.function()
+
+    def __ne__(self, other):
+        return not self == other
 
     def dead(self):
         return self.function is None or self.function() is None

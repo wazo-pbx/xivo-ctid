@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ class TestCTICommand(unittest.TestCase):
         command = command_class.from_dict({'class': 'callback_test'})
         self.assertEqual(len(command.callbacks_with_params()), 1)
 
-    def test_deregister_callback(self):
+    def test_deregister_callback_unwrapped(self):
         command_class = CTICommandClass(self.class_name, None, None)
         command = command_class.from_dict({'class': 'callback_test'})
 
@@ -81,24 +81,17 @@ class TestCTICommand(unittest.TestCase):
         self.assertEqual(len(callbacks), 1)
         self.assertEqual(weak_method.WeakCallable(function_2), callbacks[0][0])
 
-    def test_callback_memory_usage(self):
+    def test_deregister_callback_wrapped(self):
         command_class = CTICommandClass(self.class_name, None, None)
-
-        class Test(object):
-            def __init__(self):
-                command_class.register_callback_params(self.parse)
-
-            def parse(self):
-                pass
-
         command = command_class.from_dict({'class': 'callback_test'})
 
-        def run_test():
-            self.assertEqual(len(command.callbacks_with_params()), 0)
-            test_object = Test()
-            self.assertEqual(len(command.callbacks_with_params()), 1)
-            test_object.parse()
+        function_1 = lambda: None
+        function_2 = lambda: None
 
-        run_test()
+        command_class.register_callback_params(function_1)
+        command_class.register_callback_params(function_2)
+        command_class.deregister_callback(command.callbacks_with_params()[0][0])
 
-        self.assertEqual(len(command.callbacks_with_params()), 0)
+        callbacks = command.callbacks_with_params()
+        self.assertEqual(len(callbacks), 1)
+        self.assertEqual(weak_method.WeakCallable(function_2), callbacks[0][0])

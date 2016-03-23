@@ -53,15 +53,19 @@ class CTICommandClass(object):
         command.command_class = msg['class']
         command.commandid = msg.get('commandid')
         command.callbacks_with_params = self.callbacks_with_params
+        command.deregister_callback = self.deregister_callback
         self._parse_fun(msg, command)
         return command
 
     def callbacks_with_params(self):
-        return [callback for callback in self._callbacks_with_params if not callback[0].dead()]
+        return list(self._callbacks_with_params)
 
     def deregister_callback(self, function):
-        comparable = weak_method.WeakCallable(function)
-        to_remove = [(callback, params) for callback, params in self._callbacks_with_params if callback == comparable]
+        comparable_unwrapped = function
+        comparable_wrapped = weak_method.WeakCallable(function)
+        to_remove = [(callback, params) for callback, params in self._callbacks_with_params
+                     if (callback == comparable_unwrapped or
+                         callback == comparable_wrapped)]
         for pair in to_remove:
             self._callbacks_with_params.remove(pair)
 

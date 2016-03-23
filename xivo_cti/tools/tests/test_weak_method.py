@@ -95,6 +95,26 @@ class TestWeakref(unittest.TestCase):
 
         self.assertNotEqual(ref1, ref3)
 
+    def test_weak_method_equal_other_type(self):
+        def func1(param):
+            pass
+
+        class TestClass(object):
+            def func1(self):
+                pass
+
+        instance = TestClass()
+
+        def func2(param):
+            pass
+
+        ref1_free = WeakMethodFree(func1)
+        ref1_bound = WeakMethodBound(instance.func1)
+        ref2 = func2
+
+        self.assertNotEqual(ref1_free, ref2)
+        self.assertNotEqual(ref1_bound, ref2)
+
     def test_call_dead_weak_method_bound(self):
         class TestClass:
             def func(self):
