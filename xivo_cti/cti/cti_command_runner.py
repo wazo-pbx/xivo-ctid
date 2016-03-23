@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
+
+from xivo_cti.exception import InvalidCallbackException
 from xivo_cti.cti.cti_reply_generator import CTIReplyGenerator
 
 logger = logging.getLogger('CTICommandRunner')
@@ -33,7 +35,11 @@ class CTICommandRunner(object):
         for callback in command.callbacks_with_params():
             function, args = callback
             arg_list = self._get_arguments(command, args)
-            reply = function(*arg_list)
+            try:
+                reply = function(*arg_list)
+            except InvalidCallbackException:
+                logger.info("failed to dispatch cti command %s to one of it's callback", command)
+                continue
             if reply:
                 return self._reply_generator.get_reply(reply[0], command, reply[1], reply[2] if len(reply) >= 3 else False)
         return {'status': 'OK'}

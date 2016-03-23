@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,17 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+
+from hamcrest import assert_that, empty
+
+from xivo_cti.exception import InvalidCallbackException
 from xivo_cti.tools import weak_method
 from xivo_cti.tools.weak_method import WeakMethodBound, WeakMethodFree
 
 
-class Test(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class TestWeakref(unittest.TestCase):
 
     def test_weakref_function(self):
         def func(arg):
@@ -34,7 +32,7 @@ class Test(unittest.TestCase):
         f = weak_method.WeakCallable(func)
         self.assertEqual(f(1234), 2468)
         del func
-        self.assertRaises(TypeError, f, 1234)
+        self.assertRaises(InvalidCallbackException, f, 1234)
 
     def test_weakref_method(self):
         class Test(object):
@@ -44,7 +42,7 @@ class Test(unittest.TestCase):
         f = weak_method.WeakCallable(instance.func)
         self.assertEqual(f(1234), 2468)
         del instance
-        self.assertRaises(TypeError, f, 1234)
+        self.assertRaises(InvalidCallbackException, f, 1234)
 
     def test_method_dead(self):
         class Test(object):
@@ -105,7 +103,7 @@ class Test(unittest.TestCase):
         ref = WeakMethodBound(instance.func)
         del instance
 
-        self.assertRaises(TypeError, ref)
+        self.assertRaises(InvalidCallbackException, ref)
 
     def test_call_dead_function(self):
         def func():
@@ -113,4 +111,4 @@ class Test(unittest.TestCase):
         ref = WeakMethodFree(func)
         del func
 
-        self.assertRaises(TypeError, ref)
+        self.assertRaises(InvalidCallbackException, ref)

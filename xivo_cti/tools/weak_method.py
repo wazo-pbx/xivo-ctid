@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 import weakref
 
+from xivo_cti.exception import InvalidCallbackException
+
 #    http://code.activestate.com/recipes/81253-weakmethod/
 
 
@@ -28,7 +30,7 @@ class WeakMethodBound(object):
 
     def __call__(self, *args):
         if self.instance() is None:
-            raise TypeError('Method call on a dead object')
+            raise InvalidCallbackException('Method call on a dead object')
         ret = self.function(self.instance(), *args)
         return ret
 
@@ -46,7 +48,7 @@ class WeakMethodFree(object):
 
     def __call__(self, *arg):
         if self.function() is None:
-            raise TypeError('Function no longer exist')
+            raise InvalidCallbackException('Function no longer exist')
         return (self.function()(*arg))
 
     def __eq__(self, other):
