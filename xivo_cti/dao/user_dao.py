@@ -60,12 +60,10 @@ class UserDAO(object):
         user['enablednd'] = False
 
     def enable_filter(self, user_id):
-        user_db.enable_service(user_id, 'incallfilter')
         user = self._user(user_id)
         user['incallfilter'] = True
 
     def disable_filter(self, user_id):
-        user_db.disable_service(user_id, 'incallfilter')
         user = self._user(user_id)
         user['incallfilter'] = False
 

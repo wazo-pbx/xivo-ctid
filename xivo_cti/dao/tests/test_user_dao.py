@@ -104,24 +104,20 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
-    @patch('xivo_cti.database.user_db.enable_service')
-    def test_enable_filter(self, enable_service):
+    def test_enable_filter(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': False}
 
         self.dao.enable_filter(user_id)
 
-        enable_service.assert_called_once_with(user_id, 'incallfilter')
         self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
-    @patch('xivo_cti.database.user_db.disable_service')
-    def test_disable_filter(self, disable_service):
+    def test_disable_filter(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': True}
 
         self.dao.disable_filter(user_id)
 
-        disable_service.assert_called_once_with(user_id, 'incallfilter')
         self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
     @patch('xivo_cti.database.user_db.enable_service')
