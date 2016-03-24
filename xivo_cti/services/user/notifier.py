@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,8 @@ class UserServiceNotifier(object):
     def __init__(self, bus_publisher):
         self._bus_publisher = bus_publisher
 
-    def dnd_enabled(self, user_id):
-        self.send_cti_event(self._prepare_dnd_message(True, user_id))
-
-    def dnd_disabled(self, user_id):
-        self.send_cti_event(self._prepare_dnd_message(False, user_id))
+    def dnd_enabled(self, user_id, enabled):
+        self.send_cti_event(self._prepare_dnd_message(enabled, user_id))
 
     def filter_enabled(self, user_id):
         self.send_cti_event(self._prepare_filter_message(True, user_id))

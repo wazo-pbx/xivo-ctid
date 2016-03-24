@@ -51,13 +51,9 @@ class UserDAO(object):
         user_status = self._user_status(user_id)
         user_status['connection'] = 'yes'
 
-    def enable_dnd(self, user_id):
+    def dnd_enabled(self, user_id, enabled):
         user = self._user(user_id)
-        user['enablednd'] = True
-
-    def disable_dnd(self, user_id):
-        user = self._user(user_id)
-        user['enablednd'] = False
+        user['enablednd'] = enabled
 
     def enable_filter(self, user_id):
         user = self._user(user_id)

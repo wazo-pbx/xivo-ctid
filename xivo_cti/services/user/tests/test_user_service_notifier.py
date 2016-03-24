@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
-    def test_dnd_enabled(self):
+    def test_dnd_enabled_true(self):
         user_id = 34
         expected = {"class": "getlist",
                     "config": {"enablednd": True},
@@ -41,11 +41,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.dnd_enabled(user_id)
+        self.notifier.dnd_enabled(user_id, True)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_dnd_disabled(self):
+    def test_dnd_disabled_false(self):
         user_id = 34
         expected = {"class": "getlist",
                     "config": {"enablednd": False},
@@ -54,7 +54,7 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.dnd_disabled(user_id)
+        self.notifier.dnd_enabled(user_id, False)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 

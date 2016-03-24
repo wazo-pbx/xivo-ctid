@@ -350,8 +350,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_dnd_message(user_uuid, False)
 
-        self.user_service_manager.dao.user.disable_dnd.assert_called_once_with(user_id)
-        self.user_service_notifier.dnd_disabled.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.dnd_enabled.assert_called_once_with(user_id, False)
+        self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id, False)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
 
     def test_deliver_dnd_message_true(self):
@@ -361,8 +361,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_dnd_message(user_uuid, True)
 
-        self.user_service_manager.dao.user.enable_dnd.assert_called_once_with(user_id)
-        self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.dnd_enabled.assert_called_once_with(user_id, True)
+        self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id, True)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 
     def test_enable_unconditional_fwd(self):
