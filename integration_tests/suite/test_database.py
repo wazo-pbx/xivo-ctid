@@ -86,58 +86,6 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
         assert_that(call.wait_time, equal_to(42.25))
         assert_that(call.queue_id, equal_to(queue_id))
 
-    def test_set_dnd(self):
-        user_id = self.add_user_dnd_not_set()
-
-        user_dao.enable_service(user_id, 'enablednd')
-
-        self._check_dnd_is_set(user_id)
-
-    def test_unset_dnd(self):
-        user_id = self.add_user_dnd_set()
-
-        user_dao.disable_service(user_id, 'enablednd')
-
-        self._check_dnd_is_not_set(user_id)
-
-    def add_user_dnd_set(self):
-        user = self.add_user(firstname='firstname_test',
-                             enablednd=1)
-        return user.id
-
-    def add_user_dnd_not_set(self):
-        user = self.add_user(firstname='firstname_dnd not set',
-                             enablednd=0)
-        return user.id
-
-    def _check_dnd_is_set(self, user_id):
-        user_features = (self.session.query(UserFeatures)
-                         .filter(UserFeatures.id == user_id))[0]
-        self.assertTrue(user_features.enablednd)
-
-    def _check_dnd_is_not_set(self, user_id):
-        user_features = (self.session.query(UserFeatures)
-                         .filter(UserFeatures.id == user_id))[0]
-        self.assertFalse(user_features.enablednd)
-
-    def test_enable_filter(self):
-        user_id = self.add_user_with_filter(0)
-
-        user_dao.enable_service(user_id, 'incallfilter')
-
-        self._check_filter_in_db(user_id, 1)
-
-    def test_disable_filter(self):
-        user_id = self.add_user_with_filter(1)
-
-        user_dao.disable_service(user_id, 'incallfilter')
-
-        self._check_filter_in_db(user_id, 0)
-
-    def add_user_with_filter(self, filter_status):
-        user = self.add_user(firstname='firstname_filter not set', incallfilter=filter_status)
-        return user.id
-
     def test_enable_recording(self):
         user_id = self.add_user_recording_disabled()
 
@@ -164,11 +112,6 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
     def add_user_recording_enabled(self):
         user = self.add_user(firstname='firstname_recording set', callrecord=1)
         return user.id
-
-    def _check_filter_in_db(self, user_id, value):
-        user_features = (self.session.query(UserFeatures)
-                         .filter(UserFeatures.id == user_id))[0]
-        self.assertEquals(user_features.incallfilter, value)
 
     def test_enable_unconditional_fwd(self):
         destination = '765'
