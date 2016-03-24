@@ -55,13 +55,9 @@ class UserDAO(object):
         user = self._user(user_id)
         user['enablednd'] = enabled
 
-    def enable_filter(self, user_id):
+    def incallfilter_enabled(self, user_id, enabled):
         user = self._user(user_id)
-        user['incallfilter'] = True
-
-    def disable_filter(self, user_id):
-        user = self._user(user_id)
-        user['incallfilter'] = False
+        user['incallfilter'] = enabled
 
     def enable_unconditional_fwd(self, user_id, destination):
         user_db.enable_service(user_id, 'enableunc', 'destunc', destination)

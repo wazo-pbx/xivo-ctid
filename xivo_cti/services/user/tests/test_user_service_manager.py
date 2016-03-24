@@ -328,8 +328,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_incallfilter_message(user_uuid, False)
 
-        self.user_service_manager.dao.user.disable_filter.assert_called_once_with(user_id)
-        self.user_service_notifier.filter_disabled.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.incallfilter_enabled.assert_called_once_with(user_id, False)
+        self.user_service_notifier.incallfilter_enabled.assert_called_once_with(user_id, False)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, False)
 
     def test_deliver_incallfilter_message_true(self):
@@ -339,8 +339,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_incallfilter_message(user_uuid, True)
 
-        self.user_service_manager.dao.user.enable_filter.assert_called_once_with(user_id)
-        self.user_service_notifier.filter_enabled.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.incallfilter_enabled.assert_called_once_with(user_id, True)
+        self.user_service_notifier.incallfilter_enabled.assert_called_once_with(user_id, True)
         self.funckey_manager.call_filter_in_use.assert_called_once_with(user_id, True)
 
     def test_deliver_dnd_message_false(self):

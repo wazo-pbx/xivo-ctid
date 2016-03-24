@@ -58,7 +58,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_filter_enabled(self):
+    def test_incallfilter_enabled_true(self):
         user_id = 32
 
         expected = {"class": "getlist",
@@ -68,11 +68,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.filter_enabled(user_id)
+        self.notifier.incallfilter_enabled(user_id, True)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_filter_disabled(self):
+    def test_incallfilter_disabled_false(self):
         user_id = 932
 
         expected = {"class": "getlist",
@@ -82,7 +82,7 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.filter_disabled(user_id)
+        self.notifier.incallfilter_enabled(user_id, False)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 

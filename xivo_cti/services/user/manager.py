@@ -233,12 +233,8 @@ class UserServiceManager(object):
 
     def deliver_incallfilter_message(self, user_uuid, enabled):
         user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-        if enabled:
-            self.dao.user.enable_filter(user_id)
-            self.user_service_notifier.filter_enabled(user_id)
-        else:
-            self.dao.user.disable_filter(user_id)
-            self.user_service_notifier.filter_disabled(user_id)
+        self.dao.user.incallfilter_enabled(user_id, enabled)
+        self.user_service_notifier.incallfilter_enabled(user_id, enabled)
         self.funckey_manager.call_filter_in_use(user_id, enabled)
 
     @bus_listener_thread

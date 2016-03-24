@@ -30,11 +30,8 @@ class UserServiceNotifier(object):
     def dnd_enabled(self, user_id, enabled):
         self.send_cti_event(self._prepare_dnd_message(enabled, user_id))
 
-    def filter_enabled(self, user_id):
-        self.send_cti_event(self._prepare_filter_message(True, user_id))
-
-    def filter_disabled(self, user_id):
-        self.send_cti_event(self._prepare_filter_message(False, user_id))
+    def incallfilter_enabled(self, user_id, enabled):
+        self.send_cti_event(self._prepare_filter_message(enabled, user_id))
 
     def unconditional_fwd_enabled(self, user_id, destination):
         self.send_cti_event(self._prepare_unconditional_fwd_message(True, destination, user_id))
