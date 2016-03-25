@@ -391,5 +391,3 @@ class AMIClass(object):
             return False
         except socket.timeout:
             return False
-        except socket:
-            return False
