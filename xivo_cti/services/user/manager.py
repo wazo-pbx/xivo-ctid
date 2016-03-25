@@ -87,13 +87,13 @@ class UserServiceManager(object):
         self.set_presence(user_id, state)
 
     def enable_dnd(self, user_id):
-        logger.debug('Enable DND called')
+        logger.debug('Enable DND called for user_id %s', user_id)
         self._runner.run(self._client.users(user_id).update_service,
                          service_name='dnd',
                          service={'enabled': True})
 
     def disable_dnd(self, user_id):
-        logger.debug('Disable DND called')
+        logger.debug('Disable DND called for user_id %s', user_id)
         self._runner.run(self._client.users(user_id).update_service,
                          service_name='dnd',
                          service={'enabled': False})
@@ -102,13 +102,13 @@ class UserServiceManager(object):
         self.enable_dnd(user_id) if status else self.disable_dnd(user_id)
 
     def enable_filter(self, user_id):
-        logger.debug('Enable IncallFilter called')
+        logger.debug('Enable IncallFilter called for user_id %s', user_id)
         self._runner.run(self._client.users(user_id).update_service,
                          service_name='incallfilter',
                          service={'enabled': True})
 
     def disable_filter(self, user_id):
-        logger.debug('Disable IncallFilter called')
+        logger.debug('Disable IncallFilter called for user_id %s', user_id)
         self._runner.run(self._client.users(user_id).update_service,
                          service_name='incallfilter',
                          service={'enabled': False})
