@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -208,18 +208,6 @@ class AMI_1_8(object):
                 user['callrecord'] = status
             if 'incallfilter' in fn:
                 user['incallfilter'] = status
-            if 'unc' == fn:
-                fn = 'enableunc'
-                user[fn] = status
-                user['destunc'] = ev.get('Value')
-            if 'rna' == fn:
-                fn = 'enablerna'
-                user[fn] = status
-                user['destrna'] = ev.get('Value')
-            if 'busy' == fn:
-                fn = 'enablebusy'
-                user[fn] = status
-                user['destbusy'] = ev.get('Value')
             event = {'class': 'getlist',
                      'listname': 'users',
                      'function': 'updateconfig',
