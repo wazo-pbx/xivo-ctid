@@ -230,7 +230,7 @@ class UserServiceManager(object):
     def deliver_incallfilter_message(self, user_uuid, enabled):
         try:
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-            self.dao.user.incallfilter_enabled(user_id, enabled)
+            self.dao.user.set_incallfilter(user_id, enabled)
             self.user_service_notifier.incallfilter_enabled(user_id, enabled)
             self.funckey_manager.call_filter_in_use(user_id, enabled)
         except NoSuchUserException:

@@ -104,19 +104,19 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
-    def test_set_incallfilter_enabled(self):
+    def test_set_incallfilter_enable(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': False}
 
-        self.dao.incallfilter_enabled(user_id, True)
+        self.dao.set_incallfilter(user_id, True)
 
         self.assertTrue(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
-    def test_unset_incallfilter_enabled(self):
+    def test_set_incallfilter_disable(self):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'incallfilter': True}
 
-        self.dao.incallfilter_enabled(user_id, False)
+        self.dao.set_incallfilter(user_id, False)
 
         self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 

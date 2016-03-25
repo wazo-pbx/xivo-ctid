@@ -55,7 +55,7 @@ class UserDAO(object):
         user = self._user(user_id)
         user['enablednd'] = enabled
 
-    def incallfilter_enabled(self, user_id, enabled):
+    def set_incallfilter(self, user_id, enabled):
         user = self._user(user_id)
         user['incallfilter'] = enabled
 
