@@ -88,30 +88,22 @@ class UserServiceManager(object):
 
     def enable_dnd(self, user_id):
         logger.debug('Enable DND called for user_id %s', user_id)
-        self._runner.run(self._client.users(user_id).update_service,
-                         service_name='dnd',
-                         service={'enabled': True})
+        self._async_set_service(user_id, 'dnd', True)
 
     def disable_dnd(self, user_id):
         logger.debug('Disable DND called for user_id %s', user_id)
-        self._runner.run(self._client.users(user_id).update_service,
-                         service_name='dnd',
-                         service={'enabled': False})
+        self._async_set_service(user_id, 'dnd', False)
 
     def set_dnd(self, user_id, status):
         self.enable_dnd(user_id) if status else self.disable_dnd(user_id)
 
     def enable_filter(self, user_id):
         logger.debug('Enable IncallFilter called for user_id %s', user_id)
-        self._runner.run(self._client.users(user_id).update_service,
-                         service_name='incallfilter',
-                         service={'enabled': True})
+        self._async_set_service(user_id, 'incallfilter', True)
 
     def disable_filter(self, user_id):
         logger.debug('Disable IncallFilter called for user_id %s', user_id)
-        self._runner.run(self._client.users(user_id).update_service,
-                         service_name='incallfilter',
-                         service={'enabled': False})
+        self._async_set_service(user_id, 'incallfilter', False)
 
     def enable_unconditional_fwd(self, user_id, destination):
         if destination == '':
@@ -236,6 +228,11 @@ class UserServiceManager(object):
         self.dao.user.incallfilter_enabled(user_id, enabled)
         self.user_service_notifier.incallfilter_enabled(user_id, enabled)
         self.funckey_manager.call_filter_in_use(user_id, enabled)
+
+    def _async_set_service(self, user_id, service, enabled):
+        self._runner.run(self._client.users(user_id).update_service,
+                         service_name=service,
+                         service={'enabled': enabled})
 
     @bus_listener_thread
     @ack_bus_message
