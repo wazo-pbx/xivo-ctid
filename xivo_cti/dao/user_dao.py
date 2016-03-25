@@ -51,7 +51,7 @@ class UserDAO(object):
         user_status = self._user_status(user_id)
         user_status['connection'] = 'yes'
 
-    def dnd_enabled(self, user_id, enabled):
+    def set_dnd(self, user_id, enabled):
         user = self._user(user_id)
         user['enablednd'] = enabled
 

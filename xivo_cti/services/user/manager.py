@@ -221,7 +221,7 @@ class UserServiceManager(object):
     def deliver_dnd_message(self, user_uuid, enabled):
         try:
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-            self.dao.user.dnd_enabled(user_id, enabled)
+            self.dao.user.set_dnd(user_id, enabled)
             self.user_service_notifier.dnd_enabled(user_id, enabled)
             self.funckey_manager.dnd_in_use(user_id, enabled)
         except NoSuchUserException:

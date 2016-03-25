@@ -337,7 +337,7 @@ class TestUserServiceManager(_BaseTestCase):
         assert_that(calling(self.user_service_manager.deliver_dnd_message)
                     .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False),
                     not_(raises(NoSuchUserException)))
-        assert_that(self.user_service_manager.dao.user.dnd_enabled.called, equal_to(False))
+        assert_that(self.user_service_manager.dao.user.set_dnd.called, equal_to(False))
         assert_that(self.user_service_notifier.dnd_enabled.called, equal_to(False))
         assert_that(self.funckey_manager.dnd_in_use.called, equal_to(False))
 
@@ -370,7 +370,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_dnd_message(user_uuid, False)
 
-        self.user_service_manager.dao.user.dnd_enabled.assert_called_once_with(user_id, False)
+        self.user_service_manager.dao.user.set_dnd.assert_called_once_with(user_id, False)
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id, False)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, False)
 
@@ -381,7 +381,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.deliver_dnd_message(user_uuid, True)
 
-        self.user_service_manager.dao.user.dnd_enabled.assert_called_once_with(user_id, True)
+        self.user_service_manager.dao.user.set_dnd.assert_called_once_with(user_id, True)
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id, True)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 

@@ -92,7 +92,7 @@ class TestUserDAO(unittest.TestCase):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': False}
 
-        self.dao.dnd_enabled(user_id, True)
+        self.dao.set_dnd(user_id, True)
 
         self.assertTrue(self._userlist.keeplist[user_id]['enablednd'])
 
@@ -100,7 +100,7 @@ class TestUserDAO(unittest.TestCase):
         user_id = '1'
         self._userlist.keeplist[user_id] = {'enablednd': True}
 
-        self.dao.dnd_enabled(user_id, False)
+        self.dao.set_dnd(user_id, False)
 
         self.assertFalse(self._userlist.keeplist[user_id]['enablednd'])
 
