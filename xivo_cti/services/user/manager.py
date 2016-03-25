@@ -25,6 +25,7 @@ from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.database import user_db
+from xivo_cti.exception import NoSuchUserException
 from xivo_cti.model.destination_factory import DestinationFactory
 from xivo_cti.tools.extension import InvalidExtension
 
@@ -218,16 +219,22 @@ class UserServiceManager(object):
         client_connection.send_message(formatted_msg)
 
     def deliver_dnd_message(self, user_uuid, enabled):
-        user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-        self.dao.user.dnd_enabled(user_id, enabled)
-        self.user_service_notifier.dnd_enabled(user_id, enabled)
-        self.funckey_manager.dnd_in_use(user_id, enabled)
+        try:
+            user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+            self.dao.user.dnd_enabled(user_id, enabled)
+            self.user_service_notifier.dnd_enabled(user_id, enabled)
+            self.funckey_manager.dnd_in_use(user_id, enabled)
+        except NoSuchUserException:
+            logger.info('received a %s dnd event on an unknown user %s', enabled, user_uuid)
 
     def deliver_incallfilter_message(self, user_uuid, enabled):
-        user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-        self.dao.user.incallfilter_enabled(user_id, enabled)
-        self.user_service_notifier.incallfilter_enabled(user_id, enabled)
-        self.funckey_manager.call_filter_in_use(user_id, enabled)
+        try:
+            user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+            self.dao.user.incallfilter_enabled(user_id, enabled)
+            self.user_service_notifier.incallfilter_enabled(user_id, enabled)
+            self.funckey_manager.call_filter_in_use(user_id, enabled)
+        except NoSuchUserException:
+            logger.info('received a %s incallfilter event on an unknown user %s', enabled, user_uuid)
 
     def _async_set_service(self, user_id, service, enabled):
         self._runner.run(self._client.users(user_id).update_service,

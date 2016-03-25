@@ -22,8 +22,7 @@ from mock import Mock
 from mock import sentinel
 from mock import patch
 
-from hamcrest import assert_that
-from hamcrest import equal_to
+from hamcrest import assert_that, calling, equal_to, not_, raises
 
 from xivo_confd_client import Client
 from xivo_cti.async_runner import AsyncRunner, synchronize
@@ -34,6 +33,7 @@ from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.dao.forward_dao import ForwardDAO
 from xivo_cti.dao.user_dao import UserDAO
+from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.ioc.context import context
 from xivo_cti.services.agent.manager import AgentServiceManager
@@ -320,6 +320,26 @@ class TestUserServiceManager(_BaseTestCase):
 
         self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
                                                                            service={'enabled': False})
+
+    def test_deliver_incallfilter_message_no_user_found(self):
+        self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
+
+        assert_that(calling(self.user_service_manager.deliver_incallfilter_message)
+                    .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False),
+                    not_(raises(NoSuchUserException)))
+        assert_that(self.user_service_manager.dao.user.incallfilter_enabled.called, equal_to(False))
+        assert_that(self.user_service_notifier.incallfilter_enabled.called, equal_to(False))
+        assert_that(self.funckey_manager.call_filter_in_use.called, equal_to(False))
+
+    def test_deliver_dnd_message_no_user_found(self):
+        self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
+
+        assert_that(calling(self.user_service_manager.deliver_dnd_message)
+                    .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False),
+                    not_(raises(NoSuchUserException)))
+        assert_that(self.user_service_manager.dao.user.dnd_enabled.called, equal_to(False))
+        assert_that(self.user_service_notifier.dnd_enabled.called, equal_to(False))
+        assert_that(self.funckey_manager.dnd_in_use.called, equal_to(False))
 
     def test_deliver_incallfilter_message_false(self):
         user_id = '12'
