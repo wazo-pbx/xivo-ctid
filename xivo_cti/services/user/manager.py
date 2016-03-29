@@ -110,6 +110,9 @@ class UserServiceManager(object):
         self._async_set_service(user_id, 'incallfilter', False)
 
     def enable_unconditional_fwd(self, user_id, destination):
+        if not destination:
+            self.disable_unconditional_fwd(user_id, destination)
+            return
         logger.debug('Enable Unconditional called for user_id %s', user_id)
         self._async_set_forward(user_id, 'unconditional', True, destination)
 
@@ -118,6 +121,9 @@ class UserServiceManager(object):
         self._async_set_forward(user_id, 'unconditional', False, destination)
 
     def enable_rna_fwd(self, user_id, destination):
+        if not destination:
+            self.disable_rna_fwd(user_id, destination)
+            return
         logger.debug('Enable NoAnswer called for user_id %s', user_id)
         self._async_set_forward(user_id, 'noanswer', True, destination)
 
@@ -126,6 +132,9 @@ class UserServiceManager(object):
         self._async_set_forward(user_id, 'noanswer', False, destination)
 
     def enable_busy_fwd(self, user_id, destination):
+        if not destination:
+            self.disable_busy_fwd(user_id, destination)
+            return
         logger.debug('Enable Busy called for user_id %s', user_id)
         self._async_set_forward(user_id, 'busy', True, destination)
 
