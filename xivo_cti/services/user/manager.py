@@ -234,15 +234,7 @@ class UserServiceManager(object):
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
             self.dao.user.set_busy_fwd(user_id, enabled, destination)
             self.user_service_notifier.busy_fwd_enabled(user_id, enabled, destination)
-            self.funckey_manager.disable_all_busy_fwd(user_id)
-
-            if not enabled:
-                return
-            self.funckey_manager.busy_fwd_in_use(user_id, '', enabled)
-            destinations = self.dao.forward.busy_destinations(user_id)
-            if destination in destinations:
-                self.funckey_manager.busy_fwd_in_use(user_id, destination, enabled)
-
+            self.funckey_manager.update_all_busy_fwd(user_id, enabled, destination)
         except NoSuchUserException:
             logger.info('received a %s busy forward event on an unknown user %s', enabled, user_uuid)
 
@@ -251,15 +243,7 @@ class UserServiceManager(object):
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
             self.dao.user.set_rna_fwd(user_id, enabled, destination)
             self.user_service_notifier.rna_fwd_enabled(user_id, enabled, destination)
-
-            self.funckey_manager.disable_all_rna_fwd(user_id)
-            if not enabled:
-                return
-            self.funckey_manager.rna_fwd_in_use(user_id, '', enabled)
-            destinations = self.dao.forward.rna_destinations(user_id)
-            if destination in destinations:
-                self.funckey_manager.rna_fwd_in_use(user_id, destination, enabled)
-
+            self.funckey_manager.update_all_rna_fwd(user_id, enabled, destination)
         except NoSuchUserException:
             logger.info('received a %s rna forward event on an unknown user %s', enabled, user_uuid)
 
@@ -268,15 +252,7 @@ class UserServiceManager(object):
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
             self.dao.user.set_unconditional_fwd(user_id, enabled, destination)
             self.user_service_notifier.unconditional_fwd_enabled(user_id, enabled, destination)
-
-            self.funckey_manager.disable_all_unconditional_fwd(user_id)
-            if not enabled:
-                return
-            self.funckey_manager.unconditional_fwd_in_use(user_id, '', enabled)
-            destinations = self.dao.forward.unc_destinations(user_id)
-            if destination in destinations:
-                self.funckey_manager.unconditional_fwd_in_use(user_id, destination, enabled)
-
+            self.funckey_manager.update_all_unconditional_fwd(user_id, enabled, destination)
         except NoSuchUserException:
             logger.info('received a %s unconditional forward event on an unknown user %s', enabled, user_uuid)
 

@@ -19,7 +19,7 @@ from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo import xivo_helpers
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.dao.forward_dao import ForwardDAO
-from mock import patch, Mock
+from mock import call, patch, Mock
 import unittest
 
 
@@ -96,32 +96,59 @@ class TestFunckeyManager(unittest.TestCase):
         self.manager.ami.sendcommand.assert_called_once_with(
             'Command', [('Command', 'devstate change Custom:*735123***221*1003 NOT_INUSE')])
 
-    def test_disable_all_fwd_unc(self):
-        unc_dest = ['123', '666', '', '012']
+    def test_update_all_unconditional_fwd(self):
+        unc_dest = ['123', '666', '', '0123']
+        enabled = True
+        destination = '123'
         fn = Mock()
         self.manager.unconditional_fwd_in_use = fn
         self.forward_dao.unc_destinations.return_value = unc_dest
 
-        self.manager.disable_all_unconditional_fwd(self.user_id)
+        self.manager.update_all_unconditional_fwd(self.user_id, enabled, destination)
         self.forward_dao.unc_destinations.assert_called_once_with(self.user_id)
+        expected_calls = [
+            call(self.user_id, '123', True),
+            call(self.user_id, '666', False),
+            call(self.user_id, '', True),
+            call(self.user_id, '0123', False),
+        ]
+        fn.assert_has_calls(expected_calls)
         self.assertEqual(fn.call_count, 4)
 
-    def test_disable_all_fwd_rna(self):
-        rna_dest = ['123', '666', '', '012']
+    def test_update_all_rna_fwd(self):
+        rna_dest = ['123', '666', '', '0123']
+        enabled = True
+        destination = '123'
         fn = Mock()
         self.manager.rna_fwd_in_use = fn
         self.forward_dao.rna_destinations.return_value = rna_dest
 
-        self.manager.disable_all_rna_fwd(self.user_id)
+        self.manager.update_all_rna_fwd(self.user_id, enabled, destination)
         self.forward_dao.rna_destinations.assert_called_once_with(self.user_id)
+        expected_calls = [
+            call(self.user_id, '123', True),
+            call(self.user_id, '666', False),
+            call(self.user_id, '', True),
+            call(self.user_id, '0123', False),
+        ]
+        fn.assert_has_calls(expected_calls)
         self.assertEqual(fn.call_count, 4)
 
-    def test_disable_all_fwd_busy(self):
-        busy_dest = ['123', '666', '', '012']
+    def test_update_all_busy_fwd(self):
+        busy_dest = ['123', '666', '', '0123']
+        enabled = True
+        destination = '123'
         fn = Mock()
         self.manager.busy_fwd_in_use = fn
         self.forward_dao.busy_destinations.return_value = busy_dest
 
-        self.manager.disable_all_busy_fwd(self.user_id)
+        self.manager.update_all_busy_fwd(self.user_id, enabled, destination)
         self.forward_dao.busy_destinations.assert_called_once_with(self.user_id)
+        expected_calls = [
+            call(self.user_id, '123', True),
+            call(self.user_id, '666', False),
+            call(self.user_id, '', True),
+            call(self.user_id, '0123', False),
+        ]
+        fn.assert_has_calls(expected_calls)
         self.assertEqual(fn.call_count, 4)

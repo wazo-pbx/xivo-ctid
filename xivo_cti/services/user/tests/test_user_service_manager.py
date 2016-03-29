@@ -457,28 +457,25 @@ class TestUserServiceManager(_BaseTestCase):
         enabled = False
         destination = '123'
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.busy_destinations.return_value = [destination]
 
         self.user_service_manager.deliver_busy_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_busy_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_busy_message_not_funckey(self):
         user_id = '2345'
         user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
         destination = '3456'
-        fwd_key_dest = '666'
         enabled = True
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.busy_destinations.return_value = [fwd_key_dest]
 
         self.user_service_manager.deliver_busy_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.forward_dao.busy_destinations.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_busy_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_busy_message_true(self):
         user_id = '12'
@@ -486,15 +483,12 @@ class TestUserServiceManager(_BaseTestCase):
         enabled = True
         destination = '123'
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.busy_destinations.return_value = [destination]
 
         self.user_service_manager.deliver_busy_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.busy_fwd_in_use.assert_called_with(user_id, destination, enabled)
-        self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
-        self.forward_dao.busy_destinations.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_busy_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_busy_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
@@ -504,6 +498,7 @@ class TestUserServiceManager(_BaseTestCase):
                     not_(raises(NoSuchUserException)))
         assert_that(self.user_service_manager.dao.user.set_busy_fwd.called, equal_to(False))
         assert_that(self.user_service_notifier.busy_fwd_enabled.called, equal_to(False))
+        assert_that(self.funckey_manager.update_all_busy_fwd.called, equal_to(False))
 
     def test_deliver_rna_message_false(self):
         user_id = '12'
@@ -511,13 +506,12 @@ class TestUserServiceManager(_BaseTestCase):
         enabled = False
         destination = '123'
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.rna_destinations.return_value = [destination]
 
         self.user_service_manager.deliver_rna_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_rna_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.disable_all_rna_fwd.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_rna_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_rna_message_true(self):
         user_id = '12'
@@ -525,14 +519,12 @@ class TestUserServiceManager(_BaseTestCase):
         enabled = True
         destination = '123'
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.rna_destinations.return_value = [destination]
 
         self.user_service_manager.deliver_rna_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_rna_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.rna_fwd_in_use.assert_called_with(user_id, destination, enabled)
-        self.forward_dao.rna_destinations.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_rna_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_rna_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
@@ -542,6 +534,7 @@ class TestUserServiceManager(_BaseTestCase):
                     not_(raises(NoSuchUserException)))
         assert_that(self.user_service_manager.dao.user.set_rna_fwd.called, equal_to(False))
         assert_that(self.user_service_notifier.rna_fwd_enabled.called, equal_to(False))
+        assert_that(self.funckey_manager.update_all_rna_fwd.called, equal_to(False))
 
     def test_deliver_unconditional_message_false(self):
         user_id = '12'
@@ -554,7 +547,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.dao.user.set_unconditional_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.disable_all_unconditional_fwd.assert_called_once_with(user_id)
+        self.funckey_manager.update_all_unconditional_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_unconditional_message_true(self):
         user_id = '12'
@@ -562,18 +555,12 @@ class TestUserServiceManager(_BaseTestCase):
         enabled = True
         destination = '123'
         self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
-        self.forward_dao.unc_destinations.return_value = [destination]
 
         self.user_service_manager.deliver_unconditional_message(user_uuid, enabled, destination)
 
         self.user_service_manager.dao.user.set_unconditional_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.forward_dao.unc_destinations.assert_called_once_with(user_id)
-
-        expected_calls = sorted([((user_id, '', True), {}),
-                                 ((user_id, destination, True), {})])
-        calls = sorted(self.funckey_manager.unconditional_fwd_in_use.call_args_list)
-        self.assertEquals(calls, expected_calls)
+        self.funckey_manager.update_all_unconditional_fwd.assert_called_with(user_id, enabled, destination)
 
     def test_deliver_unconditional_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
@@ -583,6 +570,7 @@ class TestUserServiceManager(_BaseTestCase):
                     not_(raises(NoSuchUserException)))
         assert_that(self.user_service_manager.dao.user.set_unconditional_fwd.called, equal_to(False))
         assert_that(self.user_service_notifier.unconditional_fwd_enabled.called, equal_to(False))
+        assert_that(self.funckey_manager.update_all_unconditional_fwd.called, equal_to(False))
 
     def test_disconnect(self):
         user_id = 95
