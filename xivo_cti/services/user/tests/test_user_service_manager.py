@@ -613,9 +613,11 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.set_presence(user_id, presence)
 
-        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
+            user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
-        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
+            user_id, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
@@ -631,7 +633,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.set_presence(user_id, presence, action=False)
 
-        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
+            user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.assertFalse(self.user_service_manager.presence_service_executor.execute_actions.called)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
@@ -650,12 +653,15 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.set_presence(user_id, presence)
 
-        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
+            user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
-        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
+            user_id, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
-        self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(expected_agent_id, expected_presence)
+        self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(
+            expected_agent_id, expected_presence)
 
     def test_set_not_valid_presence(self):
         user_id = '95'
@@ -667,7 +673,8 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.set_presence(user_id, presence)
 
-        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(user_profile, expected_presence)
+        self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
+            user_profile, expected_presence)
 
         self.assertEquals(self.user_service_manager.dao.user.set_presence.call_count, 0)
         self.assertEquals(self.user_service_manager.presence_service_executor.call_count, 0)
