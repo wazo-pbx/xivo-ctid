@@ -385,6 +385,111 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_notifier.dnd_enabled.assert_called_once_with(user_id, True)
         self.funckey_manager.dnd_in_use.assert_called_once_with(user_id, True)
 
+    def test_deliver_busy_message_false(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = False
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_busy_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_busy_message_true(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = True
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_busy_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_busy_message_no_user_found(self):
+        self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
+
+        assert_that(calling(self.user_service_manager.deliver_busy_message)
+                    .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False, ''),
+                    not_(raises(NoSuchUserException)))
+        assert_that(self.user_service_manager.dao.user.set_busy_fwd.called, equal_to(False))
+        assert_that(self.user_service_notifier.busy_fwd_enabled.called, equal_to(False))
+
+    def test_deliver_rna_message_false(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = False
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_rna_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_rna_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_rna_message_true(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = True
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_rna_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_rna_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_rna_message_no_user_found(self):
+        self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
+
+        assert_that(calling(self.user_service_manager.deliver_rna_message)
+                    .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False, ''),
+                    not_(raises(NoSuchUserException)))
+        assert_that(self.user_service_manager.dao.user.set_rna_fwd.called, equal_to(False))
+        assert_that(self.user_service_notifier.rna_fwd_enabled.called, equal_to(False))
+
+    def test_deliver_unconditional_message_false(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = False
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_unconditional_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_unconditional_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_unconditional_message_true(self):
+        user_id = '12'
+        user_uuid = '7f523550-03cf-4dac-a858-cb8afdb34775'
+        enabled = True
+        destination = '123'
+        self.user_service_manager.dao.user.get_by_uuid.return_value = {'id': user_id}
+
+        self.user_service_manager.deliver_unconditional_message(user_uuid, enabled, destination)
+
+        self.user_service_manager.dao.user.set_unconditional_fwd.assert_called_once_with(user_id, enabled, destination)
+        self.user_service_notifier.unconditional_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
+        self.funckey_manager.unconditional_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+
+    def test_deliver_unconditional_message_no_user_found(self):
+        self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
+
+        assert_that(calling(self.user_service_manager.deliver_unconditional_message)
+                    .with_args('7f523550-03cf-4dac-a858-cb8afdb34775', False, ''),
+                    not_(raises(NoSuchUserException)))
+        assert_that(self.user_service_manager.dao.user.set_unconditional_fwd.called, equal_to(False))
+        assert_that(self.user_service_notifier.unconditional_fwd_enabled.called, equal_to(False))
+
     def test_enable_unconditional_fwd(self):
         user_id = 543321
         destination = '234'

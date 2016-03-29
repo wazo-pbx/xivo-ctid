@@ -33,23 +33,14 @@ class UserServiceNotifier(object):
     def incallfilter_enabled(self, user_id, enabled):
         self.send_cti_event(self._prepare_filter_message(enabled, user_id))
 
-    def unconditional_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_unconditional_fwd_message(True, destination, user_id))
+    def unconditional_fwd_enabled(self, user_id, enabled, destination):
+        self.send_cti_event(self._prepare_unconditional_fwd_message(enabled, destination, user_id))
 
-    def unconditional_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_unconditional_fwd_message(False, destination, user_id))
+    def rna_fwd_enabled(self, user_id, enabled, destination):
+        self.send_cti_event(self._prepare_rna_fwd_message(enabled, destination, user_id))
 
-    def rna_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_rna_fwd_message(True, destination, user_id))
-
-    def rna_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_rna_fwd_message(False, destination, user_id))
-
-    def busy_fwd_enabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_busy_fwd_message(True, destination, user_id))
-
-    def busy_fwd_disabled(self, user_id, destination):
-        self.send_cti_event(self._prepare_busy_fwd_message(False, destination, user_id))
+    def busy_fwd_enabled(self, user_id, enabled, destination):
+        self.send_cti_event(self._prepare_busy_fwd_message(enabled, destination, user_id))
 
     def presence_updated(self, user_id, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
