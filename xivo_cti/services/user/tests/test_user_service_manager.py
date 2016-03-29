@@ -426,7 +426,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.dao.user.set_busy_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.busy_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.busy_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+        self.funckey_manager.busy_fwd_in_use.assert_called_with(user_id, destination, enabled)
         self.funckey_manager.disable_all_busy_fwd.assert_called_once_with(user_id)
         self.forward_dao.busy_destinations.assert_called_once_with(user_id)
 
@@ -465,7 +465,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.dao.user.set_rna_fwd.assert_called_once_with(user_id, enabled, destination)
         self.user_service_notifier.rna_fwd_enabled.assert_called_once_with(user_id, enabled, destination)
-        self.funckey_manager.rna_fwd_in_use.assert_called_once_with(user_id, destination, enabled)
+        self.funckey_manager.rna_fwd_in_use.assert_called_with(user_id, destination, enabled)
         self.forward_dao.rna_destinations.assert_called_once_with(user_id)
 
     def test_deliver_rna_message_no_user_found(self):

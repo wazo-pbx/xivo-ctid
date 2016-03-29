@@ -238,6 +238,7 @@ class UserServiceManager(object):
 
             if not enabled:
                 return
+            self.funckey_manager.busy_fwd_in_use(user_id, '', enabled)
             destinations = self.dao.forward.busy_destinations(user_id)
             if destination in destinations:
                 self.funckey_manager.busy_fwd_in_use(user_id, destination, enabled)
@@ -254,6 +255,7 @@ class UserServiceManager(object):
             self.funckey_manager.disable_all_rna_fwd(user_id)
             if not enabled:
                 return
+            self.funckey_manager.rna_fwd_in_use(user_id, '', enabled)
             destinations = self.dao.forward.rna_destinations(user_id)
             if destination in destinations:
                 self.funckey_manager.rna_fwd_in_use(user_id, destination, enabled)
