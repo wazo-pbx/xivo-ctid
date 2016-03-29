@@ -57,9 +57,6 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def unconditional_fwd_in_use(self, user_id, destination, status):
-        device = self._device(user_id, 'fwdunc')
-        self._send(device, status)
-
         device = self._device(user_id, 'fwdunc', destination)
         self._send(device, status)
 
@@ -73,8 +70,7 @@ class FunckeyManager(object):
 
     def disable_all_unconditional_fwd(self, user_id):
         for destination in self.dao.forward.unc_destinations(user_id):
-            if destination:
-                self.unconditional_fwd_in_use(user_id, destination, False)
+            self.unconditional_fwd_in_use(user_id, destination, False)
 
     def disable_all_rna_fwd(self, user_id):
         for destination in self.dao.forward.rna_destinations(user_id):

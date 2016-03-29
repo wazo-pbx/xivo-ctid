@@ -274,7 +274,7 @@ class UserServiceManager(object):
 
             if not enabled:
                 return
-            self.funckey_manager.unconditional_fwd_in_use(user_id, '', True)
+            self.funckey_manager.unconditional_fwd_in_use(user_id, '', enabled)
             destinations = self.dao.forward.unc_destinations(user_id)
             if destination in destinations:
                 self.funckey_manager.unconditional_fwd_in_use(user_id, destination, enabled)
