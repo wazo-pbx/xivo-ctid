@@ -28,7 +28,6 @@ from xivo import daemonize
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti import dao
-from xivo_cti import message_hook
 from xivo_cti import http_app
 
 from xivo_cti.ami import ami_callback_handler
@@ -234,7 +233,6 @@ class CTIServer(object):
 
         self._register_cti_callbacks()
         self._register_ami_callbacks()
-        self._register_message_hooks()
 
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
@@ -445,11 +443,6 @@ class CTIServer(object):
         callback_handler.register_callback('BridgeEnter', parser.on_bridge_enter)
         callback_handler.register_callback('VarSet', parser.on_set_var)
 
-    def _register_message_hooks(self):
-        message_hook.add_hook([('function', 'updateconfig'),
-                               ('listname', 'users')],
-                              lambda x: funckey_manager.parse_update_user_config(self._funckey_manager, x))
-
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
 
@@ -590,7 +583,6 @@ class CTIServer(object):
 
     def send_cti_event(self, event):
         self._broadcast_cti_group.send_message(event)
-        message_hook.run_hooks(event)
 
     def send_to_cti_client(self, who, what):
         (ipbxid, userid) = who.split('/')
