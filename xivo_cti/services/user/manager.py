@@ -264,14 +264,10 @@ class UserServiceManager(object):
     def deliver_unconditional_message(self, user_uuid, enabled, destination):
         try:
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
-            if not destination:
-                self.funckey_manager.disable_all_unconditional_fwd(user_id)
-                return
-
             self.dao.user.set_unconditional_fwd(user_id, enabled, destination)
             self.user_service_notifier.unconditional_fwd_enabled(user_id, enabled, destination)
-            self.funckey_manager.disable_all_unconditional_fwd(user_id)
 
+            self.funckey_manager.disable_all_unconditional_fwd(user_id)
             if not enabled:
                 return
             self.funckey_manager.unconditional_fwd_in_use(user_id, '', enabled)
