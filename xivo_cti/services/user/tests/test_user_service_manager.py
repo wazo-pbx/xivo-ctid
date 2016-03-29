@@ -321,6 +321,72 @@ class TestUserServiceManager(_BaseTestCase):
         self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
                                                                            service={'enabled': False})
 
+    def test_enable_busy_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.enable_busy_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='busy',
+                                                                           forward={'enabled': True,
+                                                                                    'destination': destination})
+
+    def test_disable_busy_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.disable_busy_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='busy',
+                                                                           forward={'enabled': False,
+                                                                                    'destination': destination})
+
+    def test_enable_rna_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.enable_rna_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='noanswer',
+                                                                           forward={'enabled': True,
+                                                                                    'destination': destination})
+
+    def test_disable_rna_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.disable_rna_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='noanswer',
+                                                                           forward={'enabled': False,
+                                                                                    'destination': destination})
+
+    def test_enable_unconditional_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.enable_unconditional_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='unconditional',
+                                                                           forward={'enabled': True,
+                                                                                    'destination': destination})
+
+    def test_disable_unconditional_fwd(self):
+        user_id = 123
+        destination = '1803'
+
+        with synchronize(self._runner):
+            self.user_service_manager.disable_unconditional_fwd(user_id, destination)
+
+        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='unconditional',
+                                                                           forward={'enabled': False,
+                                                                                    'destination': destination})
+
     def test_deliver_incallfilter_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
 
