@@ -35,8 +35,7 @@ logger = logging.getLogger('AMI_1.8')
 
 class AMI_1_8(object):
 
-    userevents = ('Feature',
-                  'dialplan2cti',
+    userevents = ('dialplan2cti',
                   'User',
                   'Queue',
                   'Group',
@@ -194,28 +193,6 @@ class AMI_1_8(object):
             _set('desttype', incall.action)
             _set('destid', incall.actionarg1)
         self._call_form_dispatch_filter.handle_did(uniqueid, chanprops.channel)
-
-    def userevent_feature(self, chanprops, ev):
-        reply = {}
-        if 'XIVO_USERID' in ev and 'Function' in ev and 'Status' in ev:
-            userid = ev['XIVO_USERID']
-            status = int(ev['Status']) != 0
-            user = self.innerdata.xod_config['users'].keeplist[userid]
-            fn = ev['Function']
-            if 'dnd' in fn:
-                user['enablednd'] = status
-            if 'callrecord' in fn:
-                user['callrecord'] = status
-            if 'incallfilter' in fn:
-                user['incallfilter'] = status
-            event = {'class': 'getlist',
-                     'listname': 'users',
-                     'function': 'updateconfig',
-                     'tipbxid': self._ctiserver.myipbxid,
-                     'tid': userid,
-                     'config': user}
-            self._ctiserver.send_cti_event(event)
-        return reply
 
     def userevent_dialplan2cti(self, chanprops, event):
         # why "UserEvent + dialplan2cti" and not "Newexten + Set" ?
