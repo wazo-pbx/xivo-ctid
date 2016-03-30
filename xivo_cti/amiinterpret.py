@@ -202,12 +202,8 @@ class AMI_1_8(object):
             status = int(ev['Status']) != 0
             user = self.innerdata.xod_config['users'].keeplist[userid]
             fn = ev['Function']
-            if 'dnd' in fn:
-                user['enablednd'] = status
             if 'callrecord' in fn:
                 user['callrecord'] = status
-            if 'incallfilter' in fn:
-                user['incallfilter'] = status
             event = {'class': 'getlist',
                      'listname': 'users',
                      'function': 'updateconfig',
