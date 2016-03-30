@@ -120,83 +120,83 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertFalse(self._userlist.keeplist[user_id]['incallfilter'], 'inner data not updated for filter')
 
-    @patch('xivo_cti.database.user_db.enable_service')
-    def test_enable_unconditional_fwd(self, enable_service):
+    def test_set_unconditional_fwd_enabled(self):
         user_id = '1'
         destination = '765'
         self._userlist.keeplist[user_id] = {'enableunc': False,
                                             'destunc': '964'}
 
-        self.dao.enable_unconditional_fwd(user_id, destination)
+        self.dao.set_unconditional_fwd(user_id, True, destination)
 
-        enable_service.assert_called_once_with(user_id, 'enableunc', 'destunc', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enableunc'], True)
-        self.assertEqual(self._userlist.keeplist[user_id]['destunc'], destination, 'inner data not updated for unconditional destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destunc'],
+                         destination,
+                         'inner data not updated for unconditional destination')
 
-    @patch('xivo_cti.database.user_db.disable_service')
-    def test_unconditional_fwd_disabled(self, disable_service):
+    def test_set_unconditional_fwd_disabled(self):
         user_id = '1'
         destination = '765'
         self._userlist.keeplist[user_id] = {'enableunc': True,
                                             'destunc': destination}
 
-        self.dao.disable_unconditional_fwd(user_id, destination)
+        self.dao.set_unconditional_fwd(user_id, False, destination)
 
-        disable_service.assert_called_once_with(user_id, 'enableunc', 'destunc', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enableunc'], False)
-        self.assertEqual(self._userlist.keeplist[user_id]['destunc'], destination, 'inner data not updated for unconditional destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destunc'],
+                         destination,
+                         'inner data not updated for unconditional destination')
 
-    @patch('xivo_cti.database.user_db.enable_service')
-    def test_rna_fwd_enabled(self, enable_service):
+    def test_set_rna_fwd_enabled(self):
         user_id = '1'
         destination = '4321'
         self._userlist.keeplist[user_id] = {'enablerna': False,
                                             'destrna': '656'}
 
-        self.dao.enable_rna_fwd(user_id, destination)
+        self.dao.set_rna_fwd(user_id, True, destination)
 
-        enable_service.assert_called_once_with(user_id, 'enablerna', 'destrna', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enablerna'], True)
-        self.assertEqual(self._userlist.keeplist[user_id]['destrna'], destination, 'inner data not updated for rna destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destrna'],
+                         destination,
+                         'inner data not updated for rna destination')
 
-    @patch('xivo_cti.database.user_db.disable_service')
-    def test_rna_fwd_disabled(self, disable_service):
+    def test_set_rna_fwd_disabled(self):
         user_id = '1'
         destination = '4321'
         self._userlist.keeplist[user_id] = {'enablerna': True,
                                             'destrna': destination}
 
-        self.dao.disable_rna_fwd(user_id, destination)
+        self.dao.set_rna_fwd(user_id, False,  destination)
 
-        disable_service.assert_called_once_with(user_id, 'enablerna', 'destrna', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enablerna'], False)
-        self.assertEqual(self._userlist.keeplist[user_id]['destrna'], destination, 'inner data not updated for rna destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destrna'],
+                         destination,
+                         'inner data not updated for rna destination')
 
-    @patch('xivo_cti.database.user_db.enable_service')
-    def test_busy_fwd_enabled(self, enable_service):
+    def test_set_busy_fwd_enabled(self):
         user_id = '1'
         destination = '435'
         self._userlist.keeplist[user_id] = {'enablebusy': False,
                                             'destbusy': '876'}
 
-        self.dao.enable_busy_fwd(user_id, destination)
+        self.dao.set_busy_fwd(user_id, True, destination)
 
-        enable_service.assert_called_once_with(user_id, 'enablebusy', 'destbusy', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enablebusy'], True)
-        self.assertEqual(self._userlist.keeplist[user_id]['destbusy'], destination, 'inner data not updated for busy destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destbusy'],
+                         destination,
+                         'inner data not updated for busy destination')
 
-    @patch('xivo_cti.database.user_db.disable_service')
-    def test_busy_fwd_disabled(self, disable_service):
+    def test_set_busy_fwd_disabled(self):
         user_id = '1'
         destination = '435'
         self._userlist.keeplist[user_id] = {'enablebusy': True,
                                             'destbusy': destination}
 
-        self.dao.disable_busy_fwd(user_id, destination)
+        self.dao.set_busy_fwd(user_id, False, destination)
 
-        disable_service.assert_called_once_with(user_id, 'enablebusy', 'destbusy', destination)
         self.assertEqual(self._userlist.keeplist[user_id]['enablebusy'], False)
-        self.assertEqual(self._userlist.keeplist[user_id]['destbusy'], destination, 'inner data not updated for busy destination')
+        self.assertEqual(self._userlist.keeplist[user_id]['destbusy'],
+                         destination,
+                         'inner data not updated for busy destination')
 
     def test_connect(self):
         self.dao._innerdata = self._innerdata

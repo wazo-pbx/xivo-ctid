@@ -45,7 +45,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_dnd_disabled_false(self):
+    def test_dnd_enabled_false(self):
         user_id = 34
         expected = {"class": "getlist",
                     "config": {"enablednd": False},
@@ -72,7 +72,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_incallfilter_disabled_false(self):
+    def test_incallfilter_enabled_false(self):
         user_id = 932
 
         expected = {"class": "getlist",
@@ -86,7 +86,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_unconditional_fwd_enabled(self):
+    def test_unconditional_fwd_enabled_true(self):
         user_id = 456
         destination = '234'
         expected = {"class": "getlist",
@@ -97,11 +97,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.unconditional_fwd_enabled(user_id, destination)
+        self.notifier.unconditional_fwd_enabled(user_id, True, destination)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_rna_fwd_enabled(self):
+    def test_rna_fwd_enabled_true(self):
         user_id = 456
         destination = '234'
         expected = {"class": "getlist",
@@ -112,11 +112,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.rna_fwd_enabled(user_id, destination)
+        self.notifier.rna_fwd_enabled(user_id, True, destination)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_rna_fwd_disabled(self):
+    def test_rna_fwd_enabled_false(self):
         user_id = 456
         destination = '234'
         expected = {"class": "getlist",
@@ -127,11 +127,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.rna_fwd_disabled(user_id, destination)
+        self.notifier.rna_fwd_enabled(user_id, False, destination)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_busy_fwd_enabled(self):
+    def test_busy_fwd_enabled_true(self):
         user_id = 456
         destination = '234'
         expected = {"class": "getlist",
@@ -142,11 +142,11 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.busy_fwd_enabled(user_id, destination)
+        self.notifier.busy_fwd_enabled(user_id, True, destination)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 
-    def test_busy_fwd_disabled(self):
+    def test_busy_fwd_enabled_false(self):
         user_id = 456
         destination = '234'
         expected = {"class": "getlist",
@@ -157,7 +157,7 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tid": user_id,
                     "tipbxid": self.ipbx_id}
 
-        self.notifier.busy_fwd_disabled(user_id, destination)
+        self.notifier.busy_fwd_enabled(user_id, False, destination)
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
 

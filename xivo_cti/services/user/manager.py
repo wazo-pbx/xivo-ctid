@@ -66,6 +66,9 @@ class UserServiceManager(object):
         services_routing_key = 'config.users.*.services.*.updated'
         bus_listener.add_callback(services_routing_key, self._on_bus_services_message_event)
 
+        forwards_routing_key = 'config.users.*.forwards.*.updated'
+        bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
+
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
@@ -107,47 +110,37 @@ class UserServiceManager(object):
         self._async_set_service(user_id, 'incallfilter', False)
 
     def enable_unconditional_fwd(self, user_id, destination):
-        if destination == '':
+        if not destination:
             self.disable_unconditional_fwd(user_id, destination)
             return
-        self.dao.user.enable_unconditional_fwd(user_id, destination)
-        self.user_service_notifier.unconditional_fwd_enabled(user_id, destination)
-        self.funckey_manager.disable_all_unconditional_fwd(user_id)
-        self.funckey_manager.unconditional_fwd_in_use(user_id, '', True)
-        destinations = self.dao.forward.unc_destinations(user_id)
-        if destination in destinations:
-            self.funckey_manager.unconditional_fwd_in_use(user_id, destination, True)
+        logger.debug('Enable Unconditional called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'unconditional', True, destination)
 
     def disable_unconditional_fwd(self, user_id, destination):
-        self.dao.user.disable_unconditional_fwd(user_id, destination)
-        self.user_service_notifier.unconditional_fwd_disabled(user_id, destination)
-        self.funckey_manager.disable_all_unconditional_fwd(user_id)
+        logger.debug('Disable Unconditional called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'unconditional', False, destination)
 
     def enable_rna_fwd(self, user_id, destination):
-        self.dao.user.enable_rna_fwd(user_id, destination)
-        self.user_service_notifier.rna_fwd_enabled(user_id, destination)
-        self.funckey_manager.disable_all_rna_fwd(user_id)
-        destinations = self.dao.forward.rna_destinations(user_id)
-        if destination in destinations:
-            self.funckey_manager.rna_fwd_in_use(user_id, destination, True)
+        if not destination:
+            self.disable_rna_fwd(user_id, destination)
+            return
+        logger.debug('Enable NoAnswer called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'noanswer', True, destination)
 
     def disable_rna_fwd(self, user_id, destination):
-        self.dao.user.disable_rna_fwd(user_id, destination)
-        self.user_service_notifier.rna_fwd_disabled(user_id, destination)
-        self.funckey_manager.disable_all_rna_fwd(user_id)
+        logger.debug('Disable NoAnswer called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'noanswer', False, destination)
 
     def enable_busy_fwd(self, user_id, destination):
-        self.dao.user.enable_busy_fwd(user_id, destination)
-        self.user_service_notifier.busy_fwd_enabled(user_id, destination)
-        self.funckey_manager.disable_all_busy_fwd(user_id)
-        destinations = self.dao.forward.busy_destinations(user_id)
-        if destination in destinations:
-            self.funckey_manager.busy_fwd_in_use(user_id, destination, True)
+        if not destination:
+            self.disable_busy_fwd(user_id, destination)
+            return
+        logger.debug('Enable Busy called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'busy', True, destination)
 
     def disable_busy_fwd(self, user_id, destination):
-        self.dao.user.disable_busy_fwd(user_id, destination)
-        self.user_service_notifier.busy_fwd_disabled(user_id, destination)
-        self.funckey_manager.disable_all_busy_fwd(user_id)
+        logger.debug('Disable Busy called for user_id %s', user_id)
+        self._async_set_forward(user_id, 'busy', False, destination)
 
     def disconnect(self, user_id):
         self.dao.user.disconnect(user_id)
@@ -236,10 +229,43 @@ class UserServiceManager(object):
         except NoSuchUserException:
             logger.info('received a %s incallfilter event on an unknown user %s', enabled, user_uuid)
 
+    def deliver_busy_message(self, user_uuid, enabled, destination):
+        try:
+            user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+            self.dao.user.set_busy_fwd(user_id, enabled, destination)
+            self.user_service_notifier.busy_fwd_enabled(user_id, enabled, destination)
+            self.funckey_manager.update_all_busy_fwd(user_id, enabled, destination)
+        except NoSuchUserException:
+            logger.info('received a %s busy forward event on an unknown user %s', enabled, user_uuid)
+
+    def deliver_rna_message(self, user_uuid, enabled, destination):
+        try:
+            user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+            self.dao.user.set_rna_fwd(user_id, enabled, destination)
+            self.user_service_notifier.rna_fwd_enabled(user_id, enabled, destination)
+            self.funckey_manager.update_all_rna_fwd(user_id, enabled, destination)
+        except NoSuchUserException:
+            logger.info('received a %s rna forward event on an unknown user %s', enabled, user_uuid)
+
+    def deliver_unconditional_message(self, user_uuid, enabled, destination):
+        try:
+            user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
+            self.dao.user.set_unconditional_fwd(user_id, enabled, destination)
+            self.user_service_notifier.unconditional_fwd_enabled(user_id, enabled, destination)
+            self.funckey_manager.update_all_unconditional_fwd(user_id, enabled, destination)
+        except NoSuchUserException:
+            logger.info('received a %s unconditional forward event on an unknown user %s', enabled, user_uuid)
+
     def _async_set_service(self, user_id, service, enabled):
         self._runner.run(self._client.users(user_id).update_service,
                          service_name=service,
                          service={'enabled': enabled})
+
+    def _async_set_forward(self, user_id, forward, enabled, destination):
+        self._runner.run(self._client.users(user_id).update_forward,
+                         forward_name=forward,
+                         forward={'enabled': enabled,
+                                  'destination': destination})
 
     @bus_listener_thread
     @ack_bus_message
@@ -256,3 +282,22 @@ class UserServiceManager(object):
             self._task_queue.put(self.deliver_dnd_message, user_uuid, enabled)
         elif name == 'users_services_incallfilter_updated':
             self._task_queue.put(self.deliver_incallfilter_message, user_uuid, enabled)
+
+    @bus_listener_thread
+    @ack_bus_message
+    def _on_bus_forwards_message_event(self, event):
+        data = event.get('data', {})
+        try:
+            user_uuid = data['user_uuid']
+            enabled = data['enabled']
+            destination = data['destination']
+            name = event['name']
+        except KeyError as e:
+            logger.info('_on_bus_services_message_event: received an incomplete dnd message event: %s', e)
+
+        if name == 'users_forwards_busy_updated':
+            self._task_queue.put(self.deliver_busy_message, user_uuid, enabled, destination)
+        elif name == 'users_forwards_noanswer_updated':
+            self._task_queue.put(self.deliver_rna_message, user_uuid, enabled, destination)
+        elif name == 'users_forwards_unconditional_updated':
+            self._task_queue.put(self.deliver_unconditional_message, user_uuid, enabled, destination)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ from xivo import xivo_helpers
 from xivo_cti import dao
 
 from xivo_dao.helpers.db_utils import session_scope
-from xivo_dao.resources.user import dao as user_dao
 from xivo_dao import extensions_dao
 
 
@@ -58,9 +57,6 @@ class FunckeyManager(object):
         self._send(device, status)
 
     def unconditional_fwd_in_use(self, user_id, destination, status):
-        device = self._device(user_id, 'fwdunc')
-        self._send(device, status)
-
         device = self._device(user_id, 'fwdunc', destination)
         self._send(device, status)
 
@@ -72,56 +68,23 @@ class FunckeyManager(object):
         device = self._device(user_id, 'fwdbusy', destination)
         self._send(device, status)
 
-    def disable_all_unconditional_fwd(self, user_id):
-        for destination in self.dao.forward.unc_destinations(user_id):
-            if destination:
-                self.unconditional_fwd_in_use(user_id, destination, False)
+    def update_all_unconditional_fwd(self, user_id, enabled, destination):
+        for user_dest in self.dao.forward.unc_destinations(user_id):
+            if user_dest == destination or user_dest == '':
+                self.unconditional_fwd_in_use(user_id, user_dest, enabled)
+            else:
+                self.unconditional_fwd_in_use(user_id, user_dest,  False)
 
-    def disable_all_rna_fwd(self, user_id):
-        for destination in self.dao.forward.rna_destinations(user_id):
-            if destination:
-                self.rna_fwd_in_use(user_id, destination, False)
+    def update_all_rna_fwd(self, user_id, enabled, destination):
+        for user_dest in self.dao.forward.rna_destinations(user_id):
+            if user_dest == destination or user_dest == '':
+                self.rna_fwd_in_use(user_id, user_dest, enabled)
+            else:
+                self.rna_fwd_in_use(user_id, user_dest,  False)
 
-    def disable_all_busy_fwd(self, user_id):
-        for destination in self.dao.forward.busy_destinations(user_id):
-            if destination:
-                self.busy_fwd_in_use(user_id, destination, False)
-
-
-def parse_update_user_config(manager, event):
-    if 'config' in event and 'tid' in event:
-        config = event['config']
-        user_id = int(event['tid'])
-        if 'enableunc' in config or 'destunc' in config:
-            _set_fwd_unc_blf(manager, user_id)
-        if 'enablerna' in config or 'destrna' in config:
-            _set_fwd_rna_blf(manager, user_id)
-        if 'enablebusy' in config or 'destbusy' in config:
-            _set_fwd_busy_blf(manager, user_id)
-
-
-def _set_fwd_busy_blf(manager, user_id):
-    with session_scope():
-        user = user_dao.get(user_id)
-        destination, forward = user.destbusy, user.enablebusy == 1
-
-    manager.disable_all_busy_fwd(user_id)
-    manager.busy_fwd_in_use(user_id, destination, forward)
-
-
-def _set_fwd_rna_blf(manager, user_id):
-    with session_scope():
-        user = user_dao.get(user_id)
-        destination, forward = user.destrna, user.enablerna == 1
-
-    manager.disable_all_rna_fwd(user_id)
-    manager.rna_fwd_in_use(user_id, destination, forward)
-
-
-def _set_fwd_unc_blf(manager, user_id):
-    with session_scope():
-        user = user_dao.get(user_id)
-        destination, forward = user.destunc, user.enableunc == 1
-
-    manager.disable_all_unconditional_fwd(user_id)
-    manager.unconditional_fwd_in_use(user_id, destination, forward)
+    def update_all_busy_fwd(self, user_id, enabled, destination):
+        for user_dest in self.dao.forward.busy_destinations(user_id):
+            if user_dest == destination or user_dest == '':
+                self.busy_fwd_in_use(user_id, user_dest, enabled)
+            else:
+                self.busy_fwd_in_use(user_id, user_dest,  False)

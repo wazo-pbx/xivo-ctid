@@ -59,41 +59,20 @@ class UserDAO(object):
         user = self._user(user_id)
         user['incallfilter'] = enabled
 
-    def enable_unconditional_fwd(self, user_id, destination):
-        user_db.enable_service(user_id, 'enableunc', 'destunc', destination)
+    def set_unconditional_fwd(self, user_id, enabled, destination):
         user = self._user(user_id)
-        user['enableunc'] = True
+        user['enableunc'] = enabled
         user['destunc'] = destination
 
-    def disable_unconditional_fwd(self, user_id, destination):
-        user_db.disable_service(user_id, 'enableunc', 'destunc', destination)
+    def set_rna_fwd(self, user_id, enabled, destination):
         user = self._user(user_id)
-        user['destunc'] = destination
-        user['enableunc'] = False
-
-    def enable_rna_fwd(self, user_id, destination):
-        user_db.enable_service(user_id, 'enablerna', 'destrna', destination)
-        user = self._user(user_id)
-        user['enablerna'] = True
+        user['enablerna'] = enabled
         user['destrna'] = destination
 
-    def disable_rna_fwd(self, user_id, destination):
-        user_db.disable_service(user_id, 'enablerna', 'destrna', destination)
+    def set_busy_fwd(self, user_id, enabled, destination):
         user = self._user(user_id)
-        user['destrna'] = destination
-        user['enablerna'] = False
-
-    def enable_busy_fwd(self, user_id, destination):
-        user_db.enable_service(user_id, 'enablebusy', 'destbusy', destination)
-        user = self._user(user_id)
-        user['enablebusy'] = True
+        user['enablebusy'] = enabled
         user['destbusy'] = destination
-
-    def disable_busy_fwd(self, user_id, destination):
-        user_db.disable_service(user_id, 'enablebusy', 'destbusy', destination)
-        user = self._user(user_id)
-        user['destbusy'] = destination
-        user['enablebusy'] = False
 
     def disconnect(self, user_id):
         user_status = self._user_status(user_id)
