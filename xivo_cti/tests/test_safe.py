@@ -39,7 +39,8 @@ class TestSafe(unittest.TestCase):
     def setUp(self):
         queue_member_cti_adapter = Mock(QueueMemberCTIAdapter)
         self._ctiserver = Mock(CTIServer)
-        self.safe = Safe(self._ctiserver, queue_member_cti_adapter)
+        with patch('xivo_cti.innerdata.context'):
+            self.safe = Safe(self._ctiserver, queue_member_cti_adapter)
         self.safe.user_service_manager = Mock(UserServiceManager)
 
     def test_safe(self):
