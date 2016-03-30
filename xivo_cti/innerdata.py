@@ -54,6 +54,7 @@ class Safe(object):
         self.faxes = {}
         self.ctistack = []
         self._sent_sheets = defaultdict(list)
+        self.funckey_manager = context.get('funckey_manager')
 
     def init_xod_config(self):
         self.xod_config = {
@@ -90,6 +91,8 @@ class Safe(object):
     def _update_config_list_add(self, listname, item_id):
         self.xod_config[listname].add(item_id)
         self.xod_status[listname][item_id] = self.xod_config[listname].get_status()
+        if listname == 'users':
+            self._update_forwards_blf(item_id)
 
     def _update_config_list_del(self, listname, item_id):
         self.xod_config[listname].delete(item_id)
@@ -97,6 +100,14 @@ class Safe(object):
 
     def _update_config_list_change(self, listname, item_id):
         self.xod_config[listname].edit(item_id)
+        if listname == 'users':
+            self._update_forwards_blf(item_id)
+
+    def _update_forwards_blf(self, item_id):
+        user = self.xod_config['users'].keeplist[item_id]
+        self.funckey_manager.update_all_unconditional_fwd(user['id'], user['enableunc'], user['destunc'])
+        self.funckey_manager.update_all_rna_fwd(user['id'], user['enablerna'], user['destrna'])
+        self.funckey_manager.update_all_busy_fwd(user['id'], user['enablebusy'], user['destbusy'])
 
     def get_config(self, listname, item_id, user_contexts=None):
         if listname == 'queuemembers':
