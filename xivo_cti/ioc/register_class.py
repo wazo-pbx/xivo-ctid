@@ -31,6 +31,7 @@ from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.amiinterpret import AMI_1_8
 from xivo_cti.async_runner import AsyncRunner
 from xivo_cti.bus_listener import BusListener
+from xivo_cti.cache_updater import CacheUpdater
 from xivo_cti.call_forms.call_form_result_handler import CallFormResultHandler
 from xivo_cti.call_forms.dispatch_filter import DispatchFilter
 from xivo_cti.call_forms.variable_aggregator import VariableAggregator
@@ -157,6 +158,7 @@ def setup(xivo_uuid):
     context.register('bus_listener', bus_listener)
     context.register('bus_publisher', bus_publisher)
     context.register('broadcast_cti_group', new_broadcast_cti_group)
+    context.register('cache_updater', CacheUpdater)
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)

@@ -234,6 +234,9 @@ class CTIServer(object):
         self._register_cti_callbacks()
         self._register_ami_callbacks()
 
+        # size effect...
+        context.get('cache_updater')
+
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')
         GetRelations.register_callback_params(people_adapter.get_relations, ['user_id'])
