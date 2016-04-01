@@ -18,9 +18,10 @@
 import unittest
 
 from hamcrest import assert_that, calling, equal_to, not_, raises
-from mock import Mock
+from mock import Mock, sentinel as s
 
 from xivo_cti.bus_listener import BusListener
+from xivo_cti.innerdata import Safe
 from xivo_cti.task_queue import _TaskQueue as TaskQueue
 
 from ..cache_updater import CacheUpdater
@@ -32,8 +33,19 @@ class TestCacheUpdater(unittest.TestCase):
         self.listener = Mock(BusListener)
         self.task_queue = Mock(TaskQueue)
         self.xivo_uuid = 'ae90aff8-8947-4111-9d25-50e0f1328ea8'
+        self.innerdata = Mock(Safe)
 
-        self.updater = CacheUpdater(self.listener, self.task_queue, self.xivo_uuid)
+        self.updater = CacheUpdater(self.listener, self.task_queue, self.xivo_uuid, self.innerdata)
+
+    def test_that_on_user_line_associated_the_user_is_updated(self):
+        self.updater._on_user_line_associated(s.user_id, s.line_id)
+
+        self.innerdata.update_config_list('users', 'edit', s.user_id)
+
+    def test_that_on_user_line_associated_the_phone_is_added(self):
+        self.updater._on_user_line_associated(s.user_id, s.line_id)
+
+        self.innerdata.update_config_list('phones', 'add', s.line_id)
 
     def test_that_user_associated_messages_triggers_a_call_to_on_user_line_associated(self):
         user_id, line_id = 42, 666
@@ -42,7 +54,8 @@ class TestCacheUpdater(unittest.TestCase):
 
         self.updater.on_bus_user_line_associated(event, Mock())
 
-        self.task_queue.put.assert_called_once_with(self.updater._on_user_line_associated, user_id, line_id)
+        self.task_queue.put.assert_called_once_with(self.updater._on_user_line_associated,
+                                                    str(user_id), str(line_id))
 
     def test_that_user_associated_messages_does_nothing_on_malformed_events(self):
         assert_that(calling(self.updater.on_bus_user_line_associated)

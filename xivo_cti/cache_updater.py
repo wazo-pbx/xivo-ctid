@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 
 class CacheUpdater(object):
 
-    def __init__(self, bus_listener, task_queue, xivo_uuid):
+    def __init__(self, bus_listener, task_queue, xivo_uuid, innerdata):
         bus_listener.add_callback(UserLineAssociatedEvent.routing_key, self.on_bus_user_line_associated)
         self._task_queue = task_queue
         self._xivo_uuid = xivo_uuid
+        self._innerdata = innerdata
 
     def _on_user_line_associated(self, user_id, line_id):
-        logger.debug('********************************************************************************')
-        logger.debug('user %s has been associated to line %s', user_id, line_id)
-        logger.debug('********************************************************************************')
+        self._innerdata.update_config_list('users', 'edit', user_id)
+        self._innerdata.update_config_list('phones', 'add', line_id)
 
     @bus_listener_thread
     @ack_bus_message
@@ -42,8 +42,8 @@ class CacheUpdater(object):
             if event['origin_uuid'] != self._xivo_uuid:
                 return
 
-            user_id = event['data']['user_id']
-            line_id = event['data']['line_id']
+            user_id = str(event['data']['user_id'])
+            line_id = str(event['data']['line_id'])
             self._task_queue.put(self._on_user_line_associated, user_id, line_id)
         except (KeyError, TypeError):
             logger.info('received a malformed UserLineAssociated event')
