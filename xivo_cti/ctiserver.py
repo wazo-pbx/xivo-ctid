@@ -234,8 +234,8 @@ class CTIServer(object):
         self._register_cti_callbacks()
         self._register_ami_callbacks()
 
-        # size effect...
-        context.get('cache_updater')
+        cache_updater = context.get('cache_updater')
+        cache_updater.subscribe_to_bus(context.get('bus_listener'))
 
     def _register_cti_callbacks(self):
         people_adapter = context.get('people_cti_adapter')

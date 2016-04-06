@@ -35,7 +35,8 @@ class TestCacheUpdater(unittest.TestCase):
         self.xivo_uuid = 'ae90aff8-8947-4111-9d25-50e0f1328ea8'
         self.innerdata = Mock(Safe)
 
-        self.updater = CacheUpdater(self.listener, self.task_queue, self.xivo_uuid, self.innerdata)
+        self.updater = CacheUpdater(self.task_queue, self.xivo_uuid, self.innerdata)
+        self.updater.subscribe_to_bus(self.listener)
 
     def test_that_on_user_line_associated_the_user_is_updated(self):
         self.updater._on_user_line_associated(s.user_id, s.line_id)
