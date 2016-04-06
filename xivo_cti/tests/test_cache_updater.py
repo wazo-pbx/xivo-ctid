@@ -46,12 +46,12 @@ class TestCacheUpdater(unittest.TestCase):
     def test_that_on_user_line_associated_the_user_is_updated(self):
         self.updater._on_user_line_associated(s.user_id, s.line_id)
 
-        self.innerdata.update_config_list('users', 'edit', s.user_id)
+        self.innerdata.update_config_list.assert_any_call('users', 'edit', s.user_id)
 
     def test_that_on_user_line_associated_the_phone_is_added(self):
         self.updater._on_user_line_associated(s.user_id, s.line_id)
 
-        self.innerdata.update_config_list('phones', 'add', s.line_id)
+        self.innerdata.update_config_list.assert_any_call('phones', 'add', s.line_id)
 
     def test_that_user_associated_messages_triggers_a_call_to_on_user_line_associated(self):
         event = self._new_user_line_associated_event(SOME_USER_ID, SOME_LINE_ID)
