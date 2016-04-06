@@ -26,13 +26,18 @@ from xivo_cti.task_queue import _TaskQueue as TaskQueue
 
 from ..cache_updater import CacheUpdater
 
+SOME_USER_ID = 10
+SOME_LINE_ID = 12
+SOME_XIVO_UUID = 'ae90aff8-8947-4111-9d25-50e0f1328ea8'
+SOME_OTHER_XIVO_UUID = '14af24ad-b6d0-4297-8b64-fe551dc49cf1'
+
 
 class TestCacheUpdater(unittest.TestCase):
 
     def setUp(self):
         self.listener = Mock(BusListener)
         self.task_queue = Mock(TaskQueue)
-        self.xivo_uuid = 'ae90aff8-8947-4111-9d25-50e0f1328ea8'
+        self.xivo_uuid = SOME_XIVO_UUID
         self.innerdata = Mock(Safe)
 
         self.updater = CacheUpdater(self.task_queue, self.xivo_uuid, self.innerdata)
@@ -49,14 +54,12 @@ class TestCacheUpdater(unittest.TestCase):
         self.innerdata.update_config_list('phones', 'add', s.line_id)
 
     def test_that_user_associated_messages_triggers_a_call_to_on_user_line_associated(self):
-        user_id, line_id = 42, 666
-
-        event = self._new_user_line_associated_event(user_id, line_id)
+        event = self._new_user_line_associated_event(SOME_USER_ID, SOME_LINE_ID)
 
         self.updater.on_bus_user_line_associated(event, Mock())
 
         self.task_queue.put.assert_called_once_with(self.updater._on_user_line_associated,
-                                                    str(user_id), str(line_id))
+                                                    str(SOME_USER_ID), str(SOME_LINE_ID))
 
     def test_that_user_associated_messages_does_nothing_on_malformed_events(self):
         assert_that(calling(self.updater.on_bus_user_line_associated)
@@ -68,7 +71,7 @@ class TestCacheUpdater(unittest.TestCase):
                     not_(raises(Exception)))
 
     def test_that_user_associated_messages_from_another_xivo_does_nothing(self):
-        event = self._new_user_line_associated_event(10, 12, xivo_uuid='14af24ad-b6d0-4297-8b64-fe551dc49cf1')
+        event = self._new_user_line_associated_event(SOME_USER_ID, SOME_LINE_ID, SOME_OTHER_XIVO_UUID)
 
         self.updater.on_bus_user_line_associated(event, Mock())
 
