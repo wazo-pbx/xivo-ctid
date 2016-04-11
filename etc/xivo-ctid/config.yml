@@ -15,6 +15,30 @@ logfile: /var/log/xivo-ctid.log
 # PID file.
 pidfile: /var/run/xivo-ctid.pid
 
+# Default socket timeout in seconds
+socket_timeout: 10
+
+# Client connection information
+client:
+
+  # Listening address
+  listen: 0.0.0.0
+
+  # Listening port
+  port: 5003
+
+  # Maximum time allowed to complete the authentication in seconds
+  login_timeout: 5
+
+# Debug connection mainly for debugging and testing
+info:
+  listen: '127.0.0.1'
+  port: 5005
+
+# Connection to receive update notifications (deprecated)
+update_events_socket:
+  listen: '127.0.0.1'
+  port: 5004
 
 # REST API server
 rest_api:

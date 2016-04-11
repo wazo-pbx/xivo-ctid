@@ -56,7 +56,7 @@ class AuthenticationHandler(object):
         self._authenticated = False
         self._on_complete_cb = on_complete_cb
         self._login_task = None
-        self._login_timeout = int(config['main'].get('logintimeout', 5))
+        self._login_timeout = int(config['client']['login_timeout'])
 
     def auth_token(self):
         return self._auth_token

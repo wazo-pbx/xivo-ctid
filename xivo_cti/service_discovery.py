@@ -25,7 +25,7 @@ from xivo_cti.http_app import HTTPInterface
 def self_check(config):
     host = 'localhost'
     http_port = config['rest_api']['http']['port']
-    cti_port = config['main']['incoming_tcp']['CTI'][1]
+    cti_port = config['client']['port']
     info_url = 'http://{}:{}/{}/infos'.format(host, http_port, HTTPInterface.VERSION)
 
     try:

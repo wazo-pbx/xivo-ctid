@@ -40,6 +40,23 @@ _default_config = {
     'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
     'config_file': '/etc/xivo-ctid/config.yml',
     'extra_config_files': '/etc/xivo-ctid/conf.d/',
+    'socket_timeout': 10,
+    'client': {
+        'listen': '0.0.0.0',
+        'port': 5003,
+        'login_timeout': 5,
+        'enabled': True,
+    },
+    'info': {
+        'listen': '127.0.0.1',
+        'port': 5005,
+        'enabled': True,
+    },
+    'update_events_socket': {
+        'listen': '127.0.0.1',
+        'port': 5004,
+        'enabled': True,
+    },
     'main': {
         'certfile': '/usr/share/xivo-certs/server.crt',
         'keyfile': '/usr/share/xivo-certs/server.key',
