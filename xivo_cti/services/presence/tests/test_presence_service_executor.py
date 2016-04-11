@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,12 +16,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-from mock import Mock
-from mock import patch
+import uuid
+
+from hamcrest import assert_that, calling, raises
+from mock import Mock, patch
+
 from xivo_cti.dao.user_dao import UserDAO
+
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.agent.manager import AgentServiceManager
+
+
+SOME_UUID = str(uuid.uuid4())
+SOME_TOKEN = str(uuid.uuid4())
 
 
 class TestPresenceServiceExecutor(unittest.TestCase):
@@ -68,7 +76,7 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
                     'userstatus': {'xivo': self._get_userstatus()}}):
-            self.presence_service_executor.execute_actions(user_id, 'disconnected')
+            self.presence_service_executor.execute_actions(user_id, SOME_UUID, SOME_TOKEN, 'disconnected')
 
         self.agent_service_manager.logoff.assert_called_once_with(agent_id)
 
@@ -84,9 +92,9 @@ class TestPresenceServiceExecutor(unittest.TestCase):
         with patch('xivo_cti.services.presence.executor.config',
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
                     'userstatus': {'xivo': self._get_userstatus()}}):
-            self.presence_service_executor.execute_actions(user_id, 'available')
+            self.presence_service_executor.execute_actions(user_id, SOME_UUID, SOME_TOKEN, 'available')
 
-        self.user_service_manager.set_dnd.assert_called_once_with(user_id, False)
+        self.user_service_manager.set_dnd.assert_called_once_with(SOME_UUID, SOME_TOKEN, False)
         self.agent_service_manager.unpause_agent_on_all_queues.assert_called_once_with(agent_id)
 
     @patch('xivo_cti.dao.user', spec=UserDAO)
@@ -100,4 +108,6 @@ class TestPresenceServiceExecutor(unittest.TestCase):
                    {'profiles': {user_profile: {'userstatus': 'xivo'}},
                     'userstatus': {'xivo': self._get_userstatus()}}):
 
-            self.assertRaises(ValueError, self.presence_service_executor.execute_actions, user_id, 'unknown')
+            assert_that(calling(self.presence_service_executor.execute_actions)
+                        .with_args(user_id, SOME_UUID, SOME_TOKEN, 'unknown'),
+                        raises(ValueError))

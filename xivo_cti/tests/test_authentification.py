@@ -430,6 +430,7 @@ class TestAuthenticationHandlerOnLoginCapas(_BaseAuthenticationHandlerTestCase):
     def setUp(self):
         super(TestAuthenticationHandlerOnLoginCapas, self).setUp()
         self.handler._user_uuid = s.uuid
+        self.handler._auth_token = s.token
         self.user_id = self.handler._user_id = 42
         self.profile_id = self.handler._cti_profile_id = 3
         self.connection.login_task = Mock()
@@ -469,7 +470,7 @@ class TestAuthenticationHandlerOnLoginCapas(_BaseAuthenticationHandlerTestCase):
             with patch('xivo_cti.authentication.config', self.config):
                 self.handler._on_login_capas(self.profile_id, state, self.connection)
 
-        user_service_manager.connect.assert_called_once_with(self.user_id, state)
+        user_service_manager.connect.assert_called_once_with(self.user_id, s.uuid, s.token, state)
 
     @patch('xivo_cti.authentication.LoginCapas')
     def test_that_login_capas_command_is_deregistered(self, LoginCapas):

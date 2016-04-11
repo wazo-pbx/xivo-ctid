@@ -304,18 +304,19 @@ class CTIServer(object):
         )
         Dial.register_callback_params(self._user_service_manager.call_destination,
                                       ['cti_connection', 'user_id', 'destination'])
-        EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_id'])
-        DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_id'])
+        EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
+        DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
         DisableRecording.register_callback_params(self._user_service_manager.disable_recording, ['target'])
-        EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_id'])
-        DisableFilter.register_callback_params(self._user_service_manager.disable_filter, ['user_id'])
-        EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd, ['user_id', 'destination'])
-        DisableUnconditionalForward.register_callback_params(self._user_service_manager.disable_unconditional_fwd, ['user_id', 'destination'])
-        EnableNoAnswerForward.register_callback_params(self._user_service_manager.enable_rna_fwd, ['user_id', 'destination'])
-        DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, ['user_id', 'destination'])
-        EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, ['user_id', 'destination'])
-        DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, ['user_id', 'destination'])
+        EnableFilter.register_callback_params(self._user_service_manager.enable_filter, ['user_uuid', 'auth_token'])
+        DisableFilter.register_callback_params(self._user_service_manager.disable_filter, ['user_uuid', 'auth_token'])
+        fwd_params = ['user_uuid', 'auth_token', 'destination']
+        EnableUnconditionalForward.register_callback_params(self._user_service_manager.enable_unconditional_fwd, fwd_params)
+        DisableUnconditionalForward.register_callback_params(self._user_service_manager.disable_unconditional_fwd, fwd_params)
+        EnableNoAnswerForward.register_callback_params(self._user_service_manager.enable_rna_fwd, fwd_params)
+        DisableNoAnswerForward.register_callback_params(self._user_service_manager.disable_rna_fwd, fwd_params)
+        EnableBusyForward.register_callback_params(self._user_service_manager.enable_busy_fwd, fwd_params)
+        DisableBusyForward.register_callback_params(self._user_service_manager.disable_busy_fwd, fwd_params)
 
         SubscribeToQueuesStats.register_callback_params(self._statistics_notifier.subscribe, ['cti_connection'])
         SubscribeToQueuesStats.register_callback_params(self._queue_statistics_producer.send_all_stats, ['cti_connection'])
@@ -337,7 +338,7 @@ class CTIServer(object):
             ['user_id', 'destination']
         )
 
-        Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id'])
+        Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id', 'user_uuid', 'auth_token'])
 
         QueueAdd.register_callback_params(
             self._agent_service_cti_parser.queue_add,

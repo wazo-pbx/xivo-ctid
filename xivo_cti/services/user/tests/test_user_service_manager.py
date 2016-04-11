@@ -16,15 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+import uuid
 
 from concurrent import futures
+from functools import wraps
+
 from mock import Mock
 from mock import sentinel
 from mock import patch
 
 from hamcrest import assert_that, calling, equal_to, not_, raises
 
-from xivo_confd_client import Client
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.bus_listener import BusListener
 from xivo_cti.task_queue import new_task_queue
@@ -47,13 +49,25 @@ from xivo_cti.services.user.notifier import UserServiceNotifier
 from xivo_cti.tools.extension import InvalidExtension
 from xivo_cti.xivo_ami import AMIClass
 
+SOME_UUID = str(uuid.uuid4())
+SOME_TOKEN = str(uuid.uuid4())
+CONFIG = {'confd': {}}
+
+
+def mocked_confd_client(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        with patch('xivo_cti.services.user.manager.ConfdClient') as ConfdClientKlass:
+            mocked_client = ConfdClientKlass.return_value
+            f(*args, client=mocked_client, **kwargs)
+    return wrapped
+
 
 class _BaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self._task_queue = new_task_queue()
         self._runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self._task_queue)
-        self._client = Mock(Client).return_value
 
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
@@ -75,7 +89,6 @@ class _BaseTestCase(unittest.TestCase):
             self.ami_class,
             self._ami_cb_handler,
             self._call_manager,
-            self._client,
             self._runner,
             self._bus_listener,
             self._task_queue
@@ -87,6 +100,7 @@ class _BaseTestCase(unittest.TestCase):
         context.reset()
 
 
+@patch('xivo_cti.services.user.manager.config', CONFIG)
 class TestUserServiceManager(_BaseTestCase):
 
     def test_call_destination_url(self):
@@ -153,9 +167,9 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = '42'
 
         with patch.object(self.user_service_manager, 'set_presence') as set_presence:
-            self.user_service_manager.connect(user_id, state)
+            self.user_service_manager.connect(user_id, SOME_UUID, SOME_TOKEN, state)
 
-        set_presence.assert_called_once_with(user_id, state)
+        set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, state)
         self.user_service_manager.dao.user.connect.assert_called_once_with(user_id)
 
     def test_register_originate_response_callback(self):
@@ -268,124 +282,112 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager._dial(user_id, exten)
 
-    def test_enable_dnd(self):
-        user_id = 123
-
+    @mocked_confd_client
+    def test_enable_dnd(self, client):
         with synchronize(self._runner):
-            self.user_service_manager.enable_dnd(user_id)
+            self.user_service_manager.enable_dnd(SOME_UUID, SOME_TOKEN)
 
-        self._client.users(user_id).update_service.assert_called_once_with(service_name='dnd',
-                                                                           service={'enabled': True})
+        client.users(SOME_UUID).update_service.assert_called_once_with(service_name='dnd',
+                                                                       service={'enabled': True})
 
-    def test_disable_dnd(self):
-        user_id = 123
-
+    @mocked_confd_client
+    def test_disable_dnd(self, client):
         with synchronize(self._runner):
-            self.user_service_manager.disable_dnd(user_id)
+            self.user_service_manager.disable_dnd(SOME_UUID, SOME_TOKEN)
 
-        self._client.users(user_id).update_service.assert_called_once_with(service_name='dnd',
-                                                                           service={'enabled': False})
+        client.users(SOME_UUID).update_service.assert_called_once_with(service_name='dnd',
+                                                                       service={'enabled': False})
 
     def test_set_dnd(self):
-        old_enable, self.user_service_manager.enable_dnd = self.user_service_manager.enable_dnd, Mock()
-        old_disable, self.user_service_manager.disable_dnd = self.user_service_manager.disable_dnd, Mock()
+        with patch.object(self.user_service_manager, 'enable_dnd') as enable_dnd:
+            self.user_service_manager.set_dnd(SOME_UUID, SOME_TOKEN, True)
+            enable_dnd.assert_called_once_with(SOME_UUID, SOME_TOKEN)
 
-        user_id = 555
+        with patch.object(self.user_service_manager, 'disable_dnd') as disable_dnd:
+            self.user_service_manager.set_dnd(SOME_UUID, SOME_TOKEN, False)
+            disable_dnd.assert_called_once_with(SOME_UUID, SOME_TOKEN)
 
-        self.user_service_manager.set_dnd(user_id, True)
-
-        self.user_service_manager.enable_dnd.assert_called_once_with(user_id)
-
-        self.user_service_manager.set_dnd(user_id, False)
-
-        self.user_service_manager.disable_dnd.assert_called_once_with(user_id)
-
-        self.user_service_manager.enable_dnd = old_enable
-        self.user_service_manager.disable_dnd = old_disable
-
-    def test_enable_incallfilter(self):
-        user_id = 123
-
+    @mocked_confd_client
+    def test_enable_incallfilter(self, client):
         with synchronize(self._runner):
-            self.user_service_manager.enable_filter(user_id)
+            self.user_service_manager.enable_filter(SOME_UUID, SOME_TOKEN)
 
-        self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
-                                                                           service={'enabled': True})
+        client.users(SOME_UUID).update_service.assert_called_once_with(service_name='incallfilter',
+                                                                       service={'enabled': True})
 
-    def test_disable_incallfilter(self):
-        user_id = 123
-
+    @mocked_confd_client
+    def test_disable_incallfilter(self, client):
         with synchronize(self._runner):
-            self.user_service_manager.disable_filter(user_id)
+            self.user_service_manager.disable_filter(SOME_UUID, SOME_TOKEN)
 
-        self._client.users(user_id).update_service.assert_called_once_with(service_name='incallfilter',
-                                                                           service={'enabled': False})
+        client.users(SOME_UUID).update_service.assert_called_once_with(service_name='incallfilter',
+                                                                       service={'enabled': False})
 
-    def test_enable_busy_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_enable_busy_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.enable_busy_fwd(user_id, destination)
+            self.user_service_manager.enable_busy_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='busy',
-                                                                           forward={'enabled': True,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='busy',
+                                                                       forward={'enabled': True,
+                                                                                'destination': destination})
 
-    def test_disable_busy_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_disable_busy_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.disable_busy_fwd(user_id, destination)
+            self.user_service_manager.disable_busy_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='busy',
-                                                                           forward={'enabled': False,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='busy',
+                                                                       forward={'enabled': False,
+                                                                                'destination': destination})
 
-    def test_enable_rna_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_enable_rna_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.enable_rna_fwd(user_id, destination)
+            self.user_service_manager.enable_rna_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='noanswer',
-                                                                           forward={'enabled': True,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='noanswer',
+                                                                       forward={'enabled': True,
+                                                                                'destination': destination})
 
-    def test_disable_rna_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_disable_rna_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.disable_rna_fwd(user_id, destination)
+            self.user_service_manager.disable_rna_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='noanswer',
-                                                                           forward={'enabled': False,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='noanswer',
+                                                                       forward={'enabled': False,
+                                                                                'destination': destination})
 
-    def test_enable_unconditional_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_enable_unconditional_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.enable_unconditional_fwd(user_id, destination)
+            self.user_service_manager.enable_unconditional_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='unconditional',
-                                                                           forward={'enabled': True,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='unconditional',
+                                                                       forward={'enabled': True,
+                                                                                'destination': destination})
 
-    def test_disable_unconditional_fwd(self):
-        user_id = 123
+    @mocked_confd_client
+    def test_disable_unconditional_fwd(self, client):
         destination = '1803'
 
         with synchronize(self._runner):
-            self.user_service_manager.disable_unconditional_fwd(user_id, destination)
+            self.user_service_manager.disable_unconditional_fwd(SOME_UUID, SOME_TOKEN, destination)
 
-        self._client.users(user_id).update_forward.assert_called_once_with(forward_name='unconditional',
-                                                                           forward={'enabled': False,
-                                                                                    'destination': destination})
+        client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='unconditional',
+                                                                       forward={'enabled': False,
+                                                                                'destination': destination})
 
     def test_deliver_incallfilter_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
@@ -576,19 +578,19 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = 95
         self.user_service_manager.set_presence = Mock()
 
-        self.user_service_manager.disconnect(user_id)
+        self.user_service_manager.disconnect(user_id, SOME_UUID, SOME_TOKEN)
 
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected')
+        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, 'disconnected')
 
     def test_disconnect_no_action(self):
         user_id = 95
         self.user_service_manager.set_presence = Mock()
 
-        self.user_service_manager.disconnect_no_action(user_id)
+        self.user_service_manager.disconnect_no_action(user_id, SOME_UUID, SOME_TOKEN)
 
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.set_presence.assert_called_once_with(user_id, 'disconnected', action=False)
+        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, 'disconnected', action=False)
 
     def test_set_valid_presence_no_agent(self):
         user_id = '95'
@@ -599,13 +601,13 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, presence)
+        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
-            user_id, expected_presence)
+            user_id, SOME_UUID, SOME_TOKEN, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
@@ -619,7 +621,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, presence, action=False)
+        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence, action=False)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
@@ -639,13 +641,13 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = expected_agent_id
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, presence)
+        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
-            user_id, expected_presence)
+            user_id, SOME_UUID, SOME_TOKEN, expected_presence)
         self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(
@@ -659,7 +661,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_cti_profile_id.return_value = user_profile
         self.presence_service_manager.is_valid_presence.return_value = False
 
-        self.user_service_manager.set_presence(user_id, presence)
+        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
