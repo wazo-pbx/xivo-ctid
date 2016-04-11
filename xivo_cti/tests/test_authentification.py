@@ -50,7 +50,7 @@ class _BaseAuthenticationHandlerTestCase(unittest.TestCase):
                                                        'task_scheduler': self.task_scheduler}):
             with patch('xivo_cti.authentication.config', {'auth': {'backend': s.backend,
                                                                    'host': s.host},
-                                                          'main': {'logintimeout': 42}}):
+                                                          'client': {'login_timeout': 42}}):
                 self.handler = AuthenticationHandler(self.connection, self.complete_cb)
         self.session_id = self.handler._session_id
         self.handler._username = s.username

@@ -533,11 +533,18 @@ class CTIServer(object):
             self._on_ami_down()
 
         logger.info('Listening sockets')
-        xivoconf_general = config['main']
-        socktimeout = float(xivoconf_general.get('sockettimeout', '2'))
+        socktimeout = float(config['socket_timeout'])
         socket.setdefaulttimeout(socktimeout)
 
-        incoming_tcp = xivoconf_general.get('incoming_tcp', {})
+        incoming_tcp = {'CTI': (config['client']['listen'],
+                                config['client']['port'],
+                                config['client']['enabled']),
+                        'INFO': (config['info']['listen'],
+                                 config['info']['port'],
+                                 config['info']['enabled']),
+                        'WEBI': (config['update_events_socket']['listen'],
+                                 config['update_events_socket']['port'],
+                                 config['update_events_socket']['enabled'])}
         for kind, bind_and_port in incoming_tcp.iteritems():
             allow_kind = True
             if len(bind_and_port) > 2:
