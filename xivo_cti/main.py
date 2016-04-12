@@ -43,7 +43,7 @@ def main():
     cti_config.update_db_config()
 
     setup_logging(config['logfile'], config['foreground'], config['debug'])
-    silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu'], logging.WARNING)
+    silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu', 'stevedore.extension'], logging.WARNING)
 
     xivo_uuid = os.getenv('XIVO_UUID')
     if not xivo_uuid:

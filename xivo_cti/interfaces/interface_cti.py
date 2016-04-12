@@ -100,9 +100,11 @@ class CTI(Interfaces):
         self._auth_handler.logoff()
         try:
             user_service_manager = context.get('user_service_manager')
-            user_id = self.user_id()
             if DisconnectCause.is_valid(cause):
-                user_service_manager.disconnect_no_action(user_id)
+                user_id = self.user_id()
+                user_uuid = self._auth_handler.user_uuid()
+                auth_token = self._auth_handler.auth_token()
+                user_service_manager.disconnect_no_action(user_id, user_uuid, auth_token)
             else:
                 raise TypeError('invalid DisconnectCause %s' % cause)
         except NotLoggedException:

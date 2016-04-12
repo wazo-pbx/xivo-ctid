@@ -195,7 +195,7 @@ class AuthenticationHandler(object):
                'appliname': profile_config['name']}
 
         user_service_manager = context.get('user_service_manager')
-        user_service_manager.connect(self._user_id, state)
+        user_service_manager.connect(self._user_id, self._user_uuid, self._auth_token, state)
         if self._login_task:
             self._login_task.cancel()
         self._send_msg(msg)

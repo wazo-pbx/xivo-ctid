@@ -20,7 +20,10 @@ import logging
 from functools import partial
 
 from xivo import caller_id
+from xivo_confd_client import Client as ConfdClient
+
 from xivo_cti import dao
+from xivo_cti import config
 from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
@@ -47,7 +50,6 @@ class UserServiceManager(object):
                  ami_class,
                  ami_callback_handler,
                  call_manager,
-                 confd_client,
                  async_runner,
                  bus_listener,
                  task_queue):
@@ -60,7 +62,6 @@ class UserServiceManager(object):
         self.ami_class = ami_class
         self._ami_callback_handler = ami_callback_handler
         self._call_manager = call_manager
-        self._client = confd_client
         self._runner = async_runner
         self._task_queue = task_queue
         services_routing_key = 'config.users.*.services.*.updated'
@@ -86,76 +87,76 @@ class UserServiceManager(object):
                                      exten,
                                      "Invalid extension '{exten}'".format(exten=e.exten))
 
-    def connect(self, user_id, state):
+    def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
-        self.set_presence(user_id, state)
+        self.set_presence(user_id, user_uuid, auth_token, state)
 
-    def enable_dnd(self, user_id):
-        logger.debug('Enable DND called for user_id %s', user_id)
-        self._async_set_service(user_id, 'dnd', True)
+    def enable_dnd(self, user_uuid, auth_token):
+        logger.debug('Enable DND called for user_uuid %s', user_uuid)
+        self._async_set_service(user_uuid, auth_token, 'dnd', True)
 
-    def disable_dnd(self, user_id):
-        logger.debug('Disable DND called for user_id %s', user_id)
-        self._async_set_service(user_id, 'dnd', False)
+    def disable_dnd(self, user_uuid, auth_token):
+        logger.debug('Disable DND called for user_uuid %s', user_uuid)
+        self._async_set_service(user_uuid, auth_token, 'dnd', False)
 
-    def set_dnd(self, user_id, status):
-        self.enable_dnd(user_id) if status else self.disable_dnd(user_id)
+    def set_dnd(self, user_uuid, auth_token, status):
+        self.enable_dnd(user_uuid, auth_token) if status else self.disable_dnd(user_uuid, auth_token)
 
-    def enable_filter(self, user_id):
-        logger.debug('Enable IncallFilter called for user_id %s', user_id)
-        self._async_set_service(user_id, 'incallfilter', True)
+    def enable_filter(self, user_uuid, auth_token):
+        logger.debug('Enable IncallFilter called for user_uuid %s', user_uuid)
+        self._async_set_service(user_uuid, auth_token, 'incallfilter', True)
 
-    def disable_filter(self, user_id):
-        logger.debug('Disable IncallFilter called for user_id %s', user_id)
-        self._async_set_service(user_id, 'incallfilter', False)
+    def disable_filter(self, user_uuid, auth_token):
+        logger.debug('Disable IncallFilter called for user_uuid %s', user_uuid)
+        self._async_set_service(user_uuid, auth_token, 'incallfilter', False)
 
-    def enable_unconditional_fwd(self, user_id, destination):
+    def enable_unconditional_fwd(self, user_uuid, auth_token, destination):
         if not destination:
-            self.disable_unconditional_fwd(user_id, destination)
+            self.disable_unconditional_fwd(user_uuid, auth_token, destination)
             return
-        logger.debug('Enable Unconditional called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'unconditional', True, destination)
+        logger.debug('Enable Unconditional called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'unconditional', True, destination)
 
-    def disable_unconditional_fwd(self, user_id, destination):
-        logger.debug('Disable Unconditional called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'unconditional', False, destination)
+    def disable_unconditional_fwd(self, user_uuid, auth_token, destination):
+        logger.debug('Disable Unconditional called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'unconditional', False, destination)
 
-    def enable_rna_fwd(self, user_id, destination):
+    def enable_rna_fwd(self, user_uuid, auth_token, destination):
         if not destination:
-            self.disable_rna_fwd(user_id, destination)
+            self.disable_rna_fwd(user_uuid, auth_token, destination)
             return
-        logger.debug('Enable NoAnswer called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'noanswer', True, destination)
+        logger.debug('Enable NoAnswer called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'noanswer', True, destination)
 
-    def disable_rna_fwd(self, user_id, destination):
-        logger.debug('Disable NoAnswer called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'noanswer', False, destination)
+    def disable_rna_fwd(self, user_uuid, auth_token, destination):
+        logger.debug('Disable NoAnswer called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'noanswer', False, destination)
 
-    def enable_busy_fwd(self, user_id, destination):
+    def enable_busy_fwd(self, user_uuid, auth_token, destination):
         if not destination:
-            self.disable_busy_fwd(user_id, destination)
+            self.disable_busy_fwd(user_uuid, auth_token, destination)
             return
-        logger.debug('Enable Busy called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'busy', True, destination)
+        logger.debug('Enable Busy called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'busy', True, destination)
 
-    def disable_busy_fwd(self, user_id, destination):
-        logger.debug('Disable Busy called for user_id %s', user_id)
-        self._async_set_forward(user_id, 'busy', False, destination)
+    def disable_busy_fwd(self, user_uuid, auth_token, destination):
+        logger.debug('Disable Busy called for user_uuid %s', user_uuid)
+        self._async_set_forward(user_uuid, auth_token, 'busy', False, destination)
 
-    def disconnect(self, user_id):
+    def disconnect(self, user_id, user_uuid, auth_token):
         self.dao.user.disconnect(user_id)
-        self.set_presence(user_id, 'disconnected')
+        self.set_presence(user_id, user_uuid, auth_token, 'disconnected')
 
-    def disconnect_no_action(self, user_id):
+    def disconnect_no_action(self, user_id, user_uuid, auth_token):
         self.dao.user.disconnect(user_id)
-        self.set_presence(user_id, 'disconnected', action=False)
+        self.set_presence(user_id, user_uuid, auth_token, 'disconnected', action=False)
 
-    def set_presence(self, user_id, presence, action=True):
+    def set_presence(self, user_id, user_uuid, auth_token, presence, action=True):
         user_profile = self.dao.user.get_cti_profile_id(user_id)
         if self.presence_service_manager.is_valid_presence(user_profile, presence):
             self.dao.user.set_presence(user_id, presence)
             if action is True:
-                self.presence_service_executor.execute_actions(user_id, presence)
+                self.presence_service_executor.execute_actions(user_id, user_uuid, auth_token, presence)
             self.user_service_notifier.presence_updated(user_id, presence)
             agent_id = self.dao.user.get_agent_id(user_id)
             if agent_id is not None:
@@ -256,13 +257,15 @@ class UserServiceManager(object):
         except NoSuchUserException:
             logger.info('received a %s unconditional forward event on an unknown user %s', enabled, user_uuid)
 
-    def _async_set_service(self, user_id, service, enabled):
-        self._runner.run(self._client.users(user_id).update_service,
+    def _async_set_service(self, user_uuid, auth_token, service, enabled):
+        client = ConfdClient(token=auth_token, **config['confd'])
+        self._runner.run(client.users(user_uuid).update_service,
                          service_name=service,
                          service={'enabled': enabled})
 
-    def _async_set_forward(self, user_id, forward, enabled, destination):
-        self._runner.run(self._client.users(user_id).update_forward,
+    def _async_set_forward(self, user_uuid, auth_token, forward, enabled, destination):
+        client = ConfdClient(token=auth_token, **config['confd'])
+        self._runner.run(client.users(user_uuid).update_forward,
                          forward_name=forward,
                          forward={'enabled': enabled,
                                   'destination': destination})
