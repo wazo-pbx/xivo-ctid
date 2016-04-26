@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
+
 from xivo import xivo_helpers
 
 from xivo_cti import dao
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import extensions_dao
+
+logger = logging.getLogger(__name__)
 
 
 class FunckeyManager(object):
@@ -44,8 +48,10 @@ class FunckeyManager(object):
         return hint
 
     def _send(self, device, status):
+        new_state = self.INUSE if status else self.NOT_INUSE
+        logger.debug('changing hint %s => %s', device, new_state)
         self.ami.sendcommand(
-            'Command', [('Command', 'devstate change %s %s' % (device, self.INUSE if status else self.NOT_INUSE))]
+            'Command', [('Command', 'devstate change %s %s' % (device, new_state))]
         )
 
     def dnd_in_use(self, user_id, status):
