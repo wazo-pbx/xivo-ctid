@@ -44,7 +44,7 @@ def main():
     setup_logging(config['logfile'], config['foreground'], config['debug'])
     silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu', 'stevedore.extension'], logging.WARNING)
 
-    xivo_uuid = get_xivo_uuid(config, logger)
+    xivo_uuid = get_xivo_uuid(logger)
 
     register_class.setup(xivo_uuid)
 
