@@ -16,16 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
-import os
 import logging
 
 import xivo_dao
 
 from functools import partial
-
+from xivo.config_helper import get_xivo_uuid
 from xivo.consul_helpers import ServiceCatalogRegistration
-
 from xivo.xivo_logging import setup_logging, silence_loggers
+
 from xivo_cti import config
 from xivo_cti import cti_config
 from xivo_cti.ioc.context import context
@@ -45,10 +44,7 @@ def main():
     setup_logging(config['logfile'], config['foreground'], config['debug'])
     silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu', 'stevedore.extension'], logging.WARNING)
 
-    xivo_uuid = os.getenv('XIVO_UUID')
-    if not xivo_uuid:
-        logger.error('undefined environment variable XIVO_UUID')
-        sys.exit(1)
+    xivo_uuid = get_xivo_uuid(config, logger)
 
     register_class.setup(xivo_uuid)
 
