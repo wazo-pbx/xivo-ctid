@@ -227,17 +227,20 @@ class CurrentCallManager(object):
         transferred_channel = self._local_channel_peer(transfer_channel)
         self.ami.hangup(transferred_channel)
 
-    def attended_transfer(self, user_id, number):
+    def attended_transfer(self, user_id, user_uuid, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
+        active_call = self._get_active_call_by_uuid(user_uuid)
         try:
-            current_call = self._get_current_call(user_id)
             user_context = self._get_context(user_id)
         except LookupError as e:
             logger.info('attended_transfer: %s', e)
             return
 
-        current_channel = current_call[LINE_CHANNEL]
-        self.ami.atxfer(current_channel, number, user_context)
+        transfer_params = {'transferred_call': active_call['talking_to'].keys()[0],
+                           'initiator_call': active_call['call_id'],
+                           'exten': number,
+                           'context': user_context}
+        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def _get_active_call_by_uuid(self, user_uuid):
         for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
@@ -247,7 +250,6 @@ class CurrentCallManager(object):
     def direct_transfer(self, user_id, user_uuid, number):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
-        logger.debug('Active call %s', active_call)
         try:
             user_context = self._get_context(user_id)
         except LookupError as e:

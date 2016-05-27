@@ -370,7 +370,7 @@ class CTIServer(object):
             current_call_manager.hangup, ['user_id']
         )
         AttendedTransfer.register_callback_params(
-            current_call_manager.attended_transfer, ['user_id', 'number']
+            current_call_manager.attended_transfer, ['user_id', 'user_uuid', 'number']
         )
         DirectTransfer.register_callback_params(
             current_call_manager.direct_transfer, ['user_id', 'user_uuid', 'number']
