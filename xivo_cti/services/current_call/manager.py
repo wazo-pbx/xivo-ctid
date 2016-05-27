@@ -25,8 +25,9 @@ from xivo.asterisk.line_identity import identity_from_channel
 
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
+from xivo_ctid_ng_client import Client as CtidNGClient
 
-from xivo_cti import dao
+from xivo_cti import dao, config
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
+        self._ctid_ng_client = CtidNGClient('localhost', verify_certificate=False)
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
@@ -237,17 +239,27 @@ class CurrentCallManager(object):
         current_channel = current_call[LINE_CHANNEL]
         self.ami.atxfer(current_channel, number, user_context)
 
-    def direct_transfer(self, user_id, number):
+    def _get_active_call_by_uuid(self, user_uuid):
+        for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
+            if call['user_uuid'] == user_uuid and call['status'] == 'Up':
+                return call
+
+    def direct_transfer(self, user_id, user_uuid, number):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
+        active_call = self._get_active_call_by_uuid(user_uuid)
+        logger.debug('Active call %s', active_call)
         try:
-            current_call = self._get_current_call(user_id)
             user_context = self._get_context(user_id)
         except LookupError as e:
             logger.info('direct_transfer: %s', e)
             return
 
-        peer_channel = current_call[PEER_CHANNEL]
-        self.ami.transfer(peer_channel, number, user_context)
+        transfer_params = {'transferred_call': active_call['talking_to'].keys()[0],
+                           'initiator_call': active_call['call_id'],
+                           'exten': number,
+                           'context': user_context,
+                           'flow': 'blind'}
+        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def blind_txfer_to_voicemail(self, user_id, voicemail_number):
         logger.info('blind_txfer_to_voicemail from user (%s) to voicemail %s', user_id, voicemail_number)
