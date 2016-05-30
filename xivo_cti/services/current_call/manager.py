@@ -53,6 +53,7 @@ class CurrentCallManager(object):
         self._call_manager = call_manager
         self._call_storage = call_storage
         self._ctid_ng_client = CtidNGClient('localhost', verify_certificate=False)
+        self._transfers = {}
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
@@ -211,21 +212,14 @@ class CurrentCallManager(object):
         except LookupError as e:
             logger.info('complete_transfer: %s', e)
 
-    def cancel_transfer(self, user_id):
-        logger.info('cancel_transfer: user %s is cancelling a transfer', user_id)
-        try:
-            current_call = self._get_current_call(user_id)
-        except LookupError as e:
-            logger.info('cancel_transfer: %s', e)
-            return
-
-        if TRANSFER_CHANNEL not in current_call:
-            logger.warning('cancel_transfer: failed to find the transfer channel for this call %s', current_call)
-            return
-
-        transfer_channel = current_call[TRANSFER_CHANNEL]
-        transferred_channel = self._local_channel_peer(transfer_channel)
-        self.ami.hangup(transferred_channel)
+    def cancel_transfer(self, user_uuid):
+        logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
+        transfer = self._transfers.get(user_uuid)
+        if transfer:
+            logger.debug('Canceling %s', transfer)
+            self._ctid_ng_client.transfers.cancel_transfer(transfer, token=config['auth']['token'])
+        else:
+            logger.debug('No transfer to cancel')
 
     def attended_transfer(self, user_id, user_uuid, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
@@ -240,7 +234,7 @@ class CurrentCallManager(object):
                            'initiator_call': active_call['call_id'],
                            'exten': number,
                            'context': user_context}
-        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+        self._transfers[user_uuid] = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])['id']
 
     def _get_active_call_by_uuid(self, user_uuid):
         for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:

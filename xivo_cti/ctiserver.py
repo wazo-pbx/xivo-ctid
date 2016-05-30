@@ -382,7 +382,7 @@ class CTIServer(object):
             current_call_manager.atxfer_to_voicemail, ['user_id', 'voicemail_number']
         )
         CancelTransfer.register_callback_params(
-            current_call_manager.cancel_transfer, ['user_id']
+            current_call_manager.cancel_transfer, ['user_uuid']
         )
         CompleteTransfer.register_callback_params(
             current_call_manager.complete_transfer, ['user_id']
