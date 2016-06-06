@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ class TestPhoneList(unittest.TestCase):
                'videosupport': None,
                'regseconds': '0',
                'maxcallbitrate': None,
-               'registertrying': None,
                'session-minse': None,
                'maxforwards': None,
                'internal': False,
@@ -136,7 +135,6 @@ class TestPhoneList(unittest.TestCase):
                'videosupport': None,
                'regseconds': '0',
                'maxcallbitrate': None,
-               'registertrying': None,
                'session-minse': None,
                'maxforwards': None,
                'internal': False,
@@ -239,7 +237,6 @@ class TestPhoneList(unittest.TestCase):
                'videosupport': None,
                'regseconds': '0',
                'maxcallbitrate': None,
-               'registertrying': None,
                'session-minse': None,
                'maxforwards': None,
                'internal': False,
