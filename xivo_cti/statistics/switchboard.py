@@ -192,7 +192,7 @@ class Dispatcher(object):
         return Switchboard(queue_name)
 
 
-class Parser(object):
+class AMIParser(object):
 
     _attended_transfer = u'ATTENDEDTRANSFER'
     _linked_id_end = u'LINKEDID_END'
