@@ -99,7 +99,8 @@ from xivo_cti.statistics.statistics_notifier import StatisticsNotifier
 from xivo_cti.statistics.statistics_producer_initializer import \
     StatisticsProducerInitializer
 from xivo_cti.statistics.switchboard import Dispatcher as SwitchboardStatisticDispatcher
-from xivo_cti.statistics.switchboard import Parser as SwitchboardStatisticParser
+from xivo_cti.statistics.switchboard import AMIParser as SwitchboardStatisticAMIParser
+from xivo_cti.statistics.switchboard import BusParser as SwitchboardStatisticBusParser
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.task_scheduler import new_task_scheduler
 from xivo_cti.tools.delta_computer import DeltaComputer
@@ -210,7 +211,8 @@ def setup(xivo_uuid):
     context.register('statistics_notifier', StatisticsNotifier)
     context.register('statistics_producer_initializer', StatisticsProducerInitializer)
     context.register('switchboard_statistic_dispatcher', SwitchboardStatisticDispatcher)
-    context.register('switchboard_statistic_parser', SwitchboardStatisticParser)
+    context.register('switchboard_statistic_ami_parser', SwitchboardStatisticAMIParser)
+    context.register('switchboard_statistic_bus_parser', SwitchboardStatisticBusParser)
     context.register('switchboard_queues', switchboard_queues)
     context.register('switchboard_hold_queues', switchboard_hold_queues)
     context.register('status_forwarder', StatusForwarder)
