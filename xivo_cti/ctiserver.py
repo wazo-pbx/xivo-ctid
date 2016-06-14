@@ -376,7 +376,7 @@ class CTIServer(object):
             current_call_manager.direct_transfer, ['user_id', 'user_uuid', 'number']
         )
         BlindTransferVoicemail.register_callback_params(
-            current_call_manager.blind_txfer_to_voicemail, ['user_id', 'voicemail_number']
+            current_call_manager.blind_txfer_to_voicemail, ['user_uuid', 'voicemail_number']
         )
         AttendedTransferVoicemail.register_callback_params(
             current_call_manager.atxfer_to_voicemail, ['user_id', 'voicemail_number']
