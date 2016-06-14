@@ -243,21 +243,6 @@ class CurrentCallManager(object):
         else:
             logger.debug('No transfer to cancel')
 
-    def _get_active_call_by_uuid(self, user_uuid):
-        try:
-            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
-                logger.debug('Status: %s', call['status'])
-                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
-                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
-                    return call
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                # TODO change the log message when using a user token
-                logger.info('xivo-ctid is not authorized to list calls')
-            else:
-                raise
-
     def attended_transfer(self, user_id, user_uuid, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
@@ -271,12 +256,9 @@ class CurrentCallManager(object):
             logger.info('attended_transfer: %s', e)
             return
 
-        transfer_params = {'transferred_call': active_call['talking_to'].keys()[0],
-                           'initiator_call': active_call['call_id'],
-                           'exten': number,
-                           'context': user_context}
-        transfer_id = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])['id']
-        self._track_atxfer(transfer_id, user_uuid)
+        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context)
+        transfer = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+        self._track_atxfer(transfer['id'], user_uuid)
 
     def direct_transfer(self, user_id, user_uuid, number):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
@@ -291,57 +273,31 @@ class CurrentCallManager(object):
             logger.info('direct_transfer: %s', e)
             return
 
-        transfer_params = {'transferred_call': active_call['talking_to'].keys()[0],
-                           'initiator_call': active_call['call_id'],
-                           'exten': number,
-                           'context': user_context,
-                           'flow': 'blind'}
+        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context, 'blind')
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def atxfer_to_voicemail(self, user_uuid, voicemail_number):
         transfer = self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
-        self._track_transfer(transfer['id'], user_uuid)
+        self._track_atxfer(transfer['id'], user_uuid)
 
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
         self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
 
-    def _txfer_to_voicemail(self, user_uuid, voicemail_number, flow):
-        logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
+    def switchboard_hold(self, user_uuid, on_hold_queue):
+        logger.info('switchboard_hold: user %s is holding a call on queue %s', user_uuid, on_hold_queue)
         active_call = self._get_active_call_by_uuid(user_uuid)
         if not active_call:
-            logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
+            logger.info('switchboard_failed for user %s. No active call', user_uuid)
             return
 
         try:
-            user_context = self._get_context(user_uuid)
-        except LookupError as e:
-            logger.info('vm transfer:: %s', e)
-            return
-
-        transfer_params = {'transferred_call': active_call['talking_to'].keys()[0],
-                           'initiator_call': active_call['call_id'],
-                           'exten': 's',
-                           'context': 'vmbox',
-                           'flow': flow,
-                           'variables': {'XIVO_BASE_CONTEXT': user_context,
-                                         'ARG1': voicemail_number}}
-        return self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
-
-    def _track_atxfer(self, transfer_id, user_uuid):
-        self._transfer[user_uuid] = transfer_id
-        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
-
-    def switchboard_hold(self, user_id, on_hold_queue):
-        try:
-            current_call = self._get_current_call(user_id)
-            hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
+            number, context = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError as e:
             logger.info('switchboard_hold: %s', e)
-            logger.exception(e)
-        else:
-            channel_to_hold = current_call[PEER_CHANNEL]
-            logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
-            self.ami.redirect(channel_to_hold, hold_queue_ctx, hold_queue_number)
+            return
+
+        transfer_params = self._make_transfer_param_from_call(active_call, number, context, 'blind')
+        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
         logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)
@@ -437,3 +393,55 @@ class CurrentCallManager(object):
             return call
 
         raise NoSuchCallException('No call on {0}'.format(extension))
+
+    def _get_active_call_by_uuid(self, user_uuid):
+        try:
+            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
+                logger.debug('%s', call)
+                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
+                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
+                    return call
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                # TODO change the log message when using a user token
+                logger.info('xivo-ctid is not authorized to list calls')
+            else:
+                raise
+
+    def _txfer_to_voicemail(self, user_uuid, voicemail_number, flow):
+        logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
+        active_call = self._get_active_call_by_uuid(user_uuid)
+        if not active_call:
+            logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
+            return
+
+        try:
+            user_context = self._get_context(user_uuid)
+        except LookupError as e:
+            logger.info('vm transfer:: %s', e)
+            return
+
+        variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
+        transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
+        return self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+
+    def _track_atxfer(self, transfer_id, user_uuid):
+        self._transfers[user_uuid] = transfer_id
+        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
+
+    @staticmethod
+    def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
+        transfered_call_id = call['talking_to'].keys()[0]
+        initiator_call_id = call['call_id']
+        base_params = {'transferred_call': transfered_call_id,
+                       'initiator_call': initiator_call_id,
+                       'exten': exten,
+                       'context': context}
+
+        if flow:
+            base_params['flow'] = flow
+        if variables:
+            base_params['variables'] = variables
+
+        return base_params
