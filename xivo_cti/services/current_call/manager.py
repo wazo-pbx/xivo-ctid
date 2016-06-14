@@ -299,6 +299,9 @@ class CurrentCallManager(object):
                            'flow': 'blind'}
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
+    def atxfer_to_voicemail(self, user_uuid, voicemail_number):
+        self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
+
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
         self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
 
@@ -323,18 +326,6 @@ class CurrentCallManager(object):
                            'variables': {'XIVO_BASE_CONTEXT': user_context,
                                          'ARG1': voicemail_number}}
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
-
-    def atxfer_to_voicemail(self, user_id, voicemail_number):
-        logger.info('atxfer_to_voicemail from user (%s) to voicemail %s', user_id, voicemail_number)
-        try:
-            current_call = self._get_current_call(user_id)
-            user_context = self._get_context(user_id)
-        except LookupError as e:
-            logger.info('atxfer_to_voicemail: %s', e)
-            return
-
-        line_channel = current_call[LINE_CHANNEL]
-        self.ami.voicemail_atxfer(line_channel, user_context, voicemail_number)
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
