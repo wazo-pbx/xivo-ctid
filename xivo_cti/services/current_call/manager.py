@@ -300,6 +300,9 @@ class CurrentCallManager(object):
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
+        self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
+
+    def _txfer_to_voicemail(self, user_uuid, voicemail_number, flow):
         logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
         active_call = self._get_active_call_by_uuid(user_uuid)
         if not active_call:
@@ -316,7 +319,7 @@ class CurrentCallManager(object):
                            'initiator_call': active_call['call_id'],
                            'exten': 's',
                            'context': 'vmbox',
-                           'flow': 'blind',
+                           'flow': flow,
                            'variables': {'XIVO_BASE_CONTEXT': user_context,
                                          'ARG1': voicemail_number}}
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
