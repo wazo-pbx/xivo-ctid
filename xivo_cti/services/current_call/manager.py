@@ -243,6 +243,21 @@ class CurrentCallManager(object):
         else:
             logger.debug('No transfer to cancel')
 
+    def _get_active_call_by_uuid(self, user_uuid):
+        try:
+            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
+                logger.debug('Status: %s', call['status'])
+                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
+                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
+                    return call
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                # TODO change the log message when using a user token
+                logger.info('xivo-ctid is not authorized to list calls')
+            else:
+                raise
+
     def attended_transfer(self, user_id, user_uuid, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
@@ -261,23 +276,7 @@ class CurrentCallManager(object):
                            'exten': number,
                            'context': user_context}
         transfer_id = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])['id']
-        self._transfers[user_uuid] = transfer_id
-        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
-
-    def _get_active_call_by_uuid(self, user_uuid):
-        try:
-            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
-                logger.debug('Status: %s', call['status'])
-                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
-                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
-                    return call
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                # TODO change the log message when using a user token
-                logger.info('xivo-ctid is not authorized to list calls')
-            else:
-                raise
+        self._track_atxfer(transfer_id, user_uuid)
 
     def direct_transfer(self, user_id, user_uuid, number):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
@@ -300,7 +299,8 @@ class CurrentCallManager(object):
         self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
 
     def atxfer_to_voicemail(self, user_uuid, voicemail_number):
-        self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
+        transfer = self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
+        self._track_transfer(transfer['id'], user_uuid)
 
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
         self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
@@ -325,7 +325,11 @@ class CurrentCallManager(object):
                            'flow': flow,
                            'variables': {'XIVO_BASE_CONTEXT': user_context,
                                          'ARG1': voicemail_number}}
-        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+        return self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+
+    def _track_atxfer(self, transfer_id, user_uuid):
+        self._transfer[user_uuid] = transfer_id
+        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
