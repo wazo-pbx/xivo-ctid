@@ -246,6 +246,10 @@ class CurrentCallManager(object):
     def attended_transfer(self, user_id, user_uuid, number):
         logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
+        if not active_call:
+            logger.info('attended_transfer to %s failed for user %s. No active call', number, user_uuid)
+            return
+
         try:
             user_context = self._get_context(user_id)
         except LookupError as e:
@@ -261,13 +265,27 @@ class CurrentCallManager(object):
         self._user_uuid_by_transfer_id[transfer_id] = user_uuid
 
     def _get_active_call_by_uuid(self, user_uuid):
-        for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
-            if call['user_uuid'] == user_uuid and call['status'] == 'Up':
-                return call
+        try:
+            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
+                logger.debug('Status: %s', call['status'])
+                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
+                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
+                    return call
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                # TODO change the log message when using a user token
+                logger.info('xivo-ctid is not authorized to list calls')
+            else:
+                raise
 
     def direct_transfer(self, user_id, user_uuid, number):
         logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
+        if not active_call:
+            logger.info('direct_transfer to %s failed for user %s. No active call', number, user_uuid)
+            return
+
         try:
             user_context = self._get_context(user_id)
         except LookupError as e:
