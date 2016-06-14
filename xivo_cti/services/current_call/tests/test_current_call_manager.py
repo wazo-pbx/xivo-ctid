@@ -57,6 +57,8 @@ class _BaseTestCase(unittest.TestCase):
         self.ami_class = Mock(xivo_ami.AMIClass)
         self.call_manager = Mock(CallManager)
         self.call_storage = Mock(CallStorage)
+        self.bus_listener = Mock()
+        self.task_queue = Mock()
 
         self.manager = manager.CurrentCallManager(
             self.notifier,
@@ -65,6 +67,8 @@ class _BaseTestCase(unittest.TestCase):
             self.device_manager,
             self.call_manager,
             self.call_storage,
+            self.bus_listener,
+            self.task_queue,
         )
 
         self.line_1 = 'sip/tc8nb4'

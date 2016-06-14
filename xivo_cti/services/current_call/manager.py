@@ -17,12 +17,15 @@
 
 import time
 import logging
+from requests import HTTPError
+from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
 from xivo import caller_id
 from xivo.asterisk.extension import Extension
 from xivo.asterisk.line_identity import identity_from_channel
 
+from xivo_bus.resources.calls.transfer import AnswerTransferEvent
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 from xivo_ctid_ng_client import Client as CtidNGClient
@@ -43,7 +46,8 @@ TRANSFER_CHANNEL = 'transfer_channel'
 class CurrentCallManager(object):
 
     def __init__(self, current_call_notifier, current_call_formatter,
-                 ami_class, device_manager, call_manager, call_storage):
+                 ami_class, device_manager, call_manager, call_storage,
+                 bus_listener, task_queue):
         self._calls_per_line = {}
         self._unanswered_transfers = {}
         self._current_call_notifier = current_call_notifier
@@ -54,6 +58,25 @@ class CurrentCallManager(object):
         self._call_storage = call_storage
         self._ctid_ng_client = CtidNGClient('localhost', verify_certificate=False)
         self._transfers = {}
+        self._user_uuid_by_transfer_id = {}
+        self._bus_listener = bus_listener
+        self._task_queue = task_queue
+        self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
+
+    @bus_listener_thread
+    @ack_bus_message
+    def _on_bus_transfer_answered(self, body):
+        if body.get('name') != AnswerTransferEvent.name:
+            return
+
+        transfer_id = body.get('data').get('id')
+        self._task_queue.put(self._transfer_answered, transfer_id)
+
+    def _transfer_answered(self, transfer_id):
+        user_uuid = self._user_uuid_by_transfer_id.get(transfer_id)
+        if user_uuid:
+            line = dao.user.get_line_identity(user_uuid)
+            self._current_call_notifier.attended_transfer_answered(line)
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
@@ -204,19 +227,18 @@ class CurrentCallManager(object):
         except NoSuchCallException:
             logger.warning('hangup: failed to find the active call for user %s', user_id)
 
-    def complete_transfer(self, user_id):
-        logger.info('complete_transfer: user %s is completing a transfer', user_id)
-        try:
-            current_call = self._get_current_call(user_id)
-            self.ami.hangup(current_call[LINE_CHANNEL])
-        except LookupError as e:
-            logger.info('complete_transfer: %s', e)
+    def complete_transfer(self, user_uuid):
+        logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
+        transfer = self._transfers.get(user_uuid)
+        if transfer:
+            self._ctid_ng_client.transfers.complete_transfer(transfer, token=config['auth']['token'])
+        else:
+            logger.debug('No transfer to complete')
 
     def cancel_transfer(self, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
         transfer = self._transfers.get(user_uuid)
         if transfer:
-            logger.debug('Canceling %s', transfer)
             self._ctid_ng_client.transfers.cancel_transfer(transfer, token=config['auth']['token'])
         else:
             logger.debug('No transfer to cancel')
@@ -234,7 +256,9 @@ class CurrentCallManager(object):
                            'initiator_call': active_call['call_id'],
                            'exten': number,
                            'context': user_context}
-        self._transfers[user_uuid] = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])['id']
+        transfer_id = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])['id']
+        self._transfers[user_uuid] = transfer_id
+        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
 
     def _get_active_call_by_uuid(self, user_uuid):
         for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
