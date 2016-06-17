@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2015 Avencall
+# Copyright (C) 2012-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,16 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo_cti.cti.commands.invite_confroom import InviteConfroom
-
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 from xivo_dao import meetme_dao
 
 from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
-from xivo_cti.tools.idconverter import IdConverter
-from xivo_cti import dao
 from copy import deepcopy
 import time
 import logging
@@ -45,8 +41,6 @@ def register_callbacks():
     ami_handler.register_callback('MeetmeLeave', parse_leave)
     ami_handler.register_callback('MeetmeMute', parse_meetmemute)
     ami_handler.register_callback('MeetmeList', parse_meetmelist)
-    manager = context.get('meetme_service_manager')
-    InviteConfroom.register_callback_params(manager.invite, ['user_id', 'invitee'])
 
 
 def parse_join(event):
@@ -114,25 +108,6 @@ class MeetmeServiceManager(object):
             if room in old_cache:
                 self._cache[room]['members'] = old_cache[room]['members']
         self._publish_change()
-
-    def invite(self, inviter_id, invitee_xid):
-        invitee_id = IdConverter.xid_to_id(invitee_xid)
-        invitee_line_iface = dao.user.get_line_identity(invitee_id)
-        inviter_line_iface = dao.user.get_line_identity(inviter_id)
-        context, number = self._find_meetme_by_line(inviter_line_iface)
-        caller_id = dao.meetme.get_caller_id_from_context_number(context, number)
-
-        self.ami.sendcommand(
-            'Originate',
-            [('Channel', invitee_line_iface),
-             ('Context', context),
-             ('Exten', number),
-             ('Priority', '1'),
-             ('Async', 'true'),
-             ('CallerID', caller_id)]
-        )
-
-        return 'message', {'message': 'Command sent succesfully'}
 
     def join(self, channel, conf_number, join_seq_number, cid_name, cid_num):
         logger.debug('Join %s %s %s %s %s', channel, conf_number, join_seq_number, cid_name, cid_num)
