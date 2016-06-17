@@ -283,21 +283,17 @@ class CurrentCallManager(object):
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
         self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
 
-    def switchboard_hold(self, user_uuid, on_hold_queue):
-        logger.info('switchboard_hold: user %s is holding a call on queue %s', user_uuid, on_hold_queue)
-        active_call = self._get_active_call_by_uuid(user_uuid)
-        if not active_call:
-            logger.info('switchboard_failed for user %s. No active call', user_uuid)
-            return
-
+    def switchboard_hold(self, user_id, on_hold_queue):
         try:
-            number, context = dao.queue.get_number_context_from_name(on_hold_queue)
+            current_call = self._get_current_call(user_id)
+            hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
         except LookupError as e:
             logger.info('switchboard_hold: %s', e)
-            return
-
-        transfer_params = self._make_transfer_param_from_call(active_call, number, context, 'blind')
-        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+            logger.exception(e)
+        else:
+            channel_to_hold = current_call[PEER_CHANNEL]
+            logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
+            self.ami.redirect(channel_to_hold, hold_queue_ctx, hold_queue_number)
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
         logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)

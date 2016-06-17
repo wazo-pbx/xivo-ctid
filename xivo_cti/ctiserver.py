@@ -388,7 +388,7 @@ class CTIServer(object):
             current_call_manager.complete_transfer, ['user_uuid']
         )
         HoldSwitchboard.register_callback_params(
-            current_call_manager.switchboard_hold, ['user_uuid', 'queue_name']
+            current_call_manager.switchboard_hold, ['user_id', 'queue_name']
         )
         ResumeSwitchboard.register_callback_params(
             current_call_manager.switchboard_retrieve_waiting_call,
