@@ -42,7 +42,6 @@ USER_CONFIG_FIELDS = (
     'enablerna',
     'enableunc',
     'enablevoicemail',
-    'enablexfer',
     'entityid',
     'firstname',
     'fullname',
