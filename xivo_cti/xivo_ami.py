@@ -331,14 +331,6 @@ class AMIClass(object):
             self.setvar('BLINDTRANSFER', 'true', channel)
         return self.redirect(channel, context, extension)
 
-    def voicemail_transfer(self, channel, base_context, voicemail_number):
-        logger.debug('voicemail_transfer: channel: %s context: %s voicemail %s',
-                     channel, base_context, voicemail_number)
-
-        self.setvar('XIVO_BASE_CONTEXT', base_context, channel)
-        self.setvar('ARG1', voicemail_number, channel)
-        return self.redirect(channel, 'vmbox')
-
     def atxfer(self, channel, extension, context):
         try:
             extension = normalize_exten(extension)

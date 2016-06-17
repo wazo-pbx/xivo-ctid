@@ -89,14 +89,11 @@ class TestCurrentCallManager(_BaseTestCase):
         track.assert_called_once_with(s.transfer_id, s.user_uuid)
 
     def test_blind_txfer_to_voicemail(self):
-        user_id, vm_number, context = 42, '1076', 'ctx'
+        with patch.object(self.manager, '_txfer_to_voicemail',
+                          Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
+            self.manager.blind_txfer_to_voicemail(s.user_uuid, s.voicemail_number)
 
-        with patch.object(self.manager, '_get_context', Mock(return_value=context)):
-            with patch.object(self.manager, '_get_current_call', Mock(return_value={PEER_CHANNEL:
-                                                                                    'channel'})):
-                self.manager.blind_txfer_to_voicemail(user_id, vm_number)
-
-        self.ami_class.voicemail_transfer.assert_called_once_with('channel', context, vm_number)
+        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'blind')
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):
