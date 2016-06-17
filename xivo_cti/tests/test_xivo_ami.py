@@ -113,18 +113,6 @@ class TestXivoAMI(unittest.TestCase):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
         self.assertRaises(ValueError, self.ami_class.sipnotify, None, {'Event': 'aastra-xml'})
 
-    def test_voicemail_atxfer(self):
-        channel, context, voicemail_number = 'chan', 'ctx', '1002'
-        call_voicemail_exten = '_*97665XXXX'
-
-        with patch('xivo_cti.xivo_ami.extensions_dao.exten_by_name', Mock(return_value=call_voicemail_exten)):
-            self.ami_class.voicemail_atxfer(channel, context, voicemail_number)
-
-        self._assert_exec_command('Atxfer', [('Channel', channel),
-                                             ('Context', context),
-                                             ('Exten', '*976651002#'),
-                                             ('Priority', '1')])
-
     def test_voicemail_transfer(self):
         channel, context, voicemail_number = 'chan', 'ctx', '1002'
 

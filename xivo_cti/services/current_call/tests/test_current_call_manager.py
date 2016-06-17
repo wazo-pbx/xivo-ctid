@@ -23,7 +23,7 @@ from hamcrest import equal_to
 from hamcrest import only_contains
 from mock import Mock
 from mock import patch
-from mock import sentinel
+from mock import sentinel as s
 
 from xivo.asterisk.extension import Extension
 from xivo_cti import dao
@@ -80,14 +80,13 @@ class _BaseTestCase(unittest.TestCase):
 class TestCurrentCallManager(_BaseTestCase):
 
     def test_atxfer_to_voicemail(self):
-        user_id, vm_number, context = 42, '1076', 'ctx'
+        with patch.object(self.manager, '_track_atxfer') as track:
+            with patch.object(self.manager, '_txfer_to_voicemail',
+                              Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
+                self.manager.atxfer_to_voicemail(s.user_uuid, s.voicemail_number)
 
-        with patch.object(self.manager, '_get_context', Mock(return_value=context)):
-            with patch.object(self.manager, '_get_current_call', Mock(return_value={LINE_CHANNEL:
-                                                                                    'channel'})):
-                self.manager.atxfer_to_voicemail(user_id, vm_number)
-
-        self.ami_class.voicemail_atxfer.assert_called_once_with('channel', context, vm_number)
+        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'attended')
+        track.assert_called_once_with(s.transfer_id, s.user_uuid)
 
     def test_blind_txfer_to_voicemail(self):
         user_id, vm_number, context = 42, '1076', 'ctx'
@@ -853,55 +852,55 @@ class TestHangup(_BaseTestCase):
     def test_with_no_active_call_does_not_crash(self):
         self.manager._get_active_call = Mock(side_effect=NoSuchCallException('some error'))
 
-        self.manager.hangup(sentinel.user_id)
+        self.manager.hangup(s.user_id)
 
     def test_when_everything_works(self):
-        self.manager._get_active_call = Mock(return_value=sentinel.call)
+        self.manager._get_active_call = Mock(return_value=s.call)
 
-        self.manager.hangup(sentinel.user_id)
+        self.manager.hangup(s.user_id)
 
-        self.call_manager.hangup.assert_called_once_with(sentinel.call)
+        self.call_manager.hangup.assert_called_once_with(s.call)
 
 
 class TestGetActiveCall(_BaseTestCase):
 
     @patch('xivo_cti.dao.user.get_line', Mock(side_effect=NoSuchLineException()))
     def test_no_line(self):
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, sentinel.userid)
+        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.userid)
 
-    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'context': sentinel.context}))
+    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'context': s.context}))
     def test_line_as_no_number(self):
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, sentinel.user_id)
+        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
 
-    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'number': sentinel.number}))
+    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'number': s.number}))
     def test_line_as_no_context(self):
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, sentinel.user_id)
+        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
 
     @patch('xivo_cti.dao.user')
     def test_when_everything_works(self, mock_user_dao):
         active_call = Mock(Call)
-        mock_user_dao.get_line.return_value = {'number': sentinel.number,
-                                               'context': sentinel.context}
+        mock_user_dao.get_line.return_value = {'number': s.number,
+                                               'context': s.context}
         self.call_storage.find_all_calls_for_extension.return_value = [active_call]
 
-        self.manager.hangup(sentinel.userid)
+        self.manager.hangup(s.userid)
 
-        mock_user_dao.get_line.assert_called_once_with(sentinel.userid)
+        mock_user_dao.get_line.assert_called_once_with(s.userid)
         self.call_manager.hangup.assert_called_once_with(active_call)
         self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(sentinel.number, sentinel.context, True)
+            Extension(s.number, s.context, True)
         )
 
     @patch('xivo_cti.dao.user')
     def test_when_there_is_no_call_on_the_extension(self, mock_user_dao):
-        mock_user_dao.get_line.return_value = {'number': sentinel.number,
-                                               'context': sentinel.context}
+        mock_user_dao.get_line.return_value = {'number': s.number,
+                                               'context': s.context}
         self.call_storage.find_all_calls_for_extension.return_value = []
 
-        self.manager.hangup(sentinel.userid)
+        self.manager.hangup(s.userid)
 
-        mock_user_dao.get_line.assert_called_once_with(sentinel.userid)
+        mock_user_dao.get_line.assert_called_once_with(s.userid)
         assert_that(self.call_manager.hangup.call_count, equal_to(0))
         self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(sentinel.number, sentinel.context, True)
+            Extension(s.number, s.context, True)
         )

@@ -331,15 +331,6 @@ class AMIClass(object):
             self.setvar('BLINDTRANSFER', 'true', channel)
         return self.redirect(channel, context, extension)
 
-    def voicemail_atxfer(self, channel, context, voicemail_number):
-        logger.debug('voicemail_atxfer: channel: %s context: %s voicemail %s',
-                     channel, context, voicemail_number)
-
-        prefix = clean_extension(extensions_dao.exten_by_name('vmboxslt'))
-        consult_vm_exten = '{}{}#'.format(prefix, voicemail_number)
-
-        return self.atxfer(channel, consult_vm_exten, context)
-
     def voicemail_transfer(self, channel, base_context, voicemail_number):
         logger.debug('voicemail_transfer: channel: %s context: %s voicemail %s',
                      channel, base_context, voicemail_number)
