@@ -157,7 +157,7 @@ class UserServiceManager(object):
             self.dao.user.set_presence(user_id, presence)
             if action is True:
                 self.presence_service_executor.execute_actions(user_id, user_uuid, auth_token, presence)
-            self.user_service_notifier.presence_updated(user_id, presence)
+            self.user_service_notifier.presence_updated(user_id, user_uuid, presence)
             agent_id = self.dao.user.get_agent_id(user_id)
             if agent_id is not None:
                 self.agent_service_manager.set_presence(agent_id, presence)

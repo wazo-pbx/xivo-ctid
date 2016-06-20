@@ -37,9 +37,9 @@ logger = logging.getLogger(__name__)
 
 class StatusForwarder(object):
 
-    _id_field_map = {'agent_status_update': 'agent_id',
-                     'endpoint_status_update': 'endpoint_id',
-                     'user_status_update': 'user_id'}
+    _id_field_map = {'agent_status_update': AgentStatusUpdateEvent.id_field,
+                     'endpoint_status_update': EndpointStatusUpdateEvent.id_field,
+                     'user_status_update': UserStatusUpdateEvent.id_field}
 
     def __init__(self,
                  xivo_uuid,
@@ -260,15 +260,15 @@ class _EndpointStatusFetcher(_CtidStatusFetcher):
 class _UserStatusFetcher(_CtidStatusFetcher):
 
     @async_runner_thread
-    def _fetch(self, uuid, user_id):
-        logger.info('user_status_fetcher: fetching user %s@%s', user_id, uuid)
+    def _fetch(self, uuid, user_uuid):
+        logger.info('user_status_fetcher: fetching user %s@%s', user_uuid, uuid)
         with self.exception_logging_client(uuid) as client:
-            return client.users.get(user_id)
+            return client.users.get(user_uuid)
 
     def _on_result(self, result):
         if not result:
             return
-        key = result['origin_uuid'], result['id']
+        key = result['origin_uuid'], result['user_uuid']
         status = result['presence']
 
         self.forwarder.on_user_status_update(key, status)

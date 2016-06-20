@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
+import uuid
 
 from mock import Mock
 
@@ -163,6 +164,7 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_presence_updated(self):
         user_id = 64
+        user_uuid = str(uuid.uuid4())
         expected = {"class": "getlist",
                     "status": {"availstate": 'available'},
                     "function": "updatestatus",
@@ -171,10 +173,10 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tipbxid": self.ipbx_id}
         self.notifier._send_bus_event = Mock()
 
-        self.notifier.presence_updated(user_id, 'available')
+        self.notifier.presence_updated(user_id, user_uuid, 'available')
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
-        expected_event = UserStatusUpdateEvent(user_id, 'available')
+        expected_event = UserStatusUpdateEvent(user_uuid, 'available')
         self.bus_publisher.publish.assert_called_once_with(expected_event)
 
     def test_recording_enabled(self):

@@ -429,7 +429,7 @@ class TestCTIMessageFormatter(unittest.TestCase):
         }))
 
     def test_user_status_update(self):
-        key = ('xivo-uuid', 42)
+        key = ('xivo-uuid', 'user_uuid')
         status = 'busy'
 
         result = CTIMessageFormatter.user_status_update(key, status)
@@ -438,7 +438,7 @@ class TestCTIMessageFormatter(unittest.TestCase):
             'class': 'user_status_update',
             'data': {
                 'xivo_uuid': 'xivo-uuid',
-                'user_id': 42,
+                'user_uuid': 'user_uuid',
                 'status': status,
             }
         }))

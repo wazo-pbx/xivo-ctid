@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,13 +52,19 @@ class Endpoints(restful.Resource):
 class Users(restful.Resource):
 
     def get(self, user_id):
-        uuid = self.main_thread_proxy.get_uuid()
+        origin_uuid = self.main_thread_proxy.get_uuid()
+        user = self.main_thread_proxy.get_user(user_id)
         user_presence = self.main_thread_proxy.get_user_presence(str(user_id))
 
         try:
+            user = user.get()
+            id_ = user['id']
+            uuid = user['uuid']
+
             return {
-                'id': user_id,
-                'origin_uuid': uuid.get(),
+                'id': id_,
+                'user_uuid': uuid,
+                'origin_uuid': origin_uuid.get(),
                 'presence': user_presence.get(),
             }
         except LookupError as e:
@@ -84,7 +90,7 @@ class HTTPInterface(object):
     _resources = [
         (Endpoints, '/endpoints/<int:endpoint_id>'),
         (Infos, '/infos'),
-        (Users, '/users/<int:user_id>'),
+        (Users, '/users/<user_id>'),
         (SwaggerResource, SwaggerResource.api_path),
     ]
 

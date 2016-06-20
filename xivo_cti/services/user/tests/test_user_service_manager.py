@@ -608,7 +608,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
             user_id, SOME_UUID, SOME_TOKEN, expected_presence)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, SOME_UUID, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
@@ -627,7 +627,7 @@ class TestUserServiceManager(_BaseTestCase):
             user_profile, expected_presence)
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.assertFalse(self.user_service_manager.presence_service_executor.execute_actions.called)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, SOME_UUID, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
@@ -648,7 +648,7 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
             user_id, SOME_UUID, SOME_TOKEN, expected_presence)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, SOME_UUID, expected_presence)
         self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
         self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(
             expected_agent_id, expected_presence)

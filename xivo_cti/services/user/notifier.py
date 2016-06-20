@@ -42,9 +42,9 @@ class UserServiceNotifier(object):
     def busy_fwd_enabled(self, user_id, enabled, destination):
         self.send_cti_event(self._prepare_busy_fwd_message(enabled, destination, user_id))
 
-    def presence_updated(self, user_id, presence):
+    def presence_updated(self, user_id, user_uuid, presence):
         self.send_cti_event(self._prepare_presence_updated(user_id, presence))
-        bus_message = UserStatusUpdateEvent(user_id, presence)
+        bus_message = UserStatusUpdateEvent(user_uuid, presence)
         self._send_bus_message(bus_message)
 
     def _send_bus_message(self, message):
