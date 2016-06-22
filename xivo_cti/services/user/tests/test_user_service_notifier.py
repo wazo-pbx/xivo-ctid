@@ -16,20 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import unittest
-import uuid
 
 from mock import Mock
 
 from xivo_cti.services.user.notifier import UserServiceNotifier
-from xivo_cti.services.user.notifier import UserStatusUpdateEvent
 
 
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.bus_publisher = Mock()
-        self.notifier = UserServiceNotifier(self.bus_publisher)
+        self.notifier = UserServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
@@ -164,7 +161,6 @@ class TestUserServiceNotifier(unittest.TestCase):
 
     def test_presence_updated(self):
         user_id = 64
-        user_uuid = str(uuid.uuid4())
         expected = {"class": "getlist",
                     "status": {"availstate": 'available'},
                     "function": "updatestatus",
@@ -173,11 +169,9 @@ class TestUserServiceNotifier(unittest.TestCase):
                     "tipbxid": self.ipbx_id}
         self.notifier._send_bus_event = Mock()
 
-        self.notifier.presence_updated(user_id, user_uuid, 'available')
+        self.notifier.presence_updated(user_id, 'available')
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
-        expected_event = UserStatusUpdateEvent(user_uuid, 'available')
-        self.bus_publisher.publish.assert_called_once_with(expected_event)
 
     def test_recording_enabled(self):
         user_id = 42
