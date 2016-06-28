@@ -18,6 +18,8 @@
 import time
 import logging
 from requests import HTTPError
+
+from xivo_bus import Marshaler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
@@ -70,11 +72,8 @@ class CurrentCallManager(object):
     @bus_listener_thread
     @ack_bus_message
     def _on_bus_transfer_answered(self, body):
-        if body.get('name') != AnswerTransferEvent.name:
-            return
-
-        transfer_id = body.get('data').get('id')
-        self._task_queue.put(self._transfer_answered, transfer_id)
+        event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
+        self._task_queue.put(self._transfer_answered, event.transfer['id'])
 
     def _transfer_answered(self, transfer_id):
         user_uuid = self._user_uuid_by_transfer_id.get(transfer_id)
