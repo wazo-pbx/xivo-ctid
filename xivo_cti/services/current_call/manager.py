@@ -249,21 +249,24 @@ class CurrentCallManager(object):
             logger.debug('No transfer to cancel')
 
     def _transfer(self, auth_token, user_id, user_uuid, number, flow):
-        logger.info('transfer: user %s is doing an %s transfer to %s', user_id, flow, number)
+        logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
         if not active_call:
             logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
             return
 
         try:
-            user_context = self._get_context(user_id)
-        except LookupError as e:
-            logger.info('transfer: %s', e)
-            return
-
-        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context, flow=flow)
-        client = self._new_ctid_ng_client(auth_token)
-        return client.transfers.make_transfer(transfer_params)
+            client = self._new_ctid_ng_client(auth_token)
+            return client.transfers.make_transfer_from_user(exten=number,
+                                                            initiator=active_call['call_id'],
+                                                            flow=flow)
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                # XXX: The transfer will fail silently for the user...
+                logger.info('transfer: %s is not authorized to make transfers', user_uuid)
+            else:
+                raise
 
     def attended_transfer(self, auth_token, user_id, user_uuid, number):
         transfer = self._transfer(auth_token, user_id, user_uuid, number, 'attended')
@@ -418,8 +421,15 @@ class CurrentCallManager(object):
 
         variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
         transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
-        client = self._new_ctid_ng_client(config['auth']['token'])
-        return client.transfers.make_transfer(transfer_params)
+        try:
+            client = self._new_ctid_ng_client(config['auth']['token'])
+            return client.transfers.make_transfer(**transfer_params)
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                logger.info('xivo-ctid is not authorized to transfer to voicemail')
+            else:
+                raise
 
     def _track_atxfer(self, transfer_id, user_uuid):
         self._transfers[user_uuid] = transfer_id
@@ -429,8 +439,8 @@ class CurrentCallManager(object):
     def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
         transfered_call_id = call['talking_to'].keys()[0]
         initiator_call_id = call['call_id']
-        base_params = {'transferred_call': transfered_call_id,
-                       'initiator_call': initiator_call_id,
+        base_params = {'transferred': transfered_call_id,
+                       'initiator': initiator_call_id,
                        'exten': exten,
                        'context': context}
 
