@@ -23,7 +23,6 @@ from xivo import caller_id
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
-from xivo_ctid_ng_client import Client as CtidNGClient
 
 from xivo_cti import dao
 from xivo_cti import config
@@ -76,7 +75,7 @@ class UserServiceManager(object):
         bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
         bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status_update_event)
 
-    def call_destination(self, client_connection, user_id, url_or_exten, auth_token):
+    def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
         elif caller_id.is_complete_caller_id(url_or_exten):
@@ -84,17 +83,10 @@ class UserServiceManager(object):
         else:
             exten = url_or_exten
 
-        client = CtidNGClient('localhost', verify_certificate=False)
-        phones = self.dao.user.innerdata.xod_config['phones'].keeplist
-        variables = {'CONNECTEDLINE(number)': exten}
-        for phone in phones.itervalues():
-            if phone['iduserfeatures'] == user_id:
-                variables['CALLERID(all)'] = phone['callerid']
-                break
         try:
-            client.calls.make_call_from_user(extension=exten, variables=variables, token=auth_token)
-        except Exception as e:
-            logger.exception('call failed')
+            action_id = self._dial(user_id, exten)
+            self._register_originate_response_callback(action_id, client_connection, user_id, exten)
+        except InvalidExtension as e:
             self._on_originate_error(client_connection,
                                      user_id,
                                      exten,
