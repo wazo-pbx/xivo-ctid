@@ -28,7 +28,6 @@ from mock import sentinel as s
 from xivo.asterisk.extension import Extension
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
-from xivo_cti.dao import user_dao
 
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
@@ -491,118 +490,33 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.assertEquals(calls, [])
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_complete_transfer(self, mock_get_line_identity):
-        user_id = 5
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
+    def test_complete_transfer(self):
+        with patch.object(self.manager, '_new_ctid_ng_client') as client_factory:
+            with patch.object(self.manager, '_transfers', {s.user_uuid: s.transfer_id}):
+                self.manager.complete_transfer(s.auth_token, s.user_uuid)
 
-        self.manager.complete_transfer(user_id)
+        client_factory.return_value.transfers.complete_transfer.assert_called_once_with(s.transfer_id)
 
-        self.manager.ami.hangup.assert_called_once_with(self.channel_1)
-
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_complete_transfer_no_transfer_target_channel(self, mock_get_line_identity):
-        user_id = 5
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
-
-        self.manager.complete_transfer(user_id)
-
+    def test_complete_transfer_no_call(self):
+        with patch.object(self.manager, '_transfers', {}):
+            self.manager.complete_transfer(s.auth_token, s.user_uuid)
         # No exception
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_complete_transfer_no_call(self, mock_get_line_identity):
-        user_id = 5
-        self.manager._calls_per_line = {
-            self.line_1: [
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
+    def test_attended_transfer(self):
+        with patch.object(self.manager, '_track_atxfer') as track:
+            with patch.object(self.manager, '_transfer',
+                              Mock(return_value={'id': s.transfer_id})) as transfer:
+                self.manager.attended_transfer(s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        self.manager.complete_transfer(user_id)
+        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
+        track.assert_called_once_with(s.transfer_id, s.user_uuid)
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_attended_transfer(self, mock_get_line_identity):
-        user_id = 5
-        number = '1234'
-        line_context = 'ctx'
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
-        dao.user = Mock(user_dao.UserDAO)
-        dao.user.get_context.return_value = line_context
+    def test_direct_transfer(self):
+        with patch.object(self.manager, '_transfer',
+                          Mock(return_value={'id': s.transfer_id})) as transfer:
+            self.manager.direct_transfer(s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        self.manager.attended_transfer(user_id, number)
-
-        self.manager.ami.atxfer.assert_called_once_with(
-            self.channel_1, number, line_context)
-
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_direct_transfer(self, mock_get_line_identity):
-        user_id = 5
-        number = '9876'
-        line_context = 'mycontext'
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
-        dao.user = Mock(user_dao.UserDAO)
-        dao.user.get_context.return_value = line_context
-
-        self.manager.direct_transfer(user_id, number)
-
-        self.manager.ami.transfer.assert_called_once_with(
-            self.channel_2, number, line_context)
+        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     @patch('xivo_cti.dao.queue')
@@ -632,8 +546,8 @@ class TestCurrentCallManager(_BaseTestCase):
         self.manager.ami.redirect.assert_called_once_with(self.channel_1, 'ctx', '3006')
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
-    @patch('xivo_cti.dao.user.get_line')
-    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_get_line):
+    @patch('xivo_cti.services.current_call.manager.dao')
+    def test_switchboard_retrieve_waiting_call_when_not_talking_then_retrieve_the_call(self, mock_dao):
         unique_id = '1234567.44'
         user_id = 5
         line_identity = 'sccp/12345'
@@ -649,11 +563,10 @@ class TestCurrentCallManager(_BaseTestCase):
         cid_name, cid_number = 'Alice', '5565'
         conn = Mock(CTI)
 
-        dao.channel = Mock(channel_dao.ChannelDAO)
-        dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
-        dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
-        dao.channel.channels_from_identity.return_value = [ringing_channel]
-        mock_get_line.return_value = line
+        mock_dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        mock_dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
+        mock_dao.channel.channels_from_identity.return_value = [ringing_channel]
+        mock_dao.user.get_line.return_value = line
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
@@ -757,55 +670,17 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.set_transfer_channel(channel, transfer_channel)
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_cancel_transfer(self, mock_get_line_identity):
-        local_transfer_channel = u'Local/1003@pcm-dev-00000032;'
-        transfer_channel = local_transfer_channel + u'1'
-        transferred_channel = local_transfer_channel + u'2'
-        user_id = 5
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 TRANSFER_CHANNEL: transfer_channel,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
+    def test_cancel_transfer(self):
+        with patch.object(self.manager, '_new_ctid_ng_client') as client_factory:
+            with patch.object(self.manager, '_transfers', {s.user_uuid: s.transfer_id}):
+                self.manager.cancel_transfer(s.auth_token, s.user_uuid)
 
-        self.manager.cancel_transfer(user_id)
+        client_factory.return_value.transfers.cancel_transfer.assert_called_once_with(s.transfer_id)
 
-        self.manager.ami.hangup.assert_called_once_with(transferred_channel)
-
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
-    def test_cancel_transfer_wrong_number(self, mock_get_line_identity):
-        user_id = 5
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
-        mock_get_line_identity.return_value = self.line_1
-
-        self.manager.cancel_transfer(user_id)
-
-        # Only test that it does not crash at the moment
+    def test_cancel_transfer_no_transfer(self):
+        with patch.object(self.manager, '_transfers', {}):
+            self.manager.cancel_transfer(s.auth_token, s.user_uuid)
+        # No exception
 
     def test_local_channel_peer(self):
         local_channel = u'Local/1003@pcm-dev-00000032;'
@@ -859,44 +734,43 @@ class TestHangup(_BaseTestCase):
         self.call_manager.hangup.assert_called_once_with(s.call)
 
 
+@patch('xivo_cti.services.current_call.manager.dao')
 class TestGetActiveCall(_BaseTestCase):
 
-    @patch('xivo_cti.dao.user.get_line', Mock(side_effect=NoSuchLineException()))
-    def test_no_line(self):
+    def test_no_line(self, mock_dao):
+        mock_dao.user.get_line.side_effect = NoSuchLineException
         self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.userid)
 
-    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'context': s.context}))
-    def test_line_as_no_number(self):
+    def test_line_as_no_number(self, mock_dao):
+        mock_dao.user.get_line = Mock(return_value={'context': s.context})
         self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
 
-    @patch('xivo_cti.dao.user.get_line', Mock(return_value={'number': s.number}))
-    def test_line_as_no_context(self):
+    def test_line_as_no_context(self, mock_dao):
+        mock_dao.user.get_line = Mock(return_value={'number': s.number})
         self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
 
-    @patch('xivo_cti.dao.user')
-    def test_when_everything_works(self, mock_user_dao):
+    def test_when_everything_works(self, mock_dao):
         active_call = Mock(Call)
-        mock_user_dao.get_line.return_value = {'number': s.number,
+        mock_dao.user.get_line.return_value = {'number': s.number,
                                                'context': s.context}
         self.call_storage.find_all_calls_for_extension.return_value = [active_call]
 
         self.manager.hangup(s.userid)
 
-        mock_user_dao.get_line.assert_called_once_with(s.userid)
+        mock_dao.user.get_line.assert_called_once_with(s.userid)
         self.call_manager.hangup.assert_called_once_with(active_call)
         self.call_storage.find_all_calls_for_extension.assert_called_once_with(
             Extension(s.number, s.context, True)
         )
 
-    @patch('xivo_cti.dao.user')
-    def test_when_there_is_no_call_on_the_extension(self, mock_user_dao):
-        mock_user_dao.get_line.return_value = {'number': s.number,
+    def test_when_there_is_no_call_on_the_extension(self, mock_dao):
+        mock_dao.user.get_line.return_value = {'number': s.number,
                                                'context': s.context}
         self.call_storage.find_all_calls_for_extension.return_value = []
 
         self.manager.hangup(s.userid)
 
-        mock_user_dao.get_line.assert_called_once_with(s.userid)
+        mock_dao.user.get_line.assert_called_once_with(s.userid)
         assert_that(self.call_manager.hangup.call_count, equal_to(0))
         self.call_storage.find_all_calls_for_extension.assert_called_once_with(
             Extension(s.number, s.context, True)

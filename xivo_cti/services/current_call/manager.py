@@ -56,12 +56,16 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
-        self._ctid_ng_client = CtidNGClient('localhost', verify_certificate=False)
         self._transfers = {}
         self._user_uuid_by_transfer_id = {}
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
+
+    def _new_ctid_ng_client(self, token):
+        params = dict(config['ctid_ng'])
+        params['token'] = token
+        return CtidNGClient(**params)
 
     @bus_listener_thread
     @ack_bus_message
@@ -227,58 +231,53 @@ class CurrentCallManager(object):
         except NoSuchCallException:
             logger.warning('hangup: failed to find the active call for user %s', user_id)
 
-    def complete_transfer(self, user_uuid):
+    def complete_transfer(self, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
         transfer = self._transfers.get(user_uuid)
         if transfer:
-            self._ctid_ng_client.transfers.complete_transfer(transfer, token=config['auth']['token'])
+            client = self._new_ctid_ng_client(auth_token)
+            client.transfers.complete_transfer(transfer)
         else:
             logger.debug('No transfer to complete')
 
-    def cancel_transfer(self, user_uuid):
+    def cancel_transfer(self, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
         transfer = self._transfers.get(user_uuid)
         if transfer:
-            self._ctid_ng_client.transfers.cancel_transfer(transfer, token=config['auth']['token'])
+            client = self._new_ctid_ng_client(auth_token)
+            client.transfers.cancel_transfer(transfer)
         else:
             logger.debug('No transfer to cancel')
 
-    def attended_transfer(self, user_id, user_uuid, number):
-        logger.info('attended_transfer: user %s is doing an attented transfer to %s', user_id, number)
+    def _transfer(self, auth_token, user_id, user_uuid, number, flow):
+        logger.info('transfer: user %s is doing an %s transfer to %s', user_id, flow, number)
         active_call = self._get_active_call_by_uuid(user_uuid)
         if not active_call:
-            logger.info('attended_transfer to %s failed for user %s. No active call', number, user_uuid)
+            logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
             return
 
         try:
             user_context = self._get_context(user_id)
         except LookupError as e:
-            logger.info('attended_transfer: %s', e)
+            logger.info('transfer: %s', e)
             return
 
-        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context)
-        transfer = self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
-        self._track_atxfer(transfer['id'], user_uuid)
+        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context, flow=flow)
+        client = self._new_ctid_ng_client(auth_token)
+        return client.transfers.make_transfer(transfer_params)
 
-    def direct_transfer(self, user_id, user_uuid, number):
-        logger.info('direct_transfer: user %s is doing a direct transfer to %s', user_id, number)
-        active_call = self._get_active_call_by_uuid(user_uuid)
-        if not active_call:
-            logger.info('direct_transfer to %s failed for user %s. No active call', number, user_uuid)
-            return
+    def attended_transfer(self, auth_token, user_id, user_uuid, number):
+        transfer = self._transfer(auth_token, user_id, user_uuid, number, 'attended')
+        if transfer:
+            self._track_atxfer(transfer['id'], user_uuid)
 
-        try:
-            user_context = self._get_context(user_id)
-        except LookupError as e:
-            logger.info('direct_transfer: %s', e)
-            return
-
-        transfer_params = self._make_transfer_param_from_call(active_call, number, user_context, 'blind')
-        self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+    def direct_transfer(self, auth_token, user_id, user_uuid, number):
+        self._transfer(auth_token, user_id, user_uuid, number, 'blind')
 
     def atxfer_to_voicemail(self, user_uuid, voicemail_number):
         transfer = self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
-        self._track_atxfer(transfer['id'], user_uuid)
+        if transfer:
+            self._track_atxfer(transfer['id'], user_uuid)
 
     def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
         self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
@@ -391,11 +390,11 @@ class CurrentCallManager(object):
         raise NoSuchCallException('No call on {0}'.format(extension))
 
     def _get_active_call_by_uuid(self, user_uuid):
+        client = self._new_ctid_ng_client(config['auth']['token'])
         try:
-            for call in self._ctid_ng_client.calls.list_calls(token=config['auth']['token'])['items']:
-                logger.debug('%s', call)
-                if call['user_uuid'] == user_uuid and call['status'] == 'Up':
-                    # if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
+            # TODO when list_calls gets implemented for users use it here and remove the uuid check
+            for call in client.calls.list_calls()['items']:
+                if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
                     return call
         except HTTPError as e:
             status_code = getattr(getattr(e, 'response', None), 'status_code', None)
@@ -420,7 +419,8 @@ class CurrentCallManager(object):
 
         variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
         transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
-        return self._ctid_ng_client.transfers.make_transfer(transfer_params, token=config['auth']['token'])
+        client = self._new_ctid_ng_client(config['auth']['token'])
+        return client.transfers.make_transfer(transfer_params)
 
     def _track_atxfer(self, transfer_id, user_uuid):
         self._transfers[user_uuid] = transfer_id
