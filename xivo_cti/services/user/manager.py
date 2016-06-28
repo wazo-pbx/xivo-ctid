@@ -20,6 +20,7 @@ import logging
 from functools import partial
 
 from xivo import caller_id
+from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
 
@@ -320,15 +321,13 @@ class UserServiceManager(object):
 
     @bus_listener_thread
     @ack_bus_message
-    def _on_bus_user_status_update_event(self, event):
-        data = event.get('data', {})
+    def _on_bus_user_status_update_event(self, body):
         try:
-            user_uuid = data[UserStatusUpdateEvent.id_field]
-            presence = data['status']
+            event = Marshaler.unmarshal_message(body, UserStatusUpdateEvent)
         except KeyError as e:
             logger.info('_on_bus_user_status_update_event: received an incomplete event: %s', e)
         else:
-            self._task_queue.put(self._on_new_presence, user_uuid, presence)
+            self._task_queue.put(self._on_new_presence, event.id_, event.status)
 
     def _send_bus_message(self, message):
         self._bus_publisher.publish(message)
