@@ -173,8 +173,7 @@ class UserServiceManager(object):
                 self.agent_service_manager.set_presence(agent_id, presence)
 
     def send_presence(self, user_uuid, presence):
-        bus_message = UserStatusUpdateEvent(user_uuid, presence)
-        self._send_bus_message(bus_message)
+        self._bus_publisher.publish(UserStatusUpdateEvent(user_uuid, presence))
 
     def pickup_the_phone(self, client_connection):
         client_connection.answer_cb()
@@ -328,6 +327,3 @@ class UserServiceManager(object):
             logger.info('_on_bus_user_status_update_event: received an incomplete event: %s', e)
         else:
             self._task_queue.put(self._on_new_presence, event.id_, event.status)
-
-    def _send_bus_message(self, message):
-        self._bus_publisher.publish(message)
