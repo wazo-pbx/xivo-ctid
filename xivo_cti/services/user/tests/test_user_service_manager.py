@@ -21,11 +21,14 @@ import uuid
 from concurrent import futures
 from functools import wraps
 
+from mock import ANY
 from mock import Mock
 from mock import sentinel
 from mock import patch
 
 from hamcrest import assert_that, calling, equal_to, not_, raises
+
+from xivo_bus import Publisher
 
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.bus_listener import BusListener
@@ -80,6 +83,7 @@ class _BaseTestCase(unittest.TestCase):
         self._ami_cb_handler = Mock(AMICallbackHandler)
         self._call_manager = Mock(CallManager)
         self._bus_listener = Mock(BusListener)
+        self._bus_publisher = Mock(Publisher)
         self.user_service_manager = UserServiceManager(
             self.user_service_notifier,
             self.agent_service_manager,
@@ -91,6 +95,7 @@ class _BaseTestCase(unittest.TestCase):
             self._call_manager,
             self._runner,
             self._bus_listener,
+            self._bus_publisher,
             self._task_queue
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
@@ -166,10 +171,10 @@ class TestUserServiceManager(_BaseTestCase):
         state = 'available'
         user_id = '42'
 
-        with patch.object(self.user_service_manager, 'set_presence') as set_presence:
+        with patch.object(self.user_service_manager, 'send_presence') as send_presence:
             self.user_service_manager.connect(user_id, SOME_UUID, SOME_TOKEN, state)
 
-        set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, state)
+        send_presence.assert_called_once_with(SOME_UUID, state)
         self.user_service_manager.dao.user.connect.assert_called_once_with(user_id)
 
     def test_register_originate_response_callback(self):
@@ -578,19 +583,20 @@ class TestUserServiceManager(_BaseTestCase):
         user_id = 95
         self.user_service_manager.set_presence = Mock()
 
-        self.user_service_manager.disconnect(user_id, SOME_UUID, SOME_TOKEN)
+        with patch.object(self.user_service_manager, 'send_presence') as send_presence:
+            self.user_service_manager.disconnect(user_id, SOME_UUID)
 
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, 'disconnected')
+        send_presence.assert_called_once_with(SOME_UUID, 'disconnected')
 
     def test_disconnect_no_action(self):
         user_id = 95
         self.user_service_manager.set_presence = Mock()
 
-        self.user_service_manager.disconnect_no_action(user_id, SOME_UUID, SOME_TOKEN)
+        self.user_service_manager.disconnect_no_action(user_id, SOME_UUID)
 
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, SOME_TOKEN, 'disconnected', action=False)
+        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, ANY, 'disconnected', action=False)
 
     def test_set_valid_presence_no_agent(self):
         user_id = '95'

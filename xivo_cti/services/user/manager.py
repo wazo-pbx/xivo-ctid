@@ -20,6 +20,8 @@ import logging
 from functools import partial
 
 from xivo import caller_id
+from xivo_bus import Marshaler
+from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
 
 from xivo_cti import dao
@@ -52,6 +54,7 @@ class UserServiceManager(object):
                  call_manager,
                  async_runner,
                  bus_listener,
+                 bus_publisher,
                  task_queue):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
@@ -64,11 +67,13 @@ class UserServiceManager(object):
         self._call_manager = call_manager
         self._runner = async_runner
         self._task_queue = task_queue
+        self._bus_publisher = bus_publisher
         services_routing_key = 'config.users.*.services.*.updated'
         bus_listener.add_callback(services_routing_key, self._on_bus_services_message_event)
 
         forwards_routing_key = 'config.users.*.forwards.*.updated'
         bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
+        bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status_update_event)
 
     def call_destination(self, client_connection, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
@@ -89,7 +94,7 @@ class UserServiceManager(object):
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
-        self.set_presence(user_id, user_uuid, auth_token, state)
+        self.send_presence(user_uuid, state)
 
     def enable_dnd(self, user_uuid, auth_token):
         logger.debug('Enable DND called for user_uuid %s', user_uuid)
@@ -143,13 +148,18 @@ class UserServiceManager(object):
         logger.debug('Disable Busy called for user_uuid %s', user_uuid)
         self._async_set_forward(user_uuid, auth_token, 'busy', False, destination)
 
-    def disconnect(self, user_id, user_uuid, auth_token):
+    def disconnect(self, user_id, user_uuid):
         self.dao.user.disconnect(user_id)
-        self.set_presence(user_id, user_uuid, auth_token, 'disconnected')
+        self.send_presence(user_uuid, 'disconnected')
 
-    def disconnect_no_action(self, user_id, user_uuid, auth_token):
+    def disconnect_no_action(self, user_id, user_uuid):
         self.dao.user.disconnect(user_id)
-        self.set_presence(user_id, user_uuid, auth_token, 'disconnected', action=False)
+        self.set_presence(user_id, user_uuid, None, 'disconnected', action=False)
+
+    def _on_new_presence(self, user_uuid, presence):
+        user_id = str(self.dao.user.get(user_uuid)['id'])
+        auth_token = config['auth']['token']
+        self.set_presence(user_id, user_uuid, auth_token, presence)
 
     def set_presence(self, user_id, user_uuid, auth_token, presence, action=True):
         user_profile = self.dao.user.get_cti_profile_id(user_id)
@@ -161,6 +171,9 @@ class UserServiceManager(object):
             agent_id = self.dao.user.get_agent_id(user_id)
             if agent_id is not None:
                 self.agent_service_manager.set_presence(agent_id, presence)
+
+    def send_presence(self, user_uuid, presence):
+        self._bus_publisher.publish(UserStatusUpdateEvent(user_uuid, presence))
 
     def pickup_the_phone(self, client_connection):
         client_connection.answer_cb()
@@ -304,3 +317,13 @@ class UserServiceManager(object):
             self._task_queue.put(self.deliver_rna_message, user_uuid, enabled, destination)
         elif name == 'users_forwards_unconditional_updated':
             self._task_queue.put(self.deliver_unconditional_message, user_uuid, enabled, destination)
+
+    @bus_listener_thread
+    @ack_bus_message
+    def _on_bus_user_status_update_event(self, body):
+        try:
+            event = Marshaler.unmarshal_message(body, UserStatusUpdateEvent)
+        except KeyError as e:
+            logger.info('_on_bus_user_status_update_event: received an incomplete event: %s', e)
+        else:
+            self._task_queue.put(self._on_new_presence, event.id_, event.status)

@@ -17,6 +17,7 @@
 
 import logging
 import time
+import uuid
 
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException, NoSuchLineException
@@ -35,17 +36,31 @@ class UserDAO(object):
         except LookupError:
             raise NoSuchLineException(phone_id)
 
-    def _user(self, user_id):
+    def _is_uuid(self, id_):
         try:
-            return self.innerdata.xod_config['users'].keeplist[user_id]
-        except LookupError:
-            raise NoSuchUserException(user_id)
+            uuid.UUID(id_)
+            return True
+        except (ValueError, AttributeError):
+            return False
 
-    def _user_status(self, user_id):
-        try:
-            return self.innerdata.xod_status['users'][user_id]
-        except LookupError:
-            raise NoSuchUserException(user_id)
+    def _user(self, user_id):
+        users = self.innerdata.xod_config['users'].keeplist
+
+        if user_id in users:
+            return users[user_id]
+        elif self._is_uuid(user_id):
+            for config in users.itervalues():
+                if config.get('uuid') == user_id:
+                    return config
+
+        raise NoSuchUserException(user_id)
+
+    def _user_status(self, user_id_or_uuid):
+        user_id = str(self._user(user_id_or_uuid)['id'])
+        return self.innerdata.xod_status['users'][user_id]
+
+    def get(self, id_or_uuid):
+        return self._user(id_or_uuid)
 
     def connect(self, user_id):
         user_status = self._user_status(user_id)

@@ -93,3 +93,6 @@ class MainThreadProxy(object):
 
     def get_user_presence(self, user_id):
         return self._exec(dao.user.get_presence, user_id)
+
+    def get_user(self, id_or_uuid):
+        return self._exec(dao.user.get, id_or_uuid)

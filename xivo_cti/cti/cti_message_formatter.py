@@ -168,12 +168,12 @@ class CTIMessageFormatter(object):
 
     @staticmethod
     def user_status_update(key, status):
-        xivo_uuid, user_id = key
+        xivo_uuid, user_uuid = key
         return {
             'class': 'user_status_update',
             'data': {
                 'xivo_uuid': xivo_uuid,
-                'user_id': user_id,
+                'user_uuid': user_uuid,
                 'status': status,
             }
         }

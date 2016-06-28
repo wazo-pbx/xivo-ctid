@@ -20,15 +20,13 @@ import unittest
 from mock import Mock
 
 from xivo_cti.services.user.notifier import UserServiceNotifier
-from xivo_cti.services.user.notifier import UserStatusUpdateEvent
 
 
 class TestUserServiceNotifier(unittest.TestCase):
 
     def setUp(self):
         self.ipbx_id = 'xivo'
-        self.bus_publisher = Mock()
-        self.notifier = UserServiceNotifier(self.bus_publisher)
+        self.notifier = UserServiceNotifier()
         self.notifier.send_cti_event = Mock()
         self.notifier.ipbx_id = self.ipbx_id
 
@@ -174,8 +172,6 @@ class TestUserServiceNotifier(unittest.TestCase):
         self.notifier.presence_updated(user_id, 'available')
 
         self.notifier.send_cti_event.assert_called_once_with(expected)
-        expected_event = UserStatusUpdateEvent(user_id, 'available')
-        self.bus_publisher.publish.assert_called_once_with(expected_event)
 
     def test_recording_enabled(self):
         user_id = 42

@@ -135,10 +135,8 @@ class Safe(object):
         ListID.register_callback_params(self.handle_getlist_list_id, ['list_name', 'user_id'])
         UpdateConfig.register_callback_params(self.handle_getlist_update_config, ['user_id', 'list_name', 'item_id'])
         UpdateStatus.register_callback_params(self.handle_getlist_update_status, ['list_name', 'item_id'])
-        Availstate.register_callback_params(self.user_service_manager.set_presence, ['user_id',
-                                                                                     'user_uuid',
-                                                                                     'auth_token',
-                                                                                     'availstate'])
+        Availstate.register_callback_params(self.user_service_manager.send_presence, ['user_uuid',
+                                                                                      'availstate'])
 
     def register_ami_handlers(self):
         ami_handler = ami_callback_handler.AMICallbackHandler.get_instance()

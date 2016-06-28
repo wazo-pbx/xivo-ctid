@@ -54,7 +54,7 @@ class TestSafe(unittest.TestCase):
         self.assert_callback_registered(ListID, self.safe.handle_getlist_list_id)
         self.assert_callback_registered(UpdateConfig, self.safe.handle_getlist_update_config)
         self.assert_callback_registered(UpdateStatus, self.safe.handle_getlist_update_status)
-        self.assert_callback_registered(Availstate, self.safe.user_service_manager.set_presence)
+        self.assert_callback_registered(Availstate, self.safe.user_service_manager.send_presence)
 
     def test_handle_getlist_list_id_not_a_list(self):
         ret = self.safe.handle_getlist_list_id('not_a_list', '1')

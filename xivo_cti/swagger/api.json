@@ -108,9 +108,7 @@
                     {
                         "name": "user_id",
                         "in": "path",
-                        "type": "integer",
-                        "format": "int32",
-                        "description": "ID of the user",
+                        "description": "ID of the user or its UUID",
                         "required": true
                     }
                 ]
@@ -158,6 +156,11 @@
                     "type": "integer",
                     "format": "int32",
                     "description": "Unique ID"
+                },
+                "user_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The user's UUID"
                 },
                 "origin_uuid": {
                     "type": "string",

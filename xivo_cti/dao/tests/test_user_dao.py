@@ -21,10 +21,14 @@ from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
 from xivo_cti.innerdata import Safe
 import time
 import unittest
+
+from uuid import uuid4
 from hamcrest import assert_that
 from hamcrest import equal_to
 from xivo_cti.lists.users_list import UsersList
 from xivo_cti.lists.phones_list import PhonesList
+
+SOME_UUID = str(uuid4())
 
 
 class TestUserDAO(unittest.TestCase):
@@ -41,7 +45,7 @@ class TestUserDAO(unittest.TestCase):
         }
         self.dao = UserDAO(self._innerdata)
 
-    def test__phone(self):
+    def test_phone(self):
         line_id = '206'
         self._phonelist.keeplist[line_id] = {
             'context': 'default',
@@ -53,10 +57,10 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertTrue(result, self._phonelist.keeplist[line_id])
 
-    def test__phone_no_line(self):
+    def test_phone_no_line(self):
         self.assertRaises(NoSuchLineException, self.dao._phone, 206)
 
-    def test__user(self):
+    def test_user(self):
         user_id = '206'
         self._userlist.keeplist[user_id] = {
             'firstname': 'toto'
@@ -66,7 +70,17 @@ class TestUserDAO(unittest.TestCase):
 
         self.assertTrue(result, self._userlist.keeplist[user_id])
 
-    def test__user_no_user(self):
+    def test_user_by_uuid(self):
+        user_id = '206'
+        uuid = SOME_UUID
+        self._userlist.keeplist[user_id] = {'firstname': 'toto',
+                                            'uuid': uuid}
+
+        result = self.dao._user(uuid)
+
+        self.assertTrue(result, self._userlist.keeplist[user_id])
+
+    def test_user_no_user(self):
         self.assertRaises(NoSuchUserException, self.dao._user, 206)
 
     def test_get_by_uuid(self):
@@ -201,9 +215,9 @@ class TestUserDAO(unittest.TestCase):
     def test_connect(self):
         self.dao._innerdata = self._innerdata
         user_id = '1'
-        self._userlist = {}
-        self._userlist[user_id] = {'connection': None}
-        self.dao._innerdata.xod_status = {'users': self._userlist}
+        self._userlist.keeplist[user_id] = {'id': user_id}
+        statuses = {user_id: {'connection': None}}
+        self.dao._innerdata.xod_status = {'users': statuses}
 
         self.dao.connect(user_id)
 
@@ -215,10 +229,10 @@ class TestUserDAO(unittest.TestCase):
     def test_disconnect(self):
         self.dao._innerdata = self._innerdata
         user_id = '1'
-        self._userlist = {}
-        self._userlist[user_id] = {'connection': True,
-                                   'last-logouttimestamp': None}
-        self.dao._innerdata.xod_status = {'users': self._userlist}
+        self._userlist.keeplist[user_id] = {'id': user_id}
+        statuses = {user_id: {'connection': True,
+                              'last-logouttimestamp': None}}
+        self.dao._innerdata.xod_status = {'users': statuses}
         expected_userdata = {'connection': None,
                              'last-logouttimestamp': time.time()}
 
@@ -230,10 +244,10 @@ class TestUserDAO(unittest.TestCase):
 
     def test_get_presence(self):
         self.dao._innerdata = self._innerdata
-        self._userlist = {}
         user_id = '42'
-        self._userlist[user_id] = {'availstate': sentinel.presence}
-        self.dao._innerdata.xod_status = {'users': self._userlist}
+        self._userlist.keeplist[user_id] = {'id': user_id}
+        statuses = {user_id: {'availstate': sentinel.presence}}
+        self.dao._innerdata.xod_status = {'users': statuses}
 
         presence = self.dao.get_presence(user_id)
 
@@ -243,9 +257,9 @@ class TestUserDAO(unittest.TestCase):
         self.dao._innerdata = self._innerdata
         presence = 'disconnected'
         user_id = '1'
-        self._userlist = {}
-        self._userlist[user_id] = {'availstate': 'available'}
-        self.dao._innerdata.xod_status = {'users': self._userlist}
+        self._userlist.keeplist[user_id] = {'id': user_id}
+        statuses = {user_id: {'availstate': 'available'}}
+        self.dao._innerdata.xod_status = {'users': statuses}
         expected_userdata = {'availstate': presence}
 
         self.dao.set_presence(user_id, presence)
