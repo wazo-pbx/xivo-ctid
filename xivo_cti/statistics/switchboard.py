@@ -24,6 +24,7 @@ from xivo_bus.collectd.switchboard import (SwitchboardEnteredEvent,
                                            SwitchboardForwardedEvent,
                                            SwitchboardTransferredEvent,
                                            SwitchboardWaitTimeEvent)
+from xivo_bus.resources.calls.transfer import CompleteTransferEvent
 
 from xivo_cti.ioc.context import context
 from xivo_cti.database import statistics as statistic_dao
@@ -192,7 +193,25 @@ class Dispatcher(object):
         return Switchboard(queue_name)
 
 
-class Parser(object):
+class BusParser(object):
+
+    def __init__(self, bus_listener, task_queue, switchboard_statistic_dispatcher):
+        self._bus_listener = bus_listener
+        self._task_queue = task_queue
+        self._dispatcher = switchboard_statistic_dispatcher
+
+    def register_callbacks(self):
+        self._bus_listener.add_callback(CompleteTransferEvent.routing_key, self.on_transfer_completed)
+
+    def on_transfer_completed(self, body, msg):
+        if body['name'] != 'transfer_completed':
+            return
+
+        linked_id = body['data']['transferred_call']
+        self._task_queue.put(self._dispatcher.on_transfer, linked_id)
+
+
+class AMIParser(object):
 
     _attended_transfer = u'ATTENDEDTRANSFER'
     _linked_id_end = u'LINKEDID_END'

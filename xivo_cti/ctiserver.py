@@ -370,22 +370,22 @@ class CTIServer(object):
             current_call_manager.hangup, ['user_id']
         )
         AttendedTransfer.register_callback_params(
-            current_call_manager.attended_transfer, ['user_id', 'number']
+            current_call_manager.attended_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
         )
         DirectTransfer.register_callback_params(
-            current_call_manager.direct_transfer, ['user_id', 'number']
+            current_call_manager.direct_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
         )
         BlindTransferVoicemail.register_callback_params(
-            current_call_manager.blind_txfer_to_voicemail, ['user_id', 'voicemail_number']
+            current_call_manager.blind_txfer_to_voicemail, ['user_uuid', 'voicemail_number']
         )
         AttendedTransferVoicemail.register_callback_params(
-            current_call_manager.atxfer_to_voicemail, ['user_id', 'voicemail_number']
+            current_call_manager.atxfer_to_voicemail, ['user_uuid', 'voicemail_number']
         )
         CancelTransfer.register_callback_params(
-            current_call_manager.cancel_transfer, ['user_id']
+            current_call_manager.cancel_transfer, ['auth_token', 'user_uuid']
         )
         CompleteTransfer.register_callback_params(
-            current_call_manager.complete_transfer, ['user_id']
+            current_call_manager.complete_transfer, ['auth_token', 'user_uuid']
         )
         HoldSwitchboard.register_callback_params(
             current_call_manager.switchboard_hold, ['user_id', 'queue_name']
@@ -439,13 +439,15 @@ class CTIServer(object):
         callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
 
-        parser = context.get('switchboard_statistic_parser')
+        parser = context.get('switchboard_statistic_ami_parser')
         callback_handler.register_callback('QueueCallerAbandon', parser.on_queue_caller_abandon)
         callback_handler.register_callback('QueueCallerJoin', parser.on_queue_caller_join)
         callback_handler.register_callback('QueueCallerLeave', parser.on_queue_caller_leave)
         callback_handler.register_callback('CEL', parser.on_cel)
         callback_handler.register_callback('BridgeEnter', parser.on_bridge_enter)
         callback_handler.register_callback('VarSet', parser.on_set_var)
+
+        context.get('switchboard_statistic_bus_parser').register_callbacks()
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)

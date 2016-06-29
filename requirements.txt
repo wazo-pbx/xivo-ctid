@@ -3,6 +3,7 @@ git+https://github.com/xivo-pbx/xivo-auth-client.git
 git+https://github.com/xivo-pbx/xivo-confd-client.git
 git+https://github.com/xivo-pbx/xivo-bus.git
 git+https://github.com/xivo-pbx/xivo-ctid-client.git
+git+https://github.com/xivo-pbx/xivo-ctid-ng-client.git
 git+https://github.com/xivo-pbx/xivo-dao.git
 git+https://github.com/xivo-pbx/xivo-dird-client.git
 git+https://github.com/xivo-pbx/xivo-lib-python.git

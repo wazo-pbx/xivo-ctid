@@ -22,7 +22,7 @@ from functools import partial
 from hamcrest import assert_that, equal_to
 from mock import Mock, patch, sentinel as s
 
-from ..switchboard import Call, Dispatcher, Parser, Publisher, Switchboard
+from ..switchboard import Call, Dispatcher, AMIParser, Publisher, Switchboard
 
 LINKED_ID = u'1456240331.88'
 SWITCHBOARD_QUEUE = u'__switchboard'
@@ -206,11 +206,11 @@ class TestDispatcher(unittest.TestCase):
             return self._other_switchboard
 
 
-class TestParser(unittest.TestCase):
+class TestAMIParser(unittest.TestCase):
 
     def setUp(self):
         self.dispatcher = Mock(Dispatcher)
-        self.parser = Parser([SWITCHBOARD_QUEUE], [SWITCHBOARD_HOLD_QUEUE], self.dispatcher)
+        self.parser = AMIParser([SWITCHBOARD_QUEUE], [SWITCHBOARD_HOLD_QUEUE], self.dispatcher)
 
     def test_on_queue_caller_abandon_switchboard_hold_queue(self):
         self.parser.on_queue_caller_abandon(ABANDON_EVENT)

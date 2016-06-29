@@ -22,7 +22,7 @@ from mock import Mock, patch
 from xivo_cti.ctiserver import CTIServer
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.cti.cti_command_handler import CTICommandHandler
-from xivo_cti.cti.commands.invite_confroom import InviteConfroom
+from xivo_cti.cti.commands.dial import Dial
 from xivo_cti.cti.cti_command import CTICommandInstance
 from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
     CTIMessageEncoder
@@ -31,9 +31,10 @@ from xivo_cti.cti.cti_message_codec import CTIMessageDecoder,\
 class TestCTICommandHandler(unittest.TestCase):
 
     def setUp(self):
-        self._msg_1 = {"class": "invite_confroom",
+        self._msg_1 = {"class": "ipbxcommand",
+                       "command": "dial",
                        "commandid": 737000717,
-                       "invitee": "user:pcmdev/3"}
+                       "destination": "1004"}
         self._ctiserver = Mock(CTIServer, myipbxid='xivo')
         with patch('xivo_cti.interfaces.interface_cti.context', Mock()):
             with patch('xivo_cti.interfaces.interface_cti.AuthenticationHandler', Mock()):
@@ -48,7 +49,7 @@ class TestCTICommandHandler(unittest.TestCase):
 
         self.assertEqual(len(cti_handler._commands_to_run), 1)
         command = cti_handler._commands_to_run[0]
-        self.assertTrue(command.command_class, InviteConfroom.class_name)
+        self.assertTrue(command.command_class, Dial.class_name)
 
     def test_run_command(self):
         self.called = False
