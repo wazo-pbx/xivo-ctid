@@ -21,10 +21,7 @@ from requests import HTTPError
 
 from xivo_bus import Marshaler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
-from xivo_cti.exception import NoSuchCallException
-from xivo_cti.exception import NoSuchLineException
 from xivo import caller_id
-from xivo.asterisk.extension import Extension
 from xivo.asterisk.line_identity import identity_from_channel
 
 from xivo_bus.resources.calls.transfer import AnswerTransferEvent
@@ -375,23 +372,6 @@ class CurrentCallManager(object):
         channel_order = local_channel[-1]
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
-
-    def _get_active_call(self, user_id):
-        try:
-            line_dict = dao.user.get_line(user_id)
-        except NoSuchLineException:
-            raise NoSuchCallException('user has no line')
-
-        for fieldname in ['number', 'context']:
-            if fieldname not in line_dict:
-                raise NoSuchCallException('line with no %s' % fieldname)
-
-        extension = Extension(line_dict['number'], line_dict['context'], True)
-
-        for call in self._call_storage.find_all_calls_for_extension(extension):
-            return call
-
-        raise NoSuchCallException('No call on {0}'.format(extension))
 
     def _get_active_call_by_uuid(self, user_uuid):
         client = self._new_ctid_ng_client(config['auth']['token'])

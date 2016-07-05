@@ -28,8 +28,6 @@ from mock import sentinel as s
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
 
-from xivo_cti.exception import NoSuchCallException
-from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.storage import CallStorage
@@ -736,19 +734,3 @@ class TestHangup(_BaseTestCase):
             self.manager.hangup(s.auth_token, s.user_uuid)
 
         self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)
-
-
-@patch('xivo_cti.services.current_call.manager.dao')
-class TestGetActiveCall(_BaseTestCase):
-
-    def test_no_line(self, mock_dao):
-        mock_dao.user.get_line.side_effect = NoSuchLineException
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.userid)
-
-    def test_line_as_no_number(self, mock_dao):
-        mock_dao.user.get_line = Mock(return_value={'context': s.context})
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
-
-    def test_line_as_no_context(self, mock_dao):
-        mock_dao.user.get_line = Mock(return_value={'number': s.number})
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
