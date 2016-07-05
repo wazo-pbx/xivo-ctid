@@ -376,15 +376,18 @@ class CurrentCallManager(object):
     def _get_user_active_call(self, auth_token):
         client = self._new_ctid_ng_client(auth_token)
         try:
-            for call in client.calls.list_calls_from_user()['items']:
-                if call['status'] == 'Up' and not call['on_hold']:
-                    return call
+            calls = client.calls.list_calls_from_user()
         except HTTPError as e:
             status_code = getattr(getattr(e, 'response', None), 'status_code', None)
             if status_code == 401:
                 logger.info('This user is not authorized to list his calls')
             else:
                 raise
+
+        for call in calls['items']:
+            if call['status'] == 'Up' and not call['on_hold']:
+                return call
+        return None
 
     def _txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
         logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
