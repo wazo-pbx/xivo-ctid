@@ -104,17 +104,15 @@ class _BaseTestCase(unittest.TestCase):
 
         context.reset()
 
-    def _assert_user_called(self, exten):
-        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=exten)
-
 
 @patch('xivo_cti.services.user.manager.config', CONFIG)
 class TestUserServiceManager(_BaseTestCase):
 
     def test_call_exten(self):
-        self.user_service_manager.call_exten(s.auth_token, s.user_id, s.exten)
+        self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
 
-        self._assert_user_called(s.exten)
+        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=s.exten)
+        self._call_manager.answer_next_ringing_call.assert_called_once_with(s.connection, ANY)
 
     @unittest.skip('ctid-ng does not check the exten on calls yet')
     def test_call_exten_with_invalid_exten(self):
@@ -122,8 +120,7 @@ class TestUserServiceManager(_BaseTestCase):
 
         self.user_service_manager.call_destination(s.auth_token, s.user_id, exten)
 
-        self._assert_user_called(s.exten)
-
+        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=s.exten)
         expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
 
     def test_call_destination_url(self):
@@ -131,23 +128,23 @@ class TestUserServiceManager(_BaseTestCase):
         url = 'exten:xivo/{0}'.format(number)
 
         with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.auth_token, s.user_id, url)
-        call.assert_called_once_with(s.auth_token, s.user_id, number)
+            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, url)
+        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
 
     def test_call_destination_exten(self):
         number = '1234'
 
         with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.auth_token, s.user_id, number)
-        call.assert_called_once_with(s.auth_token, s.user_id, number)
+            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, number)
+        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
 
     def test_call_destination_caller_id(self):
         number = '1234'
         caller_id = '"Alice Smith" <{}>'.format(number)
 
         with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.auth_token, s.user_id, caller_id)
-        call.assert_called_once_with(s.auth_token, s.user_id, number)
+            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, caller_id)
+        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
 
     def test_connect(self):
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:

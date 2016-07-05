@@ -73,7 +73,7 @@ class UserServiceManager(object):
         bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
         bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status_update_event)
 
-    def call_destination(self, auth_token, user_id, url_or_exten):
+    def call_destination(self, connection, auth_token, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
         elif caller_id.is_complete_caller_id(url_or_exten):
@@ -81,9 +81,9 @@ class UserServiceManager(object):
         else:
             exten = url_or_exten
 
-        self.call_exten(auth_token, user_id, exten)
+        self.call_exten(connection, auth_token, user_id, exten)
 
-    def call_exten(self, auth_token, user_id, exten):
+    def call_exten(self, connection, auth_token, user_id, exten):
         try:
             client = self._new_ctid_ng_client(auth_token)
             client.calls.make_call_from_user(extension=exten)
@@ -94,6 +94,10 @@ class UserServiceManager(object):
                 logger.info('call: %s is not authorized to make calls')
             else:
                 raise
+
+        interface = self.dao.user.get_line_identity(user_id)
+        if interface:
+            self._call_manager.answer_next_ringing_call(connection, interface)
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
