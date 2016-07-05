@@ -78,17 +78,17 @@ class TestCurrentCallManager(_BaseTestCase):
         with patch.object(self.manager, '_track_atxfer') as track:
             with patch.object(self.manager, '_txfer_to_voicemail',
                               Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-                self.manager.atxfer_to_voicemail(s.user_uuid, s.voicemail_number)
+                self.manager.atxfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
-        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'attended')
+        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
         track.assert_called_once_with(s.transfer_id, s.user_uuid)
 
     def test_blind_txfer_to_voicemail(self):
         with patch.object(self.manager, '_txfer_to_voicemail',
                           Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-            self.manager.blind_txfer_to_voicemail(s.user_uuid, s.voicemail_number)
+            self.manager.blind_txfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
-        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'blind')
+        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):
@@ -723,13 +723,13 @@ class TestHangup(_BaseTestCase):
 
     def test_with_no_active_call_does_not_crash(self):
         with patch.object(self.manager,
-                          '_get_active_call_by_uuid',
+                          '_get_user_active_call',
                           Mock(return_value=None)):
             self.manager.hangup(s.auth_token, s.user_uuid)
 
     def test_when_everything_works(self):
         with patch.object(self.manager,
-                          '_get_active_call_by_uuid',
+                          '_get_user_active_call',
                           Mock(return_value={'call_id': s.call_id})):
             self.manager.hangup(s.auth_token, s.user_uuid)
 

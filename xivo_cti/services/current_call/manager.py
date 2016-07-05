@@ -221,7 +221,7 @@ class CurrentCallManager(object):
 
     def hangup(self, auth_token, user_uuid):
         logger.info('hangup: user %s is hanging up is current call', user_uuid)
-        active_call = self._get_active_call_by_uuid(user_uuid)
+        active_call = self._get_user_active_call(auth_token)
         if not active_call:
             logger.warning('hangup: failed to find the active call for user %s', user_uuid)
             return
@@ -249,7 +249,7 @@ class CurrentCallManager(object):
 
     def _transfer(self, auth_token, user_id, user_uuid, number, flow):
         logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
-        active_call = self._get_active_call_by_uuid(user_uuid)
+        active_call = self._get_user_active_call(auth_token)
         if not active_call:
             logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
             return
@@ -275,13 +275,13 @@ class CurrentCallManager(object):
     def direct_transfer(self, auth_token, user_id, user_uuid, number):
         self._transfer(auth_token, user_id, user_uuid, number, 'blind')
 
-    def atxfer_to_voicemail(self, user_uuid, voicemail_number):
-        transfer = self._txfer_to_voicemail(user_uuid, voicemail_number, 'attended')
+    def atxfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+        transfer = self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
         if transfer:
             self._track_atxfer(transfer['id'], user_uuid)
 
-    def blind_txfer_to_voicemail(self, user_uuid, voicemail_number):
-        self._txfer_to_voicemail(user_uuid, voicemail_number, 'blind')
+    def blind_txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+        self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
 
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
@@ -373,24 +373,22 @@ class CurrentCallManager(object):
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
 
-    def _get_active_call_by_uuid(self, user_uuid):
-        client = self._new_ctid_ng_client(config['auth']['token'])
+    def _get_user_active_call(self, auth_token):
+        client = self._new_ctid_ng_client(auth_token)
         try:
-            # TODO when list_calls gets implemented for users use it here and remove the uuid check
-            for call in client.calls.list_calls()['items']:
-                if call['user_uuid'] == user_uuid and call['status'] == 'Up' and not call['on_hold']:
+            for call in client.calls.list_calls_from_user()['items']:
+                if call['status'] == 'Up' and not call['on_hold']:
                     return call
         except HTTPError as e:
             status_code = getattr(getattr(e, 'response', None), 'status_code', None)
             if status_code == 401:
-                # TODO change the log message when using a user token
-                logger.info('xivo-ctid is not authorized to list calls')
+                logger.info('This user is not authorized to list its calls')
             else:
                 raise
 
-    def _txfer_to_voicemail(self, user_uuid, voicemail_number, flow):
+    def _txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
         logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
-        active_call = self._get_active_call_by_uuid(user_uuid)
+        active_call = self._get_user_active_call(auth_token)
         if not active_call:
             logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
             return
