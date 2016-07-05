@@ -17,22 +17,20 @@
 
 import logging
 
-from functools import partial
+from requests import HTTPError
 
 from xivo import caller_id
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
+from xivo_ctid_ng_client import Client as CtidNgClient
 
 from xivo_cti import dao
 from xivo_cti import config
-from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.model.destination_factory import DestinationFactory
-from xivo_cti.tools.extension import InvalidExtension
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +73,7 @@ class UserServiceManager(object):
         bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
         bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status_update_event)
 
-    def call_destination(self, client_connection, user_id, url_or_exten):
+    def call_destination(self, auth_token, user_id, url_or_exten):
         if DestinationFactory.is_destination_url(url_or_exten):
             exten = DestinationFactory.make_from(url_or_exten).to_exten()
         elif caller_id.is_complete_caller_id(url_or_exten):
@@ -84,13 +82,15 @@ class UserServiceManager(object):
             exten = url_or_exten
 
         try:
-            action_id = self._dial(user_id, exten)
-            self._register_originate_response_callback(action_id, client_connection, user_id, exten)
-        except InvalidExtension as e:
-            self._on_originate_error(client_connection,
-                                     user_id,
-                                     exten,
-                                     "Invalid extension '{exten}'".format(exten=e.exten))
+            client = self._new_ctid_ng_client(auth_token)
+            client.calls.make_call_from_user(extension=exten)
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            # XXX handle invalid extension when they get implemented
+            if status_code == 401:
+                logger.info('call: %s is not authorized to make calls')
+            else:
+                raise
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
@@ -186,45 +186,6 @@ class UserServiceManager(object):
         user_db.disable_service(target, 'callrecord')
         self.user_service_notifier.recording_disabled(target)
 
-    def _dial(self, user_id, exten):
-        try:
-            line = self.dao.user.get_line(user_id)
-            fullname = self.dao.user.get_fullname(user_id)
-        except LookupError:
-            logger.warning('Failed to dial %s for user %s', exten, user_id)
-        else:
-            return self.ami_class.originate(
-                line['protocol'],
-                line['name'],
-                line['number'],
-                fullname,
-                exten,
-                exten,
-                line['context'],
-            )
-
-    def _register_originate_response_callback(self, action_id, client_connection, user_id, exten):
-        callback = partial(self._on_originate_response_callback, client_connection, user_id, exten)
-        AMIResponseHandler.get_instance().register_callback(action_id, callback)
-
-    def _on_originate_response_callback(self, client_connection, user_id, exten, result):
-        response = result.get(RESPONSE)
-        if response == SUCCESS:
-            line = self.dao.user.get_line(user_id)
-            self._on_originate_success(client_connection, exten, line)
-        else:
-            self._on_originate_error(client_connection, user_id, exten, result.get(MESSAGE))
-
-    def _on_originate_success(self, client_connection, exten, line):
-        interface = '%(protocol)s/%(name)s' % line
-        self._call_manager.answer_next_ringing_call(client_connection, interface)
-        client_connection.send_message(CTIMessageFormatter.dial_success(exten))
-
-    def _on_originate_error(self, client_connection, user_id, exten, message):
-        logger.warning('Originate failed from user %s to %s: %s', user_id, exten, message)
-        formatted_msg = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
-        client_connection.send_message(formatted_msg)
-
     def deliver_dnd_message(self, user_uuid, enabled):
         try:
             user_id = str(dao.user.get_by_uuid(user_uuid)['id'])
@@ -269,6 +230,12 @@ class UserServiceManager(object):
             self.funckey_manager.update_all_unconditional_fwd(user_id, enabled, destination)
         except NoSuchUserException:
             logger.info('received a %s unconditional forward event on an unknown user %s', enabled, user_uuid)
+
+    @staticmethod
+    def _new_ctid_ng_client(auth_token):
+        ctid_ng_config = dict(config['ctid_ng'])
+        ctid_ng_config['token'] = auth_token
+        return CtidNgClient(**ctid_ng_config)
 
     def _async_set_service(self, user_uuid, auth_token, service, enabled):
         client = ConfdClient(token=auth_token, **config['confd'])

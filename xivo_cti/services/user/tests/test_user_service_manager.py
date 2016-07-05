@@ -34,7 +34,6 @@ from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.bus_listener import BusListener
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-from xivo_cti.ami.ami_response_handler import AMIResponseHandler
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.dao.forward_dao import ForwardDAO
 from xivo_cti.dao.user_dao import UserDAO
@@ -49,7 +48,6 @@ from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
-from xivo_cti.tools.extension import InvalidExtension
 from xivo_cti.xivo_ami import AMIClass
 
 SOME_UUID = str(uuid.uuid4())
@@ -101,8 +99,13 @@ class _BaseTestCase(unittest.TestCase):
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_service_manager.dao.user = Mock(UserDAO)
         self.user_service_manager.dao.forward = self.forward_dao
+        client_factory = self.user_service_manager._new_ctid_ng_client = Mock()
+        self.ctid_ng_client = client_factory.return_value
 
         context.reset()
+
+    def _assert_user_called(self, exten):
+        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=exten)
 
 
 @patch('xivo_cti.services.user.manager.config', CONFIG)
@@ -111,54 +114,33 @@ class TestUserServiceManager(_BaseTestCase):
     def test_call_destination_url(self):
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
-        connection = Mock(CTI)
-        self.user_service_manager._dial = Mock(return_value=s.action_id)
-        self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(connection, s.user_id, url)
+        self.user_service_manager.call_destination(s.auth_token, s.user_id, url)
 
-        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
-        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            s.action_id, connection, s.user_id, number)
+        self._assert_user_called(number)
 
     def test_call_destination_exten(self):
         number = '1234'
-        connection = Mock(CTI)
-        self.user_service_manager._dial = Mock(return_value=s.action_id)
-        self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(connection, s.user_id, number)
+        self.user_service_manager.call_destination(s.auth_token, s.user_id, number)
 
-        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
-
-        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            s.action_id, connection, s.user_id, number)
+        self._assert_user_called(number)
 
     def test_call_destination_caller_id(self):
         number = '1234'
         caller_id = '"Alice Smith" <{}>'.format(number)
-        connection = Mock(CTI)
 
-        self.user_service_manager._dial = Mock(return_value=s.action_id)
-        self.user_service_manager._register_originate_response_callback = Mock()
+        self.user_service_manager.call_destination(s.auth_token, s.user_id, caller_id)
 
-        self.user_service_manager.call_destination(connection, s.user_id, caller_id)
+        self._assert_user_called(number)
 
-        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
-        self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            s.action_id, connection, s.user_id, number
-        )
-
+    @unittest.skip('No destination check in ctid-ng yet')
     def test_call_destination_invalid_exten(self):
         exten = ''
-        connection = Mock(CTI)
 
-        self.user_service_manager._dial = Mock(side_effect=InvalidExtension(''))
-
-        self.user_service_manager.call_destination(connection, s.user_id, exten)
+        self.user_service_manager.call_destination(s.auth_token, s.user_id, exten)
 
         expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
-        connection.send_message.assert_called_once_with(expected_message)
 
     def test_connect(self):
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:
@@ -166,115 +148,6 @@ class TestUserServiceManager(_BaseTestCase):
 
         send_presence.assert_called_once_with(SOME_UUID, s.state)
         self.user_service_manager.dao.user.connect.assert_called_once_with(s.user_id)
-
-    def test_register_originate_response_callback(self):
-        exten = '324564'
-        callback = Mock()
-        self.user_service_manager._on_originate_response_callback = callback
-        response = {'ActionID': s.action_id}
-        connection = s
-
-        self.user_service_manager._register_originate_response_callback(s.action_id,
-                                                                        connection,
-                                                                        s.user_id,
-                                                                        exten)
-
-        AMIResponseHandler.get_instance().handle_response(response)
-        callback.assert_called_once_with(connection, s.user_id, exten, response)
-
-    def test_on_originate_response_callback_success(self):
-        connection = Mock(CTI)
-        connection.answer_cb = s
-        response = {
-            'Response': 'Success',
-            'ActionID': '123423847',
-            'Message': 'Originate successfully queued',
-        }
-        self.user_service_manager._on_originate_success = Mock()
-        self.user_service_manager.dao.user.get_line = Mock(return_value=s.line)
-
-        self.user_service_manager._on_originate_response_callback(
-            connection, s.user_id, s.exten, response,
-        )
-
-        self.user_service_manager._on_originate_success.assert_called_once_with(
-            connection, s.exten, s.line)
-
-    def test_on_originate_response_callback_error(self):
-        exten = '543'
-        msg = 'Extension does not exist.'
-        connection = Mock(CTI)
-        response = {
-            'Response': 'Error',
-            'ActionID': '123456',
-            'Message': msg,
-        }
-        self.user_service_manager._on_originate_error = Mock()
-
-        self.user_service_manager._on_originate_response_callback(connection, s.user_id, exten, response)
-
-        self.user_service_manager._on_originate_error.assert_called_once_with(connection, s.user_id, exten, msg)
-
-    def test_on_originate_success(self):
-        connection = Mock(CTI)
-        line = {'protocol': 'SCCP', 'name': 'zzzz'}
-
-        self.user_service_manager._on_originate_success(connection, s.exten, line)
-
-        self._call_manager.answer_next_ringing_call.assert_called_once_with(connection, 'SCCP/zzzz')
-        expected_message = CTIMessageFormatter.dial_success(s.exten)
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_originate_error(self):
-        exten = '1234'
-        msg = 'Extension does not exist.'
-        formatted_error = 'unreachable_extension:%s' % exten
-        formatted_msg = {
-            'class': 'ipbxcommand',
-            'error_string': formatted_error,
-        }
-        connection = Mock(CTI)
-        self.user_service_notifier.report_error = Mock()
-
-        self.user_service_manager._on_originate_error(connection, s.user_id, exten, msg)
-
-        connection.send_message.assert_called_once_with(formatted_msg)
-
-    def test_dial(self):
-        exten = '1234'
-        user_line_proto = 'SIP'
-        user_line_name = 'abcdefd'
-        user_line_number = '1001'
-        user_fullname = 'Bob'
-        user_line_context = 'default'
-        self.ami_class.originate.return_value = s.action_id
-        self.user_service_manager.dao.user.get_fullname.return_value = user_fullname
-        self.user_service_manager.dao.user.get_line.return_value = {
-            'protocol': user_line_proto,
-            'name': user_line_name,
-            'number': user_line_number,
-            'context': user_line_context,
-        }
-
-        return_value = self.user_service_manager._dial(s.user_id, exten)
-
-        self.ami_class.originate.assert_called_once_with(
-            user_line_proto,
-            user_line_name,
-            user_line_number,
-            user_fullname,
-            exten,
-            exten,
-            user_line_context,
-        )
-
-        assert_that(return_value, equal_to(s.action_id), 'Returned action id')
-
-    def test_dial_no_line_no_stack_trace(self):
-        exten = '1234'
-        self.user_service_manager.dao.user.get_line.side_effect = LookupError()
-
-        self.user_service_manager._dial(s.user_id, exten)
 
     @mocked_confd_client
     def test_enable_dnd(self, client):
