@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,10 +28,6 @@ class CallManager(object):
     def __init__(self, ami_class, ami_callback_handler):
         self._ami = ami_class
         self._ami_cb_handler = ami_callback_handler
-
-    def hangup(self, call):
-        logger.debug('Hanging up %s', call)
-        self._ami.hangup(call.source._channel)
 
     def answer_next_ringing_call(self, connection, interface):
         fn = self._get_answer_on_sip_ringing_fn(connection, interface)
