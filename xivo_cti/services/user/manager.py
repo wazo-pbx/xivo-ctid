@@ -81,6 +81,9 @@ class UserServiceManager(object):
         else:
             exten = url_or_exten
 
+        self.call_exten(auth_token, user_id, exten)
+
+    def call_exten(self, auth_token, user_id, exten):
         try:
             client = self._new_ctid_ng_client(auth_token)
             client.calls.make_call_from_user(extension=exten)
