@@ -222,13 +222,15 @@ class CurrentCallManager(object):
     def get_line_calls(self, line_identity):
         return self._calls_per_line.get(line_identity, [])
 
-    def hangup(self, user_id):
-        logger.info('hangup: user %s is hanging up is current call', user_id)
-        try:
-            call = self._get_active_call(user_id)
-            self._call_manager.hangup(call)
-        except NoSuchCallException:
-            logger.warning('hangup: failed to find the active call for user %s', user_id)
+    def hangup(self, auth_token, user_uuid):
+        logger.info('hangup: user %s is hanging up is current call', user_uuid)
+        active_call = self._get_active_call_by_uuid(user_uuid)
+        if not active_call:
+            logger.warning('hangup: failed to find the active call for user %s', user_uuid)
+            return
+
+        client = self._new_ctid_ng_client(auth_token)
+        client.calls.hangup_from_user(active_call['call_id'])
 
     def complete_transfer(self, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)

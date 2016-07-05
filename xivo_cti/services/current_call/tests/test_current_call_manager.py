@@ -25,14 +25,12 @@ from mock import Mock
 from mock import patch
 from mock import sentinel as s
 
-from xivo.asterisk.extension import Extension
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
 
 from xivo_cti.exception import NoSuchCallException
 from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.services.call.call import Call
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.services.current_call import formatter
@@ -721,17 +719,24 @@ class TestCurrentCallManager(_BaseTestCase):
 
 class TestHangup(_BaseTestCase):
 
-    def test_with_no_active_call_does_not_crash(self):
-        self.manager._get_active_call = Mock(side_effect=NoSuchCallException('some error'))
+    def setUp(self):
+        super(TestHangup, self).setUp()
+        client_factory = self.manager._new_ctid_ng_client = Mock()
+        self.ctid_ng_client = client_factory.return_value
 
-        self.manager.hangup(s.user_id)
+    def test_with_no_active_call_does_not_crash(self):
+        with patch.object(self.manager,
+                          '_get_active_call_by_uuid',
+                          Mock(return_value=None)):
+            self.manager.hangup(s.auth_token, s.user_uuid)
 
     def test_when_everything_works(self):
-        self.manager._get_active_call = Mock(return_value=s.call)
+        with patch.object(self.manager,
+                          '_get_active_call_by_uuid',
+                          Mock(return_value={'call_id': s.call_id})):
+            self.manager.hangup(s.auth_token, s.user_uuid)
 
-        self.manager.hangup(s.user_id)
-
-        self.call_manager.hangup.assert_called_once_with(s.call)
+        self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)
 
 
 @patch('xivo_cti.services.current_call.manager.dao')
@@ -748,30 +753,3 @@ class TestGetActiveCall(_BaseTestCase):
     def test_line_as_no_context(self, mock_dao):
         mock_dao.user.get_line = Mock(return_value={'number': s.number})
         self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
-
-    def test_when_everything_works(self, mock_dao):
-        active_call = Mock(Call)
-        mock_dao.user.get_line.return_value = {'number': s.number,
-                                               'context': s.context}
-        self.call_storage.find_all_calls_for_extension.return_value = [active_call]
-
-        self.manager.hangup(s.userid)
-
-        mock_dao.user.get_line.assert_called_once_with(s.userid)
-        self.call_manager.hangup.assert_called_once_with(active_call)
-        self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(s.number, s.context, True)
-        )
-
-    def test_when_there_is_no_call_on_the_extension(self, mock_dao):
-        mock_dao.user.get_line.return_value = {'number': s.number,
-                                               'context': s.context}
-        self.call_storage.find_all_calls_for_extension.return_value = []
-
-        self.manager.hangup(s.userid)
-
-        mock_dao.user.get_line.assert_called_once_with(s.userid)
-        assert_that(self.call_manager.hangup.call_count, equal_to(0))
-        self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(s.number, s.context, True)
-        )

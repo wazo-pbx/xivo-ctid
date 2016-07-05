@@ -367,7 +367,7 @@ class CTIServer(object):
         )
         current_call_manager = context.get('current_call_manager')
         Hangup.register_callback_params(
-            current_call_manager.hangup, ['user_id']
+            current_call_manager.hangup, ['auth_token', 'user_uuid']
         )
         AttendedTransfer.register_callback_params(
             current_call_manager.attended_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
