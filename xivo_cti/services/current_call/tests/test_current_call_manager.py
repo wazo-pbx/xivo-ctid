@@ -25,14 +25,10 @@ from mock import Mock
 from mock import patch
 from mock import sentinel as s
 
-from xivo.asterisk.extension import Extension
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
 
-from xivo_cti.exception import NoSuchCallException
-from xivo_cti.exception import NoSuchLineException
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.services.call.call import Call
 from xivo_cti.services.call.manager import CallManager
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.services.current_call import formatter
@@ -82,17 +78,17 @@ class TestCurrentCallManager(_BaseTestCase):
         with patch.object(self.manager, '_track_atxfer') as track:
             with patch.object(self.manager, '_txfer_to_voicemail',
                               Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-                self.manager.atxfer_to_voicemail(s.user_uuid, s.voicemail_number)
+                self.manager.atxfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
-        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'attended')
+        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
         track.assert_called_once_with(s.transfer_id, s.user_uuid)
 
     def test_blind_txfer_to_voicemail(self):
         with patch.object(self.manager, '_txfer_to_voicemail',
                           Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-            self.manager.blind_txfer_to_voicemail(s.user_uuid, s.voicemail_number)
+            self.manager.blind_txfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
-        txfer_to_vm.assert_called_once_with(s.user_uuid, s.voicemail_number, 'blind')
+        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):
@@ -601,7 +597,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
-        assert_that(self.ami_class.hangup.call_count, equal_to(0))
         assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
@@ -721,57 +716,21 @@ class TestCurrentCallManager(_BaseTestCase):
 
 class TestHangup(_BaseTestCase):
 
-    def test_with_no_active_call_does_not_crash(self):
-        self.manager._get_active_call = Mock(side_effect=NoSuchCallException('some error'))
+    def setUp(self):
+        super(TestHangup, self).setUp()
+        client_factory = self.manager._new_ctid_ng_client = Mock()
+        self.ctid_ng_client = client_factory.return_value
 
-        self.manager.hangup(s.user_id)
+    def test_with_no_active_call_does_not_crash(self):
+        with patch.object(self.manager,
+                          '_get_user_active_call',
+                          Mock(return_value=None)):
+            self.manager.hangup(s.auth_token, s.user_uuid)
 
     def test_when_everything_works(self):
-        self.manager._get_active_call = Mock(return_value=s.call)
+        with patch.object(self.manager,
+                          '_get_user_active_call',
+                          Mock(return_value={'call_id': s.call_id})):
+            self.manager.hangup(s.auth_token, s.user_uuid)
 
-        self.manager.hangup(s.user_id)
-
-        self.call_manager.hangup.assert_called_once_with(s.call)
-
-
-@patch('xivo_cti.services.current_call.manager.dao')
-class TestGetActiveCall(_BaseTestCase):
-
-    def test_no_line(self, mock_dao):
-        mock_dao.user.get_line.side_effect = NoSuchLineException
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.userid)
-
-    def test_line_as_no_number(self, mock_dao):
-        mock_dao.user.get_line = Mock(return_value={'context': s.context})
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
-
-    def test_line_as_no_context(self, mock_dao):
-        mock_dao.user.get_line = Mock(return_value={'number': s.number})
-        self.assertRaises(NoSuchCallException, self.manager._get_active_call, s.user_id)
-
-    def test_when_everything_works(self, mock_dao):
-        active_call = Mock(Call)
-        mock_dao.user.get_line.return_value = {'number': s.number,
-                                               'context': s.context}
-        self.call_storage.find_all_calls_for_extension.return_value = [active_call]
-
-        self.manager.hangup(s.userid)
-
-        mock_dao.user.get_line.assert_called_once_with(s.userid)
-        self.call_manager.hangup.assert_called_once_with(active_call)
-        self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(s.number, s.context, True)
-        )
-
-    def test_when_there_is_no_call_on_the_extension(self, mock_dao):
-        mock_dao.user.get_line.return_value = {'number': s.number,
-                                               'context': s.context}
-        self.call_storage.find_all_calls_for_extension.return_value = []
-
-        self.manager.hangup(s.userid)
-
-        mock_dao.user.get_line.assert_called_once_with(s.userid)
-        assert_that(self.call_manager.hangup.call_count, equal_to(0))
-        self.call_storage.find_all_calls_for_extension.assert_called_once_with(
-            Extension(s.number, s.context, True)
-        )
+        self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)

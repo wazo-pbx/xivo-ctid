@@ -303,7 +303,7 @@ class CTIServer(object):
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )
         Dial.register_callback_params(self._user_service_manager.call_destination,
-                                      ['cti_connection', 'user_id', 'destination'])
+                                      ['cti_connection', 'auth_token', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
@@ -367,7 +367,7 @@ class CTIServer(object):
         )
         current_call_manager = context.get('current_call_manager')
         Hangup.register_callback_params(
-            current_call_manager.hangup, ['user_id']
+            current_call_manager.hangup, ['auth_token', 'user_uuid']
         )
         AttendedTransfer.register_callback_params(
             current_call_manager.attended_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
@@ -376,10 +376,10 @@ class CTIServer(object):
             current_call_manager.direct_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
         )
         BlindTransferVoicemail.register_callback_params(
-            current_call_manager.blind_txfer_to_voicemail, ['user_uuid', 'voicemail_number']
+            current_call_manager.blind_txfer_to_voicemail, ['auth_token', 'user_uuid', 'voicemail_number']
         )
         AttendedTransferVoicemail.register_callback_params(
-            current_call_manager.atxfer_to_voicemail, ['user_uuid', 'voicemail_number']
+            current_call_manager.atxfer_to_voicemail, ['auth_token', 'user_uuid', 'voicemail_number']
         )
         CancelTransfer.register_callback_params(
             current_call_manager.cancel_transfer, ['auth_token', 'user_uuid']

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ from mock import sentinel
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.xivo_ami import AMIClass
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.services.call.call import Call
-from xivo_cti.services.call.call import _Channel
 from xivo_cti.services.call.manager import CallManager
 
 
@@ -40,16 +38,6 @@ class _BaseTest(unittest.TestCase):
 
 
 class TestCallManager(_BaseTest):
-
-    def test_when_hangup_then_hangup_destination(self):
-        call = Call(
-            _Channel(sentinel.source_exten, sentinel.source_channel),
-            _Channel(sentinel.destination_exten, sentinel.destination_channel),
-        )
-
-        self.manager.hangup(call)
-
-        self._ami.hangup.assert_called_once_with(sentinel.source_channel)
 
     def test_answer_next_ringing_call(self):
         self.manager._get_answer_on_sip_ringing_fn = Mock(return_value=sentinel.fn)

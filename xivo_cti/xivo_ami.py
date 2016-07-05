@@ -22,14 +22,8 @@ import subprocess
 import time
 import errno
 
-from copy import copy
-
-from xivo.xivo_helpers import clean_extension
-from xivo_dao import extensions_dao
-
 from xivo_cti import config
 from xivo_cti.tools.extension import normalize_exten
-from xivo_cti.interfaces.interface_ami import AMI
 
 logger = logging.getLogger('xivo_ami')
 
@@ -158,9 +152,6 @@ class AMIClass(object):
                                   [('Username', self.loginname),
                                    ('Secret', self.password)])
 
-    def hangup(self, channel):
-        return self._hangup(channel, None)
-
     def hangup_with_cause_answered_elsewhere(self, channel):
         # On most SIP phones, hanging up a ringing call with the cause
         # "answered elsewhere" prevents the phone from displaying the call
@@ -194,43 +185,6 @@ class AMIClass(object):
                                    ('Context', context),
                                    ('Exten', exten),
                                    ('Priority', priority)])
-
-    # \brief Originates a call from a phone towards another.
-    def originate(self, phoneproto, phonesrcname, phonesrcnum, cidnamesrc,
-                  phonedst, cidnamedst,
-                  locext, extravars={}, timeout=3600):
-        # originate a call btw src and dst
-        # src will ring first, and dst will ring when src responds
-        phonedst = normalize_exten(phonedst)
-        if phoneproto == 'custom':
-            channel = phonesrcname.replace('\\', '')
-        else:
-            channel = '%s/%s' % (phoneproto.upper(), phonesrcname)
-        command_details = [('Channel', channel),
-                           ('Exten', phonedst),
-                           ('Context', locext),
-                           ('Priority', '1'),
-                           ('Timeout', str(timeout * 1000)),
-                           ('Variable', 'XIVO_ORIGAPPLI=%s' % 'OrigDial'),
-                           ('Variable', 'XIVO_ORIG_CID_NAME=%s' % cidnamesrc),
-                           ('Variable', 'XIVO_ORIG_CID_NUM=%s' % phonesrcnum),
-                           ('Async', 'true')]
-        if switch_originates:
-            if (phonedst.startswith('#')):
-                command_details.append(('CallerID', '"%s" <>' % cidnamedst))
-            else:
-                command_details.append(('CallerID', '"%s"<%s>' % (cidnamedst, phonedst)))
-        else:
-            command_details.append(('CallerID', '"%s"' % cidnamesrc))
-        for var, val in extravars.iteritems():
-            command_details.append(('Variable', '%s=%s' % (var, val)))
-
-        action_id = AMI.make_actionid()
-        self.actionid = copy(action_id)
-
-        self._exec_command('Originate', command_details)
-
-        return action_id
 
     # \brief Requests the Extension Statuses
     def extensionstate(self, extension, context):
