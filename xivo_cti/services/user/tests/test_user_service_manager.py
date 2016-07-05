@@ -23,7 +23,7 @@ from functools import wraps
 
 from mock import ANY
 from mock import Mock
-from mock import sentinel
+from mock import sentinel as s
 from mock import patch
 
 from hamcrest import assert_that, calling, equal_to, not_, raises
@@ -109,106 +109,98 @@ class _BaseTestCase(unittest.TestCase):
 class TestUserServiceManager(_BaseTestCase):
 
     def test_call_destination_url(self):
-        user_id = sentinel
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
-        action_id = 'abcdef'
         connection = Mock(CTI)
-        self.user_service_manager._dial = Mock(return_value=action_id)
+        self.user_service_manager._dial = Mock(return_value=s.action_id)
         self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(connection, user_id, url)
+        self.user_service_manager.call_destination(connection, s.user_id, url)
 
-        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            action_id, connection, user_id, number)
+            s.action_id, connection, s.user_id, number)
 
     def test_call_destination_exten(self):
-        user_id = sentinel
         number = '1234'
-        action_id = '34897345'
         connection = Mock(CTI)
-        self.user_service_manager._dial = Mock(return_value=action_id)
+        self.user_service_manager._dial = Mock(return_value=s.action_id)
         self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(connection, user_id, number)
+        self.user_service_manager.call_destination(connection, s.user_id, number)
 
-        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
 
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            action_id, connection, user_id, number)
+            s.action_id, connection, s.user_id, number)
 
     def test_call_destination_caller_id(self):
-        user_id = sentinel.user_id
         number = '1234'
         caller_id = '"Alice Smith" <{}>'.format(number)
-        action_id = sentinel.action_id
         connection = Mock(CTI)
 
-        self.user_service_manager._dial = Mock(return_value=sentinel.action_id)
+        self.user_service_manager._dial = Mock(return_value=s.action_id)
         self.user_service_manager._register_originate_response_callback = Mock()
 
-        self.user_service_manager.call_destination(connection, user_id, caller_id)
+        self.user_service_manager.call_destination(connection, s.user_id, caller_id)
 
-        self.user_service_manager._dial.assert_called_once_with(user_id, number)
+        self.user_service_manager._dial.assert_called_once_with(s.user_id, number)
         self.user_service_manager._register_originate_response_callback.assert_called_once_with(
-            action_id, connection, user_id, number
+            s.action_id, connection, s.user_id, number
         )
 
     def test_call_destination_invalid_exten(self):
-        user_id = sentinel.user_id
         exten = ''
         connection = Mock(CTI)
 
         self.user_service_manager._dial = Mock(side_effect=InvalidExtension(''))
 
-        self.user_service_manager.call_destination(connection, user_id, exten)
+        self.user_service_manager.call_destination(connection, s.user_id, exten)
 
         expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
         connection.send_message.assert_called_once_with(expected_message)
 
     def test_connect(self):
-        state = 'available'
-        user_id = '42'
-
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:
-            self.user_service_manager.connect(user_id, SOME_UUID, SOME_TOKEN, state)
+            self.user_service_manager.connect(s.user_id, SOME_UUID, SOME_TOKEN, s.state)
 
-        send_presence.assert_called_once_with(SOME_UUID, state)
-        self.user_service_manager.dao.user.connect.assert_called_once_with(user_id)
+        send_presence.assert_called_once_with(SOME_UUID, s.state)
+        self.user_service_manager.dao.user.connect.assert_called_once_with(s.user_id)
 
     def test_register_originate_response_callback(self):
-        action_id, user_id, exten = '8734534', '12', '324564'
+        exten = '324564'
         callback = Mock()
         self.user_service_manager._on_originate_response_callback = callback
-        response = {'ActionID': action_id}
-        connection = sentinel
+        response = {'ActionID': s.action_id}
+        connection = s
 
-        self.user_service_manager._register_originate_response_callback(action_id, connection, user_id, exten)
+        self.user_service_manager._register_originate_response_callback(s.action_id,
+                                                                        connection,
+                                                                        s.user_id,
+                                                                        exten)
 
         AMIResponseHandler.get_instance().handle_response(response)
-        callback.assert_called_once_with(connection, user_id, exten, response)
+        callback.assert_called_once_with(connection, s.user_id, exten, response)
 
     def test_on_originate_response_callback_success(self):
         connection = Mock(CTI)
-        connection.answer_cb = sentinel
+        connection.answer_cb = s
         response = {
             'Response': 'Success',
             'ActionID': '123423847',
             'Message': 'Originate successfully queued',
         }
         self.user_service_manager._on_originate_success = Mock()
-        self.user_service_manager.dao.user.get_line = Mock(return_value=sentinel.line)
+        self.user_service_manager.dao.user.get_line = Mock(return_value=s.line)
 
         self.user_service_manager._on_originate_response_callback(
-            connection, sentinel.user_id, sentinel.exten, response,
+            connection, s.user_id, s.exten, response,
         )
 
         self.user_service_manager._on_originate_success.assert_called_once_with(
-            connection, sentinel.exten, sentinel.line)
+            connection, s.exten, s.line)
 
     def test_on_originate_response_callback_error(self):
-        user_id = 1
         exten = '543'
         msg = 'Extension does not exist.'
         connection = Mock(CTI)
@@ -219,22 +211,22 @@ class TestUserServiceManager(_BaseTestCase):
         }
         self.user_service_manager._on_originate_error = Mock()
 
-        self.user_service_manager._on_originate_response_callback(connection, user_id, exten, response)
+        self.user_service_manager._on_originate_response_callback(connection, s.user_id, exten, response)
 
-        self.user_service_manager._on_originate_error.assert_called_once_with(connection, user_id, exten, msg)
+        self.user_service_manager._on_originate_error.assert_called_once_with(connection, s.user_id, exten, msg)
 
     def test_on_originate_success(self):
         connection = Mock(CTI)
         line = {'protocol': 'SCCP', 'name': 'zzzz'}
 
-        self.user_service_manager._on_originate_success(connection, sentinel.exten, line)
+        self.user_service_manager._on_originate_success(connection, s.exten, line)
 
         self._call_manager.answer_next_ringing_call.assert_called_once_with(connection, 'SCCP/zzzz')
-        expected_message = CTIMessageFormatter.dial_success(sentinel.exten)
+        expected_message = CTIMessageFormatter.dial_success(s.exten)
         connection.send_message.assert_called_once_with(expected_message)
 
     def test_on_originate_error(self):
-        user_id, exten = '42', '1234'
+        exten = '1234'
         msg = 'Extension does not exist.'
         formatted_error = 'unreachable_extension:%s' % exten
         formatted_msg = {
@@ -244,20 +236,18 @@ class TestUserServiceManager(_BaseTestCase):
         connection = Mock(CTI)
         self.user_service_notifier.report_error = Mock()
 
-        self.user_service_manager._on_originate_error(connection, user_id, exten, msg)
+        self.user_service_manager._on_originate_error(connection, s.user_id, exten, msg)
 
         connection.send_message.assert_called_once_with(formatted_msg)
 
     def test_dial(self):
-        user_id = 654
         exten = '1234'
         user_line_proto = 'SIP'
         user_line_name = 'abcdefd'
         user_line_number = '1001'
         user_fullname = 'Bob'
         user_line_context = 'default'
-        action_id = '12345'
-        self.ami_class.originate.return_value = action_id
+        self.ami_class.originate.return_value = s.action_id
         self.user_service_manager.dao.user.get_fullname.return_value = user_fullname
         self.user_service_manager.dao.user.get_line.return_value = {
             'protocol': user_line_proto,
@@ -266,7 +256,7 @@ class TestUserServiceManager(_BaseTestCase):
             'context': user_line_context,
         }
 
-        return_value = self.user_service_manager._dial(user_id, exten)
+        return_value = self.user_service_manager._dial(s.user_id, exten)
 
         self.ami_class.originate.assert_called_once_with(
             user_line_proto,
@@ -278,14 +268,13 @@ class TestUserServiceManager(_BaseTestCase):
             user_line_context,
         )
 
-        assert_that(return_value, equal_to(action_id), 'Returned action id')
+        assert_that(return_value, equal_to(s.action_id), 'Returned action id')
 
     def test_dial_no_line_no_stack_trace(self):
-        user_id = 654
         exten = '1234'
         self.user_service_manager.dao.user.get_line.side_effect = LookupError()
 
-        self.user_service_manager._dial(user_id, exten)
+        self.user_service_manager._dial(s.user_id, exten)
 
     @mocked_confd_client
     def test_enable_dnd(self, client):
@@ -330,69 +319,57 @@ class TestUserServiceManager(_BaseTestCase):
 
     @mocked_confd_client
     def test_enable_busy_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.enable_busy_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.enable_busy_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='busy',
                                                                        forward={'enabled': True,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     @mocked_confd_client
     def test_disable_busy_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.disable_busy_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.disable_busy_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='busy',
                                                                        forward={'enabled': False,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     @mocked_confd_client
     def test_enable_rna_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.enable_rna_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.enable_rna_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='noanswer',
                                                                        forward={'enabled': True,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     @mocked_confd_client
     def test_disable_rna_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.disable_rna_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.disable_rna_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='noanswer',
                                                                        forward={'enabled': False,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     @mocked_confd_client
     def test_enable_unconditional_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.enable_unconditional_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.enable_unconditional_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='unconditional',
                                                                        forward={'enabled': True,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     @mocked_confd_client
     def test_disable_unconditional_fwd(self, client):
-        destination = '1803'
-
         with synchronize(self._runner):
-            self.user_service_manager.disable_unconditional_fwd(SOME_UUID, SOME_TOKEN, destination)
+            self.user_service_manager.disable_unconditional_fwd(SOME_UUID, SOME_TOKEN, s.destination)
 
         client.users(SOME_UUID).update_forward.assert_called_once_with(forward_name='unconditional',
                                                                        forward={'enabled': False,
-                                                                                'destination': destination})
+                                                                                'destination': s.destination})
 
     def test_deliver_incallfilter_message_no_user_found(self):
         self.user_service_manager.dao.user.get_by_uuid.side_effect = NoSuchUserException
@@ -580,26 +557,27 @@ class TestUserServiceManager(_BaseTestCase):
         assert_that(self.funckey_manager.update_all_unconditional_fwd.called, equal_to(False))
 
     def test_disconnect(self):
-        user_id = 95
         self.user_service_manager.set_presence = Mock()
 
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:
-            self.user_service_manager.disconnect(user_id, SOME_UUID)
+            self.user_service_manager.disconnect(s.user_id, SOME_UUID)
 
-        self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
+        self.user_service_manager.dao.user.disconnect.assert_called_once_with(s.user_id)
         send_presence.assert_called_once_with(SOME_UUID, 'disconnected')
 
     def test_disconnect_no_action(self):
-        user_id = 95
         self.user_service_manager.set_presence = Mock()
 
-        self.user_service_manager.disconnect_no_action(user_id, SOME_UUID)
+        self.user_service_manager.disconnect_no_action(s.user_id, SOME_UUID)
 
-        self.user_service_manager.dao.user.disconnect.assert_called_once_with(user_id)
-        self.user_service_manager.set_presence.assert_called_once_with(user_id, SOME_UUID, ANY, 'disconnected', action=False)
+        self.user_service_manager.dao.user.disconnect.assert_called_once_with(s.user_id)
+        self.user_service_manager.set_presence.assert_called_once_with(s.user_id,
+                                                                       SOME_UUID,
+                                                                       ANY,
+                                                                       'disconnected',
+                                                                       action=False)
 
     def test_set_valid_presence_no_agent(self):
-        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
@@ -607,19 +585,18 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
+        self.user_service_manager.set_presence(s.user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
-        self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.dao.user.set_presence.assert_called_once_with(s.user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
-            user_id, SOME_UUID, SOME_TOKEN, expected_presence)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
+            s.user_id, SOME_UUID, SOME_TOKEN, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(s.user_id, expected_presence)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(s.user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
     def test_set_valid_presence_no_agent_no_action(self):
-        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
@@ -627,18 +604,17 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = None
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence, action=False)
+        self.user_service_manager.set_presence(s.user_id, SOME_UUID, SOME_TOKEN, presence, action=False)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
-        self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.dao.user.set_presence.assert_called_once_with(s.user_id, expected_presence)
         self.assertFalse(self.user_service_manager.presence_service_executor.execute_actions.called)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
+        self.user_service_notifier.presence_updated.assert_called_once_with(s.user_id, expected_presence)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(s.user_id)
         self.assertFalse(self.user_service_manager.agent_service_manager.set_presence.called)
 
     def test_set_valid_presence_with_agent(self):
-        user_id = '95'
         expected_agent_id = 10
         presence = 'disconnected'
         expected_presence = 'disconnected'
@@ -647,27 +623,26 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.dao.user.get_agent_id.return_value = expected_agent_id
         self.presence_service_manager.is_valid_presence.return_value = True
 
-        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
+        self.user_service_manager.set_presence(s.user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
-        self.user_service_manager.dao.user.set_presence.assert_called_once_with(user_id, expected_presence)
+        self.user_service_manager.dao.user.set_presence.assert_called_once_with(s.user_id, expected_presence)
         self.user_service_manager.presence_service_executor.execute_actions.assert_called_once_with(
-            user_id, SOME_UUID, SOME_TOKEN, expected_presence)
-        self.user_service_notifier.presence_updated.assert_called_once_with(user_id, expected_presence)
-        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(user_id)
+            s.user_id, SOME_UUID, SOME_TOKEN, expected_presence)
+        self.user_service_notifier.presence_updated.assert_called_once_with(s.user_id, expected_presence)
+        self.user_service_manager.dao.user.get_agent_id.assert_called_once_with(s.user_id)
         self.user_service_manager.agent_service_manager.set_presence.assert_called_once_with(
             expected_agent_id, expected_presence)
 
     def test_set_not_valid_presence(self):
-        user_id = '95'
         presence = 'disconnected'
         expected_presence = 'disconnected'
         user_profile = 42
         self.user_service_manager.dao.user.get_cti_profile_id.return_value = user_profile
         self.presence_service_manager.is_valid_presence.return_value = False
 
-        self.user_service_manager.set_presence(user_id, SOME_UUID, SOME_TOKEN, presence)
+        self.user_service_manager.set_presence(s.user_id, SOME_UUID, SOME_TOKEN, presence)
 
         self.user_service_manager.presence_service_manager.is_valid_presence.assert_called_once_with(
             user_profile, expected_presence)
@@ -687,18 +662,14 @@ class TestUserServiceManager(_BaseTestCase):
 
     @patch('xivo_cti.database.user_db.enable_service')
     def test_enable_recording(self, mock_enable_service):
-        target = 37
+        self.user_service_manager.enable_recording(s.target)
 
-        self.user_service_manager.enable_recording(target)
-
-        mock_enable_service.assert_called_once_with(target, 'callrecord')
-        self.user_service_notifier.recording_enabled.assert_called_once_with(target)
+        mock_enable_service.assert_called_once_with(s.target, 'callrecord')
+        self.user_service_notifier.recording_enabled.assert_called_once_with(s.target)
 
     @patch('xivo_cti.database.user_db.disable_service')
     def test_disable_recording(self, mock_disable_service):
-        target = 35
+        self.user_service_manager.disable_recording(s.target)
 
-        self.user_service_manager.disable_recording(target)
-
-        mock_disable_service.assert_called_once_with(target, 'callrecord')
-        self.user_service_notifier.recording_disabled.assert_called_once_with(target)
+        mock_disable_service.assert_called_once_with(s.target, 'callrecord')
+        self.user_service_notifier.recording_disabled.assert_called_once_with(s.target)
