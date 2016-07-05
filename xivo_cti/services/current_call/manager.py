@@ -220,7 +220,7 @@ class CurrentCallManager(object):
         return self._calls_per_line.get(line_identity, [])
 
     def hangup(self, auth_token, user_uuid):
-        logger.info('hangup: user %s is hanging up is current call', user_uuid)
+        logger.info('hangup: user %s is hanging up his current call', user_uuid)
         active_call = self._get_user_active_call(auth_token)
         if not active_call:
             logger.warning('hangup: failed to find the active call for user %s', user_uuid)
@@ -382,7 +382,7 @@ class CurrentCallManager(object):
         except HTTPError as e:
             status_code = getattr(getattr(e, 'response', None), 'status_code', None)
             if status_code == 401:
-                logger.info('This user is not authorized to list its calls')
+                logger.info('This user is not authorized to list his calls')
             else:
                 raise
 
