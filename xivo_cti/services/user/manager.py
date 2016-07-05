@@ -240,9 +240,7 @@ class UserServiceManager(object):
 
     @staticmethod
     def _new_ctid_ng_client(auth_token):
-        ctid_ng_config = dict(config['ctid_ng'])
-        ctid_ng_config['token'] = auth_token
-        return CtidNgClient(**ctid_ng_config)
+        return CtidNgClient(token=auth_token, **config['ctid_ng'])
 
     def _async_set_service(self, user_uuid, auth_token, service, enabled):
         client = ConfdClient(token=auth_token, **config['confd'])
