@@ -48,13 +48,6 @@ class TestXivoAMI(unittest.TestCase):
         self.fail('No call matched "{}" with args {} in:\n{}'.format(
             cmd, args, self.ami_class._exec_command.call_args_list))
 
-    def test_hangup(self):
-        channel = sentinel.channel_to_hangup
-
-        self.ami_class.hangup(channel)
-
-        self._assert_exec_command('Hangup', [('Channel', channel)])
-
     def test_hangup_with_cause_answered_elsewhere(self):
         channel = sentinel.channel_to_hangup
 

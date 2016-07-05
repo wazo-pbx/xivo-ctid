@@ -599,7 +599,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
-        assert_that(self.ami_class.hangup.call_count, equal_to(0))
         assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')

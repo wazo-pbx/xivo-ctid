@@ -152,9 +152,6 @@ class AMIClass(object):
                                   [('Username', self.loginname),
                                    ('Secret', self.password)])
 
-    def hangup(self, channel):
-        return self._hangup(channel, None)
-
     def hangup_with_cause_answered_elsewhere(self, channel):
         # On most SIP phones, hanging up a ringing call with the cause
         # "answered elsewhere" prevents the phone from displaying the call
