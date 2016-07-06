@@ -112,7 +112,8 @@ class TestCalls(_BaseTestCase):
         call_function = self.ctid_ng_client.calls.make_call_from_user
 
         with patch.object(self.user_service_manager, '_on_call_success') as cb:
-            self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
+            with synchronize(self._runner):
+                self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
 
         call_function.assert_called_once_with(extension=s.exten)
         cb.assert_called_once_with(s.connection, s.user_id, call_function.return_value)
@@ -122,7 +123,8 @@ class TestCalls(_BaseTestCase):
         exception = call_function.side_effect = Exception()
 
         with patch.object(self.user_service_manager, '_on_call_exception') as cb:
-            self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
+            with synchronize(self._runner):
+                self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
 
         call_function.assert_called_once_with(extension=s.exten)
         cb.assert_called_once_with(s.connection, s.user_id, s.exten, exception)

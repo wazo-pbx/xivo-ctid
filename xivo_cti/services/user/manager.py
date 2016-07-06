@@ -17,6 +17,8 @@
 
 import logging
 
+from functools import partial
+
 from requests import ConnectionError, HTTPError
 
 from xivo import caller_id
@@ -87,12 +89,11 @@ class UserServiceManager(object):
     def call_exten(self, connection, auth_token, user_id, exten):
         logger.info('call_exten: %s is calling %s', user_id, exten)
         client = self._new_ctid_ng_client(auth_token)
-        try:
-            response = client.calls.make_call_from_user(extension=exten)
-        except Exception as e:
-            self._on_call_exception(connection, user_id, exten, e)
-        else:
-            self._on_call_success(connection, user_id, response)
+        error_cb = partial(self._on_call_exception, connection, user_id, exten)
+        success_cb = partial(self._on_call_success, connection, user_id)
+        self._runner.run(client.calls.make_call_from_user, extension=exten,
+                         _on_response=success_cb,
+                         _on_error=error_cb)
 
     def _on_call_success(self, connection, user_id, response):
         interface = self.dao.user.get_line_identity(user_id)
