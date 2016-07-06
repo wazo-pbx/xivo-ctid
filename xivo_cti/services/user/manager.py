@@ -17,7 +17,7 @@
 
 import logging
 
-from requests import HTTPError
+from requests import ConnectionError, HTTPError
 
 from xivo import caller_id
 from xivo_bus import Marshaler
@@ -108,6 +108,9 @@ class UserServiceManager(object):
             if status_code == 401:
                 error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
                 return connection.send_message(error_message)
+        except ConnectionError:
+            error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+            return connection.send_message(error_message)
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)

@@ -150,6 +150,15 @@ class TestCalls(_BaseTestCase):
         expected_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
         connection.send_message.assert_called_once_with(expected_message)
 
+    def test_on_call_exception_when_ctid_ng_is_down(self):
+        connection = Mock()
+        exception = exceptions.ConnectionError()
+
+        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
+
     def test_call_destination_url(self):
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
