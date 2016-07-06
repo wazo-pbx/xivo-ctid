@@ -85,6 +85,7 @@ class UserServiceManager(object):
         self.call_exten(connection, auth_token, user_id, exten)
 
     def call_exten(self, connection, auth_token, user_id, exten):
+        logger.info('call_exten: %s is calling %s', user_id, exten)
         client = self._new_ctid_ng_client(auth_token)
         try:
             response = client.calls.make_call_from_user(extension=exten)
