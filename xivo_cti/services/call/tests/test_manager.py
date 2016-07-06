@@ -50,19 +50,11 @@ class TestCalls(_BaseTest):
         client_factory = self.manager._new_ctid_ng_client = Mock()
         self.ctid_ng_client = client_factory.return_value
 
-    def test_hangup_with_no_active_call_does_not_crash(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value=None)):
-            self.manager.hangup(s.auth_token, s.user_uuid)
+    def test_hangup_calls_async_hangup(self):
+        with patch.object(self.manager, '_async_hangup') as async_hangup:
+            self.manager.hangup(s.connection, s.auth_token, s.user_uuid)
 
-    def test_hangup_when_everything_works(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value={'call_id': s.call_id})):
-            self.manager.hangup(s.auth_token, s.user_uuid)
-
-        self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)
+        async_hangup.assert_called_once_with(s.connection, self.ctid_ng_client, s.user_uuid)
 
     def test_call_exten_success(self):
         call_function = self.ctid_ng_client.calls.make_call_from_user
@@ -126,6 +118,33 @@ class TestCalls(_BaseTest):
         exception = exceptions.HTTPError(response=Mock(status_code=503))
 
         self.manager._on_call_exception(connection, s.user_id, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_hangup_exception_401(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=401))
+
+        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('hangup_unauthorized')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_hangup_exception_when_ctid_ng_is_down(self):
+        connection = Mock()
+        exception = exceptions.ConnectionError()
+
+        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_hangup_exception_when_xivo_auth_is_down(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=503))
+
+        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
 
         expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
         connection.send_message.assert_called_once_with(expected_message)

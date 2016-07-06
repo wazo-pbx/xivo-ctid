@@ -63,31 +63,27 @@ class CallManager(object):
                          _on_response=success_cb,
                          _on_error=error_cb)
 
-    def hangup(self, auth_token, user_uuid):
+    def hangup(self, connection, auth_token, user_uuid):
         logger.info('hangup: user %s is hanging up his current call', user_uuid)
-        active_call = self._get_user_active_call(auth_token)
+        client = self._new_ctid_ng_client(auth_token)
+        try:
+            self._async_hangup(connection, client, user_uuid)
+        except Exception as e:
+            self._on_hangup_exception(connection, user_uuid, e)
+
+    def _async_hangup(self, connection, client, user_uuid):
+        active_call = self._get_active_call(client)
         if not active_call:
             logger.warning('hangup: failed to find the active call for user %s', user_uuid)
             return
 
-        client = self._new_ctid_ng_client(auth_token)
-        client.calls.hangup_from_user(active_call['call_id'])
+        return client.calls.hangup_from_user(active_call['call_id'])
 
-    def _get_user_active_call(self, auth_token):
-        client = self._new_ctid_ng_client(auth_token)
-        try:
-            calls = client.calls.list_calls_from_user()
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                logger.info('This user is not authorized to list his calls')
-            else:
-                raise
-
+    def _get_active_call(self, client):
+        calls = client.calls.list_calls_from_user()
         for call in calls['items']:
             if call['status'] == 'Up' and not call['on_hold']:
                 return call
-        return None
 
     def _on_call_success(self, connection, user_id, response):
         interface = dao.user.get_line_identity(user_id)
@@ -104,6 +100,25 @@ class CallManager(object):
             # XXX handle invalid extension when they get implemented
             if status_code == 401:
                 error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
+            elif status_code == 503:
+                error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+            else:
+                raise
+        except ConnectionError:
+            error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+
+        if error_message:
+            connection.send_message(error_message)
+
+    def _on_hangup_exception(self, connection, user_uuid, exception):
+        logger.info('%s failed to hangup: %s', user_uuid, exception)
+        error_message = None
+        try:
+            raise exception
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                error_message = CTIMessageFormatter.ipbxcommand_error('hangup_unauthorized')
             elif status_code == 503:
                 error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
             else:

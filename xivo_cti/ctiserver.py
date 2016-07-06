@@ -305,7 +305,7 @@ class CTIServer(object):
         call_manager = context.get('call_manager')
         Dial.register_callback_params(call_manager.call_destination,
                                       ['cti_connection', 'auth_token', 'user_id', 'destination'])
-        Hangup.register_callback_params(call_manager.hangup, ['auth_token', 'user_uuid'])
+        Hangup.register_callback_params(call_manager.hangup, ['cti_connection', 'auth_token', 'user_uuid'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
