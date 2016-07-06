@@ -159,6 +159,15 @@ class TestCalls(_BaseTestCase):
         expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
         connection.send_message.assert_called_once_with(expected_message)
 
+    def test_on_call_exception_when_xivo_auth_is_down(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=503))
+
+        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
+
     def test_call_destination_url(self):
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)

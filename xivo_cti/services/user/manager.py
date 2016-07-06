@@ -100,6 +100,7 @@ class UserServiceManager(object):
 
     def _on_call_exception(self, connection, user_id, exten, exception):
         logger.info('%s failed to call %s: %s', user_id, exten, exception)
+        error_message = None
         try:
             raise exception
         except HTTPError as e:
@@ -107,10 +108,15 @@ class UserServiceManager(object):
             # XXX handle invalid extension when they get implemented
             if status_code == 401:
                 error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
-                return connection.send_message(error_message)
+            elif status_code == 503:
+                error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+            else:
+                raise
         except ConnectionError:
             error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-            return connection.send_message(error_message)
+
+        if error_message:
+            connection.send_message(error_message)
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
