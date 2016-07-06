@@ -302,8 +302,10 @@ class CTIServer(object):
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )
-        Dial.register_callback_params(context.get('call_manager').call_destination,
+        call_manager = context.get('call_manager')
+        Dial.register_callback_params(call_manager.call_destination,
                                       ['cti_connection', 'auth_token', 'user_id', 'destination'])
+        Hangup.register_callback_params(call_manager.hangup, ['auth_token', 'user_uuid'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
@@ -366,9 +368,6 @@ class CTIServer(object):
             ['cti_connection']
         )
         current_call_manager = context.get('current_call_manager')
-        Hangup.register_callback_params(
-            current_call_manager.hangup, ['auth_token', 'user_uuid']
-        )
         AttendedTransfer.register_callback_params(
             current_call_manager.attended_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
         )

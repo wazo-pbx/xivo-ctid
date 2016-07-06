@@ -63,6 +63,32 @@ class CallManager(object):
                          _on_response=success_cb,
                          _on_error=error_cb)
 
+    def hangup(self, auth_token, user_uuid):
+        logger.info('hangup: user %s is hanging up his current call', user_uuid)
+        active_call = self._get_user_active_call(auth_token)
+        if not active_call:
+            logger.warning('hangup: failed to find the active call for user %s', user_uuid)
+            return
+
+        client = self._new_ctid_ng_client(auth_token)
+        client.calls.hangup_from_user(active_call['call_id'])
+
+    def _get_user_active_call(self, auth_token):
+        client = self._new_ctid_ng_client(auth_token)
+        try:
+            calls = client.calls.list_calls_from_user()
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                logger.info('This user is not authorized to list his calls')
+            else:
+                raise
+
+        for call in calls['items']:
+            if call['status'] == 'Up' and not call['on_hold']:
+                return call
+        return None
+
     def _on_call_success(self, connection, user_id, response):
         interface = dao.user.get_line_identity(user_id)
         if interface:

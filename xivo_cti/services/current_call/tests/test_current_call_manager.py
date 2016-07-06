@@ -712,25 +712,3 @@ class TestCurrentCallManager(_BaseTestCase):
 
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
-
-
-class TestHangup(_BaseTestCase):
-
-    def setUp(self):
-        super(TestHangup, self).setUp()
-        client_factory = self.manager._new_ctid_ng_client = Mock()
-        self.ctid_ng_client = client_factory.return_value
-
-    def test_with_no_active_call_does_not_crash(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value=None)):
-            self.manager.hangup(s.auth_token, s.user_uuid)
-
-    def test_when_everything_works(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value={'call_id': s.call_id})):
-            self.manager.hangup(s.auth_token, s.user_uuid)
-
-        self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)
