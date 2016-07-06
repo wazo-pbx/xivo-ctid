@@ -20,6 +20,7 @@ import uuid
 
 from concurrent import futures
 from functools import wraps
+from requests import exceptions
 
 from mock import ANY
 from mock import Mock
@@ -97,7 +98,7 @@ class _BaseTestCase(unittest.TestCase):
             self._task_queue
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
-        self.user_service_manager.dao.user = Mock(UserDAO)
+        self.user_dao = self.user_service_manager.dao.user = Mock(UserDAO)
         self.user_service_manager.dao.forward = self.forward_dao
         client_factory = self.user_service_manager._new_ctid_ng_client = Mock()
         self.ctid_ng_client = client_factory.return_value
@@ -105,23 +106,49 @@ class _BaseTestCase(unittest.TestCase):
         context.reset()
 
 
-@patch('xivo_cti.services.user.manager.config', CONFIG)
-class TestUserServiceManager(_BaseTestCase):
+class TestCalls(_BaseTestCase):
 
-    def test_call_exten(self):
-        self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
+    def test_call_exten_success(self):
+        call_function = self.ctid_ng_client.calls.make_call_from_user
 
-        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=s.exten)
-        self._call_manager.answer_next_ringing_call.assert_called_once_with(s.connection, ANY)
+        with patch.object(self.user_service_manager, '_on_call_success') as cb:
+            self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
 
-    @unittest.skip('ctid-ng does not check the exten on calls yet')
-    def test_call_exten_with_invalid_exten(self):
-        exten = ''
+        call_function.assert_called_once_with(extension=s.exten)
+        cb.assert_called_once_with(s.connection, s.user_id, call_function.return_value)
 
-        self.user_service_manager.call_destination(s.auth_token, s.user_id, exten)
+    def test_call_exten_exception(self):
+        call_function = self.ctid_ng_client.calls.make_call_from_user
+        exception = call_function.side_effect = Exception()
 
-        self.ctid_ng_client.calls.make_call_from_user.assert_called_once_with(extension=s.exten)
-        expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:%s' % exten)
+        with patch.object(self.user_service_manager, '_on_call_exception') as cb:
+            self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
+
+        call_function.assert_called_once_with(extension=s.exten)
+        cb.assert_called_once_with(s.connection, s.user_id, s.exten, exception)
+
+    def test_on_call_success_with_a_line(self):
+        self.user_dao.get_line_identity.return_value = s.interface
+
+        self.user_service_manager._on_call_success(s.connection, s.user_id, s.result)
+
+        self._call_manager.answer_next_ringing_call.assert_called_once_with(s.connection, s.interface)
+
+    def test_on_call_success_with_no_line(self):
+        self.user_dao.get_line_identity.return_value = None
+
+        self.user_service_manager._on_call_success(s.connection, s.user_id, s.result)
+
+        assert_that(self._call_manager.answer_next_ringing_call.call_count, equal_to(0))
+
+    def test_on_call_exception_401(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=401))
+
+        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
+        connection.send_message.assert_called_once_with(expected_message)
 
     def test_call_destination_url(self):
         number = '1234'
@@ -145,6 +172,10 @@ class TestUserServiceManager(_BaseTestCase):
         with patch.object(self.user_service_manager, 'call_exten') as call:
             self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, caller_id)
         call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
+
+
+@patch('xivo_cti.services.user.manager.config', CONFIG)
+class TestUserServiceManager(_BaseTestCase):
 
     def test_connect(self):
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:

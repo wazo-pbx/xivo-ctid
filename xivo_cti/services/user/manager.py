@@ -28,6 +28,7 @@ from xivo_ctid_ng_client import Client as CtidNgClient
 from xivo_cti import dao
 from xivo_cti import config
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.model.destination_factory import DestinationFactory
@@ -84,20 +85,29 @@ class UserServiceManager(object):
         self.call_exten(connection, auth_token, user_id, exten)
 
     def call_exten(self, connection, auth_token, user_id, exten):
+        client = self._new_ctid_ng_client(auth_token)
         try:
-            client = self._new_ctid_ng_client(auth_token)
-            client.calls.make_call_from_user(extension=exten)
+            response = client.calls.make_call_from_user(extension=exten)
+        except Exception as e:
+            self._on_call_exception(connection, user_id, exten, e)
+        else:
+            self._on_call_success(connection, user_id, response)
+
+    def _on_call_success(self, connection, user_id, response):
+        interface = self.dao.user.get_line_identity(user_id)
+        if interface:
+            self._call_manager.answer_next_ringing_call(connection, interface)
+
+    def _on_call_exception(self, connection, user_id, exten, exception):
+        logger.info('%s failed to call %s: %s', user_id, exten, exception)
+        try:
+            raise exception
         except HTTPError as e:
             status_code = getattr(getattr(e, 'response', None), 'status_code', None)
             # XXX handle invalid extension when they get implemented
             if status_code == 401:
-                logger.info('call: %s is not authorized to make calls')
-            else:
-                raise
-
-        interface = self.dao.user.get_line_identity(user_id)
-        if interface:
-            self._call_manager.answer_next_ringing_call(connection, interface)
+                error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
+                return connection.send_message(error_message)
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
