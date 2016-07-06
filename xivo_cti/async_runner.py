@@ -52,22 +52,21 @@ class AsyncRunner(object):
         self._thread_pool_executor = thread_pool_executor
         self._task_queue = task_queue
 
-    def run(self, function, *args, **kwargs):
-        self._thread_pool_executor.submit(self._exec, function, *args, **kwargs)
+    def run(self, func, *args, **kwargs):
+        callback = kwargs.pop('_on_response', None)
+        error_callback = kwargs.pop('_on_error', None)
+        self._thread_pool_executor.submit(self._exec_with_cb, callback, error_callback, func, *args, **kwargs)
 
-    def run_with_cb(self, cb, function, *args, **kwargs):
-        self._thread_pool_executor.submit(self._exec_with_cb, cb, function, *args, **kwargs)
+    def run_with_cb(self, cb, func, *args, **kwargs):
+        self.run(func, _on_response=cb, *args, **kwargs)
 
-    def _exec(self, function, *args, **kwargs):
+    def _exec_with_cb(self, cb, error_cb, func, *args, **kwargs):
         try:
-            function(*args, **kwargs)
-        except Exception:
-            logger.exception('Exception in async function %s', function)
-
-    def _exec_with_cb(self, cb, function, *args, **kwargs):
-        try:
-            result = function(*args, **kwargs)
-        except Exception:
-            logger.exception('Exception in async function %s', function)
-        else:
-            self._task_queue.put(cb, result)
+            result = func(*args, **kwargs)
+            if cb:
+                self._task_queue.put(cb, result)
+        except Exception as e:
+            if error_cb:
+                self._task_queue.put(error_cb, e)
+            else:
+                logger.exception('Exception in async function %s', func)
