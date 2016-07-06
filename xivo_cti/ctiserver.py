@@ -302,7 +302,7 @@ class CTIServer(object):
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )
-        Dial.register_callback_params(self._user_service_manager.call_destination,
+        Dial.register_callback_params(context.get('call_manager').call_destination,
                                       ['cti_connection', 'auth_token', 'user_id', 'destination'])
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])

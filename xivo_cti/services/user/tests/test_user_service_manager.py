@@ -20,7 +20,6 @@ import uuid
 
 from concurrent import futures
 from functools import wraps
-from requests import exceptions
 
 from mock import ANY
 from mock import Mock
@@ -34,22 +33,17 @@ from xivo_bus import Publisher
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.bus_listener import BusListener
 from xivo_cti.task_queue import new_task_queue
-from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.dao.forward_dao import ForwardDAO
 from xivo_cti.dao.user_dao import UserDAO
 from xivo_cti.exception import NoSuchUserException
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.ioc.context import context
 from xivo_cti.services.agent.manager import AgentServiceManager
-from xivo_cti.services.call.manager import CallManager
-from xivo_cti.services.device.manager import DeviceManager
 from xivo_cti.services.funckey.manager import FunckeyManager
 from xivo_cti.services.presence.executor import PresenceServiceExecutor
 from xivo_cti.services.presence.manager import PresenceServiceManager
 from xivo_cti.services.user.manager import UserServiceManager
 from xivo_cti.services.user.notifier import UserServiceNotifier
-from xivo_cti.xivo_ami import AMIClass
 
 SOME_UUID = str(uuid.uuid4())
 SOME_TOKEN = str(uuid.uuid4())
@@ -74,13 +68,9 @@ class _BaseTestCase(unittest.TestCase):
         self.agent_service_manager = Mock(AgentServiceManager)
         self.presence_service_manager = Mock(PresenceServiceManager)
         self.presence_service_executor = Mock(PresenceServiceExecutor)
-        self.device_manager = Mock(DeviceManager)
         self.funckey_manager = Mock(FunckeyManager)
         self.forward_dao = Mock(ForwardDAO)
         self.user_service_notifier = Mock(UserServiceNotifier)
-        self.ami_class = Mock(AMIClass)
-        self._ami_cb_handler = Mock(AMICallbackHandler)
-        self._call_manager = Mock(CallManager)
         self._bus_listener = Mock(BusListener)
         self._bus_publisher = Mock(Publisher)
         self.user_service_manager = UserServiceManager(
@@ -88,10 +78,6 @@ class _BaseTestCase(unittest.TestCase):
             self.agent_service_manager,
             self.presence_service_manager,
             self.funckey_manager,
-            self.device_manager,
-            self.ami_class,
-            self._ami_cb_handler,
-            self._call_manager,
             self._runner,
             self._bus_listener,
             self._bus_publisher,
@@ -100,98 +86,8 @@ class _BaseTestCase(unittest.TestCase):
         self.user_service_manager.presence_service_executor = self.presence_service_executor
         self.user_dao = self.user_service_manager.dao.user = Mock(UserDAO)
         self.user_service_manager.dao.forward = self.forward_dao
-        client_factory = self.user_service_manager._new_ctid_ng_client = Mock()
-        self.ctid_ng_client = client_factory.return_value
 
         context.reset()
-
-
-class TestCalls(_BaseTestCase):
-
-    def test_call_exten_success(self):
-        call_function = self.ctid_ng_client.calls.make_call_from_user
-
-        with patch.object(self.user_service_manager, '_on_call_success') as cb:
-            with synchronize(self._runner):
-                self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
-
-        call_function.assert_called_once_with(extension=s.exten)
-        cb.assert_called_once_with(s.connection, s.user_id, call_function.return_value)
-
-    def test_call_exten_exception(self):
-        call_function = self.ctid_ng_client.calls.make_call_from_user
-        exception = call_function.side_effect = Exception()
-
-        with patch.object(self.user_service_manager, '_on_call_exception') as cb:
-            with synchronize(self._runner):
-                self.user_service_manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
-
-        call_function.assert_called_once_with(extension=s.exten)
-        cb.assert_called_once_with(s.connection, s.user_id, s.exten, exception)
-
-    def test_on_call_success_with_a_line(self):
-        self.user_dao.get_line_identity.return_value = s.interface
-
-        self.user_service_manager._on_call_success(s.connection, s.user_id, s.result)
-
-        self._call_manager.answer_next_ringing_call.assert_called_once_with(s.connection, s.interface)
-
-    def test_on_call_success_with_no_line(self):
-        self.user_dao.get_line_identity.return_value = None
-
-        self.user_service_manager._on_call_success(s.connection, s.user_id, s.result)
-
-        assert_that(self._call_manager.answer_next_ringing_call.call_count, equal_to(0))
-
-    def test_on_call_exception_401(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=401))
-
-        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_call_exception_when_ctid_ng_is_down(self):
-        connection = Mock()
-        exception = exceptions.ConnectionError()
-
-        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_call_exception_when_xivo_auth_is_down(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=503))
-
-        self.user_service_manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_call_destination_url(self):
-        number = '1234'
-        url = 'exten:xivo/{0}'.format(number)
-
-        with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, url)
-        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
-
-    def test_call_destination_exten(self):
-        number = '1234'
-
-        with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, number)
-        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
-
-    def test_call_destination_caller_id(self):
-        number = '1234'
-        caller_id = '"Alice Smith" <{}>'.format(number)
-
-        with patch.object(self.user_service_manager, 'call_exten') as call:
-            self.user_service_manager.call_destination(s.connection, s.auth_token, s.user_id, caller_id)
-        call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
 
 
 @patch('xivo_cti.services.user.manager.config', CONFIG)

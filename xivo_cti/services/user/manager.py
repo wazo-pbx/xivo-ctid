@@ -17,23 +17,15 @@
 
 import logging
 
-from functools import partial
-
-from requests import ConnectionError, HTTPError
-
-from xivo import caller_id
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
-from xivo_ctid_ng_client import Client as CtidNgClient
 
 from xivo_cti import dao
 from xivo_cti import config
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
-from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException
-from xivo_cti.model.destination_factory import DestinationFactory
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +41,6 @@ class UserServiceManager(object):
                  agent_service_manager,
                  presence_service_manager,
                  funckey_manager,
-                 device_manager,
-                 ami_class,
-                 ami_callback_handler,
-                 call_manager,
                  async_runner,
                  bus_listener,
                  bus_publisher,
@@ -61,11 +49,7 @@ class UserServiceManager(object):
         self.agent_service_manager = agent_service_manager
         self.presence_service_manager = presence_service_manager
         self.funckey_manager = funckey_manager
-        self.device_manager = device_manager
         self.dao = dao
-        self.ami_class = ami_class
-        self._ami_callback_handler = ami_callback_handler
-        self._call_manager = call_manager
         self._runner = async_runner
         self._task_queue = task_queue
         self._bus_publisher = bus_publisher
@@ -75,50 +59,6 @@ class UserServiceManager(object):
         forwards_routing_key = 'config.users.*.forwards.*.updated'
         bus_listener.add_callback(forwards_routing_key, self._on_bus_forwards_message_event)
         bus_listener.add_callback(UserStatusUpdateEvent.routing_key, self._on_bus_user_status_update_event)
-
-    def call_destination(self, connection, auth_token, user_id, url_or_exten):
-        if DestinationFactory.is_destination_url(url_or_exten):
-            exten = DestinationFactory.make_from(url_or_exten).to_exten()
-        elif caller_id.is_complete_caller_id(url_or_exten):
-            exten = caller_id.extract_number(url_or_exten)
-        else:
-            exten = url_or_exten
-
-        self.call_exten(connection, auth_token, user_id, exten)
-
-    def call_exten(self, connection, auth_token, user_id, exten):
-        logger.info('call_exten: %s is calling %s', user_id, exten)
-        client = self._new_ctid_ng_client(auth_token)
-        error_cb = partial(self._on_call_exception, connection, user_id, exten)
-        success_cb = partial(self._on_call_success, connection, user_id)
-        self._runner.run(client.calls.make_call_from_user, extension=exten,
-                         _on_response=success_cb,
-                         _on_error=error_cb)
-
-    def _on_call_success(self, connection, user_id, response):
-        interface = self.dao.user.get_line_identity(user_id)
-        if interface:
-            self._call_manager.answer_next_ringing_call(connection, interface)
-
-    def _on_call_exception(self, connection, user_id, exten, exception):
-        logger.info('%s failed to call %s: %s', user_id, exten, exception)
-        error_message = None
-        try:
-            raise exception
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            # XXX handle invalid extension when they get implemented
-            if status_code == 401:
-                error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
-            elif status_code == 503:
-                error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-            else:
-                raise
-        except ConnectionError:
-            error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-
-        if error_message:
-            connection.send_message(error_message)
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
@@ -258,10 +198,6 @@ class UserServiceManager(object):
             self.funckey_manager.update_all_unconditional_fwd(user_id, enabled, destination)
         except NoSuchUserException:
             logger.info('received a %s unconditional forward event on an unknown user %s', enabled, user_uuid)
-
-    @staticmethod
-    def _new_ctid_ng_client(auth_token):
-        return CtidNgClient(token=auth_token, **config['ctid_ng'])
 
     def _async_set_service(self, user_uuid, auth_token, service, enabled):
         client = ConfdClient(token=auth_token, **config['confd'])
