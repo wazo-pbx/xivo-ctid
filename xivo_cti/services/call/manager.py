@@ -66,10 +66,9 @@ class CallManager(object):
     def hangup(self, connection, auth_token, user_uuid):
         logger.info('hangup: user %s is hanging up his current call', user_uuid)
         client = self._new_ctid_ng_client(auth_token)
-        try:
-            self._async_hangup(connection, client, user_uuid)
-        except Exception as e:
-            self._on_hangup_exception(connection, user_uuid, e)
+        error_cb = partial(self._on_hangup_exception, connection, user_uuid)
+        self._runner.run(self._async_hangup, connection, client, user_uuid,
+                         _on_error=error_cb)
 
     def _async_hangup(self, connection, client, user_uuid):
         active_call = self._get_active_call(client)
