@@ -67,8 +67,10 @@ class CurrentCallManager(object):
     @bus_listener_thread
     @ack_bus_message
     def _on_bus_transfer_answered(self, body):
-        event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
-        self._task_queue.put(self._transfer_answered, event.transfer['id'])
+        event_name = body.get('name')
+        if event_name == 'transfer_answered':
+            event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
+            self._task_queue.put(self._transfer_answered, event.transfer['id'])
 
     def _transfer_answered(self, transfer_id):
         user_uuid = self._user_uuid_by_transfer_id.get(transfer_id)
