@@ -71,16 +71,28 @@ class CallManager(object):
                          _on_error=error_cb)
 
     def transfer_attended(self, auth_token, user_id, user_uuid, number):
-        self._transfer(auth_token, user_id, user_uuid, number, 'attended')
+        try:
+            self._transfer(auth_token, user_id, user_uuid, number, 'attended')
+        except Exception as e:
+            self._on_transfer_exception(user_uuid, number, e)
 
     def transfer_attended_to_voicemail(self, auth_token, user_uuid, voicemail_number):
-        self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
+        try:
+            self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
+        except Exception as e:
+            self._on_transfer_exception(user_uuid, None, e)
 
     def transfer_blind(self, auth_token, user_id, user_uuid, number):
-        self._transfer(auth_token, user_id, user_uuid, number, 'blind')
+        try:
+            self._transfer(auth_token, user_id, user_uuid, number, 'blind')
+        except Exception as e:
+            self._on_transfer_exception(user_uuid, number, e)
 
     def transfer_blind_to_voicemail(self, auth_token, user_uuid, voicemail_number):
-        self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
+        try:
+            self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
+        except Exception as e:
+            self._on_transfer_exception(user_uuid, None, e)
 
     def transfer_cancel(self, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
@@ -164,6 +176,9 @@ class CallManager(object):
         if error_message:
             connection.send_message(error_message)
 
+    def _on_transfer_exception(self, user_uuid, number, exception):
+        pass
+
     def _get_answer_on_sip_ringing_fn(self, connection, interface):
         def answer_if_matching_peer(event):
             if event['Peer'].lower() != interface.lower():
@@ -183,17 +198,9 @@ class CallManager(object):
             logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
             return
 
-        try:
-            return client.transfers.make_transfer_from_user(exten=number,
-                                                            initiator=active_call['call_id'],
-                                                            flow=flow)
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                # XXX: The transfer will fail silently for the user...
-                logger.info('transfer: %s is not authorized to make transfers', user_uuid)
-            else:
-                raise
+        return client.transfers.make_transfer_from_user(exten=number,
+                                                        initiator=active_call['call_id'],
+                                                        flow=flow)
 
     def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
         logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
@@ -211,14 +218,7 @@ class CallManager(object):
         variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
         transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
         client = self._new_ctid_ng_client(config['auth']['token'])
-        try:
-            return client.transfers.make_transfer(**transfer_params)
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                logger.info('xivo-ctid is not authorized to transfer to voicemail')
-            else:
-                raise
+        return client.transfers.make_transfer(**transfer_params)
 
     @staticmethod
     def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):

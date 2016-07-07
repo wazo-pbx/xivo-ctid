@@ -18,7 +18,7 @@
 import unittest
 
 from concurrent import futures
-from hamcrest import assert_that, equal_to
+from hamcrest import assert_that, calling, equal_to, raises
 from mock import Mock, patch, sentinel as s
 from requests import exceptions
 
@@ -173,32 +173,89 @@ class TestCalls(_BaseTest):
 class TestTransfers(_BaseTest):
 
     def test_transfer_attended(self):
-        with patch.object(self.manager, '_transfer',
-                          Mock(return_value={'id': s.transfer_id})) as transfer:
+        with patch.object(self.manager, '_transfer') as transfer:
             self.manager.transfer_attended(s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
 
+    def test_transfer_attended_exceptions(self):
+        exception = Exception()
+
+        with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
+            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+                self.manager.transfer_attended(s.auth_token, s.user_id, s.user_uuid, s.number)
+
+        on_exception.assert_called_once_with(s.user_uuid, s.number, exception)
+
     def test_transfer_blind(self):
-        with patch.object(self.manager, '_transfer',
-                          Mock(return_value={'id': s.transfer_id})) as transfer:
+        with patch.object(self.manager, '_transfer') as transfer:
             self.manager.transfer_blind(s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
+    def test_transfer_blind_exceptions(self):
+        exception = Exception()
+
+        with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
+            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+                self.manager.transfer_blind(s.auth_token, s.user_id, s.user_uuid, s.number)
+
+        on_exception.assert_called_once_with(s.user_uuid, s.number, exception)
+
     def test_transfer_attended_to_voicemail(self):
-        with patch.object(self.manager, '_transfer_to_voicemail',
-                          Mock(return_value={'id': s.transfer_id})) as transfer_to_vm:
+        with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
             self.manager.transfer_attended_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
         transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
 
+    def test_transfer_attended_to_voicemail_exceptions(self):
+        exception = Exception()
+
+        with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
+            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+                self.manager.transfer_attended_to_voicemail(s.auth_token, s.user_uuid, s.vm_number)
+
+        on_exception.assert_called_once_with(s.user_uuid, None, exception)
+
     def test_transfer_blind_to_voicemail(self):
-        with patch.object(self.manager, '_transfer_to_voicemail',
-                          Mock(return_value={'id': s.transfer_id})) as transfer_to_vm:
+        with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
             self.manager.transfer_blind_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
 
         transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
+
+    def test_transfer_blind_to_voicemail_exceptions(self):
+        exception = Exception()
+
+        with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
+            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+                self.manager.transfer_blind_to_voicemail(s.auth_token, s.user_uuid, s.vm_number)
+
+        on_exception.assert_called_once_with(s.user_uuid, None, exception)
+
+    def test_transfer_does_nothing_when_no_active_call(self):
+        with patch.object(self.manager, '_get_active_call', Mock(return_value=None)):
+            self.manager._transfer(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow)
+
+        assert_that(self.ctid_ng_client.transfers.make_transfer_from_user.call_count, equal_to(0))
+
+    def test_transfer_will_transfer_to_the_active_call(self):
+        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
+            self.manager._transfer(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow)
+
+        self.ctid_ng_client.transfers.make_transfer_from_user.assert_called_once_with(
+            exten=s.exten, initiator=s.call_id, flow=s.flow)
+
+    def test_that_exceptions_are_not_catched_in_transfer(self):
+        with patch.object(self.manager, '_get_active_call', Mock(side_effect=Exception)):
+            assert_that(calling(self.manager._transfer)
+                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        raises(Exception))
+
+        self.ctid_ng_client.transfers.make_transfer_from_user.side_effect = Exception
+        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
+            assert_that(calling(self.manager._transfer)
+                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        raises(Exception))
 
     def test_transfer_cancel(self):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
@@ -231,6 +288,18 @@ class TestTransfers(_BaseTest):
         self.manager.transfer_complete(s.auth_token, s.user_uuid)
 
         assert_that(self.ctid_ng_client.transfers.complete_transfer_from_user.call_count, equal_to(0))
+
+    def test_that_exceptions_are_not_catched_in_transfer_to_voicemail(self):
+        with patch.object(self.manager, '_get_active_call', Mock(side_effect=Exception)):
+            assert_that(calling(self.manager._transfer)
+                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        raises(Exception))
+
+        self.ctid_ng_client.transfers.make_transfer.side_effect = Exception
+        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
+            assert_that(calling(self.manager._transfer_to_voicemail)
+                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        raises(Exception))
 
 
 class TestCallManager(_BaseTest):
