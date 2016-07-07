@@ -51,8 +51,9 @@ class TestCalls(_BaseTest):
         self.ctid_ng_client = client_factory.return_value
 
     def test_hangup_calls_async_hangup(self):
-        with patch.object(self.manager, '_async_hangup') as async_hangup:
-            self.manager.hangup(s.connection, s.auth_token, s.user_uuid)
+        with synchronize(self._runner):
+            with patch.object(self.manager, '_async_hangup') as async_hangup:
+                self.manager.hangup(s.connection, s.auth_token, s.user_uuid)
 
         async_hangup.assert_called_once_with(s.connection, self.ctid_ng_client, s.user_uuid)
 
