@@ -129,11 +129,11 @@ class CallManager(object):
     def call_exten(self, connection, auth_token, user_id, exten):
         logger.info('call_exten: %s is calling %s', user_id, exten)
         client = self._new_ctid_ng_client(auth_token)
-        error_cb = partial(self._on_call_exception, connection, user_id, exten)
+        error_handler = _CallExceptionHandler(connection, user_id, exten)
         success_cb = partial(self._on_call_success, connection, user_id)
         self._runner.run(client.calls.make_call_from_user, extension=exten,
                          _on_response=success_cb,
-                         _on_error=error_cb)
+                         _on_error=error_handler.handle)
 
     def hangup(self, connection, auth_token, user_uuid):
         logger.info('hangup: user %s is hanging up his current call', user_uuid)
@@ -208,10 +208,6 @@ class CallManager(object):
         interface = dao.user.get_line_identity(user_id)
         if interface:
             self.answer_next_ringing_call(connection, interface)
-
-    def _on_call_exception(self, connection, user_id, exten, exception):
-        handler = _CallExceptionHandler(connection, user_id, exten)
-        handler.handle(exception)
 
     def _on_hangup_exception(self, connection, user_uuid, exception):
         handler = _HangupExceptionHandler(connection, user_uuid)

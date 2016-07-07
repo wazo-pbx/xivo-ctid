@@ -26,9 +26,10 @@ from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.interfaces.interface_cti import CTI
-from xivo_cti.services.call.manager import CallManager
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.xivo_ami import AMIClass
+
+from ..manager import CallManager, _CallExceptionHandler
 
 
 class _BaseTest(unittest.TestCase):
@@ -66,13 +67,16 @@ class TestCalls(_BaseTest):
     def test_call_exten_exception(self):
         call_function = self.ctid_ng_client.calls.make_call_from_user
         exception = call_function.side_effect = Exception()
+        error_handler = Mock(_CallExceptionHandler)
 
-        with patch.object(self.manager, '_on_call_exception') as cb:
+        with patch('xivo_cti.services.call.manager._CallExceptionHandler',
+                   Mock(return_value=error_handler)) as ExceptionHandler:
             with synchronize(self._runner):
                 self.manager.call_exten(s.connection, s.auth_token, s.user_id, s.exten)
 
+        ExceptionHandler.assert_called_once_with(s.connection, s.user_id, s.exten)
         call_function.assert_called_once_with(extension=s.exten)
-        cb.assert_called_once_with(s.connection, s.user_id, s.exten, exception)
+        error_handler.handle.assert_called_once_with(exception)
 
     @patch('xivo_cti.services.call.manager.dao')
     def test_on_call_success_with_a_line(self, mock_dao):
@@ -91,33 +95,6 @@ class TestCalls(_BaseTest):
             self.manager._on_call_success(s.connection, s.user_id, s.result)
 
         assert_that(answer_next_ringing_call.call_count, equal_to(0))
-
-    def test_on_call_exception_401(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=401))
-
-        self.manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('call_unauthorized')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_call_exception_when_ctid_ng_is_down(self):
-        connection = Mock()
-        exception = exceptions.ConnectionError()
-
-        self.manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_call_exception_when_xivo_auth_is_down(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=503))
-
-        self.manager._on_call_exception(connection, s.user_id, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
 
     def test_on_hangup_exception_401(self):
         connection = Mock()
@@ -374,3 +351,34 @@ class TestGetAnswerOnSIPRinging(_BaseTest):
     def _assert_nothing_was_called(self):
         assert_that(self._ami_cb_handler.unregister_callback.call_count, equal_to(0))
         assert_that(self._connection.answer_cb.call_count, equal_to(0))
+
+
+class TestCallExceptionErrorHandler(unittest.TestCase):
+
+    def setUp(self):
+        self.connection = Mock(CTI)
+        self.handler = _CallExceptionHandler(self.connection, s.user_id, s.exten)
+
+    def test_on_call_exception_401(self):
+        exception = exceptions.HTTPError(response=Mock(status_code=401))
+
+        self.handler.handle(exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('call_unauthorized')
+        self.connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_call_exception_when_ctid_ng_is_down(self):
+        exception = exceptions.ConnectionError()
+
+        self.handler.handle(exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        self.connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_call_exception_when_xivo_auth_is_down(self):
+        exception = exceptions.HTTPError(response=Mock(status_code=503))
+
+        self.handler.handle(exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        self.connection.send_message.assert_called_once_with(expected_message)
