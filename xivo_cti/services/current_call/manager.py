@@ -70,10 +70,11 @@ class CurrentCallManager(object):
         event_name = body.get('name')
         if event_name == 'transfer_answered':
             event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
-            self._task_queue.put(self._transfer_answered, event.transfer['id'])
+            self._task_queue.put(self._transfer_answered,
+                                 event.transfer['id'],
+                                 event.transfer['initiator_uuid'])
 
-    def _transfer_answered(self, transfer_id):
-        user_uuid = self._user_uuid_by_transfer_id.get(transfer_id)
+    def _transfer_answered(self, transfer_id, user_uuid):
         if user_uuid:
             line = dao.user.get_line_identity(user_uuid)
             self._current_call_notifier.attended_transfer_answered(line)
@@ -406,7 +407,6 @@ class CurrentCallManager(object):
 
     def _track_atxfer(self, transfer_id, user_uuid):
         self._transfers[user_uuid] = transfer_id
-        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
 
     @staticmethod
     def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
