@@ -33,6 +33,7 @@ from ..manager import (CallManager,
                        _CallExceptionHandler,
                        _HangupExceptionHandler,
                        _TransferExceptionHandler,
+                       _TransferCompletionExceptionHandler,
                        _TransferToVoicemailExceptionHandler)
 
 
@@ -366,6 +367,18 @@ class TestHangupExceptionErrorHandler(_BaseErrorHandlerTestCase):
         self.handler = _HangupExceptionHandler(self.connection, s.user_uuid)
         self.exception_msg_map = {
             exceptions.HTTPError(response=Mock(status_code=401)): 'hangup_unauthorized',
+            exceptions.ConnectionError(): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
+        }
+
+
+class TestTransferCompletionExceptionErrorHandler(_BaseErrorHandlerTestCase):
+
+    def setUp(self):
+        super(TestTransferCompletionExceptionErrorHandler, self).setUp()
+        self.handler = _TransferCompletionExceptionHandler(self.connection, s.user_uuid)
+        self.exception_msg_map = {
+            exceptions.HTTPError(response=Mock(status_code=401)): 'transfer_unauthorized',
             exceptions.ConnectionError(): 'service_unavailable',
             exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
         }
