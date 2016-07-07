@@ -153,11 +153,16 @@ class CallManager(object):
                          _on_error=error_handler.handle)
 
     def transfer_attended_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
-        try:
-            self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
-        except Exception as e:
-            error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
-            error_handler.handle(e)
+        logger.info('transfer_attended_to_voicemail: user %s is transfering to voicemail %s', user_uuid, voicemail_number)
+        user_context = dao.user.get_context(user_uuid)
+        if not user_context:
+            logger.info('transfer_attended_to_voicemail: failed to transfer %s is not a member of any context', user_uuid)
+            return
+
+        error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
+        self._runner.run(self._transfer_to_voicemail, auth_token, user_uuid,
+                         voicemail_number, user_context, 'attended',
+                         _on_error=error_handler.handle)
 
     def transfer_blind(self, connection, auth_token, user_id, user_uuid, number):
         logger.info('transfer_blind: user %s is transfering a call to %s', user_uuid, number)
@@ -166,11 +171,15 @@ class CallManager(object):
                          _on_error=error_handler.handle)
 
     def transfer_blind_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
-        try:
-            self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
-        except Exception as e:
-            error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
-            error_handler.handle(e)
+        logger.info('transfer_blind_to_voicemail: user %s is transfering to voicemail %s', user_uuid, voicemail_number)
+        user_context = dao.user.get_context(user_uuid)
+        if not user_context:
+            logger.info('transfer_blind_to_voicemail: failed to transfer %s is not a member of any context', user_uuid)
+            return
+
+        error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
+        self._runner.run(self._transfer_to_voicemail, auth_token, user_uuid, voicemail_number, user_context, 'blind',
+                         _on_error=error_handler.handle)
 
     def transfer_cancel(self, connection, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
@@ -235,7 +244,6 @@ class CallManager(object):
         return answer_if_matching_peer
 
     def _transfer(self, auth_token, user_id, user_uuid, number, flow):
-        logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
         if not active_call:
@@ -246,17 +254,11 @@ class CallManager(object):
                                                         initiator=active_call['call_id'],
                                                         flow=flow)
 
-    def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
-        logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
+    def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, user_context, flow):
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
         if not active_call:
-            logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
-            return
-
-        user_context = dao.user.get_context(user_uuid)
-        if not user_context:
-            logger.info('vm transfer: failed to transfer %s is not a member of any context', user_uuid)
+            logger.info('transfer to voicemail %s failed for user %s. No active call', voicemail_number, user_uuid)
             return
 
         variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}

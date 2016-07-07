@@ -167,38 +167,50 @@ class TestTransfers(_BaseTest):
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
 
-    def test_transfer_attended_to_voicemail(self):
-        with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
-            self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
+    @patch('xivo_cti.services.call.manager.dao')
+    def test_transfer_attended_to_voicemail(self, mock_dao):
+        mock_dao.user.get_context.return_value = s.context
+        with synchronize(self._runner):
+            with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
+                self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
 
-        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
+        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, s.context, 'attended')
 
-    def test_transfer_attended_to_voicemail_exceptions(self):
+    @patch('xivo_cti.services.call.manager.dao')
+    def test_transfer_attended_to_voicemail_exceptions(self, mock_dao):
+        mock_dao.user.get_context.return_value = s.context
         exception = Exception()
         error_handler = Mock(_TransferExceptionHandler)
 
-        with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
-                   Mock(return_value=error_handler)) as ExceptionHandler:
-            with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-                self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
+        with synchronize(self._runner):
+            with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
+                       Mock(return_value=error_handler)) as ExceptionHandler:
+                with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
+                    self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
 
-    def test_transfer_blind_to_voicemail(self):
+    @patch('xivo_cti.services.call.manager.dao')
+    def test_transfer_blind_to_voicemail(self, mock_dao):
+        mock_dao.user.get_context.return_value = s.context
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
-            self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
+            with synchronize(self._runner):
+                self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
 
-        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
+        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, s.context, 'blind')
 
-    def test_transfer_blind_to_voicemail_exceptions(self):
+    @patch('xivo_cti.services.call.manager.dao')
+    def test_transfer_blind_to_voicemail_exceptions(self, mock_dao):
+        mock_dao.user.get_context.return_value = s.context
         exception = Exception()
         error_handler = Mock(_TransferExceptionHandler)
 
         with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
                    Mock(return_value=error_handler)) as ExceptionHandler:
             with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-                self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
+                with synchronize(self._runner):
+                    self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
