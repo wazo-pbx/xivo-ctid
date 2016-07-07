@@ -302,10 +302,25 @@ class CTIServer(object):
         CallFormResult.register_callback_params(
             self._call_form_result_handler.parse, ['user_id', 'variables'],
         )
+
         call_manager = context.get('call_manager')
         Dial.register_callback_params(call_manager.call_destination,
                                       ['cti_connection', 'auth_token', 'user_id', 'destination'])
-        Hangup.register_callback_params(call_manager.hangup, ['cti_connection', 'auth_token', 'user_uuid'])
+        Hangup.register_callback_params(call_manager.hangup,
+                                        ['cti_connection', 'auth_token', 'user_uuid'])
+        AttendedTransfer.register_callback_params(call_manager.transfer_attended,
+                                                  ['auth_token', 'user_id', 'user_uuid', 'number'])
+        DirectTransfer.register_callback_params(call_manager.transfer_blind,
+                                                ['auth_token', 'user_id', 'user_uuid', 'number'])
+        BlindTransferVoicemail.register_callback_params(call_manager.transfer_blind_to_voicemail,
+                                                        ['auth_token', 'user_uuid', 'voicemail_number'])
+        AttendedTransferVoicemail.register_callback_params(call_manager.transfer_attended_to_voicemail,
+                                                           ['auth_token', 'user_uuid', 'voicemail_number'])
+        CancelTransfer.register_callback_params(call_manager.transfer_cancel,
+                                                ['auth_token', 'user_uuid'])
+        CompleteTransfer.register_callback_params(call_manager.transfer_complete,
+                                                  ['auth_token', 'user_uuid'])
+
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])
         EnableRecording.register_callback_params(self._user_service_manager.enable_recording, ['target'])
@@ -368,24 +383,6 @@ class CTIServer(object):
             ['cti_connection']
         )
         current_call_manager = context.get('current_call_manager')
-        AttendedTransfer.register_callback_params(
-            current_call_manager.attended_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
-        )
-        DirectTransfer.register_callback_params(
-            current_call_manager.direct_transfer, ['auth_token', 'user_id', 'user_uuid', 'number']
-        )
-        BlindTransferVoicemail.register_callback_params(
-            current_call_manager.blind_txfer_to_voicemail, ['auth_token', 'user_uuid', 'voicemail_number']
-        )
-        AttendedTransferVoicemail.register_callback_params(
-            current_call_manager.atxfer_to_voicemail, ['auth_token', 'user_uuid', 'voicemail_number']
-        )
-        CancelTransfer.register_callback_params(
-            current_call_manager.cancel_transfer, ['auth_token', 'user_uuid']
-        )
-        CompleteTransfer.register_callback_params(
-            current_call_manager.complete_transfer, ['auth_token', 'user_uuid']
-        )
         HoldSwitchboard.register_callback_params(
             current_call_manager.switchboard_hold, ['user_id', 'queue_name']
         )

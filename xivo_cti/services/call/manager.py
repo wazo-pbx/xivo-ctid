@@ -70,6 +70,36 @@ class CallManager(object):
         self._runner.run(self._async_hangup, connection, client, user_uuid,
                          _on_error=error_cb)
 
+    def transfer_attended(self, auth_token, user_id, user_uuid, number):
+        self._transfer(auth_token, user_id, user_uuid, number, 'attended')
+
+    def transfer_attended_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+        self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
+
+    def transfer_blind(self, auth_token, user_id, user_uuid, number):
+        self._transfer(auth_token, user_id, user_uuid, number, 'blind')
+
+    def transfer_blind_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+        self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
+
+    def transfer_cancel(self, auth_token, user_uuid):
+        logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
+        client = self._new_ctid_ng_client(auth_token)
+        transfer = self._get_current_transfer(client)
+        if transfer:
+            client.transfers.cancel_transfer(transfer['id'])
+        else:
+            logger.debug('cancle_transfer: No transfer to cancel for %s', user_uuid)
+
+    def transfer_complete(self, auth_token, user_uuid):
+        logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
+        client = self._new_ctid_ng_client(auth_token)
+        transfer = self._get_current_transfer(client)
+        if transfer:
+            return client.transfers.complete_transfer_from_user(transfer['id'])
+        else:
+            logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
+
     def _async_hangup(self, connection, client, user_uuid):
         active_call = self._get_active_call(client)
         if not active_call:
@@ -83,6 +113,12 @@ class CallManager(object):
         for call in calls['items']:
             if call['status'] == 'Up' and not call['on_hold']:
                 return call
+
+    def _get_current_transfer(self, client):
+        transfers = client.transfers.list_transfers_from_user()
+        for transfer in transfers['items']:
+            if transfer['flow'] == 'attended':
+                return transfer
 
     def _on_call_success(self, connection, user_id, response):
         interface = dao.user.get_line_identity(user_id)
@@ -138,6 +174,67 @@ class CallManager(object):
             connection.answer_cb()
 
         return answer_if_matching_peer
+
+    def _transfer(self, auth_token, user_id, user_uuid, number, flow):
+        logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
+        client = self._new_ctid_ng_client(auth_token)
+        active_call = self._get_active_call(client)
+        if not active_call:
+            logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
+            return
+
+        try:
+            return client.transfers.make_transfer_from_user(exten=number,
+                                                            initiator=active_call['call_id'],
+                                                            flow=flow)
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                # XXX: The transfer will fail silently for the user...
+                logger.info('transfer: %s is not authorized to make transfers', user_uuid)
+            else:
+                raise
+
+    def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
+        logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
+        client = self._new_ctid_ng_client(auth_token)
+        active_call = self._get_active_call(client)
+        if not active_call:
+            logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
+            return
+
+        user_context = dao.user.get_context(user_uuid)
+        if not user_context:
+            logger.info('vm transfer: failed to transfer %s is not a member of any context', user_uuid)
+            return
+
+        variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
+        transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
+        client = self._new_ctid_ng_client(config['auth']['token'])
+        try:
+            return client.transfers.make_transfer(**transfer_params)
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            if status_code == 401:
+                logger.info('xivo-ctid is not authorized to transfer to voicemail')
+            else:
+                raise
+
+    @staticmethod
+    def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
+        transfered_call_id = call['talking_to'].keys()[0]
+        initiator_call_id = call['call_id']
+        base_params = {'transferred': transfered_call_id,
+                       'initiator': initiator_call_id,
+                       'exten': exten,
+                       'context': context}
+
+        if flow:
+            base_params['flow'] = flow
+        if variables:
+            base_params['variables'] = variables
+
+        return base_params
 
     @staticmethod
     def _new_ctid_ng_client(auth_token):

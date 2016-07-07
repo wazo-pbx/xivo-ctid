@@ -39,16 +39,12 @@ class _BaseTest(unittest.TestCase):
         self._ami_cb_handler = Mock(AMICallbackHandler)
         self._connection = Mock(CTI)
         self._runner = AsyncRunner(futures.ThreadPoolExecutor(max_workers=1), self._task_queue)
-
         self.manager = CallManager(self._ami, self._ami_cb_handler, self._runner)
+        client_factory = self.manager._new_ctid_ng_client = Mock()
+        self.ctid_ng_client = client_factory.return_value
 
 
 class TestCalls(_BaseTest):
-
-    def setUp(self):
-        super(TestCalls, self).setUp()
-        client_factory = self.manager._new_ctid_ng_client = Mock()
-        self.ctid_ng_client = client_factory.return_value
 
     def test_hangup_calls_async_hangup(self):
         with synchronize(self._runner):
@@ -172,6 +168,69 @@ class TestCalls(_BaseTest):
         with patch.object(self.manager, 'call_exten') as call:
             self.manager.call_destination(s.connection, s.auth_token, s.user_id, caller_id)
         call.assert_called_once_with(s.connection, s.auth_token, s.user_id, number)
+
+
+class TestTransfers(_BaseTest):
+
+    def test_transfer_attended(self):
+        with patch.object(self.manager, '_transfer',
+                          Mock(return_value={'id': s.transfer_id})) as transfer:
+            self.manager.transfer_attended(s.auth_token, s.user_id, s.user_uuid, s.number)
+
+        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
+
+    def test_transfer_blind(self):
+        with patch.object(self.manager, '_transfer',
+                          Mock(return_value={'id': s.transfer_id})) as transfer:
+            self.manager.transfer_blind(s.auth_token, s.user_id, s.user_uuid, s.number)
+
+        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
+
+    def test_transfer_attended_to_voicemail(self):
+        with patch.object(self.manager, '_transfer_to_voicemail',
+                          Mock(return_value={'id': s.transfer_id})) as transfer_to_vm:
+            self.manager.transfer_attended_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
+
+        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
+
+    def test_transfer_blind_to_voicemail(self):
+        with patch.object(self.manager, '_transfer_to_voicemail',
+                          Mock(return_value={'id': s.transfer_id})) as transfer_to_vm:
+            self.manager.transfer_blind_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
+
+        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
+
+    def test_transfer_cancel(self):
+        transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
+        self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
+
+        self.manager.transfer_cancel(s.auth_token, s.user_uuid)
+
+        self.ctid_ng_client.transfers.cancel_transfer.assert_called_once_with(s.transfer_id)
+
+    def test_cancel_transfer_no_transfer(self):
+        transfers = {'items': []}
+        self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
+
+        self.manager.transfer_cancel(s.auth_token, s.user_uuid)
+
+        assert_that(self.ctid_ng_client.transfers.cancel_transfer.call_count, equal_to(0))
+
+    def test_transfer_complete(self):
+        transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
+        self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
+
+        self.manager.transfer_complete(s.auth_token, s.user_uuid)
+
+        self.ctid_ng_client.transfers.complete_transfer_from_user.assert_called_once_with(s.transfer_id)
+
+    def test_transfer_complete_no_transfer(self):
+        transfers = {'items': []}
+        self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
+
+        self.manager.transfer_complete(s.auth_token, s.user_uuid)
+
+        assert_that(self.ctid_ng_client.transfers.complete_transfer_from_user.call_count, equal_to(0))
 
 
 class TestCallManager(_BaseTest):
