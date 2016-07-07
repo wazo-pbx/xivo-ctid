@@ -222,12 +222,14 @@ class CurrentCallManager(object):
 
     def complete_transfer(self, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
-        transfer = self._transfers.get(user_uuid)
-        if transfer:
-            client = self._new_ctid_ng_client(auth_token)
-            client.transfers.complete_transfer(transfer)
-        else:
-            logger.debug('No transfer to complete')
+        client = self._new_ctid_ng_client(auth_token)
+        transfers = client.transfers.list_transfers_from_user()
+        for transfer in transfers['items']:
+            if transfer['flow'] != 'attended':
+                continue
+            client.transfers.complete_transfer_from_user(transfer['id'])
+            break
+        logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
 
     def cancel_transfer(self, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
