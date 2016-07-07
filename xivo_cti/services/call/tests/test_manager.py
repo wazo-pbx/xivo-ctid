@@ -244,7 +244,8 @@ class TestTransfers(_BaseTest):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
+        with synchronize(self._runner):
+            self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
 
         self.ctid_ng_client.transfers.cancel_transfer.assert_called_once_with(s.transfer_id)
 
@@ -252,7 +253,8 @@ class TestTransfers(_BaseTest):
         transfers = {'items': []}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
+        with synchronize(self._runner):
+            self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
 
         assert_that(self.ctid_ng_client.transfers.cancel_transfer.call_count, equal_to(0))
 
@@ -260,7 +262,8 @@ class TestTransfers(_BaseTest):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
+        with synchronize(self._runner):
+            self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
         self.ctid_ng_client.transfers.complete_transfer_from_user.assert_called_once_with(s.transfer_id)
 
@@ -268,7 +271,8 @@ class TestTransfers(_BaseTest):
         transfers = {'items': []}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
+        with synchronize(self._runner):
+            self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
         assert_that(self.ctid_ng_client.transfers.complete_transfer_from_user.call_count, equal_to(0))
 

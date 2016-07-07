@@ -183,29 +183,31 @@ class CallManager(object):
 
     def transfer_cancel(self, connection, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
+        error_handler = _TransferCompletionExceptionHandler(connection, user_uuid)
+        self._runner.run(self._transfer_cancel_async, auth_token, user_uuid,
+                         _on_error=error_handler.handle)
+
+    def _transfer_cancel_async(self, auth_token, user_uuid):
         client = self._new_ctid_ng_client(auth_token)
-        try:
-            transfer = self._get_current_transfer(client)
-            if transfer:
-                client.transfers.cancel_transfer(transfer['id'])
-            else:
-                logger.debug('cancle_transfer: No transfer to cancel for %s', user_uuid)
-        except Exception as e:
-            error_handler = _TransferCompletionExceptionHandler(connection, user_uuid)
-            error_handler.handle(e)
+        transfer = self._get_current_transfer(client)
+        if transfer:
+            return client.transfers.cancel_transfer(transfer['id'])
+
+        logger.debug('cancel_transfer: No transfer to cancel for %s', user_uuid)
 
     def transfer_complete(self, connection, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
+        error_handler = _TransferCompletionExceptionHandler(connection, user_uuid)
+        self._runner.run(self._transfer_complete_async, auth_token, user_uuid,
+                         _on_error=error_handler.handle)
+
+    def _transfer_complete_async(self, auth_token, user_uuid):
         client = self._new_ctid_ng_client(auth_token)
-        try:
-            transfer = self._get_current_transfer(client)
-            if transfer:
-                return client.transfers.complete_transfer_from_user(transfer['id'])
-            else:
-                logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
-        except Exception as e:
-            error_handler = _TransferCompletionExceptionHandler(connection, user_uuid)
-            error_handler.handle(e)
+        transfer = self._get_current_transfer(client)
+        if transfer:
+            return client.transfers.complete_transfer_from_user(transfer['id'])
+
+        logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
 
     def _async_hangup(self, connection, client, user_uuid):
         active_call = self._get_active_call(client)
