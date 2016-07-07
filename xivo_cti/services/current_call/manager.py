@@ -55,7 +55,6 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
-        self._transfers = {}
         self._user_uuid_by_transfer_id = {}
         self._bus_listener = bus_listener
         self._task_queue = task_queue
@@ -223,22 +222,26 @@ class CurrentCallManager(object):
     def complete_transfer(self, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
         client = self._new_ctid_ng_client(auth_token)
-        transfers = client.transfers.list_transfers_from_user()
-        for transfer in transfers['items']:
-            if transfer['flow'] != 'attended':
-                continue
-            client.transfers.complete_transfer_from_user(transfer['id'])
-            break
-        logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
+        transfer = self._get_current_transfer(client)
+        if transfer:
+            return client.transfers.complete_transfer_from_user(transfer['id'])
+        else:
+            logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
 
     def cancel_transfer(self, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
-        transfer = self._transfers.get(user_uuid)
+        client = self._new_ctid_ng_client(auth_token)
+        transfer = self._get_current_transfer(client)
         if transfer:
-            client = self._new_ctid_ng_client(auth_token)
-            client.transfers.cancel_transfer(transfer)
+            client.transfers.cancel_transfer(transfer['id'])
         else:
-            logger.debug('No transfer to cancel')
+            logger.debug('cancle_transfer: No transfer to cancel for %s', user_uuid)
+
+    def _get_current_transfer(self, client):
+        transfers = client.transfers.list_transfers_from_user()
+        for transfer in transfers['items']:
+            if transfer['flow'] == 'attended':
+                return transfer
 
     def _transfer(self, auth_token, user_id, user_uuid, number, flow):
         logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
@@ -261,17 +264,13 @@ class CurrentCallManager(object):
                 raise
 
     def attended_transfer(self, auth_token, user_id, user_uuid, number):
-        transfer = self._transfer(auth_token, user_id, user_uuid, number, 'attended')
-        if transfer:
-            self._track_atxfer(transfer['id'], user_uuid)
+        self._transfer(auth_token, user_id, user_uuid, number, 'attended')
 
     def direct_transfer(self, auth_token, user_id, user_uuid, number):
         self._transfer(auth_token, user_id, user_uuid, number, 'blind')
 
     def atxfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
-        transfer = self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
-        if transfer:
-            self._track_atxfer(transfer['id'], user_uuid)
+        self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
 
     def blind_txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
         self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
@@ -406,9 +405,6 @@ class CurrentCallManager(object):
                 logger.info('xivo-ctid is not authorized to transfer to voicemail')
             else:
                 raise
-
-    def _track_atxfer(self, transfer_id, user_uuid):
-        self._transfers[user_uuid] = transfer_id
 
     @staticmethod
     def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
