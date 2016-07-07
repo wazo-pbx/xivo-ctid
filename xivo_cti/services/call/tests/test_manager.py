@@ -129,7 +129,8 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_attended(self):
         with patch.object(self.manager, '_transfer') as transfer:
-            self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+            with synchronize(self._runner):
+                self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
 
@@ -140,14 +141,16 @@ class TestTransfers(_BaseTest):
         with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
                    Mock(return_value=error_handler)) as ExceptionHandler:
             with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
-                self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+                with synchronize(self._runner):
+                    self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
 
     def test_transfer_blind(self):
-        with patch.object(self.manager, '_transfer') as transfer:
-            self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+        with synchronize(self._runner):
+            with patch.object(self.manager, '_transfer') as transfer:
+                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
@@ -155,10 +158,11 @@ class TestTransfers(_BaseTest):
         exception = Exception()
         error_handler = Mock(_TransferExceptionHandler)
 
-        with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
-                   Mock(return_value=error_handler)) as ExceptionHandler:
-            with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
-                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+        with synchronize(self._runner):
+            with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
+                       Mock(return_value=error_handler)) as ExceptionHandler:
+                with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
+                    self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
