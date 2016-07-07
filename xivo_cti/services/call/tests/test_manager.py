@@ -98,7 +98,7 @@ class TestCalls(_BaseTest):
 
         self.manager._on_call_exception(connection, s.user_id, s.exten, exception)
 
-        expected_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
+        expected_message = CTIMessageFormatter.ipbxcommand_error('call_unauthorized')
         connection.send_message.assert_called_once_with(expected_message)
 
     def test_on_call_exception_when_ctid_ng_is_down(self):
@@ -174,7 +174,7 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_attended(self):
         with patch.object(self.manager, '_transfer') as transfer:
-            self.manager.transfer_attended(s.auth_token, s.user_id, s.user_uuid, s.number)
+            self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
 
@@ -183,13 +183,13 @@ class TestTransfers(_BaseTest):
 
         with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
             with patch.object(self.manager, '_on_transfer_exception') as on_exception:
-                self.manager.transfer_attended(s.auth_token, s.user_id, s.user_uuid, s.number)
+                self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        on_exception.assert_called_once_with(s.user_uuid, s.number, exception)
+        on_exception.assert_called_once_with(s.connection, s.user_uuid, s.number, exception)
 
     def test_transfer_blind(self):
         with patch.object(self.manager, '_transfer') as transfer:
-            self.manager.transfer_blind(s.auth_token, s.user_id, s.user_uuid, s.number)
+            self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
@@ -198,13 +198,13 @@ class TestTransfers(_BaseTest):
 
         with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
             with patch.object(self.manager, '_on_transfer_exception') as on_exception:
-                self.manager.transfer_blind(s.auth_token, s.user_id, s.user_uuid, s.number)
+                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        on_exception.assert_called_once_with(s.user_uuid, s.number, exception)
+        on_exception.assert_called_once_with(s.connection, s.user_uuid, s.number, exception)
 
     def test_transfer_attended_to_voicemail(self):
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
-            self.manager.transfer_attended_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
+            self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
 
         transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
 
@@ -212,14 +212,14 @@ class TestTransfers(_BaseTest):
         exception = Exception()
 
         with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
-                self.manager.transfer_attended_to_voicemail(s.auth_token, s.user_uuid, s.vm_number)
+            with patch.object(self.manager, '_on_transfer_to_voicemail_exception') as on_exception:
+                self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
-        on_exception.assert_called_once_with(s.user_uuid, None, exception)
+        on_exception.assert_called_once_with(s.connection, s.user_uuid, exception)
 
     def test_transfer_blind_to_voicemail(self):
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
-            self.manager.transfer_blind_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
+            self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
 
         transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
 
@@ -227,10 +227,10 @@ class TestTransfers(_BaseTest):
         exception = Exception()
 
         with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
-                self.manager.transfer_blind_to_voicemail(s.auth_token, s.user_uuid, s.vm_number)
+            with patch.object(self.manager, '_on_transfer_to_voicemail_exception') as on_exception:
+                self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
-        on_exception.assert_called_once_with(s.user_uuid, None, exception)
+        on_exception.assert_called_once_with(s.connection, s.user_uuid, exception)
 
     def test_transfer_does_nothing_when_no_active_call(self):
         with patch.object(self.manager, '_get_active_call', Mock(return_value=None)):
@@ -248,20 +248,20 @@ class TestTransfers(_BaseTest):
     def test_that_exceptions_are_not_catched_in_transfer(self):
         with patch.object(self.manager, '_get_active_call', Mock(side_effect=Exception)):
             assert_that(calling(self.manager._transfer)
-                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        .with_args(s.connection, s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
                         raises(Exception))
 
         self.ctid_ng_client.transfers.make_transfer_from_user.side_effect = Exception
         with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
             assert_that(calling(self.manager._transfer)
-                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
+                        .with_args(s.connection, s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
                         raises(Exception))
 
     def test_transfer_cancel(self):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_cancel(s.auth_token, s.user_uuid)
+        self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
 
         self.ctid_ng_client.transfers.cancel_transfer.assert_called_once_with(s.transfer_id)
 
@@ -269,7 +269,7 @@ class TestTransfers(_BaseTest):
         transfers = {'items': []}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_cancel(s.auth_token, s.user_uuid)
+        self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
 
         assert_that(self.ctid_ng_client.transfers.cancel_transfer.call_count, equal_to(0))
 
@@ -277,7 +277,7 @@ class TestTransfers(_BaseTest):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_complete(s.auth_token, s.user_uuid)
+        self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
         self.ctid_ng_client.transfers.complete_transfer_from_user.assert_called_once_with(s.transfer_id)
 
@@ -285,7 +285,7 @@ class TestTransfers(_BaseTest):
         transfers = {'items': []}
         self.ctid_ng_client.transfers.list_transfers_from_user.return_value = transfers
 
-        self.manager.transfer_complete(s.auth_token, s.user_uuid)
+        self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
         assert_that(self.ctid_ng_client.transfers.complete_transfer_from_user.call_count, equal_to(0))
 
@@ -300,6 +300,42 @@ class TestTransfers(_BaseTest):
             assert_that(calling(self.manager._transfer_to_voicemail)
                         .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
                         raises(Exception))
+
+    def test_on_transfer_exception_401(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=401))
+
+        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('transfer_unauthorized')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_transfer_exception_400(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=400))
+
+        self.manager._on_transfer_exception(connection, s.user_uuid, '1002', exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:1002')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_transfer_exception_when_ctid_ng_is_down(self):
+        connection = Mock()
+        exception = exceptions.ConnectionError()
+
+        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
+
+    def test_on_transfer_exception_when_xivo_auth_is_down(self):
+        connection = Mock()
+        exception = exceptions.HTTPError(response=Mock(status_code=503))
+
+        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
+
+        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        connection.send_message.assert_called_once_with(expected_message)
 
 
 class TestCallManager(_BaseTest):

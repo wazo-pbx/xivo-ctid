@@ -309,17 +309,17 @@ class CTIServer(object):
         Hangup.register_callback_params(call_manager.hangup,
                                         ['cti_connection', 'auth_token', 'user_uuid'])
         AttendedTransfer.register_callback_params(call_manager.transfer_attended,
-                                                  ['auth_token', 'user_id', 'user_uuid', 'number'])
+                                                  ['cti_connection', 'auth_token', 'user_id', 'user_uuid', 'number'])
         DirectTransfer.register_callback_params(call_manager.transfer_blind,
-                                                ['auth_token', 'user_id', 'user_uuid', 'number'])
+                                                ['cti_connection', 'auth_token', 'user_id', 'user_uuid', 'number'])
         BlindTransferVoicemail.register_callback_params(call_manager.transfer_blind_to_voicemail,
-                                                        ['auth_token', 'user_uuid', 'voicemail_number'])
+                                                        ['cti_connection', 'auth_token', 'user_uuid', 'voicemail_number'])
         AttendedTransferVoicemail.register_callback_params(call_manager.transfer_attended_to_voicemail,
-                                                           ['auth_token', 'user_uuid', 'voicemail_number'])
+                                                           ['cti_connection', 'auth_token', 'user_uuid', 'voicemail_number'])
         CancelTransfer.register_callback_params(call_manager.transfer_cancel,
-                                                ['auth_token', 'user_uuid'])
+                                                ['cti_connection', 'auth_token', 'user_uuid'])
         CompleteTransfer.register_callback_params(call_manager.transfer_complete,
-                                                  ['auth_token', 'user_uuid'])
+                                                  ['cti_connection', 'auth_token', 'user_uuid'])
 
         EnableDND.register_callback_params(self._user_service_manager.enable_dnd, ['user_uuid', 'auth_token'])
         DisableDND.register_callback_params(self._user_service_manager.disable_dnd, ['user_uuid', 'auth_token'])

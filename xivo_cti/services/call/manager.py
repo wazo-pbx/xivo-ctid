@@ -31,6 +31,78 @@ from xivo_cti.model.destination_factory import DestinationFactory
 logger = logging.getLogger(__name__)
 
 
+class _BaseExceptionHandler(object):
+
+    def __init__(self, connection, user_uuid):
+        self._connection = connection
+        self._user_uuid = user_uuid
+
+    def handle(self, exception):
+        logger.info('%s failed to %s: %s', self._user_uuid, self.operation, exception)
+        try:
+            raise exception
+        except HTTPError as e:
+            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
+            handled = self._handle_http_error(status_code)
+            if not handled:
+                raise
+        except ConnectionError:
+            return self._service_unavailable()
+
+    def _handle_http_error(self, status_code):
+        if status_code == 401:
+            return self._unauthorized()
+        elif status_code == 503:
+            return self._service_unavailable()
+        return False
+
+    def _unauthorized(self):
+        error_string = '{}_unauthorized'.format(self.operation)
+        return self._send_error(error_string)
+
+    def _service_unavailable(self):
+        error_string = 'service_unavailable'
+        return self._send_error(error_string)
+
+    def _send_error(self, error_string):
+        error_message = CTIMessageFormatter.ipbxcommand_error(error_string)
+        self._connection.send_message(error_message)
+        return True
+
+
+class _ExtensionTargettingExceptionHandler(_BaseExceptionHandler):
+
+    def __init__(self, connection, user_id, exten):
+        super(_ExtensionTargettingExceptionHandler, self).__init__(connection, user_id)
+        self._exten = exten
+
+    def _handle_http_error(self, status_code):
+        if status_code == 400:
+            return self._invalid_extension()
+        else:
+            return super(_ExtensionTargettingExceptionHandler, self)._handle_http_error(status_code)
+
+    def _invalid_extension(self):
+        error_string = 'unreachable_extension:{}'.format(self._exten)
+        return self._send_error(error_string)
+
+
+class _CallExceptionHandler(_ExtensionTargettingExceptionHandler):
+    operation = 'call'
+
+
+class _HangupExceptionHandler(_BaseExceptionHandler):
+    operation = 'hangup'
+
+
+class _TransferExceptionHandler(_ExtensionTargettingExceptionHandler):
+    operation = 'transfer'
+
+
+class _TransferToVoicemailExceptionHandler(_BaseExceptionHandler):
+    operation = 'transfer'
+
+
 class CallManager(object):
 
     _answer_trigering_event = 'SIPRinging'
@@ -70,31 +142,31 @@ class CallManager(object):
         self._runner.run(self._async_hangup, connection, client, user_uuid,
                          _on_error=error_cb)
 
-    def transfer_attended(self, auth_token, user_id, user_uuid, number):
+    def transfer_attended(self, connection, auth_token, user_id, user_uuid, number):
         try:
             self._transfer(auth_token, user_id, user_uuid, number, 'attended')
         except Exception as e:
-            self._on_transfer_exception(user_uuid, number, e)
+            self._on_transfer_exception(connection, user_uuid, number, e)
 
-    def transfer_attended_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+    def transfer_attended_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
         try:
             self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
         except Exception as e:
-            self._on_transfer_exception(user_uuid, None, e)
+            self._on_transfer_to_voicemail_exception(connection, user_uuid, e)
 
-    def transfer_blind(self, auth_token, user_id, user_uuid, number):
+    def transfer_blind(self, connection, auth_token, user_id, user_uuid, number):
         try:
             self._transfer(auth_token, user_id, user_uuid, number, 'blind')
         except Exception as e:
-            self._on_transfer_exception(user_uuid, number, e)
+            self._on_transfer_exception(connection, user_uuid, number, e)
 
-    def transfer_blind_to_voicemail(self, auth_token, user_uuid, voicemail_number):
+    def transfer_blind_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
         try:
             self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
         except Exception as e:
-            self._on_transfer_exception(user_uuid, None, e)
+            self._on_transfer_to_voicemail_exception(connection, user_uuid, e)
 
-    def transfer_cancel(self, auth_token, user_uuid):
+    def transfer_cancel(self, connection, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
         client = self._new_ctid_ng_client(auth_token)
         transfer = self._get_current_transfer(client)
@@ -103,7 +175,7 @@ class CallManager(object):
         else:
             logger.debug('cancle_transfer: No transfer to cancel for %s', user_uuid)
 
-    def transfer_complete(self, auth_token, user_uuid):
+    def transfer_complete(self, connection, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
         client = self._new_ctid_ng_client(auth_token)
         transfer = self._get_current_transfer(client)
@@ -138,46 +210,20 @@ class CallManager(object):
             self.answer_next_ringing_call(connection, interface)
 
     def _on_call_exception(self, connection, user_id, exten, exception):
-        logger.info('%s failed to call %s: %s', user_id, exten, exception)
-        error_message = None
-        try:
-            raise exception
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            # XXX handle invalid extension when they get implemented
-            if status_code == 401:
-                error_message = CTIMessageFormatter.ipbxcommand_error('calls_unauthorized')
-            elif status_code == 503:
-                error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-            else:
-                raise
-        except ConnectionError:
-            error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-
-        if error_message:
-            connection.send_message(error_message)
+        handler = _CallExceptionHandler(connection, user_id, exten)
+        handler.handle(exception)
 
     def _on_hangup_exception(self, connection, user_uuid, exception):
-        logger.info('%s failed to hangup: %s', user_uuid, exception)
-        error_message = None
-        try:
-            raise exception
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                error_message = CTIMessageFormatter.ipbxcommand_error('hangup_unauthorized')
-            elif status_code == 503:
-                error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-            else:
-                raise
-        except ConnectionError:
-            error_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
+        handler = _HangupExceptionHandler(connection, user_uuid)
+        handler.handle(exception)
 
-        if error_message:
-            connection.send_message(error_message)
+    def _on_transfer_exception(self, connection, user_uuid, number, exception):
+        handler = _TransferExceptionHandler(connection, user_uuid, number)
+        handler.handle(exception)
 
-    def _on_transfer_exception(self, user_uuid, number, exception):
-        pass
+    def _on_transfer_to_voicemail_exception(self, connection, user_uuid, exception):
+        handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
+        handler.handle(exception)
 
     def _get_answer_on_sip_ringing_fn(self, connection, interface):
         def answer_if_matching_peer(event):
