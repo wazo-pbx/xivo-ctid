@@ -62,9 +62,7 @@ class CurrentCallManager(object):
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
 
     def _new_ctid_ng_client(self, token):
-        params = dict(config['ctid_ng'])
-        params['token'] = token
-        return CtidNGClient(**params)
+        return CtidNGClient(token=token, **config['ctid_ng'])
 
     @bus_listener_thread
     @ack_bus_message
