@@ -29,7 +29,11 @@ from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.xivo_ami import AMIClass
 
-from ..manager import CallManager, _CallExceptionHandler
+from ..manager import (CallManager,
+                       _CallExceptionHandler,
+                       _HangupExceptionHandler,
+                       _TransferExceptionHandler,
+                       _TransferToVoicemailExceptionHandler)
 
 
 class _BaseTest(unittest.TestCase):
@@ -96,33 +100,6 @@ class TestCalls(_BaseTest):
 
         assert_that(answer_next_ringing_call.call_count, equal_to(0))
 
-    def test_on_hangup_exception_401(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=401))
-
-        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('hangup_unauthorized')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_hangup_exception_when_ctid_ng_is_down(self):
-        connection = Mock()
-        exception = exceptions.ConnectionError()
-
-        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_hangup_exception_when_xivo_auth_is_down(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=503))
-
-        self.manager._on_hangup_exception(connection, s.user_uuid, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
     def test_call_destination_url(self):
         number = '1234'
         url = 'exten:xivo/{0}'.format(number)
@@ -157,12 +134,15 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_attended_exceptions(self):
         exception = Exception()
+        error_handler = Mock(_TransferExceptionHandler)
 
-        with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+        with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
+                   Mock(return_value=error_handler)) as ExceptionHandler:
+            with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
                 self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        on_exception.assert_called_once_with(s.connection, s.user_uuid, s.number, exception)
+        error_handler.handle.assert_called_once_with(exception)
+        ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
 
     def test_transfer_blind(self):
         with patch.object(self.manager, '_transfer') as transfer:
@@ -172,12 +152,15 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_blind_exceptions(self):
         exception = Exception()
+        error_handler = Mock(_TransferExceptionHandler)
 
-        with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_exception') as on_exception:
+        with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
+                   Mock(return_value=error_handler)) as ExceptionHandler:
+            with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
                 self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        on_exception.assert_called_once_with(s.connection, s.user_uuid, s.number, exception)
+        error_handler.handle.assert_called_once_with(exception)
+        ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
 
     def test_transfer_attended_to_voicemail(self):
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
@@ -187,12 +170,15 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_attended_to_voicemail_exceptions(self):
         exception = Exception()
+        error_handler = Mock(_TransferExceptionHandler)
 
-        with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_to_voicemail_exception') as on_exception:
+        with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
+                   Mock(return_value=error_handler)) as ExceptionHandler:
+            with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
                 self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
-        on_exception.assert_called_once_with(s.connection, s.user_uuid, exception)
+        error_handler.handle.assert_called_once_with(exception)
+        ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
 
     def test_transfer_blind_to_voicemail(self):
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
@@ -202,12 +188,15 @@ class TestTransfers(_BaseTest):
 
     def test_transfer_blind_to_voicemail_exceptions(self):
         exception = Exception()
+        error_handler = Mock(_TransferExceptionHandler)
 
-        with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-            with patch.object(self.manager, '_on_transfer_to_voicemail_exception') as on_exception:
+        with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
+                   Mock(return_value=error_handler)) as ExceptionHandler:
+            with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
                 self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
 
-        on_exception.assert_called_once_with(s.connection, s.user_uuid, exception)
+        error_handler.handle.assert_called_once_with(exception)
+        ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
 
     def test_transfer_does_nothing_when_no_active_call(self):
         with patch.object(self.manager, '_get_active_call', Mock(return_value=None)):
@@ -278,42 +267,6 @@ class TestTransfers(_BaseTest):
                         .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
                         raises(Exception))
 
-    def test_on_transfer_exception_401(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=401))
-
-        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('transfer_unauthorized')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_transfer_exception_400(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=400))
-
-        self.manager._on_transfer_exception(connection, s.user_uuid, '1002', exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('unreachable_extension:1002')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_transfer_exception_when_ctid_ng_is_down(self):
-        connection = Mock()
-        exception = exceptions.ConnectionError()
-
-        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
-    def test_on_transfer_exception_when_xivo_auth_is_down(self):
-        connection = Mock()
-        exception = exceptions.HTTPError(response=Mock(status_code=503))
-
-        self.manager._on_transfer_exception(connection, s.user_uuid, s.exten, exception)
-
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        connection.send_message.assert_called_once_with(expected_message)
-
 
 class TestCallManager(_BaseTest):
 
@@ -353,32 +306,66 @@ class TestGetAnswerOnSIPRinging(_BaseTest):
         assert_that(self._connection.answer_cb.call_count, equal_to(0))
 
 
-class TestCallExceptionErrorHandler(unittest.TestCase):
+class _BaseErrorHandlerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.connection = Mock(CTI)
-        self.handler = _CallExceptionHandler(self.connection, s.user_id, s.exten)
 
-    def test_on_call_exception_401(self):
-        exception = exceptions.HTTPError(response=Mock(status_code=401))
+    def test_error_message(self):
+        for exception, msg_string in self.exception_msg_map.iteritems():
+            self.connection.reset_mock()
 
-        self.handler.handle(exception)
+            self.handler.handle(exception)
 
-        expected_message = CTIMessageFormatter.ipbxcommand_error('call_unauthorized')
-        self.connection.send_message.assert_called_once_with(expected_message)
+            expected_message = CTIMessageFormatter.ipbxcommand_error(msg_string)
+            self.connection.send_message.assert_called_once_with(expected_message)
 
-    def test_on_call_exception_when_ctid_ng_is_down(self):
-        exception = exceptions.ConnectionError()
 
-        self.handler.handle(exception)
+class TestCallExceptionErrorHandler(_BaseErrorHandlerTestCase):
 
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        self.connection.send_message.assert_called_once_with(expected_message)
+    def setUp(self):
+        super(TestCallExceptionErrorHandler, self).setUp()
+        self.handler = _CallExceptionHandler(self.connection, s.user_uuid, '666666')
+        self.exception_msg_map = {
+            exceptions.HTTPError(response=Mock(status_code=401)): 'call_unauthorized',
+            exceptions.ConnectionError(): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=400)): 'unreachable_extension:666666'
+        }
 
-    def test_on_call_exception_when_xivo_auth_is_down(self):
-        exception = exceptions.HTTPError(response=Mock(status_code=503))
 
-        self.handler.handle(exception)
+class TestTransferExceptionErrorHandler(_BaseErrorHandlerTestCase):
 
-        expected_message = CTIMessageFormatter.ipbxcommand_error('service_unavailable')
-        self.connection.send_message.assert_called_once_with(expected_message)
+    def setUp(self):
+        super(TestTransferExceptionErrorHandler, self).setUp()
+        self.handler = _TransferExceptionHandler(self.connection, s.user_id, '1234')
+        self.exception_msg_map = {
+            exceptions.HTTPError(response=Mock(status_code=401)): 'transfer_unauthorized',
+            exceptions.ConnectionError(): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=400)): 'unreachable_extension:1234'
+        }
+
+
+class TestTransferToVoicemailExceptionErrorHandler(_BaseErrorHandlerTestCase):
+
+    def setUp(self):
+        super(TestTransferToVoicemailExceptionErrorHandler, self).setUp()
+        self.handler = _TransferToVoicemailExceptionHandler(self.connection, s.user_uuid)
+        self.exception_msg_map = {
+            exceptions.HTTPError(response=Mock(status_code=401)): 'transfer_unauthorized',
+            exceptions.ConnectionError(): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
+        }
+
+
+class TestHangupExceptionErrorHandler(_BaseErrorHandlerTestCase):
+
+    def setUp(self):
+        super(TestHangupExceptionErrorHandler, self).setUp()
+        self.handler = _HangupExceptionHandler(self.connection, s.user_uuid)
+        self.exception_msg_map = {
+            exceptions.HTTPError(response=Mock(status_code=401)): 'hangup_unauthorized',
+            exceptions.ConnectionError(): 'service_unavailable',
+            exceptions.HTTPError(response=Mock(status_code=503)): 'service_unavailable',
+        }

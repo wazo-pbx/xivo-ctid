@@ -138,33 +138,37 @@ class CallManager(object):
     def hangup(self, connection, auth_token, user_uuid):
         logger.info('hangup: user %s is hanging up his current call', user_uuid)
         client = self._new_ctid_ng_client(auth_token)
-        error_cb = partial(self._on_hangup_exception, connection, user_uuid)
+        error_handler = _HangupExceptionHandler(connection, user_uuid)
         self._runner.run(self._async_hangup, connection, client, user_uuid,
-                         _on_error=error_cb)
+                         _on_error=error_handler.handle)
 
     def transfer_attended(self, connection, auth_token, user_id, user_uuid, number):
         try:
             self._transfer(auth_token, user_id, user_uuid, number, 'attended')
         except Exception as e:
-            self._on_transfer_exception(connection, user_uuid, number, e)
+            error_handler = _TransferExceptionHandler(connection, user_uuid, number)
+            error_handler.handle(e)
 
     def transfer_attended_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
         try:
             self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
         except Exception as e:
-            self._on_transfer_to_voicemail_exception(connection, user_uuid, e)
+            error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
+            error_handler.handle(e)
 
     def transfer_blind(self, connection, auth_token, user_id, user_uuid, number):
         try:
             self._transfer(auth_token, user_id, user_uuid, number, 'blind')
         except Exception as e:
-            self._on_transfer_exception(connection, user_uuid, number, e)
+            error_handler = _TransferExceptionHandler(connection, user_uuid, number)
+            error_handler.handle(e)
 
     def transfer_blind_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
         try:
             self._transfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
         except Exception as e:
-            self._on_transfer_to_voicemail_exception(connection, user_uuid, e)
+            error_handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
+            error_handler.handle(e)
 
     def transfer_cancel(self, connection, auth_token, user_uuid):
         logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
@@ -208,18 +212,6 @@ class CallManager(object):
         interface = dao.user.get_line_identity(user_id)
         if interface:
             self.answer_next_ringing_call(connection, interface)
-
-    def _on_hangup_exception(self, connection, user_uuid, exception):
-        handler = _HangupExceptionHandler(connection, user_uuid)
-        handler.handle(exception)
-
-    def _on_transfer_exception(self, connection, user_uuid, number, exception):
-        handler = _TransferExceptionHandler(connection, user_uuid, number)
-        handler.handle(exception)
-
-    def _on_transfer_to_voicemail_exception(self, connection, user_uuid, exception):
-        handler = _TransferToVoicemailExceptionHandler(connection, user_uuid)
-        handler.handle(exception)
 
     def _get_answer_on_sip_ringing_fn(self, connection, interface):
         def answer_if_matching_peer(event):
