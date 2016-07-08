@@ -193,7 +193,7 @@ class CallManager(object):
         if transfer:
             return client.transfers.cancel_transfer(transfer['id'])
 
-        logger.debug('cancel_transfer: No transfer to cancel for %s', user_uuid)
+        logger.info('cancel_transfer: No transfer to cancel for %s', user_uuid)
 
     def transfer_complete(self, connection, auth_token, user_uuid):
         logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
@@ -212,7 +212,7 @@ class CallManager(object):
     def _async_hangup(self, connection, client, user_uuid):
         active_call = self._get_active_call(client)
         if not active_call:
-            logger.warning('hangup: failed to find the active call for user %s', user_uuid)
+            logger.info('hangup: failed to find the active call for user %s', user_uuid)
             return
 
         return client.calls.hangup_from_user(active_call['call_id'])
