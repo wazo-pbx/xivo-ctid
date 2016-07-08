@@ -23,7 +23,7 @@ from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo import caller_id
 from xivo.asterisk.line_identity import identity_from_channel
 
-from xivo_bus.resources.calls.transfer import AnswerTransferEvent
+from xivo_bus.resources.calls.transfer import AnswerTransferEvent, CancelTransferEvent
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 
@@ -65,13 +65,22 @@ class CurrentCallManager(object):
             event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
             if event.transfer['flow'] == 'attended':
                 self._task_queue.put(self._transfer_answered,
-                                     event.transfer['id'],
+                                     event.transfer['initiator_uuid'])
+        elif event_name == 'transfer_cancelled':
+            event = Marshaler.unmarshal_message(body, CancelTransferEvent)
+            if event.transfer['flow'] == 'attended':
+                self._task_queue.put(self._transfer_cancelled,
                                      event.transfer['initiator_uuid'])
 
-    def _transfer_answered(self, transfer_id, user_uuid):
+    def _transfer_answered(self, user_uuid):
         if user_uuid:
             line = dao.user.get_line_identity(user_uuid)
             self._current_call_notifier.attended_transfer_answered(line)
+
+    def _transfer_cancelled(self, user_uuid):
+        if user_uuid:
+            line = dao.user.get_line_identity(user_uuid)
+            self._current_call_notifier.attended_transfer_cancelled(line)
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
