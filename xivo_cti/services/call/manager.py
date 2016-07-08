@@ -25,6 +25,7 @@ from xivo import caller_id
 from xivo_ctid_ng_client import Client as CtidNgClient
 
 from xivo_cti import config, dao
+from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.model.destination_factory import DestinationFactory
 
@@ -187,6 +188,7 @@ class CallManager(object):
         self._runner.run(self._transfer_cancel_async, auth_token, user_uuid,
                          _on_error=error_handler.handle)
 
+    @async_runner_thread
     def _transfer_cancel_async(self, auth_token, user_uuid):
         client = self._new_ctid_ng_client(auth_token)
         transfer = self._get_current_transfer(client)
@@ -201,6 +203,7 @@ class CallManager(object):
         self._runner.run(self._transfer_complete_async, auth_token, user_uuid,
                          _on_error=error_handler.handle)
 
+    @async_runner_thread
     def _transfer_complete_async(self, auth_token, user_uuid):
         client = self._new_ctid_ng_client(auth_token)
         transfer = self._get_current_transfer(client)
@@ -209,6 +212,7 @@ class CallManager(object):
 
         logger.info('complete_transfer: No transfer to complete for %s', user_uuid)
 
+    @async_runner_thread
     def _async_hangup(self, connection, client, user_uuid):
         active_call = self._get_active_call(client)
         if not active_call:
@@ -217,13 +221,17 @@ class CallManager(object):
 
         return client.calls.hangup_from_user(active_call['call_id'])
 
-    def _get_active_call(self, client):
+    @staticmethod
+    @async_runner_thread
+    def _get_active_call(client):
         calls = client.calls.list_calls_from_user()
         for call in calls['items']:
             if call['status'] == 'Up' and not call['on_hold']:
                 return call
 
-    def _get_current_transfer(self, client):
+    @staticmethod
+    @async_runner_thread
+    def _get_current_transfer(client):
         transfers = client.transfers.list_transfers_from_user()
         for transfer in transfers['items']:
             if transfer['flow'] == 'attended':
@@ -245,6 +253,7 @@ class CallManager(object):
 
         return answer_if_matching_peer
 
+    @async_runner_thread
     def _transfer(self, auth_token, user_id, user_uuid, number, flow):
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
@@ -256,6 +265,7 @@ class CallManager(object):
                                                         initiator=active_call['call_id'],
                                                         flow=flow)
 
+    @async_runner_thread
     def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, user_context, flow):
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
@@ -269,6 +279,7 @@ class CallManager(object):
         return client.transfers.make_transfer(**transfer_params)
 
     @staticmethod
+    @async_runner_thread
     def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
         transfered_call_id = call['talking_to'].keys()[0]
         initiator_call_id = call['call_id']
@@ -285,5 +296,6 @@ class CallManager(object):
         return base_params
 
     @staticmethod
+    @async_runner_thread
     def _new_ctid_ng_client(auth_token):
         return CtidNgClient(token=auth_token, **config['ctid_ng'])
