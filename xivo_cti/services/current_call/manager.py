@@ -63,9 +63,10 @@ class CurrentCallManager(object):
         event_name = body.get('name')
         if event_name == 'transfer_answered':
             event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
-            self._task_queue.put(self._transfer_answered,
-                                 event.transfer['id'],
-                                 event.transfer['initiator_uuid'])
+            if event.transfer['flow'] == 'attended':
+                self._task_queue.put(self._transfer_answered,
+                                     event.transfer['id'],
+                                     event.transfer['initiator_uuid'])
 
     def _transfer_answered(self, transfer_id, user_uuid):
         if user_uuid:
