@@ -53,7 +53,6 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
-        self._user_uuid_by_transfer_id = {}
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
