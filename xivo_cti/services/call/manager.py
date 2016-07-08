@@ -214,9 +214,9 @@ class CallManager(object):
 
     @async_runner_thread
     def _async_hangup(self, connection, client, user_uuid):
-        active_call = self._get_active_call(client)
+        active_call = self._get_active_or_ringing_call(client)
         if not active_call:
-            logger.info('hangup: failed to find the active call for user %s', user_uuid)
+            logger.info('hangup: failed to find an active or ringing call for user %s', user_uuid)
             return
 
         return client.calls.hangup_from_user(active_call['call_id'])
@@ -227,6 +227,15 @@ class CallManager(object):
         calls = client.calls.list_calls_from_user()
         for call in calls['items']:
             if call['status'] == 'Up' and not call['on_hold']:
+                return call
+
+    @staticmethod
+    @async_runner_thread
+    def _get_active_or_ringing_call(client):
+        valid_statuses = ['Up', 'Ring']
+        calls = client.calls.list_calls_from_user()
+        for call in calls['items']:
+            if call['status'] in valid_statuses and not call['on_hold']:
                 return call
 
     @staticmethod
