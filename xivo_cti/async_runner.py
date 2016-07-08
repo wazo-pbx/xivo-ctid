@@ -18,7 +18,6 @@
 import logging
 
 from contextlib import contextmanager
-from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +39,7 @@ def async_runner_thread(f):
     The implementation of this decorator does nothing. It's just a warning for
     the next programmer reading the decorated function.
     """
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        return f(*args, **kwargs)
-    return wrapped
+    return f
 
 
 class AsyncRunner(object):
