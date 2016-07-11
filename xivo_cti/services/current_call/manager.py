@@ -17,19 +17,17 @@
 
 import time
 import logging
-from requests import HTTPError
 
 from xivo_bus import Marshaler
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo import caller_id
 from xivo.asterisk.line_identity import identity_from_channel
 
-from xivo_bus.resources.calls.transfer import AnswerTransferEvent
+from xivo_bus.resources.calls.transfer import AnswerTransferEvent, CancelTransferEvent
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
-from xivo_ctid_ng_client import Client as CtidNGClient
 
-from xivo_cti import dao, config
+from xivo_cti import dao
 
 
 logger = logging.getLogger(__name__)
@@ -55,28 +53,34 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
-        self._transfers = {}
-        self._user_uuid_by_transfer_id = {}
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
 
-    def _new_ctid_ng_client(self, token):
-        params = dict(config['ctid_ng'])
-        params['token'] = token
-        return CtidNGClient(**params)
-
     @bus_listener_thread
     @ack_bus_message
     def _on_bus_transfer_answered(self, body):
-        event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
-        self._task_queue.put(self._transfer_answered, event.transfer['id'])
+        event_name = body.get('name')
+        if event_name == 'transfer_answered':
+            event = Marshaler.unmarshal_message(body, AnswerTransferEvent)
+            if event.transfer['flow'] == 'attended':
+                self._task_queue.put(self._transfer_answered,
+                                     event.transfer['initiator_uuid'])
+        elif event_name == 'transfer_cancelled':
+            event = Marshaler.unmarshal_message(body, CancelTransferEvent)
+            if event.transfer['flow'] == 'attended':
+                self._task_queue.put(self._transfer_cancelled,
+                                     event.transfer['initiator_uuid'])
 
-    def _transfer_answered(self, transfer_id):
-        user_uuid = self._user_uuid_by_transfer_id.get(transfer_id)
+    def _transfer_answered(self, user_uuid):
         if user_uuid:
             line = dao.user.get_line_identity(user_uuid)
             self._current_call_notifier.attended_transfer_answered(line)
+
+    def _transfer_cancelled(self, user_uuid):
+        if user_uuid:
+            line = dao.user.get_line_identity(user_uuid)
+            self._current_call_notifier.attended_transfer_cancelled(line)
 
     def handle_bridge_link(self, bridge_event):
         channel_1, channel_2 = bridge_event.bridge.channels
@@ -219,70 +223,6 @@ class CurrentCallManager(object):
     def get_line_calls(self, line_identity):
         return self._calls_per_line.get(line_identity, [])
 
-    def hangup(self, auth_token, user_uuid):
-        logger.info('hangup: user %s is hanging up his current call', user_uuid)
-        active_call = self._get_user_active_call(auth_token)
-        if not active_call:
-            logger.warning('hangup: failed to find the active call for user %s', user_uuid)
-            return
-
-        client = self._new_ctid_ng_client(auth_token)
-        client.calls.hangup_from_user(active_call['call_id'])
-
-    def complete_transfer(self, auth_token, user_uuid):
-        logger.info('complete_transfer: user %s is completing a transfer', user_uuid)
-        transfer = self._transfers.get(user_uuid)
-        if transfer:
-            client = self._new_ctid_ng_client(auth_token)
-            client.transfers.complete_transfer(transfer)
-        else:
-            logger.debug('No transfer to complete')
-
-    def cancel_transfer(self, auth_token, user_uuid):
-        logger.info('cancel_transfer: user %s is cancelling a transfer', user_uuid)
-        transfer = self._transfers.get(user_uuid)
-        if transfer:
-            client = self._new_ctid_ng_client(auth_token)
-            client.transfers.cancel_transfer(transfer)
-        else:
-            logger.debug('No transfer to cancel')
-
-    def _transfer(self, auth_token, user_id, user_uuid, number, flow):
-        logger.info('transfer: user %s is doing an %s transfer to %s', user_uuid, flow, number)
-        active_call = self._get_user_active_call(auth_token)
-        if not active_call:
-            logger.info('transfer to %s failed for user %s. No active call', number, user_uuid)
-            return
-
-        try:
-            client = self._new_ctid_ng_client(auth_token)
-            return client.transfers.make_transfer_from_user(exten=number,
-                                                            initiator=active_call['call_id'],
-                                                            flow=flow)
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                # XXX: The transfer will fail silently for the user...
-                logger.info('transfer: %s is not authorized to make transfers', user_uuid)
-            else:
-                raise
-
-    def attended_transfer(self, auth_token, user_id, user_uuid, number):
-        transfer = self._transfer(auth_token, user_id, user_uuid, number, 'attended')
-        if transfer:
-            self._track_atxfer(transfer['id'], user_uuid)
-
-    def direct_transfer(self, auth_token, user_id, user_uuid, number):
-        self._transfer(auth_token, user_id, user_uuid, number, 'blind')
-
-    def atxfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
-        transfer = self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'attended')
-        if transfer:
-            self._track_atxfer(transfer['id'], user_uuid)
-
-    def blind_txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number):
-        self._txfer_to_voicemail(auth_token, user_uuid, voicemail_number, 'blind')
-
     def switchboard_hold(self, user_id, on_hold_queue):
         try:
             current_call = self._get_current_call(user_id)
@@ -372,64 +312,3 @@ class CurrentCallManager(object):
         channel_order = local_channel[-1]
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
-
-    def _get_user_active_call(self, auth_token):
-        client = self._new_ctid_ng_client(auth_token)
-        try:
-            calls = client.calls.list_calls_from_user()
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                logger.info('This user is not authorized to list his calls')
-            else:
-                raise
-
-        for call in calls['items']:
-            if call['status'] == 'Up' and not call['on_hold']:
-                return call
-        return None
-
-    def _txfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, flow):
-        logger.info('vm transfer: user %s is doing a transfer to voicemail %s', user_uuid, voicemail_number)
-        active_call = self._get_user_active_call(auth_token)
-        if not active_call:
-            logger.info('vm transfer: to %s failed for user %s. No active call', voicemail_number, user_uuid)
-            return
-
-        try:
-            user_context = self._get_context(user_uuid)
-        except LookupError as e:
-            logger.info('vm transfer:: %s', e)
-            return
-
-        variables = {'XIVO_BASE_CONTEXT': user_context, 'ARG1': voicemail_number}
-        transfer_params = self._make_transfer_param_from_call(active_call, 's', 'vmbox', flow, variables)
-        try:
-            client = self._new_ctid_ng_client(config['auth']['token'])
-            return client.transfers.make_transfer(**transfer_params)
-        except HTTPError as e:
-            status_code = getattr(getattr(e, 'response', None), 'status_code', None)
-            if status_code == 401:
-                logger.info('xivo-ctid is not authorized to transfer to voicemail')
-            else:
-                raise
-
-    def _track_atxfer(self, transfer_id, user_uuid):
-        self._transfers[user_uuid] = transfer_id
-        self._user_uuid_by_transfer_id[transfer_id] = user_uuid
-
-    @staticmethod
-    def _make_transfer_param_from_call(call, exten, context, flow=None, variables=None):
-        transfered_call_id = call['talking_to'].keys()[0]
-        initiator_call_id = call['call_id']
-        base_params = {'transferred': transfered_call_id,
-                       'initiator': initiator_call_id,
-                       'exten': exten,
-                       'context': context}
-
-        if flow:
-            base_params['flow'] = flow
-        if variables:
-            base_params['variables'] = variables
-
-        return base_params

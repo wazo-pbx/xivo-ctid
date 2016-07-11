@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,4 +58,8 @@ class CurrentCallFormatter(object):
 
     def attended_transfer_answered(self, line_identity):
         return {'class': 'current_call_attended_transfer_answered',
+                'line': line_identity}
+
+    def attended_transfer_cancelled(self, line_identity):
+        return {'class': 'current_call_attended_transfer_cancelled',
                 'line': line_identity}

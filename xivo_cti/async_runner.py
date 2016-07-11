@@ -18,7 +18,6 @@
 import logging
 
 from contextlib import contextmanager
-from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +39,7 @@ def async_runner_thread(f):
     The implementation of this decorator does nothing. It's just a warning for
     the next programmer reading the decorated function.
     """
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        return f(*args, **kwargs)
-    return wrapped
+    return f
 
 
 class AsyncRunner(object):
@@ -52,22 +48,21 @@ class AsyncRunner(object):
         self._thread_pool_executor = thread_pool_executor
         self._task_queue = task_queue
 
-    def run(self, function, *args, **kwargs):
-        self._thread_pool_executor.submit(self._exec, function, *args, **kwargs)
+    def run(self, func, *args, **kwargs):
+        callback = kwargs.pop('_on_response', None)
+        error_callback = kwargs.pop('_on_error', None)
+        self._thread_pool_executor.submit(self._exec_with_cb, callback, error_callback, func, *args, **kwargs)
 
-    def run_with_cb(self, cb, function, *args, **kwargs):
-        self._thread_pool_executor.submit(self._exec_with_cb, cb, function, *args, **kwargs)
+    def run_with_cb(self, cb, func, *args, **kwargs):
+        self.run(func, _on_response=cb, *args, **kwargs)
 
-    def _exec(self, function, *args, **kwargs):
+    def _exec_with_cb(self, cb, error_cb, func, *args, **kwargs):
         try:
-            function(*args, **kwargs)
-        except Exception:
-            logger.exception('Exception in async function %s', function)
-
-    def _exec_with_cb(self, cb, function, *args, **kwargs):
-        try:
-            result = function(*args, **kwargs)
-        except Exception:
-            logger.exception('Exception in async function %s', function)
-        else:
-            self._task_queue.put(cb, result)
+            result = func(*args, **kwargs)
+            if cb:
+                self._task_queue.put(cb, result)
+        except Exception as e:
+            if error_cb:
+                self._task_queue.put(error_cb, e)
+            else:
+                logger.exception('Exception in async function %s', func)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -56,6 +56,11 @@ class CurrentCallNotifier(object):
     def attended_transfer_answered(self, line_identity):
         line_identity = line_identity.lower()
         formatted_message = self._formatter.attended_transfer_answered(line_identity)
+        self._send_message(line_identity, formatted_message)
+
+    def attended_transfer_cancelled(self, line_identity):
+        line_identity = line_identity.lower()
+        formatted_message = self._formatter.attended_transfer_cancelled(line_identity)
         self._send_message(line_identity, formatted_message)
 
     def _send_message(self, line_identity, message):

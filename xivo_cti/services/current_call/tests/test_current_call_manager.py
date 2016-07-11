@@ -23,7 +23,6 @@ from hamcrest import equal_to
 from hamcrest import only_contains
 from mock import Mock
 from mock import patch
-from mock import sentinel as s
 
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
@@ -73,22 +72,6 @@ class _BaseTestCase(unittest.TestCase):
 
 
 class TestCurrentCallManager(_BaseTestCase):
-
-    def test_atxfer_to_voicemail(self):
-        with patch.object(self.manager, '_track_atxfer') as track:
-            with patch.object(self.manager, '_txfer_to_voicemail',
-                              Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-                self.manager.atxfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
-
-        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'attended')
-        track.assert_called_once_with(s.transfer_id, s.user_uuid)
-
-    def test_blind_txfer_to_voicemail(self):
-        with patch.object(self.manager, '_txfer_to_voicemail',
-                          Mock(return_value={'id': s.transfer_id})) as txfer_to_vm:
-            self.manager.blind_txfer_to_voicemail(s.auth_token, s.user_uuid, s.voicemail_number)
-
-        txfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, 'blind')
 
     @patch('time.time')
     def test_bridge_channels(self, mock_time):
@@ -486,34 +469,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.assertEquals(calls, [])
 
-    def test_complete_transfer(self):
-        with patch.object(self.manager, '_new_ctid_ng_client') as client_factory:
-            with patch.object(self.manager, '_transfers', {s.user_uuid: s.transfer_id}):
-                self.manager.complete_transfer(s.auth_token, s.user_uuid)
-
-        client_factory.return_value.transfers.complete_transfer.assert_called_once_with(s.transfer_id)
-
-    def test_complete_transfer_no_call(self):
-        with patch.object(self.manager, '_transfers', {}):
-            self.manager.complete_transfer(s.auth_token, s.user_uuid)
-        # No exception
-
-    def test_attended_transfer(self):
-        with patch.object(self.manager, '_track_atxfer') as track:
-            with patch.object(self.manager, '_transfer',
-                              Mock(return_value={'id': s.transfer_id})) as transfer:
-                self.manager.attended_transfer(s.auth_token, s.user_id, s.user_uuid, s.number)
-
-        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended')
-        track.assert_called_once_with(s.transfer_id, s.user_uuid)
-
-    def test_direct_transfer(self):
-        with patch.object(self.manager, '_transfer',
-                          Mock(return_value={'id': s.transfer_id})) as transfer:
-            self.manager.direct_transfer(s.auth_token, s.user_id, s.user_uuid, s.number)
-
-        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
-
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     @patch('xivo_cti.dao.queue')
     def test_switchboard_hold(self, mock_queue_dao, mock_get_line_identity):
@@ -665,18 +620,6 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.manager.set_transfer_channel(channel, transfer_channel)
 
-    def test_cancel_transfer(self):
-        with patch.object(self.manager, '_new_ctid_ng_client') as client_factory:
-            with patch.object(self.manager, '_transfers', {s.user_uuid: s.transfer_id}):
-                self.manager.cancel_transfer(s.auth_token, s.user_uuid)
-
-        client_factory.return_value.transfers.cancel_transfer.assert_called_once_with(s.transfer_id)
-
-    def test_cancel_transfer_no_transfer(self):
-        with patch.object(self.manager, '_transfers', {}):
-            self.manager.cancel_transfer(s.auth_token, s.user_uuid)
-        # No exception
-
     def test_local_channel_peer(self):
         local_channel = u'Local/1003@pcm-dev-00000032;'
         mine = local_channel + u'1'
@@ -712,25 +655,3 @@ class TestCurrentCallManager(_BaseTestCase):
 
     def _get_notifier_calls(self):
         return [call[0][0] for call in self.notifier.publish_current_call.call_args_list]
-
-
-class TestHangup(_BaseTestCase):
-
-    def setUp(self):
-        super(TestHangup, self).setUp()
-        client_factory = self.manager._new_ctid_ng_client = Mock()
-        self.ctid_ng_client = client_factory.return_value
-
-    def test_with_no_active_call_does_not_crash(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value=None)):
-            self.manager.hangup(s.auth_token, s.user_uuid)
-
-    def test_when_everything_works(self):
-        with patch.object(self.manager,
-                          '_get_user_active_call',
-                          Mock(return_value={'call_id': s.call_id})):
-            self.manager.hangup(s.auth_token, s.user_uuid)
-
-        self.ctid_ng_client.calls.hangup_from_user.assert_called_once_with(s.call_id)

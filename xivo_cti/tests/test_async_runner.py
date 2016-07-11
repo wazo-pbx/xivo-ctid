@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright (C) 2015-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,3 +71,24 @@ class TestAsyncRunner(unittest.TestCase):
 
         function.assert_called_once_with()
         self.assertFalse(cb.called)
+
+    def test_run_with_on_response_param(self):
+        callback = Mock()
+        function = Mock()
+
+        with synchronize(self.runner):
+            self.runner.run(function, 'lol', 42, foo='bar', baz='foobar', _on_response=callback)
+
+        function.assert_called_once_with('lol', 42, foo='bar', baz='foobar')
+        callback.assert_called_once_with(function.return_value)
+
+    def test_run_with_on_error_param(self):
+        error_callback = Mock()
+        error = RuntimeError('foo')
+        function = Mock(side_effect=error)
+
+        with synchronize(self.runner):
+            self.runner.run(function, 'lol', 42, foo='bar', _on_error=error_callback)
+
+        function.assert_called_once_with('lol', 42, foo='bar')
+        error_callback.assert_called_once_with(error)
