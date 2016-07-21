@@ -193,7 +193,7 @@ class CallManager(object):
         client = self._new_ctid_ng_client(auth_token)
         transfer = self._get_current_transfer(client)
         if transfer:
-            return client.transfers.cancel_transfer(transfer['id'])
+            return client.transfers.cancel_transfer_from_user(transfer['id'])
 
         logger.info('cancel_transfer: No transfer to cancel for %s', user_uuid)
 
