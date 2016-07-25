@@ -20,6 +20,7 @@ from xivo_dao.alchemy.extension import Extension
 from xivo_dao.alchemy.infos import Infos
 from xivo_dao.alchemy.linefeatures import LineFeatures as Line
 from xivo_dao.alchemy.user_line import UserLine
+from xivo_dao.alchemy.line_extension import LineExtension
 from xivo_dao.alchemy.userfeatures import UserFeatures as User
 from xivo_dao.helpers.db_utils import session_scope
 
@@ -100,7 +101,7 @@ def find_line_context(user_id):
 def get_reachable_contexts(user_id):
     with session_scope() as session:
         query = (session.query(Extension.context)
-                 .join(UserLine.main_extension_rel)
+                 .join(LineExtension.main_extension_rel)
                  .join(UserLine.main_user_rel)
                  .filter(UserLine.user_id == user_id))
         contexts = [row.context for row in query]
@@ -130,7 +131,7 @@ def get_name_number(user_id):
         query = (session.query(User.fullname.label('name'),
                                Extension.exten.label('exten'))
                  .join(UserLine.main_user_rel)
-                 .join(UserLine.main_extension_rel)
+                 .join(LineExtension.main_extension_rel)
                  .filter(User.id == user_id))
         row = query.first()
         if not row:
