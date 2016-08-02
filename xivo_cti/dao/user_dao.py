@@ -113,22 +113,25 @@ class UserDAO(object):
         return user['fullname']
 
     def get_line(self, user_id):
+        return self.get_lines(user_id)[0]
+
+    def get_lines(self, user_id):
         try:
             user = self._user(user_id)
         except NoSuchUserException:
             raise
 
         if 'linelist' in user and user['linelist']:
-            line_id = user['linelist'][0]
+            line_ids = user['linelist']
         else:
             raise NoSuchLineException()
 
         try:
-            line = self._phone(line_id)
+            lines = [self._phone(line_id) for line_id in line_ids]
         except NoSuchLineException:
             raise
 
-        return line
+        return lines
 
     def get_line_identity(self, user_id):
         try:

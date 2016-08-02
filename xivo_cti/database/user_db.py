@@ -167,23 +167,23 @@ def get_users_config():
 
 def _config_query(session):
     columns = (getattr(User, name).label(name) for name in USER_CONFIG_FIELDS)
-    return (session.query(Line.id.label('line_id'),
-                          Line.context.label('line_context'),
+    return (session.query(Line.context.label('line_context'),
                           Infos.uuid.label('xivo_uuid'),
                           *columns)
             .outerjoin(User.main_line_rel)
             .outerjoin(UserLine.linefeatures))
 
 
-def _format_row(row):
-    if row.line_id is None:
-        line_list = []
-    else:
-        line_list = [str(row.line_id)]
+def _find_all_line_id_by_user_id(user_id):
+    with session_scope() as session:
+        user_lines = session.query(UserLine.line_id).filter(UserLine.user_id == user_id).all()
+        return [str(line_id) for line_id, in user_lines]
 
+
+def _format_row(row):
     user = {name: getattr(row, name) for name in USER_CONFIG_FIELDS}
     user['identity'] = row.fullname
     user['context'] = row.line_context
-    user['linelist'] = line_list
+    user['linelist'] = _find_all_line_id_by_user_id(row.id)
     user['xivo_uuid'] = row.xivo_uuid
     return user

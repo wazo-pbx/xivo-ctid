@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,21 +31,21 @@ class HistoryMode(object):
     outgoing = '0'
 
 
-def history_for_phone(phone, limit):
-    identifier = _phone_to_identifier(phone)
-    return all_calls_for_phone(identifier, limit)
+def history_for_phones(phones, limit):
+    identifiers = [_phone_to_identifier(phone) for phone in phones]
+    return all_calls_for_phones(identifiers, limit)
 
 
-def all_calls_for_phone(identifier, limit):
+def all_calls_for_phones(identifiers, limit):
     with session_scope():
-        call_logs = call_log_dao.find_all_history_for_phone(identifier, limit)
-        return _convert_all_call_logs(call_logs, identifier)
+        call_logs = call_log_dao.find_all_history_for_phones(identifiers, limit)
+        return _convert_all_call_logs(call_logs, identifiers)
 
 
-def _convert_all_call_logs(call_logs, identifier):
+def _convert_all_call_logs(call_logs, identifiers):
     all_calls = []
     for call_log in call_logs:
-        if call_log.destination_line_identity == identifier:
+        if call_log.destination_line_identity in identifiers:
             caller_id = call_log.source_name
             extension = call_log.source_exten
             if call_log.answered:

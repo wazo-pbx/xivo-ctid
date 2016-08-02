@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2014 Avencall
+# Copyright (C) 2007-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 
 def get_history(user_id, size):
     try:
-        phone = dao.user.get_line(user_id)
+        phones = dao.user.get_lines(user_id)
     except (NoSuchUserException, NoSuchLineException):
         return 'message', {}
 
-    calls = manager.history_for_phone(phone, size)
+    calls = manager.history_for_phones(phones, size)
 
     history = []
     for call in calls:
