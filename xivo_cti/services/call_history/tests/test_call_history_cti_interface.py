@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright (C) 2013-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class TestCallHistoryCTIInterface(TestCase):
 
     @patch('xivo_cti.dao.user')
     def test_get_history_unknown_user(self, user_dao):
-        user_dao.get_line.side_effect = NoSuchUserException()
+        user_dao.get_lines.side_effect = NoSuchUserException()
 
         result = cti_interface.get_history(sentinel.user_id,
                                            sentinel.size)
@@ -41,7 +41,7 @@ class TestCallHistoryCTIInterface(TestCase):
 
     @patch('xivo_cti.dao.user')
     def test_get_history_when_user_has_no_line(self, user_dao):
-        user_dao.get_line.side_effect = NoSuchLineException()
+        user_dao.get_lines.side_effect = NoSuchLineException()
 
         result = cti_interface.get_history(sentinel.user_id,
                                            sentinel.size)
@@ -49,9 +49,9 @@ class TestCallHistoryCTIInterface(TestCase):
         assert_that(result, contains('message', {}))
 
     @patch('xivo_cti.dao.user')
-    @patch('xivo_cti.services.call_history.manager.history_for_phone')
+    @patch('xivo_cti.services.call_history.manager.history_for_phones')
     def test_get_history_empty(self, history, user_dao):
-        user_dao.get_line.return_value = sentinel.phone
+        user_dao.get_lines.return_value = sentinel.phone
         history.return_value = []
 
         result = cti_interface.get_history(sentinel.user_id,
@@ -63,9 +63,9 @@ class TestCallHistoryCTIInterface(TestCase):
         history.assert_called_once_with(sentinel.phone, sentinel.size)
 
     @patch('xivo_cti.dao.user')
-    @patch('xivo_cti.services.call_history.manager.history_for_phone')
+    @patch('xivo_cti.services.call_history.manager.history_for_phones')
     def test_get_history(self, history, user_dao):
-        user_dao.get_line.return_value = sentinel.phone
+        user_dao.get_lines.return_value = sentinel.phone
         history.return_value = [self._call(sentinel.date1,
                                            sentinel.duration1,
                                            sentinel.caller_name1,

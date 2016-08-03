@@ -175,15 +175,23 @@ def _config_query(session):
             .outerjoin(UserLine.linefeatures))
 
 
+def _find_all_secondary_line_ids(user_id):
+    with session_scope() as session:
+        user_lines = session.query(UserLine.line_id).filter(UserLine.user_id == user_id,
+                                                            UserLine.main_line == False).all()  # noqa
+        return [str(line_id) for line_id, in user_lines]
+
+
 def _format_row(row):
-    if row.line_id is None:
-        line_list = []
+    main_line = row.line_id
+    if main_line is None:
+        line_ids = tuple()
     else:
-        line_list = [str(row.line_id)]
+        line_ids = (str(main_line),) + tuple(_find_all_secondary_line_ids(row.id))
 
     user = {name: getattr(row, name) for name in USER_CONFIG_FIELDS}
     user['identity'] = row.fullname
     user['context'] = row.line_context
-    user['linelist'] = line_list
+    user['linelist'] = line_ids
     user['xivo_uuid'] = row.xivo_uuid
     return user
