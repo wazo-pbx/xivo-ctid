@@ -384,65 +384,45 @@ class TestUserDAO(unittest.TestCase):
             'initialized': False,
             'allowtransfer': True
         }
+        self._phonelist.keeplist['irrelevant'] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '9012',
+            'identity': 'sip/h7i8j9',
+            'initialized': False,
+            'allowtransfer': True
+        }
         self._userlist.keeplist[user_id] = {'linelist': line_ids}
 
         result = self.dao.get_lines(user_id)
 
-        expected = [line for line in self._phonelist.keeplist.values()]
+        expected = [self._phonelist.keeplist[line_id] for line_id in line_ids]
         self.assertEqual(result, expected)
 
     def test_get_lines_no_linelist_field(self):
         # Happens when the CTI server is starting
-        context = 'default'
         user_id = '206'
-        line_ids = ['607', '608']
-        self._phonelist.keeplist[line_ids[0]] = {
-            'context': context,
-            'protocol': 'sip',
-            'number': '1234',
-            'identity': 'sip/a1b2c3',
-            'initialized': False,
-            'allowtransfer': True
-        }
-        self._phonelist.keeplist[line_ids[1]] = {
-            'context': 'default',
-            'protocol': 'sip',
-            'number': '5678',
-            'identity': 'sip/d4f5g6',
-            'initialized': False,
-            'allowtransfer': True
-        }
         self._userlist.keeplist[user_id] = {}
 
         self.assertRaises(NoSuchLineException, self.dao.get_lines, user_id)
 
     def test_get_lines_user_not_exist(self):
-        user_id = '206'
-        line_ids = ['607', '608']
-        self._phonelist.keeplist[line_ids[0]] = {
-            'context': 'default',
-            'protocol': 'sip',
-            'number': '1234',
-            'identity': 'sip/a1b2c3',
-            'initialized': False,
-            'allowtransfer': True
-        }
-        self._phonelist.keeplist[line_ids[1]] = {
-            'context': 'default',
-            'protocol': 'sip',
-            'number': '5678',
-            'identity': 'sip/d4f5g6',
-            'initialized': False,
-            'allowtransfer': True
-        }
+        user_id = 'not-found'
         self._userlist.keeplist = {}
 
         self.assertRaises(NoSuchUserException, self.dao.get_lines, user_id)
 
     def test_get_lines_line_not_exist(self):
         user_id = '206'
-        line_ids = ['607', '608']
-        self._phonelist.keeplist = {}
+        line_ids = ['not-found1', 'not-found2']
+        self._phonelist.keeplist['irrelevant'] = {
+            'context': 'default',
+            'protocol': 'sip',
+            'number': '9012',
+            'identity': 'sip/h7i8j9',
+            'initialized': False,
+            'allowtransfer': True
+        }
         self._userlist.keeplist[user_id] = {
             'linelist': line_ids
         }
