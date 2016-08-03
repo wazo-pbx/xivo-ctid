@@ -22,6 +22,7 @@ from datetime import datetime
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
 from hamcrest import equal_to
+from hamcrest import empty
 from hamcrest import none
 
 from xivo_cti.database import user_db as user_dao
@@ -472,7 +473,7 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
                                                   musiconhold=u'')
 
         user_id = user_line.user.id
-        line_list = [str(user_line.line.id)]
+        line_list = (str(user_line.line.id),)
         expected = {
             str(user_id): {
                 'agentid': None,
@@ -544,7 +545,7 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
         result = user_dao.get_user_config(user_id)
 
         assert_that(result[str(user_id)]['context'], none())
-        assert_that(result[str(user_id)]['linelist'], equal_to([]))
+        assert_that(result[str(user_id)]['linelist'], empty())
 
     def test_get_user_config_no_user(self):
         self.add_infos()
