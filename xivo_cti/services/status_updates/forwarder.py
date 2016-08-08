@@ -26,7 +26,7 @@ from xivo_ctid_client import Client as CtidClient
 from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
                                           UserStatusUpdateEvent,
                                           EndpointStatusUpdateEvent)
-from xivo_cti import config
+from xivo_cti import config, dao
 from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
@@ -285,5 +285,19 @@ def _new_endpoint_notifier(cti_group_factory, fetcher):
 
 
 def _new_user_notifier(cti_group_factory, fetcher):
-    msg_factory = CTIMessageFormatter.user_status_update
+    msg_factory = _UserStatusMessageFactory()
     return _StatusNotifier(cti_group_factory, msg_factory, fetcher, 'user')
+
+
+class _UserStatusMessageFactory(object):
+
+    def __call__(self, key, status):
+        xivo_uuid, user_uuid = key
+        user = dao.user.get(user_uuid)
+        return CTIMessageFormatter.user_status_update(xivo_uuid, user_uuid, user['id'], status)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
