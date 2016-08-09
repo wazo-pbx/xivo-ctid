@@ -124,6 +124,10 @@
                     "type": "string",
                     "format": "uuid",
                     "descrption": "Unique ID for the XiVO server"
+                },
+                "cti_protocol_version": {
+                    "type": "string",
+                    "description": "The CTI protocol version used by this server"
                 }
             }
         },

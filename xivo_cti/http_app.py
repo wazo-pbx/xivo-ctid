@@ -26,6 +26,7 @@ from flask.ext import restful
 from flask_cors import CORS
 from xivo import http_helpers
 
+from xivo_cti import CTI_PROTOCOL_VERSION
 from xivo_cti.swagger.resource import SwaggerResource
 
 logger = logging.getLogger(__name__)
@@ -80,6 +81,7 @@ class Infos(restful.Resource):
 
         return {
             'uuid': uuid.get(),
+            'cti_protocol_version': CTI_PROTOCOL_VERSION,
         }
 
 
