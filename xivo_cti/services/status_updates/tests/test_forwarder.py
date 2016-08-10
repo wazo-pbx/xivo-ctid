@@ -147,19 +147,19 @@ class TestNewEndpointNotifier(unittest.TestCase):
 
 class TestNewUserNotifier(unittest.TestCase):
 
-    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
-    def test_that_the_cti_group_factory_is_forwarded(self, _StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._UserStatusNotifier')
+    def test_that_the_cti_group_factory_is_forwarded(self, _UserStatusNotifier):
         _new_user_notifier(s.cti_group_factory, s.fetcher)
 
-        _StatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher, 'user')
+        _UserStatusNotifier.assert_called_once_with(s.cti_group_factory, ANY, s.fetcher, 'user')
 
-    @patch('xivo_cti.services.status_updates.forwarder._StatusNotifier')
-    def test_that_user_status_update_is_injected(self, _StatusNotifier):
+    @patch('xivo_cti.services.status_updates.forwarder._UserStatusNotifier')
+    def test_that_user_status_update_is_injected(self, _UserStatusNotifier):
         _new_user_notifier(s.cti_group_factory, s.fetcher)
         a_user_status_message_factory = _UserStatusMessageFactory()
 
-        _StatusNotifier.assert_called_once_with(ANY, a_user_status_message_factory,
-                                                s.fetcher, 'user')
+        _UserStatusNotifier.assert_called_once_with(ANY, a_user_status_message_factory,
+                                                    s.fetcher, 'user')
 
 
 class TestAgentStatusFetcher(unittest.TestCase):
