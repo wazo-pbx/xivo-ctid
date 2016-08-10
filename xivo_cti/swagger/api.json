@@ -1,5 +1,5 @@
 {
-    "swagger": 2.0,
+    "swagger": "2.0",
     "info": {
         "title": "XiVO CTId",
         "description": "Computer Telephony Integration REST service",
@@ -108,6 +108,7 @@
                     {
                         "name": "user_id",
                         "in": "path",
+                        "type": "integer",
                         "description": "ID of the user or its UUID",
                         "required": true
                     }
@@ -123,7 +124,7 @@
                 "uuid": {
                     "type": "string",
                     "format": "uuid",
-                    "descrption": "Unique ID for the XiVO server"
+                    "description": "Unique ID for the XiVO server"
                 },
                 "cti_protocol_version": {
                     "type": "string",
