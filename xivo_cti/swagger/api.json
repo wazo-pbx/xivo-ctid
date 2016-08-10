@@ -32,7 +32,9 @@
                 "summary": "Server information",
                 "description": "Configuration information about the CTI service",
                 "operationId": "get_infos",
-                "security": [ {} ],
+                "security": [
+                    {}
+                ],
                 "tags": [
                     "infos"
                 ],
@@ -51,7 +53,9 @@
                 "summary": "Find the current state of an Endpoint.",
                 "description": "An Endpoint represents any device that is connected to the server and can answer a phone call, like a VOIP phone or softphone",
                 "operationId": "get_endpoint",
-                "security": [ {} ],
+                "security": [
+                    {}
+                ],
                 "tags": [
                     "endpoint"
                 ],
@@ -86,7 +90,9 @@
                 "summary": "Find a user",
                 "description": "Find a user in the CTI",
                 "operationId": "get_user",
-                "security": [ {} ],
+                "security": [
+                    {}
+                ],
                 "tags": [
                     "user"
                 ],
@@ -114,6 +120,42 @@
                     }
                 ]
             }
+        },
+        "/agent/{agent_id}": {
+            "get": {
+                "summary": "Find an agent",
+                "description": "Find an agent in the CTI",
+                "operationId": "get_agent",
+                "security": [
+                    {}
+                ],
+                "tags": [
+                    "agent"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The agent",
+                        "schema": {
+                            "$ref": "#/definitions/Agent"
+                        }
+                    },
+                    "404": {
+                        "description": "Agent does not exist",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "ID of the agent",
+                        "required": true
+                    }
+                ]
+            }
         }
     },
     "definitions": {
@@ -129,6 +171,27 @@
                 "cti_protocol_version": {
                     "type": "string",
                     "description": "The CTI protocol version used by this server"
+                }
+            }
+        },
+        "Agent": {
+            "title": "Agent",
+            "description": "Information on the current state of an endpoint",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Unique ID"
+                },
+                "origin_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID of the server on which this endpoint is connected"
+                },
+                "status": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Numeric code representing the current status (a.k.a its state). The list of status codes and their meaning are defined in the CTI status configuration. (Configurable only via the web interface)"
                 }
             }
         },
