@@ -429,17 +429,15 @@ class TestCTIMessageFormatter(unittest.TestCase):
         }))
 
     def test_user_status_update(self):
-        key = ('xivo-uuid', 'user_uuid')
-        status = 'busy'
-
-        result = CTIMessageFormatter.user_status_update(key, status)
+        result = CTIMessageFormatter.user_status_update(s.xivo_uuid, s.user_uuid, s.user_id, s.status)
 
         assert_that(result, equal_to({
             'class': 'user_status_update',
             'data': {
-                'xivo_uuid': 'xivo-uuid',
-                'user_uuid': 'user_uuid',
-                'status': status,
+                'xivo_uuid': s.xivo_uuid,
+                'user_uuid': s.user_uuid,
+                'user_id': s.user_id,
+                'status': s.status,
             }
         }))
 

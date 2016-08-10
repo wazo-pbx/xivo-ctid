@@ -18,6 +18,8 @@
 import logging
 import xivo_agentd_client
 
+from uuid import UUID
+
 from collections import defaultdict
 from contextlib import contextmanager
 from requests.exceptions import RequestException
@@ -26,10 +28,11 @@ from xivo_ctid_client import Client as CtidClient
 from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
                                           UserStatusUpdateEvent,
                                           EndpointStatusUpdateEvent)
-from xivo_cti import config
+from xivo_cti import config, dao
 from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.exception import NoSuchUserException
 from xivo_cti.remote_service import RemoteService
 
 logger = logging.getLogger(__name__)
@@ -176,7 +179,43 @@ class _StatusNotifier(object):
             logger.debug('No subscriptions for %s in %s', key, keys)
             return
 
+        logger.info('sending: %s', msg)
         subscription.send_message(msg)
+
+
+class _UserStatusNotifier(_StatusNotifier):
+    # Allow the user registration to work by id or uuid
+
+    def register(self, connection, keys):
+        updated_keys = self._update_keys(keys)
+        super(_UserStatusNotifier, self).register(connection, updated_keys)
+
+    def unregister(self, connection, keys):
+        updated_keys = self._update_keys(keys)
+        super(_UserStatusNotifier, self).register(connection, updated_keys)
+
+    def _update_keys(self, keys):
+        new_keys = []
+        for xivo_uuid, id_or_uuid in keys:
+            if self._is_uuid(id_or_uuid):
+                return keys
+
+            try:
+                user = dao.user.get(str(id_or_uuid))
+            except NoSuchUserException:
+                continue
+
+            new_keys.append((xivo_uuid, user['uuid']))
+
+        return new_keys
+
+    @staticmethod
+    def _is_uuid(id_or_uuid):
+        try:
+            UUID(id_or_uuid)
+            return True
+        except (AttributeError, ValueError):
+            return False
 
 
 class _BaseStatusFetcher(object):
@@ -285,5 +324,19 @@ def _new_endpoint_notifier(cti_group_factory, fetcher):
 
 
 def _new_user_notifier(cti_group_factory, fetcher):
-    msg_factory = CTIMessageFormatter.user_status_update
-    return _StatusNotifier(cti_group_factory, msg_factory, fetcher, 'user')
+    msg_factory = _UserStatusMessageFactory()
+    return _UserStatusNotifier(cti_group_factory, msg_factory, fetcher, 'user')
+
+
+class _UserStatusMessageFactory(object):
+
+    def __call__(self, key, status):
+        xivo_uuid, user_uuid = key
+        user = dao.user.get(user_uuid)
+        return CTIMessageFormatter.user_status_update(xivo_uuid, user_uuid, user['id'], status)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
