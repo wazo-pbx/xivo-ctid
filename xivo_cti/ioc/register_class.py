@@ -122,8 +122,9 @@ def setup(xivo_uuid):
     bus_publisher = Publisher(bus_producer, bus_marshaler)
     bus_listener = BusListener(bus_connection, bus_exchange)
 
-    collectd_exchange = Exchange('collectd', type=config['bus']['exchange_type'])
-    collectd_producer = Producer(bus_connection, exchange=collectd_exchange, auto_declare=False)
+    same_exchange_arguments_as_collectd = {'arguments': {'auto_delete': True}, 'durable': False}
+    collectd_exchange = Exchange('collectd', type=config['bus']['exchange_type'], **same_exchange_arguments_as_collectd)
+    collectd_producer = Producer(bus_connection, exchange=collectd_exchange, auto_declare=True)
     collectd_marshaler = CollectdMarshaler(xivo_uuid)
     collectd_publisher = Publisher(collectd_producer, collectd_marshaler)
 
