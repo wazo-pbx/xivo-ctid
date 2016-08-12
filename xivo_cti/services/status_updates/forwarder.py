@@ -179,7 +179,6 @@ class _StatusNotifier(object):
             logger.debug('No subscriptions for %s in %s', key, keys)
             return
 
-        logger.info('sending: %s', msg)
         subscription.send_message(msg)
 
 
@@ -332,8 +331,13 @@ class _UserStatusMessageFactory(object):
 
     def __call__(self, key, status):
         xivo_uuid, user_uuid = key
-        user = dao.user.get(user_uuid)
-        return CTIMessageFormatter.user_status_update(xivo_uuid, user_uuid, user['id'], status)
+        try:
+            user_id = dao.user.get(user_uuid)['id']
+        except NoSuchUserException:
+            # This case should happen in acceptance tests only
+            logger.info('Received a status update from an unknown user: %s', user_uuid)
+            user_id = None
+        return CTIMessageFormatter.user_status_update(xivo_uuid, user_uuid, user_id, status)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__)

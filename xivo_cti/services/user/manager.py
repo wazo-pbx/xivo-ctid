@@ -125,9 +125,13 @@ class UserServiceManager(object):
         self.set_presence(user_id, user_uuid, None, 'disconnected', action=False)
 
     def _on_new_presence(self, user_uuid, presence):
-        user_id = str(self.dao.user.get(user_uuid)['id'])
-        auth_token = config['auth']['token']
-        self.set_presence(user_id, user_uuid, auth_token, presence)
+        try:
+            user_id = str(self.dao.user.get(user_uuid)['id'])
+        except NoSuchUserException:
+            logger.info('received a presence from an unknown user %s', user_uuid)
+        else:
+            auth_token = config['auth']['token']
+            self.set_presence(user_id, user_uuid, auth_token, presence)
 
     def set_presence(self, user_id, user_uuid, auth_token, presence, action=True):
         user_profile = self.dao.user.get_cti_profile_id(user_id)
