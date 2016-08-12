@@ -191,7 +191,7 @@ class _UserStatusNotifier(_StatusNotifier):
 
     def unregister(self, connection, keys):
         updated_keys = self._update_keys(keys)
-        super(_UserStatusNotifier, self).register(connection, updated_keys)
+        super(_UserStatusNotifier, self).unregister(connection, updated_keys)
 
     def _update_keys(self, keys):
         new_keys = []
