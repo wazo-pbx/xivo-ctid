@@ -131,6 +131,7 @@ def get_name_number(user_id):
         query = (session.query(User.fullname.label('name'),
                                Extension.exten.label('exten'))
                  .join(UserLine.main_user_rel)
+                 .join(LineExtension, UserLine.line_id == LineExtension.line_id)
                  .join(LineExtension.main_extension_rel)
                  .filter(User.id == user_id))
         row = query.first()
