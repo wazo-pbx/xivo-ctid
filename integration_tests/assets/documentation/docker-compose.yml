@@ -1,0 +1,23 @@
+sync:
+  image: n3llyb0y/wait
+  links:
+    - ctid
+    - swagger-validator
+  environment:
+    PORTS: "9495 8080"
+
+ctid:
+  image: p0bailey/docker-flask
+  volumes:
+      - "./mocks/ctid.py:/tmp/ctid.py"
+      - "../../../xivo_cti/swagger/api.json:/tmp/api.json"
+  expose:
+    - 9495
+  command: "python /tmp/ctid.py"
+
+swagger-validator:
+  image: swaggerapi/swagger-validator
+  ports:
+    - "18080:8080"
+  links:
+    - ctid
