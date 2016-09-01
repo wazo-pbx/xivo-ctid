@@ -1,3 +1,9 @@
+xivo-ctid (1:16.08.2~20160901.1) xivo-dev; urgency=medium
+
+  * xivo-16.08.2
+
+ -- Etienne Lessard <elessard@proformatique.com>  Thu, 01 Sep 2016 15:14:27 -0400
+
 xivo-ctid (1:13.22~20131101.150200.67c047a) xivo-dev; urgency=low
 
   * replace dependency from xivo-agent to xivo-bus
