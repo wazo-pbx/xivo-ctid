@@ -64,11 +64,11 @@ class TestCTI(unittest.TestCase):
 
     def test_on_auth_success(self):
         with patch.object(self._cti_connection, '_auth_handler') as auth_handler:
-            with patch.object(self._cti_connection, '_get_answer_cb') as get_answer_cb:
+            with patch.object(self._cti_connection, '_update_answer_cb') as update_answer_cb:
                 self._cti_connection._on_auth_success()
 
                 self._broadcast_cti_group.add.assert_called_once_with(self._cti_connection)
-                get_answer_cb.assert_called_once_with(auth_handler.user_id.return_value)
+                update_answer_cb.assert_called_once_with(auth_handler.user_id.return_value)
 
                 expected = {'userid': auth_handler.user_id.return_value,
                             'user_uuid': auth_handler.user_uuid.return_value,

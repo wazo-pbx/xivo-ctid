@@ -152,9 +152,9 @@ class CTI(Interfaces):
                                         'user_uuid': self._auth_handler.user_uuid(),
                                         'auth_token': self._auth_handler.auth_token(),
                                         'authenticated': self._auth_handler.is_authenticated()})
-        self.answer_cb = self._get_answer_cb(user_id)
+        self._update_answer_cb(user_id)
 
-    def _get_answer_cb(self, user_id):
+    def _update_answer_cb(self, user_id):
         device_manager = context.get('device_manager')
         try:
             device_id = user_db.get_device_id(user_id)
