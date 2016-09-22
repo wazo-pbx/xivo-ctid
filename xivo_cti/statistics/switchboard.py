@@ -126,9 +126,27 @@ class Dispatcher(object):
         self._switchboards = {name: factory(name) for name in switchboard_queues}
         self._switchboard_by_linked_id = {}
         self._hold_transfer = set()
+        self._transfer_recipients = set()
+        self._transfer_id_to_linked_id = {}
 
     def on_hold_called(self, transfer_id):
         self._hold_transfer.add(transfer_id)
+
+    def on_transfer_id_added(self, event):
+        transfer_id = event.get('Value')
+        linked_id = event['Uniqueid']
+
+        if linked_id not in self._transfer_recipients:
+            return
+
+        if transfer_id in self._hold_transfer:
+            self._transfer_id_to_linked_id[transfer_id] = linked_id
+
+        self._transfer_recipients.remove(linked_id)
+
+    def on_transfer_role(self, event):
+        if event['Value'] == 'recipient':
+            self._transfer_recipients.add(event['Uniqueid'])
 
     def on_call_abandon(self, linked_id):
         switchboard = self._switchboard_by_linked_id.get(linked_id)
@@ -188,15 +206,20 @@ class Dispatcher(object):
         switchboard.on_resume_call(linked_id)
 
     def on_transfer(self, linked_id, transfer_id=None):
-        switchboard = self._switchboard_by_linked_id.get(linked_id, None)
+        switchboard = self._switchboard_by_linked_id.get(linked_id)
         if not switchboard:
             return
 
         if transfer_id not in self._hold_transfer:
-            del self._switchboard_by_linked_id[linked_id]
             switchboard.on_transfer(linked_id)
+            del self._switchboard_by_linked_id[linked_id]
         else:
-            self._hold_transfer.remove(transfer_id)
+            new_linked_id = self._transfer_id_to_linked_id.pop(transfer_id)
+            if new_linked_id:
+                self._rename(switchboard, linked_id, new_linked_id)
+                self._switchboard_by_linked_id[new_linked_id] = switchboard
+                self._hold_transfer.remove(transfer_id)
+                switchboard.rename(linked_id, new_linked_id)
             switchboard.on_hold_call(linked_id)
 
     @staticmethod
@@ -295,6 +318,10 @@ class AMIParser(object):
             self._dispatcher.on_call_forward(linked_id)
         elif variable == u'XIVO_FWD_TYPE' and value == u'QUEUE_NOANSWER':
             self._dispatcher.on_call_forward(linked_id)
+        elif variable == u'XIVO_TRANSFER_ID':
+            self._dispatcher.on_transfer_id_added(event)
+        elif variable == u'XIVO_TRANSFER_ROLE':
+            self._dispatcher.on_transfer_role(event)
 
 
 class Publisher(object):
@@ -348,6 +375,13 @@ class Switchboard(object):
             self._publisher = publisher
         else:
             self._publisher = Publisher(context.get('collectd_publisher'), queue_name)
+
+    def rename(self, old, new):
+        call = self._calls.pop(old, None)
+        if not call:
+            return
+
+        self._calls[new] = call
 
     def on_abandon(self, linked_id):
         call = self._calls.get(linked_id)
