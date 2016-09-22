@@ -223,17 +223,13 @@ class CurrentCallManager(object):
     def get_line_calls(self, line_identity):
         return self._calls_per_line.get(line_identity, [])
 
-    def switchboard_hold(self, user_id, on_hold_queue):
+    def switchboard_hold(self, connection, auth_token, user_id, user_uuid, on_hold_queue):
         try:
-            current_call = self._get_current_call(user_id)
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
+            self._call_manager.transfer_blind(connection, auth_token, user_id, user_uuid, hold_queue_number)
         except LookupError as e:
             logger.info('switchboard_hold: %s', e)
             logger.exception(e)
-        else:
-            channel_to_hold = current_call[PEER_CHANNEL]
-            logger.info('Switchboard %s sending %s on hold', user_id, channel_to_hold)
-            self.ami.redirect(channel_to_hold, hold_queue_ctx, hold_queue_number)
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
         logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)

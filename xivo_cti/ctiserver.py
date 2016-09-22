@@ -384,7 +384,8 @@ class CTIServer(object):
         )
         current_call_manager = context.get('current_call_manager')
         HoldSwitchboard.register_callback_params(
-            current_call_manager.switchboard_hold, ['user_id', 'queue_name']
+            current_call_manager.switchboard_hold,
+            ['cti_connection', 'auth_token', 'user_id', 'user_uuid', 'queue_name']
         )
         ResumeSwitchboard.register_callback_params(
             current_call_manager.switchboard_retrieve_waiting_call,

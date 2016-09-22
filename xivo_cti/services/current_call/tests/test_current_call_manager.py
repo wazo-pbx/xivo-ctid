@@ -23,6 +23,7 @@ from hamcrest import equal_to
 from hamcrest import only_contains
 from mock import Mock
 from mock import patch
+from mock import sentinel as s
 
 from xivo_cti import dao
 from xivo_cti.dao import channel_dao
@@ -469,32 +470,15 @@ class TestCurrentCallManager(_BaseTestCase):
 
         self.assertEquals(calls, [])
 
-    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     @patch('xivo_cti.dao.queue')
-    def test_switchboard_hold(self, mock_queue_dao, mock_get_line_identity):
-        mock_queue_dao.get_number_context_from_name.return_value = '3006', 'ctx'
-        queue_name = 'queue_on_hold'
-        user_id = 7
-        mock_get_line_identity.return_value = self.line_2
+    def test_that_switchboard_hold_calls_transfer_blind(self, mock_queue_dao):
+        mock_queue_dao.get_number_context_from_name.return_value = s.queue_number, s.queue_context
 
-        self.manager._calls_per_line = {
-            self.line_1: [
-                {PEER_CHANNEL: self.channel_2,
-                 LINE_CHANNEL: self.channel_1,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-            self.line_2: [
-                {PEER_CHANNEL: self.channel_1,
-                 LINE_CHANNEL: self.channel_2,
-                 BRIDGE_TIME: 1234,
-                 ON_HOLD: False}
-            ],
-        }
+        with patch.object(self.manager, '_call_manager') as call_manager:
+            self.manager.switchboard_hold(s.connection, s.token, s.user_id, s.user_uuid, s.queue_name)
 
-        self.manager.switchboard_hold(user_id, queue_name)
-
-        self.manager.ami.redirect.assert_called_once_with(self.channel_1, 'ctx', '3006')
+        mock_queue_dao.get_number_context_from_name.assert_called_once_with(s.queue_name)
+        call_manager.transfer_blind.assert_called_once_with(s.connection, s.token, s.user_id, s.user_uuid, s.queue_number)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
     @patch('xivo_cti.services.current_call.manager.dao')
