@@ -83,6 +83,8 @@ class Call(object):
 
         if self.state == State.answered:
             self.state = State.completed
+        elif self.state == State.on_hold:
+            self.state = State.abandoned
 
     def on_enter_queue(self):
         self.state = State.ringing
@@ -123,6 +125,10 @@ class Dispatcher(object):
         factory = factory or self._switchboard_factory
         self._switchboards = {name: factory(name) for name in switchboard_queues}
         self._switchboard_by_linked_id = {}
+        self._hold_transfer = set()
+
+    def on_hold_called(self, transfer_id):
+        self._hold_transfer.add(transfer_id)
 
     def on_call_abandon(self, linked_id):
         switchboard = self._switchboard_by_linked_id.get(linked_id)
@@ -181,12 +187,17 @@ class Dispatcher(object):
 
         switchboard.on_resume_call(linked_id)
 
-    def on_transfer(self, linked_id):
-        switchboard = self._switchboard_by_linked_id.pop(linked_id, None)
+    def on_transfer(self, linked_id, transfer_id=None):
+        switchboard = self._switchboard_by_linked_id.get(linked_id, None)
         if not switchboard:
             return
 
-        switchboard.on_transfer(linked_id)
+        if transfer_id not in self._hold_transfer:
+            del self._switchboard_by_linked_id[linked_id]
+            switchboard.on_transfer(linked_id)
+        else:
+            self._hold_transfer.remove(transfer_id)
+            switchboard.on_hold_call(linked_id)
 
     @staticmethod
     def _switchboard_factory(queue_name):
@@ -208,7 +219,8 @@ class BusParser(object):
             return
 
         linked_id = body['data']['transferred_call']
-        self._task_queue.put(self._dispatcher.on_transfer, linked_id)
+        transfer_id = body['data']['id']
+        self._task_queue.put(self._dispatcher.on_transfer, linked_id, transfer_id)
 
 
 class AMIParser(object):

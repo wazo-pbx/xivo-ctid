@@ -44,6 +44,7 @@ class CurrentCallManager(object):
 
     def __init__(self, current_call_notifier, current_call_formatter,
                  ami_class, device_manager, call_manager, call_storage,
+                 switchboard_statistic_dispatcher,
                  bus_listener, task_queue):
         self._calls_per_line = {}
         self._unanswered_transfers = {}
@@ -53,6 +54,7 @@ class CurrentCallManager(object):
         self.device_manager = device_manager
         self._call_manager = call_manager
         self._call_storage = call_storage
+        self._switchboard_statistic_dispatcher = switchboard_statistic_dispatcher
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
@@ -224,9 +226,13 @@ class CurrentCallManager(object):
         return self._calls_per_line.get(line_identity, [])
 
     def switchboard_hold(self, connection, auth_token, user_id, user_uuid, on_hold_queue):
+        def on_response(response):
+            transfer_id = response['id']
+            self._switchboard_statistic_dispatcher.on_hold_called(transfer_id)
+
         try:
             hold_queue_number, hold_queue_ctx = dao.queue.get_number_context_from_name(on_hold_queue)
-            self._call_manager.transfer_blind(connection, auth_token, user_id, user_uuid, hold_queue_number)
+            self._call_manager.transfer_blind(connection, auth_token, user_id, user_uuid, hold_queue_number, on_response)
         except LookupError as e:
             logger.info('switchboard_hold: %s', e)
             logger.exception(e)

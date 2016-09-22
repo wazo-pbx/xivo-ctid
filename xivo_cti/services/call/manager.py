@@ -165,11 +165,12 @@ class CallManager(object):
                          voicemail_number, user_context, 'attended',
                          _on_error=error_handler.handle)
 
-    def transfer_blind(self, connection, auth_token, user_id, user_uuid, number):
+    def transfer_blind(self, connection, auth_token, user_id, user_uuid, number, on_response=None):
         logger.info('transfer_blind: user %s is transfering a call to %s', user_uuid, number)
         error_handler = _TransferExceptionHandler(connection, user_uuid, number)
         self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'blind',
-                         _on_error=error_handler.handle)
+                         _on_error=error_handler.handle,
+                         _on_response=on_response)
 
     def transfer_blind_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
         logger.info('transfer_blind_to_voicemail: user %s is transfering to voicemail %s', user_uuid, voicemail_number)
