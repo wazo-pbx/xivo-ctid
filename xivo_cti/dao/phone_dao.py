@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from xivo.asterisk.protocol_interface import InvalidChannelError
-from xivo.asterisk.protocol_interface import protocol_interface_from_hint
+from xivo.asterisk.protocol_interface import protocol_interfaces_from_hint
 
 from xivo_cti.exception import NoSuchPhoneException
 
@@ -37,9 +36,8 @@ class PhoneDAO(object):
         self._innerdata.xod_status['phones'][phone_id]['hintstatus'] = status
         return current_status != status
 
-    def get_phone_id_from_hint(self, hint):
-        try:
-            protocol, interface = protocol_interface_from_hint(hint.lower())
-            return self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, interface)
-        except InvalidChannelError:
-            return None
+    def get_phone_ids_from_hint(self, hint):
+        for protocol, interface in protocol_interfaces_from_hint(hint.lower()):
+            phone_id = self._innerdata.xod_config['phones'].get_phone_id_from_proto_and_name(protocol, interface)
+            if phone_id is not None:
+                yield phone_id

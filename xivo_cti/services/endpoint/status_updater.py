@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,10 +28,7 @@ class StatusUpdater(object):
         self._notifier = endpoint_status_notifier
 
     def update_status(self, hint, status):
-        phone_id = dao.phone.get_phone_id_from_hint(hint)
-        if not phone_id:
-            return
-
-        changed = dao.phone.update_status(phone_id, status)
-        if changed:
-            self._notifier.notify(phone_id, status)
+        for phone_id in dao.phone.get_phone_ids_from_hint(hint):
+            changed = dao.phone.update_status(phone_id, status)
+            if changed:
+                self._notifier.notify(phone_id, status)
