@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,8 @@ class TestStatusUpdater(unittest.TestCase):
     def test_update_status_calls_the_dao_to_update(self, dao):
         hint = 'SIP/g19gtv'
         status = 1
-        dao.phone.get_phone_id_from_hint.return_value = phone_id = '42'
+        phone_id = '42'
+        dao.phone.get_phone_ids_from_hint.return_value = [phone_id]
 
         self.updater.update_status(hint, status)
 
@@ -45,7 +46,8 @@ class TestStatusUpdater(unittest.TestCase):
     def test_that_the_notifier_is_notified_only_when_theres_a_change(self, dao):
         hint = 'SIP/g19gtv'
         status = 1
-        dao.phone.get_phone_id_from_hint.return_value = phone_id = '42'
+        phone_id = '42'
+        dao.phone.get_phone_ids_from_hint.return_value = [phone_id]
         dao.phone.update_status.return_value = True
 
         self.updater.update_status(hint, status)
@@ -57,7 +59,8 @@ class TestStatusUpdater(unittest.TestCase):
     def test_that_the_notifier_is_not_notified_when_theres_no_change(self, dao):
         hint = 'SIP/g19gtv'
         status = 1
-        dao.phone.get_phone_id_from_hint.return_value = phone_id = '42'
+        phone_id = '42'
+        dao.phone.get_phone_ids_from_hint.return_value = [phone_id]
         dao.phone.update_status.return_value = False
 
         self.updater.update_status(hint, status)

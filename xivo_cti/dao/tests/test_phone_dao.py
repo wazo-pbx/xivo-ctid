@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright (C) 2014-2016 Avencall
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import unittest
 from ..phone_dao import PhoneDAO
 from ..phone_dao import NoSuchPhoneException
 from hamcrest import assert_that
+from hamcrest import contains
 from hamcrest import equal_to
 from mock import Mock
 from mock import sentinel
@@ -70,26 +71,26 @@ class TestPhoneDAO(unittest.TestCase):
 
         assert_that(res, equal_to(False))
 
-    def test_get_phone_id_from_hint(self):
+    def test_get_phone_ids_from_hint(self):
         phones = self._innerdata.xod_config['phones'] = Mock(PhonesList)
         phones.get_phone_id_from_proto_and_name.return_value = sentinel.phone_id
 
         hint = 'SIP/abcdef'
 
-        phone_id = self.dao.get_phone_id_from_hint(hint)
+        phone_ids = self.dao.get_phone_ids_from_hint(hint)
 
-        assert_that(phone_id, equal_to(sentinel.phone_id))
+        assert_that(phone_ids, contains(sentinel.phone_id))
         phones.get_phone_id_from_proto_and_name.assert_called_once_with('sip', 'abcdef')
 
-    def test_get_phone_id_from_hint_no_phone(self):
+    def test_get_phone_ids_from_hint_no_phone(self):
         phones = self._innerdata.xod_config['phones'] = Mock(PhonesList)
         phones.get_phone_id_from_proto_and_name.return_value = None
 
-        phone_id = self.dao.get_phone_id_from_hint('SCCP/notfound')
+        phone_ids = self.dao.get_phone_ids_from_hint('SCCP/notfound')
 
-        assert_that(phone_id, equal_to(None))
+        assert_that(phone_ids, contains())
 
-    def test_get_phone_id_from_hint_with_a_none_phone_hint(self):
-        phone_id = self.dao.get_phone_id_from_hint('meetme:4001')
+    def test_get_phone_ids_from_hint_with_a_none_phone_hint(self):
+        phone_ids = self.dao.get_phone_ids_from_hint('meetme:4001')
 
-        assert_that(phone_id, equal_to(None))
+        assert_that(phone_ids, contains())
