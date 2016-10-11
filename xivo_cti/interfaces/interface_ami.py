@@ -86,13 +86,12 @@ class AMI(object):
             nocolon = []
             for line in decoded_event.split(self.LINE_SEPARATOR):
                 if '\n' not in line:
-                    if line != '--END COMMAND--':  # occurs when requesting "module reload xxx.so"
-                        key_value = line.split(self.FIELD_SEPARATOR, 1)
-                        if len(key_value) == 2:
-                            key, value = key_value
-                            event[key.strip()] = value
-                        elif line.startswith('Asterisk Call Manager'):
-                            logger.info('%s', line)
+                    key_value = line.split(self.FIELD_SEPARATOR, 1)
+                    if len(key_value) == 2:
+                        key, value = key_value
+                        event[key.strip()] = value
+                    elif line.startswith('Asterisk Call Manager'):
+                        logger.info('%s', line)
                 else:
                     nocolon.append(line)
 
@@ -102,14 +101,7 @@ class AMI(object):
             elif 'Response' in event and event['Response'] is not None:
                 AMIResponseHandler.get_instance().handle_response(event)
                 response = event['Response']
-                if (response == 'Follows' and 'Privilege' in event and
-                        event['Privilege'] == 'Command'):
-                    try:
-                        self.amiresponse_follows(event)
-                    except Exception:
-                        logger.exception('response_follows (%s) (%s)', event, nocolon)
-
-                elif response == 'Success':
+                if response == 'Success':
                     try:
                         self.amiresponse_success(event)
                     except Exception:
@@ -165,14 +157,6 @@ class AMI(object):
                           'response': 'ko',
                           'command': request.get('ipbxcommand'),
                           'replyid': request.get('commandid')})
-
-    def amiresponse_follows(self, event):
-        actionid = event.get('ActionID')
-        if actionid and actionid in self.actionids:
-            properties = self.actionids.pop(actionid)
-            mode = properties['mode']
-            logger.info('amiresponse_follows %s %s : %s - %s',
-                        actionid, mode, event, properties)
 
     def execute_and_track(self, actionid, params):
         conn_ami = self.amiclass
