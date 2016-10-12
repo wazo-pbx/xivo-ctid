@@ -30,7 +30,7 @@ class TestDocumentation(AssetLaunchingTestCase):
     assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
 
     def test_documentation_errors(self):
-        api_url = 'http://ctid:9495/0.1/api/api.json'
+        api_url = 'http://ctid:9495/0.1/api/api.yml'
         self.validate_api(api_url)
 
     def validate_api(self, url):
