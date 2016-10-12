@@ -10,7 +10,7 @@ ctid:
   image: p0bailey/docker-flask
   volumes:
       - "./mocks/ctid.py:/tmp/ctid.py"
-      - "../../../xivo_cti/swagger/api.json:/tmp/api.json"
+      - "../../../xivo_cti/swagger/api.yml:/tmp/api.yml"
   expose:
     - 9495
   command: "python /tmp/ctid.py"
