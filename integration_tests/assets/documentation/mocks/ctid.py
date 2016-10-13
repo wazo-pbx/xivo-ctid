@@ -21,10 +21,10 @@ from flask import Flask, make_response
 app = Flask(__name__)
 
 
-@app.route('/0.1/api/api.json', methods=['GET'])
+@app.route('/0.1/api/api.yml', methods=['GET'])
 def get_api():
-    with open('/tmp/api.json', 'r') as api_spec:
-        return make_response(api_spec.read()), 200, {'Content-Type': 'application/json'}
+    with open('/tmp/api.yml', 'r') as api_spec:
+        return make_response(api_spec.read()), 200, {'Content-Type': 'application/x-yaml'}
 
 
 if __name__ == "__main__":

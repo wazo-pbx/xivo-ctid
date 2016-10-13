@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2014-2015 Avencall
+# Copyright (C) 2016 Proformatique Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +31,7 @@ setup(
     url='http://wiki.xivo.io/',
     packages=find_packages(),
     package_data={
-        'xivo_cti.swagger': ['*.json'],
+        'xivo_cti.swagger': ['*.yml'],
     },
     scripts=['bin/ami-proxy', 'bin/xivo-ctid'],
 )
