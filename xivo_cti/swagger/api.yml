@@ -36,6 +36,7 @@ paths:
             $ref: '#/definitions/Info'
   /endpoints/{endpoint_id}:
     get:
+      deprecated: true
       summary: Find the current state of an Endpoint.
       description: An Endpoint represents any device that is connected to the server
         and can answer a phone call, like a VOIP phone or softphone
@@ -43,7 +44,7 @@ paths:
       security:
       - {}
       tags:
-      - endpoint
+      - deprecated
       responses:
         '200':
           description: Endpoint's state
@@ -62,13 +63,14 @@ paths:
         required: true
   /users/{user_id}:
     get:
+      deprecated: true
       summary: Find a user
       description: Find a user in the CTI
       operationId: get_user
       security:
       - {}
       tags:
-      - user
+      - deprecated
       responses:
         '200':
           description: The user
