@@ -25,8 +25,9 @@ from hamcrest import equal_to
 from hamcrest import empty
 from hamcrest import none
 
-from xivo_cti.database import user_db as user_dao
 from xivo_cti.database import statistics as statistic_switchboard_dao
+from xivo_cti.database import transfer_db as transfer_dao
+from xivo_cti.database import user_db as user_dao
 from xivo_dao.alchemy.callfilter import Callfilter
 from xivo_dao.alchemy.callfiltermember import Callfiltermember
 from xivo_dao.alchemy.contextinclude import ContextInclude
@@ -34,6 +35,7 @@ from xivo_dao.alchemy.cti_profile import CtiProfile
 from xivo_dao.alchemy.ctiphonehintsgroup import CtiPhoneHintsGroup
 from xivo_dao.alchemy.ctipresences import CtiPresences
 from xivo_dao.alchemy.dialaction import Dialaction
+from xivo_dao.alchemy.features import Features
 from xivo_dao.alchemy.linefeatures import LineFeatures
 from xivo_dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_dao.alchemy.queuemember import QueueMember
@@ -86,6 +88,18 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
         assert_that(call.end_type, equal_to('forwarded'))
         assert_that(call.wait_time, equal_to(42.25))
         assert_that(call.queue_id, equal_to(queue_id))
+
+    def test_get_transfer_dial_timeout(self):
+        feature = Features()
+        feature.filename = 'features.conf'
+        feature.category = 'general'
+        feature.var_name = 'atxfernoanswertimeout'
+        feature.var_val = '5'
+        self.add_me(feature)
+
+        result = transfer_dao.get_transfer_dial_timeout()
+
+        assert_that(result, equal_to(5))
 
     def test_enable_recording(self):
         user_id = self.add_user_recording_disabled()

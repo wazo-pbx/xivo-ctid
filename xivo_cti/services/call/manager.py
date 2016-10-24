@@ -27,6 +27,7 @@ from xivo_ctid_ng_client import Client as CtidNgClient
 from xivo_cti import config, dao
 from xivo_cti.async_runner import async_runner_thread
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
+from xivo_cti.database import transfer_db
 from xivo_cti.model.destination_factory import DestinationFactory
 
 logger = logging.getLogger(__name__)
@@ -149,8 +150,9 @@ class CallManager(object):
 
     def transfer_attended(self, connection, auth_token, user_id, user_uuid, number):
         logger.info('transfer_attended: user %s is transfering a call to %s', user_uuid, number)
+        timeout = transfer_db.get_transfer_dial_timeout()
         error_handler = _TransferExceptionHandler(connection, user_uuid, number)
-        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'attended',
+        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'attended', timeout,
                          _on_error=error_handler.handle)
 
     def transfer_attended_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
@@ -166,9 +168,10 @@ class CallManager(object):
                          _on_error=error_handler.handle)
 
     def transfer_blind(self, connection, auth_token, user_id, user_uuid, number, on_response=None):
-        logger.info('transfer_blind: user %s is transfering a call to %s', user_uuid, number)
+        logger.info('transfer_blind: user %s is transferring a call to %s', user_uuid, number)
+        timeout = transfer_db.get_transfer_dial_timeout()
         error_handler = _TransferExceptionHandler(connection, user_uuid, number)
-        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'blind',
+        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'blind', timeout,
                          _on_error=error_handler.handle,
                          _on_response=on_response)
 
@@ -264,7 +267,7 @@ class CallManager(object):
         return answer_if_matching_peer
 
     @async_runner_thread
-    def _transfer(self, auth_token, user_id, user_uuid, number, flow):
+    def _transfer(self, auth_token, user_id, user_uuid, number, flow, timeout):
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
         if not active_call:
@@ -273,7 +276,8 @@ class CallManager(object):
 
         return client.transfers.make_transfer_from_user(exten=number,
                                                         initiator=active_call['call_id'],
-                                                        flow=flow)
+                                                        flow=flow,
+                                                        timeout=timeout)
 
     @async_runner_thread
     def _transfer_to_voicemail(self, auth_token, user_uuid, voicemail_number, user_context, flow):
