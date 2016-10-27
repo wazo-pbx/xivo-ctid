@@ -266,7 +266,7 @@ class CallManager(object):
         return answer_if_matching_peer
 
     @async_runner_thread
-    def _transfer(self, auth_token, user_id, user_uuid, number, flow, timeout):
+    def _transfer(self, auth_token, user_id, user_uuid, number, flow, timeout=None):
         client = self._new_ctid_ng_client(auth_token)
         active_call = self._get_active_call(client)
         if not active_call:
