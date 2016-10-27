@@ -169,9 +169,8 @@ class CallManager(object):
 
     def transfer_blind(self, connection, auth_token, user_id, user_uuid, number, on_response=None):
         logger.info('transfer_blind: user %s is transferring a call to %s', user_uuid, number)
-        timeout = transfer_db.get_transfer_dial_timeout()
         error_handler = _TransferExceptionHandler(connection, user_uuid, number)
-        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'blind', timeout,
+        self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'blind',
                          _on_error=error_handler.handle,
                          _on_response=on_response)
 

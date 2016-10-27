@@ -155,9 +155,9 @@ class TestTransfers(_BaseTest):
     def test_transfer_blind(self):
         with synchronize(self._runner):
             with patch.object(self.manager, '_transfer') as transfer:
-                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number, SOME_TRANSFER_TIMEOUT)
+                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
 
-        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind', SOME_TRANSFER_TIMEOUT)
+        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
     @patch('xivo_cti.database.transfer_db.get_transfer_dial_timeout', Mock(return_value=SOME_TRANSFER_TIMEOUT))
     def test_transfer_blind_exceptions(self):
