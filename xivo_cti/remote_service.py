@@ -113,7 +113,7 @@ class RemoteServiceTracker(object):
         logger.debug('fetching %s %s from consul', service_name, uuid)
         returned_ids = set()
         for datacenter in self._finder._get_datacenters():
-            checks = self._checks(service_name, datacenter)
+            checks = self._finder._get_healthy(service_name, datacenter)
             logger.debug('%s: %s', datacenter, checks)
             for service in self._list_services(service_name, datacenter):
                 logger.debug('service: %s', service)
@@ -139,9 +139,6 @@ class RemoteServiceTracker(object):
 
         with self._services_lock:
             return list(self._services[service_name][uuid])
-
-    def _checks(self, service_name, datacenter):
-        return self._finder._get_healthy(service_name, datacenter)
 
     def _list_services(self, service_name, datacenter):
         headers = {'X-Consul-Token': self._get_token(datacenter)}
