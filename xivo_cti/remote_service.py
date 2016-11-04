@@ -107,10 +107,13 @@ class RemoteServiceTracker(object):
 
     def fetch_services(self, service_name, uuid):
         logger.debug('fetching %s %s from consul', service_name, uuid)
-        for service in self._finder.list_healthy_services(service_name):
-            if uuid not in service['ServiceTags']:
-                continue
-            yield RemoteService.from_consul_service(service)
+        try:
+            for service in self._finder.list_healthy_services(service_name):
+                if uuid not in service['ServiceTags']:
+                    continue
+                yield RemoteService.from_consul_service(service)
+        except ServiceDiscoveryError as e:
+            logger.info('failed to find %s %s: %s', service_name, uuid, str(e))
 
     def list_services_with_uuid(self, service_name, uuid):
         logger.debug('looking for service "%s" on %s', service_name, uuid)

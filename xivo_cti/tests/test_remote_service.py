@@ -347,11 +347,15 @@ class TestRemoteServiceTracker(unittest.TestCase):
 
     def setUp(self):
         self.uuid = 'e4d147b6-f747-4b64-955d-8c36fbcd1d3f'
-        self.tracker = remote_service.RemoteServiceTracker({'host': s.consul_host,
-                                                            'port': s.consul_port,
-                                                            'token': s.consul_token},
-                                                           'local-uuid',
-                                                           6666)
+        service_disco = {}
+        consul_conf = {'scheme': s.consul_scheme,
+                       'host': s.consul_host,
+                       'port': s.consul_port,
+                       'token': s.consul_token,
+                       'verify': s.consul_verify}
+        self.tracker = remote_service.RemoteServiceTracker(
+            consul_conf, 'local-uuid', 6666, service_disco)
+        self.finder = self.tracker._finder = Mock(remote_service.Finder)
 
         self.foobar_service = remote_service.RemoteService('foobar',
                                                            s.service_id,
@@ -365,62 +369,26 @@ class TestRemoteServiceTracker(unittest.TestCase):
         assert_that(services[0].to_dict(), equal_to({'host': 'localhost',
                                                      'port': 6666}))
 
-    def test_fetch_services_will_query_all_datacenters(self):
-        data_centers = ['dc1', 'dc2']
-        s1 = {u'Node': u'dc1',
-              u'ServiceName': u'xivo-ctid',
-              u'ServicePort': 9495,
-              u'ServiceID': s.service_id_1,
-              u'ServiceAddress': s.service_addr_1,
-              u'Address': u'127.0.0.1',
-              u'ServiceTags': [u'tag_1', u'tag_2', self.uuid]}
-        s2 = {u'Node': u'dc2',
-              u'ServiceName': u'xivo-ctid',
-              u'ServicePort': 9495,
-              u'ServiceID': s.service_id_2,
-              u'ServiceAddress': s.service_addr_2,
-              u'Address': u'127.0.0.1',
-              u'ServiceTags': [u'tag_1', u'tag_2', self.uuid]}
+    def test_fetch_services_will_query_its_finder(self):
+        s1, _ = self.finder.list_healthy_services.return_value = [
+            {'ServiceName': s.service_name,
+             'ServiceTags': [self.uuid],
+             'ServiceID': s.service_id,
+             'ServiceAddress': s.service_address,
+             'ServicePort': s.service_port},
+            {'ServiceTags': ['other-uuid']},
+        ]
 
-        with patch.object(self.tracker, '_consul_client') as consul_client:
-            catalog = consul_client.return_value.catalog
-            catalog.datacenters.return_value = data_centers
-            catalog.service.side_effect = lambda s, dc: ('index', [{'dc1': s1,
-                                                                    'dc2': s2}.get(dc)])
+        services = self.tracker.fetch_services(s.service_name, self.uuid)
 
-            services = self.tracker.fetch_services('foobar', self.uuid)
+        assert_that(services, contains(remote_service.RemoteService.from_consul_service(s1)))
 
-            assert_that(services, contains(remote_service.RemoteService.from_consul_service(s1),
-                                           remote_service.RemoteService.from_consul_service(s2)))
+    def test_fetch_errors_during_fetch_services(self):
+        self.finder.list_healthy_services.side_effect = remote_service.ServiceDiscoveryError
 
-    def test_fetch_services_will_not_track_duplicates(self):
-        data_centers = ['dc1', 'dc2']
-        s1 = {u'Node': u'dc1',
-              u'ServiceName': u'xivo-ctid',
-              u'ServicePort': 9495,
-              u'ServiceID': s.service_id_1,
-              u'ServiceAddress': s.service_addr_1,
-              u'Address': u'127.0.0.1',
-              u'ServiceTags': [u'tag_1', u'tag_2', self.uuid]}
-        s2 = {u'Node': u'dc2',
-              u'ServiceName': u'xivo-ctid',
-              u'ServicePort': 9495,
-              u'ServiceID': s.service_id_2,
-              u'ServiceAddress': s.service_addr_2,
-              u'Address': u'127.0.0.1',
-              u'ServiceTags': [u'tag_1', u'tag_2', self.uuid]}
+        services = self.tracker.fetch_services(s.service_name, self.uuid)
 
-        with patch.object(self.tracker, '_consul_client') as consul_client:
-            catalog = consul_client.return_value.catalog
-            catalog.datacenters.return_value = data_centers
-            # each config is returned twice
-            catalog.service.side_effect = lambda s, dc: ('index', map({'dc1': s1,
-                                                                       'dc2': s2}.get, [dc, dc]))
-
-            services = self.tracker.fetch_services('foobar', self.uuid)
-
-            assert_that(services, contains(remote_service.RemoteService.from_consul_service(s1),
-                                           remote_service.RemoteService.from_consul_service(s2)))
+        assert_that(list(services), empty())
 
     def test_that_list_services_will_fetch_from_consul_if_the_service_is_unknown(self):
         with patch.object(self.tracker, 'fetch_services', Mock(return_value=[self.foobar_service])) as fetch:
