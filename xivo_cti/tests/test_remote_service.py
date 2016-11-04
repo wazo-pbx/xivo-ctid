@@ -80,8 +80,7 @@ class TestRemoteService(unittest.TestCase):
         assert_that(service, equal_to(expected))
 
 
-@patch('xivo_cti.remote_service.requests')
-class TestRemoteServiceFinderGetHealthy(unittest.TestCase):
+class BaseFinderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.remote_tokens = {'dc1': 'dc1-token',
@@ -91,6 +90,49 @@ class TestRemoteServiceFinderGetHealthy(unittest.TestCase):
                               'port': 8500,
                               'host': 'localhost',
                               'verify': True}
+
+
+@patch('xivo_cti.remote_service.requests')
+class TestRemoteServiceFinderGetDatacenters(BaseFinderTestCase):
+
+    def test_that_the_url_matches_the_config(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        url_and_configs = [
+            ('http://localhost:8500/v1/catalog/datacenters', self.consul_config),
+            ('https://192.168.1.1:2155/v1/catalog/datacenters', {'scheme': 'https',
+                                                                 'host': '192.168.1.1',
+                                                                 'port': 2155}),
+        ]
+
+        for url, config in url_and_configs:
+            finder = remote_service.Finder(config, self.remote_tokens)
+            finder._get_datacenters()
+            requests.get.assert_called_once_with(url, verify=ANY)
+            requests.reset_mock()
+
+    def test_that_raises_if_not_200(self, requests):
+        requests.get.return_value = Mock(status_code=403, text='some error')
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        assert_that(calling(finder._get_datacenters), raises(Exception))
+
+    def test_that_health_uses_the_configured_verify(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        verify_and_configs = [
+            (True, self.consul_config),
+            (False, {'verify': False, 'scheme': 'https', 'host': '192.168.1.1', 'port': 2155}),
+        ]
+
+        for verify, config in verify_and_configs:
+            finder = remote_service.Finder(config, self.remote_tokens)
+            finder._get_datacenters()
+            requests.get.assert_called_once_with(ANY, verify=verify)
+            requests.reset_mock()
+
+
+@patch('xivo_cti.remote_service.requests')
+class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
 
     def test_that_get_healthy_uses_the_configured_dc_token(self, requests):
         requests.get.return_value = Mock(status_code=200)

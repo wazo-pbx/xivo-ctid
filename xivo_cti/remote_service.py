@@ -112,7 +112,7 @@ class RemoteServiceTracker(object):
     def fetch_services(self, service_name, uuid):
         logger.debug('fetching %s %s from consul', service_name, uuid)
         returned_ids = set()
-        for datacenter in self._datacenters():
+        for datacenter in self._finder._get_datacenters():
             checks = self._checks(service_name, datacenter)
             logger.debug('%s: %s', datacenter, checks)
             for service in self._list_services(service_name, datacenter):
@@ -154,12 +154,6 @@ class RemoteServiceTracker(object):
                 ids.add(service_id)
         return ids
 
-    def _datacenters(self):
-        response = requests.get('{}/catalog/datacenters'.format(self._url),
-                                verify=self._verify)
-        for datacenter in response.json():
-            yield datacenter
-
     def _list_services(self, service_name, datacenter):
         headers = {'X-Consul-Token': self._get_token(datacenter)}
         response = requests.get('{}/catalog/service/{}'.format(self._url, service_name),
@@ -185,6 +179,7 @@ class ServiceDiscoveryError(Exception):
 class Finder(object):
 
     def __init__(self, consul_config, remote_tokens):
+        self._dc_url = '{scheme}://{host}:{port}/v1/catalog/datacenters'.format(**consul_config)
         self._health_url = '{scheme}://{host}:{port}/v1/health/service'.format(**consul_config)
         self._verify = consul_config.get('verify', True)
         self._tokens = remote_tokens
@@ -193,6 +188,12 @@ class Finder(object):
     def _filter_health_services(self, service_name, query_result):
         return query_result
 
+    def _get_datacenters(self):
+        response = requests.get(self._dc_url,
+                                verify=self._verify)
+        self._assert_ok(response)
+        return response.json()
+
     def _get_healthy(self, service_name, datacenter):
         headers = {'X-Consul-Token': self._get_token(datacenter)}
         url = '{}/{}'.format(self._health_url, service_name)
@@ -200,12 +201,14 @@ class Finder(object):
                                 verify=self._verify,
                                 params={'dc': datacenter, 'passing': True},
                                 headers=headers)
-
-        if response.status_code != 200:
-            msg = getattr(response, 'text', 'unknown error')
-            raise ServiceDiscoveryError(msg)
-
+        self._assert_ok(response)
         return self._filter_health_services(service_name, response.json())
 
     def _get_token(self, datacenter):
         return self._tokens.get(datacenter, self._local_token)
+
+    @staticmethod
+    def _assert_ok(response, code=200):
+        if response.status_code != code:
+            msg = getattr(response, 'text', 'unknown error')
+            raise ServiceDiscoveryError(msg)
