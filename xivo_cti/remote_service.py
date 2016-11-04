@@ -95,6 +95,7 @@ class RemoteServiceTracker(object):
         self._verify = consul_config['verify']
         self._tokens = service_discovery_config.get('tokens', {})
         self._local_token = consul_config['token']
+        self._finder = Finder(consul_config, service_discovery_config.get('tokens', {}))
 
     def add_service_node(self, service_name, uuid, service):
         logger.info('adding service %s %s', service, uuid)
@@ -114,7 +115,7 @@ class RemoteServiceTracker(object):
         for datacenter in self._datacenters():
             checks = self._checks(service_name, datacenter)
             logger.debug('%s: %s', datacenter, checks)
-            for service in self._service(service_name, datacenter):
+            for service in self._list_services(service_name, datacenter):
                 logger.debug('service: %s', service)
                 service_id = service['ServiceID']
                 if service_id not in checks:
@@ -140,14 +141,8 @@ class RemoteServiceTracker(object):
             return list(self._services[service_name][uuid])
 
     def _checks(self, service_name, datacenter):
-        headers = {'X-Consul-Token': self._get_token(datacenter)}
-        response = requests.get('{}/health/service/{}'.format(self._url, service_name),
-                                verify=self._verify,
-                                params={'dc': datacenter, 'passing': True},
-                                headers=headers)
-
         ids = set()
-        for node in response.json():
+        for node in self._finder._get_healthy(service_name, datacenter):
             for check in node.get('Checks', []):
                 if check.get('ServiceName') != service_name:
                     logger.debug('skipping %s does not match %s', check, service_name)
@@ -165,7 +160,7 @@ class RemoteServiceTracker(object):
         for datacenter in response.json():
             yield datacenter
 
-    def _service(self, service_name, datacenter):
+    def _list_services(self, service_name, datacenter):
         headers = {'X-Consul-Token': self._get_token(datacenter)}
         response = requests.get('{}/catalog/service/{}'.format(self._url, service_name),
                                 verify=self._verify,
@@ -178,6 +173,39 @@ class RemoteServiceTracker(object):
 
         for service in response.json():
             yield service
+
+    def _get_token(self, datacenter):
+        return self._tokens.get(datacenter, self._local_token)
+
+
+class ServiceDiscoveryError(Exception):
+    pass
+
+
+class Finder(object):
+
+    def __init__(self, consul_config, remote_tokens):
+        self._health_url = '{scheme}://{host}:{port}/v1/health/service'.format(**consul_config)
+        self._verify = consul_config.get('verify', True)
+        self._tokens = remote_tokens
+        self._local_token = consul_config.get('token')
+
+    def _filter_health_services(self, service_name, query_result):
+        return query_result
+
+    def _get_healthy(self, service_name, datacenter):
+        headers = {'X-Consul-Token': self._get_token(datacenter)}
+        url = '{}/{}'.format(self._health_url, service_name)
+        response = requests.get(url,
+                                verify=self._verify,
+                                params={'dc': datacenter, 'passing': True},
+                                headers=headers)
+
+        if response.status_code != 200:
+            msg = getattr(response, 'text', 'unknown error')
+            raise ServiceDiscoveryError(msg)
+
+        return self._filter_health_services(service_name, response.json())
 
     def _get_token(self, datacenter):
         return self._tokens.get(datacenter, self._local_token)
