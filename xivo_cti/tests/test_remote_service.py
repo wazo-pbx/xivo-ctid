@@ -236,6 +236,113 @@ class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
                     raises(Exception))
 
 
+class TestRemoteServiceFinderListHealthyServices(BaseFinderTestCase):
+
+    def test_that_all_datacenters_are_searched(self):
+        dcs = ['dc1', 'dc2', 'dc3']
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        with patch.object(finder, '_get_datacenters', Mock(return_value=dcs)):
+            with patch.object(finder, '_get_healthy') as get_healthy:
+                with patch.object(finder, '_list_services') as list_services:
+                    finder.list_healthy_services(s.service_name)
+
+        for dc in dcs:
+            get_healthy.assert_any_call(s.service_name, dc)
+            list_services.assert_any_call(s.service_name, dc)
+
+    def test_that_only_healthy_services_are_returned(self):
+        s1, s2 = services = [
+            {'ServiceID': 1},
+            {'ServiceID': 42},
+        ]
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        with patch.object(finder, '_get_datacenters', Mock(return_value=['dc1'])):
+            with patch.object(finder, '_get_healthy', Mock(return_value=[42])):
+                with patch.object(finder, '_list_services', Mock(return_value=services)):
+                    result = finder.list_healthy_services(s.service_name)
+
+        assert_that(result, contains(s2))
+
+
+@patch('xivo_cti.remote_service.requests')
+class TestRemoteServiceFinderListServices(BaseFinderTestCase):
+
+    def test_that_uses_the_configured_dc_token(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        for dc, token in [('dc1', 'dc1-token'), ('dc3', 'master-token')]:
+            finder._list_services('foobar', dc)
+            expected = {'X-Consul-Token': token}
+            requests.get.assert_called_once_with(ANY,
+                                                 headers=expected,
+                                                 verify=ANY,
+                                                 params=ANY)
+            requests.reset_mock()
+
+    def test_that_url_matches_the_config(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        url_and_configs = [
+            ('http://localhost:8500/v1/catalog/service/foobar', self.consul_config),
+            ('https://192.168.1.1:2155/v1/catalog/service/foobar', {'scheme': 'https',
+                                                                   'host': '192.168.1.1',
+                                                                   'port': 2155}),
+        ]
+
+        for url, config in url_and_configs:
+            finder = remote_service.Finder(config, self.remote_tokens)
+            finder._list_services('foobar', s.dc)
+            requests.get.assert_called_once_with(url, headers=ANY, verify=ANY, params=ANY)
+            requests.reset_mock()
+
+    def test_that_uses_the_configured_verify(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        verify_and_configs = [
+            (True, self.consul_config),
+            (False, {'verify': False, 'scheme': 'https', 'host': '192.168.1.1', 'port': 2155}),
+        ]
+
+        for verify, config in verify_and_configs:
+            finder = remote_service.Finder(config, self.remote_tokens)
+            finder._list_services('foobar', s.dc)
+            requests.get.assert_called_once_with(ANY, headers=ANY, verify=verify, params=ANY)
+            requests.reset_mock()
+
+    def test_that_results_is_the_returned_json(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        result = finder._list_services('foobar', s.dc)
+
+        assert_that(result, equal_to(requests.get().json.return_value))
+
+    def test_that_params_are_based_on_the_datacenter(self, requests):
+        requests.get.return_value = Mock(status_code=200)
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        for dc in ['dc1', 'dc2']:
+            finder._list_services('foobar', dc)
+            expected = {'dc': dc}
+            requests.get.assert_called_once_with(ANY,
+                                                 headers=ANY,
+                                                 verify=ANY,
+                                                 params=expected)
+            requests.reset_mock()
+
+    def test_that_raises_if_not_200(self, requests):
+        requests.get.return_value = Mock(status_code=403, text='some error')
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        assert_that(calling(finder._list_services).with_args('foobar', 'dc1'),
+                    raises(Exception))
+
+
 class TestRemoteServiceTracker(unittest.TestCase):
 
     def setUp(self):

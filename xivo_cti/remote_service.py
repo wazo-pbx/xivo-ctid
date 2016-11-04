@@ -91,10 +91,6 @@ class RemoteServiceTracker(object):
         self._services = defaultdict(lambda: defaultdict(set))
         self._services_lock = threading.Lock()
         self.add_service_node('xivo-ctid', local_uuid, this_xivo_ctid)
-        self._url = '{scheme}://{host}:{port}/v1'.format(**consul_config)
-        self._verify = consul_config['verify']
-        self._tokens = service_discovery_config.get('tokens', {})
-        self._local_token = consul_config['token']
         self._finder = Finder(consul_config, service_discovery_config.get('tokens', {}))
 
     def add_service_node(self, service_name, uuid, service):
@@ -111,25 +107,10 @@ class RemoteServiceTracker(object):
 
     def fetch_services(self, service_name, uuid):
         logger.debug('fetching %s %s from consul', service_name, uuid)
-        returned_ids = set()
-        for datacenter in self._finder._get_datacenters():
-            checks = self._finder._get_healthy(service_name, datacenter)
-            logger.debug('%s: %s', datacenter, checks)
-            for service in self._list_services(service_name, datacenter):
-                logger.debug('service: %s', service)
-                service_id = service['ServiceID']
-                if service_id not in checks:
-                    logger.debug('skipping: not in checks %s', checks)
-                    continue
-                if uuid not in service['ServiceTags']:
-                    logger.debug('skipping: not the good uuid %s', service['ServiceTags'])
-                    continue
-                if service_id in returned_ids:
-                    logger.debug('skipping: already returned')
-                    continue
-
-                returned_ids.add(service_id)
-                yield RemoteService.from_consul_service(service)
+        for service in self._finder.list_healthy_services(service_name):
+            if uuid not in service['ServiceTags']:
+                continue
+            yield RemoteService.from_consul_service(service)
 
     def list_services_with_uuid(self, service_name, uuid):
         logger.debug('looking for service "%s" on %s', service_name, uuid)
@@ -139,23 +120,6 @@ class RemoteServiceTracker(object):
 
         with self._services_lock:
             return list(self._services[service_name][uuid])
-
-    def _list_services(self, service_name, datacenter):
-        headers = {'X-Consul-Token': self._get_token(datacenter)}
-        response = requests.get('{}/catalog/service/{}'.format(self._url, service_name),
-                                verify=self._verify,
-                                params={'dc': datacenter},
-                                headers=headers)
-        if response.status_code != 200:
-            logger.info('failed to retrieve %s from %s: %s',
-                        service_name, datacenter, response.text)
-            return
-
-        for service in response.json():
-            yield service
-
-    def _get_token(self, datacenter):
-        return self._tokens.get(datacenter, self._local_token)
 
 
 class ServiceDiscoveryError(Exception):
@@ -167,9 +131,20 @@ class Finder(object):
     def __init__(self, consul_config, remote_tokens):
         self._dc_url = '{scheme}://{host}:{port}/v1/catalog/datacenters'.format(**consul_config)
         self._health_url = '{scheme}://{host}:{port}/v1/health/service'.format(**consul_config)
+        self._service_url = '{scheme}://{host}:{port}/v1/catalog/service'.format(**consul_config)
         self._verify = consul_config.get('verify', True)
         self._tokens = remote_tokens
         self._local_token = consul_config.get('token')
+
+    def list_healthy_services(self, service_name):
+        services = []
+        for dc in self._get_datacenters():
+            healthy = self._get_healthy(service_name, dc)
+            for service in self._list_services(service_name, dc):
+                if service.get('ServiceID') not in healthy:
+                    continue
+                services.append(service)
+        return services
 
     def _filter_health_services(self, service_name, query_result):
         ids = set()
@@ -201,6 +176,13 @@ class Finder(object):
 
     def _get_token(self, datacenter):
         return self._tokens.get(datacenter, self._local_token)
+
+    def _list_services(self, service_name, datacenter):
+        headers = {'X-Consul-Token': self._get_token(datacenter)}
+        url = '{}/{}'.format(self._service_url, service_name)
+        response = requests.get(url, verify=self._verify, params={'dc': datacenter}, headers=headers)
+        self._assert_ok(response)
+        return response.json()
 
     @staticmethod
     def _assert_ok(response, code=200):
