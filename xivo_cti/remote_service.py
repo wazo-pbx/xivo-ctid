@@ -141,18 +141,7 @@ class RemoteServiceTracker(object):
             return list(self._services[service_name][uuid])
 
     def _checks(self, service_name, datacenter):
-        ids = set()
-        for node in self._finder._get_healthy(service_name, datacenter):
-            for check in node.get('Checks', []):
-                if check.get('ServiceName') != service_name:
-                    logger.debug('skipping %s does not match %s', check, service_name)
-                    continue
-                service_id = check.get('ServiceID')
-                if not service_id:
-                    logger.debug('skipping %s no service id', check)
-                    continue
-                ids.add(service_id)
-        return ids
+        return self._finder._get_healthy(service_name, datacenter)
 
     def _list_services(self, service_name, datacenter):
         headers = {'X-Consul-Token': self._get_token(datacenter)}
@@ -186,7 +175,16 @@ class Finder(object):
         self._local_token = consul_config.get('token')
 
     def _filter_health_services(self, service_name, query_result):
-        return query_result
+        ids = set()
+        for node in query_result:
+            for check in node.get('Checks', []):
+                service_id = check.get('ServiceID')
+                if not service_id:
+                    continue
+                if service_name != check.get('ServiceName'):
+                    continue
+                ids.add(service_id)
+        return list(ids)
 
     def _get_datacenters(self):
         response = requests.get(self._dc_url,

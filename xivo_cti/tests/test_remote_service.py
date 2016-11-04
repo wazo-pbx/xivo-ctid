@@ -92,6 +92,29 @@ class BaseFinderTestCase(unittest.TestCase):
                               'verify': True}
 
 
+class TestRemoteServiceFinderFilterHealthServices(BaseFinderTestCase):
+
+    def test_that_no_service_id_is_not_included(self):
+        nodes = [{'Checks': [{'ServiceID': '', 'ServiceName': 'foobar'},
+                             {'ServiceID': 'theserviceid', 'ServiceName': 'foobar'}]}]
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        result = finder._filter_health_services('foobar', nodes)
+
+        assert_that(result, contains('theserviceid'))
+
+    def test_that_other_service_name_is_not_included(self):
+        nodes = [{'Checks': [{'ServiceID': 1, 'ServiceName': 'other'},
+                             {'ServiceID': 2, 'ServiceName': 'foobar'}]}]
+
+        finder = remote_service.Finder(self.consul_config, self.remote_tokens)
+
+        result = finder._filter_health_services('foobar', nodes)
+
+        assert_that(result, contains(2))
+
+
 @patch('xivo_cti.remote_service.requests')
 class TestRemoteServiceFinderGetDatacenters(BaseFinderTestCase):
 
@@ -136,10 +159,12 @@ class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
 
     def test_that_get_healthy_uses_the_configured_dc_token(self, requests):
         requests.get.return_value = Mock(status_code=200)
+
         finder = remote_service.Finder(self.consul_config, self.remote_tokens)
 
         for dc, token in [('dc1', 'dc1-token'), ('dc3', 'master-token')]:
-            finder._get_healthy('foobar', dc)
+            with patch.object(finder, '_filter_health_services'):
+                finder._get_healthy('foobar', dc)
             expected = {'X-Consul-Token': token}
             requests.get.assert_called_once_with(ANY,
                                                  headers=expected,
@@ -158,7 +183,8 @@ class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
 
         for url, config in url_and_configs:
             finder = remote_service.Finder(config, self.remote_tokens)
-            finder._get_healthy('foobar', s.dc)
+            with patch.object(finder, '_filter_health_services'):
+                finder._get_healthy('foobar', s.dc)
             requests.get.assert_called_once_with(url, headers=ANY, verify=ANY, params=ANY)
             requests.reset_mock()
 
@@ -171,7 +197,8 @@ class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
 
         for verify, config in verify_and_configs:
             finder = remote_service.Finder(config, self.remote_tokens)
-            finder._get_healthy('foobar', s.dc)
+            with patch.object(finder, '_filter_health_services'):
+                finder._get_healthy('foobar', s.dc)
             requests.get.assert_called_once_with(ANY, headers=ANY, verify=verify, params=ANY)
             requests.reset_mock()
 
@@ -191,7 +218,8 @@ class TestRemoteServiceFinderGetHealthy(BaseFinderTestCase):
         finder = remote_service.Finder(self.consul_config, self.remote_tokens)
 
         for dc in ['dc1', 'dc2']:
-            finder._get_healthy('foobar', dc)
+            with patch.object(finder, '_filter_health_services'):
+                finder._get_healthy('foobar', dc)
             expected = {'dc': dc, 'passing': True}
             requests.get.assert_called_once_with(ANY,
                                                  headers=ANY,
