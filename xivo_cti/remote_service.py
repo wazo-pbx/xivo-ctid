@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2015 Avencall
+# Copyright (C) 2016 Proformatique, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,9 +18,9 @@
 
 import logging
 import threading
-
 from collections import defaultdict
-from consul import Consul
+
+from xivo.consul_helpers import ServiceFinder as Finder, ServiceDiscoveryError
 
 logger = logging.getLogger(__name__)
 
@@ -85,15 +86,15 @@ class RemoteService(object):
 
 class RemoteServiceTracker(object):
 
-    def __init__(self, consul_config, local_uuid, http_port):
-        self._consul_config = consul_config
+    def __init__(self, consul_config, local_uuid, http_port, service_discovery_config):
         this_xivo_ctid = RemoteService('xivo-ctid', None, 'localhost', http_port, ['xivo-ctid', local_uuid])
         self._services = defaultdict(lambda: defaultdict(set))
         self._services_lock = threading.Lock()
         self.add_service_node('xivo-ctid', local_uuid, this_xivo_ctid)
+        self._finder = Finder(consul_config, service_discovery_config.get('tokens', {}))
 
     def add_service_node(self, service_name, uuid, service):
-        logger.debug('adding service %s %s', service, uuid)
+        logger.info('adding service %s %s', service, uuid)
         with self._services_lock:
             self._services[service_name][uuid].add(service)
 
@@ -106,15 +107,13 @@ class RemoteServiceTracker(object):
 
     def fetch_services(self, service_name, uuid):
         logger.debug('fetching %s %s from consul', service_name, uuid)
-        client = self._consul_client()
-        returned_ids = set()
-        for dc in client.catalog.datacenters():
-            _, services = client.catalog.service(service_name, dc=dc)
-            for service in services:
-                service_id = service['ServiceID']
-                if uuid in service['ServiceTags'] and service_id not in returned_ids:
-                    returned_ids.add(service_id)
-                    yield RemoteService.from_consul_service(service)
+        try:
+            for service in self._finder.list_healthy_services(service_name):
+                if uuid not in service['ServiceTags']:
+                    continue
+                yield RemoteService.from_consul_service(service)
+        except ServiceDiscoveryError as e:
+            logger.info('failed to find %s %s: %s', service_name, uuid, str(e))
 
     def list_services_with_uuid(self, service_name, uuid):
         logger.debug('looking for service "%s" on %s', service_name, uuid)
@@ -124,6 +123,3 @@ class RemoteServiceTracker(object):
 
         with self._services_lock:
             return list(self._services[service_name][uuid])
-
-    def _consul_client(self):
-        return Consul(**self._consul_config)

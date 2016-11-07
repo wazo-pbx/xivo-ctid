@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2012-2016 Avencall
+# Copyright (C) 2016 Proformatique, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -130,7 +131,8 @@ def setup(xivo_uuid):
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   xivo_uuid,
-                                                  config['rest_api']['http']['port'])
+                                                  config['rest_api']['http']['port'],
+                                                  config['service_discovery'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
 
