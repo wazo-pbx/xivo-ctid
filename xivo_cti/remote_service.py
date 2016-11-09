@@ -86,12 +86,12 @@ class RemoteService(object):
 
 class RemoteServiceTracker(object):
 
-    def __init__(self, consul_config, local_uuid, http_port, service_discovery_config):
+    def __init__(self, consul_config, local_uuid, http_port):
         this_xivo_ctid = RemoteService('xivo-ctid', None, 'localhost', http_port, ['xivo-ctid', local_uuid])
         self._services = defaultdict(lambda: defaultdict(set))
         self._services_lock = threading.Lock()
         self.add_service_node('xivo-ctid', local_uuid, this_xivo_ctid)
-        self._finder = Finder(consul_config, service_discovery_config.get('tokens', {}))
+        self._finder = Finder(consul_config)
 
     def add_service_node(self, service_name, uuid, service):
         logger.info('adding service %s %s', service, uuid)
