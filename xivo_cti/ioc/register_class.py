@@ -131,8 +131,7 @@ def setup(xivo_uuid):
 
     remote_service_tracker = RemoteServiceTracker(config['consul'],
                                                   xivo_uuid,
-                                                  config['rest_api']['http']['port'],
-                                                  config['service_discovery'])
+                                                  config['rest_api']['http']['port'])
 
     thread_pool_executor = futures.ThreadPoolExecutor(max_workers=10)
 

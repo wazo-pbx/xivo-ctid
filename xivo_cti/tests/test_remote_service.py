@@ -84,14 +84,13 @@ class TestRemoteServiceTracker(unittest.TestCase):
 
     def setUp(self):
         self.uuid = 'e4d147b6-f747-4b64-955d-8c36fbcd1d3f'
-        service_disco = {}
         consul_conf = {'scheme': s.consul_scheme,
                        'host': s.consul_host,
                        'port': s.consul_port,
                        'token': s.consul_token,
                        'verify': s.consul_verify}
         self.tracker = remote_service.RemoteServiceTracker(
-            consul_conf, 'local-uuid', 6666, service_disco)
+            consul_conf, 'local-uuid', 6666)
         self.finder = self.tracker._finder = Mock(remote_service.Finder)
 
         self.foobar_service = remote_service.RemoteService('foobar',
