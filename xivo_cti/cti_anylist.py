@@ -98,7 +98,6 @@ class AnyList(object):
             'on_call_acd': False,
             'on_wrapup': False,
             'queues': [],
-            'groups': []
         },
         'queues': {
             'agentmembers': [],

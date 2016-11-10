@@ -32,7 +32,6 @@ _OBJECTS = [
     'phone',
     'agent',
     'queue',
-    'group',
     'meetme',
     'voicemail',
 ]
