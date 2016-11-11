@@ -62,12 +62,11 @@ class TestRemoteService(unittest.TestCase):
 
     def test_from_consul_service(self):
         consul_service = {u'Node': u'some_consul_host',
-                          u'ServiceName': u'xivo-ctid',
-                          u'ServicePort': 9495,
-                          u'ServiceID': s.service_id,
-                          u'ServiceAddress': s.service_addr,
-                          u'Address': u'127.0.0.1',
-                          u'ServiceTags': [u'tag_1', u'tag_2']}
+                          u'Service': u'xivo-ctid',
+                          u'Port': 9495,
+                          u'ID': s.service_id,
+                          u'Address': s.service_addr,
+                          u'Tags': [u'tag_1', u'tag_2']}
 
         service = remote_service.RemoteService.from_consul_service(consul_service)
 
@@ -107,12 +106,12 @@ class TestRemoteServiceTracker(unittest.TestCase):
 
     def test_fetch_services_will_query_its_finder(self):
         s1, _ = self.finder.list_healthy_services.return_value = [
-            {'ServiceName': s.service_name,
-             'ServiceTags': [self.uuid],
-             'ServiceID': s.service_id,
-             'ServiceAddress': s.service_address,
-             'ServicePort': s.service_port},
-            {'ServiceTags': ['other-uuid']},
+            {'Service': s.service_name,
+             'Tags': [self.uuid],
+             'ID': s.service_id,
+             'Address': s.service_address,
+             'Port': s.service_port},
+            {'Tags': ['other-uuid']},
         ]
 
         services = self.tracker.fetch_services(s.service_name, self.uuid)

@@ -77,11 +77,11 @@ class RemoteService(object):
 
     @classmethod
     def from_consul_service(cls, consul_service):
-        return cls(consul_service['ServiceName'],
-                   consul_service['ServiceID'],
-                   consul_service['ServiceAddress'],
-                   consul_service['ServicePort'],
-                   consul_service['ServiceTags'])
+        return cls(consul_service['Service'],
+                   consul_service['ID'],
+                   consul_service['Address'],
+                   consul_service['Port'],
+                   consul_service['Tags'])
 
 
 class RemoteServiceTracker(object):
@@ -109,7 +109,7 @@ class RemoteServiceTracker(object):
         logger.debug('fetching %s %s from consul', service_name, uuid)
         try:
             for service in self._finder.list_healthy_services(service_name):
-                if uuid not in service['ServiceTags']:
+                if uuid not in service['Tags']:
                     continue
                 yield RemoteService.from_consul_service(service)
         except ServiceDiscoveryError as e:
