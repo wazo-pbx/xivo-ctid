@@ -25,7 +25,6 @@ from hamcrest import equal_to
 from hamcrest import empty
 from hamcrest import none
 
-from xivo_cti.database import statistics as statistic_switchboard_dao
 from xivo_cti.database import transfer_db as transfer_dao
 from xivo_cti.database import user_db as user_dao
 from xivo_dao.alchemy.callfilter import Callfilter
@@ -41,7 +40,6 @@ from xivo_dao.alchemy.phonefunckey import PhoneFunckey
 from xivo_dao.alchemy.queuemember import QueueMember
 from xivo_dao.alchemy.rightcallmember import RightCallMember
 from xivo_dao.alchemy.schedulepath import SchedulePath
-from xivo_dao.alchemy.stat_switchboard_queue import StatSwitchboardQueue
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.tests import test_dao
 from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
@@ -75,19 +73,6 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
     def tearDownClass(cls):
         super(TestDatabaseDAO, cls).tearDownClass()
         _IntegrationUser.tearDownClass()
-
-    def test_insert_switchboard_call(self):
-        queue_id = self.add_queuefeatures(name='foobar').id
-        t = time.time()
-
-        statistic_switchboard_dao.insert_switchboard_call(t, 'forwarded', 42.25, 'foobar')
-
-        call = self.session.query(StatSwitchboardQueue).first()
-
-        assert_that(call.time, equal_to(datetime.fromtimestamp(t)))
-        assert_that(call.end_type, equal_to('forwarded'))
-        assert_that(call.wait_time, equal_to(42.25))
-        assert_that(call.queue_id, equal_to(queue_id))
 
     def test_get_transfer_dial_timeout(self):
         feature = Features()

@@ -41,7 +41,6 @@ from xivo_cti.services.current_call.manager import ON_HOLD
 from xivo_cti.services.current_call.manager import PEER_CHANNEL
 from xivo_cti.services.current_call.manager import TRANSFER_CHANNEL
 from xivo_cti.services.device.manager import DeviceManager
-from xivo_cti.statistics.switchboard import Dispatcher
 from xivo_cti import xivo_ami
 
 
@@ -54,7 +53,6 @@ class _BaseTestCase(unittest.TestCase):
         self.ami_class = Mock(xivo_ami.AMIClass)
         self.call_manager = Mock(CallManager)
         self.call_storage = Mock(CallStorage)
-        self.switchboard_statistic_dispatcher = Mock(Dispatcher)
         self.bus_listener = Mock()
         self.task_queue = Mock()
 
@@ -65,7 +63,6 @@ class _BaseTestCase(unittest.TestCase):
             self.device_manager,
             self.call_manager,
             self.call_storage,
-            self.switchboard_statistic_dispatcher,
             self.bus_listener,
             self.task_queue,
         )
@@ -482,7 +479,7 @@ class TestCurrentCallManager(_BaseTestCase):
             self.manager.switchboard_hold(s.connection, s.token, s.user_id, s.user_uuid, s.queue_name)
 
         mock_queue_dao.get_number_context_from_name.assert_called_once_with(s.queue_name)
-        call_manager.transfer_blind.assert_called_once_with(s.connection, s.token, s.user_id, s.user_uuid, s.queue_number, ANY)
+        call_manager.transfer_blind.assert_called_once_with(s.connection, s.token, s.user_id, s.user_uuid, s.queue_number)
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
     @patch('xivo_cti.services.current_call.manager.dao')
