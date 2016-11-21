@@ -11,7 +11,7 @@ Homepage: http://xivo.io/
 Package: xivo-ctid
 Architecture: all
 Pre-Depends: xivo-libctid (>= ${binary:Version})
-Depends: ${python:Depends}, ${misc:Depends}
+Depends: ${python:Depends}, ${misc:Depends}, adduser, asterisk
 Provides: pf-xivo-cti-server
 Replaces: pf-xivo-cti-server
 Conflicts: pf-xivo-cti-server, pf-xivo-queues-logger

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2007-2016 Avencall
+# Copyright (C) 2016 Proformatique Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +24,7 @@ import xivo_dao
 from functools import partial
 from xivo.config_helper import get_xivo_uuid
 from xivo.consul_helpers import ServiceCatalogRegistration
+from xivo.user_rights import change_user
 from xivo.xivo_logging import setup_logging, silence_loggers
 
 from xivo_cti import config
@@ -40,6 +42,10 @@ def main():
     cti_config.init_auth_config()
     xivo_dao.init_db_from_config(config)
     cti_config.update_db_config()
+
+    user = config.get('user')
+    if user:
+        change_user(user)
 
     setup_logging(config['logfile'], config['foreground'], config['debug'])
     silence_loggers(['amqp', 'urllib3', 'Flask-Cors', 'kombu', 'stevedore.extension'], logging.WARNING)
