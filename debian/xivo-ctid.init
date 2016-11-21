@@ -16,7 +16,7 @@ set -e
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DAEMONNAME=xivo-ctid
 DAEMON=/usr/bin/$DAEMONNAME
-PIDFILE=/var/run/$DAEMONNAME.pid
+PIDFILE=/var/run/xivo-ctid/$DAEMONNAME.pid
 XIVO_DEFAULT_FILE="/etc/default/xivo"
 
 . /lib/lsb/init-functions
@@ -42,6 +42,7 @@ case "$1" in
   start)
     is_enabled
     log_daemon_msg "Starting" "$DAEMONNAME"
+    install -d -o xivo-ctid -g xivo-ctid /var/run/xivo-ctid
     if start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --exec $DAEMON;
     then
         log_end_msg 0

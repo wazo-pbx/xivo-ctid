@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2007-2016 Avencall
+# Copyright (C) 2016 Proformatique Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,11 +36,12 @@ logger = logging.getLogger('cti_config')
 _default_config = {
     'debug': False,
     'foreground': False,
-    'pidfile': '/var/run/%s.pid' % xivo_cti.DAEMONNAME,
+    'pidfile': '/var/run/xivo-ctid/%s.pid' % xivo_cti.DAEMONNAME,
     'logfile': '/var/log/%s.log' % xivo_cti.DAEMONNAME,
     'db_uri': 'postgresql://asterisk:proformatique@localhost/asterisk',
     'config_file': '/etc/xivo-ctid/config.yml',
     'extra_config_files': '/etc/xivo-ctid/conf.d/',
+    'user': 'xivo-ctid',
     'socket_timeout': 10,
     'client': {
         'listen': '0.0.0.0',

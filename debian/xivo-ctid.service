@@ -6,8 +6,9 @@ Before=monit.service
 
 [Service]
 Type=forking
+ExecStartPre=/usr/bin/install -d -o xivo-ctid -g xivo-ctid /var/run/xivo-ctid
 ExecStart=/usr/bin/xivo-ctid
-PIDFile=/var/run/xivo-ctid.pid
+PIDFile=/var/run/xivo-ctid/xivo-ctid.pid
 
 [Install]
 WantedBy=multi-user.target

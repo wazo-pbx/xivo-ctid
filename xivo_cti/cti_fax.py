@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2007-2015 Avencall
+# Copyright (C) 2016 Proformatique Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,9 +26,7 @@ from xivo_cti.ioc.context import context
 
 logger = logging.getLogger(__name__)
 
-PATH_SPOOL_ASTERISK = '/var/spool/asterisk'
-PATH_SPOOL_ASTERISK_FAX = PATH_SPOOL_ASTERISK + '/fax'
-PATH_SPOOL_ASTERISK_TMP = PATH_SPOOL_ASTERISK + '/tmp'
+PATH_SPOOL = '/var/spool/xivo-ctid/fax'
 PDF2FAX = '/usr/bin/xivo_pdf2fax'
 
 
@@ -42,7 +41,7 @@ class asyncActionsThread(threading.Thread):
     def decodefile(self):
         decodedfile = base64.b64decode(self.params.get('rawfile').strip())
         filename = 'astsendfax-%s' % self.params.get('fileid')
-        self.tmpfilepath = '%s/%s' % (PATH_SPOOL_ASTERISK_TMP, filename)
+        self.tmpfilepath = '%s/%s' % (PATH_SPOOL, filename)
         z = open(self.tmpfilepath, 'w')
         z.write(decodedfile)
         z.close()
@@ -91,7 +90,7 @@ class Fax(object):
         self.callerid = 'anonymous'
 
         filename = 'astsendfax-%s' % self.fileid
-        self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL_ASTERISK_TMP, filename)
+        self.faxfilepath = '%s/%s.tif' % (PATH_SPOOL, filename)
 
     def setfaxparameters(self, userid, context, number):
         self.userid = userid

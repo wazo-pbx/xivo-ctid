@@ -5,6 +5,9 @@
 
 set -e
 
+LOG_FILENAME="/var/log/xivo-ctid.log"
+USER="xivo-ctid"
+
 case "$1" in
     configure)
         if [ -d /etc/pf-xivo/xivo-ctid ]; then
@@ -30,6 +33,22 @@ EOF
                 fi
             )
         fi
+
+        if ! getent passwd $USER > /dev/null; then
+            echo "Adding system user $USER" 1>&2
+            adduser --quiet --system --group --no-create-home \
+                --home /var/lib/xivo-ctid \
+                $USER
+            adduser --quiet $USER www-data
+        fi
+
+        if [ ! -e "$LOG_FILENAME" ]; then
+            touch "$LOG_FILENAME"
+        fi
+
+        chown "$USER:$USER" "$LOG_FILENAME"
+
+        install -d -o "$USER" -g asterisk -m 770 /var/spool/xivo-ctid/fax
     ;;
     abort-upgrade|abort-remove|abort-deconfigure)
 

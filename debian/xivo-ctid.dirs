@@ -1,1 +1,2 @@
 etc/xivo-ctid/conf.d
+var/spool/xivo-ctid
