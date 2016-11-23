@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2013-2016 Avencall
+# Copyright (C) 2016 Proformatique, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -435,16 +436,6 @@ class CTIServer(object):
         callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
         callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
-
-        parser = context.get('switchboard_statistic_ami_parser')
-        callback_handler.register_callback('QueueCallerAbandon', parser.on_queue_caller_abandon)
-        callback_handler.register_callback('QueueCallerJoin', parser.on_queue_caller_join)
-        callback_handler.register_callback('QueueCallerLeave', parser.on_queue_caller_leave)
-        callback_handler.register_callback('CEL', parser.on_cel)
-        callback_handler.register_callback('BridgeEnter', parser.on_bridge_enter)
-        callback_handler.register_callback('VarSet', parser.on_set_var)
-
-        context.get('switchboard_statistic_bus_parser').register_callbacks()
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)
