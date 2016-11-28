@@ -9,7 +9,7 @@ sqlalchemy==0.9.8
 -e ..
 
 # dependencies for xivo-ctid db code
-git+https://github.com/xivo-pbx/xivo-dao.git
-git+https://github.com/xivo-pbx/xivo-lib-python.git
+git+https://github.com/wazo-pbx/xivo-dao.git
+git+https://github.com/wazo-pbx/xivo-lib-python.git
 
 xivo-test-helpers>=0.1.4
