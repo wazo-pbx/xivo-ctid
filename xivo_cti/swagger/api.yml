@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: XiVO CTId
+  title: Wazo CTId
   description: Computer Telephony Integration REST service
   version: '0.1'
   license:
@@ -8,8 +8,8 @@ info:
     url: http://www.gnu.org/licenses/gpl.txt
   contact:
     name: Dev Team
-    url: http://xivo.io
-    email: dev@avencall.com
+    url: http://wazo.community
+    email: dev.wazo@gmail.com
 x-xivo-name: ctid
 x-xivo-port: 9495
 schemes:
@@ -94,7 +94,7 @@ definitions:
       uuid:
         type: string
         format: uuid
-        description: Unique ID for the XiVO server
+        description: Unique ID for the Wazo server
       cti_protocol_version:
         type: string
         description: The CTI protocol version used by this server
