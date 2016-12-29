@@ -1,12 +1,10 @@
 Source: xivo-ctid
 Section: python
 Priority: extra
-Maintainer: XiVO Dev Team <dev+pkg@proformatique.com>
-Uploaders: XiVO Builder Team <dev+pkg@proformatique.com>
+Maintainer: Wazo Maintainers <dev.wazo@gmail.com>
 Build-Depends: debhelper (>= 9), dh-python, dh-systemd (>= 1.5), python-all (>= 2.7), python-setuptools
-Standards-Version: 3.9.4
+Standards-Version: 3.9.6
 X-Python-Version: >= 2.7
-Homepage: http://xivo.io/
 
 Package: xivo-ctid
 Architecture: all
@@ -15,12 +13,12 @@ Depends: ${python:Depends}, ${misc:Depends}, adduser, asterisk
 Provides: pf-xivo-cti-server
 Replaces: pf-xivo-cti-server
 Conflicts: pf-xivo-cti-server, pf-xivo-queues-logger
-Description: XiVO CTI server
- XiVO is a system based on a powerful IPBX, to bring an easy to
+Description: Wazo CTI server
+ Wazo is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
  .
- This is the CTI server for XiVO Asterisk features.
- It provides presence and connection information to the XiVO
+ This is the CTI server for Wazo Asterisk features.
+ It provides presence and connection information to the Wazo
  switchboard clients.
  .
 
@@ -46,11 +44,11 @@ Depends: ${python:Depends},
          xivo-libdao,
          xivo-lib-python (>= 16.13~20160930.135643.aab98ec),
          xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
-Description: XiVO CTI server library
- XiVO is a system based on a powerful IPBX, to bring an easy to
+Description: Wazo CTI server library
+ Wazo is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
  .
- This is the CTI server for XiVO Asterisk features.
- It provides presence and connection information to the XiVO
+ This is the CTI server for Wazo Asterisk features.
+ It provides presence and connection information to the Wazo
  switchboard clients.
  .

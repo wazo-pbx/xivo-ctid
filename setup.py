@@ -26,9 +26,9 @@ setup(
     name='xivo-ctid',
     version='1.2',
     description='XiVO CTI Server Daemon',
-    author='Avencall',
-    author_email='xivo-dev@lists.proformatique.com',
-    url='http://wiki.xivo.io/',
+    author='Wazo Authors',
+    author_email='dev.wazo@gmail.com',
+    url='http://wazo.community',
     packages=find_packages(),
     package_data={
         'xivo_cti.swagger': ['*.yml'],
