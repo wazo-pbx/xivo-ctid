@@ -62,7 +62,7 @@ rest_api:
     enabled: True
 
     #Allow JSON preflight requests
-    allow_headers: Content-Type
+    allow_headers: [Content-Type]
 
 # xivo-agentd connection informations.
 agentd:
