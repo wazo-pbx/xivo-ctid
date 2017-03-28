@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,11 +73,13 @@ class CurrentCallManager(object):
                                      event.transfer['initiator_uuid'])
 
     def _transfer_answered(self, user_uuid):
+        logger.debug('bus transfer_answered received: user uuid: %s', user_uuid)
         if user_uuid:
             line = dao.user.get_line_identity(user_uuid)
             self._current_call_notifier.attended_transfer_answered(line)
 
     def _transfer_cancelled(self, user_uuid):
+        logger.debug('bus transfer_cancelled received: user uuid: %s', user_uuid)
         if user_uuid:
             line = dao.user.get_line_identity(user_uuid)
             self._current_call_notifier.attended_transfer_cancelled(line)

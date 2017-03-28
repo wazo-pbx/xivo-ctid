@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,13 +29,16 @@ class CurrentCallParser(object):
 
     def parse_hold(self, event):
         channel = event['Channel']
+        logger.debug('on parse_hold: %s', event)
         self._current_call_manager.hold_channel(channel)
 
     def parse_unhold(self, event):
         channel = event['Channel']
+        logger.debug('on parse_unhold: %s', event)
         self._current_call_manager.unhold_channel(channel)
 
     def parse_hangup(self, event):
+        logger.debug('on parse_hangup: %s', event)
         self._current_call_manager.end_call(event['Channel'])
         self._current_call_manager.remove_transfer_channel(event['Channel'])
 
@@ -51,12 +54,14 @@ class CurrentCallParser(object):
     def parse_local_optimization_begin(self, event):
         local_one_channel = event['LocalOneChannel']
         local_two_channel = event['LocalTwoChannel']
+        logger.debug('on parse_local_optimization_begin: %s', event)
         self._current_call_manager.on_local_optimization(local_one_channel, local_two_channel)
 
     def parse_varset_transfername(self, event):
         if 'Variable' not in event or event['Variable'] != 'TRANSFERERNAME':
             return
 
+        logger.debug('on parse_varset_transfername: %s', event)
         self._current_call_manager.set_transfer_channel(
             event['Value'],
             event['Channel'],
