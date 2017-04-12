@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -149,14 +149,14 @@ class CallManager(object):
                          _on_error=error_handler.handle)
 
     def transfer_attended(self, connection, auth_token, user_id, user_uuid, number):
-        logger.info('transfer_attended: user %s is transfering a call to %s', user_uuid, number)
+        logger.info('transfer_attended: user %s is transferring a call to %s', user_uuid, number)
         timeout = transfer_db.get_transfer_dial_timeout()
         error_handler = _TransferExceptionHandler(connection, user_uuid, number)
         self._runner.run(self._transfer, auth_token, user_id, user_uuid, number, 'attended', timeout,
                          _on_error=error_handler.handle)
 
     def transfer_attended_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
-        logger.info('transfer_attended_to_voicemail: user %s is transfering to voicemail %s', user_uuid, voicemail_number)
+        logger.info('transfer_attended_to_voicemail: user %s is transferring to voicemail %s', user_uuid, voicemail_number)
         user_context = dao.user.get_context(user_uuid)
         if not user_context:
             logger.info('transfer_attended_to_voicemail: failed to transfer %s is not a member of any context', user_uuid)
@@ -175,7 +175,7 @@ class CallManager(object):
                          _on_response=on_response)
 
     def transfer_blind_to_voicemail(self, connection, auth_token, user_uuid, voicemail_number):
-        logger.info('transfer_blind_to_voicemail: user %s is transfering to voicemail %s', user_uuid, voicemail_number)
+        logger.info('transfer_blind_to_voicemail: user %s is transferring to voicemail %s', user_uuid, voicemail_number)
         user_context = dao.user.get_context(user_uuid)
         if not user_context:
             logger.info('transfer_blind_to_voicemail: failed to transfer %s is not a member of any context', user_uuid)
