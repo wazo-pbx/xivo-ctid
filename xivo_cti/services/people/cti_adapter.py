@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ class PeopleCTIAdapter(object):
         self._runner.run_with_cb(callback, self._client.directories.favorites, profile=profile, token=token)
 
     def set_favorite(self, token, user_id, source, source_entry_id, enabled):
-        logger.debug('Set Favorite called')
+        logger.debug('Set Favorite called for user %s, contact %s/%s, favorited %s', user_id, source, source_entry_id, enabled)
         callback = partial(self._send_favorite_update, user_id, source, source_entry_id, enabled)
 
         if enabled:
