@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ from mock import sentinel, patch
 from datetime import datetime, timedelta
 from xivo_cti.services.call_history.manager import Call, HistoryMode
 from xivo_cti.services.call_history import manager as call_history_manager
-from xivo_dao.resources.call_log.model import CallLog
+from xivo_dao.alchemy.call_log import CallLog
 
 
 class CallHistoryMgrTest(unittest.TestCase):
