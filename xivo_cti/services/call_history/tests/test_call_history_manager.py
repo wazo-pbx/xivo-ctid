@@ -61,23 +61,24 @@ class CallHistoryMgrTest(unittest.TestCase):
         extension3 = u'789'
         mode3 = HistoryMode.outgoing
 
-        call_log_1 = CallLog(answered=True,
-                             date=now,
+        call_log_1 = CallLog(date=now,
+                             date_answer=now + timedelta(seconds=1),
+                             date_end=now + timedelta(seconds=3),
                              destination_line_identity=identifiers[0],
-                             duration=timedelta(0, 2, 0),
                              source_name=u'Foo',
                              source_exten=u'123')
 
-        call_log_2 = CallLog(answered=False,
-                             date=now,
+        call_log_2 = CallLog(date=now,
+                             date_answer=None,
+                             date_end=now + timedelta(seconds=3),
                              destination_line_identity=identifiers[1],
-                             duration=timedelta(0, 0, 0),
                              source_name=u'Bar',
                              source_exten=u'456')
 
         call_log_3 = CallLog(date=now,
+                             date_answer=now + timedelta(seconds=1),
+                             date_end=now + timedelta(seconds=4),
                              destination_line_identity=None,
-                             duration=timedelta(0, 3, 0),
                              destination_exten=u'789')
 
         returned_call_logs = [call_log_1, call_log_2, call_log_3]

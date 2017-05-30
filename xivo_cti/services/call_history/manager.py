@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ def _convert_all_call_logs(call_logs, identifiers):
         if call_log.destination_line_identity in identifiers:
             caller_id = call_log.source_name
             extension = call_log.source_exten
-            if call_log.answered:
+            if call_log.date_answer:
                 mode = HistoryMode.answered
             else:
                 mode = HistoryMode.missed
@@ -57,8 +57,12 @@ def _convert_all_call_logs(call_logs, identifiers):
             extension = call_log.destination_exten
             mode = HistoryMode.outgoing
 
+        duration = 0
+        if call_log.date_answer and call_log.date_end:
+            duration = int(round((call_log.date_end - call_log.date_answer).total_seconds()))
+
         all_call = Call(call_log.date,
-                        int(round(call_log.duration.total_seconds())),
+                        duration,
                         caller_id,
                         extension,
                         mode)
