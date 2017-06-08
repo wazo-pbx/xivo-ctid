@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015-2016 Avencall
+# Copyright 2015-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ import logging
 import time
 import threading
 
-from cherrypy import wsgiserver
+from cheroot import wsgi
 from flask import Flask
 from flask.ext import restful
 from flask_cors import CORS
@@ -105,9 +105,9 @@ class HTTPInterface(object):
         api = restful.Api(app, prefix='/{}'.format(self.VERSION))
         self._add_resources(api, main_thread_proxy)
         bind_addr = (config['http']['listen'], config['http']['port'])
-        wsgi_app = wsgiserver.WSGIPathInfoDispatcher({'/': app})
-        self._server = wsgiserver.CherryPyWSGIServer(bind_addr=bind_addr,
-                                                     wsgi_app=wsgi_app)
+        wsgi_app = wsgi.WSGIPathInfoDispatcher({'/': app})
+        self._server = wsgi.WSGIServer(bind_addr=bind_addr,
+                                       wsgi_app=wsgi_app)
 
     def load_cors(self, app, config):
         cors_config = dict(config.get('cors', {}))
