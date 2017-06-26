@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: Wazo CTId
+  title: xivo-ctid
   description: Computer Telephony Integration REST service
   version: '0.1'
   license:
