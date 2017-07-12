@@ -513,6 +513,44 @@ class TestCurrentCallManager(_BaseTestCase):
         self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, line_identity)
         assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(True))
 
+    @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id', Mock())
+    @patch('xivo_cti.services.current_call.manager.dao')
+    def test_switchboard_retrieve_waiting_call_twice(self, mock_dao):
+        unique_id = '1234567.44'
+        user_id = 5
+        line_identity = 'sccp/12345'
+        line_cid_name = 'John'
+        line_cid_number = '123'
+        line_callerid = '"%s" <%s>' % (line_cid_name, line_cid_number)
+        line = {
+            'identity': line_identity,
+            'callerid': line_callerid,
+        }
+        ringing_channel = 'sccp/12345-0000001'
+        channel_to_intercept = 'SIP/acbdf-348734'
+        cid_name, cid_number = 'Alice', '5565'
+        conn = Mock(CTI)
+
+        mock_dao.channel.get_channel_from_unique_id.return_value = channel_to_intercept
+        mock_dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
+        mock_dao.channel.channels_from_identity.return_value = [ringing_channel]
+        mock_dao.user.get_line.return_value = line
+
+        # Call 1
+        self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
+
+        self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, line_identity)
+        assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(True))
+
+        # Reset
+        self.call_manager.answer_next_ringing_call.reset_mock()
+
+        # Call 2
+        self.manager.switchboard_retrieve_waiting_call(42, unique_id, Mock())
+
+        self.call_manager.answer_next_ringing_call.assert_not_called()
+        assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(True))
+
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_talking_then_do_nothing(self, mock_get_line_identity):
         unique_id = '1234567.44'
