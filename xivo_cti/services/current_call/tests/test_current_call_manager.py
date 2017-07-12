@@ -511,6 +511,7 @@ class TestCurrentCallManager(_BaseTestCase):
         self.manager.ami.switchboard_retrieve.assert_called_once_with(
             line_identity, channel_to_intercept, cid_name, cid_number, line_cid_name, line_cid_number)
         self.call_manager.answer_next_ringing_call.assert_called_once_with(conn, line_identity)
+        assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(True))
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_talking_then_do_nothing(self, mock_get_line_identity):
@@ -539,6 +540,7 @@ class TestCurrentCallManager(_BaseTestCase):
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, client_connection)
 
         assert_that(self.ami_class.switchboard_retrieve.call_count, equal_to(0))
+        assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(False))
 
     @patch('xivo_dao.user_line_dao.get_line_identity_by_user_id')
     def test_switchboard_retrieve_waiting_call_when_no_channel_then_return(self, mock_get_line_identity):
@@ -555,6 +557,7 @@ class TestCurrentCallManager(_BaseTestCase):
 
         call_count_retrieve = self.manager.ami.switchboard_retrieve.call_count
         self.assertEqual(call_count_retrieve, 0)
+        assert_that(self.call_pickup_tracker.is_marked(unique_id), equal_to(False))
 
     def test_set_transfer_channel(self):
         line = u'SIP/6s7foq'.lower()
