@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2016 Avencall
-# Copyright (C) 2016 Proformatique, Inc.
+# Copyright 2012-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,7 +66,7 @@ from xivo_cti.services.call.receiver import CallReceiver
 from xivo_cti.services.call.storage import CallStorage
 from xivo_cti.services.chat import ChatPublisher
 from xivo_cti.services.current_call.formatter import CurrentCallFormatter
-from xivo_cti.services.current_call.manager import CurrentCallManager
+from xivo_cti.services.current_call.manager import CallPickupTracker, CurrentCallManager
 from xivo_cti.services.current_call.notifier import CurrentCallNotifier
 from xivo_cti.services.current_call.parser import CurrentCallParser
 from xivo_cti.services.device.manager import DeviceManager
@@ -159,6 +158,7 @@ def setup(xivo_uuid):
     context.register('call_form_dispatch_filter', DispatchFilter)
     context.register('call_form_result_handler', CallFormResultHandler)
     context.register('call_form_variable_aggregator', VariableAggregator)
+    context.register('call_pickup_tracker', CallPickupTracker)
     context.register('call_notifier', CallNotifier)
     context.register('call_receiver', CallReceiver)
     context.register('call_storage', CallStorage)

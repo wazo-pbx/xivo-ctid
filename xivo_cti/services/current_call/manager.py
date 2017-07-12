@@ -44,7 +44,7 @@ class CurrentCallManager(object):
 
     def __init__(self, current_call_notifier, current_call_formatter,
                  ami_class, device_manager, call_manager, call_storage,
-                 bus_listener, task_queue):
+                 bus_listener, task_queue, call_pickup_tracker):
         self._calls_per_line = {}
         self._unanswered_transfers = {}
         self._current_call_notifier = current_call_notifier
@@ -56,7 +56,7 @@ class CurrentCallManager(object):
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
-        self._tracker = CallPickupTracker()
+        self._tracker = call_pickup_tracker
 
     @bus_listener_thread
     @ack_bus_message
@@ -267,7 +267,6 @@ class CurrentCallManager(object):
             map(self.ami.hangup_with_cause_answered_elsewhere, ringing_channels)
             self.ami.switchboard_retrieve(line_identity, channel_to_retrieve, cid_name, cid_num, cid_name_src, cid_num_src)
             self._call_manager.answer_next_ringing_call(client_connection, line_identity)
-            # At this point the marks is leaked and will never be removed
 
     def _get_cid_name_and_number_from_line(self, line):
         try:
@@ -328,6 +327,12 @@ class CallPickupTracker(object):
     def __init__(self):
         self._marked = set()
 
+    def handle_hangup(self, event):
+        unique_id = event['Uniqueid']
+        if self.is_marked(unique_id):
+            logger.info('removing mark from hung up call %s', unique_id)
+            self._unmark(unique_id)
+
     def mark(self, unique_id):
         logger.info('marking call %s as being picked up', unique_id)
         if self.is_marked(unique_id):
@@ -336,6 +341,9 @@ class CallPickupTracker(object):
 
     def unmark(self, unique_id):
         logger.info('marking call %s as being available for pickup', unique_id)
+        return self._unmark(unique_id)
+
+    def _unmark(self, unique_id):
         try:
             self._marked.remove(unique_id)
         except KeyError:
