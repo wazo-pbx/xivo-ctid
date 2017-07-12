@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
-# Copyright (C) 2016 Proformatique, Inc.
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -436,6 +435,9 @@ class CTIServer(object):
         callback_handler.register_callback('Hangup', call_receiver.handle_hangup)
         callback_handler.register_callback('DialBegin', call_receiver.handle_dial_begin)
         callback_handler.register_callback('NewChannel', call_receiver.handle_new_channel)
+
+        call_pickup_tracker = context.get('call_pickup_tracker')
+        callback_handler.register_callback('Hangup', call_pickup_tracker.handle_hangup)
 
     def _init_statistics_producers(self):
         self._statistics_producer_initializer.init_queue_statistics_producer(self._queue_statistics_producer)

@@ -44,7 +44,7 @@ class CurrentCallManager(object):
 
     def __init__(self, current_call_notifier, current_call_formatter,
                  ami_class, device_manager, call_manager, call_storage,
-                 bus_listener, task_queue):
+                 bus_listener, task_queue, call_pickup_tracker):
         self._calls_per_line = {}
         self._unanswered_transfers = {}
         self._current_call_notifier = current_call_notifier
@@ -56,6 +56,7 @@ class CurrentCallManager(object):
         self._bus_listener = bus_listener
         self._task_queue = task_queue
         self._bus_listener.add_callback(AnswerTransferEvent.routing_key, self._on_bus_transfer_answered)
+        self._tracker = call_pickup_tracker
 
     @bus_listener_thread
     @ack_bus_message
@@ -235,15 +236,23 @@ class CurrentCallManager(object):
 
     def switchboard_retrieve_waiting_call(self, user_id, unique_id, client_connection):
         logger.info('Switchboard %s retrieving channel %s', user_id, unique_id)
+        try:
+            # The mark should be removed if the operation does not complete
+            self._tracker.mark(unique_id)
+        except Exception:
+            logger.info('the call %s is already being answered by someone', unique_id)
+            return
 
         if self._get_ongoing_calls(user_id):
             logger.info('Switchboard %s may not retrieve channel %s because he has ongoing calls', user_id, unique_id)
+            self._tracker.unmark(unique_id)
             return
 
         try:
             channel_to_retrieve = dao.channel.get_channel_from_unique_id(unique_id)
         except LookupError:
             logger.warning('Switchboard %s tried to retrieve non-existent channel %s', user_id, unique_id)
+            self._tracker.unmark(unique_id)
             return
         try:
             line = dao.user.get_line(user_id)
@@ -252,6 +261,7 @@ class CurrentCallManager(object):
             cid_name_src, cid_num_src = self._get_cid_name_and_number_from_line(line)
             ringing_channels = dao.channel.channels_from_identity(line_identity)
         except LookupError:
+            self._tracked.unmark(unique_id)
             raise LookupError('Missing information for the switchboard to retrieve channel %s' % unique_id)
         else:
             map(self.ami.hangup_with_cause_answered_elsewhere, ringing_channels)
@@ -310,3 +320,34 @@ class CurrentCallManager(object):
         channel_order = local_channel[-1]
         peer_channel_order = u'1' if channel_order == u'2' else u'2'
         return local_channel[:-1] + peer_channel_order
+
+
+class CallPickupTracker(object):
+
+    def __init__(self):
+        self._marked = set()
+
+    def handle_hangup(self, event):
+        unique_id = event['Uniqueid']
+        if self.is_marked(unique_id):
+            logger.info('removing mark from hung up call %s', unique_id)
+            self._unmark(unique_id)
+
+    def mark(self, unique_id):
+        logger.info('marking call %s as being picked up', unique_id)
+        if self.is_marked(unique_id):
+            raise Exception('Already marked')
+        self._marked.add(unique_id)
+
+    def unmark(self, unique_id):
+        logger.info('marking call %s as being available for pickup', unique_id)
+        return self._unmark(unique_id)
+
+    def _unmark(self, unique_id):
+        try:
+            self._marked.remove(unique_id)
+        except KeyError:
+            return
+
+    def is_marked(self, unique_id):
+        return unique_id in self._marked
