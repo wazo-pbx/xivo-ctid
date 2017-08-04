@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015-2016 Avencall
+# Copyright 2015-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@ import unittest
 
 from mock import Mock, patch
 from xivo_bus import Publisher
-from xivo_bus.resources.chat.event import ChatMessageEvent
 
 from xivo_cti.bus_listener import BusListener
 from xivo_cti.ctiserver import CTIServer
@@ -41,21 +40,6 @@ class TestChatPublisher(unittest.TestCase):
                                             self.cti_server,
                                             self.task_queue,
                                             'local-xivo-uuid')
-
-    def test_that_messages_are_published_on_the_bus(self):
-        from_user_id = 42
-        to_user_id = 23
-        to_xivo_uuid = 'a-valid-uuid'
-        alias = u'Bõb'
-        text = 'a message'
-
-        expected_msg = ChatMessageEvent(('local-xivo-uuid', from_user_id),
-                                        (to_xivo_uuid, to_user_id),
-                                        alias, text)
-
-        self.chat_publisher.on_cti_chat_message(from_user_id, to_xivo_uuid, to_user_id, alias, text)
-
-        self.bus_publisher.publish.assert_called_once_with(expected_msg)
 
     @patch('xivo_cti.services.chat.dao.user')
     def test_deliver_chat_message(self, user_dao):
