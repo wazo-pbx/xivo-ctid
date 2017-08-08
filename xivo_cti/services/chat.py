@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015-2016 Avencall
+# Copyright 2015-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 
 import logging
 
-from xivo_bus.resources.chat.event import ChatMessageEvent
-from xivo_cti import dao
+from xivo_ctid_ng_client import Client as CtidNgClient
+
+from xivo_cti import config, dao
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 
@@ -47,14 +48,9 @@ class ChatPublisher(object):
         msg = CTIMessageFormatter.chat(from_, to, alias, text)
         self._cti_server.send_to_cti_client(destination, msg)
 
-    def on_cti_chat_message(self, local_user_uuid, remote_xivo_uuid, remote_user_uuid, alias, text):
-        from_ = self._xivo_uuid, local_user_uuid
-        to = remote_xivo_uuid, remote_user_uuid
-        self._send_chat_msg_to_bus(from_, to, alias, text)
-
-    def _send_chat_msg_to_bus(self, from_, to, alias, text):
-        bus_msg = ChatMessageEvent(from_, to, alias, text)
-        self._publisher.publish(bus_msg)
+    def on_cti_chat_message(self, auth_token, local_user_uuid, remote_xivo_uuid, remote_user_uuid, alias, text):
+        client = self._new_ctid_ng_client(auth_token)
+        client.chats.send_message_from_user(remote_user_uuid, alias, text, to_xivo_uuid=remote_xivo_uuid)
 
     @bus_listener_thread
     @ack_bus_message
@@ -69,3 +65,7 @@ class ChatPublisher(object):
             self._task_queue.put(self.deliver_chat_message, from_, to, alias, text)
         except KeyError as e:
             logger.info('_on_bus_chat_message_event: received an incomplete chat message event: %s', e)
+
+    @staticmethod
+    def _new_ctid_ng_client(auth_token):
+        return CtidNgClient(token=auth_token, **config['ctid_ng'])
