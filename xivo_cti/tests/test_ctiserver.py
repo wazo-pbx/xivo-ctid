@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,8 +26,7 @@ class TestCTIServer(unittest.TestCase):
 
     def setUp(self):
         self.broadcast_cti_group = Mock(CTIGroup)
-        self.bus_publisher = Mock()
-        self.cti_server = CTIServer(self.bus_publisher)
+        self.cti_server = CTIServer()
         self.cti_server._broadcast_cti_group = self.broadcast_cti_group
 
     def test_send_cti_event(self):

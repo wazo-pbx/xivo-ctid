@@ -115,7 +115,7 @@ class CTIServer(object):
     _BUFSIZE_CTI = 65536
     _BUFSIZE_OTHER = 8192
 
-    def __init__(self, bus_publisher):
+    def __init__(self):
         self.start_time = time.time()
         self.myipbxid = 'xivo'
         self.interface_ami = None
