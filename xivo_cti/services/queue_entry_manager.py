@@ -195,7 +195,7 @@ class QueueEntryManager(object):
             logger.info('Publishing entries for %s: %s', queue_name, encoded_status)
             self._notifier.publish(queue_name, encoded_status)
         elif queue_name is None:
-            for q in self._queue_entries.keys():
+            for q in self._queue_entries:
                 self.publish(q)
 
     def publish_realtime_stats(self, queue_name):
