@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright 2015-2017 The Wazo Authors  (see the AUTHORS file)
 # Copyright (C) 2016 Proformatique, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -42,11 +42,11 @@ class RemoteService(object):
                 'port': self._port}
 
     def __eq__(self, other):
-        return (self._name == other._name
-                and self._id == other._id
-                and self._host == other._host
-                and self._port == other._port
-                and self._tags == other._tags)
+        return (self._name == other._name and
+                self._id == other._id and
+                self._host == other._host and
+                self._port == other._port and
+                self._tags == other._tags)
 
     def __ne__(self, other):
         return not self == other

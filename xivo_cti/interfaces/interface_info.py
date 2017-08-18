@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -95,9 +95,10 @@ class INFO(interfaces.Interfaces):
                             if ipdef == sockid.getpeername():
                                 socktoremove = sockid
                         if socktoremove:
-                            clireply.append('disconnecting %s (%s)'
-                                           % (socktoremove.getpeername(),
-                                              self._ctiserver.fdlist_interface_cti[socktoremove]))
+                            clireply.append('disconnecting %s (%s)' % (
+                                socktoremove.getpeername(),
+                                self._ctiserver.fdlist_interface_cti[socktoremove]
+                            ))
                             socktoremove.close()
                             del self._ctiserver.fdlist_interface_cti[socktoremove]
                         else:

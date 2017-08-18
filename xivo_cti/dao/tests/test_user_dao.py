@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2009-2016 Avencall
+# Copyright 2009-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from mock import patch, Mock, sentinel
-from xivo_cti.dao.user_dao import UserDAO, NoSuchUserException, \
-    NoSuchLineException
-from xivo_cti.innerdata import Safe
 import time
 import unittest
 
-from uuid import uuid4
 from hamcrest import assert_that
 from hamcrest import equal_to
+from mock import patch, Mock, sentinel
+from uuid import uuid4
 from xivo_cti.lists.users_list import UsersList
 from xivo_cti.lists.phones_list import PhonesList
+from xivo_cti.dao.user_dao import (
+    UserDAO,
+    NoSuchUserException,
+    NoSuchLineException,
+)
+from xivo_cti.innerdata import Safe
 
 SOME_UUID = str(uuid4())
 
@@ -179,7 +182,7 @@ class TestUserDAO(unittest.TestCase):
         self._userlist.keeplist[user_id] = {'enablerna': True,
                                             'destrna': destination}
 
-        self.dao.set_rna_fwd(user_id, False,  destination)
+        self.dao.set_rna_fwd(user_id, False, destination)
 
         self.assertEqual(self._userlist.keeplist[user_id]['enablerna'], False)
         self.assertEqual(self._userlist.keeplist[user_id]['destrna'],
@@ -274,7 +277,7 @@ class TestUserDAO(unittest.TestCase):
             'context': 'default',
             'protocol': 'sip',
             'number': '1234',
-            'identity': 'sip\/a1b2c3',
+            'identity': 'sip/a1b2c3',
             'initialized': False,
             'allowtransfer': True
         }
