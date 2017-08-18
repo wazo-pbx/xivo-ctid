@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012-2016 Avencall
+# Copyright 2012-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import time
+import logging
+
+from copy import deepcopy
 from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
 from xivo_dao import meetme_dao
 
 from xivo_cti.ioc.context import context
 from xivo_cti.ami import ami_callback_handler
-from copy import deepcopy
-import time
-import logging
 
 logger = logging.getLogger(__name__)
 

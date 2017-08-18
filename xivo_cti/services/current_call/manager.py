@@ -18,20 +18,17 @@
 import time
 import logging
 
-from xivo_bus import Marshaler
-from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo import caller_id
 from xivo.asterisk.line_identity import identity_from_channel
-
+from xivo_bus import Marshaler
 from xivo_bus.resources.calls.transfer import AnswerTransferEvent, CancelTransferEvent
-from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import user_line_dao
+from xivo_dao.helpers.db_utils import session_scope
 
 from xivo_cti import dao
-
+from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 
 logger = logging.getLogger(__name__)
-
 
 PEER_CHANNEL = 'peer_channel'
 LINE_CHANNEL = 'line_channel'

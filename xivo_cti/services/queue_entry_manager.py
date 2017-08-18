@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2015 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import time
+import logging
+
 from collections import namedtuple
 
 from xivo_dao.helpers.db_utils import session_scope
@@ -23,9 +26,6 @@ from xivo_dao import queue_dao
 from xivo_cti import dao
 from xivo_cti.ioc.context import context
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-
-import time
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class QueueEntryManager(object):
             self.publish_realtime_stats(queue_name)
 
     def insert(self, queue_name, pos, name, number, unique_id, wait):
-        logger.info("queue %s pos %s name %s number %s wait %s" % (queue_name, pos, name, number, wait))
+        logger.info("queue %s pos %s name %s number %s wait %s", queue_name, pos, name, number, wait)
         try:
             entry = QueueEntry(pos, name, number, time.time() - wait, unique_id)
             if queue_name not in self._queue_entries:
@@ -142,7 +142,7 @@ class QueueEntryManager(object):
         if not dao.queue.exists(queue_name):
             return
         try:
-            assert(self._queue_entries[queue_name][unique_id].position == pos)
+            assert self._queue_entries[queue_name][unique_id].position == pos
             self._queue_entries[queue_name].pop(unique_id)
             self._decrement_position(queue_name, pos)
             self._count_check(queue_name, count)
@@ -166,16 +166,16 @@ class QueueEntryManager(object):
 
     def _count_check(self, queue_name, expected_count):
         if queue_name in self._queue_entries:
-            assert(expected_count == len(self._queue_entries[queue_name]))
+            assert expected_count == len(self._queue_entries[queue_name])
         else:
-            assert(expected_count == 0)
+            assert expected_count == 0
 
     def _decrement_position(self, queue_name, removed_position):
         try:
             for unique_id, entry in self._queue_entries[queue_name].iteritems():
                 if entry.position > removed_position:
                     pos = entry.position - 1
-                    assert(pos > 0)
+                    assert pos > 0
                     new_entry = QueueEntry(
                         pos,
                         entry.name,
@@ -221,6 +221,6 @@ class QueueEntryManager(object):
         realtime_stat = {'%s' % queue_id: {u'Xivo-WaitingCalls': len(self._queue_entries[queue_name])}}
         if len(self._queue_entries[queue_name]) >= 1:
             longest_wait_time = longest_wait_time_calculator(self._queue_entries[queue_name])
-            logger.info('for queue %s longest wait time %s' % (queue_name, longest_wait_time))
+            logger.info('for queue %s longest wait time %s', queue_name, longest_wait_time)
             realtime_stat["%s" % queue_id][u'Xivo-LongestWaitTime'] = long(longest_wait_time)
         return realtime_stat

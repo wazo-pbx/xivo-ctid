@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,12 +17,13 @@
 
 import unittest
 
-from ..status_updater import StatusUpdater
-from ..status_notifier import StatusNotifier
 from hamcrest import assert_that
 from hamcrest import equal_to
 from mock import Mock
 from mock import patch
+
+from ..status_updater import StatusUpdater
+from ..status_notifier import StatusNotifier
 
 
 class TestStatusUpdater(unittest.TestCase):
