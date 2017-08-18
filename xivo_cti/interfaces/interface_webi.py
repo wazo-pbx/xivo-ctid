@@ -24,7 +24,7 @@ from xivo_cti.interfaces import interfaces
 
 logger = logging.getLogger('interface_webi')
 
-_CMD_WEBI_PATTERN = re.compile('xivo\[(.+),(add|edit|delete|deleteall|enable|disable),(.*)\]')
+_CMD_WEBI_PATTERN = re.compile(r'xivo\[(.+),(add|edit|delete|deleteall|enable|disable),(.*)\]')
 _OBJECTS = [
     'user',
     'device',
