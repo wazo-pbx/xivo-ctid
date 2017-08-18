@@ -152,9 +152,9 @@ class CTIServer(object):
         self._socket_close_all()
 
         logger.debug('Stopping all remaining threads')
-        for t in filter(lambda x: x.getName() not in
-                        ['MainThread', 'HTTPServerThread', 'ServiceDiscoveryThread'], threading.enumerate()):
-            t._Thread__stop()
+        for thread in threading.enumerate():
+            if thread.getName() not in ('MainThread', 'HTTPServerThread', 'ServiceDiscoveryThread'):
+                thread._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
 
