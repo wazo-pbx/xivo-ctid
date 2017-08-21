@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,18 +73,18 @@ class FunckeyManager(object):
             if user_dest == destination or user_dest == '':
                 self.unconditional_fwd_in_use(user_id, user_dest, enabled)
             else:
-                self.unconditional_fwd_in_use(user_id, user_dest,  False)
+                self.unconditional_fwd_in_use(user_id, user_dest, False)
 
     def update_all_rna_fwd(self, user_id, enabled, destination):
         for user_dest in self.dao.forward.rna_destinations(user_id):
             if user_dest == destination or user_dest == '':
                 self.rna_fwd_in_use(user_id, user_dest, enabled)
             else:
-                self.rna_fwd_in_use(user_id, user_dest,  False)
+                self.rna_fwd_in_use(user_id, user_dest, False)
 
     def update_all_busy_fwd(self, user_id, enabled, destination):
         for user_dest in self.dao.forward.busy_destinations(user_id):
             if user_dest == destination or user_dest == '':
                 self.busy_fwd_in_use(user_id, user_dest, enabled)
             else:
-                self.busy_fwd_in_use(user_id, user_dest,  False)
+                self.busy_fwd_in_use(user_id, user_dest, False)

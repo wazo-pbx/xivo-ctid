@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
 
 import unittest
 
-from ..phone_dao import PhoneDAO
-from ..phone_dao import NoSuchPhoneException
 from hamcrest import assert_that
 from hamcrest import contains
 from hamcrest import equal_to
@@ -26,6 +24,9 @@ from mock import Mock
 from mock import sentinel
 from xivo_cti.innerdata import Safe
 from xivo_cti.lists.phones_list import PhonesList
+
+from ..phone_dao import PhoneDAO
+from ..phone_dao import NoSuchPhoneException
 
 
 class TestPhoneDAO(unittest.TestCase):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +17,11 @@
 
 import unittest
 
-from ..register_endpoint_status import RegisterEndpointStatus
 from hamcrest import assert_that
 from hamcrest import contains
 from hamcrest import equal_to
+
+from ..register_endpoint_status import RegisterEndpointStatus
 
 
 class TestRegisterEndpointStatus(unittest.TestCase):

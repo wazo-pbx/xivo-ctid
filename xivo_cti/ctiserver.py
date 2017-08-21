@@ -86,7 +86,6 @@ from xivo_cti.cti.commands.set_forward import DisableBusyForward, \
     EnableNoAnswerForward, EnableUnconditionalForward
 from xivo_cti.cti.commands.set_user_service import DisableDND, DisableFilter, EnableDND, EnableFilter, \
     EnableRecording, DisableRecording
-from xivo_cti.services.funckey import manager as funckey_manager
 from xivo_cti.services.call_history import cti_interface as call_history_cti_interface
 from xivo_cti.interfaces import interface_cti
 from xivo_cti.interfaces import interface_info
@@ -116,7 +115,7 @@ class CTIServer(object):
     _BUFSIZE_CTI = 65536
     _BUFSIZE_OTHER = 8192
 
-    def __init__(self, bus_publisher):
+    def __init__(self):
         self.start_time = time.time()
         self.myipbxid = 'xivo'
         self.interface_ami = None
@@ -153,9 +152,9 @@ class CTIServer(object):
         self._socket_close_all()
 
         logger.debug('Stopping all remaining threads')
-        for t in filter(lambda x: x.getName() not in
-                        ['MainThread', 'HTTPServerThread', 'ServiceDiscoveryThread'], threading.enumerate()):
-            t._Thread__stop()
+        for thread in threading.enumerate():
+            if thread.getName() not in ('MainThread', 'HTTPServerThread', 'ServiceDiscoveryThread'):
+                thread._Thread__stop()
 
         daemonize.unlock_pidfile(config['pidfile'])
 

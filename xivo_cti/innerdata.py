@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ import hashlib
 import logging
 import time
 
+from collections import defaultdict
+
 from xivo_cti import cti_sheets
 from xivo_cti import config
 from xivo_cti.ami import ami_callback_handler
@@ -36,8 +38,6 @@ from xivo_dao.helpers.db_utils import session_scope
 from xivo_dao import group_dao
 from xivo_dao import queue_dao
 from xivo_dao.resources.user import dao as user_dao
-
-from collections import defaultdict
 
 logger = logging.getLogger('innerdata')
 

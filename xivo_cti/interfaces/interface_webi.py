@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 import re
+
 from xivo_cti import config
 from xivo_cti.ioc.context import context
 from xivo_cti.interfaces import interfaces
 
-import logging
-
 logger = logging.getLogger('interface_webi')
 
-_CMD_WEBI_PATTERN = re.compile('xivo\[(.+),(add|edit|delete|deleteall|enable|disable),(.*)\]')
+_CMD_WEBI_PATTERN = re.compile(r'xivo\[(.+),(add|edit|delete|deleteall|enable|disable),(.*)\]')
 _OBJECTS = [
     'user',
     'device',
