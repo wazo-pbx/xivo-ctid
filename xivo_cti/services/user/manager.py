@@ -26,6 +26,8 @@ from xivo_cti import config
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException
+from xivo_ctid_ng_client import Client as CtidNgClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,6 @@ class UserServiceManager(object):
                  funckey_manager,
                  async_runner,
                  bus_listener,
-                 bus_publisher,
                  task_queue):
         self.user_service_notifier = user_service_notifier
         self.agent_service_manager = agent_service_manager
@@ -52,7 +53,6 @@ class UserServiceManager(object):
         self.dao = dao
         self._runner = async_runner
         self._task_queue = task_queue
-        self._bus_publisher = bus_publisher
         services_routing_key = 'config.users.*.services.*.updated'
         bus_listener.add_callback(services_routing_key, self._on_bus_services_message_event)
 
@@ -62,7 +62,7 @@ class UserServiceManager(object):
 
     def connect(self, user_id, user_uuid, auth_token, state):
         self.dao.user.connect(user_id)
-        self.send_presence(user_uuid, state)
+        self.send_presence(auth_token, user_uuid, state)
 
     def enable_dnd(self, user_uuid, auth_token):
         logger.debug('Enable DND called for user_uuid %s', user_uuid)
@@ -116,9 +116,9 @@ class UserServiceManager(object):
         logger.debug('Disable Busy called for user_uuid %s', user_uuid)
         self._async_set_forward(user_uuid, auth_token, 'busy', False, destination)
 
-    def disconnect(self, user_id, user_uuid):
+    def disconnect(self, user_id, user_uuid, auth_token):
         self.dao.user.disconnect(user_id)
-        self.send_presence(user_uuid, 'disconnected')
+        self.send_presence(auth_token, user_uuid, 'disconnected')
 
     def disconnect_no_action(self, user_id, user_uuid):
         self.dao.user.disconnect(user_id)
@@ -144,8 +144,9 @@ class UserServiceManager(object):
             if agent_id is not None:
                 self.agent_service_manager.set_presence(agent_id, presence)
 
-    def send_presence(self, user_uuid, presence):
-        self._bus_publisher.publish(UserStatusUpdateEvent(user_uuid, presence), headers={'user_uuid': user_uuid})
+    def send_presence(self, auth_token, user_uuid, presence):
+        client = self._new_ctid_ng_client(auth_token)
+        client.user_presences.update_presence(user_uuid, presence)
 
     def pickup_the_phone(self, client_connection):
         client_connection.answer_cb()
@@ -260,3 +261,7 @@ class UserServiceManager(object):
             logger.info('_on_bus_user_status_update_event: received an incomplete event: %s', e)
         else:
             self._task_queue.put(self._on_new_presence, event.id_, event.status)
+
+    @staticmethod
+    def _new_ctid_ng_client(auth_token):
+        return CtidNgClient(token=auth_token, **config['ctid_ng'])

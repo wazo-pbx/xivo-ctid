@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2006-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ from mock import sentinel as s
 from mock import patch
 
 from hamcrest import assert_that, calling, equal_to, not_, raises
-
-from xivo_bus import Publisher
 
 from xivo_cti.async_runner import AsyncRunner, synchronize
 from xivo_cti.bus_listener import BusListener
@@ -72,7 +70,6 @@ class _BaseTestCase(unittest.TestCase):
         self.forward_dao = Mock(ForwardDAO)
         self.user_service_notifier = Mock(UserServiceNotifier)
         self._bus_listener = Mock(BusListener)
-        self._bus_publisher = Mock(Publisher)
         self.user_service_manager = UserServiceManager(
             self.user_service_notifier,
             self.agent_service_manager,
@@ -80,7 +77,6 @@ class _BaseTestCase(unittest.TestCase):
             self.funckey_manager,
             self._runner,
             self._bus_listener,
-            self._bus_publisher,
             self._task_queue
         )
         self.user_service_manager.presence_service_executor = self.presence_service_executor
@@ -97,7 +93,7 @@ class TestUserServiceManager(_BaseTestCase):
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:
             self.user_service_manager.connect(s.user_id, SOME_UUID, SOME_TOKEN, s.state)
 
-        send_presence.assert_called_once_with(SOME_UUID, s.state)
+        send_presence.assert_called_once_with(SOME_TOKEN, SOME_UUID, s.state)
         self.user_service_manager.dao.user.connect.assert_called_once_with(s.user_id)
 
     @mocked_confd_client
@@ -384,10 +380,10 @@ class TestUserServiceManager(_BaseTestCase):
         self.user_service_manager.set_presence = Mock()
 
         with patch.object(self.user_service_manager, 'send_presence') as send_presence:
-            self.user_service_manager.disconnect(s.user_id, SOME_UUID)
+            self.user_service_manager.disconnect(s.user_id, SOME_UUID, SOME_TOKEN)
 
         self.user_service_manager.dao.user.disconnect.assert_called_once_with(s.user_id)
-        send_presence.assert_called_once_with(SOME_UUID, 'disconnected')
+        send_presence.assert_called_once_with(SOME_TOKEN, SOME_UUID, 'disconnected')
 
     def test_disconnect_no_action(self):
         self.user_service_manager.set_presence = Mock()

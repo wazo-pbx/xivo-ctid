@@ -354,7 +354,7 @@ class CTIServer(object):
             ['user_id', 'destination']
         )
 
-        Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id', 'user_uuid'])
+        Logout.register_callback_params(self._user_service_manager.disconnect, ['user_id', 'user_uuid', 'auth_token'])
 
         QueueAdd.register_callback_params(
             self._agent_service_cti_parser.queue_add,
