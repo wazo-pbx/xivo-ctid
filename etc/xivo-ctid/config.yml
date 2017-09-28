@@ -77,7 +77,7 @@ ami:
   username: xivo_cti_user
   password: phaickbebs9
 
-# xivo-auth (authentication daemon) connection informations.
+# wazo-auth (authentication daemon) connection informations.
 auth:
   host: localhost
   port: 9497
