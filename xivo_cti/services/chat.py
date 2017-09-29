@@ -34,7 +34,7 @@ class ChatPublisher(object):
         self._cti_server = cti_server
         self._task_queue = task_queue
 
-        chat_msg_routing_key = 'chat.message.{}.#'.format(self._xivo_uuid)
+        chat_msg_routing_key = 'chat.message.{}.*.received'.format(self._xivo_uuid)
         bus_listener.add_callback(chat_msg_routing_key, self._on_bus_chat_message_event)
 
     def deliver_chat_message(self, from_, to, alias, text):
