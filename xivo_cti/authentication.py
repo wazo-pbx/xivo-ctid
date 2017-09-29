@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2016 Avencall
+# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -131,11 +131,11 @@ class AuthenticationHandler(object):
             return auth_client.token.new(backend, expiration=TWO_MONTHS)
         except requests.exceptions.RequestException as e:
             if e.response is not None and e.response.status_code == 401:
-                logger.info('Authentication failed, got a 401 from xivo-auth; username: %s, backend: %s',
+                logger.info('Authentication failed, got a 401 from wazo-auth; username: %s, backend: %s',
                             username, backend)
                 error_string = 'login_password'
             else:
-                logger.exception('Unexpected xivo-auth error')
+                logger.exception('Unexpected wazo-auth error')
                 error_string = 'xivo_auth_error'
 
             self._task_queue.put(self._fatal, 'login_pass', error_string)

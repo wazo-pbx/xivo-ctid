@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2016 Avencall
+# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -188,7 +188,7 @@ class TestAuthenticationHandlerCreateToken(_BaseAuthenticationHandlerTestCase):
         assert_that(result, equal_to(self.auth_client.token.new.return_value))
         self.auth_client.token.new.assert_called_once_with(s.backend, expiration=expiration)
 
-    def test_401_from_xivo_auth(self):
+    def test_401_from_wazo_auth(self):
         exception = requests.exceptions.RequestException(response=Mock(status_code=401))
         self.auth_client.token.new.side_effect = exception
 
@@ -196,7 +196,7 @@ class TestAuthenticationHandlerCreateToken(_BaseAuthenticationHandlerTestCase):
 
         self.assert_fatal_scheduled('login_pass', 'login_password')
 
-    def test_requests_exception_from_xivo_auth(self):
+    def test_requests_exception_from_wazo_auth(self):
         exception = requests.exceptions.RequestException()
         self.auth_client.token.new.side_effect = exception
 
