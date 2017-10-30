@@ -17,6 +17,8 @@
 
 import logging
 
+from functools import partial
+
 from xivo_bus import Marshaler
 from xivo_bus.resources.cti.event import UserStatusUpdateEvent
 from xivo_confd_client import Client as ConfdClient
@@ -24,6 +26,7 @@ from xivo_confd_client import Client as ConfdClient
 from xivo_cti import dao
 from xivo_cti import config
 from xivo_cti.bus_listener import bus_listener_thread, ack_bus_message
+from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.database import user_db
 from xivo_cti.exception import NoSuchUserException
 from xivo_ctid_ng_client import Client as CtidNgClient
@@ -147,6 +150,17 @@ class UserServiceManager(object):
     def send_presence(self, auth_token, user_uuid, presence):
         client = self._new_ctid_ng_client(auth_token)
         client.user_presences.update_presence(user_uuid, presence)
+
+    def get_presence(self, auth_token, user_id, client_connection):
+        user_uuid = self.dao.user.get(user_id)['uuid']
+        client = self._new_ctid_ng_client(auth_token)
+        on_response_cb = partial(self._on_response_get_presence, user_id, client_connection)
+        self._runner.run_with_cb(on_response_cb, client.user_presences.get_presence, user_uuid)
+
+    def _on_response_get_presence(self, user_id, client_connection, response):
+        status = response['presence']
+        message = CTIMessageFormatter.getlist_update_status_users(user_id, status)
+        client_connection.send_message(message)
 
     def pickup_the_phone(self, client_connection):
         client_connection.answer_cb()
