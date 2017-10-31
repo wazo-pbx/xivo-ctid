@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ from contextlib import contextmanager
 from requests.exceptions import RequestException
 
 from xivo_ctid_client import Client as CtidClient
+from xivo_ctid_ng_client import Client as CtidNgClient
 from xivo_bus.resources.cti.event import (AgentStatusUpdateEvent,
                                           UserStatusUpdateEvent,
                                           EndpointStatusUpdateEvent)
@@ -254,6 +255,22 @@ class _CtidStatusFetcher(_BaseStatusFetcher):
             return CtidClient(**service.to_dict())
 
 
+class _CtidNgUserStatusFetcher(_BaseStatusFetcher):
+
+    service = 'xivo-ctid-ng'
+
+    def _client(self, uuid):
+        token = config['auth']['token']
+        # There are actually no method to get the custom certificate of wazo
+        # This is the reason why the service discovery is not used for localhost
+
+        if self._uuid == uuid:
+            return CtidNgClient(token=token, **config['ctid_ng'])
+
+        for service in self._remote_service_tracker.list_services_with_uuid(self.service, uuid):
+            return CtidNgClient(token=token, verify_certificate=False, **service.to_dict())
+
+
 class _AgentStatusFetcher(_BaseStatusFetcher):
 
     service = 'xivo-agentd'
@@ -295,18 +312,18 @@ class _EndpointStatusFetcher(_CtidStatusFetcher):
         self.forwarder.on_endpoint_status_update(key, status)
 
 
-class _UserStatusFetcher(_CtidStatusFetcher):
+class _UserStatusFetcher(_CtidNgUserStatusFetcher):
 
     @async_runner_thread
     def _fetch(self, uuid, user_uuid):
         logger.info('user_status_fetcher: fetching user %s@%s', user_uuid, uuid)
         with self.exception_logging_client(uuid) as client:
-            return client.users.get(user_uuid)
+            return client.user_presences.get_presence(user_uuid)
 
     def _on_result(self, result):
         if not result:
             return
-        key = result['origin_uuid'], result['user_uuid']
+        key = result['xivo_uuid'], result['user_uuid']
         status = result['presence']
 
         self.forwarder.on_user_status_update(key, status)
