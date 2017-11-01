@@ -466,3 +466,15 @@ class TestCTIMessageFormatter(unittest.TestCase):
                                                'user_id': 42,
                                                'endpoint_id': None,
                                                'agent_id': None}}))
+
+    def test_getlist_update_status_user(self):
+        result = CTIMessageFormatter.getlist_update_status_users(s.user_id, s.status)
+
+        assert_that(result, equal_to({
+            'class': 'getlist',
+            'function': 'updatestatus',
+            'listname': 'users',
+            'tipbxid': 'xivo',
+            'tid': s.user_id,
+            'status': {'availstate': s.status}
+        }))

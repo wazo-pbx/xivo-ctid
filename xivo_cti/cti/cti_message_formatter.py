@@ -250,3 +250,12 @@ class CTIMessageFormatter(object):
                          'user_id': user_id,
                          'endpoint_id': endpoint_id,
                          'agent_id': agent_id}}
+
+    @staticmethod
+    def getlist_update_status_users(user_id, status):
+        return {'class': 'getlist',
+                'function': 'updatestatus',
+                'listname': 'users',
+                'tipbxid': 'xivo',
+                'tid': user_id,
+                'status': {'availstate': status}}
