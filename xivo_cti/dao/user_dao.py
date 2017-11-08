@@ -143,11 +143,7 @@ class UserDAO(object):
         return line_interface
 
     def get_context(self, user_id):
-        try:
-            line = self.get_line(user_id)
-        except (NoSuchUserException, NoSuchLineException):
-            return user_db.find_line_context(user_id)
-        return line['context']
+        return user_db.find_line_context(user_id)
 
     def get_cti_profile_id(self, user_id):
         try:
