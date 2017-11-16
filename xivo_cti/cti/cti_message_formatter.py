@@ -88,7 +88,7 @@ class CTIMessageFormatter(object):
     def login_id(session_id):
         return {'class': 'login_id',
                 'sessionid': session_id,
-                'xivoversion': xivo_cti.CTI_PROTOCOL_VERSION}
+                'wazoversion': xivo_cti.CTI_PROTOCOL_VERSION}
 
     @staticmethod
     def login_pass(cti_profile_id):

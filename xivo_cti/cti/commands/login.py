@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ def _parse_login_capas(msg, command):
     command.capaid = int(msg['capaid'])
     command.state = msg['state']
 
+
 LoginCapas = CTICommandClass('login_capas', None, _parse_login_capas)
 LoginCapas.add_to_registry()
 
@@ -30,7 +31,7 @@ def _parse_login_id(msg, command):
     command.company = msg['company']
     command.ident = msg['ident']
     command.userlogin = msg['userlogin']
-    command.xivo_version = msg['xivoversion']
+    command.xivo_version = msg['wazoversion']
 
 
 LoginID = CTICommandClass('login_id', None, _parse_login_id)

@@ -102,7 +102,7 @@ class TestCTIMessageFormatter(unittest.TestCase):
     def test_login_id(self):
         expected = {'class': 'login_id',
                     'sessionid': s.session_id,
-                    'xivoversion': xivo_cti.CTI_PROTOCOL_VERSION}
+                    'wazoversion': xivo_cti.CTI_PROTOCOL_VERSION}
 
         result = CTIMessageFormatter.login_id(s.session_id)
 

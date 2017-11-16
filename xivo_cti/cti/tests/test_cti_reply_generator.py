@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2014 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class TestCTIReplyGenerator(unittest.TestCase):
         login_id.commandid = command_id
         login_id.command_class = 'foobar'
         login_id.xivo_version = xivo_version
-        message = {'sessionid': session_id, 'version': '9999', 'replyid': command_id, 'class': 'foobar', 'xivoversion': xivo_version}
+        message = {'sessionid': session_id, 'version': '9999', 'replyid': command_id, 'class': 'foobar', 'wazoversion': xivo_version}
         expected = {'message': message, 'replyid': command_id, 'class': 'foobar'}
 
         generator = CTIReplyGenerator()

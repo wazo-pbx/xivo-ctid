@@ -105,7 +105,7 @@ class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
         self.handler._on_login_id(s.login, bad_version, self.connection)
 
         expected_msg = {'class': 'login_id',
-                        'error_string': 'xivoversion_client:%s;%s' % (bad_version, CTI_PROTOCOL_VERSION)}
+                        'error_string': 'wazoversion_client:%s;%s' % (bad_version, CTI_PROTOCOL_VERSION)}
         self.assert_message_sent(expected_msg)
 
     @patch('xivo_cti.authentication.LoginPass')
@@ -127,7 +127,7 @@ class TestAuthenticationHandlerOnLoginID(_BaseAuthenticationHandlerTestCase):
 
         expected_msg = {'class': 'login_id',
                         'sessionid': self.session_id,
-                        'xivoversion': CTI_PROTOCOL_VERSION}
+                        'wazoversion': CTI_PROTOCOL_VERSION}
         self.assert_message_sent(expected_msg)
 
     @patch('xivo_cti.authentication.LoginPass')
