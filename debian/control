@@ -9,7 +9,7 @@ X-Python-Version: >= 2.7
 Package: xivo-ctid
 Architecture: all
 Pre-Depends: xivo-libctid (>= ${binary:Version})
-Depends: ${python:Depends}, ${misc:Depends}, adduser, asterisk
+Depends: ${python:Depends}, ${misc:Depends}, adduser, asterisk | asterisk-virtual
 Provides: pf-xivo-cti-server
 Replaces: pf-xivo-cti-server
 Conflicts: pf-xivo-cti-server, pf-xivo-queues-logger
