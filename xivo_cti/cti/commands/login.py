@@ -31,7 +31,8 @@ def _parse_login_id(msg, command):
     command.company = msg['company']
     command.ident = msg['ident']
     command.userlogin = msg['userlogin']
-    command.xivo_version = msg['wazoversion']
+    # In wazo 17.16 the field was changed from xivoversion to wazoversion
+    command.xivo_version = msg.get('wazoversion') or msg.get('xivoversion')
 
 
 LoginID = CTICommandClass('login_id', None, _parse_login_id)
