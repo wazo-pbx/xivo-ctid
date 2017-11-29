@@ -97,7 +97,7 @@ class AuthenticationHandler(object):
         LoginID.deregister_callback(self._on_login_id)
 
         if xivo_version != xivo_cti.CTI_PROTOCOL_VERSION:
-            logger.info('%s failed to connect: version mismatch %s <> %s',
+            logger.info('%s failed to connect: the client protocol version %s is different from the server protocol version %s',
                         userlogin, xivo_version, xivo_cti.CTI_PROTOCOL_VERSION)
             msg = 'wazoversion_client:{};{}'.format(xivo_version, xivo_cti.CTI_PROTOCOL_VERSION)
             self._fatal('login_id', msg)
