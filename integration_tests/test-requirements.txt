@@ -1,4 +1,4 @@
-docker-compose==1.4.2
+docker-compose
 nose
 python-consul
 psycopg2==2.5.4
@@ -11,5 +11,4 @@ sqlalchemy==0.9.8
 # dependencies for xivo-ctid db code
 git+https://github.com/wazo-pbx/xivo-dao.git
 git+https://github.com/wazo-pbx/xivo-lib-python.git
-
-xivo-test-helpers>=0.1.4
+git+https://github.com/wazo-pbx/xivo-test-helpers.git

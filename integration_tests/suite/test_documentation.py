@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Avencall
+# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,10 +30,13 @@ class TestDocumentation(AssetLaunchingTestCase):
     assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
 
     def test_documentation_errors(self):
-        api_url = 'http://ctid:9495/0.1/api/api.yml'
-        self.validate_api(api_url)
+        ctid_port = self.service_port(9495, 'ctid')
+        api_url = 'http://localhost:{port}/0.1/api/api.yml'.format(port=ctid_port)
+        api = requests.get(api_url)
+        self.validate_api(api)
 
-    def validate_api(self, url):
-        validator_url = u'http://localhost:18080/debug'
-        response = requests.get(validator_url, params={'url': url})
+    def validate_api(self, api):
+        validator_port = self.service_port(8080, 'swagger-validator')
+        validator_url = 'http://localhost:{port}/debug'.format(port=validator_port)
+        response = requests.post(validator_url, data=api)
         assert_that(response.json(), empty(), pprint.pformat(response.json()))
