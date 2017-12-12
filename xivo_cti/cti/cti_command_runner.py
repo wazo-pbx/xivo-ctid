@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ class CTICommandRunner(object):
             arg_list = self._get_arguments(command, args)
             try:
                 reply = function(*arg_list)
-            except InvalidCallbackException:
-                logger.info("failed to dispatch cti command %s to one of it's callback", command)
+            except InvalidCallbackException as e:
+                logger.info('failed to dispatch cti command "%s" to callback "%s": "%s"', command, callback, e)
                 command.deregister_callback(function)
                 continue
             if reply:
