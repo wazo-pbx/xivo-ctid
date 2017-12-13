@@ -38,7 +38,7 @@ class CTICommandRunner(object):
             try:
                 reply = function(*arg_list)
             except InvalidCallbackException as e:
-                logger.info('failed to dispatch cti command "%s" to callback "%s": "%s"', command, callback, e)
+                logger.debug('failed to dispatch cti command "%s" to callback "%s": "%s"', command, callback, e)
                 command.deregister_callback(function)
                 continue
             if reply:
