@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2015-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2015-2018 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ import threading
 
 from cheroot import wsgi
 from flask import Flask
-from flask.ext import restful
 from flask_cors import CORS
+from flask_restful import Api, Resource
 from xivo import http_helpers
 
 from xivo_cti import CTI_PROTOCOL_VERSION
@@ -32,7 +32,7 @@ from xivo_cti.swagger.resource import SwaggerResource
 logger = logging.getLogger(__name__)
 
 
-class Endpoints(restful.Resource):
+class Endpoints(Resource):
 
     def get(self, endpoint_id):
         uuid = self.main_thread_proxy.get_uuid()
@@ -50,7 +50,7 @@ class Endpoints(restful.Resource):
                     'status_code': 404}, 404
 
 
-class Users(restful.Resource):
+class Users(Resource):
 
     def get(self, user_id):
         origin_uuid = self.main_thread_proxy.get_uuid()
@@ -74,7 +74,7 @@ class Users(restful.Resource):
                     'status_code': 404}, 404
 
 
-class Infos(restful.Resource):
+class Infos(Resource):
 
     def get(self):
         uuid = self.main_thread_proxy.get_uuid()
@@ -102,7 +102,7 @@ class HTTPInterface(object):
         app.after_request(http_helpers.log_request)
         app.secret_key = os.urandom(24)
         self.load_cors(app, config)
-        api = restful.Api(app, prefix='/{}'.format(self.VERSION))
+        api = Api(app, prefix='/{}'.format(self.VERSION))
         self._add_resources(api, main_thread_proxy)
         bind_addr = (config['http']['listen'], config['http']['port'])
         wsgi_app = wsgi.WSGIPathInfoDispatcher({'/': app})
@@ -122,9 +122,9 @@ class HTTPInterface(object):
         self._thread.start()
 
     def _add_resources(self, api, main_thread_proxy):
-        for Resource, url in self._resources:
-            Resource.main_thread_proxy = main_thread_proxy
-            api.add_resource(Resource, url)
+        for resource, url in self._resources:
+            resource.main_thread_proxy = main_thread_proxy
+            api.add_resource(resource, url)
 
     def _start_async(self):
         try:
