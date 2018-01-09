@@ -1,9 +1,9 @@
 docker-compose
 nose
 python-consul
-psycopg2==2.5.4
+psycopg2==2.6.2
 pyhamcrest
-sqlalchemy==0.9.8
+sqlalchemy==1.0.15
 
 # xivo-ctid
 -e ..
