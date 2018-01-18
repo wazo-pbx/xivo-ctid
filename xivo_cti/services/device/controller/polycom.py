@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2015 Avencall
+# Copyright 2015-2018 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ class PolycomController(AsyncController):
 class _PolycomAnswerer(object):
 
     _HEADERS = {
-        'Content-Type': ' application/x-com-polycom-spipx',
+        'Content-Type': 'application/x-com-polycom-spipx',
     }
     _DATA = '<PolycomIPPhone><Data priority="Important">Key:Line1</Data></PolycomIPPhone>'
     _TIMEOUT = 5
