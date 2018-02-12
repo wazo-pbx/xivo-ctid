@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2013-2018 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -359,6 +359,7 @@ class Safe(object):
 
         _set = self._get_set_fn(uid)
 
+        aggregator = context.get('call_form_variable_aggregator')
         for se in self.sheetevents[where]:
             display_id = se.get('display')
             condition_id = se.get('condition')
@@ -372,7 +373,10 @@ class Safe(object):
             _set('where', where)
             _set('uniqueid', uid)
             _set('ipbxid', self.ipbxid)
-            channel = context.get('call_form_variable_aggregator').get(uid)['xivo']['channel']
+            channel = aggregator.get(uid)['xivo'].get('channel')
+            if not channel:
+                continue
+
             sheet = cti_sheets.Sheet(where, self.ipbxid, uid)
             sheet.setoptions(self.sheetoptions.get(option_id))
             sheet.setdisplays(self.sheetdisplays.get(display_id))
