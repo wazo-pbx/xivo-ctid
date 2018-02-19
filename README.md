@@ -1,4 +1,4 @@
-XiVO CTI [![Build Status](https://travis-ci.org/wazo-pbx/xivo-ctid.png?branch=master)](https://travis-ci.org/wazo-pbx/xivo-ctid)
+XiVO CTI [![Build Status](https://jenkins.wazo.community/buildStatus/icon?job=xivo-ctid)](https://jenkins.wazo.community/job/xivo-ctid)
 ========
 
 XiVO CTI is a [Computer telephony integration](http://en.wikipedia.org/Computer_telephony_integration) server
