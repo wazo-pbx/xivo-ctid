@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2007-2016 Avencall
-# Copyright (C) 2016 Proformatique Inc.
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -74,7 +73,7 @@ _default_config = {
         'timeout': 3,
         'key_file': '/var/lib/xivo-auth-keys/xivo-ctid-key.yml',
         'verify_certificate': '/usr/share/xivo-certs/server.crt',
-        'backend': 'xivo_user',
+        'backend': 'wazo_user',
     },
     'bus': {
         'exchange_name': 'xivo',
