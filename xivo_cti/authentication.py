@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2016-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -137,11 +137,10 @@ class AuthenticationHandler(object):
         except NoSuchUserException:
             return self._fatal('login_pass', 'user_not_found')
 
-        client_enabled = user_config.get('enableclient', 0) != 0
         self._cti_profile_id = user_config.get('cti_profile_id')
-        if not client_enabled or not self._cti_profile_id:
-            logger.info('%s failed to login, client enabled %s profile %s',
-                        self._username, client_enabled, self._cti_profile_id)
+        if not self._cti_profile_id:
+            logger.info('%s failed to login, profile %s',
+                        self._username, self._cti_profile_id)
             return self._fatal('login_pass', 'login_password')
 
         self._authenticated = True
