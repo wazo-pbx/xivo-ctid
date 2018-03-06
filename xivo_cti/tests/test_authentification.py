@@ -1,19 +1,6 @@
 # -*- coding: utf-8 -*-
-
-# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>
+# Copyright 2016-2018 The Wazo Authors  (see the AUTHORS file)
+# SPDX-License-Identifier: GPL-3.0+
 
 import unittest
 
@@ -210,7 +197,6 @@ class TestAuthenticationHandlerOnAuthSuccess(_BaseAuthenticationHandlerTestCase)
     def setUp(self):
         super(TestAuthenticationHandlerOnAuthSuccess, self).setUp()
         self.user_config = {'cti_profile_id': s.profile_id,
-                            'enableclient': '1',
                             'id': 1}
         self.token_data = {'xivo_user_uuid': s.uuid,
                            'token': s.token}
@@ -282,16 +268,6 @@ class TestAuthenticationHandlerOnAuthSuccess(_BaseAuthenticationHandlerTestCase)
         self.handler._on_auth_success(self.token_data)
 
         self.assert_fatal('login_pass', 'user_not_found')
-
-    @patch('xivo_cti.authentication.dao')
-    def test_disabled_client(self, dao):
-        user_config = dict(self.user_config)
-        user_config['enableclient'] = 0
-        dao.user.get_by_uuid.return_value = user_config
-
-        self.handler._on_auth_success(self.token_data)
-
-        self.assert_fatal('login_pass', 'login_password')
 
     @patch('xivo_cti.authentication.dao')
     def test_undefined_profile(self, dao):
