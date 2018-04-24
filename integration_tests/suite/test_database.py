@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012-2016 Avencall
+# Copyright 2012-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import os
@@ -31,16 +31,6 @@ from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.tests import test_dao
 from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
 
-DB_USER = 'asterisk'
-DB_PASSWORD = 'proformatique'
-DB_HOST = 'localhost'
-DB_PORT = '15432'
-DB_NAME = 'asterisk'
-DB_URL = ('postgresql://{user}:{password}@{host}:{port}/{db_name}'
-          .format(user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, db_name=DB_NAME))
-
-test_dao.TEST_DB_URL = DB_URL
-
 
 class _IntegrationUser(AssetLaunchingTestCase):
 
@@ -54,6 +44,12 @@ class TestDatabaseDAO(test_dao.DAOTestCase):
     @classmethod
     def setUpClass(cls):
         _IntegrationUser.setUpClass()
+        test_dao.TEST_DB_URL = ('postgresql://{user}:{password}@{host}:{port}/{db_name}'
+                                .format(user='asterisk',
+                                        password='proformatique',
+                                        host='localhost',
+                                        port=_IntegrationUser.service_port(5432, 'postgres'),
+                                        db_name='asterisk'))
         super(TestDatabaseDAO, cls).setUpClass()
 
     @classmethod
