@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015 Avencall
+# Copyright 2015-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import unittest
@@ -8,7 +8,7 @@ from hamcrest import assert_that, contains
 
 from xivo_cti.dao.forward_dao import ForwardDAO
 
-from xivo_dao.resources.func_key.model import Forward
+from xivo_dao.alchemy.func_key_dest_forward import FuncKeyDestForward as Forward
 
 
 class TestForwardDAO(unittest.TestCase):
@@ -24,11 +24,9 @@ class TestForwardDAO(unittest.TestCase):
     def test_unc_destinations(self):
         expected_number = '1234'
         fwd_type = 'unconditional'
-        self.mock_forwards([Forward(user_id=self.user_id,
-                                    type=fwd_type,
+        self.mock_forwards([Forward(forward=fwd_type,
                                     number=expected_number),
-                            Forward(user_id=self.user_id,
-                                    type=fwd_type,
+                            Forward(forward=fwd_type,
                                     number=None)])
 
         result = self.dao.unc_destinations(self.user_id)
@@ -40,11 +38,9 @@ class TestForwardDAO(unittest.TestCase):
     def test_rna_destinations(self):
         expected_number = '2345'
         fwd_type = 'noanswer'
-        self.mock_forwards([Forward(user_id=self.user_id,
-                                    type=fwd_type,
+        self.mock_forwards([Forward(forward=fwd_type,
                                     number=expected_number),
-                            Forward(user_id=self.user_id,
-                                    type=fwd_type,
+                            Forward(forward=fwd_type,
                                     number=None)])
 
         result = self.dao.rna_destinations(self.user_id)
@@ -56,11 +52,9 @@ class TestForwardDAO(unittest.TestCase):
     def test_busy_destinations(self):
         expected_number = '1234'
         fwd_type = 'busy'
-        self.mock_forwards([Forward(user_id=self.user_id,
-                                    type=fwd_type,
+        self.mock_forwards([Forward(forward=fwd_type,
                                     number=expected_number),
-                            Forward(user_id=self.user_id,
-                                    type=fwd_type,
+                            Forward(forward=fwd_type,
                                     number=None)])
 
         result = self.dao.busy_destinations(self.user_id)
