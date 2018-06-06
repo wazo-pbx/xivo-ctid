@@ -10,30 +10,6 @@ USER="xivo-ctid"
 
 case "$1" in
     configure)
-        if [ -d /etc/pf-xivo/xivo-ctid ]; then
-            rm -rf /etc/pf-xivo/xivo-ctid
-        fi
-        if [ -d /usr/share/xivo-ctid ]; then
-            rm -rf /usr/share/xivo-ctid
-        fi
-
-        # systemd migration
-        drop_in='/etc/systemd/system/xivo-ctid.service.d/auto-sysv-migration.conf'
-        if [ -f /etc/default/xivo-ctid -a ! -f "${drop_in}" ]; then
-            # be on the safe side and source /etc/default/xivo-ctid in a subshell
-            (
-                . /etc/default/xivo-ctid
-                if [ "${XIVO_CTID_AMI_PROXY}" = 1 ]; then
-                    mkdir -p $(dirname "${drop_in}")
-                    cat > "${drop_in}" <<EOF
-[Service]
-Environment=XIVO_CTID_AMI_PROXY=1
-EOF
-                    systemctl daemon-reload || true
-                fi
-            )
-        fi
-
         if ! getent passwd $USER > /dev/null; then
             echo "Adding system user $USER" 1>&2
             adduser --quiet --system --group --no-create-home \
