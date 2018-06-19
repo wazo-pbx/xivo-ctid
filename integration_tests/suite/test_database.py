@@ -2,10 +2,6 @@
 # Copyright 2012-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
-import os
-import time
-
-from datetime import datetime
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
 from hamcrest import equal_to
@@ -29,14 +25,13 @@ from xivo_dao.alchemy.rightcallmember import RightCallMember
 from xivo_dao.alchemy.schedulepath import SchedulePath
 from xivo_dao.alchemy.userfeatures import UserFeatures
 from xivo_dao.tests import test_dao
-from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
+
+from .helpers.base import BaseIntegrationTest
 
 
-class _IntegrationUser(AssetLaunchingTestCase):
+class _IntegrationUser(BaseIntegrationTest):
 
-    assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
     asset = 'database'
-    service = 'ctid'
 
 
 class TestDatabaseDAO(test_dao.DAOTestCase):

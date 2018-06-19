@@ -1,0 +1,22 @@
+version: '3'
+services:
+  sync:
+    depends_on:
+      - ctid
+      - swagger-validator
+    environment:
+      TARGETS: "ctid:9495 swagger-validator:8080"
+
+  ctid:
+    image: p0bailey/docker-flask
+    volumes:
+        - "./mocks/ctid.py:/tmp/ctid.py"
+        - "../../xivo_cti/swagger/api.yml:/tmp/api.yml"
+    ports:
+      - 9495
+    command: "python /tmp/ctid.py"
+
+  swagger-validator:
+    image: swaggerapi/swagger-validator
+    ports:
+      - 8080
