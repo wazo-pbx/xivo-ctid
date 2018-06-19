@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright 2016-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2016-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
-import os
 import pprint
 import requests
 
 from hamcrest import assert_that, empty
 
-from xivo_test_helpers.asset_launching_test_case import AssetLaunchingTestCase
+from .helpers.base import BaseIntegrationTest
 
 
-class TestDocumentation(AssetLaunchingTestCase):
+class TestDocumentation(BaseIntegrationTest):
 
-    service = 'ctid'
     asset = 'documentation'
-    assets_root = os.path.join(os.path.dirname(__file__), '..', 'assets')
 
     def test_documentation_errors(self):
         ctid_port = self.service_port(9495, 'ctid')
