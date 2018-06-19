@@ -1,20 +1,17 @@
 version: '3'
 services:
   sync:
-    image: waisbrot/wait
     depends_on:
       - ctid
       - swagger-validator
     environment:
-      PORTS: "9495 8080"
       TARGETS: "ctid:9495 swagger-validator:8080"
-      TIMEOUT: ${INTEGRATION_TEST_TIMEOUT}
 
   ctid:
     image: p0bailey/docker-flask
     volumes:
         - "./mocks/ctid.py:/tmp/ctid.py"
-        - "../../../xivo_cti/swagger/api.yml:/tmp/api.yml"
+        - "../../xivo_cti/swagger/api.yml:/tmp/api.yml"
     ports:
       - 9495
     command: "python /tmp/ctid.py"
