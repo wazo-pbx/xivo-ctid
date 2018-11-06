@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -15,6 +15,8 @@ class StatusUpdater(object):
         self._notifier = endpoint_status_notifier
 
     def update_status(self, hint, status):
+        # TODO clean after pjsip migration
+        hint = hint.replace('PJSIP', 'SIP')
         for phone_id in dao.phone.get_phone_ids_from_hint(hint):
             changed = dao.phone.update_status(phone_id, status)
             if changed:
