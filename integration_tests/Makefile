@@ -1,7 +1,7 @@
 .PHONY: test-setup test
 
 test-setup:
-	docker pull waisbrot/wait
+	docker pull wazopbx/wait
 	docker pull wazopbx/postgres
 	docker pull swaggerapi/swagger-validator
 
