@@ -40,7 +40,7 @@ Depends: ${python:Depends},
          xivo-bus (>= 15.17~20151009.134054.be6f60a-1),
          xivo-ctid-client,
          xivo-ctid-ng-client,
-         xivo-dird-client,
+         wazo-dird-client,
          xivo-libdao,
          xivo-lib-python (>= 16.13~20160930.135643.aab98ec),
          xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
