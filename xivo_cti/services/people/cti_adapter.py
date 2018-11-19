@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2014-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
 
 from functools import partial
-from xivo_dird_client import Client
+from wazo_dird_client import Client
 
 from xivo_cti import config
 from xivo_cti import dao
