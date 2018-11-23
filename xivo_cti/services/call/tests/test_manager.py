@@ -5,23 +5,37 @@
 import unittest
 
 from concurrent import futures
-from hamcrest import assert_that, calling, equal_to, raises
-from mock import Mock, patch, sentinel as s
+from hamcrest import (
+    assert_that,
+    calling,
+    equal_to,
+    raises,
+)
+from mock import (
+    Mock,
+    patch,
+    sentinel as s,
+)
 from requests import exceptions
 
 from xivo_cti.ami.ami_callback_handler import AMICallbackHandler
-from xivo_cti.async_runner import AsyncRunner, synchronize
+from xivo_cti.async_runner import (
+    AsyncRunner,
+    synchronize,
+)
 from xivo_cti.cti.cti_message_formatter import CTIMessageFormatter
 from xivo_cti.interfaces.interface_cti import CTI
 from xivo_cti.task_queue import new_task_queue
 from xivo_cti.xivo_ami import AMIClass
 
-from ..manager import (CallManager,
-                       _CallExceptionHandler,
-                       _HangupExceptionHandler,
-                       _TransferExceptionHandler,
-                       _TransferCompletionExceptionHandler,
-                       _TransferToVoicemailExceptionHandler)
+from ..manager import (
+    CallManager,
+    _CallExceptionHandler,
+    _HangupExceptionHandler,
+    _TransferExceptionHandler,
+    _TransferCompletionExceptionHandler,
+    _TransferToVoicemailExceptionHandler,
+)
 
 SOME_TRANSFER_TIMEOUT = 5
 
@@ -116,15 +130,34 @@ class TestCalls(_BaseTest):
 
 class TestTransfers(_BaseTest):
 
-    @patch('xivo_cti.database.transfer_db.get_transfer_dial_timeout', Mock(return_value=SOME_TRANSFER_TIMEOUT))
+    @patch(
+        'xivo_cti.database.transfer_db.get_transfer_dial_timeout',
+        Mock(return_value=SOME_TRANSFER_TIMEOUT)
+    )
     def test_transfer_attended(self):
         with patch.object(self.manager, '_transfer') as transfer:
             with synchronize(self._runner):
-                self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+                self.manager.transfer_attended(
+                    s.connection,
+                    s.auth_token,
+                    s.user_id,
+                    s.user_uuid,
+                    s.number,
+                )
 
-        transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'attended', SOME_TRANSFER_TIMEOUT)
+        transfer.assert_called_once_with(
+            s.auth_token,
+            s.user_id,
+            s.user_uuid,
+            s.number,
+            'attended',
+            SOME_TRANSFER_TIMEOUT,
+        )
 
-    @patch('xivo_cti.database.transfer_db.get_transfer_dial_timeout', Mock(return_value=SOME_TRANSFER_TIMEOUT))
+    @patch(
+        'xivo_cti.database.transfer_db.get_transfer_dial_timeout',
+        Mock(return_value=SOME_TRANSFER_TIMEOUT)
+    )
     def test_transfer_attended_exceptions(self):
         exception = Exception()
         error_handler = Mock(_TransferExceptionHandler)
@@ -133,29 +166,55 @@ class TestTransfers(_BaseTest):
                    Mock(return_value=error_handler)) as ExceptionHandler:
             with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
                 with synchronize(self._runner):
-                    self.manager.transfer_attended(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+                    self.manager.transfer_attended(
+                        s.connection,
+                        s.auth_token,
+                        s.user_id,
+                        s.user_uuid,
+                        s.number,
+                    )
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
 
-    @patch('xivo_cti.database.transfer_db.get_transfer_dial_timeout', Mock(return_value=SOME_TRANSFER_TIMEOUT))
+    @patch(
+        'xivo_cti.database.transfer_db.get_transfer_dial_timeout',
+        Mock(return_value=SOME_TRANSFER_TIMEOUT)
+    )
     def test_transfer_blind(self):
         with synchronize(self._runner):
             with patch.object(self.manager, '_transfer') as transfer:
-                self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+                self.manager.transfer_blind(
+                    s.connection,
+                    s.auth_token,
+                    s.user_id,
+                    s.user_uuid,
+                    s.number,
+                )
 
         transfer.assert_called_once_with(s.auth_token, s.user_id, s.user_uuid, s.number, 'blind')
 
-    @patch('xivo_cti.database.transfer_db.get_transfer_dial_timeout', Mock(return_value=SOME_TRANSFER_TIMEOUT))
+    @patch(
+        'xivo_cti.database.transfer_db.get_transfer_dial_timeout',
+        Mock(return_value=SOME_TRANSFER_TIMEOUT)
+    )
     def test_transfer_blind_exceptions(self):
         exception = Exception()
         error_handler = Mock(_TransferExceptionHandler)
 
         with synchronize(self._runner):
-            with patch('xivo_cti.services.call.manager._TransferExceptionHandler',
-                       Mock(return_value=error_handler)) as ExceptionHandler:
+            with patch(
+                'xivo_cti.services.call.manager._TransferExceptionHandler',
+                Mock(return_value=error_handler)
+            ) as ExceptionHandler:
                 with patch.object(self.manager, '_transfer', Mock(side_effect=exception)):
-                    self.manager.transfer_blind(s.connection, s.auth_token, s.user_id, s.user_uuid, s.number)
+                    self.manager.transfer_blind(
+                        s.connection,
+                        s.auth_token,
+                        s.user_id,
+                        s.user_uuid,
+                        s.number,
+                    )
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid, s.number)
@@ -165,9 +224,20 @@ class TestTransfers(_BaseTest):
         mock_dao.user.get_context.return_value = s.context
         with synchronize(self._runner):
             with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
-                self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
+                self.manager.transfer_attended_to_voicemail(
+                    s.connection,
+                    s.auth_token,
+                    s.user_uuid,
+                    s.voicemail_number,
+                )
 
-        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, s.context, 'attended')
+        transfer_to_vm.assert_called_once_with(
+            s.auth_token,
+            s.user_uuid,
+            s.voicemail_number,
+            s.context,
+            'attended',
+        )
 
     @patch('xivo_cti.services.call.manager.dao')
     def test_transfer_attended_to_voicemail_exceptions(self, mock_dao):
@@ -176,10 +246,21 @@ class TestTransfers(_BaseTest):
         error_handler = Mock(_TransferExceptionHandler)
 
         with synchronize(self._runner):
-            with patch('xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
-                       Mock(return_value=error_handler)) as ExceptionHandler:
-                with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
-                    self.manager.transfer_attended_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
+            with patch(
+                'xivo_cti.services.call.manager._TransferToVoicemailExceptionHandler',
+                Mock(return_value=error_handler)
+            ) as ExceptionHandler:
+                with patch.object(
+                        self.manager,
+                        '_transfer_to_voicemail',
+                        Mock(side_effect=exception)
+                ):
+                    self.manager.transfer_attended_to_voicemail(
+                        s.connection,
+                        s.auth_token,
+                        s.user_uuid,
+                        s.vm_number,
+                    )
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
@@ -189,9 +270,20 @@ class TestTransfers(_BaseTest):
         mock_dao.user.get_context.return_value = s.context
         with patch.object(self.manager, '_transfer_to_voicemail') as transfer_to_vm:
             with synchronize(self._runner):
-                self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.voicemail_number)
+                self.manager.transfer_blind_to_voicemail(
+                    s.connection,
+                    s.auth_token,
+                    s.user_uuid,
+                    s.voicemail_number,
+                )
 
-        transfer_to_vm.assert_called_once_with(s.auth_token, s.user_uuid, s.voicemail_number, s.context, 'blind')
+        transfer_to_vm.assert_called_once_with(
+            s.auth_token,
+            s.user_uuid,
+            s.voicemail_number,
+            s.context,
+            'blind',
+        )
 
     @patch('xivo_cti.services.call.manager.dao')
     def test_transfer_blind_to_voicemail_exceptions(self, mock_dao):
@@ -203,7 +295,12 @@ class TestTransfers(_BaseTest):
                    Mock(return_value=error_handler)) as ExceptionHandler:
             with patch.object(self.manager, '_transfer_to_voicemail', Mock(side_effect=exception)):
                 with synchronize(self._runner):
-                    self.manager.transfer_blind_to_voicemail(s.connection, s.auth_token, s.user_uuid, s.vm_number)
+                    self.manager.transfer_blind_to_voicemail(
+                        s.connection,
+                        s.auth_token,
+                        s.user_uuid,
+                        s.vm_number,
+                    )
 
         error_handler.handle.assert_called_once_with(exception)
         ExceptionHandler.assert_called_once_with(s.connection, s.user_uuid)
@@ -215,23 +312,53 @@ class TestTransfers(_BaseTest):
         assert_that(self.ctid_ng_client.transfers.make_transfer_from_user.call_count, equal_to(0))
 
     def test_transfer_will_transfer_to_the_active_call(self):
-        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
+        with patch.object(
+                self.manager,
+                '_get_active_call',
+                Mock(return_value={'call_id': s.call_id})
+        ):
             self.manager._transfer(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow, s.timeout)
 
         self.ctid_ng_client.transfers.make_transfer_from_user.assert_called_once_with(
-            exten=s.exten, initiator=s.call_id, flow=s.flow, timeout=s.timeout)
+            exten=s.exten,
+            initiator=s.call_id,
+            flow=s.flow,
+            timeout=s.timeout,
+        )
 
     def test_that_exceptions_are_not_catched_in_transfer(self):
         with patch.object(self.manager, '_get_active_call', Mock(side_effect=Exception)):
-            assert_that(calling(self.manager._transfer)
-                        .with_args(s.connection, s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow, s.timeout),
-                        raises(Exception))
+            assert_that(
+                calling(self.manager._transfer).with_args(
+                    s.connection,
+                    s.auth_token,
+                    s.user_id,
+                    s.user_uuid,
+                    s.exten,
+                    s.flow,
+                    s.timeout,
+                ),
+                raises(Exception)
+            )
 
         self.ctid_ng_client.transfers.make_transfer_from_user.side_effect = Exception
-        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
-            assert_that(calling(self.manager._transfer)
-                        .with_args(s.connection, s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow, s.timeout),
-                        raises(Exception))
+        with patch.object(
+                self.manager,
+                '_get_active_call',
+                Mock(return_value={'call_id': s.call_id}),
+        ):
+            assert_that(
+                calling(self.manager._transfer).with_args(
+                    s.connection,
+                    s.auth_token,
+                    s.user_id,
+                    s.user_uuid,
+                    s.exten,
+                    s.flow,
+                    s.timeout,
+                ),
+                raises(Exception)
+            )
 
     def test_transfer_cancel(self):
         transfers = {'items': [{'id': s.transfer_id, 'flow': 'attended'}]}
@@ -240,7 +367,9 @@ class TestTransfers(_BaseTest):
         with synchronize(self._runner):
             self.manager.transfer_cancel(s.connection, s.auth_token, s.user_uuid)
 
-        self.ctid_ng_client.transfers.cancel_transfer_from_user.assert_called_once_with(s.transfer_id)
+        self.ctid_ng_client.transfers.cancel_transfer_from_user.assert_called_once_with(
+            s.transfer_id
+        )
 
     def test_cancel_transfer_no_transfer(self):
         transfers = {'items': []}
@@ -258,7 +387,9 @@ class TestTransfers(_BaseTest):
         with synchronize(self._runner):
             self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
-        self.ctid_ng_client.transfers.complete_transfer_from_user.assert_called_once_with(s.transfer_id)
+        self.ctid_ng_client.transfers.complete_transfer_from_user.assert_called_once_with(
+            s.transfer_id,
+        )
 
     def test_transfer_complete_no_transfer(self):
         transfers = {'items': []}
@@ -267,7 +398,10 @@ class TestTransfers(_BaseTest):
         with synchronize(self._runner):
             self.manager.transfer_complete(s.connection, s.auth_token, s.user_uuid)
 
-        assert_that(self.ctid_ng_client.transfers.complete_transfer_from_user.call_count, equal_to(0))
+        assert_that(
+            self.ctid_ng_client.transfers.complete_transfer_from_user.call_count,
+            equal_to(0),
+        )
 
     def test_that_exceptions_are_not_catched_in_transfer_to_voicemail(self):
         with patch.object(self.manager, '_get_active_call', Mock(side_effect=Exception)):
@@ -276,10 +410,21 @@ class TestTransfers(_BaseTest):
                         raises(Exception))
 
         self.ctid_ng_client.transfers.make_transfer.side_effect = Exception
-        with patch.object(self.manager, '_get_active_call', Mock(return_value={'call_id': s.call_id})):
-            assert_that(calling(self.manager._transfer_to_voicemail)
-                        .with_args(s.auth_token, s.user_id, s.user_uuid, s.exten, s.flow),
-                        raises(Exception))
+        with patch.object(
+                self.manager,
+                '_get_active_call',
+                Mock(return_value={'call_id': s.call_id}),
+        ):
+            assert_that(
+                calling(self.manager._transfer_to_voicemail).with_args(
+                    s.auth_token,
+                    s.user_id,
+                    s.user_uuid,
+                    s.exten,
+                    s.flow,
+                ),
+                raises(Exception)
+            )
 
 
 class TestCallManager(_BaseTest):
