@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2016 Avencall
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -247,12 +247,12 @@ class AMIClass(object):
 
     def sipnotify(self, channel, variables):
         if not variables or not channel:
-            raise ValueError('Missing fields to send a SIPNotify')
+            raise ValueError('Missing fields to send a PJSIPNotify')
 
-        arg_list = [('Channel', channel)]
+        arg_list = [('Endpoint', channel)]
         arg_list.extend(('Variable', '%s=%s' % (name, value)) for name, value in variables.iteritems())
 
-        return self._exec_command('SIPNotify', arg_list)
+        return self._exec_command('PJSIPNotify', arg_list)
 
     # \brief Request a mailbox count
     # context is for tracking only
