@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2016 Avencall
+# Copyright 2014-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import unittest
@@ -293,25 +293,43 @@ class TestCallManager(_BaseTest):
             self.manager._answer_trigering_event, s.fn)
 
 
-class TestGetAnswerOnSIPRinging(_BaseTest):
+class TestGetAnswerOnDeviceStateChangeRinging(_BaseTest):
 
     def test_that_ringing_on_the_good_hint_unregisters_the_callback(self):
-        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'SIP/bcde')
+        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'PJSIP/bcde')
 
-        fn({
-            'Peer': 'SIP/bcde',
-        })
+        event = {
+            'Event': 'DeviceStateChange',
+            'State': 'RINGING',
+            'Device': 'PJSIP/bcde',
+        }
+        fn(event)
 
         self._ami_cb_handler.unregister_callback.assert_called_once_with(
             self.manager._answer_trigering_event, fn)
         self._connection.answer_cb.assert_called_once_with()
 
-    def test_that_ringing_on_the_wrong_hint_unregisters_the_callback(self):
-        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'SIP/bcde')
+    def test_that_ringing_on_the_wrong_hint_does_not_unregisters_the_callback(self):
+        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'PJSIP/bcde')
 
-        fn({
-            'Peer': 'SIP/bad',
-        })
+        event = {
+            'Event': 'DeviceStateChange',
+            'State': 'RINGING',
+            'Device': 'PJSIP/bad',
+        }
+        fn(event)
+
+        self._assert_nothing_was_called()
+
+    def test_that_not_ringing_unregisters_does_not_the_callback(self):
+        fn = self.manager._get_answer_on_sip_ringing_fn(self._connection, 'PJSIP/bcde')
+
+        event = {
+            'Event': 'DeviceStateChange',
+            'State': 'RINGING',
+            'Device': 'PJSIP/bad',
+        }
+        fn(event)
 
         self._assert_nothing_was_called()
 
