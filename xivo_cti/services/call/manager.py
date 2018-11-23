@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2014-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -98,7 +98,7 @@ class _TransferCompletionExceptionHandler(_BaseExceptionHandler):
 
 class CallManager(object):
 
-    _answer_trigering_event = 'SIPRinging'
+    _answer_trigering_event = 'DeviceStateChange'
 
     def __init__(self, ami_class, ami_callback_handler, async_runner):
         self._ami = ami_class
@@ -243,7 +243,10 @@ class CallManager(object):
 
     def _get_answer_on_sip_ringing_fn(self, connection, interface):
         def answer_if_matching_peer(event):
-            if event['Peer'].lower() != interface.lower():
+            if event.get('State') != 'RINGING':
+                return
+
+            if event['Device'].lower() != interface.lower():
                 return
 
             self._ami_cb_handler.unregister_callback(self._answer_trigering_event,

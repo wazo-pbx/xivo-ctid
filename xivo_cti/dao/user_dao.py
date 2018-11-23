@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -127,6 +127,11 @@ class UserDAO(object):
                 line_interface = line_interface.replace('\/', '/')
         except (NoSuchUserException, NoSuchLineException):
             return None
+
+        #TODO: clean after pjsip migration
+        if line_interface.startswith('SIP'):
+            line_interface = line_interface.replace('SIP', 'PJSIP')
+
         return line_interface
 
     def get_context(self, user_id):
