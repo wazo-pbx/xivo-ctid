@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013-2016 Avencall
+# Copyright 2013-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import unittest
@@ -77,17 +77,24 @@ class TestXivoAMI(unittest.TestCase):
                                    ('Async', 'true')])
 
     def testSIPNotify_with_variables(self):
-        channel = 'SIP/1234'
-        variables = {'Event': 'val',
-                     'Deux': 'val2',
-                     'Trois': 3}
+        channel = 'PJSIP/1234'
+        variables = {
+            'Event': 'val',
+            'Deux': 'val2',
+            'Trois': 3,
+        }
 
         self.ami_class.sipnotify(channel, variables)
 
-        self._assert_exec_command('SIPNotify', [('Channel', channel),
-                                                ('Variable', 'Event=val'),
-                                                ('Variable', 'Deux=val2'),
-                                                ('Variable', 'Trois=3')])
+        self._assert_exec_command(
+            'PJSIPNotify',
+            [
+                ('Endpoint', channel),
+                ('Variable', 'Event=val'),
+                ('Variable', 'Deux=val2'),
+                ('Variable', 'Trois=3'),
+            ]
+        )
 
     def testSIPNotify_missing_fields(self):
         self.assertRaises(ValueError, self.ami_class.sipnotify, 'SIP/abc', {})
