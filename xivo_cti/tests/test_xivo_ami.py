@@ -7,9 +7,11 @@ import unittest
 from collections import Counter
 
 from xivo_cti.xivo_ami import AMIClass
-from mock import Mock
-from mock import patch
-from mock import sentinel
+from mock import (
+    Mock,
+    patch,
+    sentinel,
+)
 
 
 class TestXivoAMI(unittest.TestCase):
@@ -61,7 +63,14 @@ class TestXivoAMI(unittest.TestCase):
         cid_name_src = 'Bob'
         cid_num_src = '444'
 
-        self.ami_class.switchboard_retrieve(line_interface, channel, cid_name, cid_num, cid_name_src, cid_num_src)
+        self.ami_class.switchboard_retrieve(
+            line_interface,
+            channel,
+            cid_name,
+            cid_num,
+            cid_name_src,
+            cid_num_src,
+        )
 
         self._assert_exec_command('Originate',
                                   [('Channel', line_interface),
