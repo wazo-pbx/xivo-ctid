@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2014 Avencall
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 from xivo.asterisk.line_identity import identity_from_channel
@@ -26,6 +26,7 @@ class ChannelDAO(object):
         raise LookupError('No channel with unique id %s' % unique_id)
 
     def channels_from_identity(self, identity):
+        identity = identity.lower()
         return [channel for channel in self.innerdata.channels
                 if identity_from_channel(channel) == identity]
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import time
@@ -238,9 +238,10 @@ class CurrentCallManager(object):
             logger.warning('Switchboard %s tried to retrieve non-existent channel %s', user_id, unique_id)
             self._tracker.unmark(unique_id)
             return
+
         try:
             line = dao.user.get_line(user_id)
-            line_identity = line['identity'].lower()
+            line_identity = dao.user.get_line_identity(user_id)
             cid_name, cid_num = dao.channel.get_caller_id_name_number(channel_to_retrieve)
             cid_name_src, cid_num_src = self._get_cid_name_and_number_from_line(line)
             ringing_channels = dao.channel.channels_from_identity(line_identity)
