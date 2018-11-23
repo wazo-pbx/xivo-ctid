@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import time
@@ -491,6 +491,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         mock_dao.channel.channels_from_identity.return_value = [ringing_channel]
         mock_dao.user.get_line.return_value = line
+        mock_dao.user.get_line_identity.return_value = line_identity
 
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
 
@@ -522,6 +523,7 @@ class TestCurrentCallManager(_BaseTestCase):
         mock_dao.channel.get_caller_id_name_number.return_value = cid_name, cid_number
         mock_dao.channel.channels_from_identity.return_value = [ringing_channel]
         mock_dao.user.get_line.return_value = line
+        mock_dao.user.get_line_identity.return_value = line_identity
 
         # Call 1
         self.manager.switchboard_retrieve_waiting_call(user_id, unique_id, conn)
