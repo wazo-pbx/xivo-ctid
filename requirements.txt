@@ -19,5 +19,5 @@ netifaces==0.10.4  # from xivo-lib-python
 psycopg2==2.6.2  # from xivo-lib-python
 python-consul==0.7.0  # from xivo-lib-python
 pyyaml==3.12  # from xivo-lib-python
-requests==2.12.4
+requests==2.20.0
 sqlalchemy==1.0.15  # from xivo-dao
