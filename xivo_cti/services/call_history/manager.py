@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2007-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -19,7 +19,15 @@ class HistoryMode(object):
 
 
 def history_for_phones(phones, limit):
-    identifiers = [_phone_to_identifier(phone) for phone in phones]
+    # TODO: pjsip migration
+    # Not sure if its going to be cleaner to fetch both SIP and PJSIP for a while
+    # or update the cel table to match the new name
+    identifiers = []
+    for phone in phones:
+        identifier = _phone_to_identifier(phone)
+        identifiers.append(identifier)
+        if identifier.startswith('sip'):
+            identifiers.append('pj{}'.format(identifier))
     return all_calls_for_phones(identifiers, limit)
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2013-2017 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2013-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import unittest
@@ -16,7 +16,7 @@ class CallHistoryMgrTest(unittest.TestCase):
 
     @patch('xivo_cti.services.call_history.manager.all_calls_for_phones')
     def test_history_for_phones_all(self, all_calls):
-        identifiers = [u'sip/abcdef', u'sip/ghijk']
+        identifiers = [u'sip/abcdef', 'pjsip/abcdef', u'sip/ghijk', 'pjsip/ghijk']
         phones = [{u'protocol': u'sip', u'name': u'abcdef'},
                   {u'protocol': u'sip', u'name': u'ghijk'}]
         all_calls.return_value = sentinel.calls
