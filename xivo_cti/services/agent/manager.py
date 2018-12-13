@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2014 Avencall
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -11,6 +11,8 @@ from xivo_dao import agent_dao
 from xivo_dao import user_line_dao
 from xivo_dao import agent_status_dao
 from xivo_dao import queue_dao
+
+from xivo_cti import dao
 
 from xivo_cti.exception import ExtensionInUseError, NoSuchExtensionError
 
@@ -33,12 +35,13 @@ class AgentServiceManager(object):
             extens = self.find_agent_exten(agent_id)
             agent_exten = extens[0] if extens else None
 
-        with session_scope():
-            if not user_line_dao.is_phone_exten(agent_exten):
-                logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
-                return 'error', {'error_string': 'agent_login_invalid_exten',
-                                 'class': 'ipbxcommand'}
-            agent_context = agent_dao.agent_context(agent_id)
+        try:
+            line = dao.user.get_line(user_id)
+        except LookupError:
+            logger.info('%s tried to login with wrong exten (%s)', agent_id, agent_exten)
+            return 'error', {'error_string': 'agent_login_invalid_exten', 'class': 'ipbxcommand'}
+
+        agent_context = line['context']
 
         try:
             self.login(agent_id, agent_exten, agent_context)
