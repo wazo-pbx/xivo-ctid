@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2007-2014 Avencall
+# Copyright 2007-2018 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import unittest
@@ -25,20 +25,20 @@ class TestAgentServiceManager(unittest.TestCase):
                                                  self.ami)
 
     @patch('xivo_dao.user_line_dao.is_phone_exten')
-    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.resources.user.dao')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    @patch('xivo_cti.services.agent.manager.dao')
     def test_on_cti_agent_login(self,
+                                mock_dao,
                                 mock_id_converter,
                                 mock_user_dao,
-                                mock_agent_context,
                                 mock_is_phone_exten):
         agent_id = 11
         agent_context = 'test_context'
+        mock_dao.user.get_line.return_value = {'context': agent_context}
         mock_id_converter.return_value = agent_id
         mock_user_dao.get.return_value = Mock(User, agentid=agent_id)
         mock_is_phone_exten.return_value = True
-        mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id, self.agent_1_exten)
@@ -46,16 +46,16 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_manager.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_dao.user_line_dao.is_phone_exten')
-    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    @patch('xivo_cti.services.agent.manager.dao')
     def test_on_cti_agent_login_when_extension_in_use(self,
+                                                      mock_dao,
                                                       mock_id_converter,
-                                                      mock_agent_context,
                                                       mock_is_phone_exten):
         agent_id = 11
         agent_context = 'foobar'
+        mock_dao.user.get_line.return_value = {'context': agent_context}
         mock_id_converter.return_value = agent_id
-        mock_agent_context.return_value = agent_context
         mock_is_phone_exten.return_value = True
         self.agent_executor.login.side_effect = ExtensionInUseError()
 
@@ -65,16 +65,16 @@ class TestAgentServiceManager(unittest.TestCase):
         self.agent_executor.login.assert_called_once_with(agent_id, self.agent_1_exten, agent_context)
 
     @patch('xivo_dao.user_line_dao.is_phone_exten')
-    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    @patch('xivo_cti.services.agent.manager.dao')
     def test_on_cti_agent_login_when_no_such_extension(self,
+                                                       mock_dao,
                                                        mock_id_converter,
-                                                       mock_agent_context,
                                                        mock_is_phone_exten):
         agent_id = 11
         agent_context = 'foobar'
+        mock_dao.user.get_line.return_value = {'context': agent_context}
         mock_id_converter.return_value = agent_id
-        mock_agent_context.return_value = agent_context
         mock_is_phone_exten.return_value = True
         self.agent_executor.login.side_effect = NoSuchExtensionError()
 
@@ -86,15 +86,15 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.user_line_dao.is_phone_exten')
     @patch('xivo_dao.user_line_dao.get_main_exten_by_line_id')
     @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.resources.user.dao.find_all_by')
     @patch('xivo_dao.resources.user.dao.get')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    @patch('xivo_cti.services.agent.manager.dao')
     def test_on_cti_agent_login_no_number(self,
+                                          mock_dao,
                                           mock_id_converter,
                                           mock_user_dao_get,
                                           mock_user_find_all_by,
-                                          mock_agent_context,
                                           mock_find_line_id_by_user_id,
                                           mock_get_main_exten_by_line_id,
                                           mock_is_phone_exten):
@@ -102,13 +102,13 @@ class TestAgentServiceManager(unittest.TestCase):
         agent_id = 11
         line_id = 12
         agent_context = 'test_context'
+        mock_dao.user.get_line.return_value = {'context': agent_context}
         mock_id_converter.return_value = agent_id
         mock_user_dao_get.return_value = Mock(User, agentid=agent_id)
         mock_user_find_all_by.return_value = [Mock(User, agentid=user_id)]
         mock_find_line_id_by_user_id.return_value = [line_id]
         mock_get_main_exten_by_line_id.return_value = self.line_number
         mock_is_phone_exten.return_value = True
-        mock_agent_context.return_value = agent_context
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(self.connected_user_id, agent_id)
@@ -235,15 +235,15 @@ class TestAgentServiceManager(unittest.TestCase):
     @patch('xivo_dao.user_line_dao.is_phone_exten')
     @patch('xivo_dao.user_line_dao.get_main_exten_by_line_id')
     @patch('xivo_dao.user_line_dao.find_line_id_by_user_id')
-    @patch('xivo_dao.agent_dao.agent_context')
     @patch('xivo_dao.resources.user.dao.find_all_by')
     @patch('xivo_dao.resources.user.dao.find')
     @patch('xivo_cti.tools.idconverter.IdConverter.xid_to_id')
+    @patch('xivo_cti.services.agent.manager.dao')
     def test_agent_special_me(self,
+                              mock_dao,
                               mock_id_converter,
                               mock_user_dao_find,
                               mock_user_dao_find_all_by,
-                              mock_agent_context,
                               mock_find_line_id_by_user_id,
                               mock_get_main_exten_by_line_id,
                               mock_is_phone_exten):
@@ -256,7 +256,7 @@ class TestAgentServiceManager(unittest.TestCase):
         mock_find_line_id_by_user_id.return_value = [13]
         mock_get_main_exten_by_line_id.return_value = self.line_number
         mock_is_phone_exten.return_value = True
-        mock_agent_context.return_value = agent_context
+        mock_dao.user.get_line.return_value = {'context': agent_context}
         self.agent_manager.login = Mock()
 
         self.agent_manager.on_cti_agent_login(user_id, 'agent:special:me')
