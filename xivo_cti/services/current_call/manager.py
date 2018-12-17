@@ -78,7 +78,11 @@ class CurrentCallManager(object):
         self._bridge_channels_oriented(channel_2, channel_1)
 
     def _bridge_channels_oriented(self, channel, other_channel):
-        line = identity_from_channel(channel)
+        # TODO: PJSIP remove after db migration
+        if channel.startswith('PJSIP/'):
+            line = identity_from_channel(channel[2:])
+        else:
+            line = identity_from_channel(channel)
         if line not in self._calls_per_line:
             self._calls_per_line[line] = [
                 {PEER_CHANNEL: other_channel,
