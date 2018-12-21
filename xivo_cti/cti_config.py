@@ -86,6 +86,7 @@ _default_config = {
     'provd': {
         'host': 'localhost',
         'port': 8666,
+        'verify_certificate': '/usr/share/xivo-certs/server.crt',
     },
     'service_discovery': {
         'enabled': True,
