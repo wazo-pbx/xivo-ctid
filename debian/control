@@ -43,7 +43,7 @@ Depends: ${python:Depends},
          wazo-dird-client,
          xivo-libdao,
          xivo-lib-python (>= 16.13~20160930.135643.aab98ec),
-         xivo-provd-client (>= 15.08~20150422.145633.62b1f57-1)
+         wazo-provd-client
 Description: Wazo CTI server library
  Wazo is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
