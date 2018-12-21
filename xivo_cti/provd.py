@@ -15,6 +15,7 @@ class CTIProvdClient(object):
 
     def __init__(self, provd_client):
         self._dev_mgr = provd_client.devices
+        self.provd_client = provd_client
 
     def find_device(self, device_id):
         try:
