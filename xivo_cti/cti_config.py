@@ -86,6 +86,8 @@ _default_config = {
     'provd': {
         'host': 'localhost',
         'port': 8666,
+        'https': False,
+        'prefix': '/provd',
     },
     'service_discovery': {
         'enabled': True,
