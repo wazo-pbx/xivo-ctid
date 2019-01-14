@@ -110,7 +110,7 @@ dird:
 provd:
   host: localhost
   port: 8666
-  https: False
+  verify_certificate: /usr/share/xivo-certs/server.crt
 
 # Event bus (AMQP) connection informations
 bus:
