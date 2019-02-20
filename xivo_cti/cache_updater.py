@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Avencall
+# Copyright 2006-2019 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0+
 
 import logging
@@ -18,7 +18,7 @@ class CacheUpdater(object):
         self._innerdata = innerdata
 
     def subscribe_to_bus(self, bus_listener):
-        bus_listener.add_callback(UserLineAssociatedEvent.routing_key, self.on_bus_user_line_associated)
+        bus_listener.add_callback(UserLineAssociatedEvent.routing_key_fmt, self.on_bus_user_line_associated)
 
     def _on_user_line_associated(self, user_id, line_id):
         self._innerdata.update_config_list('users', 'edit', user_id)
