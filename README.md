@@ -1,3 +1,7 @@
+__Important: Please note this repository is now deprecated in Wazo, we don't support it anymore.__
+
+---------------------------------
+
 XiVO CTI [![Build Status](https://jenkins.wazo.community/buildStatus/icon?job=xivo-ctid)](https://jenkins.wazo.community/job/xivo-ctid)
 ========
 
